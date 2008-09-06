@@ -1,0 +1,172 @@
+<!--
+  Copyright 2008 Sun Microsystems, Inc. All rights reserved.
+  
+  U.S. Government Rights - Commercial software. Government users 
+  are subject to the Sun Microsystems, Inc. standard license agreement
+  and applicable provisions of the FAR and its supplements.
+  
+  Use is subject to license terms.
+  
+  This distribution may include materials developed by third parties.
+  Sun, Sun Microsystems, the Sun logo, Java and Project Identity 
+  Connectors are trademarks or registered trademarks of Sun 
+  Microsystems, Inc. or its subsidiaries in the U.S. and other
+  countries.
+  
+  UNIX is a registered trademark in the U.S. and other countries,
+  exclusively licensed through X/Open Company, Ltd. 
+  
+  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+  
+  Copyright 2008 Sun Microsystems, Inc. All rights reserved. 
+  
+  The contents of this file are subject to the terms of the Common Development
+  and Distribution License(CDDL) (the License).  You may not use this file
+  except in  compliance with the License. 
+  
+  You can obtain a copy of the License at
+  http://identityconnectors.dev.java.net/CDDLv1.0.html
+  See the License for the specific language governing permissions and 
+  limitations under the License.  
+  
+  When distributing the Covered Code, include this CDDL Header Notice in each
+  file and include the License file at identityconnectors/legal/license.txt.
+  If applicable, add the following below this CDDL Header, with the fields 
+  enclosed by brackets [] replaced by your own identifying information: 
+  "Portions Copyrighted [year] [name of copyright owner]"
+-->
+<project name="Toolkit" default="create" basedir=".">
+    <description>Java Toolkit for IdentityConnectors</description>
+
+    <!-- Environment Checks -->
+    <fail message="You have Ant version ${ant.version}. 
+         IdentityConnectors and this toolkit require Ant version 1.7.0 or higher.">
+         <condition>
+             <not>
+                 <antversion atLeast="1.7.0" />
+             </not>
+         </condition>
+     </fail>
+     <fail message="You have Java version ${ant.java.version}. 
+         IdentityConnectors and this toolkit require Java version 1.5 or higher.">
+         <condition>
+             <not>
+                 <matches pattern="1\.[5-9]" string="${ant.java.version}" />
+             </not>
+         </condition>
+     </fail>    
+
+    <!-- Groovy Jar -->
+    <path id="groovy.path">
+        <fileset dir="dist" includes="groovy*.jar" />
+    </path>
+    
+    <!-- Groovy Task Def -->
+    <taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy" classpathref="groovy.path" />
+
+    <!-- ================================= 
+          target: bundlePrompt              
+         ================================= -->
+    <target name="bundlePrompt"
+            description="Prompts the user for the target bundle directory.">
+
+        <input message="Please provide a bundle directory:"
+            addproperty="bundle.dir" />
+
+        <echo message="Bundle directory has been set." />
+    </target>
+
+    <!-- ================================= 
+          target: bundleCheck              
+         ================================= -->
+    <target name="bundleCheck">
+        <available file="${bundle.dir}" type="dir" property="clean.run"/>
+    </target>
+      
+    <!-- ================================= 
+          target: create              
+         ================================= -->
+    <target name="create" depends="clean"
+        description="Launches the new bundle creation wizard.">
+        <input message="Type a name for your Connector Bundle resource (JDBC, LDAP, etc.): "
+               addproperty="resource.name" />
+        <fail message="The resource name cannot be empty or contain spaces.">
+            <condition>
+                <or>
+                    <not>
+                        <isset property="resource.name" />
+                    </not>
+                    <length string="${resource.name}" length="0" />
+                    <contains string="${resource.name}" substring=" " />
+                </or>
+            </condition>
+        </fail>
+        <groovy>
+            properties['resource.name.lower'] = properties['resource.name'].toLowerCase()
+            properties['package.name.default'] = "org.identityconnectors." + properties['resource.name.lower']
+        </groovy>
+
+        <input message="Type a package name for the ${resource.name} connector, or hit enter to use the default:"
+            defaultvalue="${package.name.default}"
+            addproperty="package.name" />
+
+        <groovy src="misc/creator.groovy">                    
+            <arg value="${bundle.dir}" />
+            <arg value="${package.name}" />
+            <arg value="${resource.name}" />
+        </groovy>
+        
+        <copy file="misc/testProps.properties"
+              tofile="${user.home}/.connector-${resource.name.lower}.properties" />
+
+        <echo />
+        <echo message="Finished. Switch to ${bundle.dir} and run &quot;ant&quot; to build this connector." />
+    </target>
+
+    <!-- ================================= 
+          target: clean
+         ================================= -->
+    <target name="clean"
+            depends="bundlePrompt, bundleCheck"
+            if="clean.run"
+            description="Removes all generated files and folders associated with a specific connector bundle.">     
+        <echo message="This will remove the entire bundle folder at ${bundle.dir}."/>
+        <input message="Are you sure you want to do this?"
+               validargs="y,n"
+               addproperty="confirm.clean" />
+        <fail message="Build terminated by user.">
+            <condition>
+                <not>
+                    <equals arg1="y"
+                            arg2="${confirm.clean}"
+                            trim="true"
+                            casesensitive="false" />
+                </not>
+            </condition>
+        </fail>
+        <delete includeemptydirs="true" dir="${bundle.dir}"/>
+    </target>
+
+    <!-- ================================= 
+          target: usage              
+         ================================= -->
+    <target name="usage"
+            description="Prints the usage instructions for this toolkit.">
+        <echo>
+Usage: ant [options] [target]
+
+Available options: 
+    Type "ant -help" to see available options.                                       
+
+Available targets are:           
+    "create"                Generates a skeleton Connector bundle in the specified directory.
+                            This is the default target. 
+                            
+    "clean"                 Deletes the specified bundle directory, as well as the local 
+                            properties file for this bundle if it exists.
+            
+    "usage"                 Prints the usage information for this toolkit.      
+        </echo>
+    </target>
+
+</project>

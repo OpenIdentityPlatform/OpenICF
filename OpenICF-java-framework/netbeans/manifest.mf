@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+OpenIDE-Module: org.identityconnectors.toolkitmodule
+OpenIDE-Module-Layer: org/identityconnectors/toolkitmodule/layer.xml
+OpenIDE-Module-Localizing-Bundle: org/identityconnectors/toolkitmodule/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+OpenIDE-Module-Requires: org.netbeans.api.javahelp.Help
+

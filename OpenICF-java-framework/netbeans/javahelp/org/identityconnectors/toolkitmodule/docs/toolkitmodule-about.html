@@ -1,0 +1,107 @@
+<!--
+  Copyright 2008 Sun Microsystems, Inc. All rights reserved.
+  
+  U.S. Government Rights - Commercial software. Government users 
+  are subject to the Sun Microsystems, Inc. standard license agreement
+  and applicable provisions of the FAR and its supplements.
+  
+  Use is subject to license terms.
+  
+  This distribution may include materials developed by third parties.
+  Sun, Sun Microsystems, the Sun logo, Java and Project Identity 
+  Connectors are trademarks or registered trademarks of Sun 
+  Microsystems, Inc. or its subsidiaries in the U.S. and other
+  countries.
+  
+  UNIX is a registered trademark in the U.S. and other countries,
+  exclusively licensed through X/Open Company, Ltd. 
+  
+  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+  
+  Copyright 2008 Sun Microsystems, Inc. All rights reserved. 
+  
+  The contents of this file are subject to the terms of the Common Development
+  and Distribution License(CDDL) (the License).  You may not use this file
+  except in  compliance with the License. 
+  
+  You can obtain a copy of the License at
+  http://identityconnectors.dev.java.net/CDDLv1.0.html
+  See the License for the specific language governing permissions and 
+  limitations under the License.  
+  
+  When distributing the Covered Code, include this CDDL Header Notice in each
+  file and include the License file at identityconnectors/legal/license.txt.
+  If applicable, add the following below this CDDL Header, with the fields 
+  enclosed by brackets [] replaced by your own identifying information: 
+  "Portions Copyrighted [year] [name of copyright owner]"
+-->
+<html>
+  <head>
+    <title>About The Connectors Toolkit</title>
+    <link rel="stylesheet" href="nbdocs:/org/netbeans/modules/usersguide/ide.css" type="text/css">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  </head>
+  <body>
+    <h2>Overview</h2>
+    <p>
+      The IdentityConnectors Toolkit is built to help drive development of Connectors.
+      Connectors provide a consistent generic layer between applications and target resources.
+      The main focus of the API is provisioning operations and password management.
+      The toolkit is intended to facilitate development with as few dependences as possible.
+    </p>
+    <h2>Toolkit Contents</h2>
+    <p>
+      The directory where you extracted this toolkit contains the following elements:
+      <ul>
+        <li>The Connectors Framework</li>
+        <li>Full API & SPI Documentation</li>
+        <li>The Connector Contract Test Suite</li>
+        <li>A Connector Creation Wizard</li>
+        <li>A Groovy Console for testing and debugging</li>
+      </ul>
+    </p>
+    <h2>The Netbeans Plugin</h2>
+    <p>
+      This plugin is a visual wrapper for the Ant-based Connector Creation Wizard that is provided
+      with the toolkit. It will create and integrate skeleton connectors into the Netbeans environment
+    based on your input. Usage is simple:</p>
+    <h4>Step 1: Set Properties</h4>
+ 
+      <ol>
+        <li>Tell Netbeans where you extracted the Connectors Toolkit.</li>
+        <li>Choose a directory in which to create your new connector.</li>
+        <li>Enter the name of the <b>target resource</b>.</li>
+        <li>Enter a package name for the generated classes (or use the default).</li>
+      </ol>
+  
+    <h4>Step 2: Choose SPI Operations</h4>
+    <p>All the SPI operations (authenticate, create, delete, etc.) are opt-in, so you may choose
+      whichever ones your resource supports. When finished, click "Finish", and Netbeans will generate
+      a skeleton connector implementing the interfaces you selected. It will also set up the necessary
+      library and javadoc references as well. The new connector project will be automatically opened and
+      at this point is ready for you to begin working on.
+    </p>
+    <h4>More Information</h4>
+    <p>Further documentation on the Connectors Framework and the generated files and structure provided by this
+      toolkit can be found on the project website at
+      <object classid="java:org.netbeans.modules.javahelp.BrowserDisplayer">
+        <param name="content" value="http://identityconnectors.dev.java.net">
+        <param name="text" value="<html><u>http://identityconnectors.dev.java.net</u></html>">
+        <param name="textFontSize" value="medium">
+        <param name="textColor" value="blue">
+      </object>
+    .</p>
+  </body>
+</html>
+<!--
+Tip: to create a link which will open in an external web browser, try:
+<object classid="java:org.netbeans.modules.javahelp.BrowserDisplayer">
+<param name="content" value="http://www.netbeans.org/">
+<param name="text" value="<html><u>http://www.netbeans.org/</u></html>">
+<param name="textFontSize" value="medium">
+<param name="textColor" value="blue">
+</object>
+To create a link to a help set from another module, you need to know the code name base and path, e.g.:
+<a href="nbdocs://org.netbeans.modules.usersguide/org/netbeans/modules/usersguide/configure/configure_options.html">Using the Options Window</a>
+(This link will behave sanely if that module is disabled or missing.)
+-->

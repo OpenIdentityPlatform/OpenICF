@@ -1,0 +1,476 @@
+<!--
+  Copyright 2008 Sun Microsystems, Inc. All rights reserved.
+  
+  U.S. Government Rights - Commercial software. Government users 
+  are subject to the Sun Microsystems, Inc. standard license agreement
+  and applicable provisions of the FAR and its supplements.
+  
+  Use is subject to license terms.
+  
+  This distribution may include materials developed by third parties.
+  Sun, Sun Microsystems, the Sun logo, Java and Project Identity 
+  Connectors are trademarks or registered trademarks of Sun 
+  Microsystems, Inc. or its subsidiaries in the U.S. and other
+  countries.
+  
+  UNIX is a registered trademark in the U.S. and other countries,
+  exclusively licensed through X/Open Company, Ltd. 
+  
+  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+  
+  Copyright 2008 Sun Microsystems, Inc. All rights reserved. 
+  
+  The contents of this file are subject to the terms of the Common Development
+  and Distribution License(CDDL) (the License).  You may not use this file
+  except in  compliance with the License. 
+  
+  You can obtain a copy of the License at
+  http://identityconnectors.dev.java.net/CDDLv1.0.html
+  See the License for the specific language governing permissions and 
+  limitations under the License.  
+  
+  When distributing the Covered Code, include this CDDL Header Notice in each
+  file and include the License file at identityconnectors/legal/license.txt.
+  If applicable, add the following below this CDDL Header, with the fields 
+  enclosed by brackets [] replaced by your own identifying information: 
+  "Portions Copyrighted [year] [name of copyright owner]"
+-->
+<project name="connector-build" default="all">
+    <description>
+    + ==\_/================================================================== +
+    +  \(_)/ This is the default build for any Connector.                     +
+    +  -(_)- (Since this file is imported any target can be overridden)       +
+    +  /(_)\                                                                  +
+    + =========================================================S=U=N=.=C=O=M= +
+    </description>
+    <!-- set a default for configuration -->
+    <property name="configuration" value=""/>
+    <!-- load user project-configuration properties -->
+    <property file="${user.home}/.${ant.project.name}-${configuration}.properties" />
+    <!-- load user project properties -->
+    <property file="${user.home}/.${ant.project.name}.properties" />
+    <!-- load user global properties -->
+    <property file="${user.home}/.connectors.properties" />
+    <!-- configuration based directory for user libs -->
+    <condition property="userlib"
+        value="${user.home}/.${ant.project.name}/lib"
+        else="${user.home}/.${ant.project.name}-${configuration}/lib">
+        <equals arg1="${configuration}" arg2="" trim="true"/>
+    </condition>
+    <!-- load local properties -->
+    <property file="build.properties" />
+    <!-- calculate the version from various properties -->
+    <property name="BUILD_NUMBER" value="x" />
+    <property name="SVN_REVISION" value="x" />
+    <property name="ConnectorBundle-Version" 
+        value="${MAJOR}.${MINOR}.${BUILD_NUMBER}.${SVN_REVISION}"/>
+    <!-- set default properties for this build -->
+    <property name="src" value="src" />
+    <property name="lib" value="lib" />
+    <property name="dist" value="dist" />
+    <property name="build" value="build" />
+    <property name="reports" value="reports" />
+    <property name="instrumented" value="instrumented" />
+    <property name="java.debug" value="true" />
+    <property name="java.source" value="1.5" />
+    <property name="java.target" value="1.5" />
+    <property name="javadoc.author" value="true" />
+    <property name="jar.file" 
+        value="${dist}/${ConnectorBundle-Name}-${ConnectorBundle-Version}.jar" />
+    <property name="zip.file" 
+        value="${ConnectorBundle-Name}-${ConnectorBundle-Version}.zip" />
+    <!--
+        Determine if this a coverage build.
+    -->
+    <condition property="useCobertura">
+        <available type="dir" file="${cobertura.home}" />
+    </condition>
+    <!--
+        Determine if Findbugs is available to use.
+    -->
+    <condition property="useFindbugs">
+        <available type="dir" file="${findbugs.home}" />
+    </condition>
+    <!--
+        Determines if there will be an external reporting engine.
+    -->
+    <condition property="useExternalReporting">
+        <istrue value="${external.reporting}" />
+    </condition>
+    <!--
+       Pattern Sets
+    -->
+    <patternset id='ignore'>
+        <!-- exclude all cvs patterns -->
+        <exclude name='**/CVS/**' />
+        <exclude name='**/.cvsignore' />
+        <exclude name='**/.svn' />
+        <!-- exclude all backups produced by editors -->
+        <exclude name='**/*~' />
+        <exclude name='**/.#*' />
+        <exclude name='**/#*#' />
+        <exclude name='**/%*%' />
+        <exclude name='**/*.swp' />
+    </patternset>
+    <patternset id="exclude.javasrc">
+        <patternset refid='ignore'/>
+        <exclude name="**/*.java" />
+    </patternset>
+    <patternset id="exclude.test">
+        <patternset refid="ignore" />
+        <exclude name="**/*Test*" />
+    </patternset>
+    <!--
+        Path to add additional bundle dependencies.
+    -->
+    <path id="ext.path"/>    
+    <!--
+       Libraries that will be packaged w/ the Connector
+    --> 
+    <fileset id="dist.libs" dir="${basedir}" includes="${lib}/*.jar"/>
+    <!--
+        Libraries that will be used during testing.
+    -->
+    <fileset id="test.libs" dir="${basedir}" includes="${lib}/test/*.jar"/>
+    <!--
+        Libraries that will be used during building.
+    -->
+    <fileset id="build.libs" dir="${basedir}" includes="${lib}/build/*.jar"/>
+    <!--
+        User Libraries
+    -->
+    <fileset id="user.libs" dir="${userlib}" includes="*.jar"/>
+    <!-- must exist or there will be errors -->
+    <mkdir dir="${userlib}"/>
+
+    <!--
+        Classpath to build the Connector.
+    -->
+    <path id="build.path">
+        <fileset refid="dist.libs" />
+        <fileset refid="build.libs" />
+        <fileset dir="${framework.dir}/dist"
+            includes="*.jar" 
+            excludes="connector-framework-internal*.jar" />
+    </path>
+    <path id="test.path">
+        <pathelement location="${src}" />
+        <fileset refid="test.libs" />
+        <fileset dir="${framework.dir}/dist" 
+            includes="connector-framework-internal*.jar" />
+        <path refid="build.path" />
+    </path>
+    <!-- Libraries available to use from the Groovy console -->
+    <path id="console.path">
+        <fileset dir="${framework.dir}/dist" includes="*.jar"/>
+        <fileset refid="build.libs"/>
+        <fileset refid="test.libs"/>
+        <fileset refid="dist.libs"/>
+        <fileset refid="user.libs"/>
+        <fileset file="${jar.file}"/>
+    </path>
+    
+    <!--
+        Display Banner
+    -->
+    <echo>
+        Building Project:  ${ant.project.name}
+        Connector Version: ${ConnectorBundle-Name}-${ConnectorBundle-Version}
+    </echo>
+
+    <target name="-pre-compile-extra" description="Override this for pre-compile."/>
+
+    <!--
+       Base Compile Target
+    -->
+    <target name="compile" depends="-pre-compile-extra" 
+        description="compile all source and test files">
+        <mkdir dir="${build}" />
+        <javac
+            debug="${java.debug}" 
+            srcdir="${src}" destdir="${build}" 
+            target="${java.target}" source="${java.source}">
+            <classpath>
+                <path refid="build.path"/>
+                <fileset refid="user.libs"/>
+            </classpath>
+        </javac>
+    </target>
+    <!--
+       Bundle Building Target
+    -->
+    <target name="dist" depends="jar, javadoc"
+        description="generates the distribution (excludes test classes)">
+        <zip destfile="${zip.file}" basedir="${dist}"/>
+        <move file="${zip.file}" todir="${dist}"/>
+    </target>
+
+    <target name="jar" depends="compile">
+        <!-- Create the distribution directory -->
+        <mkdir dir="${dist}" />
+        <jar jarfile="${jar.file}" index="true">
+            <!-- exclude all source -->
+            <fileset dir="${src}">
+                <patternset refid="exclude.javasrc" />
+                <patternset refid="exclude.test" />
+            </fileset>
+            <!-- include all compiled classes -->
+            <fileset dir="${build}">
+                <patternset refid="exclude.test" />
+            </fileset>
+            <!-- include all 3rd party deps -->
+            <fileset refid="dist.libs" />
+            <manifest>
+                <attribute name="ConnectorBundle-FrameworkVersion"
+                    value="${ConnectorBundle-FrameworkVersion}" />
+                <attribute name="ConnectorBundle-Name"
+                    value="${ConnectorBundle-Name}" />
+                <attribute name="ConnectorBundle-Version"
+                    value="${ConnectorBundle-Version}" />
+            </manifest>
+        </jar>
+    </target>
+
+
+    <!--
+       Base Clean Target
+    -->
+    <target name="clean" depends="-pre-clean-extra" description="clean up">
+        <!-- delete all the compiled classes -->
+        <delete>
+            <fileset dir="${src}">
+                <include name="**/*.class" />
+            </fileset>
+        </delete>
+        <delete dir="${dist}" />
+        <delete dir="${build}" />
+        <delete dir="${reports}" />
+        <delete file="cobertura.ser" />
+        <delete dir="${instrumented}" />
+    </target>
+
+    <target name="-pre-clean-extra" description="Override this for pre cleaning"/>
+
+    <!--
+        Findbugs Targets
+    -->
+    <target name="findbugs" depends="dist" if="useFindbugs">
+        <!-- create report directory -->
+        <mkdir dir="${reports}/findbugs" />
+        <!-- create task for use -->
+        <taskdef name="findbugs" 
+            classname="edu.umd.cs.findbugs.anttask.FindBugsTask">
+            <classpath>
+                <fileset dir="${findbugs.home}/lib" includes="**/*.jar"/>
+            </classpath>
+        </taskdef>
+        <mkdir dir="${reports}" />
+        <!-- determine the type of report -->
+        <condition property="findbugs.report.type" value="xml" else="html">
+            <isset property="useExternalReporting" />
+        </condition>
+        <!-- execute analysis -->
+        <findbugs 
+            jvmargs="-Xmx256M"
+            timeout="3600000"
+            home="${findbugs.home}"
+            output="${findbugs.report.type}"
+            outputFile="${reports}/findbugs/report.${findbugs.report.type}">
+            <auxClassPath>
+                <path refid="build.path" />
+                <fileset refid="user.libs"/>
+            </auxClassPath>
+            <sourcePath>
+                <pathelement location="${src}"/>
+            </sourcePath>
+            <!-- core jar files -->
+            <class location="${jar.file}"/>
+        </findbugs>
+    </target>
+    <!--
+        Test Targets 
+    -->
+    <target name="test" depends="jar, run-unit-tests, report-tests" />
+    <target name="test-init">
+        <!-- clear out previous test results -->
+        <delete dir="${reports}/junit" />
+        <mkdir dir="${reports}/junit" />
+    </target>
+    <!--
+        Run unit tests with converage..
+    -->
+    <target name="cobertura-init" if="useCobertura">
+        <path id="cobertura.classpath">
+            <fileset dir="${cobertura.home}">
+                <include name="cobertura.jar" />
+                <include name="lib/**/*.jar" />
+            </fileset>
+        </path>
+        <taskdef classpathref="cobertura.classpath" resource="tasks.properties" />
+    </target>
+    <target name="instrument" depends="cobertura-init" if="useCobertura">
+        <delete file="cobertura.ser" />
+        <delete dir="${instrumented}" />
+        <mkdir dir="${instrumented}" />
+        <cobertura-instrument todir="${instrumented}">
+            <fileset dir="${build}">
+                <patternset refid="exclude.test"/>
+            </fileset>
+        </cobertura-instrument>
+    </target>
+    <target 
+        name="build-testclasspath" 
+        unless="useCobertura"
+        depends="build-testclasspath-with-coverage">
+        <path id="test-classpath">
+            <path refid="test.path" />
+            <pathelement location="${src}" />
+            <pathelement location="${build}" />
+        </path>
+    </target>
+    <target name="build-testclasspath-with-coverage" if="useCobertura">
+        <!--
+            Note the classpath order: instrumented classes are before the
+            original (uninstrumented) classes.  This is important.
+            The instrumented classes reference classes used by the
+            Cobertura runtime, so Cobertura and its dependencies
+             must be on your classpath.
+         -->
+        <path id="test-classpath">
+            <path refid="cobertura.classpath" />
+            <pathelement location="${instrumented}" />
+            <path refid="test.path" />
+            <pathelement location="${src}" />
+            <pathelement location="${build}" />
+        </path>
+    </target>
+    <target name="run-unit-tests" depends="test-init, instrument, build-testclasspath">
+        <!-- run all the junits -->
+        <junit fork="yes" forkmode="once" dir="${basedir}" showoutput="true"
+            failureProperty="test.failed" printsummary="true">
+            <!--
+                Specify the name of the coverage data file to use.
+                The value specified below is the default.
+            -->
+            <sysproperty key="net.sourceforge.cobertura.datafile" 
+                file="${basedir}/cobertura.ser" />
+            
+            <!-- Set the key for TestHelpers to use -->
+            <sysproperty key="project.name" value="${ant.project.name}"/>
+            <sysproperty key="configuraton" value="${configuration}"/>
+
+            <!-- reference the test classpath -->
+            <classpath>
+                <path refid="test-classpath" />
+                <fileset refid="user.libs" />
+            </classpath>
+            <!-- output for Netbeans JUnit window -->
+            <formatter usefile="false" type="brief"/>
+            <!-- output in xml for build automation -->
+            <formatter type="xml" />
+            <!-- turn full assertions -->
+            <assertions enableSystemAssertions="true" />
+            <batchtest todir="${reports}/junit">
+                <fileset dir="${src}">
+                    <include name="**/*Test*.java" />
+                    <exclude name="**/AllTests.java" />
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+    <target name="report-tests" depends="report-junits, report-instrument"/>
+    <target name="report-instrument" if="useCobertura">
+        <mkdir dir="${reports}/coverage" />
+        <delete dir="${reports}/coverage" />
+        <delete dir="${reports}/coverage.xml" />
+        <condition property="cobertura-format" value="xml" else="html">
+            <isset property="useExternalReporting" />
+        </condition>
+        <condition property="cobertura-directory" value="" else="/coverage">
+            <isset property="useExternalReporting" />
+        </condition>
+        <cobertura-report format="${cobertura-format}" 
+            destdir="${reports}${cobertura-directory}" srcdir="${src}" />
+    </target>
+
+    <target name="report-junits" unless="useExternalReporting"> 
+        <junitreport todir="${reports}">
+            <fileset dir="${reports}/junit" includes="TEST-*.xml"/>
+            <report format="noframes" todir="${reports}"/>
+        </junitreport>
+    </target>
+    <!--
+        Contract Tests
+    -->
+    <property name="contract.jar.file" value="${reports}/connector.jar" />
+    <property name="contract-package" value="org.identityconnectors.contract"/>
+    <property name="data.provider" value="${contract-package}.data.DefaultDataProvider"/>
+
+    <target name="contract-dist" depends="jar"> 
+        <!-- creates a temparary jar for contract testing -->
+        <delete dir="${reports}/rejar"/>
+        <mkdir dir="${reports}/rejar"/>
+        <unjar src="${jar.file}" dest="${reports}/rejar"/>
+        <!-- copy the user libs -->
+        <copy todir="${reports}/rejar/lib">
+            <fileset refid="user.libs"/>
+        </copy>
+        <!-- create a new jar -->
+        <jar jarfile="${contract.jar.file}" manifest="${reports}/rejar/META-INF/MANIFEST.MF">
+            <fileset dir="${reports}/rejar"/>
+        </jar>
+    </target>
+    <target name="contract-tests">
+        <!-- set a default for test.parameters.outFile -->
+        <property name="test.parameters.outFile" value=""/>
+        <!-- set a default for defaultdataprovider.propertyFile -->
+        <property name="defaultdataprovider.propertyFile" value=""/>
+        
+        <!-- run all the contract tests against this connector -->
+        <junit fork="yes" printsummary="yes" forkmode="once"
+            failureproperty="test.failure" errorproperty="test.error" maxmemory="512M">
+            <sysproperty key="connector-jar" value="${basedir}/${contract.jar.file}"/>
+            <sysproperty key="data-provider" value="${data.provider}"/>
+            <sysproperty key="project.name" value="${ant.project.name}"/>
+            <sysproperty key="configuration" value="${configuration}"/>
+            <sysproperty key="test.parameters.outFile" value="${test.parameters.outFile}"/>
+            <sysproperty key="defaultdataprovider.propertyFile" value="${defaultdataprovider.propertyFile}"/>
+            
+            <test todir="${reports}/junit"
+                name="${contract-package}.test.ContractTestSuite" />
+            <formatter type="xml" usefile="yes" />
+            <formatter type="plain" usefile="false" />
+            <classpath>
+                <fileset dir="${basedir}" includes="${contract.jar.file}"/>
+                <fileset dir="${framework.dir}/dist" includes="*.jar"/>
+            </classpath>
+        </junit>
+    </target>
+    
+    <target name="run-contract-tests" depends="test-init, contract-dist, contract-tests"/>
+    
+    <target name="run-gw-contract-tests" depends="test-init, contract-tests"/>
+    
+    
+    <target name="console" depends="jar">
+        <java classname="groovy.ui.Console" dir="${basedir}" classpathref="console.path" fork="true" spawn="true"/>
+        <echo message="Loading Groovy Console..."/>
+    </target>
+      
+    <presetdef name="javadoc" uri="internal:tasks">
+        <javadoc />
+    </presetdef>
+    
+    <target name="javadoc" description="generates javadoc">
+        <delete dir="${dist}/javadoc" />
+        <mkdir dir="${dist}/javadoc" />
+        <javadoc overview="${src}/overview.html"
+            author="true" version="true" source="1.5"
+            classpathref="build.path" destdir="${dist}/javadoc" 
+            sourcepath="${framework.dir}/framework/src"
+            excludepackagenames="org.identityconnectors.framework.*,org.identityconnectors.common.*">
+            <fileset dir="${src}" includes="**/*.java" excludes="**/*Test*"/>
+        </javadoc>
+    </target>
+    <target name="all" depends="clean, dist, findbugs, test"/>
+</project>

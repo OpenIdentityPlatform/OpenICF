@@ -1,0 +1,76 @@
+<!--
+  Copyright 2008 Sun Microsystems, Inc. All rights reserved.
+  
+  U.S. Government Rights - Commercial software. Government users 
+  are subject to the Sun Microsystems, Inc. standard license agreement
+  and applicable provisions of the FAR and its supplements.
+  
+  Use is subject to license terms.
+  
+  This distribution may include materials developed by third parties.
+  Sun, Sun Microsystems, the Sun logo, Java and Project Identity 
+  Connectors are trademarks or registered trademarks of Sun 
+  Microsystems, Inc. or its subsidiaries in the U.S. and other
+  countries.
+  
+  UNIX is a registered trademark in the U.S. and other countries,
+  exclusively licensed through X/Open Company, Ltd. 
+  
+  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+  
+  Copyright 2008 Sun Microsystems, Inc. All rights reserved. 
+  
+  The contents of this file are subject to the terms of the Common Development
+  and Distribution License(CDDL) (the License).  You may not use this file
+  except in  compliance with the License. 
+  
+  You can obtain a copy of the License at
+  http://identityconnectors.dev.java.net/CDDLv1.0.html
+  See the License for the specific language governing permissions and 
+  limitations under the License.  
+  
+  When distributing the Covered Code, include this CDDL Header Notice in each
+  file and include the License file at identityconnectors/legal/license.txt.
+  If applicable, add the following below this CDDL Header, with the fields 
+  enclosed by brackets [] replaced by your own identifying information: 
+  "Portions Copyrighted [year] [name of copyright owner]"
+-->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Open Connectors API</title>
+</head>
+<body>
+The Connector API presents a consistent view of each Connector 
+regardless of which operations each connector implements. 
+Common code implements the API in terms of the SPI,
+providing consistent behavior and common features.
+The developer of each Connector bundle implements (some subset of) the SPI,
+and thus inherits a certain amount of common behavior "for free".
+
+<p> For example, the common code that implements the API:
+<ul>
+        <li>Provides <em>connection pooling</em> to each <code>Connector</code> that requires it.
+        Not every <code>Connector</code> needs connection pooling, 
+        but those that do can "opt-in" simply by implementing
+        {@link com.sun.openconnectors.framework.spi.ConnectionFactory a specific interface}.
+        The calling application that uses the API does not need to do anything
+        in order to enable connection pooling, but can 
+        {@link com.sun.openconnectors.framework.api.APIConfiguration#getConnectionPoolingConfiguration configure connection pooling}.
+        </li>
+
+        <li>Provides <em>timeouts</em> for all <code>Connector</code> operations. 
+        Common code provides this transparently to each implementation of the SPI.
+        The API consumer may configure an appropriate timeout if the default is unacceptable.
+        </li>
+
+        <li>Provides <em>default implementations of advanced operations</em>.
+        A <code>Connector</code> developer may implement either simple or advanced versions
+        of certain operations such as update or search. 
+        The API consumer sees only the advanced version of such operations,
+        regardless of which version the <code>Connector</code> developer implements.
+        </li>
+</ul>
+
+</body>
+</html>

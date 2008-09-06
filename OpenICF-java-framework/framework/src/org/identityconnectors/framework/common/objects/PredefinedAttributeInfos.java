@@ -1,0 +1,108 @@
+/*
+ * Copyright 2008 Sun Microsystems, Inc. All rights reserved.
+ * 
+ * U.S. Government Rights - Commercial software. Government users 
+ * are subject to the Sun Microsystems, Inc. standard license agreement
+ * and applicable provisions of the FAR and its supplements.
+ * 
+ * Use is subject to license terms.
+ * 
+ * This distribution may include materials developed by third parties.
+ * Sun, Sun Microsystems, the Sun logo, Java and Project Identity 
+ * Connectors are trademarks or registered trademarks of Sun 
+ * Microsystems, Inc. or its subsidiaries in the U.S. and other
+ * countries.
+ * 
+ * UNIX is a registered trademark in the U.S. and other countries,
+ * exclusively licensed through X/Open Company, Ltd. 
+ * 
+ * -----------
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+ * 
+ * Copyright 2008 Sun Microsystems, Inc. All rights reserved. 
+ * 
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License(CDDL) (the License).  You may not use this file
+ * except in  compliance with the License. 
+ * 
+ * You can obtain a copy of the License at
+ * http://identityconnectors.dev.java.net/CDDLv1.0.html
+ * See the License for the specific language governing permissions and 
+ * limitations under the License.  
+ * 
+ * When distributing the Covered Code, include this CDDL Header Notice in each
+ * file and include the License file at identityconnectors/legal/license.txt.
+ * If applicable, add the following below this CDDL Header, with the fields 
+ * enclosed by brackets [] replaced by your own identifying information: 
+ * "Portions Copyrighted [year] [name of copyright owner]"
+ * -----------
+ */
+package org.identityconnectors.framework.common.objects;
+
+import static org.identityconnectors.framework.common.objects.AttributeInfoBuilder.build;
+
+public class PredefinedAttributeInfos {
+    /**
+     * Read-only attribute that shows the last date/time the password was
+     * changed.
+     */
+    public static final AttributeInfo LAST_PASSWORD_CHANGE_DATE = build(
+            PredefinedAttributes.LAST_PASSWORD_CHANGE_DATE_NAME, long.class,
+            false, true, false);
+
+    /**
+     * Common password policy attribute where the password must be changed every
+     * so often. The value for this attribute is milliseconds since its the
+     * lowest common denominator.
+     */
+    public static final AttributeInfo PASSWORD_CHANGE_INTERVAL = build(
+            PredefinedAttributes.PASSWORD_CHANGE_INTERVAL_NAME, long.class);
+
+    /**
+     * Last login date for an account. This is usually used to determine
+     * inactivity.
+     */
+    public static final AttributeInfo LAST_LOGIN_DATE = build(
+            PredefinedAttributes.LAST_LOGIN_DATE_NAME, long.class, false, true,
+            false);
+
+    static {
+        // define GROUPS attribute info
+        AttributeInfoBuilder bld = new AttributeInfoBuilder();
+        bld.setName(PredefinedAttributes.GROUPS_NAME);
+        bld.setMultiValue(true);
+        bld.setReturnedByDefault(false);
+        GROUPS = bld.build();
+        // define ACCOUNTS attribute info
+        bld = new AttributeInfoBuilder();
+        bld.setName(PredefinedAttributes.ACCOUNTS_NAME);
+        bld.setMultiValue(true);
+        bld.setReturnedByDefault(false);
+        ACCOUNTS = bld.build();
+        // define ORGANIZATION
+        bld = new AttributeInfoBuilder();
+        bld.setName(PredefinedAttributes.ORGANIZATION_NAME);
+        bld.setReturnedByDefault(false);
+        ORGANIZATIONS = bld.build();
+    }
+
+    /**
+     * Groups that an account or person belong to. The Attribute values are the
+     * UID value of each group that an account has membership in.
+     */
+    public static final AttributeInfo GROUPS;
+
+    /**
+     * Accounts that are members of a group or organization. The Attribute
+     * values are the UID value of each account the has a group or organization
+     * membership.
+     */
+    public static final AttributeInfo ACCOUNTS;
+
+    /**
+     * Organizations that an account or person is a member of. The Attribute
+     * values are the UID value of each organization that an account or person is
+     * a member of.
+     */
+    public static final AttributeInfo ORGANIZATIONS;
+}

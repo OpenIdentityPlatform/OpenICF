@@ -1,0 +1,48 @@
+<!--
+  Copyright 2008 Sun Microsystems, Inc. All rights reserved.
+  
+  U.S. Government Rights - Commercial software. Government users 
+  are subject to the Sun Microsystems, Inc. standard license agreement
+  and applicable provisions of the FAR and its supplements.
+  
+  Use is subject to license terms.
+  
+  This distribution may include materials developed by third parties.
+  Sun, Sun Microsystems, the Sun logo, Java and Project Identity 
+  Connectors are trademarks or registered trademarks of Sun 
+  Microsystems, Inc. or its subsidiaries in the U.S. and other
+  countries.
+  
+  UNIX is a registered trademark in the U.S. and other countries,
+  exclusively licensed through X/Open Company, Ltd. 
+  
+  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+  
+  Copyright 2008 Sun Microsystems, Inc. All rights reserved. 
+  
+  The contents of this file are subject to the terms of the Common Development
+  and Distribution License(CDDL) (the License).  You may not use this file
+  except in  compliance with the License. 
+  
+  You can obtain a copy of the License at
+  http://identityconnectors.dev.java.net/CDDLv1.0.html
+  See the License for the specific language governing permissions and 
+  limitations under the License.  
+  
+  When distributing the Covered Code, include this CDDL Header Notice in each
+  file and include the License file at identityconnectors/legal/license.txt.
+  If applicable, add the following below this CDDL Header, with the fields 
+  enclosed by brackets [] replaced by your own identifying information: 
+  "Portions Copyrighted [year] [name of copyright owner]"
+-->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Open Connectors</title>
+</head>
+<body>
+This is the "Service Provider Interface" package.  The {@link com.sun.openconnectors.framework.spi.Connector} developer is responsible for implementing the following interfaces to build a {@link com.sun.openconnectors.framework.spi.Connector}.  First, one must implement the {@link com.sun.openconnectors.framework.spi.Configuration} interface.  The {@link com.sun.openconnectors.framework.spi.Configuration#validate} method is used to determine if the configuration information provided is valid.  The implementation should simply be a Java Bean.  There should be a getter and setter for each configuration property. For instance if the resource is a database some typical configuration information would include the JDBC driver, the host name of remote machine or the URL, and come credentials.  The getter should return the default value.  Second, one should implement the {@link com.sun.openconnectors.framework.spi.Connector} interface.  This interface insures proper initialization and disposal of the {@link com.sun.openconnectors.framework.spi.Connector}.  If the {@link com.sun.openconnectors.framework.spi.Connector} developer would like the API to handle 'Connection Pooling' one must implement the {@link com.sun.openconnectors.framework.spi.ConnectionFactory} interface.  Third, one should implement all the operations the resource can support like {@link com.sun.openconnectors.framework.spi.operations.CreateOp}, {@link com.sun.openconnectors.framework.spi.operations.UpdateOp}, {@link com.sun.openconnectors.framework.spi.operations.DeleteOp}, {@link com.sun.openconnectors.framework.spi.operations.SearchOp}, etc..
+<p>
+The operations package has many operations to choose from some do the something only more options.   For instance there are two search operations.  {@link com.sun.openconnectors.framework.spi.operations.SearchOp} is the simplest.
+</body>
+</html>

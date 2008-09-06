@@ -1,0 +1,543 @@
+<!--
+  Copyright 2008 Sun Microsystems, Inc. All rights reserved.
+  
+  U.S. Government Rights - Commercial software. Government users 
+  are subject to the Sun Microsystems, Inc. standard license agreement
+  and applicable provisions of the FAR and its supplements.
+  
+  Use is subject to license terms.
+  
+  This distribution may include materials developed by third parties.
+  Sun, Sun Microsystems, the Sun logo, Java and Project Identity 
+  Connectors are trademarks or registered trademarks of Sun 
+  Microsystems, Inc. or its subsidiaries in the U.S. and other
+  countries.
+  
+  UNIX is a registered trademark in the U.S. and other countries,
+  exclusively licensed through X/Open Company, Ltd. 
+  
+  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+  
+  Copyright 2008 Sun Microsystems, Inc. All rights reserved. 
+  
+  The contents of this file are subject to the terms of the Common Development
+  and Distribution License(CDDL) (the License).  You may not use this file
+  except in  compliance with the License. 
+  
+  You can obtain a copy of the License at
+  http://identityconnectors.dev.java.net/CDDLv1.0.html
+  See the License for the specific language governing permissions and 
+  limitations under the License.  
+  
+  When distributing the Covered Code, include this CDDL Header Notice in each
+  file and include the License file at identityconnectors/legal/license.txt.
+  If applicable, add the following below this CDDL Header, with the fields 
+  enclosed by brackets [] replaced by your own identifying information: 
+  "Portions Copyrighted [year] [name of copyright owner]"
+-->
+<project name="connector-framework" default="all" xmlns:oc='internal:tasks'>
+    <description>
+    + ==\_/=============C=o=n=n=e=c=t=o=r===F=r=a=m=e=w=o=r=k================ +
+    +  \(_)/ This build file is responsible for building the Connector        +
+    +  -(_)- Framework and Toolkit.                                           +
+    +  /(_)\                                                                  +
+    + =========================================================S=U=N=.=C=O=M= +
+    </description>
+    <!-- load user overrides -->
+    <property file="${user.home}/.${ant.project.name}.properties" />
+    <!-- load global user overrides -->
+    <property file="${user.home}/.connectors.properties" />
+    <!-- load build properties -->
+    <property file="build.properties" />
+    <!-- calculate the version from various properties -->
+    <property name="version" value="${MAJOR}.${MINOR}.${BUILD_NUMBER}.${SVN_REVISION}"/>
+    <!-- set defaults if they are not already set -->
+    <property name="debug" value="true" />
+    <property name="src-framework" location="framework/src" />
+    <property name="src-framework-internal" location="framework-internal/src" />
+    <property name="src-framework-test" location="framework-test/src" />
+    <property name="src-contract-test" location="test-contract/src"/>
+    <property name="src-toolkit" location="toolkit"/>
+    <property name="build" location="build"/>
+    <property name="build-framework" location="build/framework/classes" />
+    <property name="build-framework-internal" location="build/framework-internal/classes" />
+    <property name="build-framework-test" location="build/framework-test/classes" />
+    <property name="build-contract-test" location="build/contract-tests"/>
+    <property name="instrumented" value="build/instrumented" />
+    <property name="dist" location="dist" />
+    <property name="netbeans" location="netbeans" />
+    <property name="lib-framework-internal" location="framework-internal/lib" />
+    <property name="reports" location="reports" />
+    <property name="jar.file" value="${dist}/${ant.project.name}-${version}.jar" />
+    <property name="jar.file-internal" value="${dist}/${ant.project.name}-internal-${version}.jar" />
+    <property name="jar.file-contract" value="${dist}/${ant.project.name}-contract-${version}.jar" />
+    <property name="testbundles.dir" value="testbundles"/>
+    <property name="toolkit.name" value="connector_toolkit-${version}" />
+    <property name="toolkit.file" value="${dist}/${toolkit.name}.zip"/>
+    <property name="build-toolkit" location="build/${toolkit.name}"/>
+    <property name="nbm-name" value="IdentityConnectors-Plugin.nbm" />
+
+    <!--
+        Determine if this a coverage build.
+    -->
+    <condition property="useCobertura">
+        <available type="dir" file="${cobertura.home}" />
+    </condition>
+    <!--
+        Determine if Findbugs is available to use.
+    -->
+    <condition property="useFindbugs">
+        <available type="dir" file="${findbugs.home}" />
+    </condition>
+    <!--
+        Determines if there will be an external reporting engine.
+    -->
+    <condition property="useExternalReporting">
+        <istrue value="${external.reporting}" />
+    </condition>
+    <!--
+       Presets
+    -->
+    <presetdef name="javac" uri="internal:tasks">
+        <javac target="1.5" source="1.5" nowarn="true" debug="${debug}" deprecation="${deprecation}" />
+    </presetdef>
+    <presetdef name="javadoc" uri="internal:tasks">
+        <javadoc author="true" version="true" source="1.5"/>
+    </presetdef>
+    <presetdef name="copy" uri="internal:tasks">
+        <copy includeEmptyDirs="false" />
+    </presetdef>
+   <presetdef name="ant" uri="internal:tasks">
+        <ant inheritAll="false" inheritRefs="false"/>
+    </presetdef>
+    <presetdef name="nbBuild" uri="internal:tasks">
+        <ant dir="${netbeans}" inheritAll="false">
+            <property name="netbeans.dest.dir" value="${netbeans.home}/.."/>
+            <property name="harness.dir" value="${netbeans.home}/../harness"/>
+            <property name="nbm" value="${nbm-name}" />
+        </ant>
+    </presetdef>
+    
+    <!--
+       Pattern Sets
+    -->
+    <patternset id='ignore'>
+        <!-- exclude all backups produced by editors -->
+        <exclude name='**/*~' />
+        <exclude name='**/.#*' />
+        <exclude name='**/#*#' />
+        <exclude name='**/%*%' />
+        <exclude name='**/*.swp' />
+    </patternset>
+    <patternset id="exclude.javasrc">
+        <patternset refid='ignore'/>
+        <exclude name="**/*.java" />
+    </patternset>
+    <patternset id="exclude.test">
+        <exclude name="**/*Test*" />
+        <exclude name="**/test/**"/>
+    </patternset>
+    <path id="class.path">
+        <fileset dir="${lib-framework-internal}">
+            <include name="**/*jar" />
+        </fileset>
+    </path>
+    <fileset id="test.fileset" dir="${src-framework-test}">
+        <include name="**/*Test*.java" />
+        <!-- exclude helper class -->
+        <exclude name="**/JMXTests.java" />
+    </fileset>
+
+    <!-- ********************************************************* -->
+    <!-- ********************************************************* -->
+    <!-- General Targets                                           -->
+    <!-- ********************************************************* -->
+    <!-- ********************************************************* -->
+    <target name="compile" description="compile the source ">
+        <mkdir dir="${build-framework}" />
+        <mkdir dir="${build-framework-internal}" />
+        <mkdir dir="${build-framework-test}" />
+        <mkdir dir="${build-contract-test}" />
+        <!-- compile all source files -->
+        <oc:javac 
+            classpathref="class.path"
+            srcdir="${src-framework}"
+            destdir="${build-framework}" />
+        <oc:javac 
+            classpathref="class.path"
+            srcdir="${src-framework-internal}"
+            destdir="${build-framework-internal}">
+          <oc:classpath>
+            <oc:pathelement location='${build-framework}'/>
+          </oc:classpath>
+        </oc:javac>
+        <oc:javac
+            classpathref="class.path"
+            srcdir="${src-framework-test}"
+            destdir="${build-framework-test}">
+          <oc:classpath>
+            <oc:pathelement location='${build-framework}'/>
+            <oc:pathelement location='${build-framework-internal}'/>
+          </oc:classpath>
+        </oc:javac>
+        <oc:javac
+            classpathref="class.path"
+            srcdir="${src-contract-test}"
+            destdir="${build-contract-test}">
+          <oc:classpath>
+            <oc:pathelement location='${build-framework}'/>
+          </oc:classpath>
+        </oc:javac>
+    </target>
+
+    <macrodef name="jarframework">
+        <attribute name="file"/>
+        <attribute name="title"/>
+        <element name="filesets"/>
+        <sequential>
+            <jar jarfile="@{file}" index="yes">
+                <!-- add all the filesets -->
+                <filesets/>
+                <manifest>
+                    <attribute name="Built-By" value="${user.name}"/>
+                    <section name="@{title}">
+                        <attribute name="Implementation-Title" value="@{title}"/>
+                        <attribute name="Implementation-Version" value="${version} ${BUILD_ID}"/> 
+                    </section>
+                </manifest>
+            </jar>
+        </sequential>
+    </macrodef>
+
+    <target name="jar" depends="compile" description="generate the framework jar">
+        <!-- Create the distribution directory -->
+        <mkdir dir="${dist}" />
+        <jarframework file="${jar.file}"
+            title="Connectors Framework">
+            <filesets>
+                <fileset dir="${build-framework}"/>
+                <fileset dir="${src-framework}">
+                    <patternset refid="exclude.javasrc"/>
+                </fileset>
+            </filesets>
+        </jarframework>
+        <jarframework file="${jar.file-internal}"
+            title="Connectors Framework - Internal">
+            <filesets>
+                <fileset dir="${build-framework-internal}"/>
+                <fileset dir="${src-framework-internal}">
+                    <patternset refid="exclude.javasrc"/>
+                </fileset>
+            </filesets>
+        </jarframework>
+        <jarframework file="${jar.file-contract}" 
+            title="Connectors Framework - Contract">
+            <filesets>
+                <fileset dir="${build-contract-test}"/>
+                <fileset dir="${src-contract-test}">
+                    <patternset refid="exclude.javasrc"/>
+                </fileset>
+            </filesets>
+        </jarframework>
+    </target>
+    <target name="nbm" if="netbeans.home">
+        <!-- build Netbeans plugin (.nbm file) -->
+        <oc:nbBuild target="nbm"/>
+        <oc:copy todir="${build-toolkit}" file="${netbeans}/build/${nbm-name}"/>
+    </target>
+    <target name="javadoc" description="generates javadoc">
+        <delete dir="${dist}/javadoc" />
+        <mkdir dir="${dist}/javadoc" />
+        <oc:javadoc overview="${src-framework}/overview.html" 
+            classpathref="class.path" destdir="${dist}/javadoc">
+            <oc:fileset dir="${src-framework}">
+                <oc:patternset refid="ignore"/>
+                <oc:exclude name="**/package.html"/>
+                <oc:exclude name="**/overview.html"/>
+            </oc:fileset>
+        </oc:javadoc>
+    </target>
+    <target name="nbm-clean" if="netbeans.home">
+        <!-- clean the netbeans module -->
+        <oc:nbBuild target="clean"/>
+    </target>
+    <target name="clean" depends="nbm-clean" description="clean up">
+        <delete dir="${dist}" />
+        <delete dir="${reports}" />
+        <delete dir="${build}" />
+ 
+        <oc:ant dir="${testbundles.dir}/testcommonv1" target="clean"/>
+        <oc:ant dir="${testbundles.dir}/testcommonv2" target="clean"/>
+        <oc:ant dir="${testbundles.dir}/testbundlev1" target="clean"/>
+        <oc:ant dir="${testbundles.dir}/testbundlev2" target="clean"/>    
+    </target>
+
+    <!-- ********************************************************* -->
+    <!-- ********************************************************* -->
+    <!-- Findbugs Targets                                          -->
+    <!-- ********************************************************* -->
+    <!-- ********************************************************* -->
+
+    <!--
+        Only run findbugs bugs if its home is specified.
+    -->
+    <target name="findbugs" 
+        depends="findbugs-init, findbugs-report"/>
+    <target name="findbugs-init" depends="jar" if="useFindbugs">
+        <taskdef name="findbugs" 
+            classname="edu.umd.cs.findbugs.anttask.FindBugsTask">
+            <classpath>
+                <fileset dir="${findbugs.home}/lib" includes="**/*.jar"/>
+            </classpath>
+        </taskdef>
+        <mkdir dir="${reports}" />
+        <!-- determine the type of report -->
+        <condition property="findbugs.report.type" value="xml" else="html">
+            <isset property="useExternalReporting" />
+        </condition>
+    </target>
+    <target name="findbugs-report" if="useFindbugs">
+        <mkdir dir="${reports}/findbugs" />
+        <findbugs 
+            output="${findbugs.report.type}"
+            outputFile="${reports}/findbugs/report.${findbugs.report.type}"
+            timeout="3600000"
+            home="${findbugs.home}">
+            <auxClassPath>
+                <path refid="class.path" />
+            </auxClassPath>
+            <sourcePath>
+                <pathelement location="${src-framework}"/>
+                <pathelement location="${src-framework-internal}"/>
+                <pathelement location="${src-framework-test}"/>
+            </sourcePath>
+            <!-- core jar files -->
+            <class location="${jar.file}"/>
+            <class location="${jar.file-internal}"/>
+        </findbugs>
+    </target>
+    <!-- ********************************************************* -->
+    <!-- ********************************************************* -->
+    <!-- Test Targets                                              -->
+    <!-- ********************************************************* -->
+    <!-- ********************************************************* -->
+    <target name="test" depends="dist, test-toolkit, run-tests, report-tests" />
+    <!--
+        Run unit tests with converage..
+    -->
+    <target name="cobertura-init" if="useCobertura">
+        <path id="cobertura.classpath">
+            <fileset dir="${cobertura.home}">
+                <include name="cobertura.jar" />
+                <include name="lib/**/*.jar" />
+            </fileset>
+        </path>
+        <taskdef classpathref="cobertura.classpath" resource="tasks.properties" />
+    </target>
+
+    <target name="instrument" depends="cobertura-init, jar" if="useCobertura">
+        <delete file="cobertura.ser" />
+        <delete dir="${instrumented}" />
+        <mkdir dir="${instrumented}" />
+        <cobertura-instrument todir="${instrumented}">
+            <ignore regex="org.apache.log4j.*" />
+            <fileset dir="${build-framework}">
+                <patternset refid="exclude.test"/>
+            </fileset>
+            <fileset dir="${build-framework-internal}">
+                <patternset refid="exclude.test"/>
+            </fileset>
+        </cobertura-instrument>
+    </target>
+
+    <target 
+        name="build-testclasspath" 
+        unless="useCobertura"
+        depends="build-testclasspath-with-coverage">
+        <path id="test-classpath">
+            <path refid="class.path" />
+            <pathelement location="${src-framework}" />
+            <pathelement location="${src-framework-internal}" />
+            <pathelement location="${src-framework-test}" />
+            <pathelement location="${build-framework}" />
+            <pathelement location="${build-framework-internal}" />
+            <pathelement location="${build-framework-test}" />
+        </path>
+    </target>
+    <target name="build-testclasspath-with-coverage" if="useCobertura">
+        <!--
+            Note the classpath order: instrumented classes are before the
+            original (uninstrumented) classes.  This is important.
+            The instrumented classes reference classes used by the
+            Cobertura runtime, so Cobertura and its dependencies
+             must be on your classpath.
+         -->
+        <path id="test-classpath">
+            <path refid="class.path" />
+            <path refid="cobertura.classpath" />
+            <pathelement location="${instrumented}" />
+            <pathelement location="${src-framework}" />
+            <pathelement location="${src-framework-internal}" />
+            <pathelement location="${src-framework-test}" />
+            <pathelement location="${build-framework}" />
+            <pathelement location="${build-framework-internal}" />
+            <pathelement location="${build-framework-test}" />
+        </path>
+    </target>
+
+    <target name="run-tests" depends="instrument, build-testclasspath">
+        <!-- clear out previous test results -->
+        <delete dir="${reports}/junit" />
+        <mkdir dir="${reports}/junit" />
+        <!-- build out the test bundles -->
+        <oc:ant dir="${testbundles.dir}/testcommonv1" />
+        <oc:ant dir="${testbundles.dir}/testcommonv2" />
+        <oc:ant dir="${testbundles.dir}/testbundlev1" />
+        <oc:ant dir="${testbundles.dir}/testbundlev2" />
+        <!-- run all the junits -->
+        <junit fork="yes" forkmode="once" dir="${basedir}" showoutput="true"
+            failureProperty="test.failed" printsummary="true">
+            <!--
+                Specify the name of the coverage data file to use.
+                The value specified below is the default.
+            -->
+            <sysproperty key="net.sourceforge.cobertura.datafile" 
+                file="${basedir}/cobertura.ser" />
+            <sysproperty key="testbundles.dir" 
+                value="${testbundles.dir}" />
+            <!-- reference the test classpath -->
+            <classpath refid="test-classpath" />
+            <!-- output in xml for build automation -->
+            <formatter type="xml" />
+            <!-- turn full assertions -->
+            <assertions enableSystemAssertions="true" />
+            <batchtest todir="${reports}/junit">
+                <fileset refid="test.fileset" />
+            </batchtest>
+        </junit>    
+    </target>
+    <target name="report-tests" depends="report-junits, report-instrument"/>
+    <target name="report-instrument" if="useCobertura">
+        <mkdir dir="${reports}/coverage" />
+        <delete dir="${reports}/coverage" />
+        <delete dir="${reports}/coverage.xml" />
+        <condition property="cobertura-format" value="xml" else="html">
+            <isset property="useExternalReporting" />
+        </condition>
+        <condition property="cobertura-directory" value="" else="/coverage">
+            <isset property="useExternalReporting" />
+        </condition>
+        <cobertura-report format="${cobertura-format}" 
+            destdir="${reports}${cobertura-directory}">
+         <fileset dir="${src-framework}">
+           <include name="**/*.java" />
+         </fileset>
+         <fileset dir="${src-framework-internal}">
+           <include name="**/*.java" />
+         </fileset>
+
+        </cobertura-report>
+    </target>
+   
+    <target name="report-junits" unless="useExternalReporting"> 
+        <junitreport todir="${reports}">
+            <fileset dir="${reports}/junit" includes="TEST-*.xml"/>
+            <report format="noframes" todir="${reports}"/>
+        </junitreport>
+    </target>
+
+    <!-- 
+        Test toolkit package
+    -->
+    <target name="test-toolkit" description="tests the toolkit">
+        <!-- start fresh -->
+        <delete dir="${build-toolkit}"/>
+        <!-- unzip contents of the toolkit -->
+        <unzip dest="${build}" src="${toolkit.file}"/>       
+        <!-- test creation wizard -->
+        <property name="test_connector.dir" location="${build}/test_connector"/>
+        <ant dir="${build-toolkit}" inheritAll="false">
+            <property name="bundle.dir" value="${test_connector.dir}" />
+            <property name="confirm.clean" value="y" />
+            <property name="resource.name" value="Foo" />
+            <property name="package.name" value="custom.foo" />
+            <property name="selected.ops" value="0" />
+        </ant>
+        <fail message="Toolkit code-generator was unsuccessful.">
+            <condition>
+                <not>
+                    <available 
+                        type="file"
+                        file="${test_connector.dir}/src/custom/foo/FooConnector.java" />
+                </not>
+            </condition>
+        </fail>
+        <!-- run a build -->
+        <ant dir="${test_connector.dir}" inheritAll="false"/>
+        <fail message="Connector 'dist' directory should exist after a build.">
+            <condition>
+                <not>
+                    <available file="${test_connector.dir}/dist" type="dir" />
+                </not>
+            </condition>
+        </fail>
+
+        <!-- Test full bundle clean -->
+        <ant dir="${build-toolkit}" target="clean" inheritAll="false">
+            <property name="bundle.dir" value="${test_connector.dir}" />
+            <property name="confirm.clean" value="y" />
+        </ant>
+        <fail message="'testConnector' directory should not contain any files after a clean.">
+            <condition>
+                <available file="${bundle.dir}/*" />
+            </condition>
+        </fail>
+    </target>
+
+    <!--  
+        Package up all the deliverables.
+    -->
+    <target name="dist" depends="jar, javadoc"
+        description="creates the toolkit distribution">
+        <!-- create staging directory -->
+        <delete dir="${build-toolkit}"/>
+        <mkdir dir="${build-toolkit}"/>
+        <!-- copy the dependent libraries -->
+        <oc:copy todir="${dist}">
+            <oc:fileset dir="${lib-framework-internal}">
+                <oc:include name="groovy*.jar"/>
+            </oc:fileset>
+        </oc:copy>
+        <!-- clean up previous file -->
+        <delete file="${toolkit.file}"/>
+        <!-- copy all libs to toolkit staging -->
+        <mkdir dir="${build-toolkit}/dist"/>
+        <oc:copy todir="${build-toolkit}/dist">
+            <oc:fileset dir="${dist}" includes="*.jar"/>
+        </oc:copy>
+        <!-- copy all the javadoc -->
+        <oc:copy todir="${build-toolkit}">
+            <oc:fileset dir="${dist}" includes="javadoc/**"/>
+        </oc:copy>
+        <!-- copy all the toolkit source -->
+        <oc:copy todir="${build-toolkit}">
+            <oc:fileset dir="${src-toolkit}"/>
+        </oc:copy>
+        <!-- copy in the connector build -->
+        <oc:copy todir="${build-toolkit}" file="connector_build.xml"/>       
+        <!-- build and copy in the netbeans module (conditionally) -->
+        <antcall target="nbm"/> 
+        <!-- package it -->
+        <zip 
+            destfile="${toolkit.file}" 
+            basedir="${build}" 
+            includes="${toolkit.name}/**"/>
+    </target>
+    
+    <!--
+      Default Build Target
+    -->
+    <target name="all" description="builds, distributes, and tests framework"
+        depends="clean, dist, findbugs, test">
+    </target>
+</project>

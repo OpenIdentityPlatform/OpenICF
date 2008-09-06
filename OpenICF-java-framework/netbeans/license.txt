@@ -1,0 +1,4 @@
+
+IdentityConnectors Toolkit
+v1.0 built on 8/1/2008
+https://openconnectors.dev.java.net/
