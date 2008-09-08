@@ -12,7 +12,6 @@ import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
 import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncToken;
-import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.framework.common.serializer.SerializerUtil;
@@ -199,20 +198,30 @@ public class ObjectNormalizerFacadeTests {
     @Test
     public void testSyncDelta()
     {
-        SyncDeltaBuilder builder =
+        ConnectorObjectBuilder objbuilder =
+            new ConnectorObjectBuilder();
+        objbuilder.setName("myname");
+        objbuilder.setUid("myuid");
+        objbuilder.addAttribute(createTestAttribute());
+        ConnectorObject obj = objbuilder.build();
+         
+         SyncDeltaBuilder builder =
             new SyncDeltaBuilder();
          builder.setDeltaType(SyncDeltaType.DELETE);
          builder.setToken(new SyncToken("mytoken"));
-         builder.setUid(new Uid("myuid"));
-         builder.addAttribute(createTestAttribute());
+         builder.setObject(obj);
          SyncDelta v1 = builder.build();
          SyncDelta v2 = createTestNormalizer().normalizeSyncDelta(v1);
          builder =
              new SyncDeltaBuilder();
          builder.setDeltaType(SyncDeltaType.DELETE);
          builder.setToken(new SyncToken("mytoken"));
-         builder.setUid(new Uid("myuid"));
-         builder.addAttribute(createNormalizedTestAttribute());
+         objbuilder =
+             new ConnectorObjectBuilder();
+         objbuilder.setName("myname");
+         objbuilder.setUid("myuid");
+         objbuilder.addAttribute(createNormalizedTestAttribute());         
+         builder.setObject(objbuilder.build());
          SyncDelta expected = builder.build();
          Assert.assertEquals(expected, v2);
          Assert.assertFalse(expected.equals(v1));

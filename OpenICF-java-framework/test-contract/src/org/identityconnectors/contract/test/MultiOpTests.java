@@ -44,6 +44,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -157,7 +158,7 @@ public class MultiOpTests extends ObjectClassRunner {
                             delta.getDeltaType() == SyncDeltaType.CREATE);
                     Set<Attribute> expected = coCreatedAll.get(delta.getUid());
                     assertNotNull(expected);
-                    Set<Attribute> got = delta.getAttributes();
+                    Set<Attribute> got = delta.getObject().getAttributes();
                     assertNotNull(got);
                     getHelper().checkAttributes(expected, got);
                     token = delta.getToken();
@@ -236,7 +237,7 @@ public class MultiOpTests extends ObjectClassRunner {
                                     updateUid));
                             Set<Attribute> expected = replaceAttributes;
                             assertNotNull(expected);
-                            Set<Attribute> got = delta.getAttributes();
+                            Set<Attribute> got = delta.getObject().getAttributes();
                             assertNotNull(got);
                             getHelper().checkAttributes(expected, got);
                         } else {
@@ -295,7 +296,7 @@ public class MultiOpTests extends ObjectClassRunner {
                                 .equals(createUid));
                         Set<Attribute> expected = attrs;
                         assertNotNull(expected);
-                        Set<Attribute> got = delta.getAttributes();
+                        Set<Attribute> got = delta.getObject().getAttributes();
                         assertNotNull(got);
                         getHelper().checkAttributes(expected, got);
                     } else {

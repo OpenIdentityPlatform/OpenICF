@@ -982,20 +982,18 @@ public class ObjectSerializationTests {
     
     @Test
     public void testSyncDelta() {
+        ConnectorObjectBuilder bld = new ConnectorObjectBuilder();
+        bld.setUid("foo");
+        bld.setName("name");
         SyncDeltaBuilder builder = new SyncDeltaBuilder();
-        builder.setUid(new Uid("myuid"));
+        builder.setObject(bld.build());
         builder.setDeltaType(SyncDeltaType.CREATE);
         builder.setToken(new SyncToken("mytoken"));
-        builder.addAttribute(AttributeBuilder.build("foo", "bar"));
         SyncDelta v1 = builder.build();
         SyncDelta v2 = (SyncDelta)cloneObject(v1);
-        Assert.assertEquals(new Uid("myuid"),v2.getUid());
+        Assert.assertEquals(new Uid("foo"),v2.getObject().getUid());
         Assert.assertEquals(new SyncToken("mytoken"),v2.getToken());
         Assert.assertEquals(SyncDeltaType.CREATE,v2.getDeltaType());
-        Set<Attribute> attributes = v2.getAttributes();
-        Assert.assertEquals(1,attributes.size());
-        Attribute attr = attributes.iterator().next();
-        Assert.assertEquals("foo",attr.getName());        
         Assert.assertEquals(v1,v2);
     }
     

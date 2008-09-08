@@ -41,10 +41,8 @@ package org.identityconnectors.framework.common.objects;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.identityconnectors.common.Assertions;
-import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.framework.api.operations.SyncApiOp;
 import org.identityconnectors.framework.spi.operations.SyncOp;
 
@@ -56,48 +54,65 @@ import org.identityconnectors.framework.spi.operations.SyncOp;
  * @see SyncOp
  */
 public final class SyncDelta {
-    private final Uid _uid;
     private final SyncToken _token;
     private final SyncDeltaType _deltaType;
-    private final Set<Attribute> _attributes;
+    private final Uid _uid;
+    private final ConnectorObject _object;
 
     /**
      * Creates a SyncDelata
-     * 
-     * @param uid
-     *            The uid. Must not be null.
      * @param token
      *            The token. Must not be null.
      * @param deltaType
      *            The delta. Must not be null.
-     * @param attributes
-     *            May be null.
+     * @param uid
+     *            The uid. Must not be null.           
+     * @param object 
+     *            The object that has changed. May be null for delete.
      */
-    SyncDelta(Uid uid, SyncToken token, SyncDeltaType deltaType,
-            Set<Attribute> attributes) {
-        Assertions.nullCheck(uid, "uid");
+    SyncDelta(SyncToken token, SyncDeltaType deltaType,
+            Uid uid,
+            ConnectorObject object) {
         Assertions.nullCheck(token, "token");
         Assertions.nullCheck(deltaType, "deltaType");
+        Assertions.nullCheck(uid, "uid");
+        
+        //only allow null object for delete
+        if ( object == null && 
+             deltaType != SyncDeltaType.DELETE) {
+            throw new IllegalArgumentException("ConnectorObject must be specified for anything other than delete.");
+        }
+        
+        //if object not null, make sure its Uid
+        //matches
+        if ( object != null ) {
+            if (!uid.equals(object.getUid())) {
+                throw new IllegalArgumentException("Uid does not match that of the object.");                
+            }
+        }
 
-        _uid = uid;
         _token = token;
         _deltaType = deltaType;
-        _attributes = CollectionUtil.newReadOnlySet(attributes);
-
-        // make sure attributes don't also contain uid
-        if (AttributeUtil.getUidAttribute(attributes) != null) {
-            throw new IllegalArgumentException(
-                    "Attributes must not contain a UID");
-        }
+        _uid    = uid;
+        _object = object;
     }
-
+    
     /**
-     * Returns the <code>Uid</code> of the object that changed.
-     * 
-     * @return the <code>Uid</code> of the object that changed.
+     * Returns the Uid of the connector object that changed.
+     * @return The Uid.
      */
     public Uid getUid() {
         return _uid;
+    }
+
+    /**
+     * Returns the connector object that changed. This
+     * may be null in the case of delete.
+     * @return The object or possibly null if this
+     * represents a delete.
+     */
+    public ConnectorObject getObject() {
+        return _object;
     }
 
     /**
@@ -118,27 +133,14 @@ public final class SyncDelta {
         return _deltaType;
     }
 
-    /**
-     * Returns the attributes associated with the change. TODO: Define whether
-     * this is the whole object or just those that changed. The argument for
-     * just the changes is that it will be faster. The argument against is that
-     * the application will need to whole object anyway in most cases and so for
-     * those cases it will actually be slower. Need some more emperical data
-     * here...
-     * 
-     * @return The attributes
-     */
-    public Set<Attribute> getAttributes() {
-        return _attributes;
-    }
     
     @Override
     public String toString() {
         Map<String,Object> values = new HashMap<String, Object>();
-        values.put("Uid", _uid);
         values.put("Token", _token);
         values.put("DeltaType", _deltaType);
-        values.put("Attributes", _attributes);
+        values.put("Uid", _uid);
+        values.put("Object", _object);
         return values.toString();
     }
     
@@ -151,16 +153,21 @@ public final class SyncDelta {
     public boolean equals(Object o) {
         if ( o instanceof SyncDelta ) {
             SyncDelta other = (SyncDelta)o;
-            if (!_uid.equals(other._uid)) {
-                return false;
-            }
             if (!_token.equals(other._token)) {
                 return false;
             }
             if (!_deltaType.equals(other._deltaType)) {
                 return false;
             }
-            if (!_attributes.equals(other._attributes)) {
+            if (!_uid.equals(other._uid)) {
+                return false;
+            }
+            if (_object == null) {
+                if ( other._object != null ) {
+                    return false;
+                }
+            }
+            else if (!_object.equals(other._object)) {
                 return false;
             }
             return true;

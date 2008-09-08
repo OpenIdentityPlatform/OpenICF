@@ -604,22 +604,20 @@ class CommonObjectHandlers {
                 
                 public Object deserialize(ObjectDecoder decoder)  {
                     SyncDeltaBuilder builder = new SyncDeltaBuilder();
-                    builder.setUid((Uid)decoder.readObjectField("Uid",Uid.class,null));
                     builder.setDeltaType((SyncDeltaType)decoder.readObjectField("SyncDeltaType",SyncDeltaType.class,null));
                     builder.setToken((SyncToken)decoder.readObjectField("SyncToken",SyncToken.class,null));
-                    @SuppressWarnings("unchecked")
-                    Set<Attribute> attributes = (Set)decoder.readObjectField("Attributes",Set.class,null);
-                    builder.setAttributes(attributes);
+                    builder.setUid((Uid)decoder.readObjectField("Uid",Uid.class,null));
+                    builder.setObject((ConnectorObject)decoder.readObjectField("ConnectorObject",ConnectorObject.class,null));
                     return builder.build();
                 }
         
                 public void serialize(Object object, ObjectEncoder encoder)
                 {
                     SyncDelta val = (SyncDelta)object;
-                    encoder.writeObjectField("Uid", val.getUid(), true);
                     encoder.writeObjectField("SyncDeltaType", val.getDeltaType(), true);
                     encoder.writeObjectField("SyncToken", val.getToken(), true);
-                    encoder.writeObjectField("Attributes", val.getAttributes(),true);
+                    encoder.writeObjectField("Uid", val.getUid(), true);
+                    encoder.writeObjectField("ConnectorObject", val.getObject(), true);
                 }
                     
             });

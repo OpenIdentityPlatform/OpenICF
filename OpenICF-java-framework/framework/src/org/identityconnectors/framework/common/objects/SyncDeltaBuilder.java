@@ -39,21 +39,14 @@
  */
 package org.identityconnectors.framework.common.objects;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import org.identityconnectors.common.Assertions;
-import org.identityconnectors.common.CollectionUtil;
-
-
 /**
  * Builder for {@link SyncDelta}.
  */
 public final class SyncDeltaBuilder {
-    private Uid _uid;
     private SyncToken _token;
     private SyncDeltaType _deltaType;
-    private Set<Attribute> _attributes = new HashSet<Attribute>();
+    private Uid _uid;
+    private ConnectorObject _object;
 
     /**
      * Create a new <code>SyncDeltaBuilder</code>
@@ -68,29 +61,10 @@ public final class SyncDeltaBuilder {
      * @param delta The original delta.
      */
     public SyncDeltaBuilder(SyncDelta delta) {
-        _uid = delta.getUid();
         _token = delta.getToken();
         _deltaType = delta.getDeltaType();
-        _attributes = new HashSet<Attribute>(delta.getAttributes());
-    }
-
-    /**
-     * Returns the <code>Uid</code> of the object that changed.
-     * 
-     * @return the <code>Uid</code> of the object that changed.
-     */
-    public Uid getUid() {
-        return _uid;
-    }
-
-    /**
-     * Sets the <code>Uid</code> of the object that changed.
-     * 
-     * @param uid
-     *            the <code>Uid</code> of the object that changed.
-     */
-    public void setUid(Uid uid) {
-        _uid = uid;
+        _object = delta.getObject();
+        _uid = delta.getUid();
     }
 
     /**
@@ -130,62 +104,58 @@ public final class SyncDeltaBuilder {
     public void setDeltaType(SyncDeltaType type) {
         _deltaType = type;
     }
-
+    
     /**
-     * Returns the attributes associated with the change. TODO: Define whether
-     * this is the whole object or just those that changed. The argument for
-     * just the changes is that it will be faster. The argument against is that
-     * the application will need to whole object anyway in most cases and so for
-     * those cases it will actually be slower. Need some more emperical data
-     * here...
-     * 
-     * @return The attributes
+     * Gets the Uid of the object that changed
+     * @return The Uid of the object that changed.
      */
-    public Set<Attribute> getAttributes() {
-        return _attributes;
+    public Uid getUid() {
+        return _uid;
+    }
+    
+    /**
+     * Sets the Uid of the object that changed.
+     * Note that this is implicitly set when you call
+     * {@link #setObject(ConnectorObject)}.
+     * @param uid The Uid of the object that changed.
+     */
+    public void setUid(Uid uid) {
+        _uid = uid;
     }
 
     /**
-     * Sets the attributes associated with the change. TODO: Define whether this
-     * is the whole object or just those that changed. The argument for just the
-     * changes is that it will be faster. The argument against is that the
-     * application will need to whole object anyway in most cases and so for
-     * those cases it will actually be slower. Need some more emperical data
-     * here...
-     * 
-     * @param attributes
-     *            The attributes
+     * Returns the object that changed.
+     * @return The object that changed. May be null for
+     * deletes.
      */
-    public void setAttributes(Set<Attribute> attributes) {
-        attributes = CollectionUtil.nullAsEmpty(attributes);
-        _attributes = attributes;
+    public ConnectorObject getObject() {
+        return _object;
     }
 
     /**
-     * Adds an attribute associated with the change. TODO: Define whether this
-     * is the whole object or just those that changed. The argument for just the
-     * changes is that it will be faster. The argument against is that the
-     * application will need to whole object anyway in most cases and so for
-     * those cases it will actually be slower. Need some more emperical data
-     * here...
-     * 
-     * @param attribute
-     *            The attribute
+     * Sets the object that changed and implicitly
+     * sets Uid if object is not null.
+     * @param object The object that changed. May be
+     * null for deletes.
      */
-    public void addAttribute(Attribute attribute) {
-        Assertions.nullCheck(attribute, "attribute");
-        _attributes.add(attribute);
+    public void setObject(ConnectorObject object) {
+        _object = object;
+        if ( object != null ) {
+            _uid = object.getUid();
+        }
     }
 
+
     /**
-     * Creates a SyncDelata. Prior to calling the following must be specified:
+     * Creates a SyncDelta. Prior to calling the following must be specified:
      * <ol>
-     * <li>{@link #setUid(Uid) Uid}</li>
+     * <li>{@link #setObject(ConnectorObject) Object} (for anything other than delete)</li>
+     * <li>{@link #setUid(Uid) Uid} (this is implictly set when calling {@link #setObject(ConnectorObject)})</li>
      * <li>{@link #setToken(SyncToken) Token}</li>
      * <li>{@link #setDeltaType(SyncDeltaType) DeltaType}</li>
      * </ol>
      */
     public SyncDelta build() {
-        return new SyncDelta(_uid, _token, _deltaType, _attributes);
+        return new SyncDelta(_token, _deltaType, _uid, _object);
     }
 }

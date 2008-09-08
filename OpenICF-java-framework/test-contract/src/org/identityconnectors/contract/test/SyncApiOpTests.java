@@ -114,7 +114,7 @@ public class SyncApiOpTests extends ObjectClassRunner {
             assertEquals("Sync returned wrong Uid, expected: " + uid + ",got: "
                     + deltas.get(0).getUid(), deltas.get(0).getUid(), uid);
             // check that attributes are correct
-            getHelper().checkAttributes(attrs, deltas.get(0).getAttributes());
+            getHelper().checkAttributes(attrs, deltas.get(0).getObject().getAttributes());
             // check that operation is CREATE
             assertTrue("Sync returned wrong delta type, expected CREATE, got: "
                     + deltas.get(0).getDeltaType(),

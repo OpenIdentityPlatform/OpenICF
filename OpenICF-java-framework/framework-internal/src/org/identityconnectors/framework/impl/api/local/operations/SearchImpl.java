@@ -40,13 +40,10 @@
 package org.identityconnectors.framework.impl.api.local.operations;
 
 import java.util.List;
-import java.util.Set;
 
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
-import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
-import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
@@ -181,16 +178,8 @@ public class SearchImpl extends ConnectorAPIOperationRunner implements SearchApi
          * Handle the object w/ reduced attributes.
          */
         public boolean handle(ConnectorObject obj) {
-            // clone the object and reduce the attributes only the set of
-            // attributes.
-            ConnectorObjectBuilder bld = new ConnectorObjectBuilder();
-            bld.setUid(obj.getUid());
-            bld.setName(obj.getName());
-            bld.setObjectClass(obj.getObjectClass());
-            Set<Attribute> objAttrs = obj.getAttributes();
-            Set<Attribute> attrs = reduceToAttrsToGet(objAttrs);
-            bld.addAttributes(attrs);
-            return _handler.handle(bld.build());
+            obj = reduceToAttrsToGet(obj);
+            return _handler.handle(obj);
         }
     }
 }

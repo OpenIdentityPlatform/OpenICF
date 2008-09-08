@@ -103,7 +103,9 @@ public final class ObjectNormalizerFacade {
     public SyncDelta normalizeSyncDelta(SyncDelta delta) {
         SyncDeltaBuilder builder = new
             SyncDeltaBuilder(delta);
-        builder.setAttributes(normalizeAttributes(delta.getAttributes()));
+        if ( delta.getObject() != null ) {
+            builder.setObject(normalizeObject(delta.getObject()));
+        }
         return builder.build();
     }
     

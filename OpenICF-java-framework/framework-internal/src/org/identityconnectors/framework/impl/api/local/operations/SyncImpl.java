@@ -39,11 +39,8 @@
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
-import java.util.Set;
-
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.framework.api.operations.SyncApiOp;
-import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
@@ -103,9 +100,9 @@ public class SyncImpl extends ConnectorAPIOperationRunner implements SyncApiOp {
             bld.setUid(delta.getUid());
             bld.setToken(delta.getToken());
             bld.setDeltaType(delta.getDeltaType());
-            Set<Attribute> deltaAttrs = delta.getAttributes();
-            Set<Attribute> attrs = reduceToAttrsToGet(deltaAttrs);
-            bld.setAttributes(attrs);
+            if ( delta.getObject() != null ) {
+                bld.setObject(reduceToAttrsToGet(delta.getObject()));
+            }
             return _handler.handle(bld.build());
         }
     }

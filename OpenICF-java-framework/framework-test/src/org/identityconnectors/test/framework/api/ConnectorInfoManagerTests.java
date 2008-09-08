@@ -415,7 +415,7 @@ public class ConnectorInfoManagerTests {
         for ( int i = 0; i < results.size(); i++ ) {
             SyncDelta obj = results.get(i);
             Assert.assertEquals(String.valueOf(i),
-                    obj.getUid().getUidValue());
+                    obj.getObject().getUid().getUidValue());
         }
         
         results.clear();
@@ -438,7 +438,7 @@ public class ConnectorInfoManagerTests {
         for ( int i = 0; i < results.size(); i++ ) {
             SyncDelta obj = results.get(i);
             Assert.assertEquals(String.valueOf(i),
-                    obj.getUid().getUidValue());
+                    obj.getObject().getUid().getUidValue());
         }
         
         shutdownConnnectorInfoManager();

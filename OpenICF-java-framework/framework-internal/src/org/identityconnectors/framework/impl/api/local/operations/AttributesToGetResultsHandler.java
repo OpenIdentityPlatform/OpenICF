@@ -46,6 +46,8 @@ import java.util.Set;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
+import org.identityconnectors.framework.common.objects.ConnectorObject;
+import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 
 
@@ -84,5 +86,18 @@ public abstract class AttributesToGetResultsHandler {
             }
         }
         return ret;
+    }
+    
+    public ConnectorObject reduceToAttrsToGet(ConnectorObject obj) {
+        // clone the object and reduce the attributes only the set of
+        // attributes.
+        ConnectorObjectBuilder bld = new ConnectorObjectBuilder();
+        bld.setUid(obj.getUid());
+        bld.setName(obj.getName());
+        bld.setObjectClass(obj.getObjectClass());
+        Set<Attribute> objAttrs = obj.getAttributes();
+        Set<Attribute> attrs = reduceToAttrsToGet(objAttrs);
+        bld.addAttributes(attrs);
+        return bld.build();
     }
 }

@@ -170,11 +170,18 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
                      OperationOptions options) {
         checkClassLoader();
         for (int i = 0; i < _config.getNumResults(); i++ ) {
+            ConnectorObjectBuilder obuilder =
+                new ConnectorObjectBuilder();
+            obuilder.setUid(Integer.toString(i));
+            obuilder.setName(Integer.toString(i));
+            obuilder.setObjectClass(objClass);
+
             SyncDeltaBuilder builder =
                 new SyncDeltaBuilder();
-            builder.setUid(new Uid(""+i));
+            builder.setObject(obuilder.build());
             builder.setDeltaType(SyncDeltaType.CREATE);
             builder.setToken(new SyncToken("mytoken"));
+
             SyncDelta rv = builder.build();
             if (!handler.handle(rv)) {
                 break;
