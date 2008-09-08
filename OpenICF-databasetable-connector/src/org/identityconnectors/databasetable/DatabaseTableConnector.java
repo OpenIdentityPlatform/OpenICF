@@ -745,47 +745,25 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      * @return ConnectorObjectBuilder object
      */
     private SyncDeltaBuilder buildSyncDelta(Set<Attribute> attributeSet) {
-        String uidValue = null;
         Object token = null;
         SyncDeltaBuilder bld = new SyncDeltaBuilder();
-        for (Attribute attribute : attributeSet) {
-            final String columnName = attribute.getName();
-            final Object value = AttributeUtil.getSingleValue(attribute);
-            // Map the special
-            if (columnName.equalsIgnoreCase(config.getKeyColumn())) {
-                if (value == null) {
-                    String msg = "Name cannot be null.";
-                    throw new IllegalArgumentException(msg);
-                }
-                uidValue = value.toString();
-                bld.addAttribute(AttributeBuilder.build(Name.NAME, value));
-            } else if (columnName.equalsIgnoreCase(config.getPasswordColumn())) {
-                // No Password in the result object
-            } else if (columnName.equalsIgnoreCase(config.getChangeLogColumn())) {
-                if (value == null) {
-//                    String msg = "ChangeLogValue cannot be null.";
-//                    throw new IllegalArgumentException(msg);
-                    token = 0L;
-                } else {                
-                    token = value;
-                }
-                // TODO decide change log column is in delta set, comment out following line
-                // bld.addAttribute(AttributeBuilder.build(columnName, value));
-            } else {
-                bld.addAttribute(AttributeBuilder.build(columnName, value));
-            }
+        Attribute attribute = AttributeUtil.find(config.getChangeLogColumn(), 
+                attributeSet);
+        if ( attribute != null ) {
+            token = AttributeUtil.getSingleValue(attribute);
         }
-
-        // To be sure that uid is present
-        if(uidValue == null) {
-            throw new IllegalStateException("The uid value is missing in query");
+        
+        if ( token == null ) {
+            token = 0L;
         }
+        
         // To be sure that sync token is present
         if(token != null) {
             bld.setToken(new SyncToken(token));
-        }        
-        // Add Uid attribute to object
-        bld.setUid(new Uid(uidValue));        
+        }  
+        
+        bld.setObject(buildConnectorObject(attributeSet).build());
+        
         // only deals w/ updates
         bld.setDeltaType(SyncDeltaType.UPDATE);
         return bld;

@@ -1385,7 +1385,7 @@ public class DatabaseConnectorTests {
             System.out.println("SyncDeltat: " + delta);
             if (delta.getUid().equals(uid)) {
                 found = true;
-                this.attributes = delta.getAttributes();
+                this.attributes = delta.getObject().getAttributes();
                 this.deltaType = delta.getDeltaType();
                 this.token = delta.getToken();
                 return false;
