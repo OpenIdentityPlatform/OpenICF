@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.framework.api.RemoteFrameworkConnectionInfo;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -102,6 +103,7 @@ public class RemoteOperationInvocationHandler implements InvocationHandler {
             new RemoteFrameworkConnection(connectionInfo);
             
         try {
+            connection.writeObject(CurrentLocale.get());
             connection.writeObject(connectionInfo.getKey());
             //send the request
             connection.writeObject(request);

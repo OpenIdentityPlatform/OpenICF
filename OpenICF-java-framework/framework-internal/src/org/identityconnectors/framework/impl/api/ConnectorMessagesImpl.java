@@ -44,6 +44,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.framework.common.objects.ConnectorMessages;
 
 
@@ -63,11 +64,12 @@ public class ConnectorMessagesImpl implements ConnectorMessages {
     private Map<Locale,Map<String,String>> 
         _catalogs = new HashMap<Locale,Map<String,String>>();
     
-    public String format(Locale locale, String key, String dflt, Object... args) {
+    public String format(String key, String dflt, Object... args) {
         if ( key == null ) {
             return dflt;
         }
         
+        Locale locale = CurrentLocale.get();
         if ( locale == null ) {
             locale = Locale.getDefault();
         }

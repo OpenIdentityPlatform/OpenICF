@@ -52,6 +52,7 @@ import org.identityconnectors.framework.impl.api.APIConfigurationImpl;
  * {@link OperationResponsePart}'s followed by an {@link OperationResponseEnd}.
  */
 public class OperationRequest implements Message {
+        
     /**
      * The key of the connector to operate on.
      */
@@ -83,7 +84,7 @@ public class OperationRequest implements Message {
         _operation = operation;
         _arguments = CollectionUtil.newReadOnlyList(arguments);
     }
-    
+        
     public ConnectorKey getConnectorKey() {
         return _connectorKey;
     }

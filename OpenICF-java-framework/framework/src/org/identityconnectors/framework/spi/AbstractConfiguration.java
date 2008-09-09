@@ -39,8 +39,6 @@
  */
 package org.identityconnectors.framework.spi;
 
-import java.util.Locale;
-
 import org.identityconnectors.framework.common.objects.ConnectorMessages;
 
 
@@ -50,22 +48,13 @@ import org.identityconnectors.framework.common.objects.ConnectorMessages;
 public abstract class AbstractConfiguration implements Configuration {
 
     private ConnectorMessages _connectorMessages;
-    private Locale _locale;
     
     public final ConnectorMessages getConnectorMessages() {
         return _connectorMessages;
     }
 
-    public final Locale getLocale() {
-        return _locale;
-    }
-
     public final void setConnectorMessages(ConnectorMessages messages) {
         _connectorMessages = messages;
-    }
-
-    public final void setLocale(Locale locale) {
-        _locale = locale;
     }
 
     public abstract void validate();

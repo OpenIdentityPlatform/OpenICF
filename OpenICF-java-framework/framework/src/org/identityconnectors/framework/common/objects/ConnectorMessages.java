@@ -39,20 +39,21 @@
  */
 package org.identityconnectors.framework.common.objects;
 
-import java.util.Locale;
+import org.identityconnectors.common.l10n.CurrentLocale;
 
 /**
  * Message catalog for a given connector.
+ * @see CurrentLocale
  */
 public interface ConnectorMessages {
     /**
-     * Formats the given message key.
-     * @param locale The locale to format in. If null, uses the default locale.
+     * Formats the given message key in the 
+     * {@link CurrentLocale}.
      * @param key The message key to format. 
      * @param dflt The default message if key is not found. If null, defaults
      * to key.
      * @param args Parameters with which to format the message.
      * @return The formatted string.
      */
-    public String format(Locale locale, String key, String dflt, Object... args);
+    public String format(String key, String dflt, Object... args);
 }

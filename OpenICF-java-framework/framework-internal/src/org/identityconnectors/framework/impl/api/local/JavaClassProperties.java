@@ -168,7 +168,6 @@ public class JavaClassProperties
             ConfigurationPropertiesImpl properties,
             Class<? extends Configuration> config) throws Exception {
         Configuration rv = config.newInstance();
-        rv.setLocale(properties.getParent().getLocale());
         rv.setConnectorMessages(properties.getParent().getConnectorInfo().getMessages());
         Map<String, PropertyDescriptor> descriptors = getFilteredProperties(config);
         for (ConfigurationPropertyImpl property : properties.getProperties()) {
@@ -216,10 +215,6 @@ public class JavaClassProperties
             String propName = descriptor.getName();
             if ( descriptor.getWriteMethod() == null ) {
                 //if there's no setter, ignore it
-                continue;
-            }
-            if ( "locale".equals(propName) ) {
-                // exclude setLocale since its part of the interface..
                 continue;
             }
             if ( "connectorMessages".equals(propName) ) {

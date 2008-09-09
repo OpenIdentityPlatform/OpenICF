@@ -39,6 +39,7 @@
  */
 package org.identityconnectors.test.framework.impl.serializer;
 
+import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.RemoteFrameworkConnectionInfo;
 import org.identityconnectors.framework.common.serializer.SerializerUtil;
@@ -62,6 +63,7 @@ public class ObjectXmlEchoTests extends ObjectSerializationTests {
             RemoteFrameworkConnection conn = 
                 new RemoteFrameworkConnection(info);
             try {
+                conn.writeObject(CurrentLocale.get());
                 conn.writeObject(info.getKey());
                 conn.writeObject(message);
                 EchoMessage clone = (EchoMessage)conn.readObject();

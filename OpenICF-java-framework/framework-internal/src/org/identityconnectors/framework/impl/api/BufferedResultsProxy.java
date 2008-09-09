@@ -271,7 +271,10 @@ public class BufferedResultsProxy implements InvocationHandler {
             throw new UnsupportedOperationException("We only support operations that have a single stream handler "+method);
         }
 
-        
+        //this guy will automatically inherit
+        //CurrentLocale since we are using a new thread
+        //NOTE: if we ever introduce thread pooling
+        //here, it needs to explicitly propagate
         bufHandler.setDaemon(true);
         bufHandler.start();
         while (!bufHandler.isStopped())

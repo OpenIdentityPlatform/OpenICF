@@ -190,7 +190,6 @@ class APIConfigurationHandlers {
                     (Set)decoder.readObjectField("SupportedOperations",Set.class,null);
                 rv.setSupportedOperations(set);
                 rv.setProducerBufferSize(decoder.readIntField("producerBufferSize",0));
-                rv.setLocale((Locale)decoder.readObjectField("Locale",Locale.class,null));
                 return rv;
             }
             
@@ -210,8 +209,6 @@ class APIConfigurationHandlers {
                         val.getTimeoutMap(),false);
                 encoder.writeObjectField("SupportedOperations", 
                         val.getSupportedOperations(),true);
-                encoder.writeObjectField("Locale", 
-                        val.getLocale(),true);
             }
                            
         });

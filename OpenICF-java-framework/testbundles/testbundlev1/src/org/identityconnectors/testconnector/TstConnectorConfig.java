@@ -39,6 +39,7 @@
  */
 package org.identityconnectors.testconnector;
 
+import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.spi.AbstractConfiguration;
 
@@ -98,7 +99,7 @@ public class TstConnectorConfig extends AbstractConfiguration {
     public void validate() {
         TstConnector.checkClassLoader();
         if (_failValidation) {
-            throw new ConnectorException("validation failed");
+            throw new ConnectorException("validation failed "+CurrentLocale.get().getLanguage());
         }
     }
 

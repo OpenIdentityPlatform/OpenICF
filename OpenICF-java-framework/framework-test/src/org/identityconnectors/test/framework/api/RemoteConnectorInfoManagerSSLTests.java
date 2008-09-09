@@ -187,7 +187,7 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
     }
 
     
-    private ConnectorServer _server;
+    private static ConnectorServer _server;
     
     
     

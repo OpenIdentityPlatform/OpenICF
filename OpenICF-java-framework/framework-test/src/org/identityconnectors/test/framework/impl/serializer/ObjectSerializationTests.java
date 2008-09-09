@@ -468,7 +468,6 @@ public class ObjectSerializationTests {
         v1.setConnectorPoolConfiguration(new ObjectPoolConfiguration());
         v1.setConfigurationProperties(props1);
         v1.setConnectorPoolingSupported(true);
-        v1.setLocale(new Locale("en"));
         v1.setProducerBufferSize(200);
         v1.setSupportedOperations(FrameworkUtil.allAPIOperations());
         Map<Class<? extends APIOperation>,Integer> map =
@@ -483,7 +482,6 @@ public class ObjectSerializationTests {
         Assert.assertEquals(v1.getConnectorPoolConfiguration(),v2.getConnectorPoolConfiguration());
         Assert.assertEquals(v1.getConfigurationProperties(),v2.getConfigurationProperties());
         Assert.assertTrue(v2.isConnectorPoolingSupported());
-        Assert.assertEquals(new Locale("en"), v2.getLocale());
         Assert.assertEquals(200, v2.getProducerBufferSize());
         Assert.assertEquals(FrameworkUtil.allAPIOperations(), 
                 v2.getSupportedOperations());
@@ -878,7 +876,9 @@ public class ObjectSerializationTests {
         List<Object> args = new ArrayList<Object>();
         args.add("my arg");
         OperationRequest v1 = new
-            OperationRequest(new ConnectorKey("my bundle",
+            OperationRequest(
+                    new ConnectorKey(
+                    "my bundle",
                     "my version",
                 "my connector"),
                 apiImpl,

@@ -39,8 +39,6 @@
  */
 package org.identityconnectors.framework.impl.api;
 
-import java.util.Locale;
-
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.framework.api.ConfigurationProperty;
 import org.identityconnectors.framework.common.objects.ConnectorMessages;
@@ -145,9 +143,8 @@ public class ConfigurationPropertyImpl implements ConfigurationProperty {
     
     private String formatMessage(String key, String dflt, Object...args) {
         APIConfigurationImpl apiConfig = getParent().getParent();
-        Locale locale = apiConfig.getLocale();
         ConnectorMessages messages = apiConfig.getConnectorInfo().getMessages();
-        return messages.format(locale, key, dflt, args);
+        return messages.format(key, dflt, args);
     }
     
     // =======================================================================

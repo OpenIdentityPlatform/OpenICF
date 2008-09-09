@@ -43,7 +43,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.Map;
-import java.util.LinkedHashMap;
 
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.CollectionUtil;

@@ -39,6 +39,7 @@
  */
 package org.identityconnectors.framework.impl.api;
 
+import java.util.Locale;
 import java.util.concurrent.Executors;
 
 import java.lang.reflect.InvocationHandler;
@@ -51,6 +52,7 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.OperationTimeoutException;
 
@@ -104,10 +106,20 @@ public class MethodTimeoutProxy implements InvocationHandler {
             return method.invoke(_target, args);
         }
         
+        final Locale locale = CurrentLocale.get();
+        
         Callable<Object> callable = new Callable<Object>() {
             public Object call() throws Exception {
                 try {
-                    return method.invoke(_target, args);
+                    try {
+                        //propagate current locale
+                        //since this is a thread pool
+                        CurrentLocale.set(locale);
+                        return method.invoke(_target, args);
+                    }
+                    finally {
+                        CurrentLocale.clear();
+                    }
                 }
                 catch (InvocationTargetException e) {
                     Throwable root = e.getCause();

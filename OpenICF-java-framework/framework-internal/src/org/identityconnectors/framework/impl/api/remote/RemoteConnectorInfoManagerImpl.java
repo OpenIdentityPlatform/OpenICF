@@ -42,6 +42,7 @@ package org.identityconnectors.framework.impl.api.remote;
 import java.util.List;
 
 import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.api.ConnectorInfoManager;
 import org.identityconnectors.framework.api.ConnectorKey;
@@ -65,6 +66,7 @@ public class RemoteConnectorInfoManagerImpl implements ConnectorInfoManager {
         throws RuntimeException {
         RemoteFrameworkConnection connection = new RemoteFrameworkConnection(info);
         try {
+            connection.writeObject(CurrentLocale.get());
             connection.writeObject(info.getKey());
             connection.writeObject(new HelloRequest());
             HelloResponse response = (HelloResponse)connection.readObject();

@@ -40,7 +40,6 @@
 package org.identityconnectors.framework.impl.api;
 
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -63,12 +62,7 @@ public class APIConfigurationImpl implements APIConfiguration {
     private boolean _isConnectorPoolingSupported;
     
     private ConfigurationPropertiesImpl _configurationProperties;
-    
-    /**
-     * The locale to display messages. 
-     */
-    private Locale _locale;
-       
+           
     /**
      * Default size of the buffer.
      */
@@ -163,22 +157,7 @@ public class APIConfigurationImpl implements APIConfiguration {
      */
     public ConfigurationPropertiesImpl getConfigurationProperties() {
         return _configurationProperties;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void setLocale(Locale locale) {
-        _locale = locale;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    public Locale getLocale() {
-        return (_locale == null) ? Locale.getDefault() : _locale;
-    }
-    
+    }    
 
     /**
      * {@inheritDoc}

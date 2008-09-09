@@ -52,6 +52,7 @@ import java.util.Set;
 import junit.framework.Assert;
 
 import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConfigurationProperties;
 import org.identityconnectors.framework.api.ConfigurationProperty;
@@ -173,19 +174,21 @@ public class ConnectorInfoManagerTests {
         Assert.assertEquals("Display for test field.",property.getDisplayName(null));
 
         Locale xlocale = new Locale("es");
-        api.setLocale(xlocale);
+        CurrentLocale.set(xlocale);
         Assert.assertEquals("tstField.help_es",property.getHelpMessage(null));
         Assert.assertEquals("tstField.display_es",property.getDisplayName(null));
         
         Locale esESlocale = new Locale("es","ES");
-        api.setLocale(esESlocale);
+        CurrentLocale.set(esESlocale);
         Assert.assertEquals("tstField.help_es-ES",property.getHelpMessage(null));
         Assert.assertEquals("tstField.display_es-ES",property.getDisplayName(null));
         
         Locale esARlocale = new Locale("es","AR");
-        api.setLocale(esARlocale);
+        CurrentLocale.set(esARlocale);
         Assert.assertEquals("tstField.help_es",property.getHelpMessage(null));
         Assert.assertEquals("tstField.display_es",property.getDisplayName(null));
+        
+        CurrentLocale.clear();
         
         ConnectorFacadeFactory facf = ConnectorFacadeFactory.getInstance();
         ConnectorFacade facade = facf.newInstance(api);
@@ -218,12 +221,33 @@ public class ConnectorInfoManagerTests {
         facade.validate();
         property.setValue(true);
         facade = facf.newInstance(api);
+        //validate and also test that locale is propogated
+        //properly
         try {
+            CurrentLocale.set(new Locale("en"));
             facade.validate();
+            
             Assert.fail("exception expected");
         }
         catch (ConnectorException e) {
-            Assert.assertEquals("validation failed", e.getMessage());
+            Assert.assertEquals("validation failed en", e.getMessage());
+        }
+        finally {
+            CurrentLocale.clear();
+        }
+        //validate and also test that locale is propogated
+        //properly
+        try {
+            CurrentLocale.set(new Locale("es"));
+            facade.validate();
+            
+            Assert.fail("exception expected");
+        }
+        catch (ConnectorException e) {
+            Assert.assertEquals("validation failed es", e.getMessage());
+        }
+        finally {
+            CurrentLocale.clear();
         }
         shutdownConnnectorInfoManager();
     }

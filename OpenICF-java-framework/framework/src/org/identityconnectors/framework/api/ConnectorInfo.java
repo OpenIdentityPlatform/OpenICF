@@ -39,8 +39,7 @@
  */
 package org.identityconnectors.framework.api;
 
-import java.util.Locale;
-
+import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
 
@@ -52,10 +51,11 @@ public interface ConnectorInfo {
 
     /**
      * Returns a friendly name suitable for display in the UI.
+     * The name will be localized using the {@link CurrentLocale}.
      * 
      * @return The friendly name
      */
-    public String getConnectorDisplayName(Locale locale);
+    public String getConnectorDisplayName();
 
     /**
      * Uniquely identifies this connector in a given installation

@@ -40,7 +40,6 @@
 package org.identityconnectors.framework.spi;
 
 import java.net.URI;
-import java.util.Locale;
 
 import org.identityconnectors.framework.common.objects.ConnectorMessages;
 
@@ -79,23 +78,7 @@ public interface Configuration {
      * @return The locale
      */
     public ConnectorMessages getConnectorMessages();
-    
-    /**
-     * Should return the locale that is set by {#setLocale}
-     * @return The locale
-     */
-    public Locale getLocale();
-    
-    /**
-     * Called after the {@link Configuration}'s instance is created to make
-     * sure that the {@link Connector} has the proper locale to create messages
-     * for {@link Exception}s etc. 
-     * 
-     * @param locale
-     *            current locale the {@link Connector} is operating in.
-     */
-    public void setLocale(Locale locale);
-    
+        
     /**
      * Called after the {@link Configuration}'s instance is created to make
      * sure that the {@link Connector} has the proper ConnectorMessages to create messages

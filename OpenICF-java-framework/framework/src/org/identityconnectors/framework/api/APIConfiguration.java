@@ -39,7 +39,6 @@
  */
 package org.identityconnectors.framework.api;
 
-import java.util.Locale;
 import java.util.Set;
 
 import org.identityconnectors.common.pooling.ObjectPoolConfiguration;
@@ -79,20 +78,7 @@ public interface APIConfiguration {
      */
     ObjectPoolConfiguration getConnectorPoolConfiguration();
 
-    
-    /**
-     * Return the {@link Locale} that is to be used for translating messages.
-     */
-    Locale getLocale();
-    
-    /**
-     * Pass the {@link Locale} to the {@link Connector} for use with translating
-     * messages. This is especially helpful with {@link Exception}s.
-     * 
-     * @param locale current {@link Locale} for message translation.
-     */
-    void setLocale(Locale locale);
-    
+        
     // =======================================================================
     // Operational Support Set
     // =======================================================================

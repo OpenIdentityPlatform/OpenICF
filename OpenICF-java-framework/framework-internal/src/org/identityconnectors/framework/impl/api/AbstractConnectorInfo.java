@@ -39,8 +39,6 @@
  */
 package org.identityconnectors.framework.impl.api;
 
-import java.util.Locale;
-
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.api.ConnectorKey;
@@ -71,8 +69,8 @@ abstract public class AbstractConnectorInfo implements ConnectorInfo {
         _messages = messages;
     }
 
-    public final String getConnectorDisplayName(Locale locale) {
-        return _messages.format(locale,_connectorDisplayNameKey, _connectorKey.getConnectorName());
+    public final String getConnectorDisplayName() {
+        return _messages.format(_connectorDisplayNameKey, _connectorKey.getConnectorName());
     }
     
     public final String getConnectorDisplayNameKey() {

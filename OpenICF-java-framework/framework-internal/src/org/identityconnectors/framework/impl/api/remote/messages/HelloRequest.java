@@ -44,8 +44,8 @@ package org.identityconnectors.framework.impl.api.remote.messages;
  * will respond with a {@link HelloResponse}.
  */
 public class HelloRequest implements Message {
-    
+        
     public HelloRequest() {
     }
-    
+        
 }

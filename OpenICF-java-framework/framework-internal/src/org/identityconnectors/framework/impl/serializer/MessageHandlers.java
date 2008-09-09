@@ -122,7 +122,8 @@ class MessageHandlers {
                 @SuppressWarnings("unchecked")
                 List<Object> arguments = (List)
                     decoder.readObjectField("Arguments",List.class,null);
-                return new OperationRequest(connectorKey,
+                return new OperationRequest(
+                        connectorKey,
                         configuration,
                         operation,
                         arguments);

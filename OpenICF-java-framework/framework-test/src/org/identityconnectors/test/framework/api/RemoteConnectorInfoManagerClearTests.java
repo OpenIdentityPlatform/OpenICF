@@ -54,7 +54,7 @@ import org.identityconnectors.framework.server.ConnectorServer;
 
 public class RemoteConnectorInfoManagerClearTests extends ConnectorInfoManagerTests {
 
-    private ConnectorServer _server;
+    private static ConnectorServer _server;
     
     /**
      * To be overridden by subclasses to get different ConnectorInfoManagers
