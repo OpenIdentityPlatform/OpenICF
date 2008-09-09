@@ -48,6 +48,7 @@ import java.util.LinkedHashMap;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.framework.api.operations.APIOperation;
+import org.identityconnectors.framework.common.serializer.SerializerUtil;
 
 
 /**
@@ -223,12 +224,7 @@ public final class Schema {
      */
     @Override
     public String toString() {
-        Map<String, Object> map = new LinkedHashMap<String, Object>();
-        map.put("ObjectClasses", _declaredObjectClasses);
-        map.put("Options", _declaredOperationOptions);
-        map.put("SupportedClasses", _supportedObjectClassesByOperation);
-        map.put("SupportedOptions", _supportedOptionsByOperation);
-        return map.toString();
+        return SerializerUtil.serializeXmlObject(this, false);
     }
 
     /**
