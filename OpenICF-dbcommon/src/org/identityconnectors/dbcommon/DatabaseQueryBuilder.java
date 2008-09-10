@@ -45,6 +45,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.identityconnectors.common.Pair;
 import org.identityconnectors.common.StringUtil;
 
 
@@ -60,15 +61,17 @@ public class DatabaseQueryBuilder {
     private String tableName = null; //Mandatory select clause
     private FilterWhereBuilder whereBuilder = null;
     private Set<String> columnNamesToGet=new HashSet<String>();
-         
+    private List<Pair<String, Boolean>> columnNamesToOrderBy = null;
     /**
      * DatabaseQuery Constructor, construct select  from table name, columnNamesToGet and where clause
      * @param tableName The name of the database table to select from
-     * @param columnNamesToGet The required attribute set  
-     * @param select mandatory select clause
-     * @param whereBuilder the whereBuilder, part of the query
+     * @param columnNamesToGet the names of the column to be in the result
+     * @param whereBuilder whereBuilder the whereBuilder, part of the query
+     * @param columnNamesToOrderBy The list of order by column names with ascendent / descendent boolean flag
+     *  
      */
-    public DatabaseQueryBuilder(final String tableName, final Set<String> columnNamesToGet, final FilterWhereBuilder whereBuilder) {
+    public DatabaseQueryBuilder(String tableName, Set<String> columnNamesToGet, FilterWhereBuilder whereBuilder,
+            List<Pair<String, Boolean>> columnNamesToOrderBy) {
         if(StringUtil.isBlank(tableName)) {
             throw new IllegalArgumentException("the tableName must not be null or empty");
         }
@@ -78,8 +81,20 @@ public class DatabaseQueryBuilder {
         this.tableName = tableName;
         this.columnNamesToGet=columnNamesToGet;
         this.whereBuilder = whereBuilder;  
+        this.columnNamesToOrderBy = columnNamesToOrderBy;
     }     
-      
+
+    
+    /**
+     * DatabaseQuery Constructor, construct select  from table name, columnNamesToGet and where clause
+     * @param tableName
+     * @param columnNamesToGet
+     * @param whereBuilder
+     */
+    public DatabaseQueryBuilder(final String tableName, final Set<String> columnNamesToGet, final FilterWhereBuilder whereBuilder) {
+        this(tableName,columnNamesToGet, whereBuilder, null);
+    }
+    
     /**
      * DatabaseQuery Constructor which takes advantage of prepared select SQL clause
      * @param select mandatory select clause
@@ -98,7 +113,8 @@ public class DatabaseQueryBuilder {
         this.select = select;
         this.whereBuilder = whereBuilder;       
     }     
-                  
+
+
     /**
      * Return full sql statement string
      * @return Sql query statement to execute
@@ -110,13 +126,27 @@ public class DatabaseQueryBuilder {
         }       
         
         String ret = select;
-        if(whereBuilder == null) {
-            return ret;
+        if(whereBuilder != null) {
+            final String where = whereBuilder.getWhereClause();
+            if(!StringUtil.isBlank(where)) {
+                ret += (select.indexOf("WHERE")==-1) ? " WHERE "+where:" AND ( "+where+" )";
+            }        
         }
-        String where = whereBuilder.getWhereClause();
-        if(!StringUtil.isBlank(where)) {
-            ret += (select.indexOf("WHERE")==-1) ? " WHERE "+where:" AND ( "+where+" )";
-        }        
+        if(this.columnNamesToOrderBy != null) {
+            StringBuilder obld = new StringBuilder(" ORDER BY ");
+            boolean first=true;
+            for (Pair<String, Boolean> orderBy : columnNamesToOrderBy) {
+                if( !first) {
+                    obld.append(", ");
+                }
+                first = false;
+                obld.append(orderBy.first);
+                obld.append(orderBy.second ? " ASC" : " DESC");
+            }
+            if(obld.length() != 0) {
+                ret += obld.toString();
+            }        
+        }
         return ret;
     }
 

@@ -42,9 +42,11 @@ package org.identityconnectors.dbcommon;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.identityconnectors.common.Pair;
 import org.junit.Test;
 
 /**
@@ -158,4 +160,24 @@ public class DatabaseQueryBuilderTest {
         assertEquals("value for binding", VALUE, actual.getParams().get(0));
     }    
     
+    /**
+     * Test method for {@link DatabaseQueryBuilder#getSQL()}.
+     */
+    @Test
+    public void testGetSqlWithAttributesToGetAndOrderBy() {
+        Set<String> attributesToGet=new LinkedHashSet<String>();
+        ArrayList<Pair<String, Boolean>> orderBy = new ArrayList<Pair<String, Boolean>>();
+        attributesToGet.add("test1");
+        attributesToGet.add("test2");        
+        orderBy.add(new Pair<String, Boolean>("test1", true));
+        orderBy.add(new Pair<String, Boolean>("test2", false));
+        FilterWhereBuilder where = new FilterWhereBuilder();
+        where.addBind(NAME, OPERATOR, VALUE);
+        DatabaseQueryBuilder actual = new DatabaseQueryBuilder("table" , attributesToGet, where, orderBy);
+        assertNotNull(actual);
+        assertEquals("SELECT test1 , test2 FROM table WHERE name = ? ORDER BY test1 ASC, test2 DESC", actual.getSQL());
+        assertEquals("not one value for binding", 1, actual.getParams().size());
+        assertEquals("value for binding", VALUE, actual.getParams().get(0));
+    }    
+        
 }
