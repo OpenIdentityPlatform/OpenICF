@@ -56,6 +56,7 @@ import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.CaseInsensitiveMap;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.GUID;
+import org.identityconnectors.common.Pair;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
@@ -459,8 +460,10 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         final String tblname = config.quoteName(config.getDBTable());
         final String changeLogColumnName = config.quoteName(config.getChangeLogColumn());
         final Set<String> columnNamesToGet = resolveColumnNamesToGet(options);
+        final List<Pair<String, Boolean>> columnNamesToOrderBy = new ArrayList<Pair<String,Boolean>>();
         //Add also the token column
         columnNamesToGet.add(changeLogColumnName);
+        columnNamesToOrderBy.add(new Pair<String, Boolean>(changeLogColumnName, false));
 
         // The first token is null = empty FilterWhereBuilde
         final FilterWhereBuilder fwb = new FilterWhereBuilder();
@@ -468,7 +471,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             final Object parameter = SQLUtil.convertToJDBC(token.getValue(), getColumnType(config.getChangeLogColumn()));            
             fwb.addBind(changeLogColumnName, ">", parameter);            
         }
-        final DatabaseQueryBuilder query = new DatabaseQueryBuilder(tblname, columnNamesToGet, fwb);
+        final DatabaseQueryBuilder query = new DatabaseQueryBuilder(tblname, columnNamesToGet, fwb, columnNamesToOrderBy);
 
         ResultSet result = null;
         PreparedStatement statement = null;
