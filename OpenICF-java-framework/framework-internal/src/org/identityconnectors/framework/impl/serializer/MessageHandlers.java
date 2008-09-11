@@ -119,6 +119,8 @@ class MessageHandlers {
                 @SuppressWarnings("unchecked")
                 Class<? extends APIOperation> operation = 
                     (Class)decoder.readClassField("operation",null);
+                String operationMethodName =
+                    decoder.readStringField("operationMethodName", null);
                 @SuppressWarnings("unchecked")
                 List<Object> arguments = (List)
                     decoder.readObjectField("Arguments",List.class,null);
@@ -126,6 +128,7 @@ class MessageHandlers {
                         connectorKey,
                         configuration,
                         operation,
+                        operationMethodName,
                         arguments);
             }
     
@@ -135,6 +138,8 @@ class MessageHandlers {
                     (OperationRequest)object;
                 encoder.writeClassField("operation", 
                         val.getOperation());
+                encoder.writeStringField("operationMethodName", 
+                        val.getOperationMethodName());
                 encoder.writeObjectField("ConnectorKey", 
                         val.getConnectorKey(),true);
                 encoder.writeObjectField("APIConfiguration", 

@@ -96,6 +96,7 @@ public class RemoteOperationInvocationHandler implements InvocationHandler {
                 connectorInfo.getConnectorKey(),
                 _configuration,
                 _operation,
+                method.getName(),
                 simpleMarshallArgs);
         
         //create the connection

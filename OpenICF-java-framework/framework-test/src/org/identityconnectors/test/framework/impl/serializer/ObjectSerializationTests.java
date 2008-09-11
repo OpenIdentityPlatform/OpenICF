@@ -883,6 +883,7 @@ public class ObjectSerializationTests {
                 "my connector"),
                 apiImpl,
                 CreateApiOp.class,
+                "mymethodName",
                 args);
         OperationRequest v2 = (OperationRequest)cloneObject(v1);
         Assert.assertEquals("my bundle", v2.getConnectorKey().getBundleName());
@@ -890,6 +891,7 @@ public class ObjectSerializationTests {
         Assert.assertEquals("my connector", v2.getConnectorKey().getConnectorName());
         Assert.assertNotNull(v2.getConfiguration());
         Assert.assertEquals(CreateApiOp.class, v2.getOperation());
+        Assert.assertEquals("mymethodName", v2.getOperationMethodName());
         Assert.assertEquals(args, v2.getArguments());
     }
     

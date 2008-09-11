@@ -270,19 +270,33 @@ public class ConnectionProcessor implements Runnable {
         return new HelloResponse(exception,connectorInfo);
     }
         
+    private Method getOperationMethod(OperationRequest request) {
+        Method [] methods = 
+            request.getOperation().getDeclaredMethods();
+        Method found = null;
+        for (Method m : methods ) {
+            if ( m.getName().equalsIgnoreCase(request.getOperationMethodName())) {
+                if ( found != null) {
+                    throw new ConnectorException("APIOperations are expected "
+                            +"to have exactly one method of a given name: "+request.getOperation());
+                }
+                found = m;
+            }
+        }
+        if ( found == null) {
+            throw new ConnectorException("APIOperations are expected "
+                    +"to have exactly one method of a given name: "+request.getOperation());
+        }
+        return found;
+    }
+    
     private OperationResponsePart 
     processOperationRequest(OperationRequest request) 
     throws IOException {
         Object result;
         Throwable exception = null;
         try {
-            Method [] methods = 
-                request.getOperation().getDeclaredMethods();
-            if ( methods.length != 1) {
-                throw new ConnectorException("APIOperations are expected "
-                        +"to have exactly one method: "+request.getOperation());
-            }
-            Method method = methods[0];
+            Method method = getOperationMethod(request);
             APIOperation operation = getAPIOperation(request);
             List<Object> arguments = request.getArguments();
             List<Object> argumentsAndStreamHandlers =

@@ -69,6 +69,13 @@ public class OperationRequest implements Message {
     private final Class<? extends APIOperation> _operation;
     
     /**
+     * The name of the method since operations can have more
+     * than one method.
+     * NOTE: this is case-insensitive
+     */
+    private final String _operationMethodName;
+    
+    /**
      * The arguments to the operation. In general, these correspond
      * to the actual arguments of the method. The one exception is
      * search - in this case, the callback is not passed.
@@ -78,10 +85,12 @@ public class OperationRequest implements Message {
     public OperationRequest(ConnectorKey key,
             APIConfigurationImpl apiConfiguration,
             Class<? extends APIOperation> operation,
+            String operationMethodName,
             List<Object> arguments) {
         _connectorKey     = key;
         _configuration = apiConfiguration;
         _operation = operation;
+        _operationMethodName = operationMethodName;
         _arguments = CollectionUtil.newReadOnlyList(arguments);
     }
         
@@ -95,6 +104,10 @@ public class OperationRequest implements Message {
     
     public Class<? extends APIOperation> getOperation() {
         return _operation;
+    }
+    
+    public String getOperationMethodName() {
+        return _operationMethodName;
     }
     
     public List<Object> getArguments() {
