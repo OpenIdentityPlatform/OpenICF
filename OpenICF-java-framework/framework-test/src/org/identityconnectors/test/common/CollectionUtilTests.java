@@ -275,4 +275,75 @@ public class CollectionUtilTests {
         set1.add("val2");
         Assert.assertTrue(CollectionUtil.equals(set1, set2));
     }
+    
+    @Test
+    public void testHashCode() {
+        Assert.assertEquals(0,CollectionUtil.hashCode(null));
+        Assert.assertEquals("str".hashCode(),CollectionUtil.hashCode("str"));
+        
+        byte [] arr1 = new byte[] { 1,2,3 };
+        byte [] arr2 = new byte[] { 1,2,3 };
+        byte [] arr3 = new byte[] { 1,2,4 };
+        byte [] arr4 = new byte[] { 1,2 };
+        int [] arr5  = new int[] {1,2,3};
+        
+        Assert.assertEquals(CollectionUtil.hashCode(arr1), 
+                CollectionUtil.hashCode(arr2));
+        Assert.assertFalse(CollectionUtil.hashCode(arr2) == 
+                CollectionUtil.hashCode(arr3));
+        Assert.assertFalse(CollectionUtil.hashCode(arr2) == 
+            CollectionUtil.hashCode(arr4));
+        Assert.assertTrue(CollectionUtil.hashCode(arr2) == 
+            CollectionUtil.hashCode(arr5));
+
+        List<byte[]> list1 = new ArrayList<byte[]>();
+        List<byte[]> list2 = new ArrayList<byte[]>();
+        list1.add(arr1);
+        list2.add(arr2);
+        
+        Assert.assertTrue(CollectionUtil.hashCode(list1) == 
+            CollectionUtil.hashCode(list2));
+        
+        list2.add(arr2);
+        Assert.assertFalse(CollectionUtil.hashCode(list1) == 
+            CollectionUtil.hashCode(list2));
+        
+        list1.add(arr1);
+        Assert.assertTrue(CollectionUtil.hashCode(list1) == 
+            CollectionUtil.hashCode(list2));
+
+        list1.add(arr1);
+        list2.add(arr3);
+        Assert.assertFalse(CollectionUtil.hashCode(list1) == 
+            CollectionUtil.hashCode(list2));
+
+        Map<String,byte[]> map1 = new HashMap<String,byte[]>();
+        Map<String,byte[]> map2 = new HashMap<String,byte[]>();
+        map1.put("key1", arr1);
+        map2.put("key1", arr2);
+        Assert.assertTrue(CollectionUtil.hashCode(map1) == 
+            CollectionUtil.hashCode(map2));
+        map2.put("key2", arr2);
+        Assert.assertFalse(CollectionUtil.hashCode(map1) == 
+            CollectionUtil.hashCode(map2));
+        map1.put("key2", arr1);
+        Assert.assertTrue(CollectionUtil.hashCode(map1) == 
+            CollectionUtil.hashCode(map2));
+        map1.put("key2", arr3);
+        Assert.assertFalse(CollectionUtil.hashCode(map1) == 
+            CollectionUtil.hashCode(map2));
+        
+        Set<String> set1 = new HashSet<String>();
+        Set<String> set2 = new HashSet<String>();
+        set1.add("val");
+        set2.add("val");
+        Assert.assertTrue(CollectionUtil.hashCode(set1) == 
+            CollectionUtil.hashCode(set2));
+        set2.add("val2");
+        Assert.assertFalse(CollectionUtil.hashCode(set1) == 
+            CollectionUtil.hashCode(set2));
+        set1.add("val2");
+        Assert.assertTrue(CollectionUtil.hashCode(set1) == 
+            CollectionUtil.hashCode(set2));
+    }
 }

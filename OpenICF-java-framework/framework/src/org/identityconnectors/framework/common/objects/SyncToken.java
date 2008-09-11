@@ -86,7 +86,7 @@ public final class SyncToken {
     
     @Override
     public int hashCode() {
-        return _value.hashCode();
+        return CollectionUtil.hashCode(_value);
     }
     
     @Override

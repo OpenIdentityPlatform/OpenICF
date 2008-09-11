@@ -363,6 +363,42 @@ public final class CollectionUtil {
     }
     
     /**
+     * hashCode function that properly handles arrays,
+     * collections, maps, collections of arrays, and maps of arrays.
+     * @param o The object. May be null.
+     * @return the hashCode
+     */
+    public static int hashCode(Object o) {
+        if ( o == null ) {
+            return 0;
+        }
+        else if ( o.getClass().isArray() ) {
+            int length = Array.getLength(o);
+            int rv = 0;
+            for ( int i = 0; i < length; i++ ) {
+                Object el = Array.get(o, i);
+                rv += CollectionUtil.hashCode(el);
+            }
+            return rv;
+        }
+        else if ( o instanceof Collection ) {
+            Collection<?> l = (Collection<?>)o;
+            int rv = 0;
+            for ( Object el : l) {
+                rv += CollectionUtil.hashCode(el);
+            }
+            return rv;
+        }
+        else if ( o instanceof Map ) {
+            Map<?,?> map = (Map<?,?>)o;
+            return CollectionUtil.hashCode(map.values());
+        }
+        else {
+            return o.hashCode();
+        }
+    }
+    
+    /**
      * Equality function that properly handles arrays,
      * lists, maps, lists of arrays, and maps of arrays.
      * <p>
