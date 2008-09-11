@@ -79,7 +79,7 @@ public class Attribute {
     /**
      * Create an attribute.
      */
-    public Attribute(String name, List<Object> value) {
+    Attribute(String name, List<Object> value) {
         if (StringUtil.isBlank(name)) {
             throw new IllegalArgumentException("Name must not be blank!");
         }

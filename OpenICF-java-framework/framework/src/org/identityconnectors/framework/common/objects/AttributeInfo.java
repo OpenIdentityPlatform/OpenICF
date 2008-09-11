@@ -46,6 +46,7 @@ import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.operations.GetApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
+import org.identityconnectors.framework.common.FrameworkUtil;
 
 /**
  * <i>AttributeInfo</i> is meta data responsible for describing an
@@ -67,7 +68,7 @@ public final class AttributeInfo {
 	private final boolean _updateable;
 	private final boolean _returnedByDefault;
 
-	public AttributeInfo(final String name, final Class<?> type,
+	AttributeInfo(final String name, final Class<?> type,
 			final boolean readable, final boolean createable,
 			final boolean required, final boolean multivalue,
 			final boolean updateable, final boolean returnedByDefault) {
@@ -81,6 +82,8 @@ public final class AttributeInfo {
             final String MSG = "Password based attributes must be of type GuardedString.";
             throw new IllegalArgumentException(MSG);
         }
+        // check the type..
+        FrameworkUtil.checkAttributeType(type);
 		_name = name;
 		_type = type;
 		_readable = readable;
