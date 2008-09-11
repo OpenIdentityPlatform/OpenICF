@@ -265,7 +265,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     }
     
     /**
-     * Creates the appropriate timeout proxy for the given operation
+     * Creates the timeout proxy for the given operation
      * @param api The operation
      * @param target The underlying object
      * @return The proxy
@@ -276,32 +276,10 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
         int timeout = getAPIConfiguration().getTimeout(api);
         int bufferSize = getAPIConfiguration().getProducerBufferSize();
 
-        
-        APIOperation rv = target; //default to the underylying target in case of no timeout
-        
-        //now wrap the proxy in the appropriate timeout proxy
-        if ( api == SearchApiOp.class ||
-             api == SyncApiOp.class ) {
-            //search/sync are special
-            if (timeout != APIOperation.NO_TIMEOUT ||
-                    bufferSize != 0) {
-                BufferedResultsProxy timeoutHandler =
-                    new BufferedResultsProxy(target,
-                            bufferSize,timeout);
-                rv = newAPIOperationProxy(api,
-                        timeoutHandler);
-            }
-        }
-        else {
-            if ( timeout != APIOperation.NO_TIMEOUT ) {
-                //everything else is a general purpose timeout proxy
-                MethodTimeoutProxy timeoutHandler = new MethodTimeoutProxy(target,
-                        timeout);
-                rv = newAPIOperationProxy(api,
-                        timeoutHandler);
-            }
-        }
-        return rv;
+        DelegatingTimeoutProxy handler = 
+            new DelegatingTimeoutProxy(target,timeout,bufferSize);
+                
+        return newAPIOperationProxy(api, handler);
     }
     
     /**
