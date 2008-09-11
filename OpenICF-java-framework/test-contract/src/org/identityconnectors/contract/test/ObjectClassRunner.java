@@ -229,11 +229,10 @@ public abstract class ObjectClassRunner extends AbstractSimpleTest {
     public boolean isOperationAttributeSupported(String name) {
         if (isObjectClassSupported()) {
             ObjectClassInfo oinfo = getObjectClassInfo();            
-            for (AttributeInfo ainfo: oinfo.getAttributeInfo()) {
-                if (ainfo.is(name) && ainfo.isReadable() && ainfo.isWritable()) {
-                    return true;
-                }
-            }
+            for (AttributeInfo ainfo : oinfo.getAttributeInfo()) {
+				return ainfo.is(name) && ainfo.isReadable()
+						&& ainfo.isCreateable() && ainfo.isUpdateable();
+			}
         }
         return false;
     }

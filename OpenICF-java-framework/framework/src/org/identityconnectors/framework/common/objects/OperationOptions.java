@@ -42,6 +42,7 @@ package org.identityconnectors.framework.common.objects;
 import java.util.Map;
 
 import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.operations.ScriptOnResourceApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
 import org.identityconnectors.framework.api.operations.SyncApiOp;
@@ -149,7 +150,7 @@ public final class OperationOptions {
     /**
      * Get the password to run the operation as..
      */
-    public String getRunWithPassword() {
-        return (String) _operationOptions.get(OP_RUN_WITH_PASSWORD);
+    public GuardedString getRunWithPassword() {
+        return (GuardedString) _operationOptions.get(OP_RUN_WITH_PASSWORD);
     }
 }

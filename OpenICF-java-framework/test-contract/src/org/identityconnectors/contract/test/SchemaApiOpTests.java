@@ -82,7 +82,8 @@ public class SchemaApiOpTests extends AbstractSimpleTest {
     private static final String ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT = "returnedByDefault";
     private static final String ATTRIBUTE_FIELD_MULTI_VALUE = "multiValue";
     private static final String ATTRIBUTE_FIELD_REQUIRED = "required";
-    private static final String ATTRIBUTE_FIELD_WRITABLE = "writable";
+    private static final String ATTRIBUTE_FIELD_CREATEABLE = "createable";
+    private static final String ATTRIBUTE_FIELD_UPDATEABLE = "updateable";
     private static final String ATTRIBUTE_FILED_READABLE = "readable";
     private static final String ATTRIBUTE_FIELD_TYPE = "type";
 
@@ -207,8 +208,10 @@ public class SchemaApiOpTests extends AbstractSimpleTest {
                 expectedValues.get(ATTRIBUTE_FIELD_TYPE));
         assertNotNull(String.format(msg, ATTRIBUTE_FILED_READABLE), 
                 expectedValues.get(ATTRIBUTE_FILED_READABLE));
-        assertNotNull(String.format(msg, ATTRIBUTE_FIELD_WRITABLE), 
-                expectedValues.get(ATTRIBUTE_FIELD_WRITABLE));
+        assertNotNull(String.format(msg, ATTRIBUTE_FIELD_CREATEABLE), 
+                expectedValues.get(ATTRIBUTE_FIELD_CREATEABLE));
+        assertNotNull(String.format(msg, ATTRIBUTE_FIELD_UPDATEABLE), 
+                expectedValues.get(ATTRIBUTE_FIELD_UPDATEABLE));
         assertNotNull(String.format(msg, ATTRIBUTE_FIELD_REQUIRED), 
                 expectedValues.get(ATTRIBUTE_FIELD_REQUIRED));
         assertNotNull(String.format(msg, ATTRIBUTE_FIELD_MULTI_VALUE), 
@@ -224,9 +227,12 @@ public class SchemaApiOpTests extends AbstractSimpleTest {
         assertEquals(String.format(msg, ATTRIBUTE_FILED_READABLE, new Boolean(expectedValues
                 .get(ATTRIBUTE_FILED_READABLE)), attribute.isReadable()), 
                 new Boolean(expectedValues.get(ATTRIBUTE_FILED_READABLE)), attribute.isReadable());
-        assertEquals(String.format(msg, ATTRIBUTE_FIELD_WRITABLE, new Boolean(expectedValues
-                .get(ATTRIBUTE_FIELD_WRITABLE)), attribute.isWritable()), 
-                new Boolean(expectedValues.get(ATTRIBUTE_FIELD_WRITABLE)), attribute.isWritable());
+        assertEquals(String.format(msg, ATTRIBUTE_FIELD_CREATEABLE, new Boolean(expectedValues
+                .get(ATTRIBUTE_FIELD_CREATEABLE)), attribute.isCreateable()), 
+                new Boolean(expectedValues.get(ATTRIBUTE_FIELD_CREATEABLE)), attribute.isCreateable());
+        assertEquals(String.format(msg, ATTRIBUTE_FIELD_UPDATEABLE, new Boolean(expectedValues
+                .get(ATTRIBUTE_FIELD_UPDATEABLE)), attribute.isUpdateable()), 
+                new Boolean(expectedValues.get(ATTRIBUTE_FIELD_UPDATEABLE)), attribute.isUpdateable());
         assertEquals(String.format(msg, ATTRIBUTE_FIELD_REQUIRED, new Boolean(expectedValues
                 .get(ATTRIBUTE_FIELD_REQUIRED)), attribute.isRequired()), 
                 new Boolean(expectedValues.get(ATTRIBUTE_FIELD_REQUIRED)), attribute.isRequired());

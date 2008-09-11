@@ -46,6 +46,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.ScriptOnResourceApiOp;
@@ -170,7 +171,7 @@ public class ScriptOnResourceApiOpTests extends AbstractSimpleTest {
                     + TEST_NAME);
             if (password != null) {
                 LOG.info("Using OperationOptions: ''{0}'' value: ''{1}''.", OperationOptions.OP_RUN_WITH_PASSWORD, password);
-                builder.setRunWithPassword(password);
+                builder.setRunWithPassword(new GuardedString(password.toCharArray()));
             }
 
             return builder.build();

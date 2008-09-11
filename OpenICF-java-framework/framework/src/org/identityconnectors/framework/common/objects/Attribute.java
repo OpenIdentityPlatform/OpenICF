@@ -46,6 +46,7 @@ import java.util.Map;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.common.security.GuardedString;
 
 
 /**
@@ -75,15 +76,30 @@ public class Attribute {
      */
     private final List<Object> value;
 
-    Attribute(String name, List<Object> value) {
+    /**
+     * Create an attribute.
+     */
+    public Attribute(String name, List<Object> value) {
         if (StringUtil.isBlank(name)) {
             throw new IllegalArgumentException("Name must not be blank!");
+        }
+        if (OperationalAttributes.PASSWORD_NAME.equals(name)
+                || OperationalAttributes.CURRENT_PASSWORD_NAME.equals(name)
+                || OperationalAttributes.RESET_PASSWORD_NAME.equals(name)) {
+            // check the value..
+            if (value == null || value.size() != 1) {
+                final String MSG = "Must be a single value.";
+                throw new IllegalArgumentException(MSG);
+            }
+            if (!(value.get(0) instanceof GuardedString)) {
+                final String MSG = "Password value must be an instance of GuardedString";
+                throw new IllegalArgumentException(MSG);
+            }
         }
         // make this case insensitive
         this.name = name;
         // copy to prevent corruption..
-        this.value = (value == null) ? null : CollectionUtil
-                .newReadOnlyList(value);
+        this.value = (value == null) ? null : CollectionUtil.newReadOnlyList(value);
     }
 
     public String getName() {

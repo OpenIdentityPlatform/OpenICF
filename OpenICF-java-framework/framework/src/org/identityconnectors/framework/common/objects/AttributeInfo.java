@@ -42,9 +42,10 @@ package org.identityconnectors.framework.common.objects;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.operations.GetApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
-
 
 /**
  * <i>AttributeInfo</i> is meta data responsible for describing an
@@ -54,161 +55,182 @@ import org.identityconnectors.framework.api.operations.SearchApiOp;
  * and name. It is recommended that date fields be represented as a long with
  * time zone UTC. It should be up to the display or separate attributes if the
  * time zone is necessary.
- * 
- * @author Will Droste
- * @version $Revision: 1.7 $
- * @since 1.0
  */
 public final class AttributeInfo {
 
-    private final String name;
-    private final Class<?> type;
-    private final boolean required;
-    private final boolean readable;
-    private final boolean writeable;
-    private final boolean multivalue;
-    private final boolean returnedByDefault;
+	private final String _name;
+	private final Class<?> _type;
+	private final boolean _required;
+	private final boolean _readable;
+	private final boolean _createable;
+	private final boolean _multivalue;
+	private final boolean _updateable;
+	private final boolean _returnedByDefault;
 
-    public AttributeInfo(final String name, final Class<?> type,
-            final boolean readable, final boolean writeable,
-            final boolean required, final boolean multivalue,
-            final boolean returnedByDefault) {
-        this.name = name;
-        this.type = type;
-        this.readable = readable;
-        this.writeable = writeable;
-        this.required = required;
-        this.multivalue = multivalue;
-        this.returnedByDefault = returnedByDefault;
-    }
-
-    /**
-     * The native name of the attribute.
-     * 
-     * @return the native name of the attribute its describing.
-     */
-    public String getName() {
-        return this.name;
-    }
-
-    /**
-     * The basic type associated with this attribute. All primitives are
-     * supported.
-     * 
-     * @return the native type if uses.
-     */
-    public Class<?> getType() {
-        return this.type;
-    }
-
-    /**
-     * Determines if the attribute is readable.
-     * 
-     * @return true if the attribute is readable else false.
-     */
-    public boolean isReadable() {
-        return this.readable;
-    }
-
-    /**
-     * Determines if the attribute is writable.
-     * 
-     * @return true if the attribute is writable else false.
-     */
-    public boolean isWritable() {
-        return this.writeable;
-    }
-
-    /**
-     * Determines whether this attribute is required for creates.
-     * 
-     * @return true if the attribute is required for an object else false.
-     */
-    public boolean isRequired() {
-        return this.required;
-    }
-
-    /**
-     * Determines if this attribute can handle multiple values. There is a
-     * special case with byte[] since in most instances this denotes a single
-     * object.
-     * 
-     * @return true if the attribute is multi-value otherwise false.
-     */
-    public boolean isMultiValue() {
-        return this.multivalue;
-    }
-
-    /**
-     * Determines if the attribute is returned by default. Indicates if an
-     * {@link Attribute} will be returned during {@link SearchApiOp} or
-     * {@link GetApiOp} inside a {@link ConnectorObject} by default. The default
-     * value is <code>true</code>.
-     * 
-     * @return false iff the attribute should not be returned by default.
-     */
-    public boolean isReturnedByDefault() {
-        return returnedByDefault;
-    }
-
-    /**
-     * Determines if the name parameter matches this {@link AttributeInfo}.
-     */
-    public boolean is(String name) {
-        return getName().equalsIgnoreCase(name);
-    }
-
-    // =======================================================================
-    // Object Overrides
-    // =======================================================================
-
-    @Override
-    public boolean equals(Object obj) {
-        boolean ret = false;
-        if (obj instanceof AttributeInfo) {
-            AttributeInfo other = (AttributeInfo)obj;
-            if (!getName().toUpperCase().equals(other.getName().toUpperCase())) {
-                return false;
-            }
-            if (!getType().equals(other.getType())) {
-                return false;
-            }
-            if (isReadable() != other.isReadable()) {
-                return false;
-            }
-            if (isWritable() != other.isWritable()) {
-                return false;
-            }
-            if (isRequired() != other.isRequired()) {
-                return false;
-            }
-            if (isMultiValue() != other.isMultiValue()) {
-                return false;
-            }
-            if (isReturnedByDefault() != other.isReturnedByDefault()) {
-                return false;
-            }
-            return true;
+	public AttributeInfo(final String name, final Class<?> type,
+			final boolean readable, final boolean createable,
+			final boolean required, final boolean multivalue,
+			final boolean updateable, final boolean returnedByDefault) {
+        if (StringUtil.isBlank(name)) {
+            throw new IllegalStateException("Name must not be blank!");
         }
-        return ret;
-    }
+        if ((OperationalAttributes.PASSWORD_NAME.equals(name) ||
+                OperationalAttributes.RESET_PASSWORD_NAME.equals(name) ||
+                OperationalAttributes.CURRENT_PASSWORD_NAME.equals(name)) &&
+                !GuardedString.class.equals(type)) {
+            final String MSG = "Password based attributes must be of type GuardedString.";
+            throw new IllegalArgumentException(MSG);
+        }
+		_name = name;
+		_type = type;
+		_readable = readable;
+		_createable = createable;
+		_required = required;
+		_multivalue = multivalue;
+		_updateable = updateable;
+		_returnedByDefault = returnedByDefault;
+	}
 
-    @Override
-    public int hashCode() {
-        return getName().toUpperCase().hashCode();
-    }
+	/**
+	 * The native name of the attribute.
+	 * 
+	 * @return the native name of the attribute its describing.
+	 */
+	public String getName() {
+		return _name;
+	}
 
-    @Override
-    public String toString() {
-        Map<String, Object> map = new LinkedHashMap<String, Object>();
-        map.put("Name", getName());
-        map.put("Type", getType());
-        map.put("Required", isRequired());
-        map.put("Readable", isReadable());
-        map.put("Writeable", isWritable());
-        map.put("MultiValue", isMultiValue());
-        map.put("ReturnedByDefault", isReturnedByDefault());
-        return map.toString();
-    }
+	/**
+	 * The basic type associated with this attribute. All primitives are
+	 * supported.
+	 * 
+	 * @return the native type if uses.
+	 */
+	public Class<?> getType() {
+		return _type;
+	}
+
+	/**
+	 * Determines if the attribute is readable.
+	 * 
+	 * @return true if the attribute is readable else false.
+	 */
+	public boolean isReadable() {
+		return _readable;
+	}
+
+	/**
+	 * Determines if the attribute is writable on create.
+	 * 
+	 * @return true if the attribute is writable on create else false.
+	 */
+	public boolean isCreateable() {
+		return _createable;
+	}
+
+	/**
+	 * Determines if the attribute is writable on update.
+	 * 
+	 * @return true if the attribute is writable on update else false.
+	 */
+	public boolean isUpdateable() {
+		return _updateable;
+	}
+
+	/**
+	 * Determines whether this attribute is required for creates.
+	 * 
+	 * @return true if the attribute is required for an object else false.
+	 */
+	public boolean isRequired() {
+		return _required;
+	}
+
+	/**
+	 * Determines if this attribute can handle multiple values. There is a
+	 * special case with byte[] since in most instances this denotes a single
+	 * object.
+	 * 
+	 * @return true if the attribute is multi-value otherwise false.
+	 */
+	public boolean isMultiValue() {
+		return _multivalue;
+	}
+
+	/**
+	 * Determines if the attribute is returned by default. Indicates if an
+	 * {@link Attribute} will be returned during {@link SearchApiOp} or
+	 * {@link GetApiOp} inside a {@link ConnectorObject} by default. The default
+	 * value is <code>true</code>.
+	 * 
+	 * @return false iff the attribute should not be returned by default.
+	 */
+	public boolean isReturnedByDefault() {
+		return _returnedByDefault;
+	}
+
+	/**
+	 * Determines if the name parameter matches this {@link AttributeInfo}.
+	 */
+	public boolean is(String name) {
+		return getName().equalsIgnoreCase(name);
+	}
+
+	// =======================================================================
+	// Object Overrides
+	// =======================================================================
+
+	@Override
+	public boolean equals(Object obj) {
+		boolean ret = false;
+		if (obj instanceof AttributeInfo) {
+			AttributeInfo other = (AttributeInfo) obj;
+			if (!getName().toUpperCase().equals(other.getName().toUpperCase())) {
+				return false;
+			}
+			if (!getType().equals(other.getType())) {
+				return false;
+			}
+			if (isReadable() != other.isReadable()) {
+				return false;
+			}
+			if (isCreateable() != other.isCreateable()) {
+				return false;
+			}
+			if (isRequired() != other.isRequired()) {
+				return false;
+			}
+			if (isMultiValue() != other.isMultiValue()) {
+				return false;
+			}
+			if (isReturnedByDefault() != other.isReturnedByDefault()) {
+				return false;
+			}
+			if (isUpdateable() != other.isUpdateable()) {
+				return false;
+			}
+			return true;
+		}
+		return ret;
+	}
+
+	@Override
+	public int hashCode() {
+		return getName().toUpperCase().hashCode();
+	}
+
+	@Override
+	public String toString() {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("Name", getName());
+		map.put("Type", getType());
+		map.put("Required", isRequired());
+		map.put("Readable", isReadable());
+		map.put("Createable", isCreateable());
+		map.put("MultiValue", isMultiValue());
+		map.put("Updateable", isUpdateable());
+		map.put("ReturnedByDefault", isReturnedByDefault());
+		return map.toString();
+	}
 
 }

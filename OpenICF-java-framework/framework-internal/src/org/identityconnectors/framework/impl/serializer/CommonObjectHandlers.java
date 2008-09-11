@@ -305,10 +305,12 @@ class CommonObjectHandlers {
                         decoder.readBooleanField("required",false));
                 builder.setReadable(
                         decoder.readBooleanField("readable",false));
-                builder.setWriteable(
-                        decoder.readBooleanField("writeable",false));
+                builder.setCreateable(
+                        decoder.readBooleanField("creatable",false));
                 builder.setMultiValue(
                         decoder.readBooleanField("multivalue",false));
+                builder.setUpdateable(
+                		decoder.readBooleanField("updateable",false));
                 builder.setReturnedByDefault(
                         decoder.readBooleanField("returnedbydefault",true));
                 return builder.build();
@@ -321,8 +323,9 @@ class CommonObjectHandlers {
                 encoder.writeClassField("type", val.getType());
                 encoder.writeBooleanField("required", val.isRequired());
                 encoder.writeBooleanField("readable", val.isReadable());
-                encoder.writeBooleanField("writeable", val.isWritable());
+                encoder.writeBooleanField("creatable", val.isCreateable());
                 encoder.writeBooleanField("multivalue", val.isMultiValue());
+                encoder.writeBooleanField("updateable", val.isUpdateable());
                 encoder.writeBooleanField("returnedbydefault", val.isReturnedByDefault());
             }
             
@@ -594,7 +597,7 @@ class CommonObjectHandlers {
                 public void serialize(Object object, ObjectEncoder encoder)
                 {
                     SyncToken val = (SyncToken)object;
-                    encoder.writeObjectField("value", val.getValue(),false);
+            		encoder.writeObjectField("value", val.getValue(), false);
                 }
                     
             });

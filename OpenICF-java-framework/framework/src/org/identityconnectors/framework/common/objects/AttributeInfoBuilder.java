@@ -40,7 +40,6 @@
 package org.identityconnectors.framework.common.objects;
 
 import org.identityconnectors.common.StringUtil;
-import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.FrameworkUtil;
 
 /**
@@ -61,161 +60,161 @@ import org.identityconnectors.framework.common.FrameworkUtil;
  */
 public final class AttributeInfoBuilder {
 
-    private String name;
-    private Class<?> type;
-    private boolean readable;
-    private boolean writeable;
-    private boolean required;
-    private boolean multivalue;
-    private boolean returnedByDefault;
+	private String _name;
+	private Class<?> _type;
+	private boolean _readable;
+	private boolean _createable;
+	private boolean _required;
+	private boolean _multivalue;
+	private boolean _updateable;
+	private boolean _returnedByDefault;
 
-    /**
-     * Creates an builder with all the defaults set. The name must be set before
-     * the 'build' method is called otherwise an {@link IllegalStateException}
-     * is thrown.
-     * 
-     * <pre>
-     * Name: &lt;not set&gt;
-     * Readable: true
-     * Writeable: true
-     * Required: false
-     * Type: string
-     * MultiValue: false
-     * </pre>
-     */
-    public AttributeInfoBuilder() {
-        this.name = null;
-        this.readable = true;
-        this.writeable = true;
-        this.required = false;
-        this.multivalue = false;
-        this.type = String.class;
-        this.returnedByDefault = true;
-    }
+	/**
+	 * Creates an builder with all the defaults set. The name must be set before
+	 * the 'build' method is called otherwise an {@link IllegalStateException}
+	 * is thrown.
+	 * 
+	 * <pre>
+	 * Name: &lt;not set&gt;
+	 * Readable: true
+	 * Writeable: true
+	 * Required: false
+	 * Type: string
+	 * MultiValue: false
+	 * </pre>
+	 */
+	public AttributeInfoBuilder() {
+		_name = null;
+		_readable = true;
+		_createable = true;
+		_required = false;
+		_updateable = true;
+		_multivalue = false;
+		_type = String.class;
+		_returnedByDefault = true;
+	}
 
-    /**
-     * Builds an {@link AttributeInfo} object based on the properties set.
-     * 
-     * @return {@link AttributeInfo} based on the properties set.
-     */
-    public AttributeInfo build() {
-        if (StringUtil.isBlank(name)) {
-            throw new IllegalStateException("Name must not be blank!");
-        }
-        if ((OperationalAttributes.PASSWORD_NAME.equals(name) ||
-                OperationalAttributes.RESET_PASSWORD_NAME.equals(name) ||
-                OperationalAttributes.CURRENT_PASSWORD_NAME.equals(name)) &&
-                !GuardedString.class.equals(type)) {
-            final String MSG = "Password based attributes must be of type GuardedString.";
-            throw new IllegalArgumentException(MSG);
-        }
-        return new AttributeInfo(name, type, readable, writeable, required,
-                multivalue, returnedByDefault);
-    }
+	/**
+	 * Builds an {@link AttributeInfo} object based on the properties set.
+	 * 
+	 * @return {@link AttributeInfo} based on the properties set.
+	 */
+	public AttributeInfo build() {
+		return new AttributeInfo(_name, _type, _readable, _createable,
+				_required, _multivalue, _updateable, _returnedByDefault);
+	}
 
-    /**
-     * Sets the unique name of the {@link AttributeInfo} object.
-     * 
-     * @param name
-     *            unique name of the {@link AttributeInfo} object.
-     */
-    public void setName(final String name) {
-        if (StringUtil.isBlank(name)) {
-            throw new IllegalArgumentException("Argument must not be blank.");
-        }
-        this.name = name;
-    }
+	/**
+	 * Sets the unique name of the {@link AttributeInfo} object.
+	 * 
+	 * @param name
+	 *            unique name of the {@link AttributeInfo} object.
+	 */
+	public void setName(final String name) {
+		if (StringUtil.isBlank(name)) {
+			throw new IllegalArgumentException("Argument must not be blank.");
+		}
+		_name = name;
+	}
 
-    /**
-     * Please see {@link FrameworkUtil#checkAttributeType(Class)} for the
-     * definitive list of supported types.
-     * 
-     * @param value
-     *            type for an {@link Attribute}'s value.
-     * @throws IllegalArgumentException
-     *             if the Class is not a supported type.
-     */
-    public void setType(final Class<?> value) {
-        FrameworkUtil.checkAttributeType(value);
-        this.type = value;
-    }
+	/**
+	 * Please see {@link FrameworkUtil#checkAttributeType(Class)} for the
+	 * definitive list of supported types.
+	 * 
+	 * @param value
+	 *            type for an {@link Attribute}'s value.
+	 * @throws IllegalArgumentException
+	 *             if the Class is not a supported type.
+	 */
+	public void setType(final Class<?> value) {
+		FrameworkUtil.checkAttributeType(value);
+		_type = value;
+	}
 
-    /**
-     * Determines if the attribute is readable.
-     */
-    public void setReadable(final boolean value) {
-        this.readable = value;
-    }
+	/**
+	 * Determines if the attribute is readable.
+	 */
+	public void setReadable(final boolean value) {
+		_readable = value;
+	}
 
-    /**
-     * Determines if the attribute is writable.
-     */
-    public void setWriteable(final boolean value) {
-        this.writeable = value;
-    }
+	/**
+	 * Determines if the attribute is writable.
+	 */
+	public void setCreateable(final boolean value) {
+		_createable = value;
+	}
 
-    /**
-     * Determines if this attribute is required.
-     * 
-     * @param value
-     */
-    public void setRequired(final boolean value) {
-        this.required = value;
-    }
+	/**
+	 * Determines if this attribute is required.
+	 */
+	public void setRequired(final boolean value) {
+		_required = value;
+	}
 
-    public void setMultiValue(final boolean value) {
-        this.multivalue = value;
-    }
+	/**
+	 * Determines if this attribute supports multivalue.
+	 */
+	public void setMultiValue(final boolean value) {
+		_multivalue = value;
+	}
 
-    public void setReturnedByDefault(final boolean value) {
-        this.returnedByDefault = value;
-    }
+	/**
+	 * Determines if this attribute writable during update.
+	 */
+	public void setUpdateable(final boolean value) {
+		_updateable = value;
+	}
+	
+	public void setReturnedByDefault(final boolean value) {
+		_returnedByDefault = value;
+	}
 
-    // =======================================================================
-    // Static Helper methods..
-    // =======================================================================
-    public static AttributeInfo build(final String name) {
-        AttributeInfoBuilder bld = new AttributeInfoBuilder();
-        bld.setName(name);
-        return bld.build();
-    }
+	// =======================================================================
+	// Static Helper methods..
+	// =======================================================================
+	public static AttributeInfo build(final String name) {
+		AttributeInfoBuilder bld = new AttributeInfoBuilder();
+		bld.setName(name);
+		return bld.build();
+	}
 
-    public static AttributeInfo build(final String name, final Class<?> type) {
-        AttributeInfoBuilder bld = new AttributeInfoBuilder();
-        bld.setName(name);
-        bld.setType(type);
-        return bld.build();
-    }
+	public static AttributeInfo build(final String name, final Class<?> type) {
+		AttributeInfoBuilder bld = new AttributeInfoBuilder();
+		bld.setName(name);
+		bld.setType(type);
+		return bld.build();
+	}
 
-    public static AttributeInfo build(final String name, final Class<?> type,
-            final boolean required) {
-        AttributeInfoBuilder bld = new AttributeInfoBuilder();
-        bld.setName(name);
-        bld.setType(type);
-        bld.setRequired(required);
-        return bld.build();
-    }
+	public static AttributeInfo build(final String name, final Class<?> type,
+			final boolean required) {
+		AttributeInfoBuilder bld = new AttributeInfoBuilder();
+		bld.setName(name);
+		bld.setType(type);
+		bld.setRequired(required);
+		return bld.build();
+	}
 
-    public static AttributeInfo build(final String name,
-            final boolean required, final boolean readable,
-            final boolean writeable) {
-        AttributeInfoBuilder bld = new AttributeInfoBuilder();
-        bld.setName(name);
-        bld.setRequired(required);
-        bld.setReadable(readable);
-        bld.setWriteable(writeable);
-        return bld.build();
-    }
+	public static AttributeInfo build(final String name,
+			final boolean required, final boolean readable,
+			final boolean writeable) {
+		AttributeInfoBuilder bld = new AttributeInfoBuilder();
+		bld.setName(name);
+		bld.setRequired(required);
+		bld.setReadable(readable);
+		bld.setCreateable(writeable);
+		return bld.build();
+	}
 
-    public static AttributeInfo build(final String name, final Class<?> type,
-            final boolean required, final boolean readable,
-            final boolean writeable) {
-        AttributeInfoBuilder bld = new AttributeInfoBuilder();
-        bld.setName(name);
-        bld.setType(type);
-        bld.setRequired(required);
-        bld.setReadable(readable);
-        bld.setWriteable(writeable);
-        return bld.build();
-    }
+	public static AttributeInfo build(final String name, final Class<?> type,
+			final boolean required, final boolean readable,
+			final boolean writeable) {
+		AttributeInfoBuilder bld = new AttributeInfoBuilder();
+		bld.setName(name);
+		bld.setType(type);
+		bld.setRequired(required);
+		bld.setReadable(readable);
+		bld.setCreateable(writeable);
+		return bld.build();
+	}
 }

@@ -44,6 +44,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.identityconnectors.common.Assertions;
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.serializer.ObjectSerializerFactory;
 
 
@@ -109,16 +110,16 @@ public final class OperationOptionsBuilder {
     }
 
     /**
-     * Set the run with password option.
-     */
-    public void setRunWithPassword(String password) {
-        Assertions.nullCheck(password, "password");
-        _options.put(OperationOptions.OP_RUN_WITH_PASSWORD, password);
-    }
+	 * Set the run with password option.
+	 */
+	public void setRunWithPassword(GuardedString password) {
+		Assertions.nullCheck(password, "password");
+		_options.put(OperationOptions.OP_RUN_WITH_PASSWORD, password);
+	}
     
     /**
-     * Set the run as user option.
-     */
+	 * Set the run as user option.
+	 */
     public void setRunAsUser(String user) {
         Assertions.nullCheck(user, "user");
         _options.put(OperationOptions.OP_RUN_AS_USER, user);

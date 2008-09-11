@@ -183,16 +183,6 @@ public final class AttributeBuilder {
             return new Uid(getSingleStringValue());
         } else if (Name.NAME.equals(_name)) {
             return new Name(getSingleStringValue());
-        } else if (OperationalAttributes.PASSWORD_NAME.equals(_name)
-                || OperationalAttributes.CURRENT_PASSWORD_NAME.equals(_name)
-                || OperationalAttributes.RESET_PASSWORD_NAME.equals(_name)) {
-            // check the value..
-            checkSingleValue();
-            if (!(_value.get(0) instanceof GuardedString)) {
-                final String MSG = "Password value must be an instance of GuardedString";
-                throw new IllegalArgumentException(MSG);
-            }
-            return new Attribute(_name, _value);
         }
         return new Attribute(_name, _value);
     }

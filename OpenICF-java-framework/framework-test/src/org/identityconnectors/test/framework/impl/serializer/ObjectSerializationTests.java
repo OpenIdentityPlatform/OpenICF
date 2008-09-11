@@ -543,8 +543,9 @@ public class ObjectSerializationTests {
         builder.setType(String.class);
         builder.setRequired(true);
         builder.setReadable(true);
-        builder.setWriteable(true);
+        builder.setCreateable(true);
         builder.setMultiValue(true);
+        builder.setUpdateable(false);
         builder.setReturnedByDefault(false);
         AttributeInfo v1 = builder.build();
         AttributeInfo v2 = (AttributeInfo)cloneObject(v1);
@@ -554,7 +555,8 @@ public class ObjectSerializationTests {
         Assert.assertTrue(v2.isMultiValue());
         Assert.assertTrue(v2.isReadable());
         Assert.assertTrue(v2.isRequired());
-        Assert.assertTrue(v2.isWritable());
+        Assert.assertTrue(v2.isCreateable());
+        Assert.assertFalse(v2.isUpdateable());
         Assert.assertFalse(v2.isReturnedByDefault());
     }
     
@@ -591,7 +593,7 @@ public class ObjectSerializationTests {
         builder.setType(String.class);
         builder.setRequired(true);
         builder.setReadable(true);
-        builder.setWriteable(true);
+        builder.setCreateable(true);
         builder.setMultiValue(true);
         ObjectClassInfoBuilder obld = new ObjectClassInfoBuilder();
         obld.addAttributeInfo(builder.build());
