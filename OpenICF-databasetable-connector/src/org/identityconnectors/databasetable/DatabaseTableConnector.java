@@ -494,6 +494,11 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             SQLUtil.closeQuietly(statement);
         }        
     }
+    
+    public SyncToken getLatestSyncToken() {
+        //TODO: implement me
+        return null;
+    }
 
     // =======================================================================
     // Schema..
