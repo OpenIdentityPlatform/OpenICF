@@ -56,7 +56,8 @@ import java.util.Set;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.contract.data.DataProvider;
-import org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException;
+import org.identityconnectors.contract.exceptions.ContractException;
+import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConfigurationProperties;
 import org.identityconnectors.framework.api.ConfigurationProperty;
@@ -106,29 +107,32 @@ public class ConnectorHelper {
     private static final String WRONG_CONFIGURATION_PREFIX = "wrong";
     private static final String MULTI_VALUE_TYPE_PREFIX = "multi";
 
-    public DataProvider createDataProvider() throws Exception {
+    public static DataProvider createDataProvider() {
         DataProvider dp = null;
-
-        String customDataProvider = System.getProperty(JVM_ARG_DATA_PROVIDER);
-        if (customDataProvider != null) {
-            Class<?> dpClass = null;
-            dpClass = Class.forName(customDataProvider);
-            if (!DataProvider.class.isAssignableFrom(dpClass)) {
-                /*
-                 * The Class is not an instanceof DataProvider, so we cannot use
-                 * it.
-                 */
-                LOG.info("Class {0} is not assignable as DataProvider",
-                        customDataProvider);
-                throw new Exception("Class " + customDataProvider
-                        + " is not of type " + DataProvider.class.getName());
-            }
-            dp = (DataProvider) dpClass.newInstance();
-        } else {
-            LOG.error("DataProvider class not specified");
+        try {            
+            String customDataProvider = System.getProperty(JVM_ARG_DATA_PROVIDER);
+            if (customDataProvider != null) {
+                Class<?> dpClass = null;
+                dpClass = Class.forName(customDataProvider);
+                if (!DataProvider.class.isAssignableFrom(dpClass)) {
+                    /*
+                     * The Class is not an instanceof DataProvider, so we cannot
+                     * use it.
+                     */
+                    LOG.info("Class {0} is not assignable as DataProvider", customDataProvider);
+                    throw new Exception("Class " + customDataProvider + " is not of type "
+                            + DataProvider.class.getName());
+                }
+                dp = (DataProvider) dpClass.newInstance();
+            } else {
+                LOG.error("DataProvider class not specified");
+            }            
+        } catch (Exception ex) {
+            ContractException.wrap(ex);
         }
         
         return dp;
+
     }
 
     /**
@@ -136,9 +140,8 @@ public class ConnectorHelper {
      * 
      * @param dataProvider
      * @return
-     * @throws java.lang.Exception
      */
-    public ConfigurationProperties getConfigurationProperties(DataProvider dataProvider) throws Exception {
+    public static ConfigurationProperties getConfigurationProperties(DataProvider dataProvider) {
         ConnectorInfoManager manager = getInfoManager(dataProvider);
 
         APIConfiguration apiConfig = getDefaultConfigurationProperties(
@@ -152,7 +155,7 @@ public class ConnectorHelper {
      * Creates connector facade, initializes connector configuration from dataProvider. propertyPrefix is added before
      * configuration properties. 
      */
-    private ConnectorFacade createConnectorFacade(DataProvider dataProvider, final String propertyPrefix) throws Exception {
+    private static ConnectorFacade createConnectorFacade(DataProvider dataProvider, final String propertyPrefix) {
         ConnectorInfoManager manager = getInfoManager(dataProvider);
         Assert.assertNotNull("Manager can't be null, check configuration properties !", manager);
 
@@ -188,7 +191,7 @@ public class ConnectorHelper {
                             "No value found for connector property ''{0}''",
                             propName);
                 }
-            } catch (DataProvider.ObjectNotFoundException ex) {
+            } catch (ObjectNotFoundException ex) {
                 LOG.info("Caught Object not found exception, propName: " + propName);
             }
         }
@@ -210,7 +213,7 @@ public class ConnectorHelper {
      * Creates connector facade, initializes connector configuration from
      * dataProvider and validates configuration and/or tests connection.
      */
-    public ConnectorFacade createConnectorFacade(DataProvider dataProvider) throws Exception {
+    public static ConnectorFacade createConnectorFacade(DataProvider dataProvider) {
         ConnectorFacade connector = createConnectorFacade(dataProvider, null);
         
         // try to test connector configuration and established connection
@@ -226,18 +229,18 @@ public class ConnectorHelper {
     }
     
     /**
-     * Creates conenctor facade with wrong configuration.
+     * Creates connector facade with wrong configuration.
      */
-    public ConnectorFacade createConnectorFacadeWithWrongConfiguration(DataProvider dataProvider, int iteration) throws Exception {
+    public static ConnectorFacade createConnectorFacadeWithWrongConfiguration(DataProvider dataProvider, int iteration) {
         LOG.info("Creating connector facade with wrong configuration.");
         return createConnectorFacade(dataProvider,iteration + "." + WRONG_CONFIGURATION_PREFIX);
     }
     
     /**
-     * Performs search on connector facade and filteres only searched object by its name.
+     * Performs search on connector facade and filters only searched object by its name.
      * @return found object
      */
-    ConnectorObject findObjectByName(ConnectorFacade connectorFacade, 
+    static ConnectorObject findObjectByName(ConnectorFacade connectorFacade, 
             ObjectClass objClass, String name, OperationOptions opOptions) {        
         Filter nameFilter = FilterBuilder.equalTo(new Name(name));        
         final List<ConnectorObject> foundObjects = new ArrayList<ConnectorObject>();
@@ -262,7 +265,7 @@ public class ConnectorHelper {
      * Performs search on connector facade with specified object class, filter and operation options.
      * @return list of found objects.
      */
-    public List<ConnectorObject> search(ConnectorFacade connectorFacade, ObjectClass objClass, Filter filter, OperationOptions opOptions) {
+    public static List<ConnectorObject> search(ConnectorFacade connectorFacade, ObjectClass objClass, Filter filter, OperationOptions opOptions) {
         final List<ConnectorObject> foundObjects = new ArrayList<ConnectorObject>();
         connectorFacade.search(objClass, filter,
                 new ResultsHandler() {
@@ -275,10 +278,10 @@ public class ConnectorHelper {
     }
     
     /**
-     * Peforms sync on connector facade.
+     * Performs sync on connector facade.
      * @returns list of deltas
      */
-    public List<SyncDelta> sync(ConnectorFacade connectorFacade, ObjectClass objClass,
+    public static List<SyncDelta> sync(ConnectorFacade connectorFacade, ObjectClass objClass,
             SyncToken token, OperationOptions opOptions) {
         final List<SyncDelta> returnedDeltas = new ArrayList<SyncDelta>();
 
@@ -296,7 +299,7 @@ public class ConnectorHelper {
      * Performs deletion of object specified by uid.
      * Fails in case failOnError is true and object wasn't deleted during delete call.
      */
-    public boolean deleteObject(ConnectorFacade connectorFacade, 
+    public static boolean deleteObject(ConnectorFacade connectorFacade, 
             ObjectClass objClass, Uid uid, boolean failOnError, OperationOptions opOptions) {
         boolean deleted = false;
         
@@ -330,7 +333,7 @@ public class ConnectorHelper {
     /**
      * Deletes objects for passed uids.
      */
-    public void deleteObjects(ConnectorFacade connectorFacade, ObjectClass objectClass,
+    public static void deleteObjects(ConnectorFacade connectorFacade, ObjectClass objectClass,
             Set<Uid> uids, OperationOptions opOptions) {
         if (uids == null) {
             return;
@@ -344,7 +347,7 @@ public class ConnectorHelper {
     /**
      * Checks if object has expected attributes and values. All readable or non-special attributes are checked.
      */
-    public boolean checkObject(ObjectClassInfo objectClassInfo, ConnectorObject connectorObj,
+    public static boolean checkObject(ObjectClassInfo objectClassInfo, ConnectorObject connectorObj,
             Set<Attribute> requestedAttributes) {
         return checkObject(objectClassInfo, connectorObj, requestedAttributes, true);
     }
@@ -353,7 +356,7 @@ public class ConnectorHelper {
      * Checks if object has expected attributes and values. All readable or non-special attributes are checked.
      * @param checkNotReturnedByDefault if true then also attributes not returned by default are checked 
      */
-    public boolean checkObject(ObjectClassInfo objectClassInfo, ConnectorObject connectorObj,
+    public static boolean checkObject(ObjectClassInfo objectClassInfo, ConnectorObject connectorObj,
             Set<Attribute> requestedAttributes, boolean checkNotReturnedByDefault) {
         boolean success = true;
 
@@ -376,7 +379,7 @@ public class ConnectorHelper {
     /**
      * Compares two sets of attributes.
      */
-    public boolean checkAttributes(final Set<Attribute> expected, final Set<Attribute> got) {
+    public static boolean checkAttributes(final Set<Attribute> expected, final Set<Attribute> got) {
         boolean success = true;
 
         for (Attribute attribute : expected) {
@@ -390,7 +393,7 @@ public class ConnectorHelper {
     /**
      * Whether is attribute readable.
      */
-    public boolean isReadable(ObjectClassInfo objectClassInfo, Attribute attribute) {
+    public static boolean isReadable(ObjectClassInfo objectClassInfo, Attribute attribute) {
         boolean isReadable = false;
         Set<AttributeInfo> attributeInfoSet = objectClassInfo.getAttributeInfo();
         for(AttributeInfo attributeInfo : attributeInfoSet) {
@@ -405,7 +408,7 @@ public class ConnectorHelper {
     /**
      * Whether is attribute returnedByDefault.
      */
-    public boolean isReturnedByDefault(ObjectClassInfo objectClassInfo, Attribute attribute) {
+    public static boolean isReturnedByDefault(ObjectClassInfo objectClassInfo, Attribute attribute) {
         boolean isReturnedByDefault = false;
         Set<AttributeInfo> attributeInfoSet = objectClassInfo.getAttributeInfo();
         for(AttributeInfo attributeInfo : attributeInfoSet) {
@@ -420,7 +423,7 @@ public class ConnectorHelper {
     /**
      * gets attribute's values for all object class' attributes
      */
-    public Set<Attribute> getAttributes(DataProvider dataProvider, 
+    public static Set<Attribute> getAttributes(DataProvider dataProvider, 
             ObjectClassInfo objectClassInfo, 
             String testName, int sequenceNumber, boolean checkRequired) throws ObjectNotFoundException {
         return getAttributes(dataProvider, objectClassInfo, testName, "", sequenceNumber, checkRequired, false);
@@ -435,9 +438,9 @@ public class ConnectorHelper {
      * @param sequenceNumber
      * @param checkRequired
      * @return
-     * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
+     * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
      */
-    public Set<Attribute> getAttributes(DataProvider dataProvider, 
+    public static Set<Attribute> getAttributes(DataProvider dataProvider, 
             ObjectClassInfo objectClassInfo, String testName, 
             String qualifier, int sequenceNumber, 
             boolean checkRequired, boolean onlyMultiValue) throws ObjectNotFoundException {
@@ -481,7 +484,7 @@ public class ConnectorHelper {
                         }
                     }
                 }
-            } catch (DataProvider.ObjectNotFoundException ex) {
+            } catch (ObjectNotFoundException ex) {
                 // caught an exception because no value was supplied for an attribute
                 if(checkRequired && attributeInfo.isRequired()) {
                     // if the attribute was required, it's an error
@@ -508,9 +511,9 @@ public class ConnectorHelper {
      * @param qualifier
      * @param sequenceNumber
      * @return
-     * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
+     * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
      */
-    public Uid createObject(ConnectorFacade connectorFacade, 
+    public static Uid createObject(ConnectorFacade connectorFacade, 
             DataProvider dataProvider, ObjectClassInfo objectClassInfo,
             String testName, String qualifier, 
             int sequenceNumber, OperationOptions opOptions) throws ObjectNotFoundException {
@@ -529,9 +532,9 @@ public class ConnectorHelper {
      * @param testName
      * @param sequenceNumber
      * @return
-     * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
+     * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
      */
-    public Uid createObject(ConnectorFacade connectorFacade, 
+    public static Uid createObject(ConnectorFacade connectorFacade, 
             DataProvider dataProvider, ObjectClassInfo objectClassInfo,
             String testName, int sequenceNumber, OperationOptions opOptions) throws ObjectNotFoundException {
         Set<Attribute> attributes = getAttributes(dataProvider, 
@@ -544,7 +547,7 @@ public class ConnectorHelper {
     /**
      * Creates <i>howMany</i> objects.
      */
-    public Map<Uid, Set<Attribute>> createObjects(ConnectorFacade connectorFacade,
+    public static Map<Uid, Set<Attribute>> createObjects(ConnectorFacade connectorFacade,
             DataProvider dataProvider, ObjectClass objectClass, ObjectClassInfo objectClassInfo,
             String testName, int howMany, OperationOptions opOptions)
             throws ObjectNotFoundException {
@@ -568,7 +571,7 @@ public class ConnectorHelper {
     /**
      * Checks that object's specified uids were created with expected attributes.
      */
-    public boolean checkObjects(ConnectorFacade connectorFacade, ObjectClass objectClass,
+    public static boolean checkObjects(ConnectorFacade connectorFacade, ObjectClass objectClass,
             ObjectClassInfo objectClassInfo, Map<Uid, Set<Attribute>> uidsAttributes,
             OperationOptions opOptions) {
         boolean success = true;
@@ -595,7 +598,7 @@ public class ConnectorHelper {
      * @param operation
      * @return
      */
-    public boolean operationSupported(ConnectorFacade connectorFacade, String typeQuery, 
+    public static boolean operationSupported(ConnectorFacade connectorFacade, String typeQuery, 
             Class<? extends APIOperation> operation) {
         boolean opSupported = false;
         
@@ -623,7 +626,7 @@ public class ConnectorHelper {
      * @param operation
      * @return
      */
-    public boolean operationSupported(ConnectorFacade connectorFacade,
+    public static boolean operationSupported(ConnectorFacade connectorFacade,
             Class<? extends APIOperation> operation) {
         boolean opSupported = false;
         
@@ -646,7 +649,7 @@ public class ConnectorHelper {
      * Remote manager is created in case all gateway properties are set. If gateway properties are missing
      * or remote manager creation fails then tries to create local manager.
      */
-    public ConnectorInfoManager getInfoManager(final DataProvider dataProvider) {
+    public static ConnectorInfoManager getInfoManager(final DataProvider dataProvider) {
         ConnectorInfoManagerFactory fact = ConnectorInfoManagerFactory.getInstance();
         ConnectorInfoManager manager = null;
 
@@ -673,7 +676,7 @@ public class ConnectorHelper {
      * @return null in case configuration is NOT provided
      * @throws RuntimeException if creation fails although properties were provided
      */
-    private ConnectorInfoManager getLocalManager(final DataProvider dataProvider,
+    private static ConnectorInfoManager getLocalManager(final DataProvider dataProvider,
             final ConnectorInfoManagerFactory fact) {
         ConnectorInfoManager manager = null;
 
@@ -705,7 +708,7 @@ public class ConnectorHelper {
      * @return null in case configuration is NOT provided
      * @throws RuntimeException in case creation fails although configuration properties were provided
      */
-    private ConnectorInfoManager getRemoteManager(final DataProvider dataProvider,
+    private static ConnectorInfoManager getRemoteManager(final DataProvider dataProvider,
             final ConnectorInfoManagerFactory fact) {
         ConnectorInfoManager manager = null;
 
@@ -733,7 +736,7 @@ public class ConnectorHelper {
         return manager;
     }
     
-    public APIConfiguration getDefaultConfigurationProperties(DataProvider dataProvider,
+    public static APIConfiguration getDefaultConfigurationProperties(DataProvider dataProvider,
             ConnectorInfoManager manager) throws ObjectNotFoundException {
         
         List<ConnectorInfo> infos = manager.getConnectorInfos();
@@ -747,7 +750,7 @@ public class ConnectorHelper {
         return apiConfig;
     }
     
-    private String formatDataName(String name, String objectClassName) {
+    private static String formatDataName(String name, String objectClassName) {
         StringBuffer sbPath = new StringBuffer(objectClassName);
         sbPath.append(".");
         sbPath.append(name);
@@ -761,9 +764,9 @@ public class ConnectorHelper {
      * @param name
      * @param objectClassName
      * @return
-     * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
+     * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
      */
-    public String getString(DataProvider dataProvider, String componentName, 
+    public static String getString(DataProvider dataProvider, String componentName, 
             String name, String objectClassName) throws ObjectNotFoundException {
         return dataProvider.getString(formatDataName(name, objectClassName), 
                 componentName);
@@ -778,9 +781,9 @@ public class ConnectorHelper {
      * @param objectClassName
      * @param sequenceNumber
      * @return
-     * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
+     * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
      */
-    public String getString(DataProvider dataProvider, String componentName, 
+    public static String getString(DataProvider dataProvider, String componentName, 
             String name, String qualifier, String objectClassName,
             int sequenceNumber) throws ObjectNotFoundException {
         
@@ -792,14 +795,14 @@ public class ConnectorHelper {
         return dataProvider.getString(dataName, componentName, sequenceNumber);
     }
         
-    public String getString(DataProvider dataProvider, String componentName, 
+    public static String getString(DataProvider dataProvider, String componentName, 
             String name, String objectClassName,
             int sequenceNumber) throws ObjectNotFoundException {
         return getString(dataProvider, componentName, name, "", 
                 objectClassName, sequenceNumber);
     }
 
-    public Object get(DataProvider dataProvider, String componentName, 
+    public static Object get(DataProvider dataProvider, String componentName, 
             String dataTypeName, String name, String objectClassName, 
             int sequenceNumber) throws ObjectNotFoundException {
         return dataProvider.get(dataTypeName, formatDataName(name, objectClassName), 
@@ -809,7 +812,7 @@ public class ConnectorHelper {
     /**
      * Returns object class based on object class info.
      */
-    public ObjectClass getObjectClassFromObjectClassInfo(final ObjectClassInfo objectClassInfo) {
+    public static ObjectClass getObjectClassFromObjectClassInfo(final ObjectClassInfo objectClassInfo) {
         return new ObjectClass(objectClassInfo.getType());
     }
 }

@@ -46,7 +46,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
-import org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException;
+import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.SchemaApiOp;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
@@ -114,7 +114,7 @@ public class SchemaApiOpTests extends AbstractSimpleTest {
      * Tests that returned schema by connector is the same as expected schema to be returned.
      */
     @Test
-    public void testSchemaValidity() throws Exception {
+    public void testSchemaValidity() {
         final Schema schema = getConnectorFacade().schema();
         String msg = null;
 
@@ -247,7 +247,7 @@ public class SchemaApiOpTests extends AbstractSimpleTest {
         try {
             propValue = getDataProvider().getTestSuiteAttribute(typeName, propName);
         } catch (ObjectNotFoundException ex) {
-            fail("Property definition not found: " + ex.getSearchedObjectName());
+            fail("Property definition not found: " + ex.getMessage());
         }
         assertNotNull(propValue);
 

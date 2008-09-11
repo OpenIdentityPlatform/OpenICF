@@ -89,13 +89,13 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
      * {@inheritDoc}     
      */
     @Override
-    public void testRun() throws Exception {
+    public void testRun() {
 
         Uid uid = null;
         
         try {
             // create a user
-            Set<Attribute> attrs = getHelper().getAttributes(getDataProvider(),
+            Set<Attribute> attrs = ConnectorHelper.getAttributes(getDataProvider(),
                     getObjectClassInfo(), getTestName(), 0, true);
 
             uid = getConnectorFacade().create(getObjectClass(), attrs, getOperationOptionsByOp(CreateApiOp.class));
@@ -107,14 +107,14 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
             assertNotNull("Unable to retrieve newly created object", obj);
 
             // now try to authenticate
-            String name = getHelper().getString(getDataProvider(),
+            String name = ConnectorHelper.getString(getDataProvider(),
                     getTestName(), Name.NAME, getObjectClassInfo().getType(),
                     0);
 
             // test negative case with valid user, but wrong password
             boolean authenticateFailed = false;
 
-            String wrongPassword = getHelper().getString(getDataProvider(),
+            String wrongPassword = ConnectorHelper.getString(getDataProvider(),
                     getTestName(), "wrong.password", getObjectClassInfo().getType(),
                     0);
 
@@ -130,7 +130,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                     authenticateFailed);
 
             // now try with the right password
-            String password = getHelper().getString(getDataProvider(),
+            String password = ConnectorHelper.getString(getDataProvider(),
                     getTestName(), OperationalAttributes.PASSWORD_NAME,
                     getObjectClassInfo().getType(), 0);
 
@@ -140,7 +140,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
         } finally {
             if (uid != null) {
                 // delete the object
-                getHelper().deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid,
+                ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid,
                         false, getOperationOptionsByOp(DeleteApiOp.class));
             }
         }

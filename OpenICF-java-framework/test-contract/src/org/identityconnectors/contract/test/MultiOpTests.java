@@ -42,9 +42,6 @@ package org.identityconnectors.contract.test;
 import static org.junit.Assert.*;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -62,7 +59,6 @@ import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
-import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncDeltaType;
@@ -106,7 +102,7 @@ public class MultiOpTests extends ObjectClassRunner {
      * 
      */
     @Override
-    public void testRun() throws Exception {
+    public void testRun() {
         Map<Uid, Set<Attribute>> coCreatedAll = null;
 
         // objects stored in connector resource before test
@@ -120,32 +116,32 @@ public class MultiOpTests extends ObjectClassRunner {
 
         try {
             /* SearchApiOp - get objects stored in connector resource before test */
-            if (getHelper().operationSupported(getConnectorFacade(), SearchApiOp.class)) {
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), SearchApiOp.class)) {
                 // null filter
-                coBeforeTest = getHelper().search(getConnectorFacade(), getObjectClass(), null,
+                coBeforeTest = ConnectorHelper.search(getConnectorFacade(), getObjectClass(), null,
                         getOperationOptionsByOp(SearchApiOp.class));
             }
 
             /* CreateApiOp - create initial objects */
             // creates objects
-            coCreatedAll = getHelper().createObjects(getConnectorFacade(),
+            coCreatedAll = ConnectorHelper.createObjects(getConnectorFacade(),
                     getDataProvider(), getObjectClass(), getObjectClassInfo(), getTestName(),
                     createCount, getOperationOptionsByOp(CreateApiOp.class));
             // check that objects were created with attributes as requested
-            final boolean success = getHelper().checkObjects(getConnectorFacade(),
+            final boolean success = ConnectorHelper.checkObjects(getConnectorFacade(),
                     getObjectClass(), getObjectClassInfo(), coCreatedAll,
                     getOperationOptionsByOp(GetApiOp.class));
             assertTrue("Created objects are different than requested.", success);
 
             /* TestApiOp */
-            if (getHelper().operationSupported(getConnectorFacade(), TestApiOp.class)) {
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), TestApiOp.class)) {
                 // should NOT throw
                 getConnectorFacade().test();
             }
 
             /* SyncApiOp - check sync of created objects */
-            if (getHelper().operationSupported(getConnectorFacade(), SyncApiOp.class)) {
-                List<SyncDelta> deltas = getHelper().sync(getConnectorFacade(), getObjectClass(),
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), SyncApiOp.class)) {
+                List<SyncDelta> deltas = ConnectorHelper.sync(getConnectorFacade(), getObjectClass(),
                         token, getOperationOptionsByOp(SyncApiOp.class));
                 assertTrue("Sync returned different number of deltas than expected. Expected: "
                         + createCount + ", but returned: " + deltas.size(),
@@ -160,7 +156,7 @@ public class MultiOpTests extends ObjectClassRunner {
                     assertNotNull(expected);
                     Set<Attribute> got = delta.getObject().getAttributes();
                     assertNotNull(got);
-                    getHelper().checkAttributes(expected, got);
+                    ConnectorHelper.checkAttributes(expected, got);
                     token = delta.getToken();
                 }
             }
@@ -168,12 +164,12 @@ public class MultiOpTests extends ObjectClassRunner {
             /* DeleteApiOp - delete one object */
             Uid deleteUid = coCreatedAll.keySet().toArray(new Uid[0])[0];
             // deletes it and checks that it was really deleted
-            getHelper().deleteObject(getConnectorFacade(), getObjectClass(), deleteUid, true,
+            ConnectorHelper.deleteObject(getConnectorFacade(), getObjectClass(), deleteUid, true,
                     getOperationOptionsByOp(DeleteApiOp.class));
             coCreatedAll.remove(deleteUid);
 
             /* SearchApiOp - search with null filter */
-            List<ConnectorObject> coFound = getHelper().search(getConnectorFacade(),
+            List<ConnectorObject> coFound = ConnectorHelper.search(getConnectorFacade(),
                     getObjectClass(), null, getOperationOptionsByOp(SearchApiOp.class));
             assertTrue("Search with null filter returned different results count. Expected: "
                     + coCreatedAll.size() + coBeforeTest.size() + ", but returned: "
@@ -181,7 +177,7 @@ public class MultiOpTests extends ObjectClassRunner {
             // check all objects
             for (ConnectorObject obj : coFound) {
                 if (coCreatedAll.containsKey(obj.getUid())) {
-                    getHelper().checkObject(getObjectClassInfo(), obj,
+                    ConnectorHelper.checkObject(getObjectClassInfo(), obj,
                             coCreatedAll.get(obj.getUid()));
                 } else {
                     assertTrue("Search with null filter returned unexpected object.", coBeforeTest
@@ -190,9 +186,9 @@ public class MultiOpTests extends ObjectClassRunner {
             }
 
             /* UpdateApiOp - update one object */
-            if (getHelper().operationSupported(getConnectorFacade(), UpdateApiOp.class)) {
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), UpdateApiOp.class)) {
                 Uid updateUid = coCreatedAll.keySet().toArray(new Uid[0])[0];
-                Set<Attribute> replaceAttributes = getHelper().getAttributes(getDataProvider(),
+                Set<Attribute> replaceAttributes = ConnectorHelper.getAttributes(getDataProvider(),
                         getObjectClassInfo(), getTestName(), MODIFIED, 0, false, false);
                 
                 // update only in case there is something to update
@@ -213,15 +209,15 @@ public class MultiOpTests extends ObjectClassRunner {
                 /* SearchApiOp - search with Uid filter */
                 // search by Uid
                 Filter fltUid = FilterBuilder.equalTo(updateUid);
-                coFound = getHelper().search(getConnectorFacade(), getObjectClass(), fltUid,
+                coFound = ConnectorHelper.search(getConnectorFacade(), getObjectClass(), fltUid,
                         getOperationOptionsByOp(SearchApiOp.class));
                 assertTrue("Search with Uid filter returned unexpected number of objects. Expected: 1, but returned: "
                                 + coFound.size(), coFound.size() == 1);
-                getHelper().checkObject(getObjectClassInfo(), coFound.get(0), replaceAttributes);
+                ConnectorHelper.checkObject(getObjectClassInfo(), coFound.get(0), replaceAttributes);
 
                 /* SyncApiOp - sync after one delete and one update */
-                if (getHelper().operationSupported(getConnectorFacade(), SyncApiOp.class)) {
-                    List<SyncDelta> deltas = getHelper().sync(getConnectorFacade(),
+                if (ConnectorHelper.operationSupported(getConnectorFacade(), SyncApiOp.class)) {
+                    List<SyncDelta> deltas = ConnectorHelper.sync(getConnectorFacade(),
                             getObjectClass(), token, getOperationOptionsByOp(SyncApiOp.class));
                     // one deleted, one updated (if existed attributes to update)
                     assertTrue("Sync returned unexpected number of deltas. Exptected: 2, but returned: "
@@ -239,7 +235,7 @@ public class MultiOpTests extends ObjectClassRunner {
                             assertNotNull(expected);
                             Set<Attribute> got = delta.getObject().getAttributes();
                             assertNotNull(got);
-                            getHelper().checkAttributes(expected, got);
+                            ConnectorHelper.checkAttributes(expected, got);
                         } else {
                             fail("Sync returned CREATE type, but no objects were created since last sync.");
                         }
@@ -250,14 +246,14 @@ public class MultiOpTests extends ObjectClassRunner {
             }
 
             /* ValidateApiOp */
-            if (getHelper().operationSupported(getConnectorFacade(), ValidateApiOp.class)) {
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), ValidateApiOp.class)) {
                 // should NOT throw
                 getConnectorFacade().validate();
             }
 
             /* CreateApiOp */
             // create one last object
-            Set<Attribute> attrs = getHelper().getAttributes(getDataProvider(),
+            Set<Attribute> attrs = ConnectorHelper.getAttributes(getDataProvider(),
                     getObjectClassInfo(), getTestName(), createCount + 1, true);
             Uid createUid = getConnectorFacade().create(getObjectClass(), attrs, getOperationOptionsByOp(CreateApiOp.class));
             assertNotNull("Create returned null Uid.", createUid);
@@ -268,19 +264,19 @@ public class MultiOpTests extends ObjectClassRunner {
             assertNotNull("Unable to retrieve newly created object", obj);
 
             // compare requested attributes to retrieved attributes
-            getHelper().checkObject(getObjectClassInfo(), obj, attrs);
+            ConnectorHelper.checkObject(getObjectClassInfo(), obj, attrs);
             coCreatedAll.put(createUid, attrs);
 
             /* DeleteApiOp - delete one object */
             deleteUid = coCreatedAll.keySet().toArray(new Uid[0])[0];
             // deletes it and checks that it was really deleted
-            getHelper().deleteObject(getConnectorFacade(), getObjectClass(), deleteUid, true,
+            ConnectorHelper.deleteObject(getConnectorFacade(), getObjectClass(), deleteUid, true,
                     getOperationOptionsByOp(DeleteApiOp.class));
             coCreatedAll.remove(deleteUid);
 
             /* SyncApiOp - one delete, one create */
-            if (getHelper().operationSupported(getConnectorFacade(), SyncApiOp.class)) {
-                List<SyncDelta> deltas = getHelper().sync(getConnectorFacade(), getObjectClass(),
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), SyncApiOp.class)) {
+                List<SyncDelta> deltas = ConnectorHelper.sync(getConnectorFacade(), getObjectClass(),
                         token, getOperationOptionsByOp(SyncApiOp.class));
                 // one deleted, one created
                 assertTrue("Sync returned unexpected number of deltas. Exptected: 2, but returned: "
@@ -298,7 +294,7 @@ public class MultiOpTests extends ObjectClassRunner {
                         assertNotNull(expected);
                         Set<Attribute> got = delta.getObject().getAttributes();
                         assertNotNull(got);
-                        getHelper().checkAttributes(expected, got);
+                        ConnectorHelper.checkAttributes(expected, got);
                     } else {
                         fail("Sync returned UPDATE type, but no objects were updated since last sync.");
                     }
@@ -310,13 +306,13 @@ public class MultiOpTests extends ObjectClassRunner {
         } finally {
             if (coCreatedAll != null) {
                 // delete all created objects
-                getHelper().deleteObjects(getConnectorFacade(), getObjectClass(),
+                ConnectorHelper.deleteObjects(getConnectorFacade(), getObjectClass(),
                         coCreatedAll.keySet(), getOperationOptionsByOp(DeleteApiOp.class));
             }
 
             /* SyncApiOp - all objects were deleted */
-            if (getHelper().operationSupported(getConnectorFacade(), SyncApiOp.class)) {
-                List<SyncDelta> deltas = getHelper().sync(getConnectorFacade(), getObjectClass(),
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), SyncApiOp.class)) {
+                List<SyncDelta> deltas = ConnectorHelper.sync(getConnectorFacade(), getObjectClass(),
                         token, getOperationOptionsByOp(SyncApiOp.class));
                 assertTrue("Sync returned unexpected number of deltas. Exptected: 2, but returned: "
                                 + deltas.size(), deltas.size() == coCreatedAll.size());
@@ -352,7 +348,7 @@ public class MultiOpTests extends ObjectClassRunner {
      * Tests ENABLE attribute contract 
      */
     @Test
-    public void testEnableOpAttribute() throws Exception {
+    public void testEnableOpAttribute() {
         if (isOperationAttributeSupported(OperationalAttributes.ENABLE_NAME)) {
 
             //check ENABLE for true
@@ -367,13 +363,12 @@ public class MultiOpTests extends ObjectClassRunner {
      * Method to check the ENABLE attribute contract
      * 
      * @param enabled ENABLE state
-     * @throws java.lang.Exception
      */
-    private void checkEnableOpAttribute(boolean enabled) throws Exception {
+    private void checkEnableOpAttribute(boolean enabled) {
 
         Set<Attribute> attrs = null;
 
-        attrs = getHelper().getAttributes(getDataProvider(), getObjectClassInfo(), getTestName(), 0, true);
+        attrs = ConnectorHelper.getAttributes(getDataProvider(), getObjectClassInfo(), getTestName(), 0, true);
 
         //remove ENABLE if present
         for (Attribute attribute : attrs) {
@@ -411,7 +406,7 @@ public class MultiOpTests extends ObjectClassRunner {
             checkEnableAttribute(uid, !enabled);
 
         } finally {
-            getHelper().deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid, false, null);
+            ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid, false, null);
         }
     }
 
@@ -421,9 +416,8 @@ public class MultiOpTests extends ObjectClassRunner {
      * 
      * @param uid Uid to get
      * @param enabled expected ENABLE value
-     * @throws java.lang.Exception
      */
-    private void checkEnableAttribute(Uid uid, boolean enabled) throws Exception {
+    private void checkEnableAttribute(Uid uid, boolean enabled) {
         //get the object
         ConnectorObject obj = getConnectorFacade().getObject(getSupportedObjectClass(), uid, null);
 

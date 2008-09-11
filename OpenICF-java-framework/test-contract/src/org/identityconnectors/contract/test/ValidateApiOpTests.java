@@ -76,14 +76,13 @@ public class ValidateApiOpTests extends AbstractSimpleTest {
     
     /**
      * Tests validate() with configuration that should NOT be correct.
-     * @throws Exception
      */
     @Test
-    public void testValidateFail() throws Exception {
+    public void testValidateFail() {
         // run test only in case operation is supported
-        if (getHelper().operationSupported(getConnectorFacade(), getAPIOperation())) {
+        if (ConnectorHelper.operationSupported(getConnectorFacade(), getAPIOperation())) {
             // create connector with invalid configuration            
-            _connFacade = getHelper().createConnectorFacadeWithWrongConfiguration(getDataProvider(), getIterationNumber());
+            _connFacade = ConnectorHelper.createConnectorFacadeWithWrongConfiguration(getDataProvider(), getIterationNumber());
             try {
                 // should throw RuntimeException
                 getConnectorFacade().validate();
@@ -114,17 +113,10 @@ public class ValidateApiOpTests extends AbstractSimpleTest {
     /**
      * Parameters to be passed to junit test - iteration number.
      * @return List of arrays of parameters for this test.
-     * @throws Exception
      */
     @Parameters
-    public static List<Object[]> data() throws Exception {
-        Integer i = null;
-        try {
-            i = Integer.parseInt((String)getDataProvider().getTestSuiteAttribute(Integer.class.getName(), "iterations.Validate"));
-        }
-        catch (Exception ex) {
-            throw new Exception("ValidateApiOpTests need property iterations.Validate.testsuite.integer to be set");
-        }
+    public static List<Object[]> data() {
+        Integer i = Integer.parseInt((String)getDataProvider().getTestSuiteAttribute(Integer.class.getName(), "iterations.Validate"));
         List<Object[]> list = new ArrayList<Object[]>();
         for (Integer j=1; j<=i; j++) {
             list.add(new Object[] {j});

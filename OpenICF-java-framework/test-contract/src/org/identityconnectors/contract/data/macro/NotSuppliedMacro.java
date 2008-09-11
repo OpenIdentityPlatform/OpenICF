@@ -41,6 +41,7 @@ package org.identityconnectors.contract.data.macro;
 
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.contract.data.DataProvider;
+import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 
 import junit.framework.Assert;
 
@@ -72,7 +73,7 @@ public class NotSuppliedMacro implements Macro {
 
         // when an ObjectNotFoundException is returned, it's
         // mean to signal that are to pretend we didn't find
-        return new DataProvider.ObjectNotFoundException();
+        return new ObjectNotFoundException();
     }
 
 }

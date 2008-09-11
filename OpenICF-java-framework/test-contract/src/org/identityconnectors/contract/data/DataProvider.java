@@ -39,45 +39,15 @@
  */
 package org.identityconnectors.contract.data;
 
+import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
+
 /**
  * DataProvider is a facility used for getting (reading/generating) data for
  * Contract test suite.
  * 
  * @author Dan Vernon
  */
-public interface DataProvider {
-    
-    /**
-     * Exception thwron when the value for some type cannot be resolved
-     */
-    @SuppressWarnings("serial")
-    public class ObjectNotFoundException extends Exception {
-        private String _searchedObjectName;
-        
-        public ObjectNotFoundException() {
-            super();
-        }
-
-        public ObjectNotFoundException(String message) {
-            super(message);
-        }
-
-        public ObjectNotFoundException(Throwable t) {
-            super(t);
-        }
-
-        public ObjectNotFoundException(String message, Throwable t) {
-            super(message, t);
-        }
-
-        public String getSearchedObjectName() {
-            return _searchedObjectName;
-        }
-
-        public void setSearchedObjectName(String searchedObjectName) {
-            _searchedObjectName = searchedObjectName;
-        }                
-    }
+public interface DataProvider {        
 
     /**
      * Gets data value by the specified parameters
@@ -148,4 +118,5 @@ public interface DataProvider {
      */
     public Object getTestSuiteAttribute(String typeName, 
             String propName) throws ObjectNotFoundException;
+    
 }

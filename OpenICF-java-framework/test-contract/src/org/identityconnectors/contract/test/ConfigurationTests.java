@@ -86,10 +86,9 @@ public final class ConfigurationTests {
      * Initialize the unit test
      */
     @Before
-    public void init() throws Exception {        
-        ConnectorHelper connHelper = new ConnectorHelper();
-        DataProvider dataProvider = connHelper.createDataProvider();
-        _configProperties = connHelper.getConfigurationProperties(dataProvider);                
+    public void init() {        
+        DataProvider dataProvider = ConnectorHelper.createDataProvider();
+        _configProperties = ConnectorHelper.getConfigurationProperties(dataProvider);                
     }
 
     /**
@@ -104,7 +103,7 @@ public final class ConfigurationTests {
      * Unit test for checking if the {@link Configuration} property type is supported
      */
     @Test
-    public void testPropertiesType() throws Exception {
+    public void testPropertiesType() {
 
         assertNotNull(_configProperties);
         

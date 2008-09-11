@@ -108,9 +108,8 @@ public class Expression {
      * Resolve the Expression to value using {@link Macro}s
      * 
      * @return {@link Object} value
-     * @throws java.lang.Exception If resolving the value was not possible
      */
-    public Object resolveExpression() throws Exception {
+    public Object resolveExpression() {
         // expression is made of of:
         //      1.  a macro
         //      2.  a string
@@ -251,9 +250,8 @@ public class Expression {
      * @param context
      * @param macroText
      * @return
-     * @throws java.lang.Exception
      */
-    private Object processMacro(ExpressionContext context, String macroText) throws Exception {
+    private Object processMacro(ExpressionContext context, String macroText) {
         int index = 0;
         int embeddedMacroLevel = 0;
         List<String> parametersStrings = new ArrayList<String>();

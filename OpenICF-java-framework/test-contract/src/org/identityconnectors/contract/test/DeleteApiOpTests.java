@@ -45,14 +45,12 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import org.identityconnectors.common.logging.Log;
-import org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
 import org.identityconnectors.framework.api.operations.GetApiOp;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
-import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -86,14 +84,14 @@ public class DeleteApiOpTests extends ObjectClassRunner {
      * {@inheritDoc}
      */
     @Override
-    public void testRun() throws ObjectNotFoundException {      
+    public void testRun() {      
         ConnectorObject obj = null;
         Uid uid = null;
 
         
         try {
             // create something to delete - object class is always supported
-            uid = getHelper().createObject(getConnectorFacade(), getDataProvider(),
+            uid = ConnectorHelper.createObject(getConnectorFacade(), getDataProvider(),
                     getObjectClassInfo(), getTestName(), 0, getOperationOptionsByOp(DeleteApiOp.class));
 
             // The object should exist now
@@ -113,7 +111,7 @@ public class DeleteApiOpTests extends ObjectClassRunner {
                     obj);
         } finally {
             // try to delete in case of exception
-            getHelper().deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid, false,
+            ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid, false,
                     getOperationOptionsByOp(DeleteApiOp.class));
         }
     }

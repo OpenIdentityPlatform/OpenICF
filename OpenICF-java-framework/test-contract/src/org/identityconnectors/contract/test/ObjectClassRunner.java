@@ -42,14 +42,11 @@ package org.identityconnectors.contract.test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.GetApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
-import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
@@ -57,7 +54,6 @@ import org.identityconnectors.framework.common.objects.OperationOptionInfo;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Schema;
-import org.identityconnectors.framework.common.objects.Uid;
 import org.junit.runners.Parameterized.Parameters;
 
 import static org.junit.Assert.*;
@@ -91,12 +87,12 @@ public abstract class ObjectClassRunner extends AbstractSimpleTest {
      * Initialize the environment needed to run the test
      */
     @Before
-    public void init() throws Exception {
+    public void init() {
         super.init();                        
         Set<ObjectClassInfo> oinfos = getSchema().getObjectClassInfo();
         for (Iterator<ObjectClassInfo> it = oinfos.iterator(); it.hasNext();) {
             _objectClassInfo = it.next();
-            _supportedObjectClass = getHelper().getObjectClassFromObjectClassInfo(_objectClassInfo);
+            _supportedObjectClass = ConnectorHelper.getObjectClassFromObjectClassInfo(_objectClassInfo);
             if (_objectClassInfo.getType().equals(getObjectClass().getObjectClassValue())){                
                 _ocSupported = true;
                 break;
@@ -121,9 +117,9 @@ public abstract class ObjectClassRunner extends AbstractSimpleTest {
      * operation is supported by the connector
      */
     @Test
-    public void testContract() throws Exception {
+    public void testContract() {
         //run the contract test for supported operation only
-        if (getHelper().operationSupported(getConnectorFacade(), getAPIOperation())) {
+        if (ConnectorHelper.operationSupported(getConnectorFacade(), getAPIOperation())) {
             try {
                 testRun();
                 if (!isObjectClassSupported()) {
@@ -146,7 +142,7 @@ public abstract class ObjectClassRunner extends AbstractSimpleTest {
     /**
      * This method will be called configured number of times
      */
-    public abstract void testRun() throws Exception;
+    public abstract void testRun();
     
     /**
      * Return all the base {@link ObjectClass}s.

@@ -46,10 +46,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.identityconnectors.common.logging.Log;
-import org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException;
+import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.ScriptOnConnectorApiOp;
-import org.identityconnectors.framework.api.operations.ScriptOnResourceApiOp;
 import org.identityconnectors.framework.common.objects.ScriptContext;
 import org.junit.Test;
 
@@ -85,7 +84,7 @@ public class ScriptOnConnectorApiOpTests extends AbstractSimpleTest {
     @Test
     public void testRunScript() {
         // run test only in case operation is supported
-        if (getHelper().operationSupported(getConnectorFacade(), getAPIOperation())) {
+        if (ConnectorHelper.operationSupported(getConnectorFacade(), getAPIOperation())) {
             try {
                 // get test properties - optional
                 // if a property is not found test is skipped
@@ -119,7 +118,7 @@ public class ScriptOnConnectorApiOpTests extends AbstractSimpleTest {
     @Test
     public void testRunScriptFailUnknownLanguage() {
         // run test only in case operation is supported
-        if (getHelper().operationSupported(getConnectorFacade(), getAPIOperation())) {
+        if (ConnectorHelper.operationSupported(getConnectorFacade(), getAPIOperation())) {
             try {
                 getConnectorFacade().runScriptOnConnector(
                         new ScriptContext("NONEXISTING LANGUAGE", "script",
@@ -137,7 +136,7 @@ public class ScriptOnConnectorApiOpTests extends AbstractSimpleTest {
     @Test
     public void testRunScriptFailEmptyScriptText() {
         // run test only in case operation is supported
-        if (getHelper().operationSupported(getConnectorFacade(), getAPIOperation())) {
+        if (ConnectorHelper.operationSupported(getConnectorFacade(), getAPIOperation())) {
             try {
                 getConnectorFacade().runScriptOnConnector(
                         new ScriptContext("LANGUAGE", "", new HashMap<String, Object>()), null);

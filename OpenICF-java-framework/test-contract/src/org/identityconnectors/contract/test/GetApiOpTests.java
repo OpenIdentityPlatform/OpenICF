@@ -44,7 +44,6 @@ import static org.junit.Assert.assertNotNull;
 import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
-import org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
@@ -54,7 +53,6 @@ import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
-import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -87,12 +85,12 @@ public class GetApiOpTests extends ObjectClassRunner {
      * {@inheritDoc}      
      */
     @Override
-    public void testRun() throws ObjectNotFoundException {
+    public void testRun() {
         ConnectorObject obj = null;
         Uid uid = null;
         
         try {
-            Set<Attribute> requestedAttributes = getHelper().getAttributes(
+            Set<Attribute> requestedAttributes = ConnectorHelper.getAttributes(
                     getDataProvider(), getObjectClassInfo(), getTestName(), 0, true);
             // object class is always supported
             uid = getConnectorFacade().create(getSupportedObjectClass(),
@@ -105,21 +103,21 @@ public class GetApiOpTests extends ObjectClassRunner {
             obj = getConnectorFacade().getObject(getObjectClass(), uid, getOperationOptionsByOp(GetApiOp.class));
             assertNotNull("Unable to get object by uid", obj);
 
-            getHelper().checkObject(getObjectClassInfo(), obj, requestedAttributes);
+            ConnectorHelper.checkObject(getObjectClassInfo(), obj, requestedAttributes);
 
             // retrieve by name
             Name name = obj.getName();
-            obj = getHelper().findObjectByName(getConnectorFacade(), getObjectClass(),
+            obj = ConnectorHelper.findObjectByName(getConnectorFacade(), getObjectClass(),
                     name.getNameValue(), getOperationOptionsByOp(SearchApiOp.class));
             assertNotNull("Unable to get object by name", obj);
 
-            getHelper().checkObject(getObjectClassInfo(), obj, requestedAttributes);
+            ConnectorHelper.checkObject(getObjectClassInfo(), obj, requestedAttributes);
 
             // get by other attributes???
 
         } finally {
             // finally ... get rid of the object
-            getHelper().deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid, false,
+            ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid, false,
                     getOperationOptionsByOp(DeleteApiOp.class));
         }
     }

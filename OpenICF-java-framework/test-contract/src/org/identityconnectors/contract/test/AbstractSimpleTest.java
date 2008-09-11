@@ -57,7 +57,6 @@ import org.junit.Before;
  */
 public abstract class AbstractSimpleTest {
 
-    private static ConnectorHelper _connHelper;
     private static DataProvider _dataProvider;
     
     protected ConnectorFacade _connFacade;
@@ -68,7 +67,6 @@ public abstract class AbstractSimpleTest {
      */
     @AfterClass
     public static void disposeOnce() {
-        _connHelper = null;
         // call dispose (not in interface) on DefaultDataProvider
         if (_dataProvider instanceof DefaultDataProvider) {
             ((DefaultDataProvider)_dataProvider).dispose();
@@ -80,8 +78,8 @@ public abstract class AbstractSimpleTest {
      * Initialize the environment needed to run the test
      */
     @Before
-    public void init() throws Exception {        
-        _connFacade = getHelper().createConnectorFacade(getDataProvider());       
+    public void init() {        
+        _connFacade = ConnectorHelper.createConnectorFacade(getDataProvider());       
     }
 
     /**
@@ -101,28 +99,12 @@ public abstract class AbstractSimpleTest {
     // Helper methods
     //=================================================================
     /**
-     * Gets {@link ConnectorHelper} instance
-     * @return {@link ConnectorHelper}
-     */
-    public synchronized static ConnectorHelper getHelper() {
-        if (_connHelper == null) {
-            _connHelper = new ConnectorHelper();
-        }
-        return _connHelper;
-    }
-
-    /**
      * Gets preconfigured {@link DataProvider} instance
      * @return {@link DataProvider}
-     * @throws ConnectorException in case DataProvider cannot be created.
      */
     public synchronized static DataProvider getDataProvider() {
         if (_dataProvider == null) {
-            try {
-                _dataProvider = getHelper().createDataProvider();
-            } catch (Exception ex) {
-                ConnectorException.wrap(ex);
-            }
+            _dataProvider = ConnectorHelper.createDataProvider();
         }
         return _dataProvider;
     }

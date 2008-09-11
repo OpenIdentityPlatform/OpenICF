@@ -41,6 +41,7 @@ package org.identityconnectors.contract.data.macro;
 
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.contract.data.DefaultDataProvider;
+import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 
 
 import junit.framework.Assert;
@@ -93,7 +94,7 @@ public class GetMacro implements Macro {
         Object value = null;
         try {
             value = _dataProvider.get(key);
-        } catch (DefaultDataProvider.ObjectNotFoundException ex) {
+        } catch (ObjectNotFoundException ex) {
             Assert.fail("Get macro caught an exception");                
         }
                 

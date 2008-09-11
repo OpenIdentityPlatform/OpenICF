@@ -42,17 +42,14 @@ package org.identityconnectors.contract.test;
 import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
-import org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
 import org.identityconnectors.framework.api.operations.GetApiOp;
-import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
-import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -88,13 +85,13 @@ public class CreateApiOpTests extends ObjectClassRunner {
      * {@inheritDoc}
      */
     @Override
-    public void testRun() throws ObjectNotFoundException {
+    public void testRun() {
         
         Uid uid = null;
         
         try {
 
-            Set<Attribute> attrs = getHelper().getAttributes(getDataProvider(),
+            Set<Attribute> attrs = ConnectorHelper.getAttributes(getDataProvider(),
                     getObjectClassInfo(), getTestName(), 0, true);
             
             // should throw UnsupportedObjectClass if not supported
@@ -108,7 +105,7 @@ public class CreateApiOpTests extends ObjectClassRunner {
             assertNotNull("Unable to retrieve newly created object", obj);
 
             // compare requested attributes to retrieved attributes
-            getHelper().checkObject(getObjectClassInfo(), obj, attrs);
+            ConnectorHelper.checkObject(getObjectClassInfo(), obj, attrs);
         } finally {
             if (uid != null) {
                 // delete the object
@@ -138,14 +135,14 @@ public class CreateApiOpTests extends ObjectClassRunner {
      * Uids.
      */
     @Test
-    public void testCreateWithSameAttributes() throws Exception {
-        if (getHelper().operationSupported(getConnectorFacade(), getAPIOperation())) {
+    public void testCreateWithSameAttributes() {
+        if (ConnectorHelper.operationSupported(getConnectorFacade(), getAPIOperation())) {
             Uid uid1 = null;
             Uid uid2 = null;
 
             try {
 
-                Set<Attribute> attrs = getHelper().getAttributes(getDataProvider(),
+                Set<Attribute> attrs = ConnectorHelper.getAttributes(getDataProvider(),
                         getObjectClassInfo(), getTestName(), 1, true);
 
                 // ObjectClassInfo is always supported
@@ -158,7 +155,7 @@ public class CreateApiOpTests extends ObjectClassRunner {
                 assertNotNull("Unable to retrieve newly created object", obj1);
 
                 // compare requested attributes to retrieved attributes
-                getHelper().checkObject(getObjectClassInfo(), obj1, attrs);
+                ConnectorHelper.checkObject(getObjectClassInfo(), obj1, attrs);
 
                 /* SECOND CREATE: */
 
@@ -173,18 +170,18 @@ public class CreateApiOpTests extends ObjectClassRunner {
                 assertNotNull("Unable to retrieve newly created object", obj2);
 
                 // compare requested attributes to retrieved attributes
-                getHelper().checkObject(getObjectClassInfo(), obj2, attrs);
+                ConnectorHelper.checkObject(getObjectClassInfo(), obj2, attrs);
             } catch (RuntimeException ex) {
                 // ok - second create could throw this exception
             } finally {
                 if (uid1 != null) {
                     // delete the object
-                    getHelper().deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid1,
+                    ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid1,
                             false, getOperationOptionsByOp(DeleteApiOp.class));
                 }
                 if (uid2 != null) {
                     // delete the object
-                    getHelper().deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid2,
+                    ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid2,
                             false, getOperationOptionsByOp(DeleteApiOp.class));
                 }
             }

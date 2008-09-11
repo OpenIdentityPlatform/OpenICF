@@ -42,6 +42,7 @@ package org.identityconnectors.contract.data;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +76,7 @@ import org.identityconnectors.contract.data.macro.NotSuppliedMacro;
 import org.identityconnectors.contract.data.macro.ObjectMacro;
 import org.identityconnectors.contract.data.macro.RandomMacro;
 import org.identityconnectors.contract.data.macro.SysPropsMacro;
+import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.test.TestHelpers;
 
 
@@ -322,8 +324,7 @@ public class DefaultDataProvider implements DataProvider {
         try {
             return getAndResolve(name);
         } catch (ObjectNotFoundException ex) {
-            ex.setSearchedObjectName(name);
-            throw ex;
+            throw new ObjectNotFoundException("Cannot find object: " + name);
         }
     }
 
@@ -418,6 +419,7 @@ public class DefaultDataProvider implements DataProvider {
 
         return shortName;
     }
+
 
     /**
      * writes key, value to _propertyOutFile

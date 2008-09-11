@@ -91,21 +91,21 @@ public class SyncApiOpTests extends ObjectClassRunner {
      * {@inheritDoc}
      */
     @Override
-    public void testRun() throws Exception {
+    public void testRun() {
         Uid uid = null;
         Set<Attribute> attrs = null;
         List<SyncDelta> deltas = null;
 
         try {
             // create record
-            attrs = getHelper().getAttributes(getDataProvider(), getObjectClassInfo(),
+            attrs = ConnectorHelper.getAttributes(getDataProvider(), getObjectClassInfo(),
                     getTestName(), 0, true);
             uid = getConnectorFacade().create(getSupportedObjectClass(), attrs, getOperationOptionsByOp(CreateApiOp.class));
             assertNotNull("Create returned null uid.", uid);
 
             // use null SyncToken which means first sync for the resource is called
             // should throw RuntimeException when ObjectClass is not supported
-            deltas = getHelper().sync(getConnectorFacade(), getObjectClass(), null, getOperationOptionsByOp(SyncApiOp.class));
+            deltas = ConnectorHelper.sync(getConnectorFacade(), getObjectClass(), null, getOperationOptionsByOp(SyncApiOp.class));
 
             // check that returned one delta
             assertTrue("SyncResultsHandler#handle should be called once, but called "
@@ -114,7 +114,7 @@ public class SyncApiOpTests extends ObjectClassRunner {
             assertEquals("Sync returned wrong Uid, expected: " + uid + ",got: "
                     + deltas.get(0).getUid(), deltas.get(0).getUid(), uid);
             // check that attributes are correct
-            getHelper().checkAttributes(attrs, deltas.get(0).getObject().getAttributes());
+            ConnectorHelper.checkAttributes(attrs, deltas.get(0).getObject().getAttributes());
             // check that operation is CREATE
             assertTrue("Sync returned wrong delta type, expected CREATE, got: "
                     + deltas.get(0).getDeltaType(),
@@ -122,12 +122,12 @@ public class SyncApiOpTests extends ObjectClassRunner {
         } finally {
             if (uid != null) {
                 // cleanup test data
-                getHelper().deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid, false,
+                ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid, false,
                         getOperationOptionsByOp(DeleteApiOp.class));
 
                 List<SyncDelta> delDeltas = null;
                 // use SyncToken returned by previous sync call
-                delDeltas = getHelper().sync(getConnectorFacade(), getObjectClass(),
+                delDeltas = ConnectorHelper.sync(getConnectorFacade(), getObjectClass(),
                         deltas.get(0).getToken(), getOperationOptionsByOp(SyncApiOp.class));
 
                 // check that returned one delta
@@ -150,11 +150,11 @@ public class SyncApiOpTests extends ObjectClassRunner {
     @Test
     public void testSyncFailInvalidSyncToken() {
         // run the test only if operation is supported
-        if (getHelper().operationSupported(getConnectorFacade(), getAPIOperation())) {
+        if (ConnectorHelper.operationSupported(getConnectorFacade(), getAPIOperation())) {
             try {
                 // pass an invalid SyncToken
                 // should throw an exception
-                getHelper().sync(getConnectorFacade(), getSupportedObjectClass(), new SyncToken("INVALIDTOKEN"), null);
+                ConnectorHelper.sync(getConnectorFacade(), getSupportedObjectClass(), new SyncToken("INVALIDTOKEN"), null);
 
                 fail("Invalid token passed to sync, RuntimeException expected.");
             } catch (RuntimeException ex) {
@@ -170,9 +170,9 @@ public class SyncApiOpTests extends ObjectClassRunner {
     @Test
     public void testSyncNoExistingDataToSynchronize() {
         // run the test only if operation is supported
-        if (getHelper().operationSupported(getConnectorFacade(), getAPIOperation())) {
+        if (ConnectorHelper.operationSupported(getConnectorFacade(), getAPIOperation())) {
             // no data created, try to call sync
-            final List<SyncDelta> deltas = getHelper().sync(getConnectorFacade(), getSupportedObjectClass(), null, null);
+            final List<SyncDelta> deltas = ConnectorHelper.sync(getConnectorFacade(), getSupportedObjectClass(), null, null);
             assertTrue("SyncResultsHandler#handle shouldn't be called when don't exist data to synchronize.", deltas.size()==0);
         }
     }
