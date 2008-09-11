@@ -76,6 +76,7 @@ import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.ScriptContextBuilder;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
+import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.impl.api.ConfigurationPropertyImpl;
 import org.identityconnectors.framework.impl.api.local.ConnectorPoolManager;
 import org.junit.Test;
@@ -426,6 +427,9 @@ public class ConnectorInfoManagerTests {
         ConnectorFacadeFactory facf = ConnectorFacadeFactory.getInstance();
         ConnectorFacade facade = facf.newInstance(api);
 
+        SyncToken latest = facade.getLatestSyncToken();
+        Assert.assertEquals("mylatest", latest.getValue());
+        
         final List<SyncDelta> results = new ArrayList<SyncDelta>();
         
         facade.sync(ObjectClass.ACCOUNT, null, new SyncResultsHandler() {

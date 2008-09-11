@@ -80,4 +80,12 @@ public interface SyncOp extends SPIOperation {
     public void sync(ObjectClass objClass, SyncToken token,
             SyncResultsHandler handler,
             OperationOptions options);
+    
+    /**
+     * Returns the token corresponding to the latest sync delta.
+     * This is to support applications that may wish to sync starting
+     * "now".
+     * @return The latest token or null if there is no sync data.
+     */
+    public SyncToken getLatestSyncToken();
 }

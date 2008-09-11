@@ -79,6 +79,10 @@ public class SyncImpl extends ConnectorAPIOperationRunner implements SyncApiOp {
         handler = new NormalizingSyncResultsHandler(handler,normalizer);
         ((SyncOp) getConnector()).sync(objClass, token, handler, options);
     }
+    
+    public SyncToken getLatestSyncToken() {
+        return ((SyncOp) getConnector()).getLatestSyncToken();        
+    }
 
     /**
      * Simple handler to reduce the attributes to only the set of attribute to

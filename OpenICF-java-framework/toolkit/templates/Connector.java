@@ -195,7 +195,14 @@ public class <%= resourceName %>Connector implements PoolableConnector, <%= inte
      */   
     public void sync(ObjectClass objClass, SyncToken token, SyncResultsHandler handler, final OperationOptions options) {
         throw new UnsupportedOperationException();
-    } <% } %>
+    } 
+    /**
+     * {@inheritDoc}
+     */   
+    public SyncToken getLatestSyncToken() {
+        throw new UnsupportedOperationException();
+    } 
+    <% } %>
           
     <% if(interfaces.contains("TestOp")) { %>
     /**

@@ -188,6 +188,10 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
             }
         }
     }
+    public SyncToken getLatestSyncToken() {
+        checkClassLoader();
+        return new SyncToken("mylatest");
+    }
 
     public Schema schema() {
         checkClassLoader();

@@ -233,6 +233,14 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
         .sync(objClass, token, handler, options);
     }
     
+    /**
+     * {@inheritDoc}
+     */
+    public final SyncToken getLatestSyncToken() {
+        return ((SyncApiOp)this.getOperationCheckSupported(SyncApiOp.class))
+        .getLatestSyncToken();
+    }
+    
     private APIOperation getOperationCheckSupported(final Class<? extends APIOperation> api) {
         // check if this operation is supported.
         if (!getSupportedOperations().contains(api)) {
