@@ -57,107 +57,146 @@ import org.identityconnectors.common.StringUtil;
  * @since 1.0
  */
 public class DatabaseQueryBuilder {
-    private String select = null; //Mandatory select clause
-    private String tableName = null; //Mandatory select clause
-    private FilterWhereBuilder whereBuilder = null;
-    private Set<String> columnNamesToGet=new HashSet<String>();
-    private List<Pair<String, Boolean>> columnNamesToOrderBy = null;
+    private String selectFrom = null; //Mandatory selectFrom clause
+    private String tableName = null; //Mandatory selectFrom clause
+    private FilterWhereBuilder where = null;
+    private Set<String> columns=new HashSet<String>();
+    private List<OrderBy> orderBy = null;
+    
     /**
-     * DatabaseQuery Constructor, construct select  from table name, columnNamesToGet and where clause
-     * @param tableName The name of the database table to select from
-     * @param columnNamesToGet the names of the column to be in the result
-     * @param whereBuilder whereBuilder the whereBuilder, part of the query
-     * @param columnNamesToOrderBy The list of order by column names with ascendent / descendent boolean flag
-     *  
+     * Set the columnNames to get
+     * @param columns the required columns in SQL query
      */
-    public DatabaseQueryBuilder(String tableName, Set<String> columnNamesToGet, FilterWhereBuilder whereBuilder,
-            List<Pair<String, Boolean>> columnNamesToOrderBy) {
-        if(StringUtil.isBlank(tableName)) {
+    public void setColumns(Set<String> columns) {
+        this.columns = columns;
+    }
+
+    /**
+     * Set selectFrom and from clause
+     * @param selectFrom the selectFrom part including the from table
+     */
+    public void setSelectFrom(String selectFrom) {
+        this.selectFrom = selectFrom;
+    }
+
+    /**
+     * Set the table name
+     * @param tableName name of the table
+     */
+    public void setTableName(String tableName) {
+        this.tableName = tableName;
+    }
+
+    /**
+     * set the where builder
+     * @param whereBuilder {@link FilterWhereBuilder} the where filer builder
+     */
+    public void setWhere(FilterWhereBuilder whereBuilder) {
+        this.where = whereBuilder;
+    }
+
+    /**
+     * sET THE ORDER BY CLAUSE
+     * @param orderBy a list of {@link Pair} pair as colunName and sort order
+     */
+    public void setOrderBy(List<OrderBy> orderBy) {
+        this.orderBy = orderBy;
+    }
+
+
+    /**
+     * DatabaseQuery Constructor, construct selectFrom  from table name, columns and where clause
+     * @param tableName The name of the database table to selectFrom from
+     * @param columns the names of the column to be in the result
+     */
+    public DatabaseQueryBuilder(String tableName, Set<String> columns) {
+        
+        if( StringUtil.isBlank(tableName)) {
             throw new IllegalArgumentException("the tableName must not be null or empty");
         }
-        if(columnNamesToGet == null || columnNamesToGet.size() == 0) {
-            throw new IllegalArgumentException("the columnNamesToGet must not be null or empty");            
-        }  
+                
+        if ( columns == null || columns.size() == 0) {
+            throw new IllegalArgumentException("CoulmnNamesToGet must not be empty");
+        }                
         this.tableName = tableName;
-        this.columnNamesToGet=columnNamesToGet;
-        this.whereBuilder = whereBuilder;  
-        this.columnNamesToOrderBy = columnNamesToOrderBy;
+        this.columns=columns;
     }     
-
     
     /**
-     * DatabaseQuery Constructor, construct select  from table name, columnNamesToGet and where clause
-     * @param tableName
-     * @param columnNamesToGet
-     * @param whereBuilder
+     * DatabaseQuery Constructor which takes advantage of prepared selectFrom SQL clause
+     * @param selectFrom mandatory selectFrom clause
+     * @param where the where, part of the query
      */
-    public DatabaseQueryBuilder(final String tableName, final Set<String> columnNamesToGet, final FilterWhereBuilder whereBuilder) {
-        this(tableName,columnNamesToGet, whereBuilder, null);
-    }
-    
-    /**
-     * DatabaseQuery Constructor which takes advantage of prepared select SQL clause
-     * @param select mandatory select clause
-     * @param whereBuilder the whereBuilder, part of the query
-     */
-    public DatabaseQueryBuilder(final String select, final FilterWhereBuilder whereBuilder) {
-        if(StringUtil.isBlank(select)) {
-            throw new IllegalArgumentException("the select clause must not be empty");
-        }
-        if(!select.toUpperCase().contains("SELECT")) {
-            throw new IllegalArgumentException("the select clause is missing");            
-        }
-        if(!select.toUpperCase().contains("FROM")) {
-            throw new IllegalArgumentException("the from clause is missing");            
-        }
-        this.select = select;
-        this.whereBuilder = whereBuilder;       
+    public DatabaseQueryBuilder(final String selectFrom) {
+        if(StringUtil.isBlank(selectFrom)) {
+            throw new IllegalArgumentException("the selectFrom clause must not be empty");
+        }            
+        this.selectFrom = selectFrom;
     }     
 
 
     /**
      * Return full sql statement string
+     * 
      * @return Sql query statement to execute
      */
     public String getSQL() {
-       
-        if (StringUtil.isBlank(select)) {
-            select = createSelect(columnNamesToGet);
-        }       
-        
-        String ret = select;
-        if(whereBuilder != null) {
-            final String where = whereBuilder.getWhereClause();
-            if(!StringUtil.isBlank(where)) {
-                ret += (select.indexOf("WHERE")==-1) ? " WHERE "+where:" AND ( "+where+" )";
-            }        
+
+        if (StringUtil.isBlank(selectFrom)) {
+            if (StringUtil.isBlank(tableName)) {
+                throw new IllegalArgumentException("the tableName must not be null or empty");
+            }
+
+            if (columns != null) {
+                selectFrom = createSelect(columns);
+            }
+
+            if (StringUtil.isBlank(selectFrom)) {
+                throw new IllegalArgumentException("the selectFrom clause must not be empty");
+            }
+        } else {
+            if (!selectFrom.toUpperCase().contains("SELECT")) {
+                throw new IllegalArgumentException("the required SELECt clause is missing");
+            }
+
+            if (!selectFrom.toUpperCase().contains("FROM")) {
+                throw new IllegalArgumentException("the required FROM clause is missing");
+            }
         }
-        if(this.columnNamesToOrderBy != null) {
+
+        String ret = selectFrom;
+        if (where != null) {
+            final String whereSql = where.getWhereClause();
+            if (!StringUtil.isBlank(whereSql)) {
+                ret += (selectFrom.indexOf("WHERE") == -1) ? " WHERE " + whereSql : " AND ( " + whereSql + " )";
+            }
+        }
+        if (this.orderBy != null) {
             StringBuilder obld = new StringBuilder(" ORDER BY ");
-            boolean first=true;
-            for (Pair<String, Boolean> orderBy : columnNamesToOrderBy) {
-                if( !first) {
+            boolean first = true;
+            for (OrderBy ord : orderBy) {
+                if (!first) {
                     obld.append(", ");
                 }
                 first = false;
-                obld.append(orderBy.first);
-                obld.append(orderBy.second ? " ASC" : " DESC");
+                obld.append(ord.getColumnName());
+                obld.append(ord.isAscendent() ? " ASC" : " DESC");
             }
-            if(obld.length() != 0) {
+            if (obld.length() != 0) {
                 ret += obld.toString();
-            }        
+            }
         }
         return ret;
     }
 
     /**
-     * @param columnNamesToGet
+     * @param columns
      * @param columnQuote
-     * @return the select statement
+     * @return the selectFrom statement
      */
     private String createSelect(final Set<String> columnNamesToGet) {
         if (columnNamesToGet.size() == 0) {
-            throw new IllegalStateException("No coulmn names to get in query");
+            throw new IllegalStateException("No coulmnNamesToGet");
         }
         StringBuilder ret = new StringBuilder("SELECT ");
         boolean first=true;
@@ -179,9 +218,40 @@ public class DatabaseQueryBuilder {
      * @return
      */
     public List<Object> getParams() {
-        if(whereBuilder==null) {
+        if(where==null) {
             return new ArrayList<Object>();
         }
-        return whereBuilder.getParams();
+        return where.getParams();
+    }
+    
+    /**
+     * The Required order by data subclass
+     */
+    public static class OrderBy extends Pair<String, Boolean>{
+        /**
+         * One order by column
+         * @param columnName column name
+         * @param asc true/false for ascendent/descendent
+         */
+        public OrderBy(String columnName, Boolean asc) {
+            super(columnName, asc);
+        }
+        
+        /**
+         * The column name
+         * @return a name
+         */
+        public String getColumnName() {
+            return this.first;
+        }
+        
+        /**
+         * The ascendent flag
+         * @return a boolean true/false as ascendent/descendent
+         */
+        public boolean isAscendent() {
+            return this.second;
+        }
+        
     }
 }

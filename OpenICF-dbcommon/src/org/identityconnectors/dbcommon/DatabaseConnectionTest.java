@@ -59,7 +59,8 @@ import org.junit.Test;
  */
 public class DatabaseConnectionTest {
 
-    private static final String LOGIN = "";
+    private static final String LOGIN = "login";
+    private static final String NAME = "name";
     private static final String TEST_SQL_STATEMENT = "SELECT * FROM dummy";
     
     private List<Object> values;
@@ -71,6 +72,7 @@ public class DatabaseConnectionTest {
     public void setUp() throws Exception {
         values = new ArrayList<Object>();
         values.add(LOGIN); 
+        values.add(NAME); 
     }
 
     /**
@@ -82,7 +84,7 @@ public class DatabaseConnectionTest {
     }
 
     /**
-     * Test method for {@link org.identityconnectors.dbcommon.DatabaseConnection#DatabaseConnection(java.lang.String, java.lang.String, java.lang.String, java.lang.String)}.
+     * Test method for {@link DatabaseConnection#DatabaseConnection(java.lang.String, java.lang.String, java.lang.String, java.lang.String)}.
      */
     @Test
     public void testDatabaseConnection() {
@@ -93,7 +95,7 @@ public class DatabaseConnectionTest {
     }
 
     /**
-     * Test method for {@link org.identityconnectors.dbcommon.DatabaseConnection#dispose()}.
+     * Test method for {@link DatabaseConnection#dispose()}.
      */
     @Test
     public void testDispose() {
@@ -112,7 +114,7 @@ public class DatabaseConnectionTest {
     }
 
     /**
-     * Test method for {@link org.identityconnectors.dbcommon.DatabaseConnection#test()}.
+     * Test method for {@link DatabaseConnection#test()}.
      */
     @Test
     public void testTest() {
@@ -128,7 +130,7 @@ public class DatabaseConnectionTest {
     }
 
     /**
-     * Test method for {@link org.identityconnectors.dbcommon.DatabaseConnection#getConnection()}.
+     * Test method for {@link DatabaseConnection#getConnection()}.
      */
     @Test
     public void testGetSetConnection() {
@@ -143,7 +145,41 @@ public class DatabaseConnectionTest {
     }
 
     /**
-     * Test method for {@link org.identityconnectors.dbcommon.DatabaseConnection#prepareStatement(java.lang.String, java.util.List)}.
+     * Test method for {@link DatabaseConnection#prepareStatement(java.lang.String, java.util.List)}.
+     * @throws Exception 
+     */
+    @Test
+    public void testPrepareStatementNullValues() throws Exception{
+        ExpectProxy<Connection> tpc = new ExpectProxy<Connection>();
+        ExpectProxy<PreparedStatement> tps = new ExpectProxy<PreparedStatement>();
+        tpc.expectAndReturn("prepareStatement", tps.getProxy(PreparedStatement.class));
+
+        DatabaseConnection dbc = new DatabaseConnection(tpc.getProxy(Connection.class));
+        dbc.prepareStatement(TEST_SQL_STATEMENT, null);
+       
+        assertTrue("statement created", tpc.isDone());
+        assertTrue("value binded", tps.isDone());
+    }
+    
+    /**
+     * Test method for {@link DatabaseConnection#prepareStatement(java.lang.String, java.util.List)}.
+     * @throws Exception 
+     */
+    @Test
+    public void testPrepareStatementEmptyValues() throws Exception{
+        ExpectProxy<Connection> tpc = new ExpectProxy<Connection>();
+        ExpectProxy<PreparedStatement> tps = new ExpectProxy<PreparedStatement>();
+        tpc.expectAndReturn("prepareStatement", tps.getProxy(PreparedStatement.class));
+
+        DatabaseConnection dbc = new DatabaseConnection(tpc.getProxy(Connection.class));
+        dbc.prepareStatement(TEST_SQL_STATEMENT, new ArrayList<Object>());
+       
+        assertTrue("statement created", tpc.isDone());
+        assertTrue("value binded", tps.isDone());
+    }    
+
+    /**
+     * Test method for {@link DatabaseConnection#prepareStatement(java.lang.String, java.util.List)}.
      * @throws Exception 
      */
     @Test
@@ -151,17 +187,20 @@ public class DatabaseConnectionTest {
         ExpectProxy<Connection> tpc = new ExpectProxy<Connection>();
         ExpectProxy<PreparedStatement> tps = new ExpectProxy<PreparedStatement>();
         tpc.expectAndReturn("prepareStatement", tps.getProxy(PreparedStatement.class));
-        tps.expectAndReturn("setObject", "test");
+        tps.expectAndReturn("setObject", LOGIN);
+        tps.expectAndReturn("setObject", NAME);
+        tps.expectAndReturn("execute", true);
 
         DatabaseConnection dbc = new DatabaseConnection(tpc.getProxy(Connection.class));
-        dbc.prepareStatement(TEST_SQL_STATEMENT, values);
+        final PreparedStatement ps = dbc.prepareStatement(TEST_SQL_STATEMENT, values);
+        ps.execute();
        
         assertTrue("statement created", tpc.isDone());
         assertTrue("value binded", tps.isDone());
-    }    
+    }       
     
     /**
-     * Test method for {@link org.identityconnectors.dbcommon.DatabaseConnection#commit(org.identityconnectors.common.logging.Log)}.
+     * Test method for {@link DatabaseConnection#commit(org.identityconnectors.common.logging.Log)}.
      */
     @Test
     public void testCommit() {

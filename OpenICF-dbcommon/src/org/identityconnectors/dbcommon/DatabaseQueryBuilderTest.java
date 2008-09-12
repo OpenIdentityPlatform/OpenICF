@@ -43,10 +43,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.identityconnectors.common.Pair;
+import org.identityconnectors.dbcommon.DatabaseQueryBuilder.OrderBy;
 import org.junit.Test;
 
 /**
@@ -64,28 +65,54 @@ public class DatabaseQueryBuilderTest {
 
 
     /**
-     * Test method for {@link DatabaseQueryBuilder#FilterQueryBuilder(String, java.util.Map)}.
+     * Test method for {@link DatabaseQueryBuilder#DatabaseQueryBuilder(String, Set)}.
+     */
+    @Test(expected=IllegalArgumentException.class)
+    public void testFilterQueryBuilderTableMissing() {
+        new DatabaseQueryBuilder("", null).getSQL();
+    }
+    
+    /**
+     * Test method for {@link DatabaseQueryBuilder#DatabaseQueryBuilder(String, Set)}.
+     */
+    @Test(expected=IllegalArgumentException.class)
+    public void testFilterQueryBuilderColumnMissing() {
+        new DatabaseQueryBuilder("table", null).getSQL();
+    }
+    
+    /**
+     * Test method for {@link DatabaseQueryBuilder#DatabaseQueryBuilder(String, Set)}.
+     */
+    @Test(expected=IllegalArgumentException.class)
+    public void testFilterQueryBuilderColumnEmpty() {
+        new DatabaseQueryBuilder("table", new HashSet<String>()).getSQL();
+    }    
+    /**
+     * Test method for {@link DatabaseQueryBuilder#DatabaseQueryBuilder(String)}.
      */
     @Test(expected=IllegalArgumentException.class)
     public void testFilterQueryBuilderSelectMissing() {
-        new DatabaseQueryBuilder("", null);
+        new DatabaseQueryBuilder("").getSQL();
     }
     
+    
     /**
-     * Test method for {@link DatabaseQueryBuilder#FilterQueryBuilder(String, java.util.Map)}.
+     * Test method for {@link DatabaseQueryBuilder#DatabaseQueryBuilder(String)}.
      */
     @Test(expected=IllegalArgumentException.class)
     public void testFilterQueryBuilderWhereMissing() {
-        new DatabaseQueryBuilder(SELECT.substring(0, 7), null);
+        new DatabaseQueryBuilder(SELECT.substring(0, 7), null).getSQL();
     }
     
     /**
-     * Test method for {@link DatabaseQueryBuilder#FilterQueryBuilder(String, java.util.Map)}.
+     * Test method for {@link DatabaseQueryBuilder#DatabaseQueryBuilder(String)}.
      */
     @Test
     public void testFilterQueryBuilder() {
-        DatabaseQueryBuilder actual = new DatabaseQueryBuilder(SELECT, null);
+        DatabaseQueryBuilder actual = new DatabaseQueryBuilder(SELECT);
         assertNotNull(actual);
+        assertNotNull(actual.getSQL());
+        assertEquals(SELECT, actual.getSQL());
     }
 
     /**
@@ -95,7 +122,8 @@ public class DatabaseQueryBuilderTest {
     public void testGetSql() {
         FilterWhereBuilder where = new FilterWhereBuilder();
         where.addBind(NAME, OPERATOR, VALUE);
-        DatabaseQueryBuilder actual = new DatabaseQueryBuilder(SELECT, where);
+        DatabaseQueryBuilder actual = new DatabaseQueryBuilder(SELECT);
+        actual.setWhere(where);
         assertNotNull(actual);
         assertEquals(SELECT + " WHERE name = ?", actual.getSQL());
         assertEquals("not one value for binding", 1, actual.getParams().size());
@@ -109,19 +137,21 @@ public class DatabaseQueryBuilderTest {
     public void testGetSqlWithWhere() {
         FilterWhereBuilder where = new FilterWhereBuilder();
         where.addBind(NAME, OPERATOR, VALUE);
-        DatabaseQueryBuilder actual = new DatabaseQueryBuilder(SELECT_WITH_WHERE, where);
+        DatabaseQueryBuilder actual = new DatabaseQueryBuilder(SELECT_WITH_WHERE);
+        actual.setWhere(where);        
         assertNotNull(actual);
         assertEquals(SELECT_WITH_WHERE + " AND ( name = ? )", actual.getSQL());
         assertEquals("not one value for binding", 1, actual.getParams().size());
     }
     
     /**
-     * Test method 
+     * Test method for {@link DatabaseQueryBuilder#getSQL()}.
      */
     @Test
     public void testGetSqlWithEmptyWhere() {
         FilterWhereBuilder where = new FilterWhereBuilder();
-        DatabaseQueryBuilder actual = new DatabaseQueryBuilder(SELECT_WITH_WHERE, where);
+        DatabaseQueryBuilder actual = new DatabaseQueryBuilder(SELECT_WITH_WHERE);
+        actual.setWhere(where);
         assertNotNull(actual);
         assertEquals(SELECT_WITH_WHERE, actual.getSQL());
     }    
@@ -136,8 +166,8 @@ public class DatabaseQueryBuilderTest {
         attributesToGet.add("test2");        
         FilterWhereBuilder where = new FilterWhereBuilder();
         where.addBind(NAME, OPERATOR, VALUE);
-        DatabaseQueryBuilder actual = new DatabaseQueryBuilder("table" , attributesToGet, where);
-        assertNotNull(actual);
+        DatabaseQueryBuilder actual = new DatabaseQueryBuilder("table" , attributesToGet);
+        actual.setWhere(where);
         assertEquals("SELECT test1 , test2 FROM table WHERE name = ?", actual.getSQL());
         assertEquals("not one value for binding", 1, actual.getParams().size());
         assertEquals("value for binding", VALUE, actual.getParams().get(0));
@@ -153,7 +183,10 @@ public class DatabaseQueryBuilderTest {
         attributesToGet.add("test2");        
         FilterWhereBuilder where = new FilterWhereBuilder();
         where.addBind(NAME, OPERATOR, VALUE);
-        DatabaseQueryBuilder actual = new DatabaseQueryBuilder("table" , attributesToGet, where);
+        DatabaseQueryBuilder actual = new DatabaseQueryBuilder("table" , attributesToGet);
+        actual.setWhere(where);
+        actual.setTableName("table");
+        
         assertNotNull(actual);
         assertEquals("SELECT test1 , test2 FROM table WHERE name = ?", actual.getSQL());
         assertEquals("not one value for binding", 1, actual.getParams().size());
@@ -166,14 +199,16 @@ public class DatabaseQueryBuilderTest {
     @Test
     public void testGetSqlWithAttributesToGetAndOrderBy() {
         Set<String> attributesToGet=new LinkedHashSet<String>();
-        ArrayList<Pair<String, Boolean>> orderBy = new ArrayList<Pair<String, Boolean>>();
+        ArrayList<OrderBy> orderBy = new ArrayList<OrderBy>();
         attributesToGet.add("test1");
         attributesToGet.add("test2");        
-        orderBy.add(new Pair<String, Boolean>("test1", true));
-        orderBy.add(new Pair<String, Boolean>("test2", false));
+        orderBy.add(new OrderBy("test1", true));
+        orderBy.add(new OrderBy("test2", false));
         FilterWhereBuilder where = new FilterWhereBuilder();
         where.addBind(NAME, OPERATOR, VALUE);
-        DatabaseQueryBuilder actual = new DatabaseQueryBuilder("table" , attributesToGet, where, orderBy);
+        DatabaseQueryBuilder actual = new DatabaseQueryBuilder("table" , attributesToGet);
+        actual.setWhere(where);
+        actual.setOrderBy(orderBy);
         assertNotNull(actual);
         assertEquals("SELECT test1 , test2 FROM table WHERE name = ? ORDER BY test1 ASC, test2 DESC", actual.getSQL());
         assertEquals("not one value for binding", 1, actual.getParams().size());

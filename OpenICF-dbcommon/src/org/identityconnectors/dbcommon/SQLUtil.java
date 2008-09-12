@@ -265,23 +265,33 @@ public final class SQLUtil {
      * @return a attribute
      * @throws SQLException
      */
-    protected static Attribute convertToAttribute(final String name, final Object value) throws SQLException {
-        Attribute ret = null;
+    static Attribute convertToAttribute(final String name, final Object value) throws SQLException {
+        return AttributeBuilder.build(name, convertToSupportedType(value));
+    }
+
+    
+    /**
+     * Convert a columns database type to attribute 
+     * @param value a value of a attribute
+     * @throws SQLException
+     * @return a attribute's supported object
+     */
+    public static Object convertToSupportedType(final Object value) throws SQLException {
+        Object ret = null;
         // TODO must be able to convert any data value to supported types
         // fix any discrepancies between what the schema
         // method reports the type of an attribute, and
         // what we actually return
         if (value instanceof Blob) {
-            ret = AttributeBuilder.build(name, makeConversion((Blob) value));
+            ret = makeConversion((Blob) value);
         } else if (value instanceof Date) {
             // All Date, Timestamp are convered to long 
-            ret = AttributeBuilder.build(name, ((Date) value).getTime());
+            ret = ((Date) value).getTime();
         } else {
-            ret = AttributeBuilder.build(name, value);
+            ret = value;
         }
         return ret;
-    }
-
+    }    
     /**
      * Convert attribute types to database types 
      * @param param the value to convert

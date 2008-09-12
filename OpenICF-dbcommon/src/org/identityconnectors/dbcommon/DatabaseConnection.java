@@ -155,6 +155,9 @@ public class DatabaseConnection  {
      */
     public PreparedStatement prepareStatement(final String sql, final List<Object> params) throws SQLException {
         final PreparedStatement statement = getConnection().prepareStatement(sql);
+        if(params == null) {
+            return statement;
+        }
         for (int i = 0; i < params.size(); i++) {
             final int idx = i + 1;
             Object val = params.get(i);

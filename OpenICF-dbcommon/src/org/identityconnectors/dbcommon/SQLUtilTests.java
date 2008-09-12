@@ -86,7 +86,6 @@ public class SQLUtilTests {
         c = tp.getProxy(Connection.class);
         SQLUtil.closeQuietly(c);
         Assert.assertTrue(tp.isDone());
-
     }
     
     /**
@@ -295,6 +294,7 @@ public class SQLUtilTests {
         
         final Set<Attribute> actual = SQLUtil.getAttributeSet(resultSetProxy);
         assertTrue(trs.isDone());
+        assertTrue(trsmd.isDone());
         assertEquals(2, actual.size());
         assertNotNull(AttributeUtil.find(TEST1, actual));
         assertNotNull(AttributeUtil.find(TEST2, actual));
