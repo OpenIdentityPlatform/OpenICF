@@ -61,7 +61,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import org.identityconnectors.common.CaseInsensitiveMap;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.EqualsHashCodeBuilder;
 import org.identityconnectors.common.IOUtil;
@@ -71,7 +70,6 @@ import org.identityconnectors.dbcommon.SQLUtil;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
-import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -98,11 +96,9 @@ import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
-import org.identityconnectors.framework.spi.operations.AuthenticateOp;
 import org.identityconnectors.framework.test.TestHelpers;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -619,7 +615,51 @@ public class DatabaseConnectorTests {
         accountEquals(expected, actual);        
     }      
     
+
     
+    /**
+     * Test creating of the connector object, searching using UID and delete
+     * @throws SQLException 
+     */
+    @Test
+    public void testGetLatestSyncToken() throws SQLException {
+        final String ERR1 = "Could not find new object.";
+        final String SQL_TEMPLATE = "UPDATE Accounts SET changed = ? WHERE accountId = ?";
+        
+        ConnectorFacade facade = getFacade();
+        TestAccount account = TestAccount.createTestAccount();
+        final Uid uid = facade.create(ObjectClass.ACCOUNT, account.toAttributeSet(), null);
+        final Timestamp changed = new Timestamp(System.currentTimeMillis());
+
+        // update the last change
+        DatabaseTableConnector connector = null;
+        PreparedStatement ps = null;
+        DatabaseTableConnection conn = null;
+        try {
+            connector = new DatabaseTableConnector();
+            connector.init(newConfiguration());
+            conn = connector.getConnection();
+
+            List<Object> values = new ArrayList<Object>();
+            values.add(changed);
+            values.add(uid.getUidValue());
+            ps = conn.prepareStatement(SQL_TEMPLATE, values);
+            ps.execute();
+            conn.commit();
+        } finally {
+            if (conn != null)
+                SQLUtil.closeQuietly(conn.getConnection());
+            SQLUtil.closeQuietly(ps);
+            if (connector != null) {
+                connector.dispose();
+            }
+        }
+        // attempt to find the newly created object..
+        final SyncToken latestSyncToken = facade.getLatestSyncToken();
+        assertNotNull(latestSyncToken);
+        final Object actual = latestSyncToken.getValue();
+        assertEquals(changed.getTime(), actual);        
+    } 
     
     @Test
     public void testQuoting() throws Exception {

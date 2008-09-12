@@ -56,7 +56,6 @@ import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.CaseInsensitiveMap;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.GUID;
-import org.identityconnectors.common.Pair;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
@@ -65,6 +64,7 @@ import org.identityconnectors.dbcommon.FilterWhereBuilder;
 import org.identityconnectors.dbcommon.InsertIntoBuilder;
 import org.identityconnectors.dbcommon.SQLUtil;
 import org.identityconnectors.dbcommon.UpdateSetBuilder;
+import org.identityconnectors.dbcommon.DatabaseQueryBuilder.OrderBy;
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
@@ -82,6 +82,7 @@ import org.identityconnectors.framework.spi.operations.SearchOp;
 import org.identityconnectors.framework.spi.operations.SyncOp;
 import org.identityconnectors.framework.spi.operations.TestOp;
 import org.identityconnectors.framework.spi.operations.UpdateOp;
+
 
 
 /**
@@ -419,7 +420,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         final String tblname = config.quoteName(config.getDBTable());
         final Set<String> columnNamesToGet = resolveColumnNamesToGet(options);
         // For all user query there is no need to replace or quote anything
-        final DatabaseQueryBuilder query = new DatabaseQueryBuilder(tblname, columnNamesToGet, where);
+        final DatabaseQueryBuilder query = new DatabaseQueryBuilder(tblname, columnNamesToGet);
+        query.setWhere(where);
 
         ResultSet result = null;
         PreparedStatement statement = null;
@@ -459,19 +461,21 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         // Names
         final String tblname = config.quoteName(config.getDBTable());
         final String changeLogColumnName = config.quoteName(config.getChangeLogColumn());
-        final Set<String> columnNamesToGet = resolveColumnNamesToGet(options);
-        final List<Pair<String, Boolean>> columnNamesToOrderBy = new ArrayList<Pair<String,Boolean>>();
+        final Set<String> columnNames = resolveColumnNamesToGet(options);
+        final List<OrderBy> orderBy = new ArrayList<OrderBy>();
         //Add also the token column
-        columnNamesToGet.add(changeLogColumnName);
-        columnNamesToOrderBy.add(new Pair<String, Boolean>(changeLogColumnName, false));
+        columnNames.add(changeLogColumnName);
+        orderBy.add(new OrderBy(changeLogColumnName, true));
 
-        // The first token is null = empty FilterWhereBuilde
-        final FilterWhereBuilder fwb = new FilterWhereBuilder();
+        // The first token is not null set the FilterWhereBuilder
+        final FilterWhereBuilder where = new FilterWhereBuilder();
         if(token != null) {
             final Object parameter = SQLUtil.convertToJDBC(token.getValue(), getColumnType(config.getChangeLogColumn()));            
-            fwb.addBind(changeLogColumnName, ">", parameter);            
+            where.addBind(changeLogColumnName, ">", parameter);            
         }
-        final DatabaseQueryBuilder query = new DatabaseQueryBuilder(tblname, columnNamesToGet, fwb, columnNamesToOrderBy);
+        final DatabaseQueryBuilder query = new DatabaseQueryBuilder(tblname, columnNames);
+        query.setWhere(where);
+        query.setOrderBy(orderBy);
 
         ResultSet result = null;
         PreparedStatement statement = null;
@@ -496,8 +500,39 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
     }
     
     public SyncToken getLatestSyncToken() {
-        //TODO: implement me
-        return null;
+
+        final String SQL_SELECT = "SELECT MAX( {0} ) FROM {1}";
+        Assertions.blankCheck(config.getChangeLogColumn(), "changeLogColumn");
+        
+        // Format the update query
+        final String tblname = config.quoteName(config.getDBTable());
+        final String chlogName = config.quoteName(config.getChangeLogColumn());
+        final String sql = MessageFormat.format(SQL_SELECT , chlogName, tblname);
+        SyncToken ret = null;
+        
+        log.info("getLatestSyncToken");               
+        PreparedStatement stmt = null;
+        ResultSet rset = null;
+        try {
+            // create the prepared statement..
+            stmt = conn.prepareStatement(sql, null);
+            rset = stmt.executeQuery();
+            if (rset.next()) {
+                ret = new SyncToken(SQLUtil.convertToSupportedType(rset.getObject(1)));
+            }
+        } catch (SQLException e) {
+            SQLUtil.rollbackQuietly(conn.getConnection());
+            log.error(e, "SQL: " + sql);
+            throw ConnectorException.wrap(e);
+        } finally {
+            // clean up..
+            SQLUtil.closeQuietly(rset);
+            SQLUtil.closeQuietly(stmt);
+        }
+        // commit changes
+        conn.commit();
+        log.ok("getLatestSyncToken", ret.getValue());
+        return ret;
     }
 
     // =======================================================================
