@@ -88,17 +88,15 @@ public abstract class ObjectClassRunner extends AbstractSimpleTest {
      */
     @Before
     public void init() {
-        super.init();                        
-        Set<ObjectClassInfo> oinfos = getSchema().getObjectClassInfo();
+        super.init();
+        Set<ObjectClassInfo> oinfos = getSchema().getSupportedObjectClassesByOperation(getAPIOperation());
         for (Iterator<ObjectClassInfo> it = oinfos.iterator(); it.hasNext();) {
             _objectClassInfo = it.next();
             _supportedObjectClass = ConnectorHelper.getObjectClassFromObjectClassInfo(_objectClassInfo);
-            if (_objectClassInfo.getType().equals(getObjectClass().getObjectClassValue())){                
+            if (_supportedObjectClass.equals(getObjectClass())){                
                 _ocSupported = true;
                 break;
             }
-
-
         }
     }
     
@@ -128,9 +126,7 @@ public abstract class ObjectClassRunner extends AbstractSimpleTest {
                             " throw RuntimeException");
                 }
             } catch (RuntimeException e) {
-                e.printStackTrace();
                 if (isObjectClassSupported()) {
-                    e.printStackTrace();
                     fail("Unexpected RuntimeException thrown: " + e);
                 }
             }
