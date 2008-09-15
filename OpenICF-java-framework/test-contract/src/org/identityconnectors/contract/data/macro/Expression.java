@@ -119,6 +119,11 @@ public class Expression {
         ExpressionContext context = new ExpressionContext(0);
         Object expressionReturn = null;
         
+        // handle empty strings
+        if (_expressionString.length()==0) {
+            expressionReturn = _expressionString;
+        }
+        
         for(int i=context.getCurrentPosition();i<_expressionString.length();i++) {
             char ch = _expressionString.charAt(i);
             if(ch == '$') {

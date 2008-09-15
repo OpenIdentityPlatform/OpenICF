@@ -179,12 +179,13 @@ public class ConnectorHelper {
                 
                 Object configObject = dataProvider.getConnectorAttribute(
                         prop.getType().getName(), tmpPropName);
-                if (prop.getType().equals(GuardedString.class)) {
-                    configObject = new GuardedString(configObject.toString().toCharArray());
-                }
+                
                 if (configObject != null) {
                     LOG.info("Setting property ''{0}'' to value ''{1}''",
                             propName, configObject.toString());
+                    if (prop.getType().equals(GuardedString.class)) {
+                        configObject = new GuardedString(configObject.toString().toCharArray());
+                    }
                     properties.setPropertyValue(propName, configObject);
                 } else {
                     LOG.warn(
