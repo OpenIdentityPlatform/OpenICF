@@ -389,11 +389,11 @@ public class MultiOpTests extends ObjectClassRunner {
 
             checkEnableAttribute(uid, enabled);
 
-            //remove ENABLE if present
+            //remove ENABLE if present           
             for (Attribute attribute : attrs) {
                 if (attribute.is(OperationalAttributes.ENABLE_NAME)) {
                     attrs.remove(attribute);
-
+                    break;
                 }
             }
             //add ENABLE
