@@ -472,6 +472,8 @@ public class DefaultDataProvider implements DataProvider {
         String svalue = null;
         if (value instanceof Expression) {
             svalue = ((Expression) value).getExpressionString();
+        } else if (value instanceof String) {
+            svalue = String.format("${LITERAL,%s}", value);
         } else if (value instanceof Double) {
             svalue = String.format("${DOUBLE,%f}", value);
         } else if (value instanceof Float) {

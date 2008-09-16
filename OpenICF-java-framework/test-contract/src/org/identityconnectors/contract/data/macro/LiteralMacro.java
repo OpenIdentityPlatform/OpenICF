@@ -52,12 +52,14 @@ import junit.framework.Assert;
 public class LiteralMacro implements Macro {
     
     private static final Log LOG = Log.getLog(LiteralMacro.class);
+    
+    public static String MACRO_NAME = "LITERAL";
 
     /**
      * {@inheritDoc}     
      */
     public String getName() {
-        return "LITERAL";
+        return MACRO_NAME;
     }
 
     /**

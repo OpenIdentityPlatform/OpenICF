@@ -126,27 +126,24 @@ public class Expression {
         
         for(int i=context.getCurrentPosition();i<_expressionString.length();i++) {
             char ch = _expressionString.charAt(i);
-            if(ch == '$') {
+            if (ch == '$' && i + 1 < _expressionString.length()
+                    && _expressionString.charAt(i + 1) == '{') {
                 int macroStart = i;
                 i++;
-                Assert.assertTrue(i < _expressionString.length());
-                ch = _expressionString.charAt(i); 
-                if (ch == '{') {
-                    int closingBrace = findClosingBrace(_expressionString, i);
-                    Assert.assertFalse("Improperly formatted expression:  No closing brace found for expression", (i == -1));
-                    // get the macro
-                    String macroString = _expressionString.substring(macroStart, closingBrace + 1);
-                    context.setCurrentPosition(macroStart);
-                    Object obj = processMacro(context, macroString);
-                    if(expressionReturn == null) {
-                        expressionReturn = obj;                        
-                    } else {
-                        expressionReturn = concatenate(expressionReturn, obj);
-                    }
-                    i += context.getCurrentPosition();
+
+                int closingBrace = findClosingBrace(_expressionString, i);
+                Assert.assertFalse("Improperly formatted expression:  No closing brace found for expression",
+                        (i == -1));
+                // get the macro
+                String macroString = _expressionString.substring(macroStart, closingBrace + 1);
+                context.setCurrentPosition(macroStart);
+                Object obj = processMacro(context, macroString);
+                if (expressionReturn == null) {
+                    expressionReturn = obj;
                 } else {
-                    Assert.fail("Improperly formatted expression: '$' must be followed by a '{'");
+                    expressionReturn = concatenate(expressionReturn, obj);
                 }
+                i += context.getCurrentPosition();                
             } else {
                 String processedString = processString(context, _expressionString.substring(i));
                 if(expressionReturn == null) {
@@ -213,7 +210,7 @@ public class Expression {
     }
 
     /**
-     * Processes the Expression string
+     * Processes the Expression string. Some escaping could be done here, but currently is not.
      * 
      * @param context
      * @param patternSubstring
@@ -224,24 +221,8 @@ public class Expression {
         
         StringBuffer foundString = new StringBuffer();
         for(index=0;index<patternSubstring.length();index++) {
-            char ch = patternSubstring.charAt(index);
-            if(ch == '$') {
-                // must be followed by either a $ or a {
-                char next = patternSubstring.charAt(index + 1);
-                if(next == '$') {
-                    foundString.append('$');
-                    // add one, because we already processed
-                    // the next character
-                    index++;
-                } else {
-                    // went one character too far ...
-                    // ran into the next macro token
-                    index--;
-                    break;
-                }
-            } else {
-                foundString.append(ch);
-            }
+            char ch = patternSubstring.charAt(index);            
+            foundString.append(ch);                        
         }
         
         context.setCurrentPosition(index);
@@ -299,7 +280,12 @@ public class Expression {
                 
             case ',':
                 if(embeddedMacroLevel == 0) {
-                    parametersStrings.add(foundParameter.toString().trim());
+                    if (parametersStrings.size() > 0 && parametersStrings.get(0).equals(LiteralMacro.MACRO_NAME)) {
+                        parametersStrings.add(foundParameter.toString());
+                    }
+                    else {
+                        parametersStrings.add(foundParameter.toString().trim());
+                    }
                     foundParameter = new StringBuffer();
                 } else {
                     foundParameter.append(ch);
@@ -314,9 +300,30 @@ public class Expression {
         
         // add the last one in ... there may not be one in certain
         // cases, so check length first
-        String lastParameter = foundParameter.toString().trim();
+        String lastParameter;
+        if (parametersStrings.size() > 0 && parametersStrings.get(0).equals(LiteralMacro.MACRO_NAME)) {
+            lastParameter = foundParameter.toString();
+        }
+        else {
+            lastParameter = foundParameter.toString().trim();
+        }        
         if(lastParameter.length() > 0) {            
             parametersStrings.add(lastParameter);
+        }
+        
+        // handle special case - LITERAL macro 
+        if (parametersStrings.size() > 0 && parametersStrings.get(0).equals(LiteralMacro.MACRO_NAME)) {
+            StringBuffer buf = new StringBuffer();
+            for (int i = 1; i < parametersStrings.size(); i++) {
+                buf.append(parametersStrings.get(i));
+                if (i + 1 < parametersStrings.size()) {
+                    buf.append(",");
+                }
+            }
+
+            // add in one for the trailing } that was removed earlier
+            context.setCurrentPosition(index + 1);
+            return buf.toString();
         }
         
         List<Object> resolvedParameters = new ArrayList<Object>();
