@@ -404,9 +404,9 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
         // check that there is a driver..
         Assertions.blankCheck(getDriver(), "driver");
         // determine if you can get a connection to the database..
-        Assertions.blankCheck(getLogin(), "login");
+        Assertions.nullCheck(getLogin(), "login");
         // check that there is a table to query..
-        Assertions.blankCheck(getPassword(), "password");
+        Assertions.nullCheck(getPassword(), "password");
         // check that there is a table to query..
         Assertions.blankCheck(getConnectionUrl(), "connectionUrl");
       

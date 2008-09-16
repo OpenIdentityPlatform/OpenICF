@@ -298,6 +298,15 @@ public class DatabaseConnectorTests {
         assertNotNull(uid);
         assertEquals(name.getNameValue(), uid.getUidValue());
     }
+    
+    /**
+     * test method
+     */
+    @Test
+    public void testTestMethod() {
+        ConnectorFacade facade = getFacade();
+        facade.test();
+    }    
 
     /**
      * Test retrieving the schema using the API.
@@ -983,6 +992,8 @@ public class DatabaseConnectorTests {
     DatabaseTableConfiguration newConfiguration() {
         DatabaseTableConfiguration config = new DatabaseTableConfiguration();
         config.setDriver(DRIVER);
+        config.setLogin("");
+        config.setPassword("");
         config.setDBTable(DB_TABLE);
         config.setKeyColumn(TestAccount.ACCOUNTID);
         config.setPasswordColumn(TestAccount.PASSWORD);
