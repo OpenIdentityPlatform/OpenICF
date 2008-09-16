@@ -87,53 +87,64 @@ public class DeleteApiOpTests extends ObjectClassRunner {
     public void testRun() {      
         ConnectorObject obj = null;
         Uid uid = null;
-
         
         try {
             // create something to delete - object class is always supported
             uid = ConnectorHelper.createObject(getConnectorFacade(), getDataProvider(),
                     getObjectClassInfo(), getTestName(), 0, getOperationOptionsByOp(DeleteApiOp.class));
-
+            
             // The object should exist now
             obj = getConnectorFacade().getObject(getSupportedObjectClass(), uid, getOperationOptionsByOp(GetApiOp.class));
-            assertNotNull(
-                    "Unable to perform delete test because object to be deleted cannot be created",
-                    obj);
+            assertNotNull("Unable to perform delete test because object to be deleted cannot be created", obj);
 
-            // try to delete objects with the name if they exist
+            // try to delete object
             getConnectorFacade().delete(getObjectClass(), uid, getOperationOptionsByOp(DeleteApiOp.class));
 
-            // Try to find it now that it should be deleted
+            // Try to find it now, it should be deleted
             obj = getConnectorFacade().getObject(getSupportedObjectClass(), uid, getOperationOptionsByOp(GetApiOp.class));
-
-            // verify that it is deleted
-            assertNull("Object wasn't deleted by delete.",
-                    obj);
+            assertNull("Object wasn't deleted by delete.", obj);
+            
         } finally {
-            // try to delete in case of exception
+            // try to delete if previous deletes failed
             ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid, false,
                     getOperationOptionsByOp(DeleteApiOp.class));
         }
     }
-
+    
     /**
-     * Tests deleting of non-existing Uid, which should throw UnknownUidException
-     * if the object class is supported   
+     * Tests that delete throws {@link UnknownUidException} when object is deleted for the second time.
      */
     @Test
-    public void testDeleteNonExistingUid() {
+    public void testDeleteThrowUnknownUid() {
+        // run the contract test only if delete is supported
+        if (ConnectorHelper.operationSupported(getConnectorFacade(), getAPIOperation())) {
+            Uid uid = null;
+            
+            try {
+                // create something to delete - object class is always supported
+                uid = ConnectorHelper.createObject(getConnectorFacade(), getDataProvider(),
+                        getObjectClassInfo(), getTestName(), 1, getOperationOptionsByOp(DeleteApiOp.class));
                 
-        try {
-            if (isObjectClassSupported()) {
-                getConnectorFacade().delete(getObjectClass(), new Uid("NONEXISTINGUID"), null);
-                fail("Deleting a non existing Uid should have caused an UnknownUid exception");
-            } else {
-                LOG.info("Object class ''{0}'' not supported by connector, ignoring 'testDeleteNonExistingUid' test", getObjectClass());
+                // delete for the first time
+                getConnectorFacade().delete(getSupportedObjectClass(), uid, getOperationOptionsByOp(DeleteApiOp.class));
+                
+                try {
+                    // delete for the second time
+                    getConnectorFacade().delete(getSupportedObjectClass(), uid, getOperationOptionsByOp(DeleteApiOp.class));
+                    fail("Delete of previously deleted object should throw UnknownUidException.");
+                }
+                catch (UnknownUidException ex) {
+                    // ok
+                }
             }
-        } catch (UnknownUidException t) {
-            //ok
+            finally {
+                // try to delete if anything failed
+                ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid, false,
+                        getOperationOptionsByOp(DeleteApiOp.class));
+            }
         }
     }
+
 
     /**
      * {@inheritDoc}     
