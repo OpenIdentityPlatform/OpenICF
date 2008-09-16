@@ -39,6 +39,8 @@
  */
 package org.identityconnectors.contract.test;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -250,7 +252,10 @@ public class UpdateApiOpTests extends ObjectClassRunner {
      */
     private Set<Attribute> mergeAttributeSets(Set<Attribute> attrSet1, Set<Attribute> attrSet2) {
         Set<Attribute> attrs = new HashSet<Attribute>();
-        Map<String, Attribute> attrMap2 = AttributeUtil.toMap(attrSet2);
+        Map<String, Attribute> attrMap2 = new HashMap<String, Attribute>();
+        for (Attribute attr : attrSet2) {
+            attrMap2.put(attr.getName(), attr);
+        }
 
         for (Attribute attr1 : attrSet1) {
             Attribute attr2 = attrMap2.remove(attr1.getName());
