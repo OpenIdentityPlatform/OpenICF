@@ -250,6 +250,12 @@ public class Expression {
         // strip off ${ and }       
         macroText = macroText.substring(2, macroText.length() - 1);
         
+        // handle special case - LITERAL macro 
+        if (macroText.startsWith(LiteralMacro.MACRO_NAME)) {
+            context.setCurrentPosition(macroText.length() + 1);
+            return macroText.substring(macroText.indexOf(',') + 1).trim();
+        }
+        
         StringBuffer foundParameter = new StringBuffer();        
         // find the parameters by splitting on ','
         // treat everything between '${' and '}' as 
@@ -279,13 +285,8 @@ public class Expression {
                 break;
                 
             case ',':
-                if(embeddedMacroLevel == 0) {
-                    if (parametersStrings.size() > 0 && parametersStrings.get(0).equals(LiteralMacro.MACRO_NAME)) {
-                        parametersStrings.add(foundParameter.toString());
-                    }
-                    else {
-                        parametersStrings.add(foundParameter.toString().trim());
-                    }
+                if(embeddedMacroLevel == 0) {                    
+                    parametersStrings.add(foundParameter.toString().trim());
                     foundParameter = new StringBuffer();
                 } else {
                     foundParameter.append(ch);
@@ -300,30 +301,9 @@ public class Expression {
         
         // add the last one in ... there may not be one in certain
         // cases, so check length first
-        String lastParameter;
-        if (parametersStrings.size() > 0 && parametersStrings.get(0).equals(LiteralMacro.MACRO_NAME)) {
-            lastParameter = foundParameter.toString();
-        }
-        else {
-            lastParameter = foundParameter.toString().trim();
-        }        
+        String lastParameter = foundParameter.toString().trim();
         if(lastParameter.length() > 0) {            
             parametersStrings.add(lastParameter);
-        }
-        
-        // handle special case - LITERAL macro 
-        if (parametersStrings.size() > 0 && parametersStrings.get(0).equals(LiteralMacro.MACRO_NAME)) {
-            StringBuffer buf = new StringBuffer();
-            for (int i = 1; i < parametersStrings.size(); i++) {
-                buf.append(parametersStrings.get(i));
-                if (i + 1 < parametersStrings.size()) {
-                    buf.append(",");
-                }
-            }
-
-            // add in one for the trailing } that was removed earlier
-            context.setCurrentPosition(index + 1);
-            return buf.toString();
         }
         
         List<Object> resolvedParameters = new ArrayList<Object>();
