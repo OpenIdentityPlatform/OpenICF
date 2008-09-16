@@ -161,7 +161,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                 // don't want to have two same values for UID attribute
                 addDelAttrs.remove(uid);
                 ConnectorHelper.checkObject(getObjectClassInfo(), obj,
-                        mergeAttributeSets(replaceAttributes, addDelAttrs));
+                        mergeAttributeSets(addDelAttrs, replaceAttributes));
                 addDelAttrs.add(uid);
 
                 // delete added attribute values
