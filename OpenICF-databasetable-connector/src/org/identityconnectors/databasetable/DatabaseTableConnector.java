@@ -157,7 +157,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      */
     public void init(Configuration cfg) {
         this.config = (DatabaseTableConfiguration) cfg;
-        this.conn = newConnection();
+        this.conn = DatabaseTableConnector.newConnection(this.config);
         this.schema = null;
         this.defaultAttributesToGet = null;
         this.columnClassNames = null;
@@ -258,7 +258,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             pstmt.execute();
         } catch (SQLException e) {
         	log.error(e, "Create user {0} error", name.getNameValue());
-            SQLUtil.rollbackQuietly(conn.getConnection());
+            SQLUtil.rollbackQuietly(conn);
             throw ConnectorException.wrap(e);
         } finally {
             // clean up...
@@ -310,7 +310,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             }
         } catch (SQLException e) {
             log.error(e, "SQL: " + sql);
-            SQLUtil.rollbackQuietly(conn.getConnection());
+            SQLUtil.rollbackQuietly(conn);
             throw ConnectorException.wrap(e);
         } finally {
             // clean up..
@@ -372,7 +372,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             stmt = conn.prepareStatement(sql, params);
             stmt.execute();
         } catch (SQLException e) {
-            SQLUtil.rollbackQuietly(conn.getConnection());
+            SQLUtil.rollbackQuietly(conn);
             log.error(e, "SQL: " + sql);
             throw ConnectorException.wrap(e);
         } finally {
@@ -521,7 +521,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
                 ret = new SyncToken(SQLUtil.convertToSupportedType(rset.getObject(1)));
             }
         } catch (SQLException e) {
-            SQLUtil.rollbackQuietly(conn.getConnection());
+            SQLUtil.rollbackQuietly(conn);
             log.error(e, "SQL: " + sql);
             throw ConnectorException.wrap(e);
         } finally {
@@ -684,7 +684,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             // get the results queued..
             attrInfo = buildAttributeInfoSet(rset);            
         } catch (SQLException ex) {
-            SQLUtil.rollbackQuietly(conn.getConnection());
+            SQLUtil.rollbackQuietly(conn);
             log.error(ex, "Error in SQL: " + sql);
             throw ConnectorException.wrap(ex);
         } finally {
@@ -811,19 +811,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         bld.setDeltaType(SyncDeltaType.UPDATE);
         return bld;
     }       
-    
-    /**
-     * @return a new {@link DatabaseTableConnection} connection
-     */
-    private DatabaseTableConnection newConnection() {
-        final java.sql.Connection connection = 
-            SQLUtil.getDriverMangerConnection(
-                    config.getDriver(),
-                    config.getConnectionUrl(), 
-                    config.getLogin(), 
-                    config.getPassword());
-        return new DatabaseTableConnection(connection, config);    
-    }
+
 
     /**
      * @param options
@@ -869,4 +857,20 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         assert columnClassNames != null;
         return columnClassNames.get(columnName);
     }
+    
+    
+    /**
+     * Test enabled create connection function
+     * @param config 
+     * @return a new {@link DatabaseTableConnection} connection
+     */
+    static DatabaseTableConnection newConnection( DatabaseTableConfiguration config ) {
+        final java.sql.Connection connection = 
+            SQLUtil.getDriverMangerConnection(
+                    config.getDriver(),
+                    config.getConnectionUrl(), 
+                    config.getLogin(), 
+                    config.getPassword());
+        return new DatabaseTableConnection(connection, config);    
+    }    
 }

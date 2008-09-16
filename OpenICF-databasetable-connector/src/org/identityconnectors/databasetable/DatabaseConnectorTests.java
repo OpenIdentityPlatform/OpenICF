@@ -139,6 +139,7 @@ public class DatabaseConnectorTests {
     // Setup/Teardown
     /**
      * Creates a temporary database based on a SQL resource file.
+     * @throws Exception 
      */
     @BeforeClass
     public static void createDatabase() throws Exception {
@@ -146,19 +147,14 @@ public class DatabaseConnectorTests {
         // clear out the test database directory..
         IOUtil.delete(f);
         // attempt to create the database in the directory..
-        DatabaseTableConfiguration config = new DatabaseTableConfiguration();
+        final DatabaseTableConfiguration config = new DatabaseTableConfiguration();
         config.setDriver(DRIVER);
         config.setConnectionUrl(MessageFormat.format(URL_TEMPLATE, f));
-        final Connection connection = SQLUtil.
-            getDriverMangerConnection(config.getDriver(), 
-                                      config.getConnectionUrl(), 
-                                      config.getLogin(), 
-                                      config.getPassword());
-        DatabaseTableConnection con = new DatabaseTableConnection(connection, config);
-        Connection conn = con.getConnection();
+        final DatabaseTableConnection con = DatabaseTableConnector.newConnection(config);
+        final Connection conn = con.getConnection();
         // create the database..
-        Statement stmt = conn.createStatement();
-        String create = getResourceAsString("derbyTest.sql");
+        final Statement stmt = conn.createStatement();
+        final String create = getResourceAsString("derbyTest.sql");
         assertNotNull(create);
         stmt.execute(create);
         SQLUtil.closeQuietly(stmt);
@@ -166,6 +162,9 @@ public class DatabaseConnectorTests {
         SQLUtil.closeQuietly(conn);
     }
 
+    /**
+     * test method
+     */
     @AfterClass
     public static void deleteDatabase() {
         ConnectorFacadeFactory.getInstance().dispose();
@@ -173,10 +172,14 @@ public class DatabaseConnectorTests {
         try {
             DriverManager.getConnection(URL_SHUTDOWN);
         } catch (Exception ex) {
+            //expected
         }
     }
 
     // Tests
+    /**
+     * test method
+     */
     @Test
     public void testProperties() {
         // attempt to test driver info..
@@ -232,7 +235,7 @@ public class DatabaseConnectorTests {
         ConnectorFacade facade = getFacade(cfg);
 
         TestAccount tst = TestAccount.createTestAccount();
-        Uid uid = facade.create(ObjectClass.ACCOUNT, tst.toAttributeSet(), null);
+        facade.create(ObjectClass.ACCOUNT, tst.toAttributeSet(), null);
     }
 
 
@@ -281,6 +284,9 @@ public class DatabaseConnectorTests {
         }
     }
 
+    /**
+     * test method
+     */
     @Test
     public void testCreateWithName() {
         ConnectorFacade facade = getFacade();
@@ -424,8 +430,6 @@ public class DatabaseConnectorTests {
         final Uid uid = facade.create(ObjectClass.ACCOUNT, tst.toAttributeSet(), null);
         assertNotNull(uid);
 
-        // retrieve the object
-        ConnectorFacadeFactory factory = ConnectorFacadeFactory.getInstance();
         // **test only**
         FindUidObjectHandler handler = new FindUidObjectHandler(uid);
         facade.search(ObjectClass.ACCOUNT, new EqualsFilter(uid), handler, null);
@@ -534,13 +538,10 @@ public class DatabaseConnectorTests {
         final Uid uid = facade.create(ObjectClass.ACCOUNT, expected.toAttributeSet(), null);
 
         // update the last change
-        DatabaseTableConnector connector = null;
         PreparedStatement ps = null;
         DatabaseTableConnection conn = null;
         try {
-            connector = new DatabaseTableConnector();
-            connector.init(newConfiguration());
-            conn = connector.getConnection();
+            conn = DatabaseTableConnector.newConnection(newConfiguration());
 
             List<Object> values = new ArrayList<Object>();
             final Timestamp changed = new Timestamp(System.currentTimeMillis() - 1000);
@@ -551,12 +552,8 @@ public class DatabaseConnectorTests {
             ps.execute();
             conn.commit();
         } finally {
-            if (conn != null)
-                SQLUtil.closeQuietly(conn.getConnection());
             SQLUtil.closeQuietly(ps);
-            if (connector != null) {
-                connector.dispose();
-            }
+            SQLUtil.closeQuietly(conn);
         }
         System.out.println("Uid: " + uid);
         FindUidSyncHandler handler = new FindUidSyncHandler(uid);
@@ -580,13 +577,10 @@ public class DatabaseConnectorTests {
         final Uid uid = facade.create(ObjectClass.ACCOUNT, expected.toAttributeSet(), null);
 
         // update the last change
-        DatabaseTableConnector connector = null;
         PreparedStatement ps = null;
         DatabaseTableConnection conn = null;
         try {
-            connector = new DatabaseTableConnector();
-            connector.init(newConfiguration());
-            conn = connector.getConnection();
+            conn = DatabaseTableConnector.newConnection(newConfiguration());
 
             List<Object> values = new ArrayList<Object>();
             final Timestamp changed = new Timestamp(System.currentTimeMillis());
@@ -597,12 +591,8 @@ public class DatabaseConnectorTests {
             ps.execute();
             conn.commit();
         } finally {
-            if (conn != null)
-                SQLUtil.closeQuietly(conn.getConnection());
             SQLUtil.closeQuietly(ps);
-            if (connector != null) {
-                connector.dispose();
-            }
+            SQLUtil.closeQuietly(conn);
         }
         System.out.println("Uid: " + uid);
         FindUidSyncHandler handler = new FindUidSyncHandler(uid);
@@ -623,7 +613,6 @@ public class DatabaseConnectorTests {
      */
     @Test
     public void testGetLatestSyncToken() throws SQLException {
-        final String ERR1 = "Could not find new object.";
         final String SQL_TEMPLATE = "UPDATE Accounts SET changed = ? WHERE accountId = ?";
         
         ConnectorFacade facade = getFacade();
@@ -632,13 +621,10 @@ public class DatabaseConnectorTests {
         final Timestamp changed = new Timestamp(System.currentTimeMillis());
 
         // update the last change
-        DatabaseTableConnector connector = null;
         PreparedStatement ps = null;
         DatabaseTableConnection conn = null;
         try {
-            connector = new DatabaseTableConnector();
-            connector.init(newConfiguration());
-            conn = connector.getConnection();
+            conn = DatabaseTableConnector.newConnection(newConfiguration());
 
             List<Object> values = new ArrayList<Object>();
             values.add(changed);
@@ -647,12 +633,8 @@ public class DatabaseConnectorTests {
             ps.execute();
             conn.commit();
         } finally {
-            if (conn != null)
-                SQLUtil.closeQuietly(conn.getConnection());
             SQLUtil.closeQuietly(ps);
-            if (connector != null) {
-                connector.dispose();
-            }
+            SQLUtil.closeQuietly(conn);
         }
         // attempt to find the newly created object..
         final SyncToken latestSyncToken = facade.getLatestSyncToken();
@@ -661,6 +643,10 @@ public class DatabaseConnectorTests {
         assertEquals(changed.getTime(), actual);        
     } 
     
+    /**
+     * Test quoting method
+     * @throws Exception
+     */
     @Test
     public void testQuoting() throws Exception {
         final Map<String, Pair<String, String>> data = new HashMap<String, Pair<String, String>>();
@@ -677,6 +663,9 @@ public class DatabaseConnectorTests {
         }
     }
 
+    /**
+     * Test method
+     */
     @Test(expected = IllegalArgumentException.class)
     public void testValidQuoting() {
         // test the exception case..
@@ -836,8 +825,8 @@ public class DatabaseConnectorTests {
             TestAccount actual = TestAccount.fromAttributeSet(results.get(0).getAttributes());
             accountEquals(expected, actual);
         } finally {
-            if(conn != null) SQLUtil.closeQuietly(conn.getConnection());
             SQLUtil.closeQuietly(ps);
+            SQLUtil.closeQuietly(conn);
 
             if (connector != null) {
                 connector.dispose();
@@ -991,10 +980,7 @@ public class DatabaseConnectorTests {
         return factory.newInstance(impl);
     }
 
-    /**
-     * @return
-     */
-    public DatabaseTableConfiguration newConfiguration() {
+    DatabaseTableConfiguration newConfiguration() {
         DatabaseTableConfiguration config = new DatabaseTableConfiguration();
         config.setDriver(DRIVER);
         config.setDBTable(DB_TABLE);
@@ -1006,11 +992,11 @@ public class DatabaseConnectorTests {
         return config;
     }
 
-    public File getDBDirectory() {
+    File getDBDirectory() {
         return new File(System.getProperty("java.io.tmpdir"), DB_DIR);
     }
 
-    public String getConnectionUrl() {
+    String getConnectionUrl() {
         return MessageFormat.format(URL_TEMPLATE, getDBDirectory());
     }
 
@@ -1086,26 +1072,27 @@ public class DatabaseConnectorTests {
         
         private Timestamp changed;
 
-        public TestAccount() {
+        TestAccount() {
+            //empty
         }
 
-        public String getAccountId() {
+        String getAccountId() {
             return accountId;
         }
 
-        public void setAccountId(String accountId) {
+        void setAccountId(String accountId) {
             this.accountId = accountId;
         }
 
-        public String getPassword() {
+        String getPassword() {
             return password;
         }
 
-        public void setPassword(String password) {
+        void setPassword(String password) {
             this.password = password;
         }
 
-        public void setPassword(GuardedString password) {
+        void setPassword(GuardedString password) {
             this.password = getPlainPassword(password);
         }
 
@@ -1119,100 +1106,100 @@ public class DatabaseConnectorTests {
             return buf.toString();
         }
 
-        public String getManager() {
+        String getManager() {
             return manager;
         }
 
-        public void setManager(String manager) {
+        void setManager(String manager) {
             this.manager = manager;
         }
 
-        public String getMiddleName() {
+        String getMiddleName() {
             return middleName;
         }
 
-        public void setMiddleName(String middleName) {
+        void setMiddleName(String middleName) {
             this.middleName = middleName;
         }
 
-        public String getFirstName() {
+        String getFirstName() {
             return firstName;
         }
 
-        public void setFirstName(String firstName) {
+        void setFirstName(String firstName) {
             this.firstName = firstName;
         }
 
-        public String getLastName() {
+        String getLastName() {
             return lastName;
         }
 
-        public void setLastName(String lastName) {
+        void setLastName(String lastName) {
             this.lastName = lastName;
         }
 
-        public String getEmail() {
+        String getEmail() {
             return email;
         }
 
-        public void setEmail(String email) {
+        void setEmail(String email) {
             this.email = email;
         }
 
-        public String getDepartment() {
+        String getDepartment() {
             return department;
         }
 
-        public void setDepartment(String department) {
+        void setDepartment(String department) {
             this.department = department;
         }
 
-        public Integer getAge() {
+        Integer getAge() {
             return age;
         }
 
-        public void setAge(Integer age) {
+        void setAge(Integer age) {
             this.age = age;
         }
 
-        public BigDecimal getSalary() {
+        BigDecimal getSalary() {
             return salary;
         }
 
-        public void setSalary(BigDecimal salary) {
+        void setSalary(BigDecimal salary) {
             this.salary = salary;
         }
 
-        public byte[] getJpegPhoto() {
+        byte[] getJpegPhoto() {
             return jpegphoto;
         }
 
-        public void setJpegPhoto(byte[] jpegphoto) {
+        void setJpegPhoto(byte[] jpegphoto) {
             this.jpegphoto = jpegphoto;
         }
 
 
-        public Date getEnrolled() {
+        Date getEnrolled() {
             return enrolled;
         }
 
-        public void setEnrolled(Date enrolled) {
+        void setEnrolled(Date enrolled) {
             this.enrolled = enrolled;
         }
         
-        public Timestamp getChanged() {
+        Timestamp getChanged() {
             return changed;
         }
 
-        public void setChanged(Timestamp changed) {
+        void setChanged(Timestamp changed) {
             this.changed = changed;
         }
 
-        public String getTitle() {
+        String getTitle() {
             return this.title;
         }
 
-        public void setTitle(String title) {
+        void setTitle(String title) {
             this.title = title;
         }
 
@@ -1220,7 +1207,7 @@ public class DatabaseConnectorTests {
          * Create a random test account fully populated..
          * @return an account
          */
-        public static TestAccount createTestAccount() {
+        static TestAccount createTestAccount() {
             TestAccount testAccount = new TestAccount();
             testAccount.setAccountId(randomString(r, 50));
             testAccount.setAge(r.nextInt(100));
@@ -1244,7 +1231,7 @@ public class DatabaseConnectorTests {
          * @param attributes connector attributes
          * @return s test account
          */
-        public static TestAccount fromAttributeSet(Set<Attribute> attributes) {
+        static TestAccount fromAttributeSet(Set<Attribute> attributes) {
             TestAccount ret = new TestAccount();
             for (Attribute attr : attributes) {
                 String name = attr.getName();
@@ -1281,7 +1268,7 @@ public class DatabaseConnectorTests {
             return ret;
         }
 
-        public Set<Attribute> toAttributeSet() {
+        Set<Attribute> toAttributeSet() {
             return toAttributeSet(true);
         }
         
@@ -1290,7 +1277,7 @@ public class DatabaseConnectorTests {
          * @param passwdColDefined
          *            if the attribute set should include password
          */
-        public Set<Attribute> toAttributeSet(boolean passwdColDefined) {
+        Set<Attribute> toAttributeSet(boolean passwdColDefined) {
             Set<Attribute> ret = new HashSet<Attribute>();
             ret.add(AttributeBuilder.build(Name.NAME, getAccountId()));
 
