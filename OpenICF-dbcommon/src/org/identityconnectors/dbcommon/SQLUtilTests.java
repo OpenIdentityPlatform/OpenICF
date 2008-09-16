@@ -69,7 +69,7 @@ import org.junit.Test;
 public class SQLUtilTests {
  
     /**
-     * Test method for {@link org.identityconnectors.dbcommon.SQLUtil#closeQuietly(Connection)}.
+     * Test method for {@link SQLUtil#closeQuietly(Connection)}.
      * @throws Exception
      */
     @Test
@@ -78,18 +78,24 @@ public class SQLUtilTests {
         tp.expectAndReturn("isClosed",Boolean.FALSE); 
         tp.expectAndThrow("close",new SQLException("expected")); 
         Connection c = tp.getProxy(Connection.class);
-        SQLUtil.closeQuietly(c);
+        DatabaseConnection dbc = new DatabaseConnection(c);
+        SQLUtil.closeQuietly(dbc);
         Assert.assertTrue(tp.isDone());
         
         tp = new ExpectProxy<Connection>();
         tp.expectAndReturn("isClosed",Boolean.TRUE); 
         c = tp.getProxy(Connection.class);
-        SQLUtil.closeQuietly(c);
+        dbc = new DatabaseConnection(c);
+        SQLUtil.closeQuietly(dbc);
         Assert.assertTrue(tp.isDone());
+        
+        //null tests
+        dbc = null;
+        SQLUtil.closeQuietly(dbc);
     }
     
     /**
-     * Test method for {@link org.identityconnectors.dbcommon.SQLUtil#rollbackQuietly(Connection)}.
+     * Test method for {@link SQLUtil#rollbackQuietly(Connection)}.
      * @throws Exception
      */
     @Test
@@ -98,20 +104,25 @@ public class SQLUtilTests {
         tp.expectAndReturn("isClosed",Boolean.FALSE); 
         tp.expectAndThrow("rollback",new SQLException("expected")); 
         Connection s = tp.getProxy(Connection.class);
-        SQLUtil.rollbackQuietly(s);
+        DatabaseConnection dbc = new DatabaseConnection(s);
+        SQLUtil.rollbackQuietly(dbc);
         Assert.assertTrue(tp.isDone());
         
         tp = new ExpectProxy<Connection>();
         tp.expectAndReturn("isClosed",Boolean.TRUE); 
         s = tp.getProxy(Connection.class);
-        SQLUtil.rollbackQuietly(s);
+        dbc = new DatabaseConnection(s);
+        SQLUtil.rollbackQuietly(dbc);
         Assert.assertTrue(tp.isDone());
         
+        //null tests
+        dbc = null;
+        SQLUtil.rollbackQuietly(dbc);                
     }
     
 
     /**
-     * Test method for {@link org.identityconnectors.dbcommon.SQLUtil#closeQuietly(Statement)}.
+     * Test method for {@link SQLUtil#closeQuietly(Statement)}.
      */
     @Test
     public void quietStatementClose() {
@@ -122,7 +133,7 @@ public class SQLUtilTests {
     }
 
     /**
-     * Test method for {@link org.identityconnectors.dbcommon.SQLUtil#closeQuietly(ResultSet)}.
+     * Test method for {@link SQLUtil#closeQuietly(ResultSet)}.
      */
     @Test
     public void quietResultSetClose() {
@@ -133,9 +144,9 @@ public class SQLUtilTests {
     }
 
     /**
-     * Test method for {@link org.identityconnectors.dbcommon.SQLUtil#closeQuietly(Connection)}.
-     * Test method for {@link org.identityconnectors.dbcommon.SQLUtil#closeQuietly(ResultSet)}.
-     * Test method for {@link org.identityconnectors.dbcommon.SQLUtil#closeQuietly(Statement)}.
+     * Test method for {@link SQLUtil#closeQuietly(Connection)}.
+     * Test method for {@link SQLUtil#closeQuietly(ResultSet)}.
+     * Test method for {@link SQLUtil#closeQuietly(Statement)}.
      */
     @Test
     public void withNull() {

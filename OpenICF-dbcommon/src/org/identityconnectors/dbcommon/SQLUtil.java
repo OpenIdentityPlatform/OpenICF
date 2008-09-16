@@ -112,22 +112,6 @@ public final class SQLUtil {
         return ret;
     }    
 
-    /**
-     * Ignores any exception thrown by the {@link Connection} parameter when
-     * closed, it also checks for {@code null}.
-     * 
-     * @param conn
-     *            JDBC connection to close.
-     */
-    public static void closeQuietly(Connection conn) {
-        try {
-            if (conn != null && !conn.isClosed()) {
-                conn.close();
-            }
-        } catch (SQLException expected) {
-            //expected
-        }
-    }
     
     /**
      * Ignores any exception thrown by the {@link Connection} parameter when
@@ -144,7 +128,52 @@ public final class SQLUtil {
         } catch (SQLException expected) {
             //expected
         }
-    }    
+    }  
+    
+    /**
+     * Ignores any exception thrown by the {@link DatabaseConnection} parameter when
+     * closed, it also checks for {@code null}.
+     * 
+     * @param conn
+     *            DatabaseConnection to rollback.
+     */
+    public static void rollbackQuietly(DatabaseConnection conn) {
+        if (conn != null) {
+            rollbackQuietly(conn.getConnection());
+        }
+    }       
+
+    /**
+     * Ignores any exception thrown by the {@link Connection} parameter when
+     * closed, it also checks for {@code null}.
+     * 
+     * @param conn
+     *            JDBC connection to close.
+     */
+    public static void closeQuietly(Connection conn) {
+        try {
+            if (conn != null && !conn.isClosed()) {
+                conn.close();
+            }
+        } catch (SQLException expected) {
+            //expected
+        }
+    }
+
+    
+    /**
+     * Ignores any exception thrown by the {@link Connection} parameter when closed, 
+     * it also checks for {@code null}.
+     * 
+     * @param conn
+     *            DatabaseConnection to close.
+     */
+    public static void closeQuietly(DatabaseConnection conn) {
+        if (conn != null) {
+            closeQuietly(conn.getConnection());
+        }
+    }
+        
 
     /**
      * Ignores any exception thrown by the {@link Statement#close()} method.
