@@ -48,7 +48,7 @@ public class PredefinedAttributeInfos {
      */
     public static final AttributeInfo LAST_PASSWORD_CHANGE_DATE = build(
             PredefinedAttributes.LAST_PASSWORD_CHANGE_DATE_NAME, long.class,
-            false, true, false);
+            false, true, false, false);
 
     /**
      * Common password policy attribute where the password must be changed every
@@ -64,7 +64,7 @@ public class PredefinedAttributeInfos {
      */
     public static final AttributeInfo LAST_LOGIN_DATE = build(
             PredefinedAttributes.LAST_LOGIN_DATE_NAME, long.class, false, true,
-            false);
+            false, false);
 
     static {
         // define GROUPS attribute info

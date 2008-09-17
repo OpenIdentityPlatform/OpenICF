@@ -197,24 +197,26 @@ public final class AttributeInfoBuilder {
 
 	public static AttributeInfo build(final String name,
 			final boolean required, final boolean readable,
-			final boolean writeable) {
+			final boolean creatable, final boolean updateable) {
 		AttributeInfoBuilder bld = new AttributeInfoBuilder();
 		bld.setName(name);
 		bld.setRequired(required);
 		bld.setReadable(readable);
-		bld.setCreateable(writeable);
+		bld.setCreateable(creatable);
+        bld.setUpdateable(updateable);
 		return bld.build();
 	}
 
 	public static AttributeInfo build(final String name, final Class<?> type,
 			final boolean required, final boolean readable,
-			final boolean writeable) {
+			final boolean creatable, final boolean updateable) {
 		AttributeInfoBuilder bld = new AttributeInfoBuilder();
 		bld.setName(name);
 		bld.setType(type);
 		bld.setRequired(required);
 		bld.setReadable(readable);
-		bld.setCreateable(writeable);
+		bld.setCreateable(creatable);
+        bld.setUpdateable(updateable);
 		return bld.build();
 	}
 }

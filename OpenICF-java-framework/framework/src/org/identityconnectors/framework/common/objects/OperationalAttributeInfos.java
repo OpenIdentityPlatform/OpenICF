@@ -82,7 +82,7 @@ public final class OperationalAttributeInfos {
      */
     public static final AttributeInfo PASSWORD = build(
             OperationalAttributes.PASSWORD_NAME, GuardedString.class, true,
-            false, true);
+            false, true, true);
 
     /**
      * Used in conjunction with password to do an account level password change.
@@ -91,7 +91,7 @@ public final class OperationalAttributeInfos {
      */
     public static final AttributeInfo CURRENT_PASSWORD = build(
             OperationalAttributes.CURRENT_PASSWORD_NAME, GuardedString.class,
-            false, false, true);
+            false, false, true, true);
 
     /**
      * Used to do an administrator reset of the password. The value is the reset
@@ -99,7 +99,7 @@ public final class OperationalAttributeInfos {
      */
     public static final AttributeInfo RESET_PASSWORD = build(
             OperationalAttributes.RESET_PASSWORD_NAME, GuardedString.class,
-            false, false, true);
+            false, false, true, true);
     
     /**
      * Used to determine if a password is expired or to expire a password.
