@@ -65,6 +65,8 @@ public class NullMacro implements Macro {
         // first parameter is macro name
         Assert.assertEquals(parameters[0], getName());
 		
+        LOG.ok("''{0}'' macro called", getName());
+        
 		return null;
 	}
 
