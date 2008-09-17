@@ -39,8 +39,13 @@
  */
 package org.identityconnectors.contract.data.macro;
 
+import org.identityconnectors.common.logging.Log;
+import org.junit.Assert;
+
 public class NullMacro implements Macro {
 
+	private static final Log LOG = Log.getLog(NullMacro.class);
+	
     /**     
      * {@inheritDoc}
      */
@@ -52,6 +57,14 @@ public class NullMacro implements Macro {
      * {@inheritDoc}
      */
 	public Object resolve(Object[] parameters) {
+        LOG.ok("enter");
+        
+        // should be one parameter
+        Assert.assertEquals(1, parameters.length);
+
+        // first parameter is macro name
+        Assert.assertEquals(parameters[0], getName());
+		
 		return null;
 	}
 
