@@ -73,6 +73,7 @@ import org.identityconnectors.contract.data.macro.Macro;
 import org.identityconnectors.contract.data.macro.MapEntryMacro;
 import org.identityconnectors.contract.data.macro.MapMacro;
 import org.identityconnectors.contract.data.macro.NotSuppliedMacro;
+import org.identityconnectors.contract.data.macro.NullMacro;
 import org.identityconnectors.contract.data.macro.ObjectMacro;
 import org.identityconnectors.contract.data.macro.RandomMacro;
 import org.identityconnectors.contract.data.macro.SysPropsMacro;
@@ -177,6 +178,7 @@ public class DefaultDataProvider implements DataProvider {
         addMacro(new MapEntryMacro());
         addMacro(new MapMacro());
         addMacro(new ObjectMacro());
+        addMacro(new NullMacro());
 
     // load additional macros
     //loadMacros();
