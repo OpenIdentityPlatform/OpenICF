@@ -42,6 +42,11 @@ package org.identityconnectors.contract.data.macro;
 import org.identityconnectors.common.logging.Log;
 import org.junit.Assert;
 
+/**
+ * This macro takes no parameters, returns null value.
+ * 
+ * @author David Adam
+ */
 public class NullMacro implements Macro {
 
 	private static final Log LOG = Log.getLog(NullMacro.class);
