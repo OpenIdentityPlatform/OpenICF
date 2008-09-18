@@ -334,8 +334,7 @@ public class Expression {
             // alias parameters
             resolvedParameters.remove(0);
             resolvedParameters.addAll(0, Arrays.asList(alias));
-            LOG.info("Macro alias ''{0}'' replaced by macro ''{1}'', added parameters ''{2}''.",
-                    macroName, (String) alias[0], Arrays.copyOfRange(alias, 1, alias.length - 1));
+            LOG.info("Macro alias ''{0}'' replaced by ''{1}''.", macroName, Arrays.asList(alias));
         }
         
         Macro macro = _macroRegistry.get(macroName);
