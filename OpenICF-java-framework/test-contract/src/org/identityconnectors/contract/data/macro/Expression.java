@@ -188,9 +188,8 @@ public class Expression {
     }
     
     /**
-     * Removes whitespaces at the beginning and at the end of String.
-     * Whitespace is defined as ' ' and '\t'.
-     * String#trim removes also '\n' and other characters.
+     * Removes spaces at the beginning and at the end of String.
+     * 
      */
     private String trim(String str) {        
         if (str.length() == 0) {
@@ -199,14 +198,14 @@ public class Expression {
         
         int startIndex = 0;                
         char ch = str.charAt(startIndex);
-        while ((ch ==' ' || ch =='\t') && startIndex < str.length()) {
+        while ((ch ==' ') && startIndex < str.length()) {
             startIndex++;
             ch = str.charAt(startIndex);
         }
         
         int endIndex = str.length() - 1;                
         ch = str.charAt(endIndex);
-        while ((ch ==' ' || ch =='\t') && endIndex > 0) {
+        while ((ch ==' ') && endIndex > 0) {
             endIndex--;
             ch = str.charAt(startIndex);
         }
