@@ -40,8 +40,11 @@
 package org.identityconnectors.contract.data.macro;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
+
+import org.identityconnectors.common.logging.Log;
 
 import junit.framework.Assert;
 
@@ -62,6 +65,8 @@ import junit.framework.Assert;
  */
 public class Expression {
         
+    private static final Log LOG = Log.getLog(Expression.class);
+    
     /**
      * Encapsulates a position counter used for parsing
      * expressions.
@@ -317,6 +322,22 @@ public class Expression {
         // the macro name.
         String macroName = (String)resolvedParameters.get(0);
         Assert.assertNotNull("Macro name not found", macroName);
+        
+        // check if exist alias for macro
+        Object[] alias = MacroAliases.ALIASES.get(macroName);
+        if (alias != null) {
+            Assert.assertTrue("Wrong macro alias definition - it must contain at least alias name.",
+                    alias.length > 0);
+            // update macro name
+            macroName = (String) alias[0];
+            // also remove macro name from parameters and add there new one +
+            // alias parameters
+            resolvedParameters.remove(0);
+            resolvedParameters.addAll(0, Arrays.asList(alias));
+            LOG.info("Macro alias ''{0}'' replaced by macro ''{1}'', added parameters ''{2}''.",
+                    macroName, (String) alias[0], Arrays.copyOfRange(alias, 1, alias.length - 1));
+        }
+        
         Macro macro = _macroRegistry.get(macroName);
         Assert.assertNotNull("No macro defined for " + macroName, macro);
         // add in one for the trailing } that was removed earlier
