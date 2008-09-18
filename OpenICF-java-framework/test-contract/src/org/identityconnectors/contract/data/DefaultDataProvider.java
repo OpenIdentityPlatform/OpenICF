@@ -60,7 +60,9 @@ import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.contract.data.macro.ArrayMacro;
 import org.identityconnectors.contract.data.macro.ByteArrayMacro;
+import org.identityconnectors.contract.data.macro.CharacterMacro;
 import org.identityconnectors.contract.data.macro.Expression;
 import org.identityconnectors.contract.data.macro.GetMacro;
 import org.identityconnectors.contract.data.macro.ListMacro;
@@ -172,6 +174,8 @@ public class DefaultDataProvider implements DataProvider {
         addMacro(new MapMacro());
         addMacro(new ObjectMacro());
         addMacro(new NullMacro());
+        addMacro(new ArrayMacro());
+        addMacro(new CharacterMacro());
 
     // load additional macros
     //loadMacros();

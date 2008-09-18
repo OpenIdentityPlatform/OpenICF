@@ -188,6 +188,33 @@ public class Expression {
     }
     
     /**
+     * Removes whitespaces at the beginning and at the end of String.
+     * Whitespace is defined as ' ' and '\t'.
+     * String#trim removes also '\n' and other characters.
+     */
+    private String trim(String str) {        
+        if (str.length() == 0) {
+            return str;
+        }
+        
+        int startIndex = 0;                
+        char ch = str.charAt(startIndex);
+        while ((ch ==' ' || ch =='\t') && startIndex < str.length()) {
+            startIndex++;
+            ch = str.charAt(startIndex);
+        }
+        
+        int endIndex = str.length() - 1;                
+        ch = str.charAt(endIndex);
+        while ((ch ==' ' || ch =='\t') && endIndex > 0) {
+            endIndex--;
+            ch = str.charAt(startIndex);
+        }
+        
+        return str.substring(startIndex, endIndex + 1);
+    }
+    
+    /**
      * Helper function for finding closing brace
      * 
      * @param expressionText
@@ -291,7 +318,7 @@ public class Expression {
                 
             case ',':
                 if(embeddedMacroLevel == 0) {                    
-                    parametersStrings.add(foundParameter.toString().trim());
+                    parametersStrings.add(trim(foundParameter.toString()));
                     foundParameter = new StringBuffer();
                 } else {
                     foundParameter.append(ch);
@@ -306,7 +333,7 @@ public class Expression {
         
         // add the last one in ... there may not be one in certain
         // cases, so check length first
-        String lastParameter = foundParameter.toString().trim();
+        String lastParameter = trim(foundParameter.toString());
         if(lastParameter.length() > 0) {            
             parametersStrings.add(lastParameter);
         }
