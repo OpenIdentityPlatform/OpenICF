@@ -64,6 +64,10 @@ public class ConnectorMessagesImpl implements ConnectorMessages {
     private Map<Locale,Map<String,String>> 
         _catalogs = new HashMap<Locale,Map<String,String>>();
     
+    public ConnectorMessagesImpl() {
+        
+    }
+    
     public String format(String key, String dflt, Object... args) {
         if ( key == null ) {
             return dflt;

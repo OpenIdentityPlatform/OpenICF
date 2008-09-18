@@ -42,6 +42,7 @@ package org.identityconnectors.framework.impl.api;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.api.ConnectorKey;
+import org.identityconnectors.framework.common.objects.ConnectorMessages;
 import org.identityconnectors.framework.common.serializer.SerializerUtil;
 
 
@@ -52,7 +53,7 @@ abstract public class AbstractConnectorInfo implements ConnectorInfo {
 
     private String _connectorDisplayNameKey;
     private ConnectorKey _connectorKey;
-    private ConnectorMessagesImpl _messages;  
+    private ConnectorMessages _messages;  
     
     private APIConfigurationImpl _defaultAPIConfiguration;
 
@@ -61,11 +62,11 @@ abstract public class AbstractConnectorInfo implements ConnectorInfo {
 
     }
     
-    public final ConnectorMessagesImpl getMessages() {
+    public final ConnectorMessages getMessages() {
         return _messages;
     }
     
-    public final void setMessages(ConnectorMessagesImpl messages) {
+    public final void setMessages(ConnectorMessages messages) {
         _messages = messages;
     }
 

@@ -51,6 +51,7 @@ import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.ConnectorMessages;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
@@ -77,6 +78,16 @@ public abstract class TestHelpers {
         return getInstance().createTestConfigurationImpl(clazz, config);
     }
     
+    /**
+     * Creates an dummy message catalog ideal for unit testing.
+     * All messages are formatted as follows:
+     * <p>
+     * <code><i>message-key</i>: <i>arg0.toString()</i>, ..., <i>argn.toString</i></code>
+     * @return A dummy message catalog.
+     */
+    public static ConnectorMessages createDummyMessages() {
+        return getInstance().createDummyMessagesImpl();
+    }
         
     public static List<ConnectorObject> searchToList(SearchApiOp search, 
             ObjectClass oclass, 
@@ -275,7 +286,6 @@ public abstract class TestHelpers {
         ret.putAll(System.getProperties());
         return ret;
     }
-    
     abstract protected APIConfiguration createTestConfigurationImpl(Class<? extends Connector> clazz,
             Configuration config);
     abstract protected void searchImpl(SearchOp<?> search,
@@ -283,6 +293,7 @@ public abstract class TestHelpers {
             final Filter filter, 
             ResultsHandler handler,
             OperationOptions options);
+    abstract protected ConnectorMessages createDummyMessagesImpl();
 
 
 }

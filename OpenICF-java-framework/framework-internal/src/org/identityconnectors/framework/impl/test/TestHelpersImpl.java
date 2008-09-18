@@ -43,6 +43,7 @@ import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorKey;
 import org.identityconnectors.framework.common.FrameworkUtil;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.ConnectorMessages;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
@@ -50,7 +51,6 @@ import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.impl.api.APIConfigurationImpl;
 import org.identityconnectors.framework.impl.api.ConfigurationPropertiesImpl;
-import org.identityconnectors.framework.impl.api.ConnectorMessagesImpl;
 import org.identityconnectors.framework.impl.api.local.JavaClassProperties;
 import org.identityconnectors.framework.impl.api.local.LocalConnectorInfoImpl;
 import org.identityconnectors.framework.impl.api.local.operations.SearchImpl;
@@ -77,7 +77,7 @@ public class TestHelpersImpl extends TestHelpers {
                new ConnectorKey(clazz.getName()+".bundle",
                 "1.0",
                 clazz.getName()));
-        info.setMessages(new ConnectorMessagesImpl());
+        info.setMessages(createDummyMessages());
         try {
             APIConfigurationImpl rv = new APIConfigurationImpl();
             rv.setConnectorPoolingSupported(
@@ -119,6 +119,26 @@ public class TestHelpersImpl extends TestHelpers {
             options = new OperationOptionsBuilder().build();
         }
         SearchImpl.rawSearch(search, oclass, filter, handler, options);
+    }
+    
+    @Override
+    protected ConnectorMessages createDummyMessagesImpl() {
+        return new DummyConnectorMessages();
+    }
+    
+    private static class DummyConnectorMessages implements ConnectorMessages {
+        public String format(String key, String dflt, Object... args) {
+            StringBuilder builder = new StringBuilder();
+            builder.append(key);
+            builder.append(": ");
+            String sep = "";
+            for (Object arg : args ) {
+                builder.append(sep);
+                builder.append(arg);
+                sep=", ";
+            }
+            return builder.toString();
+        }
     }
 
 }
