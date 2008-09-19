@@ -405,6 +405,7 @@ public class DatabaseConnectorTests {
         String strUpdate = " !@#$%^&*()\"'changed";
         int strUpdateLen = strUpdate.length();
         tst.setAge(tst.getAge() + 10);
+        tst.setAccessed(tst.getAccessed() + 1);
         tst.setDepartment(tst.getDepartment().substring(strUpdateLen) + strUpdate);
         tst.setEmail(tst.getEmail().substring(strUpdateLen) + strUpdate);
         tst.setFirstName(tst.getFirstName().substring(strUpdateLen) + strUpdate);
@@ -452,6 +453,7 @@ public class DatabaseConnectorTests {
         String strUpdate = " !@#$%^&*()\"'changed";
         int strUpdateLen = strUpdate.length();
         tst.setAge(tst.getAge() + 10);
+        tst.setAccessed(tst.getAccessed() + 1);
         tst.setDepartment(tst.getDepartment().substring(strUpdateLen) + strUpdate);
         tst.setEmail(tst.getEmail().substring(strUpdateLen) + strUpdate);
         tst.setFirstName(tst.getFirstName().substring(strUpdateLen) + strUpdate);
@@ -532,52 +534,13 @@ public class DatabaseConnectorTests {
             }
         }
     }    
-
-    /**
-     * Test creating of the connector object, searching using UID and delete
-     * @throws SQLException 
-     */
-    @Test
-    public void testSyncPartOld() throws SQLException {
-        final String ERR1 = "Could not find new object.";
-        final String SQL_TEMPLATE = "UPDATE Accounts SET changed = ? WHERE accountId = ?";
-        
-        ConnectorFacade facade = getFacade();
-        TestAccount expected = TestAccount.createTestAccount();
-        final Uid uid = facade.create(ObjectClass.ACCOUNT, expected.toAttributeSet(), null);
-
-        // update the last change
-        PreparedStatement ps = null;
-        DatabaseTableConnection conn = null;
-        try {
-            conn = DatabaseTableConnector.newConnection(newConfiguration());
-
-            List<Object> values = new ArrayList<Object>();
-            final Timestamp changed = new Timestamp(System.currentTimeMillis() - 1000);
-            expected.setChanged(changed);
-            values.add(changed);
-            values.add(uid.getUidValue());
-            ps = conn.prepareStatement(SQL_TEMPLATE, values);
-            ps.execute();
-            conn.commit();
-        } finally {
-            SQLUtil.closeQuietly(ps);
-            SQLUtil.closeQuietly(conn);
-        }
-        System.out.println("Uid: " + uid);
-        FindUidSyncHandler handler = new FindUidSyncHandler(uid);
-        // attempt to find the newly created object..
-        facade.sync(ObjectClass.ACCOUNT, new SyncToken(System.currentTimeMillis()), handler, null);
-        assertFalse(ERR1, handler.found);
-        // Test the created attributes are equal the searched      
-    }      
     
     /**
      * Test creating of the connector object, searching using UID and delete
      * @throws SQLException 
      */
     @Test
-    public void testSyncPartNew() throws SQLException {
+    public void testSyncIncemental() throws SQLException {
         final String ERR1 = "Could not find new object.";
         final String SQL_TEMPLATE = "UPDATE Accounts SET changed = ? WHERE accountId = ?";
         
@@ -604,17 +567,123 @@ public class DatabaseConnectorTests {
             SQLUtil.closeQuietly(conn);
         }
         System.out.println("Uid: " + uid);
-        FindUidSyncHandler handler = new FindUidSyncHandler(uid);
+        FindUidSyncHandler ok = new FindUidSyncHandler(uid);
         // attempt to find the newly created object..
-        facade.sync(ObjectClass.ACCOUNT, new SyncToken(System.currentTimeMillis() - 1000), handler, null);
-        assertTrue(ERR1, handler.found);
+        facade.sync(ObjectClass.ACCOUNT, new SyncToken(System.currentTimeMillis() - 1000), ok, null);
+        assertTrue(ERR1, ok.found);
         // Test the created attributes are equal the searched
-        assertNotNull(handler.attributes);
-        TestAccount actual = TestAccount.fromAttributeSet(handler.attributes);
-        accountEquals(expected, actual);        
+        assertNotNull(ok.attributes);
+        TestAccount actual = TestAccount.fromAttributeSet(ok.attributes);
+        accountEquals(expected, actual);  
+        
+        //Not in the next result
+        FindUidSyncHandler empt = new FindUidSyncHandler(uid);
+        // attempt to find the newly created object..
+        facade.sync(ObjectClass.ACCOUNT, ok.token, empt, null);
+        assertFalse(ERR1, empt.found);        
     }      
     
+    
+    /**
+     * Test creating of the connector object, searching using UID and delete
+     * @throws SQLException 
+     */
+    @Test
+    public void testSyncUsingIntegerColumn() throws SQLException {
+        final String ERR1 = "Could not find new object.";
+        final String SQL_TEMPLATE = "UPDATE Accounts SET age = ? WHERE accountId = ?";
+        
+        final DatabaseTableConfiguration cfg = newConfiguration();
+        cfg.setChangeLogColumn(TestAccount.AGE);
+        ConnectorFacade facade = getFacade(cfg);
+        TestAccount expected = TestAccount.createTestAccount();
+        final Uid uid = facade.create(ObjectClass.ACCOUNT, expected.toAttributeSet(), null);
 
+        // update the last change
+        PreparedStatement ps = null;
+        DatabaseTableConnection conn = null;
+        Integer changed = new Long(System.currentTimeMillis()).intValue();
+        try {
+            conn = DatabaseTableConnector.newConnection(cfg);
+
+            List<Object> values = new ArrayList<Object>();
+            expected.setAge(null); //The age as a changeLogColumn will not be in the result
+            values.add(changed);
+            values.add(uid.getUidValue());
+            ps = conn.prepareStatement(SQL_TEMPLATE, values);
+            ps.execute();
+            conn.commit();
+        } finally {
+            SQLUtil.closeQuietly(ps);
+            SQLUtil.closeQuietly(conn);
+        }
+        System.out.println("Uid: " + uid);
+        FindUidSyncHandler ok = new FindUidSyncHandler(uid);
+        // attempt to find the newly created object..
+        facade.sync(ObjectClass.ACCOUNT, new SyncToken(changed - 1000), ok, null);
+        assertTrue(ERR1, ok.found);
+        // Test the created attributes are equal the searched
+        assertNotNull(ok.attributes);
+        TestAccount actual = TestAccount.fromAttributeSet(ok.attributes);
+        accountEquals(expected, actual);     
+        
+        System.out.println("Uid: " + uid);
+        FindUidSyncHandler empt = new FindUidSyncHandler(uid);
+        // attempt to find the newly created object..
+        facade.sync(ObjectClass.ACCOUNT, ok.token, empt, null);
+        assertFalse(ERR1, empt.found);           
+    }   
+   
+    
+    /**
+     * Test creating of the connector object, searching using UID and delete
+     * @throws SQLException 
+     */
+    @Test
+    public void testSyncUsingLongColumn() throws SQLException {
+        final String ERR1 = "Could not find new object.";
+        final String SQL_TEMPLATE = "UPDATE Accounts SET accessed = ? WHERE accountId = ?";
+        
+        final DatabaseTableConfiguration cfg = newConfiguration();
+        cfg.setChangeLogColumn(TestAccount.ACCESSED);
+        ConnectorFacade facade = getFacade(cfg);
+        TestAccount expected = TestAccount.createTestAccount();
+        final Uid uid = facade.create(ObjectClass.ACCOUNT, expected.toAttributeSet(), null);
+
+        // update the last change
+        PreparedStatement ps = null;
+        DatabaseTableConnection conn = null;
+        Integer changed = new Long(System.currentTimeMillis()).intValue();
+        try {
+            conn = DatabaseTableConnector.newConnection(cfg);
+
+            List<Object> values = new ArrayList<Object>();
+            expected.setAccessed(null); //The age as a changeLogColumn will not be in the result
+            values.add(changed);
+            values.add(uid.getUidValue());
+            ps = conn.prepareStatement(SQL_TEMPLATE, values);
+            ps.execute();
+            conn.commit();
+        } finally {
+            SQLUtil.closeQuietly(ps);
+            SQLUtil.closeQuietly(conn);
+        }
+        System.out.println("Uid: " + uid);
+        FindUidSyncHandler ok = new FindUidSyncHandler(uid);
+        // attempt to find the newly created object..
+        facade.sync(ObjectClass.ACCOUNT, new SyncToken(changed - 1000), ok, null);
+        assertTrue(ERR1, ok.found);
+        // Test the created attributes are equal the searched
+        assertNotNull(ok.attributes);
+        TestAccount actual = TestAccount.fromAttributeSet(ok.attributes);
+        accountEquals(expected, actual);     
+        
+        System.out.println("Uid: " + uid);
+        FindUidSyncHandler empt = new FindUidSyncHandler(uid);
+        // attempt to find the newly created object..
+        facade.sync(ObjectClass.ACCOUNT, ok.token, empt, null);
+        assertFalse(ERR1, empt.found);           
+    }       
     
     /**
      * Test creating of the connector object, searching using UID and delete
@@ -926,6 +995,7 @@ public class DatabaseConnectorTests {
     private void accountEquals(TestAccount expected, TestAccount actual) {
         assertEquals("getAccountId", expected.getAccountId(), actual.getAccountId());
         assertEquals("getAge", expected.getAge(), actual.getAge());
+        assertEquals("getAccessed", expected.getAccessed(), actual.getAccessed());
         assertEquals("getDepartment", expected.getDepartment(), actual.getDepartment());
         assertEquals("getEmail", expected.getEmail(), actual.getEmail());
         assertEquals("getFirstName", expected.getFirstName(), actual.getFirstName());        
@@ -1052,6 +1122,8 @@ public class DatabaseConnectorTests {
         
         private static final String ENROLLED = "enrolled";
         
+        private static final String ACCESSED = "accessed";
+        
         private static final String CHANGED = "changed";
 
         // Fields..  
@@ -1074,6 +1146,8 @@ public class DatabaseConnectorTests {
         private String department;
 
         private Integer age;
+        
+        private Long accessed;
 
         private BigDecimal salary;
 
@@ -1173,6 +1247,14 @@ public class DatabaseConnectorTests {
             this.age = age;
         }
 
+        Long getAccessed() {
+            return accessed;
+        }
+
+        void setAccessed(Long accessed) {
+            this.accessed = accessed;
+        }        
+        
         BigDecimal getSalary() {
             return salary;
         }
@@ -1222,6 +1304,7 @@ public class DatabaseConnectorTests {
             TestAccount testAccount = new TestAccount();
             testAccount.setAccountId(randomString(r, 50));
             testAccount.setAge(r.nextInt(100));
+            testAccount.setAccessed(r.nextLong());
             testAccount.setDepartment(randomString(r, 50));
             testAccount.setEmail(randomString(r, 50));
             testAccount.setFirstName(randomString(r, 50));
@@ -1268,12 +1351,17 @@ public class DatabaseConnectorTests {
                     ret.setTitle(AttributeUtil.getStringValue(attr));
                 } else if (AGE.equalsIgnoreCase(name)) {
                     ret.setAge(AttributeUtil.getIntegerValue(attr));
+                } else if (ACCESSED.equalsIgnoreCase(name)) {
+                    ret.setAccessed(AttributeUtil.getLongValue(attr));
                 } else if (SALARY.equalsIgnoreCase(name)) {
                     ret.setSalary(AttributeUtil.getBigDecimalValue(attr));
                 } else if (ENROLLED.equalsIgnoreCase(name)) {
                     ret.setEnrolled(AttributeUtil.getDateValue(attr));
                 } else if (CHANGED.equalsIgnoreCase(name)) {
-                    ret.setChanged(new Timestamp(AttributeUtil.getLongValue(attr)));
+                    final Long longValue = AttributeUtil.getLongValue(attr);
+                    if(longValue !=null) {
+                        ret.setChanged(new Timestamp(longValue));
+                    }
                 }
             }
             return ret;
@@ -1308,6 +1396,7 @@ public class DatabaseConnectorTests {
             ret.add(AttributeBuilder.build(DEPARTMENT, getDepartment()));
             ret.add(AttributeBuilder.build(TITLE, getTitle()));
             ret.add(AttributeBuilder.build(AGE, getAge()));
+            ret.add(AttributeBuilder.build(ACCESSED, getAccessed()));
             ret.add(AttributeBuilder.build(SALARY, getSalary()));
             ret.add(AttributeBuilder.build(JPEGPHOTO, getJpegPhoto()));
             ret.add(AttributeBuilder.build(ENROLLED, getEnrolled().getTime()));

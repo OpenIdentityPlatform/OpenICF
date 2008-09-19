@@ -9,6 +9,7 @@ create table Accounts (
   department  VARCHAR(250),
   title       VARCHAR(250),
   age         INTEGER,
+  accessed    BIGINT,
   salary      DECIMAL(7,2),
   jpegphoto   BLOB,
   enrolled    TIMESTAMP,      
