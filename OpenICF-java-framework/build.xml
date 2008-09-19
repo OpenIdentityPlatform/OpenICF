@@ -76,6 +76,7 @@
     <property name="toolkit.file" value="${dist}/${toolkit.name}.zip"/>
     <property name="build-toolkit" location="build/${toolkit.name}"/>
     <property name="nbm-name" value="IdentityConnectors-Plugin.nbm" />
+    <property name="coverage.file" location="${basedir}/cobertura.ser"/>
 
     <!--
         Determine if this a coverage build.
@@ -336,19 +337,15 @@
     </target>
 
     <target name="instrument" depends="cobertura-init, jar" if="useCobertura">
-        <delete file="cobertura.ser" />
+        <delete file="${coverage.file}" />
         <delete dir="${instrumented}" />
         <mkdir dir="${instrumented}" />
-        <cobertura-instrument todir="${instrumented}">
+        <cobertura-instrument todir="${instrumented}" datafile="${coverage.file}">
             <ignore regex="org.apache.log4j.*" />
             <ignore regex="org.identityconnectors.testcommon.*" />
             <ignore regex="org.identityconnectors.testconnector.*" />
-            <fileset dir="${build-framework}">
-                <patternset refid="exclude.test"/>
-            </fileset>
-            <fileset dir="${build-framework-internal}">
-                <patternset refid="exclude.test"/>
-            </fileset>
+            <fileset dir="${build-framework}"/>
+            <fileset dir="${build-framework-internal}"/>
         </cobertura-instrument>
     </target>
 
@@ -404,7 +401,7 @@
                 The value specified below is the default.
             -->
             <sysproperty key="net.sourceforge.cobertura.datafile" 
-                file="${basedir}/cobertura.ser" />
+                file="${coverage.file}" />
             <sysproperty key="testbundles.dir" 
                 value="${testbundles.dir}" />
             <!-- reference the test classpath -->
@@ -429,14 +426,12 @@
         <condition property="cobertura-directory" value="" else="/coverage">
             <isset property="useExternalReporting" />
         </condition>
-        <cobertura-report format="${cobertura-format}" 
+        <cobertura-report
+            datafile="${coverage.file}"
+            format="${cobertura-format}" 
             destdir="${reports}${cobertura-directory}">
-            <fileset dir="${src-framework}">
-                <include name="**/*.java" />
-            </fileset>
-            <fileset dir="${src-framework-internal}">
-                <include name="**/*.java" />
-            </fileset>
+            <fileset dir="${src-framework}" includes="**/*.java" />
+            <fileset dir="${src-framework-internal}" includes="**/*.java" />
         </cobertura-report>
     </target>
    
