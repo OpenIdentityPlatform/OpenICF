@@ -50,6 +50,7 @@ import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.SchemaApiOp;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
+import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -75,6 +76,7 @@ public class SchemaApiOpTests extends AbstractSimpleTest {
      */
     private static final String SUPPORTED_OBJECT_CLASSES_PROPERTY_PREFIX = "oclasses." + TEST_NAME;
     private static final String SUPPORTED_OPERATIONS_PROPERTY_PREFIX = "operations." + TEST_NAME;
+    private static final String STRICT_CHECK_PROPERTY_PREFIX = "strictCheck." + TEST_NAME;
 
     /*
      * AttributeInfo field names used in property configuration:
@@ -118,43 +120,52 @@ public class SchemaApiOpTests extends AbstractSimpleTest {
     public void testSchemaValidity() {
         final Schema schema = getConnectorFacade().schema();
         String msg = null;
+        
+        Boolean strictCheck = getStrictCheckProperty();
 
         // list of expected object classes
         List<String> expOClasses = (List<String>) getTestPropertyOrFail(List.class.getName(),
-                SUPPORTED_OBJECT_CLASSES_PROPERTY_PREFIX);
+                SUPPORTED_OBJECT_CLASSES_PROPERTY_PREFIX, true);
 
         // iterate over object classes and check that were expected and check
         // their attributes
         for (ObjectClassInfo ocInfo : schema.getObjectClassInfo()) {
             msg = "Schema returned object class %s that is not expected to be suported.";
-            assertTrue(String.format(msg, ocInfo.getType()), 
-                    expOClasses.contains(ocInfo.getType()));
+            assertTrue(String.format(msg, ocInfo.getType()), expOClasses.contains(ocInfo.getType()));
 
             // list of expected attributes for the object class
             List<String> expAttrs = (List<String>) getTestPropertyOrFail(List.class.getName(),
                     "attributes." + ocInfo.getType() + "."
-                            + SUPPORTED_OBJECT_CLASSES_PROPERTY_PREFIX);
+                            + SUPPORTED_OBJECT_CLASSES_PROPERTY_PREFIX, strictCheck);
             
             // check object class attributes
             for (AttributeInfo attr : ocInfo.getAttributeInfo()) {
-                msg = "Object class %s contains unexpected attribute: %s.";
-                assertTrue(String.format(msg, ocInfo.getType(), attr.getName()),
-                        expAttrs.contains(attr.getName()));
+                if (strictCheck) {
+                    msg = "Object class %s contains unexpected attribute: %s.";
+                    assertTrue(String.format(msg, ocInfo.getType(), attr.getName()), expAttrs
+                            .contains(attr.getName()));
+                }
 
                 // expected attribute values
                 Map<String, String> expAttrValues = (Map<String, String>) getTestPropertyOrFail(
                         Map.class.getName(), attr.getName() + ".attribute." + ocInfo.getType()
-                                + "." + SUPPORTED_OBJECT_CLASSES_PROPERTY_PREFIX);
+                                + "." + SUPPORTED_OBJECT_CLASSES_PROPERTY_PREFIX, strictCheck);
 
-                // check all attribute's fields
-                checkAttributeValues(ocInfo, attr, expAttrValues);
+                // check attribute's values in case the test is strict or property is provided
+                if (strictCheck || expAttrValues != null) {
+                    // check all attribute's fields
+                    checkAttributeValues(ocInfo, attr, expAttrValues);
+                }
             }
             
-            // check that there shouldn't be more attributes
-            msg = "Schema returned less attributes for object class %s "
-                + ", expected: %d, returned: %d";
-            assertTrue(String.format(msg, ocInfo.getType(), expAttrs.size(), ocInfo.getAttributeInfo().size()),
-                expAttrs.size() == ocInfo.getAttributeInfo().size());
+            
+            // check that all expected attributes are in schema
+            for (String expAttr : expAttrs) {
+                msg = "Schema doesn't contain expected attribute '%s' in object class '%s'.";
+                assertNotNull(String.format(msg, expAttr, ocInfo.getType()), AttributeInfoUtil
+                        .find(expAttr, ocInfo.getAttributeInfo()));
+            }
+            
         }
         
         msg = "Schema returned less supported object classes, expected: %d, returned %d.";
@@ -163,7 +174,7 @@ public class SchemaApiOpTests extends AbstractSimpleTest {
 
         // expected object classes supported by operations
         Map<String, List<String>> expOperations = (Map<String, List<String>>) getTestPropertyOrFail(
-                Map.class.getName(), SUPPORTED_OPERATIONS_PROPERTY_PREFIX);
+                Map.class.getName(), SUPPORTED_OPERATIONS_PROPERTY_PREFIX, true);
         Map<Class<? extends APIOperation>, Set<ObjectClassInfo>> supportedOperations = schema
                 .getSupportedObjectClassesByOperation();
 
@@ -243,19 +254,35 @@ public class SchemaApiOpTests extends AbstractSimpleTest {
                 expectedValues.get(ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT)), attribute.isReturnedByDefault()), 
                 new Boolean(expectedValues.get(ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT)), attribute.isReturnedByDefault());
     }
-
+    
+    /**
+     * Returns strictCheck property value.
+     * When property is not defined true is assumed.
+     */
+    private Boolean getStrictCheckProperty() {
+        Boolean strict = true;
+        try {
+            strict = (Boolean)getDataProvider().getTestSuiteAttribute(Boolean.class.getName(), STRICT_CHECK_PROPERTY_PREFIX);
+        }
+        catch (ObjectNotFoundException ex) {
+            // ok - property not defined
+        }
+        
+        return strict;
+    }
+    
     /**
      * Returns property value or fails test if property is not defined.
      */
-    private Object getTestPropertyOrFail(String typeName, String propName) {
+    private Object getTestPropertyOrFail(String typeName, String propName, boolean failOnError) {
         Object propValue = null;
 
         try {
             propValue = getDataProvider().getTestSuiteAttribute(typeName, propName);
         } catch (ObjectNotFoundException ex) {
-            fail("Property definition not found: " + ex.getMessage());
+            if (failOnError) fail("Property definition not found: " + ex.getMessage());
         }
-        assertNotNull(propValue);
+        if (failOnError) assertNotNull(propValue);
 
         return propValue;
     }
