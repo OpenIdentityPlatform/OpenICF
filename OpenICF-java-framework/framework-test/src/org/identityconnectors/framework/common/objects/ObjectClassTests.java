@@ -37,50 +37,39 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * -----------
  */
-package org.identityconnectors.common.management;
+package org.identityconnectors.framework.common.objects;
 
-import javax.management.MBeanAttributeInfo;
-import javax.management.MBeanConstructorInfo;
-import javax.management.MBeanNotificationInfo;
-import javax.management.MBeanOperationInfo;
+import static org.junit.Assert.*;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import org.junit.Test;
 
 /**
- * Base implementation of the DynamicMBean class. This class will implement all
- * the abstract methods with default values.
+ * Make sure to test various methods of the object class.
  */
-public class BaseDynamicMBean extends AbstractDynamicMBean {
-    /**
-     * {@inheritDoc}
-     */
-    protected MBeanAttributeInfo[] createMBeanAttributeInfo() {
-        return null;
-    }
+public class ObjectClassTests {
 
-    /**
-     * {@inheritDoc}
-     */
-    protected MBeanConstructorInfo[] createMBeanConstructorInfo() {
-        return null;
-    }
+	@Test
+	public void testEquals() {
+		Object actual = new ObjectClass(ObjectClass.ACCOUNT_NAME);
+		assertEquals(ObjectClass.ACCOUNT, actual);
+		actual = new ObjectClass("babbo");
+		assertFalse(actual.equals(ObjectClass.ACCOUNT));
+		ObjectClass expected = new ObjectClass("babbo");
+		assertEquals(expected, actual);
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    protected MBeanOperationInfo[] createMBeanOperationInfo() {
-        return null;
-    }
+	@Test
+	public void testHashCode() {
+		Set<ObjectClass> set = new HashSet<ObjectClass>();
+		set.add(ObjectClass.ACCOUNT);
+		set.add(ObjectClass.GROUP);
+		set.add(ObjectClass.ACCOUNT);
+		assertTrue(set.contains(ObjectClass.ACCOUNT));
+		assertTrue(set.contains(ObjectClass.GROUP));
+		assertTrue(2 == set.size());
 
-    /**
-     * {@inheritDoc}
-     */
-    protected MBeanNotificationInfo[] createMBeanNotificationInfo() {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected String getMBeanDescription() {
-        return null;
-    }
+	}
 }
