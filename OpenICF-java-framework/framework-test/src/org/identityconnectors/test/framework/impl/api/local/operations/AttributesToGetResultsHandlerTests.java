@@ -46,6 +46,9 @@ import java.util.Set;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.ConnectorObject;
+import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.impl.api.local.operations.AttributesToGetResultsHandler;
 import org.junit.Test;
 
@@ -80,8 +83,18 @@ public class AttributesToGetResultsHandlerTests {
     }
     
     @Test
-    public void testSimpleSearch() throws Exception {
-        
+    public void testWithConnectorObject() throws Exception {
+        String[] attrsToGet = { "a", "b" };
+        ConnectorObjectBuilder bld = new ConnectorObjectBuilder();
+        bld.setUid("1");
+        bld.setName("aname");
+        bld.addAttribute(AttributeBuilder.build("a", 1));
+        bld.addAttribute(AttributeBuilder.build("b", 1));
+        ConnectorObject expected = bld.build();
+        bld.addAttribute(AttributeBuilder.build("c", 1));
+        TestHandler tst = new TestHandler(attrsToGet);
+        ConnectorObject actual = tst.reduceToAttrsToGet(bld.build());
+        assertEquals(expected, actual);
     }
     
     static class TestHandler extends AttributesToGetResultsHandler {
