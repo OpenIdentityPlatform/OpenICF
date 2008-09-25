@@ -66,5 +66,15 @@ public class MacroAliases {
         ALIASES.put("BOOLEAN", new Object[] {"OBJECT", "java.lang.Boolean"});
         ALIASES.put("FILE", new Object[] {"OBJECT", "java.io.File"});
         ALIASES.put("URI", new Object[] {"OBJECT", "java.net.URI"});
+        
+        // arrays
+        ALIASES.put("STRINGARRAY", new Object[] {"ARRAY", "java.lang.String"});
+        ALIASES.put("LONGARRAY", new Object[] {"ARRAY", "java.lang.Long"});
+        ALIASES.put("INTEGERARRAY", new Object[] {"ARRAY", "java.lang.Integer"});
+        ALIASES.put("DOUBLEARRAY", new Object[] {"ARRAY", "java.lang.Double"});
+        ALIASES.put("FLOATARRAY", new Object[] {"ARRAY", "java.lang.Float"});
+        ALIASES.put("BOOLEANARRAY", new Object[] {"ARRAY", "java.lang.Boolean"});
+        ALIASES.put("URIARRAY", new Object[] {"ARRAY", "java.net.URI"});
+        ALIASES.put("FILEARRAY", new Object[] {"ARRAY", "java.io.File"});
     }
 }

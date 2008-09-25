@@ -406,6 +406,22 @@ public class DefaultDataProvider implements DataProvider {
             shortName = "string";        
         } else if (typeName.equals("[B")) {
             shortName = "bytearray";        
+        } else if (typeName.equals("[Ljava.lang.String;") || typeName.equals("[Lorg.identityconnectors.common.security.GuardedString;")) {
+            shortName = "stringarray";
+        } else if (typeName.equals("[Ljava.lang.Long;") || typeName.equals("[J")) {
+            shortName = "longarray";
+        } else if (typeName.equals("[Ljava.lang.Integer;") || typeName.equals("[I")) {
+            shortName = "integerarray";
+        } else if (typeName.equals("[Ljava.lang.Double;") || typeName.equals("[D")) {
+            shortName = "doublearray";
+        } else if (typeName.equals("[Ljava.lang.Float;") || typeName.equals("[F")) {
+            shortName = "floatarray";
+        } else if (typeName.equals("[Ljava.lang.Boolean;") || typeName.equals("[Z")) {
+            shortName = "floatarray";
+        } else if (typeName.equals("[Ljava.net.URI;")) {
+            shortName = "uriarray";
+        } else if (typeName.equals("[Ljava.io.File;")) {
+            shortName = "filearray";
         } else {
             int lindex = typeName.lastIndexOf(".");
             if (lindex != -1) {
