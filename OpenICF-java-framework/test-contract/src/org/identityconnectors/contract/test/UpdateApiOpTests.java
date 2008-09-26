@@ -39,7 +39,6 @@
  */
 package org.identityconnectors.contract.test;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -53,7 +52,6 @@ import org.identityconnectors.framework.api.operations.GetApiOp;
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
-import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -102,7 +100,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
         try {
             // create an object to update
             uid = ConnectorHelper.createObject(getConnectorFacade(), getDataProvider(),
-                    getObjectClassInfo(), getTestName(), 2, getOperationOptionsByOp(CreateApiOp.class));
+                    getObjectClassInfo(), getTestName(), 0, getOperationOptionsByOp(CreateApiOp.class));
             assertNotNull("Create returned null Uid.", uid);
 
             // get by uid
@@ -194,48 +192,69 @@ public class UpdateApiOpTests extends ObjectClassRunner {
     
     /**
      * Tests create of two different objects and then update one to the same
-     * values as the second. Should return different Uid or throw.
+     * attributes as the second. Test that updated object did not update uid to the same value as the first object. 
      */
     @Test
     public void testUpdateToSameAttributes() {
         if (ConnectorHelper.operationSupported(getConnectorFacade(), getAPIOperation())) {
-            final int createdObjectsCount = 2;
-
-            Map<Uid, Set<Attribute>> coCreated = null;
-            Uid newUid = null;
+            Uid uid1 = null;
+            Uid uid2 = null;
             
             try {
-                // create objects with object class that is supported
-                coCreated = ConnectorHelper.createObjects(getConnectorFacade(), getDataProvider(),
-                        getSupportedObjectClass(), getObjectClassInfo(), getTestName(),
-                        createdObjectsCount, getOperationOptionsByOp(CreateApiOp.class));
-                // check that objects were created with attributes as requested
-                final boolean success = ConnectorHelper.checkObjects(getConnectorFacade(),
-                        getSupportedObjectClass(), getObjectClassInfo(), coCreated, getOperationOptionsByOp(GetApiOp.class));
-                assertTrue("Created objects are different than requested.", success);
+                // create two new objects
+                Set<Attribute> attrs1 = ConnectorHelper.getAttributes(getDataProvider(),
+                        getObjectClassInfo(), getTestName(), 1, true);
+                uid1 = getConnectorFacade().create(getSupportedObjectClass(), attrs1, null);
+                assertNotNull("Create returned null uid.", uid1);
                 
-                Uid[] uids = coCreated.keySet().toArray(new Uid[0]);
-
-                Set<Attribute> replaceAttributes = coCreated.get(uids[0]);
-                replaceAttributes.add(uids[1]);
-                newUid = getConnectorFacade().update(UpdateApiOp.Type.REPLACE,
+                // get the object to make sure it exist now
+                ConnectorObject obj1 = getConnectorFacade().getObject(getSupportedObjectClass(),
+                        uid1, getOperationOptionsByOp(GetApiOp.class));
+                
+                // compare requested attributes to retrieved attributes
+                ConnectorHelper.checkObject(getObjectClassInfo(), obj1, attrs1);
+                
+                Set<Attribute> attrs2 = ConnectorHelper.getAttributes(getDataProvider(),
+                        getObjectClassInfo(), getTestName(), 2, true);
+                uid2 = getConnectorFacade().create(getSupportedObjectClass(), attrs2, null);
+                assertNotNull("Create returned null uid.", uid2);
+                
+                // get the object to make sure it exist now
+                ConnectorObject obj2 = getConnectorFacade().getObject(getSupportedObjectClass(),
+                        uid2, getOperationOptionsByOp(GetApiOp.class));
+                
+                // compare requested attributes to retrieved attributes
+                ConnectorHelper.checkObject(getObjectClassInfo(), obj2, attrs2);
+                                
+                // update second object with attributes of first object
+                Set<Attribute> replaceAttributes = attrs1;
+                replaceAttributes.add(uid2);
+                
+                try {
+                    Uid newUid = getConnectorFacade().update(UpdateApiOp.Type.REPLACE,
                         getSupportedObjectClass(), replaceAttributes, getOperationOptionsByOp(UpdateApiOp.class));
+                
+                    if (!uid2.equals(newUid)) {
+                        uid2 = newUid;
+                    }
 
                 
-                assertFalse("Update returned the same uid when tried to update to the same " +
-                		"attributes as another object.", uids[0].equals(newUid));
-
-            } catch (RuntimeException ex) {
-                // ok - update could throw this exception
-            } finally {
-                if (newUid != null) {
-                    ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(),
-                            newUid, false, getOperationOptionsByOp(DeleteApiOp.class));
+                    assertFalse("Update returned the same uid when tried to update to the same " +
+                		"attributes as another object.", uid1.equals(uid2));
                 }
-                // delete test objects
-                if (coCreated != null) {
-                    ConnectorHelper.deleteObjects(getConnectorFacade(), getSupportedObjectClass(),
-                            coCreated.keySet(), getOperationOptionsByOp(DeleteApiOp.class));
+                catch (RuntimeException ex) {
+                    // ok - update could throw this in case @@NAME@@ and @@UID@@ are the same attributes
+                }
+            } finally {
+                if (uid1 != null) {
+                    // delete the object
+                    ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid1,
+                            false, getOperationOptionsByOp(DeleteApiOp.class));
+                }
+                if (uid2 != null) {
+                    // delete the object
+                    ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid2,
+                            false, getOperationOptionsByOp(DeleteApiOp.class));
                 }
             }
         }

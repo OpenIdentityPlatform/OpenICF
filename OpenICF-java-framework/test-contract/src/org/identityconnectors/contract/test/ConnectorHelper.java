@@ -39,6 +39,7 @@
  */
 package org.identityconnectors.contract.test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -81,6 +82,7 @@ import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.SyncDelta;
+import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -332,20 +334,6 @@ public class ConnectorHelper {
     
         
     /**
-     * Deletes objects for passed uids.
-     */
-    public static void deleteObjects(ConnectorFacade connectorFacade, ObjectClass objectClass,
-            Set<Uid> uids, OperationOptions opOptions) {
-        if (uids == null) {
-            return;
-        }
-
-        for (Uid uid : uids) {
-            deleteObject(connectorFacade, objectClass, uid, false, opOptions);
-        }
-    }
-    
-    /**
      * Checks if object has expected attributes and values. All readable or non-special attributes are checked.
      */
     public static boolean checkObject(ObjectClassInfo objectClassInfo, ConnectorObject connectorObj,
@@ -376,6 +364,24 @@ public class ConnectorHelper {
 
         return success;
     }
+    
+    /**
+     * Check that passed SyncDelta has exptected values.
+     */
+    public static void checkSyncDelta(ObjectClassInfo ocInfo, SyncDelta delta, Uid uid, Set<Attribute> attributes, SyncDeltaType deltaType, boolean checkNotReturnedByDefault) {
+        // check that Uid is correct
+        String msg = "Sync returned wrong Uid, expected: %s, returned: %s.";
+        assertEquals(String.format(msg, uid, delta.getUid()), delta.getUid(), uid);
+
+        if (deltaType != SyncDeltaType.DELETE) {
+            // check that attributes are correct
+            ConnectorHelper.checkObject(ocInfo, delta.getObject(), attributes, checkNotReturnedByDefault);
+        }
+
+        // check that delta type is expected
+        msg = "Sync delta type should be %s, but returned: %s.";
+        assertTrue(String.format(msg, deltaType, delta.getDeltaType()), delta.getDeltaType() == deltaType);
+    }        
     
     /**
      * Compares two sets of attributes.
@@ -545,53 +551,6 @@ public class ConnectorHelper {
     }
         
   
-    /**
-     * Creates <i>howMany</i> objects.
-     */
-    public static Map<Uid, Set<Attribute>> createObjects(ConnectorFacade connectorFacade,
-            DataProvider dataProvider, ObjectClass objectClass, ObjectClassInfo objectClassInfo,
-            String testName, int howMany, OperationOptions opOptions)
-            throws ObjectNotFoundException {
-        Map<Uid, Set<Attribute>> objects = new HashMap<Uid, Set<Attribute>>();
-        for (int i = 0; i < howMany; i++) {
-            // could throw UnsupportedOperationException
-            Set<Attribute> attr = getAttributes(dataProvider, objectClassInfo, testName, i, true);
-            Uid uid = connectorFacade.create(objectClass, attr, opOptions);
-            
-            assertNotNull("Create returned null Uid.", uid);            
-            assertFalse("Create returned the same Uid as by previous create.", objects.keySet()
-                    .contains(uid));
-            objects.put(uid, attr);
-        }
-        
-        assertTrue("Map of created objects has different size.", howMany == objects.size());
-
-        return objects;
-    }
-    
-    /**
-     * Checks that object's specified uids were created with expected attributes.
-     */
-    public static boolean checkObjects(ConnectorFacade connectorFacade, ObjectClass objectClass,
-            ObjectClassInfo objectClassInfo, Map<Uid, Set<Attribute>> uidsAttributes,
-            OperationOptions opOptions) {
-        boolean success = true;
-        assertNotNull("Map of uids -> attributes  can't be null.", uidsAttributes);
-
-        for (Uid uid : uidsAttributes.keySet()) {
-            // get the object to make sure it exist now
-            ConnectorObject obj = connectorFacade.getObject(objectClass, uid, opOptions);
-            assertNotNull("Unable to retrieve object.", obj);
-
-            // compare expected attributes to retrieved attributes
-            if (!checkObject(objectClassInfo, obj, uidsAttributes.get(uid))) {
-                success = false;
-            }
-        }
-
-        return success;
-    }
-    
     /**
      * check to see if a particular objectclass supports a particular operation
      * @param connectorFacade

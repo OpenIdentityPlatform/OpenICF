@@ -47,6 +47,7 @@ import java.util.List;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.GetApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
+import org.identityconnectors.framework.api.operations.SyncApiOp;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
@@ -239,7 +240,7 @@ public abstract class ObjectClassRunner extends AbstractSimpleTest {
      */
     @Override
     public OperationOptions getOperationOptionsByOp(Class<? extends APIOperation> clazz) {
-        if (clazz.equals(SearchApiOp.class) || clazz.equals(GetApiOp.class)) {
+        if (clazz.equals(SearchApiOp.class) || clazz.equals(GetApiOp.class) || clazz.equals(SyncApiOp.class)) {
             // all object class attributes as attrsToGet
             Collection<String> attrNames = new ArrayList<String>();
             for (AttributeInfo attrInfo : getObjectClassInfo().getAttributeInfo()) {

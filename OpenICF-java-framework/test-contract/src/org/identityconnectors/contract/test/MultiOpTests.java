@@ -42,10 +42,12 @@ package org.identityconnectors.contract.test;
 import static org.junit.Assert.*;
 
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
@@ -103,17 +105,22 @@ public class MultiOpTests extends ObjectClassRunner {
      */
     @Override
     public void testRun() {
-        Map<Uid, Set<Attribute>> coCreatedAll = null;
+        // initial number of objects to be created
+        final int recordCount = 10;
+        
+        List<Uid> uids = new ArrayList<Uid>();
+        List<Set<Attribute>> attrs = new ArrayList<Set<Attribute>>();
 
         // objects stored in connector resource before test
-        List<ConnectorObject> coBeforeTest = null;
-
-        // token returned by sync
+        List<ConnectorObject> coBeforeTest = null;        
+        
+        // sync variables
         SyncToken token = null;
-
-        // initial number of objects to be created
-        final int createCount = 10;
-
+        List<SyncDelta> deltas = null;
+        
+        // variable for assert messages
+        String msg = null;
+        
         try {
             /* SearchApiOp - get objects stored in connector resource before test */
             if (ConnectorHelper.operationSupported(getConnectorFacade(), SearchApiOp.class)) {
@@ -121,17 +128,33 @@ public class MultiOpTests extends ObjectClassRunner {
                 coBeforeTest = ConnectorHelper.search(getConnectorFacade(), getObjectClass(), null,
                         getOperationOptionsByOp(SearchApiOp.class));
             }
+            
+            /* SyncApiOp - start synchronizing from now */
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), SyncApiOp.class)) {
+                // start synchronizing from now
+                token = getConnectorFacade().getLatestSyncToken();
+            }
 
             /* CreateApiOp - create initial objects */
-            // creates objects
-            coCreatedAll = ConnectorHelper.createObjects(getConnectorFacade(),
-                    getDataProvider(), getObjectClass(), getObjectClassInfo(), getTestName(),
-                    createCount, getOperationOptionsByOp(CreateApiOp.class));
-            // check that objects were created with attributes as requested
-            final boolean success = ConnectorHelper.checkObjects(getConnectorFacade(),
-                    getObjectClass(), getObjectClassInfo(), coCreatedAll,
-                    getOperationOptionsByOp(GetApiOp.class));
-            assertTrue("Created objects are different than requested.", success);
+            for (int i = 0; i < recordCount; i++) {
+                Set<Attribute> attr = ConnectorHelper.getAttributes(getDataProvider(),
+                        getObjectClassInfo(), getTestName(), i, true);
+                Uid luid = getConnectorFacade().create(getObjectClass(), attr, getOperationOptionsByOp(CreateApiOp.class));
+                assertNotNull("Create returned null uid.", luid);
+                attrs.add(attr);
+                uids.add(luid);
+            }            
+            
+            /* GetApiOp - check that objects were created with attributes as requested */
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), GetApiOp.class)) {
+                for (int i = 0; i < recordCount; i++) {
+                    ConnectorObject obj = getConnectorFacade().getObject(getObjectClass(),
+                            uids.get(i), getOperationOptionsByOp(GetApiOp.class));
+                    assertNotNull("Unable to retrieve newly created object", obj);
+
+                    ConnectorHelper.checkObject(getObjectClassInfo(), obj, attrs.get(i));
+                }
+            }
 
             /* TestApiOp */
             if (ConnectorHelper.operationSupported(getConnectorFacade(), TestApiOp.class)) {
@@ -141,107 +164,126 @@ public class MultiOpTests extends ObjectClassRunner {
 
             /* SyncApiOp - check sync of created objects */
             if (ConnectorHelper.operationSupported(getConnectorFacade(), SyncApiOp.class)) {
-                List<SyncDelta> deltas = ConnectorHelper.sync(getConnectorFacade(), getObjectClass(),
-                        token, getOperationOptionsByOp(SyncApiOp.class));
-                assertTrue("Sync returned different number of deltas than expected. Expected: "
-                        + createCount + ", but returned: " + deltas.size(),
-                        deltas.size() == createCount);
+                if (SyncApiOpTests.canSyncAfterOp(CreateApiOp.class)) {
+                    // sync after create
+                    deltas = ConnectorHelper.sync(getConnectorFacade(), getObjectClass(), token,
+                            getOperationOptionsByOp(SyncApiOp.class));
 
-                for (SyncDelta delta : deltas) {
-                    assertTrue(
-                            "Sync returned delta with unexpected type. Expected CREATE, but returned "
-                                    + delta.getDeltaType(),
-                            delta.getDeltaType() == SyncDeltaType.CREATE);
-                    Set<Attribute> expected = coCreatedAll.get(delta.getUid());
-                    assertNotNull(expected);
-                    Set<Attribute> got = delta.getObject().getAttributes();
-                    assertNotNull(got);
-                    ConnectorHelper.checkAttributes(expected, got);
-                    token = delta.getToken();
+                    msg = "Sync after %d creates returned %d deltas.";
+                    assertTrue(String.format(msg, recordCount, deltas.size()),
+                            deltas.size() == recordCount);
+
+                    // check all deltas
+                    for (int i = 0; i < recordCount; i++) {
+                        ConnectorHelper.checkSyncDelta(getObjectClassInfo(), deltas.get(i), uids
+                                .get(i), attrs.get(i), SyncDeltaType.CREATE, true);
+                    }
+
+                    token = deltas.get(recordCount - 1).getToken();
                 }
             }
 
             /* DeleteApiOp - delete one object */
-            Uid deleteUid = coCreatedAll.keySet().toArray(new Uid[0])[0];
-            // deletes it and checks that it was really deleted
+            Uid deleteUid = uids.remove(0);
+            attrs.remove(0);
+            
+            // delete it and check that it was really deleted
             ConnectorHelper.deleteObject(getConnectorFacade(), getObjectClass(), deleteUid, true,
                     getOperationOptionsByOp(DeleteApiOp.class));
-            coCreatedAll.remove(deleteUid);
 
             /* SearchApiOp - search with null filter */
-            List<ConnectorObject> coFound = ConnectorHelper.search(getConnectorFacade(),
-                    getObjectClass(), null, getOperationOptionsByOp(SearchApiOp.class));
-            assertTrue("Search with null filter returned different results count. Expected: "
-                    + coCreatedAll.size() + coBeforeTest.size() + ", but returned: "
-                    + coFound.size(), coFound.size() == coCreatedAll.size() + coBeforeTest.size());
-            // check all objects
-            for (ConnectorObject obj : coFound) {
-                if (coCreatedAll.containsKey(obj.getUid())) {
-                    ConnectorHelper.checkObject(getObjectClassInfo(), obj,
-                            coCreatedAll.get(obj.getUid()));
-                } else {
-                    assertTrue("Search with null filter returned unexpected object.", coBeforeTest
-                            .contains(obj));
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), SearchApiOp.class)) {
+                List<ConnectorObject> coFound = ConnectorHelper.search(getConnectorFacade(),
+                        getObjectClass(), null, getOperationOptionsByOp(SearchApiOp.class));
+                assertTrue(
+                        "Search with null filter returned different count of results. Expected: "
+                                + uids.size() + coBeforeTest.size() + ", but returned: "
+                                + coFound.size(), coFound.size() == uids.size()
+                                + coBeforeTest.size());
+                // check all objects
+                for (ConnectorObject obj : coFound) {
+                    if (uids.contains((obj.getUid()))) {
+                        int index = uids.indexOf(obj.getUid());
+                        ConnectorHelper.checkObject(getObjectClassInfo(), obj, attrs.get(index));
+                    } else {
+                        assertTrue("Search with null filter returned unexpected object " + obj,
+                                coBeforeTest.contains(obj));
+                    }
                 }
             }
 
             /* UpdateApiOp - update one object */
+            Uid updateUid = null;
+            Set<Attribute> replaceAttributes = null; 
             if (ConnectorHelper.operationSupported(getConnectorFacade(), UpdateApiOp.class)) {
-                Uid updateUid = coCreatedAll.keySet().toArray(new Uid[0])[0];
-                Set<Attribute> replaceAttributes = ConnectorHelper.getAttributes(getDataProvider(),
+                updateUid = uids.remove(0);
+                attrs.remove(0);
+                replaceAttributes = ConnectorHelper.getAttributes(getDataProvider(),
                         getObjectClassInfo(), getTestName(), MODIFIED, 0, false, false);
                 
                 // update only in case there is something to update
-                if (replaceAttributes.size() > 0) {
-                    
-                    // object class is not supported
+                if (replaceAttributes.size() > 0) {                    
                     // Uid must be present in attributes
                     replaceAttributes.add(updateUid);
                     Uid newUid = getConnectorFacade().update(UpdateApiOp.Type.REPLACE,
                             getObjectClass(), replaceAttributes, getOperationOptionsByOp(UpdateApiOp.class));
                     replaceAttributes.remove(updateUid);
-
-                    coCreatedAll.remove(updateUid);
-                    updateUid = newUid;
-                    coCreatedAll.put(newUid, replaceAttributes);
+                    
+                    if (!updateUid.equals(newUid)) {
+                        updateUid = newUid;
+                    }
+                    
+                    attrs.add(replaceAttributes);
+                    uids.add(updateUid);
                 }
 
                 /* SearchApiOp - search with Uid filter */
-                // search by Uid
-                Filter fltUid = FilterBuilder.equalTo(updateUid);
-                coFound = ConnectorHelper.search(getConnectorFacade(), getObjectClass(), fltUid,
-                        getOperationOptionsByOp(SearchApiOp.class));
-                assertTrue("Search with Uid filter returned unexpected number of objects. Expected: 1, but returned: "
-                                + coFound.size(), coFound.size() == 1);
-                ConnectorHelper.checkObject(getObjectClassInfo(), coFound.get(0), replaceAttributes);
-
-                /* SyncApiOp - sync after one delete and one update */
-                if (ConnectorHelper.operationSupported(getConnectorFacade(), SyncApiOp.class)) {
-                    List<SyncDelta> deltas = ConnectorHelper.sync(getConnectorFacade(),
-                            getObjectClass(), token, getOperationOptionsByOp(SyncApiOp.class));
-                    // one deleted, one updated (if existed attributes to update)
-                    assertTrue("Sync returned unexpected number of deltas. Exptected: 2, but returned: "
+                if (ConnectorHelper.operationSupported(getConnectorFacade(), SearchApiOp.class)) {
+                    // search by Uid
+                    Filter fltUid = FilterBuilder.equalTo(updateUid);
+                    List<ConnectorObject> coFound = ConnectorHelper.search(getConnectorFacade(), getObjectClass(),
+                            fltUid, getOperationOptionsByOp(SearchApiOp.class));
+                    assertTrue("Search with Uid filter returned unexpected number of objects. Expected: 1, but returned: "
+                                    + coFound.size(), coFound.size() == 1);
+                    ConnectorHelper.checkObject(getObjectClassInfo(), coFound.get(0),
+                            replaceAttributes);
+                }                
+            }
+            
+            /* SyncApiOp - sync after one delete and one possible update */
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), SyncApiOp.class)) {
+                if (SyncApiOpTests.canSyncAfterOp(DeleteApiOp.class)
+                        || SyncApiOpTests.canSyncAfterOp(UpdateApiOp.class)) {
+                    
+                    deltas = ConnectorHelper.sync(getConnectorFacade(), getObjectClass(),
+                            token, getOperationOptionsByOp(SyncApiOp.class));
+                    // one deleted, one updated (if existed attributes to
+                    // update)
+                    assertTrue("Sync returned unexpected number of deltas. Exptected: max 2, but returned: "
                                     + deltas.size(), deltas.size() <= 2);
 
-                    for (SyncDelta delta : deltas) {
-                        if (delta.getDeltaType() == SyncDeltaType.DELETE) {
-                            assertTrue("Sync returned unexpected Uid.", delta.getUid().equals(
-                                    deleteUid));
-                        } else if (delta.getDeltaType() == SyncDeltaType.UPDATE) {
-                            // TODO: not sure, maybe the old uid
-                            assertTrue("Sync returned unexpected Uid.", delta.getUid().equals(
-                                    updateUid));
-                            Set<Attribute> expected = replaceAttributes;
-                            assertNotNull(expected);
-                            Set<Attribute> got = delta.getObject().getAttributes();
-                            assertNotNull(got);
-                            ConnectorHelper.checkAttributes(expected, got);
-                        } else {
-                            fail("Sync returned CREATE type, but no objects were created since last sync.");
+                    for (int i = 0; i < deltas.size(); i++) {
+                        SyncDelta delta = deltas.get(i);
+                                                
+                        if (i == 0) {
+                            if (SyncApiOpTests.canSyncAfterOp(DeleteApiOp.class)) {
+                                ConnectorHelper.checkSyncDelta(getObjectClassInfo(), delta,
+                                        deleteUid, null, SyncDeltaType.DELETE, true);
+                            }
+                            else if (SyncApiOpTests.canSyncAfterOp(UpdateApiOp.class)) {
+                                ConnectorHelper.checkSyncDelta(getObjectClassInfo(), delta,
+                                        updateUid, replaceAttributes, SyncDeltaType.UPDATE, true);
+                            }
                         }
+                        // second must be update
+                        else {                            
+                            ConnectorHelper.checkSyncDelta(getObjectClassInfo(), delta,
+                                    updateUid, replaceAttributes, SyncDeltaType.UPDATE, true);
+                        }
+                        
                         // remember last token
                         token = delta.getToken();
-                    }
+                    }                      
                 }
             }
 
@@ -251,77 +293,97 @@ public class MultiOpTests extends ObjectClassRunner {
                 getConnectorFacade().validate();
             }
 
-            /* CreateApiOp */
-            // create one last object
-            Set<Attribute> attrs = ConnectorHelper.getAttributes(getDataProvider(),
-                    getObjectClassInfo(), getTestName(), createCount + 1, true);
-            Uid createUid = getConnectorFacade().create(getObjectClass(), attrs, getOperationOptionsByOp(CreateApiOp.class));
+            /* CreateApiOp - create one last object */
+            Set<Attribute> attrs11 = ConnectorHelper.getAttributes(getDataProvider(),
+                    getObjectClassInfo(), getTestName(), recordCount + 1, true);            
+            Uid createUid = getConnectorFacade().create(getObjectClass(), attrs11, getOperationOptionsByOp(CreateApiOp.class));
+            uids.add(createUid);
+            attrs.add(attrs11);
             assertNotNull("Create returned null Uid.", createUid);
 
-            // get the object to make sure it exist now
-            ConnectorObject obj = getConnectorFacade().getObject(getObjectClass(), createUid,
-                    getOperationOptionsByOp(GetApiOp.class));
-            assertNotNull("Unable to retrieve newly created object", obj);
-
-            // compare requested attributes to retrieved attributes
-            ConnectorHelper.checkObject(getObjectClassInfo(), obj, attrs);
-            coCreatedAll.put(createUid, attrs);
-
-            /* DeleteApiOp - delete one object */
-            deleteUid = coCreatedAll.keySet().toArray(new Uid[0])[0];
-            // deletes it and checks that it was really deleted
-            ConnectorHelper.deleteObject(getConnectorFacade(), getObjectClass(), deleteUid, true,
-                    getOperationOptionsByOp(DeleteApiOp.class));
-            coCreatedAll.remove(deleteUid);
-
-            /* SyncApiOp - one delete, one create */
-            if (ConnectorHelper.operationSupported(getConnectorFacade(), SyncApiOp.class)) {
-                List<SyncDelta> deltas = ConnectorHelper.sync(getConnectorFacade(), getObjectClass(),
-                        token, getOperationOptionsByOp(SyncApiOp.class));
-                // one deleted, one created
-                assertTrue("Sync returned unexpected number of deltas. Exptected: 2, but returned: "
-                                + deltas.size(), deltas.size() == 2);
-
-                for (SyncDelta delta : deltas) {
-                    if (delta.getDeltaType() == SyncDeltaType.DELETE) {
-                        assertTrue("Sync returned unexpected Uid.", delta.getUid()
-                                .equals(deleteUid));
-                    } else if (delta.getDeltaType() == SyncDeltaType.CREATE) {
-                        // TODO: not sure, maybe the old uid
-                        assertTrue("Sync returned unexpected Uid.", delta.getUid()
-                                .equals(createUid));
-                        Set<Attribute> expected = attrs;
-                        assertNotNull(expected);
-                        Set<Attribute> got = delta.getObject().getAttributes();
-                        assertNotNull(got);
-                        ConnectorHelper.checkAttributes(expected, got);
-                    } else {
-                        fail("Sync returned UPDATE type, but no objects were updated since last sync.");
-                    }
-                    // remember last token
-                    token = delta.getToken();
-                }
+            /* GetApiOp */
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), GetApiOp.class)) {
+                // get the object to make sure it exist now
+                ConnectorObject obj = getConnectorFacade().getObject(getObjectClass(), createUid,
+                        getOperationOptionsByOp(GetApiOp.class));
+                assertNotNull("Unable to retrieve newly created object", obj);
+    
+                // compare requested attributes to retrieved attributes
+                ConnectorHelper.checkObject(getObjectClassInfo(), obj, attrs11);
             }
 
-        } finally {
-            if (coCreatedAll != null) {
-                // delete all created objects
-                ConnectorHelper.deleteObjects(getConnectorFacade(), getObjectClass(),
-                        coCreatedAll.keySet(), getOperationOptionsByOp(DeleteApiOp.class));
+            /* DeleteApiOp - delete one object */
+            deleteUid = uids.remove(0);
+            attrs.remove(0);
+            // delete it and check that it was really deleted
+            ConnectorHelper.deleteObject(getConnectorFacade(), getObjectClass(), deleteUid, true,
+                    getOperationOptionsByOp(DeleteApiOp.class));
+
+            /* SyncApiOp - after delete, create */
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), SyncApiOp.class)) {
+                if (SyncApiOpTests.canSyncAfterOp(DeleteApiOp.class)
+                        || SyncApiOpTests.canSyncAfterOp(CreateApiOp.class)) {
+                    deltas = ConnectorHelper.sync(getConnectorFacade(), getObjectClass(), token,
+                            getOperationOptionsByOp(SyncApiOp.class));
+                    // one deleted, one created
+                    assertTrue("Sync returned unexpected number of deltas. Exptected: max 2, but returned: "
+                                    + deltas.size(), deltas.size() <= 2);
+
+                    for (int i = 0; i < deltas.size(); i++) {
+                        SyncDelta delta = deltas.get(i);
+                                                
+                        if (i == 0) {
+                            if (SyncApiOpTests.canSyncAfterOp(DeleteApiOp.class)) {
+                                ConnectorHelper.checkSyncDelta(getObjectClassInfo(), delta,
+                                        deleteUid, null, SyncDeltaType.DELETE, true);
+                            }
+                            else if (SyncApiOpTests.canSyncAfterOp(CreateApiOp.class)) {
+                                ConnectorHelper.checkSyncDelta(getObjectClassInfo(), delta,
+                                        createUid, attrs11, SyncDeltaType.CREATE, true);
+                            }
+                        }
+                        // second must be create
+                        else {                            
+                            ConnectorHelper.checkSyncDelta(getObjectClassInfo(), delta,
+                                    updateUid, replaceAttributes, SyncDeltaType.CREATE, true);
+                        }
+                        
+                        // remember last token
+                        token = delta.getToken();
+                    }                    
+                }
+            }
+            
+            /* DeleteApiOp - delete all objects */
+            for (int i = 0; i < uids.size(); i++) {
+                ConnectorHelper.deleteObject(getConnectorFacade(), getObjectClass(), uids.get(i),
+                        true, getOperationOptionsByOp(DeleteApiOp.class));
             }
 
             /* SyncApiOp - all objects were deleted */
-            if (ConnectorHelper.operationSupported(getConnectorFacade(), SyncApiOp.class)) {
-                List<SyncDelta> deltas = ConnectorHelper.sync(getConnectorFacade(), getObjectClass(),
-                        token, getOperationOptionsByOp(SyncApiOp.class));
-                assertTrue("Sync returned unexpected number of deltas. Exptected: 2, but returned: "
-                                + deltas.size(), deltas.size() == coCreatedAll.size());
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), SyncApiOp.class)
+                    && SyncApiOpTests.canSyncAfterOp(DeleteApiOp.class)) {
+                deltas = ConnectorHelper.sync(getConnectorFacade(), getObjectClass(), token,
+                        getOperationOptionsByOp(SyncApiOp.class))
+                        ;
+                msg = "Sync returned unexpected number of deltas. Exptected: %d, but returned: %d";
+                assertTrue(String.format(msg, uids.size(), deltas.size()), deltas.size() == uids
+                        .size());
 
-                for (SyncDelta delta : deltas) {
-                    assertTrue("Sync returned unexpected type. Expected: DELETE, but returned: "
-                            + delta.getDeltaType(), delta.getDeltaType() == SyncDeltaType.DELETE);
-                    assertTrue("Sync returned unexpected Uid.", coCreatedAll.containsKey(delta
-                            .getUid()));
+                for (int i = 0; i < uids.size(); i++) {
+                    ConnectorHelper.checkSyncDelta(getObjectClassInfo(), deltas.get(i),
+                            uids.get(i), null, SyncDeltaType.DELETE, true);
+                }
+            }
+
+        } finally {           
+            // cleanup
+            for (Uid deluid : uids) {
+                try {
+                    ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(),
+                            deluid, false, getOperationOptionsByOp(DeleteApiOp.class));
+                } catch (Exception e) {
+                    // ok
                 }
             }
         }
