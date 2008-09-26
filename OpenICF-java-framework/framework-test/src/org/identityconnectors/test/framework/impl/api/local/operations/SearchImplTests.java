@@ -50,14 +50,17 @@ import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
+import org.identityconnectors.framework.impl.api.local.operations.SearchImpl;
+import org.identityconnectors.framework.spi.Configuration;
+import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.operations.SearchOp;
 import org.identityconnectors.framework.test.TestHelpers;
 import org.junit.Assert;
 import org.junit.Test;
-
 
 /**
  * Attempt to test Search.
@@ -72,35 +75,61 @@ public class SearchImplTests {
         List<List<ConnectorObject>> main = new ArrayList<List<ConnectorObject>>();
         // create first batch
         data = new ArrayList<ConnectorObject>();
-        for (int i=0; i<5; i++) {
+        for (int i = 0; i < 5; i++) {
             data.add(createObject(i));
-            expected.add(createObject(i));            
+            expected.add(createObject(i));
         }
         main.add(data);
         // create second batch
         data = new ArrayList<ConnectorObject>();
-        for (int i=3; i<10; i++) {
+        for (int i = 3; i < 10; i++) {
             data.add(createObject(i));
-            expected.add(createObject(i));            
-        }
-        main.add(data);        
-        // create third batch
-        data = new ArrayList<ConnectorObject>();
-        for (int i=8; i<12; i++) {
-            data.add(createObject(i));
-            expected.add(createObject(i));            
+            expected.add(createObject(i));
         }
         main.add(data);
-        List<ConnectorObject> actual = 
-        TestHelpers.searchToList(new DuplicateProvider(), 
-            ObjectClass.ACCOUNT, 
-            new MockFilter(main),
-            null);
+        // create third batch
+        data = new ArrayList<ConnectorObject>();
+        for (int i = 8; i < 12; i++) {
+            data.add(createObject(i));
+            expected.add(createObject(i));
+        }
+        main.add(data);
+        List<ConnectorObject> actual = TestHelpers.searchToList(
+                new DuplicateProvider(), ObjectClass.ACCOUNT, new MockFilter(
+                        main), null);
         List<ConnectorObject> expecteList = CollectionUtil.newList(expected);
         Assert.assertEquals(expecteList, actual);
     }
-    
-    
+
+    @Test
+    public void testAttrsToGetQuery() {
+        // create duplicate data..
+        Set<ConnectorObject> expected = new LinkedHashSet<ConnectorObject>();
+        List<List<ConnectorObject>> main = new ArrayList<List<ConnectorObject>>();
+        List<ConnectorObject> data = new ArrayList<ConnectorObject>();
+        for (int i = 0; i < 10; i++) {
+            ConnectorObjectBuilder bld = new ConnectorObjectBuilder();
+            bld.setUid("" + i);
+            bld.setName("" + i);
+            bld.addAttribute("a", 1);
+            bld.addAttribute("b", 2);
+            expected.add(bld.build());
+            bld.addAttribute("c", 3);
+            data.add(bld.build());
+        }
+        main.add(data);
+        Filter filter = new MockFilter(main);
+        Connector connector = new DuplicateProvider();
+        SearchImpl search = new SearchImpl(null, connector);
+        OperationOptionsBuilder bld = new OperationOptionsBuilder();
+        bld.setAttributesToGet(new String[] {"a", "b"});
+        OperationOptions options = bld.build();
+        List<ConnectorObject> actual = TestHelpers.searchToList(
+                search, ObjectClass.ACCOUNT, filter, options);
+        List<ConnectorObject> expecteList = CollectionUtil.newList(expected);
+        Assert.assertEquals(expecteList, actual);
+    }
+
     ConnectorObject createObject(int uid) {
         ConnectorObjectBuilder bld = new ConnectorObjectBuilder();
         bld.setUid("" + uid);
@@ -108,19 +137,19 @@ public class SearchImplTests {
         bld.addAttribute(AttributeBuilder.build("a", uid));
         return bld.build();
     }
-    
+
     public static class DuplicateProvider implements
-            SearchOp<List<ConnectorObject>> {
+            SearchOp<List<ConnectorObject>>, Connector {
         /**
          * Just return something..
          */
         public static class MockFilterTranslator implements
                 FilterTranslator<List<ConnectorObject>> {
             public List<List<ConnectorObject>> translate(Filter filter) {
-                return ((MockFilter)filter).getObjects();
+                return ((MockFilter) filter).getObjects();
             }
         }
-        
+
         public FilterTranslator<List<ConnectorObject>> createFilterTranslator(
                 ObjectClass oclass, OperationOptions options) {
             return new MockFilterTranslator();
@@ -135,21 +164,40 @@ public class SearchImplTests {
                 }
             }
         }
-    }
-    
 
-    
+        //
+        // Do nothing methods for search impl call..
+        //
+        public void dispose() {
+            // TODO Auto-generated method stub
+            
+        }
+
+        public Configuration getConfiguration() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        public void init(Configuration cfg) {
+            // TODO Auto-generated method stub
+            
+        }
+    }
+
     /**
      * Use the filter to pass objects to the filter translator.
      */
     public static class MockFilter implements Filter {
         public final List<List<ConnectorObject>> _objs;
+
         public MockFilter(List<List<ConnectorObject>> objs) {
             _objs = objs;
         }
+
         public boolean accept(ConnectorObject obj) {
             return true;
         }
+
         public List<List<ConnectorObject>> getObjects() {
             return _objs;
         }
