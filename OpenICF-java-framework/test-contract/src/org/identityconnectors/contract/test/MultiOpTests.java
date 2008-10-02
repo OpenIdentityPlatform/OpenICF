@@ -461,6 +461,9 @@ public class MultiOpTests extends ObjectClassRunner {
             //add ENABLE
             attrs.add(AttributeBuilder.buildEnabled(!enabled));
 
+            // add uid for update
+            attrs.add(uid);
+            
             //update
             uid = getConnectorFacade().update(UpdateApiOp.Type.REPLACE, getSupportedObjectClass(), attrs, null);
 
