@@ -54,11 +54,13 @@ public final class SyncDeltaBuilder {
     public SyncDeltaBuilder() {
 
     }
-    
+
     /**
-     * Creates a new <code>SyncDeltaBuilder</code> whose
-     * values are initialized to those of the delta.
-     * @param delta The original delta.
+     * Creates a new <code>SyncDeltaBuilder</code> whose values are
+     * initialized to those of the delta.
+     * 
+     * @param delta
+     *            The original delta.
      */
     public SyncDeltaBuilder(SyncDelta delta) {
         _token = delta.getToken();
@@ -82,8 +84,9 @@ public final class SyncDeltaBuilder {
      * @param token
      *            the <code>SyncToken</code> of the object that changed.
      */
-    public void setToken(SyncToken token) {
+    public SyncDeltaBuilder setToken(SyncToken token) {
         _token = token;
+        return this;
     }
 
     /**
@@ -101,56 +104,63 @@ public final class SyncDeltaBuilder {
      * @param type
      *            The type of change that occurred.
      */
-    public void setDeltaType(SyncDeltaType type) {
+    public SyncDeltaBuilder setDeltaType(SyncDeltaType type) {
         _deltaType = type;
+        return this;
     }
-    
+
     /**
      * Gets the Uid of the object that changed
+     * 
      * @return The Uid of the object that changed.
      */
     public Uid getUid() {
         return _uid;
     }
-    
+
     /**
-     * Sets the Uid of the object that changed.
-     * Note that this is implicitly set when you call
-     * {@link #setObject(ConnectorObject)}.
-     * @param uid The Uid of the object that changed.
+     * Sets the Uid of the object that changed. Note that this is implicitly set
+     * when you call {@link #setObject(ConnectorObject)}.
+     * 
+     * @param uid
+     *            The Uid of the object that changed.
      */
-    public void setUid(Uid uid) {
+    public SyncDeltaBuilder setUid(Uid uid) {
         _uid = uid;
+        return this;
     }
 
     /**
      * Returns the object that changed.
-     * @return The object that changed. May be null for
-     * deletes.
+     * 
+     * @return The object that changed. May be null for deletes.
      */
     public ConnectorObject getObject() {
         return _object;
     }
 
     /**
-     * Sets the object that changed and implicitly
-     * sets Uid if object is not null.
-     * @param object The object that changed. May be
-     * null for deletes.
+     * Sets the object that changed and implicitly sets Uid if object is not
+     * null.
+     * 
+     * @param object
+     *            The object that changed. May be null for deletes.
      */
-    public void setObject(ConnectorObject object) {
+    public SyncDeltaBuilder setObject(ConnectorObject object) {
         _object = object;
-        if ( object != null ) {
+        if (object != null) {
             _uid = object.getUid();
         }
+        return this;
     }
-
 
     /**
      * Creates a SyncDelta. Prior to calling the following must be specified:
      * <ol>
-     * <li>{@link #setObject(ConnectorObject) Object} (for anything other than delete)</li>
-     * <li>{@link #setUid(Uid) Uid} (this is implictly set when calling {@link #setObject(ConnectorObject)})</li>
+     * <li>{@link #setObject(ConnectorObject) Object} (for anything other than
+     * delete)</li>
+     * <li>{@link #setUid(Uid) Uid} (this is implictly set when calling
+     * {@link #setObject(ConnectorObject)})</li>
      * <li>{@link #setToken(SyncToken) Token}</li>
      * <li>{@link #setDeltaType(SyncDeltaType) DeltaType}</li>
      * </ol>

@@ -133,11 +133,12 @@ public final class AttributeBuilder {
      * @throws IllegalArgumentException
      *             iff the name parameter is blank.
      */
-    public void setName(final String name) {
+    public AttributeBuilder setName(final String name) {
         if (StringUtil.isBlank(name)) {
             throw new IllegalArgumentException(NAME_ERROR);
         }
         _name = name;
+        return this;
     }
 
     /**
@@ -155,10 +156,11 @@ public final class AttributeBuilder {
      * @throws NullPointerException
      *             iff any of the values are null.
      */
-    public void addValue(final Object... objs) {
+    public AttributeBuilder addValue(final Object... objs) {
         if (objs != null) {
             addValuesInternal(Arrays.asList(objs));
         }
+        return this;
     }
 
     /**
@@ -167,8 +169,9 @@ public final class AttributeBuilder {
      * @throws NullPointerException
      *             iff any of the values are null.
      */
-    public void addValue(final Collection<?> obj) {
+    public AttributeBuilder addValue(final Collection<?> obj) {
         addValuesInternal(obj);
+        return this;
     }
 
     /**

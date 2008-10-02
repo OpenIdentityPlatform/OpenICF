@@ -110,11 +110,12 @@ public final class AttributeInfoBuilder {
 	 * @param name
 	 *            unique name of the {@link AttributeInfo} object.
 	 */
-	public void setName(final String name) {
+	public AttributeInfoBuilder setName(final String name) {
 		if (StringUtil.isBlank(name)) {
 			throw new IllegalArgumentException("Argument must not be blank.");
 		}
 		_name = name;
+		return this;
 	}
 
 	/**
@@ -126,48 +127,55 @@ public final class AttributeInfoBuilder {
 	 * @throws IllegalArgumentException
 	 *             if the Class is not a supported type.
 	 */
-	public void setType(final Class<?> value) {
+	public AttributeInfoBuilder setType(final Class<?> value) {
 		FrameworkUtil.checkAttributeType(value);
 		_type = value;
+        return this;
 	}
 
 	/**
 	 * Determines if the attribute is readable.
 	 */
-	public void setReadable(final boolean value) {
+	public AttributeInfoBuilder setReadable(final boolean value) {
 		_readable = value;
+        return this;
 	}
 
 	/**
 	 * Determines if the attribute is writable.
 	 */
-	public void setCreateable(final boolean value) {
+	public AttributeInfoBuilder setCreateable(final boolean value) {
 		_createable = value;
+        return this;
 	}
 
 	/**
 	 * Determines if this attribute is required.
 	 */
-	public void setRequired(final boolean value) {
+	public AttributeInfoBuilder setRequired(final boolean value) {
 		_required = value;
+        return this;
 	}
 
 	/**
 	 * Determines if this attribute supports multivalue.
 	 */
-	public void setMultiValue(final boolean value) {
+	public AttributeInfoBuilder setMultiValue(final boolean value) {
 		_multivalue = value;
+        return this;
 	}
 
 	/**
 	 * Determines if this attribute writable during update.
 	 */
-	public void setUpdateable(final boolean value) {
+	public AttributeInfoBuilder setUpdateable(final boolean value) {
 		_updateable = value;
+        return this;
 	}
 	
-	public void setReturnedByDefault(final boolean value) {
+	public AttributeInfoBuilder setReturnedByDefault(final boolean value) {
 		_returnedByDefault = value;
+        return this;
 	}
 
 	// =======================================================================

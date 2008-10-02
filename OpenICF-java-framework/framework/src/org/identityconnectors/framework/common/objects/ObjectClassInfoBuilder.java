@@ -70,30 +70,33 @@ public final class ObjectClassInfoBuilder {
      * @see ObjectClassInfo#getType()
      * @see ObjectClass#ACCOUNT_NAME
      */
-    public void setType(String type) {
+    public ObjectClassInfoBuilder setType(String type) {
         _type = type;
+        return this;
     }
 
     /**
      * Add the specified {@link AttributeInfo} object to the
      * {@link ObjectClassInfo} that is being built.
      */
-    public void addAttributeInfo(AttributeInfo info) {
+    public ObjectClassInfoBuilder addAttributeInfo(AttributeInfo info) {
         if (_info.containsKey(info.getName())) {
             final String MSG = "AttributeInfo of name '%s' already exists!";
             throw new IllegalArgumentException(String.format(MSG, info.getName()));
         }
         _info.put(info.getName(), info);
+        return this;
     }
 
     /**
      * Add to the {@link ObjectClassInfo} that is being built each
      * {@link AttributeInfo} in the specified collection.
      */
-    public void addAllAttributeInfo(Collection<AttributeInfo> c) {
+    public ObjectClassInfoBuilder addAllAttributeInfo(Collection<AttributeInfo> c) {
         for (AttributeInfo info : c) {
             addAttributeInfo(info);
         }
+        return this;
     }
 
     /**

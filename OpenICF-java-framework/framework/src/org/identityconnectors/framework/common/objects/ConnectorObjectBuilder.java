@@ -71,28 +71,33 @@ public final class ConnectorObjectBuilder {
     // =======================================================================
     // Uid Setters
     // =======================================================================
-    public void setUid(final String uid) {
+    public ConnectorObjectBuilder setUid(final String uid) {
         addAttribute(new Uid(uid));
+        return this;
     }
 
-    public void setUid(final Uid uid) {
+    public ConnectorObjectBuilder setUid(final Uid uid) {
         addAttribute(uid);
+        return this;
     }
 
     // =======================================================================
     // Name Setter
     // =======================================================================
-    public void setName(final String name) {
+    public ConnectorObjectBuilder setName(final String name) {
         addAttribute(new Name(name));
+        return this;
     }
-    public void setName(final Name name) {
+    public ConnectorObjectBuilder setName(final Name name) {
         addAttribute(name);
+        return this;
     }
     // =======================================================================
     // ObjectClass Setter
     // =======================================================================
-    public void setObjectClass(ObjectClass oclass) {
+    public ConnectorObjectBuilder setObjectClass(ObjectClass oclass) {
         _objectClass = oclass;
+        return this;
     }
 
     // =======================================================================
@@ -102,12 +107,13 @@ public final class ConnectorObjectBuilder {
      * Takes all the attribute from a {@link ConnectorObject} and add/overwrite
      * the current attributes.
      */
-    public void add(ConnectorObject obj) {
+    public ConnectorObjectBuilder add(ConnectorObject obj) {
         // simply add all the attributes
         for (Attribute attr : obj.getAttributes()) {
             addAttribute(attr);
         }
         setObjectClass(obj.getObjectClass());
+        return this;
     }
 
     // =======================================================================
@@ -116,34 +122,38 @@ public final class ConnectorObjectBuilder {
     /**
      * Adds one or many attributes to the {@link ConnectorObject}.
      */
-    public void addAttribute(Attribute... attrs) {
+    public ConnectorObjectBuilder addAttribute(Attribute... attrs) {
         validateParameter(attrs, "attrs");
         for (Attribute a : attrs) {
             _attrs.put(a.getName(), a);
         }
+        return this;
     }
 
     /**
      * Add all the {@link Attribute}s of a {@link Collection}.
      */
-    public void addAttributes(Collection<Attribute> attrs) {
+    public ConnectorObjectBuilder addAttributes(Collection<Attribute> attrs) {
         validateParameter(attrs, "attrs");
         for (Attribute a : attrs) {
             _attrs.put(a.getName(), a);
         }
+        return this;
     }
     /**
      * Adds values to the attribute.
      */
-    public void addAttribute(String name, Object... objs) {
+    public ConnectorObjectBuilder addAttribute(String name, Object... objs) {
         addAttribute(AttributeBuilder.build(name, objs));
+        return this;
     }
 
     /**
      * Adds each object in the collection.
      */
-    public void addAttribute(String name, Collection<?> obj) {
+    public ConnectorObjectBuilder addAttribute(String name, Collection<?> obj) {
         addAttribute(AttributeBuilder.build(name, obj));
+        return this;
     }
 
     // =======================================================================

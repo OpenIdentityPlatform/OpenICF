@@ -53,7 +53,6 @@ import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.security.GuardedString;
 
-
 /**
  * Utility methods to retrieve values from instances of {@link Attribute}.
  */
@@ -360,7 +359,7 @@ public final class AttributeUtil {
      * identifies a "special attribute" such as {@link Uid},
      * {@link ObjectClass} or one of the {@link OperationalAttributes}.
      */
-    static String createSpecialName(String name) {
+    public static String createSpecialName(String name) {
         if (StringUtil.isBlank(name)) {
             final String ERR = "Name parameter must not be blank!";
             throw new IllegalArgumentException(ERR);

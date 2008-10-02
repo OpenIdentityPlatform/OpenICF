@@ -47,7 +47,6 @@ import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.serializer.ObjectSerializerFactory;
 
-
 /**
  * Builder for {@link OperationOptions}.
  */
@@ -71,12 +70,13 @@ public final class OperationOptionsBuilder {
      *            serialize. See {@link ObjectSerializerFactory} for a list of
      *            supported types.
      */
-    public void setOption(String name, Object value) {
+    public OperationOptionsBuilder setOption(String name, Object value) {
         Assertions.blankCheck(name, "name");
         // don't validate value here - we do that in
         // the constructor of OperationOptions - that's
         // really the only place we can truly enforce this
         _options.put(name, value);
+        return this;
     }
 
     /**
@@ -85,12 +85,13 @@ public final class OperationOptionsBuilder {
      * @param attrNames
      *            list of {@link Attribute} names.
      */
-    public void setAttributesToGet(String... attrNames) {
+    public OperationOptionsBuilder setAttributesToGet(String... attrNames) {
         Assertions.nullCheck(attrNames, "attrNames");
         // don't validate value here - we do that in
         // the constructor of OperationOptions - that's
         // really the only place we can truly enforce this
         _options.put(OperationOptions.OP_ATTRIBUTES_TO_GET, attrNames);
+        return this;
     }
 
     /**
@@ -99,7 +100,8 @@ public final class OperationOptionsBuilder {
      * @param attrNames
      *            list of {@link Attribute} names.
      */
-    public void setAttributesToGet(Collection<String> attrNames) {
+    public OperationOptionsBuilder setAttributesToGet(
+            Collection<String> attrNames) {
         Assertions.nullCheck(attrNames, "attrNames");
         // don't validate value here - we do that in
         // the constructor of OperationOptions - that's
@@ -107,22 +109,25 @@ public final class OperationOptionsBuilder {
         String[] attrs = new String[attrNames.size()];
         attrs = attrNames.toArray(attrs);
         _options.put(OperationOptions.OP_ATTRIBUTES_TO_GET, attrs);
+        return this;
     }
 
     /**
-	 * Set the run with password option.
-	 */
-	public void setRunWithPassword(GuardedString password) {
-		Assertions.nullCheck(password, "password");
-		_options.put(OperationOptions.OP_RUN_WITH_PASSWORD, password);
-	}
-    
+     * Set the run with password option.
+     */
+    public OperationOptionsBuilder setRunWithPassword(GuardedString password) {
+        Assertions.nullCheck(password, "password");
+        _options.put(OperationOptions.OP_RUN_WITH_PASSWORD, password);
+        return this;
+    }
+
     /**
-	 * Set the run as user option.
-	 */
-    public void setRunAsUser(String user) {
+     * Set the run as user option.
+     */
+    public OperationOptionsBuilder setRunAsUser(String user) {
         Assertions.nullCheck(user, "user");
         _options.put(OperationOptions.OP_RUN_AS_USER, user);
+        return this;
     }
 
     /**
