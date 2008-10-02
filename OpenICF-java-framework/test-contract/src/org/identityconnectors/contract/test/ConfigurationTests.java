@@ -39,13 +39,13 @@
  */
 package org.identityconnectors.contract.test;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.contract.data.DataProvider;
 import org.identityconnectors.framework.api.ConfigurationProperties;
 import org.identityconnectors.framework.api.ConfigurationProperty;
+import org.identityconnectors.framework.common.FrameworkUtil;
 import org.identityconnectors.framework.spi.Configuration;
 import org.junit.After;
 import org.junit.Before;
@@ -60,26 +60,7 @@ import static org.junit.Assert.*;
  */
 public final class ConfigurationTests {
 
-    private static final Log LOG = Log.getLog(ConfigurationTests.class);
-    private static final List <String> ALLOWED_TYPES = Arrays.asList(new String[] {
-        "java.lang.String", 
-        "[Ljava.lang.String",
-        "java.lang.Boolean",
-        "[Ljava.lang.Boolean",
-        "java.lang.Integer",
-        "[Ljava.lang.Integer",
-        "java.lang.Long",
-        "[Ljava.lang.Long",
-        "java.lang.Float",
-        "[Ljava.lang.Float",
-        "java.lang.Double",
-        "[Ljava.lang.Double",
-        "java.net.URI",
-        "[Ljava.net.URI",
-        "org.identityconnectors.common.security.GuardedString"
-        });
-    
-    
+    private static final Log LOG = Log.getLog(ConfigurationTests.class);           
     private ConfigurationProperties _configProperties = null;
 
     /**
@@ -114,10 +95,11 @@ public final class ConfigurationTests {
         for (String propertyName : propertyNames) {
             ConfigurationProperty property =  _configProperties.getProperty(propertyName);
             assertNotNull(property);
-            
-            String type = property.getType().getName();
-            LOG.ok("Property: ''{0}'' type ''{1}''", property.getName(), type);
-            assertTrue("Type " + type + " not allowed in configuration!", ALLOWED_TYPES.contains(type));
+                        
+            String typeName = property.getType().getName();
+            LOG.ok("Property: ''{0}'' type ''{1}''", property.getName(), typeName);
+            assertTrue("Type " + typeName + " not allowed in configuration!", FrameworkUtil
+                    .isSupportedConfigurationType(property.getType()));
         }
     }
 }

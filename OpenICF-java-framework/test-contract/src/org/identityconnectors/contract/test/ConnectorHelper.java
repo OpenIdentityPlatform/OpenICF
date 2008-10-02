@@ -130,7 +130,7 @@ public class ConnectorHelper {
                 LOG.error("DataProvider class not specified");
             }            
         } catch (Exception ex) {
-            ContractException.wrap(ex);
+            throw ContractException.wrap(ex);
         }
         
         return dp;
