@@ -39,6 +39,7 @@
  */
 package org.identityconnectors.framework.common.exceptions;
 
+import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 
 /**
@@ -46,13 +47,16 @@ import org.identityconnectors.framework.common.objects.Uid;
  * identifies no object on the target resource.
  */
 public class UnknownUidException extends InvalidCredentialException {
-    
+    private static final String MSG = "Object with Uid '%s' and ObjectClass '%s' does not exist!";    
     private static final long serialVersionUID = 1L;
 
     public UnknownUidException() {
         super();
     }
 
+    public UnknownUidException(Uid uid, ObjectClass objclass) {
+        super(String.format(MSG, uid, objclass));
+    }
     public UnknownUidException(String message) {
         super(message);
     }

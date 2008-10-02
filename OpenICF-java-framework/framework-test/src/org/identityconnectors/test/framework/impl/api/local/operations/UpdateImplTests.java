@@ -300,6 +300,7 @@ public class UpdateImplTests {
         Attribute cattr = AttributeBuilder.build("abc", 1);
         base.add(battr);
         changeset.add(cattr);
+        expected.add(cattr);
         actual = up.merge(Type.REPLACE, changeset, base);
         Assert.assertEquals(expected, actual);
     }

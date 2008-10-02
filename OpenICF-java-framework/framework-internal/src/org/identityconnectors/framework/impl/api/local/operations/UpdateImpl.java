@@ -133,9 +133,7 @@ public class UpdateImpl extends ConnectorAPIOperationRunner implements
             Uid uid = AttributeUtil.getUidAttribute(normalizedAttributes);
             ConnectorObject o = getConnectorObject(objclass, uid, options);
             if (o == null) {
-                final String MSG = "Object with Uid '%s' and ObjectClass '%s' does not exist!";
-                final String ERR = String.format(MSG, uid, objclass);
-                throw new UnknownUidException(ERR);
+                throw new UnknownUidException(uid, objclass);
             }
             // merge the update data..
             Set<Attribute> mergeAttrs = merge(type, normalizedAttributes, o.getAttributes());
@@ -163,37 +161,38 @@ public class UpdateImpl extends ConnectorAPIOperationRunner implements
             // get the name of the update attributes
             String name = updateAttr.getName();
             Attribute baseAttr = baseAttrMap.get(name);
-            // if this is a delete and the base attribute doesn't exist
-            if (Type.DELETE.equals(type) && baseAttr == null) {
-                continue;
-            }
-            // exclude attributes that are the same on replace
-            if (Type.REPLACE.equals(type) && updateAttr.equals(baseAttr)) {
-                continue;
-            }
             List<Object> values;
             final Attribute modifiedAttr; 
-            if (Type.ADD.equals(type) && baseAttr != null) {
-                // create a new list with the base attribute to add to..
-                values = CollectionUtil.newList(baseAttr.getValue());
-                values.addAll(updateAttr.getValue());
-                modifiedAttr = AttributeBuilder.build(name, values);
-            } else if (Type.DELETE.equals(type)) {
-                // create a list with the base attribute to remove from..
-                values = CollectionUtil.newList(baseAttr.getValue());
-                for (Object val : updateAttr.getValue()) {
-                    values.remove(val);
-                }
-                // if the values are empty send a null to the connector..
-                if (values.isEmpty()) {
-                    modifiedAttr = AttributeBuilder.build(name);
+            if (Type.ADD.equals(type)) {
+                if (baseAttr == null) {
+                    modifiedAttr = updateAttr;
                 } else {
+                    // create a new list with the base attribute to add to..
+                    values = CollectionUtil.newList(baseAttr.getValue());
+                    values.addAll(updateAttr.getValue());
                     modifiedAttr = AttributeBuilder.build(name, values);
                 }
+            } else if (Type.DELETE.equals(type)) {
+                if (baseAttr == null) {
+                    // nothing to actually do the attribute do not exist
+                    continue;                    
+                } else {
+                    // create a list with the base attribute to remove from..
+                    values = CollectionUtil.newList(baseAttr.getValue());
+                    for (Object val : updateAttr.getValue()) {
+                        values.remove(val);
+                    }
+                    // if the values are empty send a null to the connector..
+                    if (values.isEmpty()) {
+                        modifiedAttr = AttributeBuilder.build(name);
+                    } else {
+                        modifiedAttr = AttributeBuilder.build(name, values);
+                    }
+                }
+            } else if (Type.REPLACE.equals(type)){
+                modifiedAttr = updateAttr;
             } else {
-                // replace the attribute w/ the change set value.
-                values = updateAttr.getValue();
-                modifiedAttr = AttributeBuilder.build(name, values);
+                throw new IllegalStateException("Unknown Type: " + type);
             }
             ret.add(modifiedAttr);
         }
