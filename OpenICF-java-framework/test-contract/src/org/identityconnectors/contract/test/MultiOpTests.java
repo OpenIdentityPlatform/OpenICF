@@ -436,7 +436,7 @@ public class MultiOpTests extends ObjectClassRunner {
         for (Attribute attribute : attrs) {
             if (attribute.is(OperationalAttributes.ENABLE_NAME)) {
                 attrs.remove(attribute);
-
+                break;
             }
         }
 
