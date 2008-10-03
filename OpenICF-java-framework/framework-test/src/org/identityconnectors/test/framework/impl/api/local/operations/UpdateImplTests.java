@@ -304,4 +304,26 @@ public class UpdateImplTests {
         actual = up.merge(Type.REPLACE, changeset, base);
         Assert.assertEquals(expected, actual);
     }
+
+    @Test
+    public void mergeAddsBaseAttributes() {
+        UpdateImpl up = new UpdateImpl(null, null);
+        Set<Attribute> actual;
+        Uid uid = new Uid("1");
+        Set<Attribute> base = CollectionUtil.<Attribute>newSet(uid);
+        Set<Attribute> expected = CollectionUtil.<Attribute>newSet(uid);
+        Set<Attribute> changeset = CollectionUtil.<Attribute>newSet(uid);
+        // attempt to add a value to an attribute..
+        Attribute attr;
+        attr = AttributeBuilder.build("abc", 1);
+        base.add(attr);
+        changeset.add(attr);
+        expected.add(attr);
+        // add another one to base and it should be expected..
+        attr = AttributeBuilder.build("bbb", 2);
+        base.add(attr);
+        expected.add(attr);
+        actual = up.merge(Type.REPLACE, changeset, base);
+        Assert.assertEquals(expected, actual);
+    }
 }

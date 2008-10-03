@@ -86,6 +86,15 @@ public class AttributesAccessor {
     public Name getName() {
         return (Name) find(Name.NAME);
     }
+    
+    /**
+     * Get the {@link Uid} attribute from the set of attributes.
+     * 
+     * @return the {@link Uid} attribute in the set.
+     */
+    public Uid getUid() {
+        return (Uid) find(Uid.NAME);
+    }
 
     /**
      * Return the enabled status of the account.

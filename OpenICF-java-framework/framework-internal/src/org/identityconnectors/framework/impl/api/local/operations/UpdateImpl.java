@@ -39,6 +39,7 @@
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -138,7 +139,7 @@ public class UpdateImpl extends ConnectorAPIOperationRunner implements
             // merge the update data..
             Set<Attribute> mergeAttrs = merge(type, normalizedAttributes, o.getAttributes());
             // update the object..
-            ret = ((UpdateOp) c).update(objclass, mergeAttrs,options);
+            ret = ((UpdateOp) c).update(objclass, mergeAttrs, options);
         }
         return (Uid)normalizer.normalizeAttribute(ret);
     }
@@ -150,16 +151,17 @@ public class UpdateImpl extends ConnectorAPIOperationRunner implements
             Set<Attribute> baseAttrs) {
         // return the merged attributes
         Set<Attribute> ret = new HashSet<Attribute>();
-        ret.add(AttributeUtil.getUidAttribute(baseAttrs));
+        // create map that can be modified to get the subset of changes 
         Map<String, Attribute> baseAttrMap = AttributeUtil.toMap(baseAttrs);
         // run through attributes of the current object..
         for (final Attribute updateAttr : updateAttrs) {
-            // ignore uid because its immutable from this layer..
+            // ignore uid because its immutable..
             if (updateAttr instanceof Uid) {
                 continue;
             }
             // get the name of the update attributes
             String name = updateAttr.getName();
+            // remove each attribute that is an update attribute..
             Attribute baseAttr = baseAttrMap.get(name);
             List<Object> values;
             final Attribute modifiedAttr; 
@@ -196,6 +198,15 @@ public class UpdateImpl extends ConnectorAPIOperationRunner implements
             }
             ret.add(modifiedAttr);
         }
+        // add the rest of the base attribute that were not update attrs
+        Map<String, Attribute> updateAttrMap = AttributeUtil.toMap(updateAttrs);
+        for (Attribute a : baseAttrs) {
+            if (!updateAttrMap.containsKey(a.getName())) {
+                ret.add(a);
+            }
+        }
+        // always add the UID..
+        ret.add(updateAttrMap.get(Uid.NAME));
         return ret;
     }
 
@@ -234,7 +245,7 @@ public class UpdateImpl extends ConnectorAPIOperationRunner implements
                             "Can not ADD or DELETE 'null' value.");
                 }
                 // make sure that if this an delete/add that it doesn't include
-                // certain attributes because it doesn't make any since..
+                // certain attributes because it doesn't make any sense..
                 String name = attr.getName();
                 if (OPERATIONAL_ATTRIBUTE_NAMES.contains(name)) {
                     String msg = String.format(OPERATIONAL_ATTRIBUTE_ERR, name);
