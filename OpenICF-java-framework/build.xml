@@ -202,6 +202,7 @@
                 <manifest>
                     <attribute name="Built-By" value="${user.name}"/>
                     <section name="@{title}">
+                        <attribute name="Build-Date" value="${DSTAMP}-${TSTAMP}"/>
                         <attribute name="Implementation-Title" value="@{title}"/>
                         <attribute name="Implementation-Version" value="${version} ${BUILD_ID}"/> 
                     </section>
@@ -211,6 +212,8 @@
     </macrodef>
 
     <target name="jar" depends="compile" description="generate the framework jar">
+        <!-- get the current time stamp -->
+        <tstamp/>
         <!-- Create the distribution directory -->
         <mkdir dir="${dist}" />
         <jarframework file="${jar.file}"
