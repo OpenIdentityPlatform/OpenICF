@@ -350,10 +350,9 @@ public class ConnectorHelper {
         boolean success = true;
 
         for (Attribute attribute : requestedAttributes) {
-            // we will check all attributes that are readable and also those
-            // non-readable that are not special (this is because of passwords,
-            // because they can be hashed)
-            if (isReadable(objectClassInfo, attribute) || !AttributeUtil.isSpecial(attribute)) {
+            // we will check all attributes that are readable all other attributes
+            // should not be present in connector object
+            if (isReadable(objectClassInfo, attribute)) {
                 if (checkNotReturnedByDefault || isReturnedByDefault(objectClassInfo, attribute)) {
                     Attribute createdAttribute = connectorObj.getAttributeByName(attribute.getName());
                     Assert.assertEquals("Attribute " + attribute.getName()
@@ -381,21 +380,7 @@ public class ConnectorHelper {
         // check that delta type is expected
         msg = "Sync delta type should be %s, but returned: %s.";
         assertTrue(String.format(msg, deltaType, delta.getDeltaType()), delta.getDeltaType() == deltaType);
-    }        
-    
-    /**
-     * Compares two sets of attributes.
-     */
-    public static boolean checkAttributes(final Set<Attribute> expected, final Set<Attribute> got) {
-        boolean success = true;
-
-        for (Attribute attribute : expected) {
-            Assert.assertTrue("Expected attribute " + attribute + " not found.", got
-                    .contains(attribute));
-        }
-
-        return success;
-    } 
+    }         
     
     /**
      * Whether is attribute readable.
