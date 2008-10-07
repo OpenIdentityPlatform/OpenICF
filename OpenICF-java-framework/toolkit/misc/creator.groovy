@@ -65,7 +65,7 @@ operations.each {
 baseDir = properties["basedir"]
 
 //extract the full version string from one of the framework jars (1.0.x.x)
-jarFile = new File(baseDir, "dist/connector-framework.jar")
+jarFile = new File(new File(baseDir,"dist"),"connector-framework.jar")
 jarVersion = "1.0"
 
 //map that the template engine will use

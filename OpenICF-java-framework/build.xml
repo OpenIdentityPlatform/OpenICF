@@ -206,7 +206,7 @@
                         <attribute name="Implementation-Title" value="@{title}"/>
                         <attribute name="Implementation-Version" value="${version} ${BUILD_ID}"/> 
                         <attribute name="Build-Number" value="${BUILD_ID}"/> 
-                        <attribute name="SVN Revision" value="${SVN_REVISION}"/> 
+                        <attribute name="SVN-Revision" value="${SVN_REVISION}"/> 
                     </section>
                 </manifest>
             </jar>
