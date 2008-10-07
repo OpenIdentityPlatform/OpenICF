@@ -50,7 +50,7 @@
     <!-- load build properties -->
     <property file="build.properties" />
     <!-- calculate the version from various properties -->
-    <property name="version" value="${MAJOR}.${MINOR}.${BUILD_NUMBER}.${SVN_REVISION}"/>
+    <property name="version" value="${MAJOR}.${MINOR}.${SVN_REVISION}"/>
     <!-- set defaults if they are not already set -->
     <property name="debug" value="true" />
     <property name="src-framework" location="framework/src" />
@@ -68,9 +68,9 @@
     <property name="netbeans" location="netbeans" />
     <property name="lib-framework-internal" location="framework-internal/lib" />
     <property name="reports" location="reports" />
-    <property name="jar.file" value="${dist}/${ant.project.name}-${version}.jar" />
-    <property name="jar.file-internal" value="${dist}/${ant.project.name}-internal-${version}.jar" />
-    <property name="jar.file-contract" value="${dist}/${ant.project.name}-contract-${version}.jar" />
+    <property name="jar.file" value="${dist}/${ant.project.name}.jar" />
+    <property name="jar.file-internal" value="${dist}/${ant.project.name}-internal.jar" />
+    <property name="jar.file-contract" value="${dist}/${ant.project.name}-contract.jar" />
     <property name="testbundles.dir" value="testbundles"/>
     <property name="toolkit.name" value="connector_toolkit-${version}" />
     <property name="toolkit.file" value="${dist}/${toolkit.name}.zip"/>
@@ -205,6 +205,8 @@
                         <attribute name="Build-Date" value="${DSTAMP}-${TSTAMP}"/>
                         <attribute name="Implementation-Title" value="@{title}"/>
                         <attribute name="Implementation-Version" value="${version} ${BUILD_ID}"/> 
+                        <attribute name="Build-Number" value="${BUILD_ID}"/> 
+                        <attribute name="SVN Revision" value="${SVN_REVISION}"/> 
                     </section>
                 </manifest>
             </jar>

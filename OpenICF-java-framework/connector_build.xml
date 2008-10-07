@@ -63,7 +63,7 @@
     <property name="BUILD_NUMBER" value="x" />
     <property name="SVN_REVISION" value="x" />
     <property name="ConnectorBundle-Version" 
-        value="${MAJOR}.${MINOR}.${BUILD_NUMBER}.${SVN_REVISION}"/>
+        value="${MAJOR}.${MINOR}.${SVN_REVISION}"/>
     <!-- set default properties for this build -->
     <property name="src" value="src" />
     <property name="lib" value="lib" />
@@ -227,6 +227,10 @@
                     value="${ConnectorBundle-Name}" />
                 <attribute name="ConnectorBundle-Version"
                     value="${ConnectorBundle-Version}" />
+                <attribute name="Build-Number"
+                    value="${BUILD_NUMBER}" />
+                <attribute name="Subversion-Revision"
+                    value="${SVN_REVISION}" />
             </manifest>
         </jar>
     </target>
