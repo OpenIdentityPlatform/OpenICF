@@ -65,11 +65,8 @@ operations.each {
 baseDir = properties["basedir"]
 
 //extract the full version string from one of the framework jars (1.0.x.x)
-filter = {File fName -> return fName.getName().endsWith(".jar") && fName.getName().startsWith("connector") } as FileFilter
-jarFile = new File(baseDir, "dist").listFiles(filter)[0]
-startIdx = jarFile.getName().lastIndexOf("-") + 1
-endIdx = jarFile.getName().lastIndexOf(".")
-jarVersion = jarFile.getName().substring(startIdx, endIdx)
+jarFile = new File(baseDir, "dist/connector-framework.jar")
+jarVersion = "1.0"
 
 //map that the template engine will use
 values = ["userName":properties["user.name"], "packageName":PACKAGE_NAME, "resourceName":RESOURCE_NAME, "frameworkDir":baseDir, "bundleDir":BUNDLE_DIR, "interfaces":interfaces, "jarVersion":jarVersion]
