@@ -485,7 +485,6 @@ public class GroovyDataProvider implements DataProvider {
 
 	/* ************************ interface DataProvider ********************** */
 
-	@Override
 	public Object get(String dataTypeName, String name, String componentName,
 			int sequenceNumber) throws ObjectNotFoundException {
 		// put the parameters in the Map ... this will fail if called
