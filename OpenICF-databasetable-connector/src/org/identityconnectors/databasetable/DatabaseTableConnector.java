@@ -351,10 +351,13 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         }
         UpdateSetBuilder updateSet = new UpdateSetBuilder();
         for (Attribute attribute : attrs) {
-            final String columnName = config.getColumnName(attribute.getName());
-            final Object value = AttributeUtil.getSingleValue(attribute);
-            final Object parameter = SQLUtil.convertToJDBC(value, getColumnType(columnName));
-            updateSet.addBind(config.quoteName(columnName), parameter);
+            // All attributes needs to be updated except the UID
+            if (!attribute.is(Uid.NAME)) {
+                final String columnName = config.getColumnName(attribute.getName());
+                final Object value = AttributeUtil.getSingleValue(attribute);
+                final Object parameter = SQLUtil.convertToJDBC(value, getColumnType(columnName));
+                updateSet.addBind(config.quoteName(columnName), parameter);
+            }            
         }
         log.info("Update user {0} to {1}", oldUid.getUidValue(), ret.getUidValue());
         
