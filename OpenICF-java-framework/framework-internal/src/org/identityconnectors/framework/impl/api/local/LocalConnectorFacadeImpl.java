@@ -147,18 +147,7 @@ public class LocalConnectorFacadeImpl extends AbstractConnectorFacade {
 
     @Override
     protected APIOperation getOperationImplementation(final Class<? extends APIOperation> api) {
-        APIOperation ret = null;
-        // need to figure out if api operation is a get op..
-        if (api.equals(GetApiOp.class)) {
-            APIOperation op = getAPIOperationRunner(SearchApiOp.class);
-            ret = new GetImpl((SearchApiOp) op);
-        } else {
-            ret = getAPIOperationRunner(api);
-        }
-        return ret;
-    }
 
-    APIOperation getAPIOperationRunner(final Class<? extends APIOperation> api) {
                 
         APIOperation proxy;
         //first create the inner proxy - this is the proxy that obtaining
@@ -169,6 +158,19 @@ public class LocalConnectorFacadeImpl extends AbstractConnectorFacade {
             OperationalContext context =
                 new OperationalContext(connectorInfo,getAPIConfiguration());
             proxy = new ValidateImpl(context);
+        }
+        else if ( api == GetApiOp.class ) {
+            Constructor<? extends APIOperationRunner> constructor =
+                API_TO_IMPL.get(SearchApiOp.class);
+            ConnectorOperationalContext context =
+            new ConnectorOperationalContext(connectorInfo,
+                    getAPIConfiguration(), 
+                    getPool());
+        
+            ConnectorAPIOperationRunnerProxy handler =
+                new ConnectorAPIOperationRunnerProxy(context,constructor);
+            proxy = 
+                new GetImpl((SearchApiOp)newAPIOperationProxy(SearchApiOp.class, handler));            
         }
         else {
             Constructor<? extends APIOperationRunner> constructor =
