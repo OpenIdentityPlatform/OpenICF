@@ -444,7 +444,7 @@ public class DatabaseConnectorTests {
         FindUidObjectHandler handler = new FindUidObjectHandler(uid);
         facade.search(ObjectClass.ACCOUNT, new EqualsFilter(uid), handler, null);
         assertNotNull(handler.connectorObject);
-
+ 
         // create updated connector object
         ConnectorObjectBuilder coBuilder = new ConnectorObjectBuilder();
         coBuilder.setName(handler.connectorObject.getName());
