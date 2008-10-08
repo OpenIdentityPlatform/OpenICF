@@ -90,8 +90,9 @@ public class GetApiOpTests extends ObjectClassRunner {
         Uid uid = null;
         
         try {
-            Set<Attribute> requestedAttributes = ConnectorHelper.getAttributes(
-                    getDataProvider(), getObjectClassInfo(), getTestName(), 0, true);
+            Set<Attribute> requestedAttributes = ConnectorHelper.getCreateableAttributes(
+                    getDataProvider(), getObjectClassInfo(), getTestName(), 0, true, false);
+
             // object class is always supported
             uid = getConnectorFacade().create(getSupportedObjectClass(),
                     requestedAttributes, getOperationOptionsByOp(CreateApiOp.class));

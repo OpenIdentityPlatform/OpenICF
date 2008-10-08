@@ -98,6 +98,7 @@ import org.identityconnectors.framework.common.objects.OperationalAttributes;
  * 
  * @author Dan Vernon
  * @author Tomas Knappek
+ * @author Zdenek Louzensky
  */
 public class ConnectorHelper {
     /**
@@ -398,6 +399,21 @@ public class ConnectorHelper {
     }
     
     /**
+     * Whether is attribute readable.
+     */
+    public static boolean isUpdateable(ObjectClassInfo objectClassInfo, Attribute attribute) {
+        boolean isUpdateable = false;
+        Set<AttributeInfo> attributeInfoSet = objectClassInfo.getAttributeInfo();
+        for(AttributeInfo attributeInfo : attributeInfoSet) {
+            if(attributeInfo.is(attribute.getName())) {
+                isUpdateable = attributeInfo.isUpdateable();
+                break;
+            }
+        }
+        return isUpdateable;
+    }
+    
+    /**
      * Whether is attribute returnedByDefault.
      */
     public static boolean isReturnedByDefault(ObjectClassInfo objectClassInfo, Attribute attribute) {
@@ -413,13 +429,22 @@ public class ConnectorHelper {
     }
     
     /**
-     * gets attribute's values for all object class' attributes
+     * Get updateable attributes' values.
      */
-    public static Set<Attribute> getAttributes(DataProvider dataProvider, 
+    public static Set<Attribute> getUpdateableAttributes(DataProvider dataProvider, 
             ObjectClassInfo objectClassInfo, 
-            String testName, int sequenceNumber, boolean checkRequired) throws ObjectNotFoundException {
-        return getAttributes(dataProvider, objectClassInfo, testName, "", sequenceNumber, checkRequired, false);
-    }        
+            String testName, String qualifier, int sequenceNumber, boolean checkRequired, boolean onlyMultiValue) {
+        return getAttributes(dataProvider, objectClassInfo, testName, qualifier, sequenceNumber, false, onlyMultiValue, false, true);
+    }
+    
+    /**
+     * Get createable attributes' values.
+     */
+    public static Set<Attribute> getCreateableAttributes(DataProvider dataProvider, 
+            ObjectClassInfo objectClassInfo, 
+            String testName, int sequenceNumber, boolean checkRequired, boolean onlyMultiValue) {
+        return getAttributes(dataProvider, objectClassInfo, testName, "", sequenceNumber, checkRequired, onlyMultiValue, true, false);
+    }
     
     /**
      * get attribute values (concatenates the qualifier with the name)
@@ -435,12 +460,18 @@ public class ConnectorHelper {
     public static Set<Attribute> getAttributes(DataProvider dataProvider, 
             ObjectClassInfo objectClassInfo, String testName, 
             String qualifier, int sequenceNumber, 
-            boolean checkRequired, boolean onlyMultiValue) throws ObjectNotFoundException {
+            boolean checkRequired, boolean onlyMultiValue, boolean onlyCreateable, boolean onlyUpdateable) throws ObjectNotFoundException {
         Set<Attribute> attributes = new HashSet<Attribute>();        
         
         
         for(AttributeInfo attributeInfo : objectClassInfo.getAttributeInfo()) {
             if (onlyMultiValue && !attributeInfo.isMultiValue()) {
+                continue;
+            }
+            if (onlyCreateable && !attributeInfo.isCreateable()) {
+                continue;
+            }
+            if (onlyUpdateable && !attributeInfo.isUpdateable()) {
                 continue;
             }
             String attributeName = attributeInfo.getName();
@@ -509,9 +540,8 @@ public class ConnectorHelper {
             DataProvider dataProvider, ObjectClassInfo objectClassInfo,
             String testName, String qualifier, 
             int sequenceNumber, OperationOptions opOptions) throws ObjectNotFoundException {
-        Set<Attribute> attributes = getAttributes(dataProvider, 
-                objectClassInfo, testName, qualifier, 
-                sequenceNumber, true, false);
+        Set<Attribute> attributes = getAttributes(dataProvider, objectClassInfo, testName,
+                qualifier, sequenceNumber, true, false, true, false);
         
         return connectorFacade.create(getObjectClassFromObjectClassInfo(objectClassInfo), attributes, opOptions);        
     }
@@ -529,8 +559,8 @@ public class ConnectorHelper {
     public static Uid createObject(ConnectorFacade connectorFacade, 
             DataProvider dataProvider, ObjectClassInfo objectClassInfo,
             String testName, int sequenceNumber, OperationOptions opOptions) throws ObjectNotFoundException {
-        Set<Attribute> attributes = getAttributes(dataProvider, 
-                objectClassInfo, testName, sequenceNumber, true);
+        Set<Attribute> attributes = getCreateableAttributes(dataProvider, objectClassInfo,
+                testName, sequenceNumber, true, false);
 
         return connectorFacade.create(getObjectClassFromObjectClassInfo(objectClassInfo), attributes, opOptions);
     }

@@ -107,8 +107,9 @@ public class UpdateApiOpTests extends ObjectClassRunner {
             obj = getConnectorFacade().getObject(getSupportedObjectClass(), uid, getOperationOptionsByOp(GetApiOp.class));
             assertNotNull("Cannot retrieve created object.", obj);
 
-            Set<Attribute> replaceAttributes = ConnectorHelper.getAttributes(getDataProvider(),
-                    getObjectClassInfo(), getTestName(), MODIFIED, 0, false, false);
+            Set<Attribute> replaceAttributes = ConnectorHelper.getUpdateableAttributes(
+                    getDataProvider(), getObjectClassInfo(), getTestName(), MODIFIED, 0, false,
+                    false);
 
             if (replaceAttributes.size() > 0 || !isObjectClassSupported()) {
                 // update only in case there is something to update or when object class is not supported
@@ -135,7 +136,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
 
             // ADD and DELETE update test:
             // set of *multivalue* attributes with generated values
-            Set<Attribute> addDelAttrs = ConnectorHelper.getAttributes(getDataProvider(),
+            Set<Attribute> addDelAttrs = ConnectorHelper.getUpdateableAttributes(getDataProvider(),
                     getObjectClassInfo(), getTestName(), ADDED, 0, false, true);
             if (addDelAttrs.size() > 0) {
                 // uid must be present for update
@@ -202,8 +203,8 @@ public class UpdateApiOpTests extends ObjectClassRunner {
             
             try {
                 // create two new objects
-                Set<Attribute> attrs1 = ConnectorHelper.getAttributes(getDataProvider(),
-                        getObjectClassInfo(), getTestName(), 1, true);
+                Set<Attribute> attrs1 = ConnectorHelper.getCreateableAttributes(getDataProvider(),
+                        getObjectClassInfo(), getTestName(), 1, true, false);
                 uid1 = getConnectorFacade().create(getSupportedObjectClass(), attrs1, null);
                 assertNotNull("Create returned null uid.", uid1);
                 
@@ -214,8 +215,8 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                 // compare requested attributes to retrieved attributes
                 ConnectorHelper.checkObject(getObjectClassInfo(), obj1, attrs1);
                 
-                Set<Attribute> attrs2 = ConnectorHelper.getAttributes(getDataProvider(),
-                        getObjectClassInfo(), getTestName(), 2, true);
+                Set<Attribute> attrs2 = ConnectorHelper.getCreateableAttributes(getDataProvider(),
+                        getObjectClassInfo(), getTestName(), 2, true, false);
                 uid2 = getConnectorFacade().create(getSupportedObjectClass(), attrs2, null);
                 assertNotNull("Create returned null uid.", uid2);
                 
@@ -226,8 +227,13 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                 // compare requested attributes to retrieved attributes
                 ConnectorHelper.checkObject(getObjectClassInfo(), obj2, attrs2);
                                 
-                // update second object with attributes of first object
-                Set<Attribute> replaceAttributes = attrs1;
+                // update second object with updateable attributes of first object
+                Set<Attribute> replaceAttributes = new HashSet<Attribute>();
+                for (Attribute attr : attrs1) {
+                    if (ConnectorHelper.isUpdateable(getObjectClassInfo(), attr)) {
+                        replaceAttributes.add(attr);
+                    }
+                }
                 replaceAttributes.add(uid2);
                 
                 try {

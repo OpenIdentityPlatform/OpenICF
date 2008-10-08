@@ -109,8 +109,9 @@ public class SearchApiOpTests extends ObjectClassRunner {
             //prepare the data
             for (int i = 0; i < recordCount; i++) {
                 //create objects
-                Set<Attribute> attr = ConnectorHelper.getAttributes(getDataProvider(),
-                        getObjectClassInfo(), getTestName(), i, true);
+                Set<Attribute> attr = ConnectorHelper.getCreateableAttributes(getDataProvider(),
+                        getObjectClassInfo(), getTestName(), i, true, false);
+
                 Uid luid = getConnectorFacade().create(getSupportedObjectClass(), attr, getOperationOptionsByOp(CreateApiOp.class));
                 assertNotNull("Create returned null uid.", luid);
                 attrs.add(attr);
@@ -209,9 +210,8 @@ public class SearchApiOpTests extends ObjectClassRunner {
         Uid uid = null;
 
         try {
-
-            Set<Attribute> attrs = ConnectorHelper.getAttributes(getDataProvider(),
-                    getObjectClassInfo(), getTestName(), 0, true);
+            Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
+                    getObjectClassInfo(), getTestName(), 0, true, false);
 
             uid = getConnectorFacade().create(getSupportedObjectClass(), attrs, null);
             assertNotNull("Create returned null uid.", uid);

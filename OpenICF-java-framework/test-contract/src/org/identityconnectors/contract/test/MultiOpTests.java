@@ -137,8 +137,8 @@ public class MultiOpTests extends ObjectClassRunner {
 
             /* CreateApiOp - create initial objects */
             for (int i = 0; i < recordCount; i++) {
-                Set<Attribute> attr = ConnectorHelper.getAttributes(getDataProvider(),
-                        getObjectClassInfo(), getTestName(), i, true);
+                Set<Attribute> attr = ConnectorHelper.getCreateableAttributes(getDataProvider(),
+                        getObjectClassInfo(), getTestName(), i, true, false);
                 Uid luid = getConnectorFacade().create(getObjectClass(), attr, getOperationOptionsByOp(CreateApiOp.class));
                 assertNotNull("Create returned null uid.", luid);
                 attrs.add(attr);
@@ -218,7 +218,7 @@ public class MultiOpTests extends ObjectClassRunner {
             if (ConnectorHelper.operationSupported(getConnectorFacade(), UpdateApiOp.class)) {
                 updateUid = uids.remove(0);
                 attrs.remove(0);
-                replaceAttributes = ConnectorHelper.getAttributes(getDataProvider(),
+                replaceAttributes = ConnectorHelper.getUpdateableAttributes(getDataProvider(),
                         getObjectClassInfo(), getTestName(), MODIFIED, 0, false, false);
                 
                 // update only in case there is something to update
@@ -294,8 +294,8 @@ public class MultiOpTests extends ObjectClassRunner {
             }
 
             /* CreateApiOp - create one last object */
-            Set<Attribute> attrs11 = ConnectorHelper.getAttributes(getDataProvider(),
-                    getObjectClassInfo(), getTestName(), recordCount + 1, true);            
+            Set<Attribute> attrs11 = ConnectorHelper.getCreateableAttributes(getDataProvider(),
+                    getObjectClassInfo(), getTestName(), recordCount + 1, true, false);     
             Uid createUid = getConnectorFacade().create(getObjectClass(), attrs11, getOperationOptionsByOp(CreateApiOp.class));
             uids.add(createUid);
             attrs.add(attrs11);
@@ -430,7 +430,8 @@ public class MultiOpTests extends ObjectClassRunner {
 
         Set<Attribute> attrs = null;
 
-        attrs = ConnectorHelper.getAttributes(getDataProvider(), getObjectClassInfo(), getTestName(), 0, true);
+        attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(), getObjectClassInfo(),
+                getTestName(), 0, true, false);
 
         //remove ENABLE if present
         for (Attribute attribute : attrs) {
@@ -451,13 +452,10 @@ public class MultiOpTests extends ObjectClassRunner {
 
             checkEnableAttribute(uid, enabled);
 
-            //remove ENABLE if present           
-            for (Attribute attribute : attrs) {
-                if (attribute.is(OperationalAttributes.ENABLE_NAME)) {
-                    attrs.remove(attribute);
-                    break;
-                }
-            }
+            // get attributes with the same values but only updateable
+            attrs = ConnectorHelper.getUpdateableAttributes(getDataProvider(),
+                    getObjectClassInfo(), getTestName(), "", 0, false, false);
+            
             //add ENABLE
             attrs.add(AttributeBuilder.buildEnabled(!enabled));
 

@@ -95,8 +95,8 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
         
         try {
             // create a user
-            Set<Attribute> attrs = ConnectorHelper.getAttributes(getDataProvider(),
-                    getObjectClassInfo(), getTestName(), 0, true);
+            Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
+                    getObjectClassInfo(), getTestName(), 0, true, false);
 
             uid = getConnectorFacade().create(getObjectClass(), attrs, getOperationOptionsByOp(CreateApiOp.class));
 

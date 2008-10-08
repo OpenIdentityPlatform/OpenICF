@@ -116,8 +116,8 @@ public class SyncApiOpTests extends ObjectClassRunner {
             /* CREATE: */
 
             // create record
-            attrs = ConnectorHelper.getAttributes(getDataProvider(), getObjectClassInfo(),
-                    getTestName(), 0, true);
+            attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
+                    getObjectClassInfo(), getTestName(), 0, true, false);
             uid = getConnectorFacade().create(getSupportedObjectClass(), attrs,
                     getOperationOptionsByOp(CreateApiOp.class));
             assertNotNull("Create returned null uid.", uid);
@@ -143,8 +143,9 @@ public class SyncApiOpTests extends ObjectClassRunner {
             if (ConnectorHelper.operationSupported(getConnectorFacade(), UpdateApiOp.class)
                     && canSyncAfterOp(UpdateApiOp.class)) {
 
-                Set<Attribute> replaceAttributes = ConnectorHelper.getAttributes(getDataProvider(),
-                        getObjectClassInfo(), getTestName(), MODIFIED, 0, false, false);
+                Set<Attribute> replaceAttributes = ConnectorHelper.getUpdateableAttributes(
+                        getDataProvider(), getObjectClassInfo(), getTestName(), MODIFIED, 0, false,
+                        false);
 
                 // update only in case there is something to update
                 if (replaceAttributes.size() > 0) {
@@ -220,8 +221,8 @@ public class SyncApiOpTests extends ObjectClassRunner {
                 SyncToken token = getConnectorFacade().getLatestSyncToken();
 
                 // create record
-                Set<Attribute> attrs = ConnectorHelper.getAttributes(getDataProvider(),
-                        getObjectClassInfo(), getTestName(), 1, true);
+                Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
+                        getObjectClassInfo(), getTestName(), 1, true, false);
                 uid = getConnectorFacade().create(getSupportedObjectClass(), attrs, null);
                 assertNotNull("Create returned null uid.", uid);
 
@@ -257,12 +258,12 @@ public class SyncApiOpTests extends ObjectClassRunner {
             Uid uid2 = null;
             try {
                 // create two new objects
-                Set<Attribute> attrs1 = ConnectorHelper.getAttributes(getDataProvider(),
-                        getObjectClassInfo(), getTestName(), 2, true);
+                Set<Attribute> attrs1 = ConnectorHelper.getCreateableAttributes(getDataProvider(),
+                        getObjectClassInfo(), getTestName(), 2, true, false);
                 uid1 = getConnectorFacade().create(getSupportedObjectClass(), attrs1, null);
                 assertNotNull("Create returned null uid.", uid1);
-                Set<Attribute> attrs2 = ConnectorHelper.getAttributes(getDataProvider(),
-                        getObjectClassInfo(), getTestName(), 3, true);
+                Set<Attribute> attrs2 = ConnectorHelper.getCreateableAttributes(getDataProvider(),
+                        getObjectClassInfo(), getTestName(), 3, true, false);
                 uid2 = getConnectorFacade().create(getSupportedObjectClass(), attrs2, null);
                 assertNotNull("Create returned null uid.", uid2);
 

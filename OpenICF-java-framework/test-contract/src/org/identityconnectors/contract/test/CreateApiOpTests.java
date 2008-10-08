@@ -90,9 +90,8 @@ public class CreateApiOpTests extends ObjectClassRunner {
         Uid uid = null;
         
         try {
-
-            Set<Attribute> attrs = ConnectorHelper.getAttributes(getDataProvider(),
-                    getObjectClassInfo(), getTestName(), 0, true);
+            Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
+                    getObjectClassInfo(), getTestName(), 0, true, false);
             
             // should throw UnsupportedObjectClass if not supported
             uid = getConnectorFacade().create(getObjectClass(), attrs,
@@ -141,9 +140,8 @@ public class CreateApiOpTests extends ObjectClassRunner {
             Uid uid2 = null;
 
             try {
-
-                Set<Attribute> attrs = ConnectorHelper.getAttributes(getDataProvider(),
-                        getObjectClassInfo(), getTestName(), 1, true);
+                Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
+                        getObjectClassInfo(), getTestName(), 1, true, false);
 
                 // ObjectClassInfo is always supported
                 uid1 = getConnectorFacade().create(getSupportedObjectClass(), attrs,
@@ -164,7 +162,7 @@ public class CreateApiOpTests extends ObjectClassRunner {
                 assertFalse("Create returned the same Uid as by previous create.", uid1
                         .equals(uid2));
 
-                // get the object to make sure it exist now
+                // get the object to make sure it exists now
                 ConnectorObject obj2 = getConnectorFacade().getObject(getSupportedObjectClass(),
                         uid2, getOperationOptionsByOp(GetApiOp.class));
                 assertNotNull("Unable to retrieve newly created object", obj2);
