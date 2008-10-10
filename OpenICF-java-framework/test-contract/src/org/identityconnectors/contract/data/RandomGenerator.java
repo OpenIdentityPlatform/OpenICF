@@ -58,6 +58,9 @@ import org.junit.Assert;
  *  <li>? - lowercase and uppercase letter</li>
  *  <li>. - any character</li>
  * </ul> 
+ * <p>Any other character inside the pattern is directly printed to the output.</p>
+ * <p>Backslash is used to escape any character. For instance pattern "###.##" prints a floating
+ * point random number</p> 
  * 
  * <p>org.identityconnectors.contract.data.macro.RandomMacro -- written by Dan Vernon, 
  * the original source of random generating functionality.</p>
@@ -84,8 +87,6 @@ public class RandomGenerator {
 
 			String generatedStr = createRandomString(pattern,
 					getDefaultCharacterSetMap());
-			
-			System.out.println(generatedStr);
 
 			return c.newInstance(generatedStr);
 		} catch (Exception e) {
@@ -187,12 +188,19 @@ public class RandomGenerator {
 		for (int i = 0; i < pattern.length(); i++) {
 			Set<Character> characterSet = characterSetMap.get(new Character(
 					pattern.charAt(i)));
-			Assert
-					.assertNotNull(
-							"Unrecognized character in random template.  Unable to retrieve characterSet",
-							characterSet);
-
-			replacement.append(randomCharacter(rnd, characterSet));
+			if (pattern.charAt(i) == '\\') {
+				// do escape, and print the next character
+				i++;
+				if (i < pattern.length()) {
+					replacement.append(pattern.charAt(i));
+				}
+				continue;
+			}
+			if (characterSet == null) {
+				replacement.append(pattern.charAt(i));
+			} else {
+				replacement.append(randomCharacter(rnd, characterSet));
+			}
 		}
 		return replacement.toString();
 	}

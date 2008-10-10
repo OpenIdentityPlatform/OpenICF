@@ -39,6 +39,13 @@
 // -- END LICENSE
 //
 // @author David Adam
+
+// do not modify imports
+import org.identityconnectors.contract.data.groovy.Lazy
+import org.identityconnectors.contract.data.groovy.Random
+import org.identityconnectors.contract.data.groovy.Get
+
+
 /*
  * this configuration is used just by JUnit GroovyDataProvider
  */
@@ -52,12 +59,20 @@ abc = "abc"
 randomNewAge = Lazy.random("####", Long.class);
 remus = Lazy.random("####", Integer.class);
 
+// map escaping of invalid names
+attributeMap['string'] = 'Good morning!'
+attributeMapSecond['stringSec'] = 'Good morning Mrs. Smith!'
+Delete.account['@@NAME@@'].string = 'blaf'
+account['@@NAME@@'].string = 'blaf blaf'
 
-// !!!
-import org.identityconnectors.contract.data.groovy.Lazy
-import org.identityconnectors.contract.data.groovy.Random
-import org.identityconnectors.contract.data.groovy.Get
+//literals macro replacement testing
+Tfloat= Lazy.random('#####\\.##', Float.class)
 
+//LIST:
+// test list of strings (random)
+multi.Tstring=[Lazy.random("AAAAA##") , Lazy.random("AAAAA##")]
+//recursive version (lists)
+multi.recursive.Tstring=[Lazy.random("AAAAA##") , [Lazy.random("AAAAA##") , Lazy.random("AAAAA##")]]
 
 abar="foo"
 b="bar"

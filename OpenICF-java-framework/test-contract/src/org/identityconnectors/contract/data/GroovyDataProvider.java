@@ -44,28 +44,21 @@ import groovy.util.ConfigObject;
 import groovy.util.ConfigSlurper;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
-import java.util.Properties;
 
 import org.identityconnectors.common.CollectionUtil;
-import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.contract.data.groovy.Get;
 import org.identityconnectors.contract.data.groovy.Lazy;
 import org.identityconnectors.contract.data.groovy.Random;
-import org.identityconnectors.contract.data.macro.Macro;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
-import org.identityconnectors.framework.test.TestHelpers;
 import org.junit.Assert;
 
 /**
@@ -116,7 +109,7 @@ public class GroovyDataProvider implements DataProvider {
 
 	/** contains property name that user asked last time */
 	private String currentQuery = null; // TODO try to eliminate this var. to
-										// make it thread safe
+	// make it thread safe
 
 	private static/*
 					 * TODO delete static, it's just here because of for Unit
@@ -289,7 +282,6 @@ public class GroovyDataProvider implements DataProvider {
 	 */
 	public Object get(String name) throws ObjectNotFoundException {
 		currentQuery = name; // save the original query (will be used later)
-		currentQuery = currentQuery.replace('@', '_');
 		// when caching... see get())
 
 		Object o = recursiveGet(currentQuery);
@@ -426,13 +418,47 @@ public class GroovyDataProvider implements DataProvider {
 				Lazy lazy = (Lazy) o;
 
 				tmpResult = resolveLazy(lazy);
-			}
+			} else if (o instanceof List) {
+				List list = (List) o;
+				tmpResult = resolveList(list);
+				
+//				// for now just single level of resolving
+//				List list = (List) o;
+//				for (ListIterator it = list.listIterator(); it.hasNext();) {
+//					Object object = (Object) it.next();
+//					if (object instanceof Lazy) {
+//						Lazy lazyO = (Lazy) object;
+//						Object resolvedObj = resolveLazy(lazyO);
+//						it.set(resolvedObj);
+//					}
+//					// TODO Future: extract this method and insert recursive
+//					// resolving for nested lists
+//				}// for list
+
+			} // TODO future //else if (o instanceof Map) { }
 
 			cache.put(currentQuery, tmpResult);
 		}
 
 		// return cached property
 		return cache.get(currentQuery);
+	}
+
+	private List resolveList(List list) {
+		List localList = list;
+		for (ListIterator it = localList.listIterator(); it.hasNext();) {
+			Object object = (Object) it.next();
+			if (object instanceof Lazy) {
+				Lazy lazyO = (Lazy) object;
+				Object resolvedObj = resolveLazy(lazyO);
+				it.set(resolvedObj);
+			} else if (object instanceof List) {
+				List arg = (List) object;
+				List resolvedList = resolveList(arg);
+				it.set(resolvedList);
+			}
+		}// for list
+		return localList;
 	}
 
 	private Object resolveLazy(Lazy lazy) {
@@ -455,7 +481,7 @@ public class GroovyDataProvider implements DataProvider {
 				Assert.assertTrue(value instanceof String);
 				Random rnd = (Random) lazy;
 				resolvedValue = rnd.generate();// RandomGenerator.generate((String)
-												// value);
+				// value);
 			}
 		}
 
@@ -485,6 +511,9 @@ public class GroovyDataProvider implements DataProvider {
 
 	/* ************************ interface DataProvider ********************** */
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Object get(String dataTypeName, String name, String componentName,
 			int sequenceNumber) throws ObjectNotFoundException {
 		// put the parameters in the Map ... this will fail if called

@@ -43,6 +43,7 @@ import groovy.util.ConfigObject;
 import groovy.util.ConfigSlurper;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -56,8 +57,11 @@ import org.junit.Test;
 
 /**
  * unit test for GroovyDataProvider
+ * 
  * @author David Adam
- *
+ * 
+ * Note: if getting MissingMethodException, update imports in configfile.groovy
+ * 
  */
 public class GroovyDataProviderTest {
 	private static final String NON_EXISTING_PROPERTY = "abcdefghi123asiosfjds";
@@ -216,17 +220,125 @@ public class GroovyDataProviderTest {
 	public void testNewRandomGenerator() throws Exception {
 		Assert.assertTrue(new File(GroovyDataProvider.CONFIG_FILE_PATH)
 				.exists());
-	
+
 		Object o = getProperty(gdp, "randomNewAge");
 		Object o2 = getProperty(gdp, "remus");
-		
+
+		Assert.assertNotNull(o);
+		Assert.assertNotNull(o2);
+
 		Assert.assertTrue(o instanceof Long);
 		Assert.assertTrue(o2 instanceof Integer);
-		
-		System.out.println("long value: " + o.toString() + "   int value: " + o2.toString());
+
+		System.out.println("long value: " + o.toString() + "   int value: "
+				+ o2.toString());
 	}
 
+	@Test
+	public void testMapAttributesNew() throws Exception {
+		Assert.assertTrue(new File(GroovyDataProvider.CONFIG_FILE_PATH)
+				.exists());
+
+		{
+			Object o = getProperty(gdp, "attributeMap.string");
+			Assert.assertNotNull(o);
+			Assert.assertTrue(o instanceof String);
+			Assert.assertTrue(o.toString() == "Good morning!");
+		}
+
+		// attributeMapSecond['stringSec'] = 'Good morning!'
+		{
+			Object o = getProperty(gdp, "attributeMapSecond.stringSec");
+			Assert.assertNotNull(o);
+			Assert.assertTrue(o instanceof String);
+			Assert.assertTrue(o.toString() == "Good morning Mrs. Smith!");
+		}
+		
+		Assert.assertTrue(new File(GroovyDataProvider.CONFIG_FILE_PATH)
+				.exists());
+
+		{
+			Object o = getProperty(gdp, "Delete.account.@@NAME@@.string");
+			Assert.assertNotNull(o);
+			Assert.assertTrue(o instanceof String);
+			Assert.assertTrue(o.toString() == "blaf");
+		}
+
+		{
+			Object o = getProperty(gdp, "account.@@NAME@@.string");
+			Assert.assertNotNull(o);
+			Assert.assertTrue(o instanceof String);
+			Assert.assertTrue(o.toString() == "blaf blaf");
+		}
+
+	}
+	
+	@Test
+	public void literalsMacroReplacementTest() throws Exception {
+		{
+			Object o = getProperty(gdp, "Tfloat");
+			Assert.assertNotNull(o);
+			System.out.println(o.getClass().getName() + " " + o.toString());
+			Assert.assertTrue(o instanceof Float);
+		}
+	}
+	
+	@Test
+	public void multiStringListTest() throws Exception {
+		{
+			//multi.Tstring=[Lazy.random("AAAAA##") , Lazy.random("AAAAA##")]
+			Object o = getProperty(gdp, "multi.Tstring");
+			Assert.assertNotNull(o);
+			Assert.assertTrue(o instanceof List);
+			if (o instanceof List) {
+				List l = (List) o;
+				printList(l);
+			}
+		}
+	}
+	
+	@Test
+	public void multiStringRecursiveTest() throws Exception {
+		//multi.recursive.Tstring=[Lazy.random("AAAAA##") , [Lazy.random("AAAAA##") , Lazy.random("AAAAA##")]]
+		{
+			Object o = getProperty(gdp, "multi.recursive.Tstring");
+			Assert.assertNotNull(o);
+			Assert.assertTrue(o instanceof List);
+			if (o instanceof List) {
+				List l = (List) o;
+				
+				boolean recursiveListPresent = false;
+				for (Object object : l) {
+					if (object instanceof List) {
+						recursiveListPresent = true;
+					}
+				}
+				Assert.assertTrue(recursiveListPresent);
+				
+				printList(l);
+			}
+		}
+	}
+
+
+
 	/* ************* UTILITY METHODS ***************** */
+	/** 
+	 * recursively print a list
+	 */
+	private void printList(List l) {
+		System.out.print(" [ ");
+		for (Object object : l) {
+			if (object instanceof List) {
+				List newL = (List) object;
+				printList(newL);
+			} else {
+				System.out.print(object.toString() + ", ");
+			}
+		}
+		System.out.print(" ] ");
+	}
+	
 	private void printMap(Object o) {
 		if (o instanceof Map) {
 			Map m = (Map) o;

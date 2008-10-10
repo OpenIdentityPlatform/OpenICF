@@ -74,15 +74,43 @@ String.metaClass.plus = {Get get->
 Tstring = Lazy.random("AAAAA##")
 Tinteger= Lazy.random("##", Integer.class)
 Tlong= Lazy.random("#####", Long.class)
+Tbiginteger=Lazy.random("#####", java.math.BigInteger.class)
+Tfloat=Lazy.random("#####\\.##", Float.class)
+Tdouble=Lazy.random("#####\\.##", Double.class)
+Tbigdecimal=Lazy.random("#####\\.##", java.math.BigDecimal.class)
+Tboolean=false
+//bytearray=${BYTEARRAY, ${RANDOM, .............}} // TODO
 
-//Don't want to generate random values for *.Ttestsuite.T*
-//(not all types are used in tests setup but the list is easier to maintain)
-testsuite.Tstring=new ObjectNotFoundException()
-testsuite.Tinteger=new ObjectNotFoundException()
-testsuite.Tlong=new ObjectNotFoundException()
-testsuite.Tbiginteger=new ObjectNotFoundException()
-testsuite.Tfloat=new ObjectNotFoundException()
-testsuite.Tdouble=new ObjectNotFoundException()
-testsuite.Tbigdecimal=new ObjectNotFoundException()
-testsuite.Tboolean=new ObjectNotFoundException()
-testsuite.Tbytearray=new ObjectNotFoundException()
+
+
+// Default data for multivalue attributes of common types
+multi.Tstring=[Lazy.random("AAAAA##") , Lazy.random("AAAAA##")]
+multi.Tinteger=[Lazy.random("##", Integer.class), Lazy.random("##", Integer.class)]
+multi.Tlong=[Lazy.random("#####", Long.class), Lazy.random("#####", Long.class)]
+multi.biginteger=${LIST, ${BIGINTEGER, ${RANDOM, #####}}, ${BIGINTEGER, ${RANDOM, #####}}}
+//
+//
+//
+////Don't want to generate random values for *.Ttestsuite.T*
+////(not all types are used in tests setup but the list is easier to maintain)
+//testsuite.Tstring=new ObjectNotFoundException()
+//testsuite.Tinteger=new ObjectNotFoundException()
+//testsuite.Tlong=new ObjectNotFoundException()
+//testsuite.Tbiginteger=new ObjectNotFoundException()
+//testsuite.Tfloat=new ObjectNotFoundException()
+//testsuite.Tdouble=new ObjectNotFoundException()
+//testsuite.Tbigdecimal=new ObjectNotFoundException()
+//testsuite.Tboolean=new ObjectNotFoundException()
+//testsuite.Tbytearray=new ObjectNotFoundException()
+//
+////Don't want to generate random values for *.connector.*
+////(not all types are allowed in connector configuration but the list is easier to maintain)
+//connector.string=new ObjectNotFoundException()
+//connector.integer=new ObjectNotFoundException()
+//connector.long=new ObjectNotFoundException()
+//connector.biginteger=new ObjectNotFoundException()
+//connector.float=new ObjectNotFoundException()
+//connector.double=new ObjectNotFoundException()
+//connector.bigdecimal=new ObjectNotFoundException()
+//connector.boolean=new ObjectNotFoundException()
+//connector.bytearray=new ObjectNotFoundException()
