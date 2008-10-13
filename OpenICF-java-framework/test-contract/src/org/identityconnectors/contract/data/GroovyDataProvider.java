@@ -192,6 +192,7 @@ public class GroovyDataProvider implements DataProvider {
 		 */
 		if (new File(LOCALCONFIG_NAME).exists()) {
 			co = parsePropertyFile(LOCALCONFIG_NAME);
+			System.out.println(new File(LOCALCONFIG_NAME).getAbsolutePath());
 		}// #1
 
 		String prjName = System.getProperty("project.name");
@@ -272,19 +273,49 @@ public class GroovyDataProvider implements DataProvider {
 		return result;
 	}
 
+//	/**
+//	 * TODO javadoc
+//	 * 
+//	 * @param name
+//	 *            property name
+//	 * @return the value for given property
+//	 * @throws Exception
+//	 * @Deprecated
+//	 */
+//	public Object get(String name) throws ObjectNotFoundException {
+//		return get(name, String.class, true);
+//	}
+
 	/**
-	 * TODO javadoc
 	 * 
-	 * @param name
-	 *            property name
-	 * @return the value for given property
-	 * @throws Exception
+	 * 
+	 * 
+	 * 
+	 * 
+	 * GET -- main entrance to the resolution chain
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
 	 */
-	public Object get(String name) throws ObjectNotFoundException {
+	public Object get(String name, String type, boolean useDefault) throws ObjectNotFoundException {
 		currentQuery = name; // save the original query (will be used later)
 		// when caching... see get())
+		Object o = null;
+		
+		try {
+			o = recursiveGet(currentQuery);
+		} catch (ObjectNotFoundException onfe) {
+			// What to do in case of missing property value:
+			if (useDefault) {
+				// generate a default value
+				recursiveGet(type);
+			} else {
+				throw onfe;
+			}
+		}
 
-		Object o = recursiveGet(currentQuery);
 		// resolve o.n.f.e.
 		if (o instanceof ObjectNotFoundException) {
 			throw (ObjectNotFoundException) o;
@@ -298,7 +329,7 @@ public class GroovyDataProvider implements DataProvider {
 	 * @param name
 	 * @return
 	 */
-	private Object recursiveGet(String name) {
+	private Object recursiveGet(String name) throws ObjectNotFoundException {
 		Object response = null;
 
 		try {
@@ -421,21 +452,7 @@ public class GroovyDataProvider implements DataProvider {
 			} else if (o instanceof List) {
 				List list = (List) o;
 				tmpResult = resolveList(list);
-				
-//				// for now just single level of resolving
-//				List list = (List) o;
-//				for (ListIterator it = list.listIterator(); it.hasNext();) {
-//					Object object = (Object) it.next();
-//					if (object instanceof Lazy) {
-//						Lazy lazyO = (Lazy) object;
-//						Object resolvedObj = resolveLazy(lazyO);
-//						it.set(resolvedObj);
-//					}
-//					// TODO Future: extract this method and insert recursive
-//					// resolving for nested lists
-//				}// for list
-
-			} // TODO future //else if (o instanceof Map) { }
+			}
 
 			cache.put(currentQuery, tmpResult);
 		}
@@ -444,6 +461,13 @@ public class GroovyDataProvider implements DataProvider {
 		return cache.get(currentQuery);
 	}
 
+	/**
+	 * Method that resolves all Lazy values within the given list. Resolving
+	 * works recursively for nested lists also.
+	 * 
+	 * @param list
+	 * @return the list with resolved values
+	 */
 	private List resolveList(List list) {
 		List localList = list;
 		for (ListIterator it = localList.listIterator(); it.hasNext();) {
@@ -453,6 +477,7 @@ public class GroovyDataProvider implements DataProvider {
 				Object resolvedObj = resolveLazy(lazyO);
 				it.set(resolvedObj);
 			} else if (object instanceof List) {
+				// recursively resolve attributes in nested lists
 				List arg = (List) object;
 				List resolvedList = resolveList(arg);
 				it.set(resolvedList);
@@ -523,6 +548,7 @@ public class GroovyDataProvider implements DataProvider {
 
 		StringBuffer sbPath = new StringBuffer();
 		if (sequenceNumber != -1) {
+			sbPath.append("i");// sequence marker e.g.: i1, i2, i3 ...
 			sbPath.append(sequenceNumber);
 			sbPath.append(".");
 		}
@@ -537,7 +563,7 @@ public class GroovyDataProvider implements DataProvider {
 		try {
 
 			// call get to resolve the property value
-			Object obj = get(sbPath.toString());
+			Object obj = get(sbPath.toString(), shortTypeName, true);
 
 			LOG.info("Fully resolved ''{0}'' to value ''{1}''", sbPath
 					.toString(), obj);
@@ -586,7 +612,7 @@ public class GroovyDataProvider implements DataProvider {
 	public Object getTestSuiteAttribute(String typeName, String propName)
 			throws ObjectNotFoundException {
 
-		return get(propName + "." + "testsuite." + getShortTypeName(typeName));
+		return get("testsuite." + propName, null, false);
 	}
 
 	/**
@@ -595,7 +621,7 @@ public class GroovyDataProvider implements DataProvider {
 	public Object getConnectorAttribute(String typeName, String propName)
 			throws ObjectNotFoundException {
 
-		return get(propName + "." + "connector." + getShortTypeName(typeName));
+		return get("connector." + propName, null, false);
 	}
 
 	/* ************** AUXILIARY METHODS *********************** */

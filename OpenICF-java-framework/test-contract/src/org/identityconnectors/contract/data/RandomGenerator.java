@@ -40,33 +40,44 @@
 package org.identityconnectors.contract.data;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
-import org.junit.Assert;
+
+
 
 /**
- * <p>Random generator uses a pattern to generate a random sequence based on given pattern.</p>
- * <p>the supported
- * characters are (can appear in pattern string):</p>
- * <ul><li># - numeric</li>
- *  <li>a - lowercase letter</li>
- *  <li>A - uppercase letter</li>
- *  <li>? - lowercase and uppercase letter</li>
- *  <li>. - any character</li>
- * </ul> 
- * <p>Any other character inside the pattern is directly printed to the output.</p>
- * <p>Backslash is used to escape any character. For instance pattern "###.##" prints a floating
- * point random number</p> 
+ * <p>
+ * Random generator uses a pattern to generate a random sequence based on given
+ * pattern.
+ * </p>
+ * <p>
+ * the supported characters are (can appear in pattern string):
+ * </p>
+ * <ul>
+ * <li># - numeric</li>
+ * <li>a - lowercase letter</li>
+ * <li>A - uppercase letter</li>
+ * <li>? - lowercase and uppercase letter</li>
+ * <li>. - any character</li>
+ * </ul>
+ * <p>
+ * Any other character inside the pattern is directly printed to the output.
+ * </p>
+ * <p>
+ * Backslash is used to escape any character. For instance pattern "###.##"
+ * prints a floating point random number
+ * </p>
  * 
- * <p>org.identityconnectors.contract.data.macro.RandomMacro -- written by Dan Vernon, 
- * the original source of random generating functionality.</p>
+ * <p>
+ * org.identityconnectors.contract.data.macro.RandomMacro -- written by Dan
+ * Vernon, the original source of random generating functionality.
+ * </p>
  * 
  * @author David Adam, Zdenek Louzensky
- *
+ * 
  */
 public class RandomGenerator {
 
@@ -83,11 +94,19 @@ public class RandomGenerator {
 	public static Object generate(String pattern, Class clazz) {
 		Constructor c;
 		try {
-			c = clazz.getConstructor(String.class);
-
 			String generatedStr = createRandomString(pattern,
 					getDefaultCharacterSetMap());
 
+			// resolve Character and ByteArray types:
+			if (clazz.isInstance(new byte[0])) {
+				return generatedStr.getBytes();
+			}
+			if (clazz.isInstance(new Character('a'))) {
+				char[] arr = generatedStr.toCharArray();
+				return arr[0];
+			}
+
+			c = clazz.getConstructor(String.class);
 			return c.newInstance(generatedStr);
 		} catch (Exception e) {
 			e.printStackTrace(); // TODO

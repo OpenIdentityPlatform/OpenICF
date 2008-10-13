@@ -46,6 +46,7 @@ import org.identityconnectors.contract.data.groovy.Random
 import org.identityconnectors.contract.data.groovy.Get
 
 
+
 /*
  * this configuration is used just by JUnit GroovyDataProvider
  */
@@ -68,14 +69,21 @@ account['@@NAME@@'].string = 'blaf blaf'
 //literals macro replacement testing
 Tfloat= Lazy.random('#####\\.##', Float.class)
 
+//Test ByteArray 
+byteArray.test = Lazy.random('AAAAA', byte[].class)
+
+//Test Character
+charTest = Lazy.random('AAA', Character.class)
+
 //LIST:
 // test list of strings (random)
 multi.Tstring=[Lazy.random("AAAAA##") , Lazy.random("AAAAA##")]
 //recursive version (lists)
-multi.recursive.Tstring=[Lazy.random("AAAAA##") , [Lazy.random("AAAAA##") , Lazy.random("AAAAA##")]]
+multi.recursive.Tstring=[Lazy.random("AAAAA##") , [Lazy.random("AAA##") , [Lazy.random("AAA##") , Lazy.random('AAAAA\\_##')]]]
 
 abar="foo"
 b="bar"
 random="aaa" + Lazy.random("####") + "." + Lazy.random("####") + Lazy.get("a"+Lazy.get("b")) 
 randomPure="aaa" + Lazy.random("####") + "." + Lazy.random("####")
 foo.bla.horror.random="aaa" + Lazy.random("####") + "." + Lazy.random("####") + Lazy.get("a"+Lazy.get("b"))
+

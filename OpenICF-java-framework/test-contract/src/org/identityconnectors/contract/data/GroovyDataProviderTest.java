@@ -84,7 +84,7 @@ public class GroovyDataProviderTest {
 		Assert
 				.assertEquals(
 						"If you think you can do a thing or think you can't do a thing, you're right",
-						gdp.get("aSimpleString"));
+						gdp.get("aSimpleString", "string", true));
 	}
 
 	@Test(expected = ObjectNotFoundException.class)
@@ -253,7 +253,7 @@ public class GroovyDataProviderTest {
 			Assert.assertTrue(o instanceof String);
 			Assert.assertTrue(o.toString() == "Good morning Mrs. Smith!");
 		}
-		
+
 		Assert.assertTrue(new File(GroovyDataProvider.CONFIG_FILE_PATH)
 				.exists());
 
@@ -272,7 +272,7 @@ public class GroovyDataProviderTest {
 		}
 
 	}
-	
+
 	@Test
 	public void literalsMacroReplacementTest() throws Exception {
 		{
@@ -282,48 +282,84 @@ public class GroovyDataProviderTest {
 			Assert.assertTrue(o instanceof Float);
 		}
 	}
-	
+
 	@Test
 	public void multiStringListTest() throws Exception {
-		{
-			//multi.Tstring=[Lazy.random("AAAAA##") , Lazy.random("AAAAA##")]
-			Object o = getProperty(gdp, "multi.Tstring");
-			Assert.assertNotNull(o);
-			Assert.assertTrue(o instanceof List);
-			if (o instanceof List) {
-				List l = (List) o;
-				printList(l);
-			}
+
+		// multi.Tstring=[Lazy.random("AAAAA##") , Lazy.random("AAAAA##")]
+		Object o = getProperty(gdp, "multi.Tstring");
+		Assert.assertNotNull(o);
+		Assert.assertTrue(o instanceof List);
+		if (o instanceof List) {
+			List l = (List) o;
+			printList(l);
+			System.out.println();
 		}
 	}
-	
+
 	@Test
 	public void multiStringRecursiveTest() throws Exception {
-		//multi.recursive.Tstring=[Lazy.random("AAAAA##") , [Lazy.random("AAAAA##") , Lazy.random("AAAAA##")]]
-		{
-			Object o = getProperty(gdp, "multi.recursive.Tstring");
-			Assert.assertNotNull(o);
-			Assert.assertTrue(o instanceof List);
-			if (o instanceof List) {
-				List l = (List) o;
-				
-				boolean recursiveListPresent = false;
-				for (Object object : l) {
-					if (object instanceof List) {
-						recursiveListPresent = true;
+		// multi.recursive.Tstring=[Lazy.random("AAAAA##") ,
+		// [Lazy.random("AAAAA##") , Lazy.random("AAAAA##")]]
+
+		Object o = getProperty(gdp, "multi.recursive.Tstring", false);
+		Assert.assertNotNull(o);
+		Assert.assertTrue(o instanceof List);
+		if (o instanceof List) {
+			List l = (List) o;
+
+			boolean recursiveListPresent = false;
+			boolean recursiveListPresent2 = false;
+			for (Object object : l) {
+				if (object instanceof List) {
+					recursiveListPresent = true;
+					
+					List lRec = (List) object;
+					for (Object object2 : lRec) {
+						if (object2 instanceof List) {
+							recursiveListPresent2 = true;
+						}
 					}
 				}
-				Assert.assertTrue(recursiveListPresent);
-				
-				printList(l);
 			}
+			Assert.assertTrue(recursiveListPresent);
+			Assert.assertTrue(recursiveListPresent2);
+
+			printList(l);
+			System.out.println("\n");
 		}
 	}
 
+	@Test
+	public void testByteArray() throws Exception {
+		Object o = getProperty(gdp, "byteArray.test");
+		Assert.assertNotNull(o);
+		Assert.assertTrue(o instanceof byte[]);
+		if (o instanceof byte[]) {
+			byte[] barr = (byte[]) o;
+			System.out.println("Byte Array values:");
+			for (byte b : barr) {
+				System.out.print(Byte.toString(b) + ", ");
+			}
+			System.out.println();
+		}
+	}
 
+	@Test
+	public void characterTest() throws Exception {
+		Object o = getProperty(gdp, "charTest");
+		Assert.assertNotNull(o);
+		Assert.assertTrue(o instanceof Character);
+	}
+	
+	@Test (expected=ObjectNotFoundException.class)
+	public void testNonExistingDefault() throws Exception {
+		//should not return default vale
+		Object o = getProperty(gdp, "connector.login");
+	}
 
 	/* ************* UTILITY METHODS ***************** */
-	/** 
+	/**
 	 * recursively print a list
 	 */
 	private void printList(List l) {
@@ -338,7 +374,7 @@ public class GroovyDataProviderTest {
 		}
 		System.out.print(" ] ");
 	}
-	
+
 	private void printMap(Object o) {
 		if (o instanceof Map) {
 			Map m = (Map) o;
@@ -361,17 +397,25 @@ public class GroovyDataProviderTest {
 	 */
 	private Object getProperty(GroovyDataProvider gdp2, String propertyName)
 			throws Exception {
+
+		return getProperty(gdp2, propertyName, true);
+	}
+
+	private Object getProperty(GroovyDataProvider gdp2, String propertyName,
+			boolean printOut) throws Exception {
 		// doing the acquire of property!
-		Object o = gdp2.get(propertyName);
+		Object o = gdp2.get(propertyName, "string", true);
 
 		// just informational output
 		if (o instanceof Map) {
 			Map m = (Map) o;
 			String s = (m.size() > 0) ? "is present" : "is missing";
-			System.out.println("property " + propertyName + " " + s);
+			if (printOut) {
+				System.out.println("property " + propertyName + " " + s);
+			}
 		} else {
-			if (o instanceof String) {
-				String s = (String) o;
+			String s = o.toString();
+			if (printOut) {
 				System.out.println("property " + propertyName + " : "
 						+ ((s.length() > 0) ? s : "EMPTY STRING"));
 			}
