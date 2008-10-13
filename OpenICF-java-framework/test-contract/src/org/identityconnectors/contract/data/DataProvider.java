@@ -119,4 +119,15 @@ public interface DataProvider {
     public Object getTestSuiteAttribute(String typeName, 
             String propName) throws ObjectNotFoundException;
     
+    /**
+     * Gets test suite attribute
+     * 
+     * @param typeName
+     * @param propName
+     * @return
+     * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
+     */
+    public Object getTestSuiteAttribute(String typeName, 
+            String propName, String testName) throws ObjectNotFoundException;
+    
 }

@@ -66,10 +66,10 @@ public class ScriptOnConnectorApiOpTests extends AbstractSimpleTest {
     private static final Log LOG = Log.getLog(ScriptOnConnectorApiOpTests.class);
 
     private static final String TEST_NAME="ScriptOnConnector";
-    private static final String LANGUAGE_PROP_PREFIX = "language." + TEST_NAME;
-    private static final String SCRIPT_PROP_PREFIX = "script." + TEST_NAME;
-    private static final String ARGUMENTS_PROP_PREFIX = "arguments." + TEST_NAME;
-    private static final String RESULT_PROP_PREFIX = "result." + TEST_NAME;
+    private static final String LANGUAGE_PROP_PREFIX = "language";
+    private static final String SCRIPT_PROP_PREFIX = "script";
+    private static final String ARGUMENTS_PROP_PREFIX = "arguments";
+    private static final String RESULT_PROP_PREFIX = "result";
     
     /**
      * Returns 
@@ -89,13 +89,13 @@ public class ScriptOnConnectorApiOpTests extends AbstractSimpleTest {
                 // get test properties - optional
                 // if a property is not found test is skipped
                 String language = (String) getDataProvider().getTestSuiteAttribute(
-                        String.class.getName(), LANGUAGE_PROP_PREFIX);
+                        String.class.getName(), LANGUAGE_PROP_PREFIX, TEST_NAME);
                 String script = (String) getDataProvider().getTestSuiteAttribute(
-                        String.class.getName(), SCRIPT_PROP_PREFIX);
+                        String.class.getName(), SCRIPT_PROP_PREFIX, TEST_NAME);
                 Map<String, Object> arguments = (Map<String, Object>) getDataProvider()
-                        .getTestSuiteAttribute(Map.class.getName(), ARGUMENTS_PROP_PREFIX);
+                        .getTestSuiteAttribute(Map.class.getName(), ARGUMENTS_PROP_PREFIX, TEST_NAME);
                 Object expResult = getDataProvider().getTestSuiteAttribute(Object.class.getName(),
-                        RESULT_PROP_PREFIX);
+                        RESULT_PROP_PREFIX, TEST_NAME);
 
                 // run the script
                 Object result = getConnectorFacade().runScriptOnConnector(

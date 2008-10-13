@@ -308,6 +308,14 @@ public class DefaultDataProvider implements DataProvider {
 
         return get(propName + "." + "testsuite." + getShortTypeName(typeName));
     }
+        
+    /**
+     * {@inheritDoc}
+     */
+    public Object getTestSuiteAttribute(String typeName, String propName, String testName)
+            throws ObjectNotFoundException {
+        return get(propName + "." + testName + "." + "testsuite." + getShortTypeName(typeName));
+    }
 
     /**
      * Gets the value by the name from the _data map. The functionality is as

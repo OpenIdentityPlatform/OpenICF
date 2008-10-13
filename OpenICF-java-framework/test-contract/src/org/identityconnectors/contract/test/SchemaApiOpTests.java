@@ -74,9 +74,9 @@ public class SchemaApiOpTests extends AbstractSimpleTest {
      * Properties prefixes:
      * it's added .testsuite.${type.name} after the prefix
      */
-    private static final String SUPPORTED_OBJECT_CLASSES_PROPERTY_PREFIX = "oclasses." + TEST_NAME;
-    private static final String SUPPORTED_OPERATIONS_PROPERTY_PREFIX = "operations." + TEST_NAME;
-    private static final String STRICT_CHECK_PROPERTY_PREFIX = "strictCheck." + TEST_NAME;
+    private static final String SUPPORTED_OBJECT_CLASSES_PROPERTY_PREFIX = "oclasses";
+    private static final String SUPPORTED_OPERATIONS_PROPERTY_PREFIX = "operations";
+    private static final String STRICT_CHECK_PROPERTY_PREFIX = "strictCheck";
 
     /*
      * AttributeInfo field names used in property configuration:
@@ -262,7 +262,7 @@ public class SchemaApiOpTests extends AbstractSimpleTest {
     private Boolean getStrictCheckProperty() {
         Boolean strict = true;
         try {
-            strict = (Boolean)getDataProvider().getTestSuiteAttribute(Boolean.class.getName(), STRICT_CHECK_PROPERTY_PREFIX);
+            strict = (Boolean)getDataProvider().getTestSuiteAttribute(Boolean.class.getName(), STRICT_CHECK_PROPERTY_PREFIX, TEST_NAME);
         }
         catch (ObjectNotFoundException ex) {
             // ok - property not defined
@@ -278,7 +278,7 @@ public class SchemaApiOpTests extends AbstractSimpleTest {
         Object propValue = null;
 
         try {
-            propValue = getDataProvider().getTestSuiteAttribute(typeName, propName);
+            propValue = getDataProvider().getTestSuiteAttribute(typeName, propName, TEST_NAME);
         } catch (ObjectNotFoundException ex) {
             if (failOnError) fail("Property definition not found: " + ex.getMessage());
         }

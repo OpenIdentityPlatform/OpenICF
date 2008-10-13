@@ -82,9 +82,9 @@ public class SyncApiOpTests extends ObjectClassRunner {
      * (Some connectors are capable to sync only ie. CREATEs)
      */
     private static final String DISABLE = "disable";
-    private static final String CREATE_PREFIX = "create." + TEST_NAME;
-    private static final String UPDATE_PREFIX = "update." + TEST_NAME;
-    private static final String DELETE_PREFIX = "delete." + TEST_NAME;
+    private static final String CREATE_PREFIX = "create";
+    private static final String UPDATE_PREFIX = "update";
+    private static final String DELETE_PREFIX = "delete";
 
     public SyncApiOpTests(ObjectClass oclass) {
         super(oclass);
@@ -312,13 +312,13 @@ public class SyncApiOpTests extends ObjectClassRunner {
         try {
             if (operation.equals(CreateApiOp.class)) {
                 canSync = !(Boolean) getDataProvider().getTestSuiteAttribute(
-                        Boolean.class.getName(), DISABLE + "." + CREATE_PREFIX);
+                        Boolean.class.getName(), DISABLE + "." + CREATE_PREFIX, TEST_NAME);
             } else if (operation.equals(UpdateApiOp.class)) {
                 canSync = !(Boolean) getDataProvider().getTestSuiteAttribute(
-                        Boolean.class.getName(), DISABLE + "." + UPDATE_PREFIX);
+                        Boolean.class.getName(), DISABLE + "." + UPDATE_PREFIX, TEST_NAME);
             } else if (operation.equals(DeleteApiOp.class)) {
                 canSync = !(Boolean) getDataProvider().getTestSuiteAttribute(
-                        Boolean.class.getName(), DISABLE + "." + DELETE_PREFIX);
+                        Boolean.class.getName(), DISABLE + "." + DELETE_PREFIX, TEST_NAME);
             }
         } catch (ObjectNotFoundException ex) {
             // exceptions is throw in case property definition is not found

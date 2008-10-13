@@ -69,10 +69,10 @@ public class ScriptOnResourceApiOpTests extends AbstractSimpleTest {
     private static final Log LOG = Log.getLog(ScriptOnResourceApiOpTests.class);
     
     private static final String TEST_NAME="ScriptOnResource";
-    private static final String LANGUAGE_PROP_PREFIX = "language." + TEST_NAME;
-    private static final String SCRIPT_PROP_PREFIX = "script." + TEST_NAME;
-    private static final String ARGUMENTS_PROP_PREFIX = "arguments." + TEST_NAME;
-    private static final String RESULT_PROP_PREFIX = "result." + TEST_NAME;
+    private static final String LANGUAGE_PROP_PREFIX = "language";
+    private static final String SCRIPT_PROP_PREFIX = "script";
+    private static final String ARGUMENTS_PROP_PREFIX = "arguments";
+    private static final String RESULT_PROP_PREFIX = "result";
 
     /**
      * Returns 
@@ -93,13 +93,13 @@ public class ScriptOnResourceApiOpTests extends AbstractSimpleTest {
                 // get test properties - optional
                 // if a property is not found test is skipped
                 String language = (String) getDataProvider().getTestSuiteAttribute(
-                        String.class.getName(), LANGUAGE_PROP_PREFIX);
+                        String.class.getName(), LANGUAGE_PROP_PREFIX, TEST_NAME);
                 String script = (String) getDataProvider().getTestSuiteAttribute(
-                        String.class.getName(), SCRIPT_PROP_PREFIX);
+                        String.class.getName(), SCRIPT_PROP_PREFIX, TEST_NAME);
                 Map<String, Object> arguments = (Map<String, Object>) getDataProvider()
-                        .getTestSuiteAttribute(Map.class.getName(), ARGUMENTS_PROP_PREFIX);
+                        .getTestSuiteAttribute(Map.class.getName(), ARGUMENTS_PROP_PREFIX, TEST_NAME);
                 Object expResult = getDataProvider().getTestSuiteAttribute(Object.class.getName(),
-                        RESULT_PROP_PREFIX);
+                        RESULT_PROP_PREFIX, TEST_NAME);
 
                 // run the script
                 Object result = getConnectorFacade().runScriptOnResource(
@@ -160,15 +160,14 @@ public class ScriptOnResourceApiOpTests extends AbstractSimpleTest {
             OperationOptionsBuilder builder = new OperationOptionsBuilder();
             
             // OperationOptions RUN_AS_USER
-            final String user = getStringProperty(OperationOptions.OP_RUN_AS_USER + "." + TEST_NAME);
+            final String user = getStringProperty(OperationOptions.OP_RUN_AS_USER);
             if (user != null) {
                 LOG.info("Using OperationOptions: ''{0}'' value: ''{1}''.", OperationOptions.OP_RUN_AS_USER, user);
                 builder.setRunAsUser(user);
             }
 
             // OperationOptions RUN_WITH_PASSWORD
-            final String password = getStringProperty(OperationOptions.OP_RUN_WITH_PASSWORD + "."
-                    + TEST_NAME);
+            final String password = getStringProperty(OperationOptions.OP_RUN_WITH_PASSWORD);
             if (password != null) {
                 LOG.info("Using OperationOptions: ''{0}'' value: ''{1}''.", OperationOptions.OP_RUN_WITH_PASSWORD, password);
                 builder.setRunWithPassword(new GuardedString(password.toCharArray()));
@@ -188,7 +187,7 @@ public class ScriptOnResourceApiOpTests extends AbstractSimpleTest {
     private String getStringProperty(String name) {
         String value = null;
         try {
-            value = (String) getDataProvider().getTestSuiteAttribute(String.class.getName(), name);
+            value = (String) getDataProvider().getTestSuiteAttribute(String.class.getName(), name, TEST_NAME);
             LOG.info("Property ''{0}'' value ''{1}''.", name, value);
         } catch (ObjectNotFoundException ex) {
             // ok

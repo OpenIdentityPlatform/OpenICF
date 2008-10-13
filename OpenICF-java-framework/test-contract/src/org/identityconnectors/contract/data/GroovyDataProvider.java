@@ -614,8 +614,17 @@ public class GroovyDataProvider implements DataProvider {
 
 		return get("testsuite." + propName, null, false);
 	}
-
+	
+	
 	/**
+         * {@inheritDoc}
+         */
+	public Object getTestSuiteAttribute(String typeName, String propName, String testName)
+            throws ObjectNotFoundException {
+                return get("testsuite." + testName + "." + propName, null, false);
+        }
+
+    /**
 	 * {@inheritDoc}
 	 */
 	public Object getConnectorAttribute(String typeName, String propName)
