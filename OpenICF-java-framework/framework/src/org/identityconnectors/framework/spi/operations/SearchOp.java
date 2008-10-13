@@ -54,17 +54,19 @@ import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 public interface SearchOp<T> extends SPIOperation {
     
     /**
-     * Creates a filter translator that will translate
-     * a specified filter to the native filter. The
-     * translated filters will be subsequently passed to
+     * Creates a filter translator that will translate a specified filter to the
+     * native filter. The translated filters will be subsequently passed to
      * {@link #search(ObjectClass, Object, ResultsHandler)}
-     * @param oclass The object class for the search. Will never be null.
+     * 
+     * @param oclass
+     *            The object class for the search. Will never be null.
      * @param options
      *            additional options that impact the way this operation is run.
-     *            If the caller passes null, the framework will convert this into
-     *            an empty set of options, so SPI need not worry
-     *            about this ever being null.
-     * @return A filter translator.
+     *            If the caller passes null, the framework will convert this
+     *            into an empty set of options, so SPI need not worry about this
+     *            ever being null.
+     * @return A filter translator this must not be <code>null</code>. Or the
+     *         API will throw a {@link NullPointerException}.
      */
     public FilterTranslator<T> createFilterTranslator(ObjectClass oclass, OperationOptions options);
     /**
