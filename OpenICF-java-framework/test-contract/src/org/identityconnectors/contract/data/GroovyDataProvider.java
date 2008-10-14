@@ -310,7 +310,7 @@ public class GroovyDataProvider implements DataProvider {
 			// What to do in case of missing property value:
 			if (useDefault) {
 				// generate a default value
-				recursiveGet(type);
+				o = recursiveGet(type);
 			} else {
 				throw onfe;
 			}
@@ -556,8 +556,6 @@ public class GroovyDataProvider implements DataProvider {
 		sbPath.append(componentName);
 		sbPath.append(".");
 		sbPath.append(name);
-		sbPath.append(".");
-		sbPath.append(shortTypeName);
 		LOG.info("getting data for ''{0}''", sbPath);
 
 		try {
