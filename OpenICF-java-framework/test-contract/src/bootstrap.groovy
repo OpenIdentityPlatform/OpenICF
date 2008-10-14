@@ -73,6 +73,7 @@ String.metaClass.plus = {Get get->
  */
 Tstring = Lazy.random("AAAAA##")
 Tinteger= Lazy.random("##", Integer.class)
+Tint= Lazy.random("##", Integer.class)
 Tlong= Lazy.random("#####", Long.class)
 Tbiginteger=Lazy.random("#####", java.math.BigInteger.class)
 Tfloat=Lazy.random("#####\\.##", Float.class)

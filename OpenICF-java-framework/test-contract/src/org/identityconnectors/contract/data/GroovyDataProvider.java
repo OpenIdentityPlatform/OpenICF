@@ -88,12 +88,9 @@ import org.junit.Assert;
  * random value.
  * </p>
  * 
- * <p>
- * Type names are now prefixed with T, so use Tstring instead of string (as in
- * DefaultDataProvider)
- * </p>
  * 
- * @author David Adam, Zdenek Louzensky
+ * @author David Adam
+ * @author Zdenek Louzensky
  */
 public class GroovyDataProvider implements DataProvider {
 
@@ -556,7 +553,7 @@ public class GroovyDataProvider implements DataProvider {
 		sbPath.append(componentName);
 		sbPath.append(".");
 		sbPath.append(name);
-		LOG.info("getting data for ''{0}''", sbPath);
+		LOG.info("getting data for ''{0}'', type: ''{1}''", sbPath, dataTypeName);
 
 		try {
 
@@ -576,9 +573,9 @@ public class GroovyDataProvider implements DataProvider {
 		// found nothing, so return nothing
 		throw new ObjectNotFoundException("Can't find object for key:  " + name);
 
-	}
+	}	
 
-	/**
+        /**
 	 * {@inheritDoc}
 	 */
 	public Object get(String dataTypeName, String name, String componentName)
