@@ -41,6 +41,7 @@ package org.identityconnectors.databasetable;
 
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -129,20 +130,20 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * should have rights to insert/update/delete the rows in the configured identity holder table.
      * Required configuration property, and should be validated      
      */
-    private String password;
+    private GuardedString password;
 
     /**
      * @return
      */
     @ConfigurationProperty ( order=4, helpMessageKey="PWD_HELP", displayMessageKey="PWD_DISPLAY", confidential=true )
-    public String getPassword() {
+    public GuardedString getPassword() {
         return this.password;
     }
 
     /**
      * @param value
      */
-    public void setPassword(String value) {
+    public void setPassword(GuardedString value) {
         this.password = value;
     }
 

@@ -1063,7 +1063,7 @@ public class DatabaseConnectorTests {
         DatabaseTableConfiguration config = new DatabaseTableConfiguration();
         config.setDriver(DRIVER);
         config.setLogin("");
-        config.setPassword("");
+        config.setPassword(new GuardedString("".toCharArray()));
         config.setDBTable(DB_TABLE);
         config.setKeyColumn(TestAccount.ACCOUNTID);
         config.setPasswordColumn(TestAccount.PASSWORD);

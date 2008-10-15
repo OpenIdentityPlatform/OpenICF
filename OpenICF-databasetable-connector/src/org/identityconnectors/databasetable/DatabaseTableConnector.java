@@ -139,7 +139,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
     /**
      * Same of the data types must be converted
      */
-    private Map<String,String> columnClassNames;
+    private Map<String,Class<?>> columnClassNames;
 
 
     // =======================================================================
@@ -242,8 +242,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             // quoted column name
             final String columnName = config.getColumnName(attr.getName());
             final Object value = AttributeUtil.getSingleValue(attr);
-            final String clazzName = getColumnType(columnName);
-            final Object parameter = SQLUtil.convertToJDBC(value, clazzName);
+            final Class<?> clazz = getColumnType(columnName);
+            final Object parameter = SQLUtil.convertToJDBC(value, clazz);
             bld.addBind(config.quoteName(columnName), parameter);
         }
         
@@ -257,7 +257,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             // execute the SQL statement
             pstmt.execute();
         } catch (SQLException e) {
-        	log.error(e, "Create user {0} error", name.getNameValue());
+            log.error(e, "Create user {0} error", name.getNameValue());
             SQLUtil.rollbackQuietly(conn);
             throw ConnectorException.wrap(e);
         } finally {
@@ -355,9 +355,10 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             if (!attribute.is(Uid.NAME)) {
                 final String columnName = config.getColumnName(attribute.getName());
                 final Object value = AttributeUtil.getSingleValue(attribute);
-                final Object parameter = SQLUtil.convertToJDBC(value, getColumnType(columnName));
+                final Class<?> clazz = getColumnType(columnName);
+                final Object parameter = SQLUtil.convertToJDBC(value, clazz);
                 updateSet.addBind(config.quoteName(columnName), parameter);
-            }            
+            }
         }
         log.info("Update user {0} to {1}", oldUid.getUidValue(), ret.getUidValue());
         
@@ -473,7 +474,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         // The first token is not null set the FilterWhereBuilder
         final FilterWhereBuilder where = new FilterWhereBuilder();
         if(token != null) {
-            final Object parameter = SQLUtil.convertToJDBC(token.getValue(), getColumnType(config.getChangeLogColumn()));            
+            final Class<?> clazz = getColumnType(config.getChangeLogColumn());
+            final Object parameter = SQLUtil.convertToJDBC(token.getValue(), clazz );            
             where.addBind(changeLogColumnName, ">", parameter);            
         }
         final DatabaseQueryBuilder query = new DatabaseQueryBuilder(tblname, columnNames);
@@ -563,52 +565,52 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         config.validate();
         conn.test();        
     }
-    	
+        
     /**
-	 * Attempts to authenticate the given user/password combination.
-	 * 
-	 * 
-	 */
-	public void authenticate(String username, GuardedString password,
-			OperationOptions options) {
+     * Attempts to authenticate the given user/password combination.
+     * 
+     * 
+     */
+    public void authenticate(String username, GuardedString password,
+            OperationOptions options) {
 
-		final String SQL_AUTH_QUERY = "SELECT {0} FROM {1} WHERE ( {0} = ? ) AND ( {2} = ? )";
+        final String SQL_AUTH_QUERY = "SELECT {0} FROM {1} WHERE ( {0} = ? ) AND ( {2} = ? )";
 
-		log.info("authenticate user: {0}", username);
+        log.info("authenticate user: {0}", username);
 
-		Assertions.blankCheck(username, "username");
-		Assertions.nullCheck(password, "password");
-		
-		//check if password column is defined in the config
-		Assertions.blankCheck(config.getPasswordColumn(), "passwordColumn");
+        Assertions.blankCheck(username, "username");
+        Assertions.nullCheck(password, "password");
+        
+        //check if password column is defined in the config
+        Assertions.blankCheck(config.getPasswordColumn(), "passwordColumn");
 
-		String sql = MessageFormat.format(SQL_AUTH_QUERY, config.quoteName(config
-				.getKeyColumn()), config.quoteName(config.getDBTable()), config
-				.quoteName(config.getPasswordColumn()));
+        String sql = MessageFormat.format(SQL_AUTH_QUERY, config.quoteName(config
+                .getKeyColumn()), config.quoteName(config.getDBTable()), config
+                .quoteName(config.getPasswordColumn()));
 
-		List<Object> values = new ArrayList<Object>();
-		values.add(username); // real username
-		values.add(password); // real password
+        List<Object> values = new ArrayList<Object>();
+        values.add(username); // real username
+        values.add(password); // real password
 
-		PreparedStatement stmt = null;
-		ResultSet result = null;
-		try {
-			// replace the ? in the SQL_AUTH statement with real data
-			stmt = conn.prepareStatement(sql, values);
-			result = stmt.executeQuery();
-			if (!result.next()) {
-				throw new InvalidCredentialException("user: " + username
-						+ " authentication failed");
-			}
-			log.info("user: {0} authenticated ", username);
-		} catch (SQLException e) {
-			log.error(e, "user: {0} authentication failed ", username);
-			throw ConnectorException.wrap(e);
-		} finally {
-			SQLUtil.closeQuietly(result);
-			SQLUtil.closeQuietly(stmt);
-		}
-	}
+        PreparedStatement stmt = null;
+        ResultSet result = null;
+        try {
+            // replace the ? in the SQL_AUTH statement with real data
+            stmt = conn.prepareStatement(sql, values);
+            result = stmt.executeQuery();
+            if (!result.next()) {
+                throw new InvalidCredentialException("user: " + username
+                        + " authentication failed");
+            }
+            log.info("user: {0} authenticated ", username);
+        } catch (SQLException e) {
+            log.error(e, "user: {0} authentication failed ", username);
+            throw ConnectorException.wrap(e);
+        } finally {
+            SQLUtil.closeQuietly(result);
+            SQLUtil.closeQuietly(stmt);
+        }
+    }
     
     /**
      * Cache schema, defaultAtributesToGet, columnClassNamens
@@ -705,13 +707,19 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      */
     private Set<AttributeInfo> buildAttributeInfoSet(ResultSet rset) throws SQLException {
         Set<AttributeInfo> attrInfo = new HashSet<AttributeInfo>();
-        this.columnClassNames = new CaseInsensitiveMap<String>();
+        this.columnClassNames = new CaseInsensitiveMap<Class<?>>();
         ResultSetMetaData meta = rset.getMetaData();
         int count = meta.getColumnCount();
         for (int i = 1; i <= count; i++) {
             final String name = meta.getColumnName(i);
             final AttributeInfoBuilder attrBld = new AttributeInfoBuilder();
             final String columnClassName = meta.getColumnClassName(i);
+            Class<?> columnClass = null;
+            try {
+                columnClass = Class.forName(columnClassName);
+            } catch (ClassNotFoundException e) {
+                throw new IllegalArgumentException(e.getMessage());   
+            }            
             if (name.equalsIgnoreCase(config.getKeyColumn())) {
                 // name attribute
                 attrBld.setName(Name.NAME);
@@ -723,12 +731,12 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
                 // Password attribute
                 attrInfo.add(OperationalAttributeInfos.PASSWORD);                
             } else if (name.equalsIgnoreCase(config.getChangeLogColumn())) {
-                columnClassNames.put(name, columnClassName);
+                columnClassNames.put(name, columnClass);
                 // skip changelog column
                 // TODO decide changed column is in the schema, comment out this if statement 
             } else {
                 // All other attributed taken from the table
-                columnClassNames.put(name, columnClassName);
+                columnClassNames.put(name, columnClass);
                 final Class<?> dataType = SQLUtil.getAttributeDataType(columnClassName);
                 attrBld.setType(dataType);
                 attrBld.setName(name);
@@ -852,7 +860,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      * @param columnName
      * @return the className of the column
      */
-    private String getColumnType(String columnName) {
+    private Class<?> getColumnType(String columnName) {
         if (columnClassNames == null) {
             cacheSchema();
         }
