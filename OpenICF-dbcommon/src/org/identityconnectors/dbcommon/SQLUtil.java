@@ -56,6 +56,7 @@ import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
@@ -90,9 +91,10 @@ public final class SQLUtil {
      * @param password jdbc password
      * @return a valid connection
      */
-    public static Connection getDriverMangerConnection(String driver, String url, String login, String password) {
+    public static Connection getDriverMangerConnection(final String driver, final String url, final String login,
+            final GuardedString password) {
         // create the connection base on the configuration..
-        Connection ret = null;
+        final Connection[] ret = new Connection[1];
         try {
             // load the driver class..
             Class.forName(driver);
@@ -100,18 +102,27 @@ public final class SQLUtil {
 
             // check if there is authentication involved.
             if (StringUtil.isNotBlank(login)) {
-                ret = DriverManager.getConnection(url, login, password);
+                password.access(new GuardedString.Accessor() {
+                    public void access(char[] clearChars) {
+                        try {
+                            ret[0] = DriverManager.getConnection(url, login, new String(clearChars));
+                        } catch (SQLException e) {
+                            // checked exception are not allowed in the access method 
+                            // Lets use the exception softening pattern
+                            throw new RuntimeException(e);
+                        }
+                    }
+                });
             } else {
-                ret = DriverManager.getConnection(url);
+                ret[0] = DriverManager.getConnection(url);
             }
             // turn off auto-commit
-            ret.setAutoCommit(false);
+            ret[0].setAutoCommit(false);
         } catch (Exception e) {
             throw ConnectorException.wrap(e);
         }
-        return ret;
+        return ret[0];
     }    
-
     
     /**
      * Ignores any exception thrown by the {@link Connection} parameter when
@@ -322,41 +333,69 @@ public final class SQLUtil {
         return ret;
     }    
     /**
-     * Convert attribute types to database types 
-     * @param param the value to convert
-     * @param clazzName expected class name
+     * Convert attribute types to database types
+     * 
+     * @param param
+     *            the value to convert
+     * @param clazzName
+     *            expected class name
      * 
      * @return a converted value
      */
     public static Object convertToJDBC(Object param, String clazzName) {
-        //check the conversion to is valid
+        // check the conversion to is valid
         if (StringUtil.isBlank(clazzName)) {
             return param;
         }
+
+        Class<?> clazz = null;
         try {
-            //Date, Timestamps conversion support for now
-            final Class<?> clazz = Class.forName(clazzName);
-            if (param.getClass().equals(Long.class)) {
-                if (clazz.equals(java.util.Date.class)) {
-                    return new java.util.Date((Long) param);
-                } else if (clazz.equals(java.sql.Date.class)) {
-                    return new java.sql.Date((Long) param);
-                } else if (clazz.equals(java.sql.Timestamp.class)) {
-                    return new java.sql.Timestamp((Long) param);
-                }
-            }
-            return param;
-        } catch (Exception expected) {
+            clazz = Class.forName(clazzName);
+        } catch (ClassNotFoundException expected) {
             // Could not convert
-            final String msg = "Could not convert to class: "+clazzName;
-            log.info(expected, msg);
+            final String msg = "Could not convert to class: " + clazz;
+            log.ok(expected, msg);
             return param;
         }
+
+        return convertToJDBC(param, clazz);
+    }
+
+    /**
+     * Convert attribute types to database types
+     * 
+     * @param param
+     *            the value to convert
+     * @param clazz
+     *            expected class
+     * 
+     * @return a converted value
+     */
+    public static Object convertToJDBC(Object param, Class<?> clazz) {
+        // check the conversion to is valid
+        if (clazz == null) {
+            return param;
+        }
+
+        // Date, Timestamps conversion support for now
+        if (param.getClass().equals(Long.class)) {
+            if (clazz.equals(java.util.Date.class)) {
+                return new java.util.Date((Long) param);
+            } else if (clazz.equals(java.sql.Date.class)) {
+                return new java.sql.Date((Long) param);
+            } else if (clazz.equals(java.sql.Timestamp.class)) {
+                return new java.sql.Timestamp((Long) param);
+            }
+        }
+        return param;
+
     }
     
     /**
      * Make a blob conversion
-     * @param blobValue blob
+     * 
+     * @param blobValue
+     *            blob
      * @return a converted value
      * @throws SQLException
      */

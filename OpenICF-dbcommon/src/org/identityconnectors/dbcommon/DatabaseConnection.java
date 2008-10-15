@@ -185,18 +185,18 @@ public class DatabaseConnection  {
 
     /**
      * The helper guardedString bind method
-     * @param statement to bind to
+     * @param stmt to bind to
      * @param idx index of the object
      * @param a <CODE>GuardedString</CODE> parameter
      * @throws SQLException
      */
-    protected void setGuardedStringParam(final PreparedStatement statement, final int idx, GuardedString guard)
+    protected void setGuardedStringParam(final PreparedStatement stmt, final int idx, GuardedString guard)
             throws SQLException {
         try {
             guard.access(new GuardedString.Accessor() {
                 public void access(char[] clearChars) {
                     try {
-                        statement.setString(idx, new String(clearChars));
+                        setParam(stmt, idx, new String(clearChars));
                     } catch (SQLException e) {
                         // checked exception are not allowed in the access method 
                         // Lets use the exception softening pattern

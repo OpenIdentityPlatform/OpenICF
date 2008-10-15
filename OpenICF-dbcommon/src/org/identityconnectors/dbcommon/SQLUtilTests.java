@@ -208,7 +208,20 @@ public class SQLUtilTests {
         assertEquals(expected, object);
     }    
     
-
+    /**
+     * Test method
+     * @throws SQLException 
+     */
+    @Test
+    public void testConvertTimestampClassNameToJDBC() {
+        Timestamp expected = new Timestamp(System.currentTimeMillis());
+        long src = expected.getTime();
+        Object actual = SQLUtil.convertToJDBC(src, expected.getClass().getName());
+        assertNotNull(actual);
+        assertEquals(expected.getClass(), actual.getClass());
+        assertEquals(expected, actual);
+    }   
+    
     /**
      * Test method
      * @throws SQLException 
@@ -217,7 +230,7 @@ public class SQLUtilTests {
     public void testConvertTimestampToJDBC() {
         Timestamp expected = new Timestamp(System.currentTimeMillis());
         long src = expected.getTime();
-        Object actual = SQLUtil.convertToJDBC(src, expected.getClass().getName());
+        Object actual = SQLUtil.convertToJDBC(src, expected.getClass());
         assertNotNull(actual);
         assertEquals(expected.getClass(), actual.getClass());
         assertEquals(expected, actual);
@@ -230,7 +243,7 @@ public class SQLUtilTests {
     public void testConvertDateToJDBC() {
         Date expected = new Date(System.currentTimeMillis());
         long src = expected.getTime();
-        Object actual = SQLUtil.convertToJDBC(src, expected.getClass().getName());
+        Object actual = SQLUtil.convertToJDBC(src, expected.getClass());
         assertNotNull(actual);
         assertEquals(expected.getClass(), actual.getClass());
         assertEquals(expected, actual);
@@ -243,7 +256,7 @@ public class SQLUtilTests {
     public void testConvertSqlDateToJDBC() {
         java.sql.Date expected = new java.sql.Date(System.currentTimeMillis());
         long src = expected.getTime();
-        Object actual = SQLUtil.convertToJDBC(src, expected.getClass().getName());
+        Object actual = SQLUtil.convertToJDBC(src, expected.getClass());
         assertNotNull(actual);
         assertEquals(expected.getClass(), actual.getClass());
         assertEquals(expected, actual);
@@ -257,7 +270,7 @@ public class SQLUtilTests {
     @Test
     public void testConvertStringToJDBC() {
         String expected = "test";
-        Object actual = SQLUtil.convertToJDBC(expected, expected.getClass().getName());
+        Object actual = SQLUtil.convertToJDBC(expected, expected.getClass());
         assertNotNull(actual);
         assertEquals(expected.getClass(), actual.getClass());
         assertEquals(expected, actual);
@@ -270,7 +283,7 @@ public class SQLUtilTests {
     @Test
     public void testConvertLongToJDBC() {
         Long expected = 10l;
-        Object actual = SQLUtil.convertToJDBC(expected, expected.getClass().getName());
+        Object actual = SQLUtil.convertToJDBC(expected, expected.getClass());
         assertNotNull(actual);
         assertEquals(expected.getClass(), actual.getClass());
         assertEquals(expected, actual);
