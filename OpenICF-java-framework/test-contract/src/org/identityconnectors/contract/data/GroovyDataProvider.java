@@ -47,6 +47,7 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -67,13 +68,13 @@ import org.junit.Assert;
  * Groovy to parse the property file.
  * </p>
  * <p>
- * Order of lookup for the property files follows:
+ * Order of lookup for the property files follows (latter overrides previous):
  * </p>
- * <ol>
- * <li>bundle-dir/contract-tests.groovy</li>
- * <li>USER_HOME/.bundle-name.groovy</li>
- * <li>USER_HOME/.bundle-name/contract-tests.groovy</li>
- * </ol>
+ * <ul>
+ * <li>1) user-home/.bundle-name/contract-tests.groovy
+ * <li>2)user-home/.bundle-name-${configuration}/contract-tests.groovy<br />
+ *              in case ${configuration} is specified
+ * </ul>
  * <p>
  * Note: If two property files contain the same property name, the value from
  * the latter file the list <b>overrides</b> the others. I.e. the last file
@@ -95,6 +96,7 @@ import org.junit.Assert;
 public class GroovyDataProvider implements DataProvider {
 
 	private static final String PROPERTY_SEPARATOR = ".";
+	private static final String CONTRACT_TESTS_FILE_NAME = "contract-tests.groovy";
 	/** just for test purposes see GroovyDataProviderTest */
 	public static final String CONFIG_FILE_PATH = "src//configfile.groovy";
 
@@ -161,87 +163,60 @@ public class GroovyDataProvider implements DataProvider {
 		return cs.parse(url);
 	}
 
-	/**
-	 * load properties in the following order:
-	 * <ul>
-	 * <li>1) bundle-dir/contract-tests.groovy
-	 * <li>2) user-home/.bundle-name/contract-tests.groovy
-	 * <li>3) user-home/.bundle-name/contract-tests-configuration.groovy --
-	 * this is of the highest priority
-	 * </ul>
-	 * 
-	 */
-	private static ConfigObject loadProjectProperties() {
-		// CONTANTS
-		final String CONTRACT_TESTS_MARKER = "contract-tests";
-		final String CONTRACT_TEST_EXTENSION = ".groovy";
-		final String LOCALCONFIG_NAME = CONTRACT_TESTS_MARKER
-				+ CONTRACT_TEST_EXTENSION;
+    /**
+     * load properties in the following order (latter overrides previous):
+     * <ul>
+     * <li>1) user-home/.bundle-name/contract-tests.groovy
+     * <li>2)user-home/.bundle-name-${configuration}/contract-tests.groovy<br />
+     * in case ${configuration} is specified
+     * </ul>
+     * 
+     */
+    private static ConfigObject loadProjectProperties() {
+        /*
+         * main config object, that will contain the merged result form 2
+         * configuration files.
+         */
+        ConfigObject co = null;
 
-		/**
-		 * main config object, that will contain the merged result form 3
-		 * configuration files.
-		 */
-		ConfigObject co = null;
+        String prjName = System.getProperty("project.name");
+        File userHome = new File(System.getProperty("user.home"));
 
-		/*
-		 * load the local properties file #1
-		 */
-		if (new File(LOCALCONFIG_NAME).exists()) {
-			co = parsePropertyFile(LOCALCONFIG_NAME);
-			System.out.println(new File(LOCALCONFIG_NAME).getAbsolutePath());
-		}// #1
+        if (StringUtil.isNotBlank(prjName)) {
+            // list of filePaths to configuration files
+            List<String> configurations = null;
+            {
+                configurations = new LinkedList<String>();
+                // #1: user-home/.connector-name/contract-tests.groovy
+                String directoryPath = userHome.getAbsolutePath() + File.separatorChar + "."
+                        + prjName;
+                configurations.add(directoryPath + File.separatorChar + CONTRACT_TESTS_FILE_NAME);
+                // #2: determine the configuration property
+                String cfg = System.getProperty("configuration", null);
+                if (StringUtil.isNotBlank(cfg)) {
+                    directoryPath = directoryPath + "-" + cfg;
+                    configurations.add(directoryPath + File.separatorChar + CONTRACT_TESTS_FILE_NAME);
+                }
 
-		String prjName = System.getProperty("project.name");
-		File userHome = new File(System.getProperty("user.home"));
+                for (String configFile : configurations) {
+                    // read the config file's contents and merge it:
+                    File cnfg = new File(configFile);
+                    if (cnfg.exists()) {
+                        ConfigObject lowPriorityCObj = parsePropertyFile(cnfg.getAbsolutePath());
+                        if (co != null) {
+                            ConfigObject merged = mergeConfigObjects(co, lowPriorityCObj);
+                            co = merged; // co holds the final ConfigObject
+                        } else {
+                            co = lowPriorityCObj;
+                        }
+                    }
+                }
+            }// configuration init
 
-		if (StringUtil.isNotBlank(prjName)) {
-			/*
-			 * load the user properties file (project specific) #2 including
-			 * CONFIGURATION SPECIFIC files #3
-			 */
-			// includes the parent configuration and the specific config
-			List<String> configurations = null;
-			{
-				configurations = CollectionUtil.newList(CONTRACT_TESTS_MARKER);
-				// determine the configuration property
-				String cfg = System.getProperty("configuration", null);
-				if (StringUtil.isNotBlank(cfg)) {
-					String name = CONTRACT_TESTS_MARKER + "-" + cfg;
-					configurations.add(name);
-				}
+        }
 
-				String prjFolderName = String.format(".%s", prjName);
-				File f = new File(userHome, prjFolderName);
-
-				for (String configFile : configurations) {
-					// read the config file's contents and merge it:
-					String fn = String.format("%s" + CONTRACT_TEST_EXTENSION,
-							configFile);
-					File cnfg = new File(f, fn);
-					if (cnfg.exists()) {
-						ConfigObject lowPriorityCObj = parsePropertyFile(cnfg
-								.getAbsolutePath());
-						if (co != null) {
-							ConfigObject merged = mergeConfigObjects(co,
-									lowPriorityCObj);
-							co = merged; // co holds the final ConfigObject
-						} else {
-							co = lowPriorityCObj;
-						}
-					}
-				}
-			}// configuration init
-
-		}
-
-		// load the system properties
-		// ret.putAll(System.getProperties()); TODO do we add system properties
-		// automatically?
-
-		String s = co.getProperty("password.connector.string").toString();
-		return co;
-	}
+        return co;
+    }
 
 	public static ConfigObject mergeConfigObjects(ConfigObject lowPriorityCO,
 			ConfigObject highPriorityCO) {
