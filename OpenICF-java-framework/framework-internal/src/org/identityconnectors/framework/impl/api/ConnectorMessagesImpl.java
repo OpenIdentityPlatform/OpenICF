@@ -55,9 +55,9 @@ public class ConnectorMessagesImpl implements ConnectorMessages {
 
     /**
      * NOTE: I am choosing not to use ResourceBundle here because,
-     * for the case of the gateway, we will not be able to use
+     * for the remote case, we will not be able to use
      * ResourceBundle. Rather than have one implementation for
-     * the Gateway and one for Java, I have a single implementation
+     * C# and one for Java, I have a single implementation
      * for both.
      */
     

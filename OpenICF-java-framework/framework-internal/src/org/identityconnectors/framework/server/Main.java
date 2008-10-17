@@ -52,16 +52,16 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 
 public final class Main {
-    private static final String PROP_PORT = "gateway.port";
-    private static final String PROP_BUNDLE_DIR = "gateway.bundleDir";
-    private static final String PROP_SSL  = "gateway.usessl";
-    private static final String PROP_IFADDRESS = "gateway.ifaddress";
-    private static final String PROP_KEY = "gateway.key";
+    private static final String PROP_PORT = "connectorserver.port";
+    private static final String PROP_BUNDLE_DIR = "connectorserver.bundleDir";
+    private static final String PROP_SSL  = "connectorserver.usessl";
+    private static final String PROP_IFADDRESS = "connectorserver.ifaddress";
+    private static final String PROP_KEY = "connectorserver.key";
 
     private static void usage() {
-        System.out.println("Usage: Main -run -properties <gateway.properties>");
-        System.out.println("       Main -setKey -key <key> -properties <gateway.properties>");
-        System.out.println("       Main -setDefaults -properties <gateway.properties>");
+        System.out.println("Usage: Main -run -properties <connectorserver.properties>");
+        System.out.println("       Main -setKey -key <key> -properties <connectorserver.properties>");
+        System.out.println("       Main -setDefaults -properties <connectorserver.properties>");
         System.out.println("NOTE: If using SSL, you must specify the system config");
         System.out.println("    properties: ");
         System.out.println("        -Djavax.net.ssl.keyStore");
@@ -116,7 +116,7 @@ public final class Main {
                 return;
             }
             IOUtil.extractResourceToFile(Main.class, 
-                    "gateway.properties", 
+                    "connectorserver.properties", 
                     new File(propertiesFileName));
         }
         else {
@@ -134,13 +134,13 @@ public final class Main {
         String ifAddress = properties.getProperty(PROP_IFADDRESS);
         String keyHash = properties.getProperty(PROP_KEY);
         if ( portStr == null ) {
-            throw new ConnectorException("gateway.properties is missing "+PROP_PORT);
+            throw new ConnectorException("connectorserver.properties is missing "+PROP_PORT);
         }
         if ( bundleDirStr == null ) {
-            throw new ConnectorException("gateway.properties is missing "+PROP_BUNDLE_DIR);
+            throw new ConnectorException("connectorserver.properties is missing "+PROP_BUNDLE_DIR);
         }
         if ( keyHash == null ) {
-            throw new ConnectorException("gateway.properties is missing "+PROP_KEY);
+            throw new ConnectorException("connectorserver.properties is missing "+PROP_KEY);
         }
         
         

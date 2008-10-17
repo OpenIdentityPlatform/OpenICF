@@ -119,7 +119,7 @@ public abstract class ConnectorInfoManagerFactory {
     /**
      * Clears the remote cache. There should be an admin
      * page function which exposes this method for the case
-     * where you drop in a new connector in the gateway and reset
+     * where you drop in a new connector in the connector server and reset
      * it.
      */
     public abstract void clearRemoteCache();

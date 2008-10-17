@@ -621,7 +621,7 @@ public class ConnectorHelper {
 
     /**
      * Tries to create remote or local manager.
-     * Remote manager is created in case all gateway properties are set. If gateway properties are missing
+     * Remote manager is created in case all connectorserver properties are set. If connectorserver properties are missing
      * or remote manager creation fails then tries to create local manager.
      */
     public static ConnectorInfoManager getInfoManager(final DataProvider dataProvider) {
@@ -688,7 +688,7 @@ public class ConnectorHelper {
         ConnectorInfoManager manager = null;
 
         try {
-            // try to get gateway properties if not provided exception is thrown            
+            // try to get connectorserver properties if not provided exception is thrown            
             String gwhost = (String) dataProvider.getTestSuiteAttribute(String.class.getName(),
                     "gwhost");
             Integer gwport = Integer.parseInt((String) dataProvider.getTestSuiteAttribute(
@@ -700,7 +700,7 @@ public class ConnectorHelper {
             manager = fact.getRemoteManager(new RemoteFrameworkConnectionInfo(
                     gwhost, gwport, new GuardedString(gwkey.toCharArray())));
         } catch (ObjectNotFoundException ex) {
-            LOG.warn("Gateway configuration is not provided or correct.");
+            LOG.warn("Connector server configuration is not provided or correct.");
         } catch (RuntimeException ex) {
             LOG.warn("Cannot connect to remote manager although configuration is provided.");
             // rethrow 
