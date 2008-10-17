@@ -42,12 +42,11 @@ package org.identityconnectors.contract.data.groovy;
 /**
  * 
  * @author Zdenek Louzensky
- *
+ * 
  */
-public class Get extends Lazy {   
+public class Get extends Lazy {
     protected Get(Object prop) {
         value = prop;
     }
-    
-    
+
 }

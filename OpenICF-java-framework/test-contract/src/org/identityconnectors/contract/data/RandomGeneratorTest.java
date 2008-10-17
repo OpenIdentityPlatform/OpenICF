@@ -53,48 +53,48 @@ import org.junit.Test;
  * 
  */
 public class RandomGeneratorTest {
-	private static RandomGenerator rg;
+    private static RandomGenerator rg;
 
-	@Before
-	public void setUp() {
-		rg = new RandomGenerator();
-	}
+    @Before
+    public void setUp() {
+        rg = new RandomGenerator();
+    }
 
-	@After
-	public void tearDown() {
-		rg = null;
-	}
+    @After
+    public void tearDown() {
+        rg = null;
+    }
 
-	@Test
-	public void testRandomLongGenerator() {
-		{
-			Object o = rg.generate("#####", Long.class);
-			Assert.assertNotNull(o);
-			Assert.assertTrue(o instanceof Long);
-			System.out.println(o.toString());
-		}
+    @Test
+    public void testRandomLongGenerator() {
+        {
+            Object o = rg.generate("#####", Long.class);
+            Assert.assertNotNull(o);
+            Assert.assertTrue(o instanceof Long);
+            System.out.println(o.toString());
+        }
 
+    }
 
-	}
-	
-	@Test 
-	public void testRgen2() {
-		{
-			Object o = rg.generate("###X##");
-			Assert.assertNotNull(o);
-			Assert.assertTrue(o.toString().contains("X"));
-			System.out.println(o.toString());
-		}
-	}
-	
-	@Test 
-	public void testRgen3() {
-		{
-			Object o = rg.generate("###\\.##", Float.class); // this means ###\.##
-			Assert.assertNotNull(o);
-			Assert.assertTrue(o instanceof Float);
-			Assert.assertTrue(o.toString().contains("."));			
-			System.out.println(o.toString());
-		}
-	}
+    @Test
+    public void testRgen2() {
+        {
+            Object o = rg.generate("###X##");
+            Assert.assertNotNull(o);
+            Assert.assertTrue(o.toString().contains("X"));
+            System.out.println(o.toString());
+        }
+    }
+
+    @Test
+    public void testRgen3() {
+        {
+            Object o = rg.generate("###\\.##", Float.class); // this means
+                                                                // ###\.##
+            Assert.assertNotNull(o);
+            Assert.assertTrue(o instanceof Float);
+            Assert.assertTrue(o.toString().contains("."));
+            System.out.println(o.toString());
+        }
+    }
 }

@@ -44,22 +44,22 @@ import org.identityconnectors.contract.data.RandomGenerator;
 /**
  * 
  * @author Zdenek Louzensky
- *
+ * 
  */
 public class Random extends Lazy {
 
-	private Class clazz;
+    private Class clazz;
 
-	protected Random(Object pattern) {
-		this(pattern, String.class);
-	}
+    protected Random(Object pattern) {
+        this(pattern, String.class);
+    }
 
-	protected Random(Object pattern, Class clazz) {
-		value = pattern;
-		this.clazz = clazz;
-	}
-	
-	public Object generate() {
-		return RandomGenerator.generate(value.toString(), clazz);
-	}
+    protected Random(Object pattern, Class clazz) {
+        value = pattern;
+        this.clazz = clazz;
+    }
+
+    public Object generate() {
+        return RandomGenerator.generate(value.toString(), clazz);
+    }
 }

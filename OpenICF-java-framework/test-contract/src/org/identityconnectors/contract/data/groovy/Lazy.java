@@ -49,29 +49,29 @@ import java.util.List;
  * @author Zdenek Louzensky
  *
  */
-public abstract class Lazy {         
-    
-    protected List<Object> successors = new LinkedList<Object>();    
+public abstract class Lazy {
+
+    protected List<Object> successors = new LinkedList<Object>();
     protected Object value;
 
     public Lazy plus(String s) {
         successors.add(s);
         return this;
     }
-    
+
     public Lazy plus(Lazy lazy) {
         successors.add(lazy);
-        return this;        
+        return this;
     }
 
     public static Lazy get(Object prop) {
         return new Get(prop);
     }
-    
+
     public static Lazy random(Object pattern) {
         return new Random(pattern);
     }
-    
+
     public static Lazy random(Object pattern, Class clazz) {
         return new Random(pattern, clazz);
     }
@@ -91,6 +91,5 @@ public abstract class Lazy {
     public void setValue(Object value) {
         this.value = value;
     }
-    
-    
+
 }
