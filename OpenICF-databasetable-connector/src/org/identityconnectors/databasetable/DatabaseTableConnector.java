@@ -819,7 +819,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         bld.setObject(buildConnectorObject(attributeSet).build());
         
         // only deals w/ updates
-        bld.setDeltaType(SyncDeltaType.UPDATE);
+        bld.setDeltaType(SyncDeltaType.CREATE_OR_UPDATE);
         return bld;
     }       
 
