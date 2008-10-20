@@ -51,7 +51,8 @@ import org.identityconnectors.framework.common.FrameworkUtil;
  * <p>
  * What this token represents is entirely connector-specific. On some connectors
  * this might be a last-modified value. On others, it might be a unique ID of a
- * log table entry.
+ * log table entry. On others such as JMS, this might be a dummy value since
+ * JMS itself keeps track of the state of the sync.
  */
 public final class SyncToken {
 

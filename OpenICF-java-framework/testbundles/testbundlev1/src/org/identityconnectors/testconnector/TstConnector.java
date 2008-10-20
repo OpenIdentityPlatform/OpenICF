@@ -179,7 +179,7 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
             SyncDeltaBuilder builder =
                 new SyncDeltaBuilder();
             builder.setObject(obuilder.build());
-            builder.setDeltaType(SyncDeltaType.CREATE);
+            builder.setDeltaType(SyncDeltaType.CREATE_OR_UPDATE);
             builder.setToken(new SyncToken("mytoken"));
 
             SyncDelta rv = builder.build();

@@ -49,13 +49,6 @@ import org.identityconnectors.framework.spi.operations.SyncOp;
 /**
  * Receive synchronization events from the resource. This will be supported by
  * connectors that implement {@link SyncOp}.
- * <p>
- * TODO: define quality of service level. For example, on JMS sync, when
- * synchronizing from a queue, the connector should return one SyncDelta
- * per-call to {@link #sync(ObjectClass, SyncToken, SyncResultsHandler)}. Each
- * call to {@link #sync(ObjectClass, SyncToken, SyncResultsHandler)} should
- * delete the previous entry and return the next. That would guarantee that no
- * items get dropped.
  * 
  * @see SyncOp
  */

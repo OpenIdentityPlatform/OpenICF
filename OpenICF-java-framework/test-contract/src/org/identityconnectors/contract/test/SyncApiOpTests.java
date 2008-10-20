@@ -133,7 +133,7 @@ public class SyncApiOpTests extends ObjectClassRunner {
 
                 // check delta
                 ConnectorHelper.checkSyncDelta(getObjectClassInfo(), deltas.get(0), uid, attrs,
-                        SyncDeltaType.CREATE, true);
+                        SyncDeltaType.CREATE_OR_UPDATE, true);
 
                 token = deltas.get(0).getToken();
             }
@@ -174,7 +174,7 @@ public class SyncApiOpTests extends ObjectClassRunner {
 
                     // check delta
                     ConnectorHelper.checkSyncDelta(getObjectClassInfo(), deltas.get(0), uid,
-                            replaceAttributes, SyncDeltaType.UPDATE, true);
+                            replaceAttributes, SyncDeltaType.CREATE_OR_UPDATE, true);
 
                     token = deltas.get(0).getToken();
                 }
@@ -235,7 +235,7 @@ public class SyncApiOpTests extends ObjectClassRunner {
 
                 // check delta, but don't check attributes which are not returned by default
                 ConnectorHelper.checkSyncDelta(getObjectClassInfo(), deltas.get(0), uid, attrs,
-                        SyncDeltaType.CREATE, false);
+                        SyncDeltaType.CREATE_OR_UPDATE, false);
             } finally {
                 // cleanup
                 getConnectorFacade().delete(getSupportedObjectClass(), uid, null);

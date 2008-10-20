@@ -48,14 +48,6 @@ import org.identityconnectors.framework.common.objects.SyncToken;
 
 /**
  * Receive synchronization events from the resource.
- * <p>
- * TODO: define quality of service level. For example, on JMS sync, when
- * synchronizing from a queue, the connector should return one SyncDelta
- * per-call to {@link #sync(ObjectClass, SyncToken, SyncResultsHandler)}. Each
- * call to {@link #sync(ObjectClass, SyncToken, SyncResultsHandler)} should
- * delete the previous entry and return the next. That would guarantee that no
- * items get dropped. Connectors that implement this interface will be exposed
- * to the application via {@link SyncApiOp}.
  * 
  * @see SyncApiOp
  */
@@ -68,7 +60,7 @@ public interface SyncOp extends SPIOperation {
      * @param token
      *            The token representing the last token from the previous sync.
      *            Should be null if this is the first sync for the given
-     *            resource.
+     *            resource. 
      * @param handler
      *            The result handler Must not be null.
      * @param options
