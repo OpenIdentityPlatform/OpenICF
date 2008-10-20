@@ -44,7 +44,7 @@
     + =========================================================S=U=N=.=C=O=M= +
     </description>
     <!-- set a default for configuration -->
-    <property name="configuration" value=""/>
+    <property name="configuration" value="default"/>
     <!-- load user project-configuration properties -->
     <property file="${user.home}/.${ant.project.name}-${configuration}.properties" />
     <!-- load user project properties -->
@@ -414,7 +414,7 @@
     <property name="contract-package" value="org.identityconnectors.contract"/>
     <property name="data.provider" value="${contract-package}.data.DefaultDataProvider"/>
 
-    <target name="contracts-init" if="contracts.run">
+    <target name="contract-init" if="contracts.run">
         <!-- clear out previous test results -->
         <delete dir="${reports}/contracts" />
         <mkdir dir="${reports}/contracts" />
@@ -450,7 +450,7 @@
             <sysproperty key="defaultdataprovider.propertyFile" value="${defaultdataprovider.propertyFile}"/>
             
             <test todir="${reports}/contracts"
-                name="${contract-package}.test.ContractTestSuite" />
+                name="${contract-package}-${configuration}" />
             <formatter type="xml" usefile="yes" />
             <formatter type="plain" usefile="false" />
             <classpath>
@@ -460,9 +460,9 @@
         </junit>
     </target>
 
-    <target name="run-contract-tests" depends="contracts-init, contract-dist, contract-tests"/>
+    <target name="run-contract-tests" depends="contract-init, contract-dist, contract-tests"/>
     
-    <target name="run-gw-contract-tests" depends="contracts-init, contract-tests"/>
+    <target name="run-gw-contract-tests" depends="contract-init, contract-tests"/>
     
     
     <target name="console" depends="jar">
