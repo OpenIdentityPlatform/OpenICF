@@ -382,7 +382,7 @@
             </batchtest>
         </junit>
     </target>
-    <target name="report-tests" depends="report-junits, report-contracts, report-instrument"/>
+    <target name="report-tests" depends="report-junits, report-instrument"/>
     <target name="report-instrument" if="useCobertura">
         <mkdir dir="${reports}/coverage" />
         <delete dir="${reports}/coverage" />
@@ -398,8 +398,12 @@
     </target>
 
     <target name="report-junits" unless="useExternalReporting"> 
+        <fileset id="report.set" dir="${reports}">
+        	<include name="**/junit/TEST-*.xml"/>
+            <include name="**/contracts/TEST-*.xml"/>
+        </fileset> 
         <junitreport todir="${reports}">
-            <fileset dir="${reports}/junit" includes="TEST-*.xml"/>
+            <fileset refid="report.set"/>
             <report format="noframes" todir="${reports}"/>
         </junitreport>
     </target>
@@ -455,12 +459,7 @@
             </classpath>
         </junit>
     </target>
-    <target name="report-contracts" if="contracts.run" unless="useExternalReporting"> 
-        <junitreport todir="${reports}">
-            <fileset dir="${reports}/contracts" includes="TEST-*.xml"/>
-            <report format="noframes" todir="${reports}"/>
-        </junitreport>
-    </target>
+
     <target name="run-contract-tests" depends="contracts-init, contract-dist, contract-tests"/>
     
     <target name="run-gw-contract-tests" depends="contracts-init, contract-tests"/>
