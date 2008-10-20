@@ -62,8 +62,10 @@ import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.api.ConnectorInfoManager;
 import org.identityconnectors.framework.api.ConnectorInfoManagerFactory;
 import org.identityconnectors.framework.api.ConnectorKey;
+import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
+import org.identityconnectors.framework.api.operations.SyncApiOp;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.OperationTimeoutException;
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -170,6 +172,11 @@ public class ConnectorInfoManagerTests {
         ConfigurationProperty property  = props.getProperty("tstField");
         
         Assert.assertNotNull(property);
+        
+        Set<Class<? extends APIOperation>> operations =
+            property.getOperations();
+        Assert.assertEquals(1, operations.size());
+        Assert.assertEquals(SyncApiOp.class, operations.iterator().next());
         
         Assert.assertEquals("Help for test field.",property.getHelpMessage(null));
         Assert.assertEquals("Display for test field.",property.getDisplayName(null));

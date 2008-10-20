@@ -119,6 +119,11 @@ class APIConfigurationHandlers {
                         decoder.readClassField("type",null));
                 rv.setValue(
                         decoder.readObjectField("value",null,null));
+                @SuppressWarnings("unchecked")
+                Set<Class<? extends APIOperation>>
+                        ops =
+                   (Set)decoder.readObjectField("operations", Set.class, null);
+                rv.setOperations(ops);
                 return rv;
             }
             
@@ -140,6 +145,8 @@ class APIConfigurationHandlers {
                         val.getType());
                 encoder.writeObjectField("value",
                         val.getValue(),false);
+                encoder.writeObjectField("operations", 
+                        val.getOperations(),true);
             }
                    
          });

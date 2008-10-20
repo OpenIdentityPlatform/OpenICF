@@ -39,6 +39,9 @@
  */
 package org.identityconnectors.framework.api;
 
+import java.util.Set;
+
+import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.spi.Configuration;
 
 /**
@@ -81,4 +84,13 @@ public interface ConfigurationProperty {
      * the application when persisted?
      */
     public boolean isConfidential();
+    
+    /**
+     * Set of operations for which this property must be specified.
+     * This is used for the case where a connector may or may not
+     * implement certain operations depending in the configuration.
+     * The default value of "empty array" is special in that
+     * it means that this property is applicable to all operations.
+     */
+    public Set<Class<? extends APIOperation>> getOperations();
 }

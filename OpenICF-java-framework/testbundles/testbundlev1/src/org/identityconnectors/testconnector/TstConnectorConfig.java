@@ -42,6 +42,8 @@ package org.identityconnectors.testconnector;
 import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.spi.AbstractConfiguration;
+import org.identityconnectors.framework.spi.ConfigurationProperty;
+import org.identityconnectors.framework.spi.operations.SyncOp;
 
 public class TstConnectorConfig extends AbstractConfiguration {
     private String _tstField;
@@ -55,6 +57,7 @@ public class TstConnectorConfig extends AbstractConfiguration {
     public TstConnectorConfig() {
         TstConnector.checkClassLoader();
     }
+
     
     public boolean getResetConnectionCount() {
         TstConnector.checkClassLoader();
@@ -66,6 +69,7 @@ public class TstConnectorConfig extends AbstractConfiguration {
         _resetConnectionCount = count;
     }
 
+    @ConfigurationProperty(operations={SyncOp.class})
     public String getTstField() {
         TstConnector.checkClassLoader();
         return _tstField;

@@ -416,6 +416,7 @@ public class ObjectSerializationTests {
         v1.setDisplayMessageKey("display key");
         v1.setValue("bar");
         v1.setType(String.class);
+        v1.setOperations(FrameworkUtil.allAPIOperations());
         
         ConfigurationPropertyImpl v2 = (ConfigurationPropertyImpl)
             cloneObject(v1);
@@ -426,6 +427,7 @@ public class ObjectSerializationTests {
         Assert.assertEquals("display key", v2.getDisplayMessageKey());
         Assert.assertEquals("bar", v2.getValue());
         Assert.assertEquals(String.class, v2.getType());
+        Assert.assertEquals(FrameworkUtil.allAPIOperations(), v2.getOperations());
     }
     
     @Test
@@ -439,6 +441,7 @@ public class ObjectSerializationTests {
         prop1.setDisplayMessageKey("display key");
         prop1.setValue("bar");
         prop1.setType(String.class);
+        prop1.setOperations(null);
         
         ConfigurationPropertiesImpl v1 = new ConfigurationPropertiesImpl();
         v1.setProperties(CollectionUtil.newList(prop1));
@@ -460,6 +463,7 @@ public class ObjectSerializationTests {
         prop1.setDisplayMessageKey("display key");
         prop1.setValue("bar");
         prop1.setType(String.class);
+        prop1.setOperations(null);
         
         ConfigurationPropertiesImpl props1 = new ConfigurationPropertiesImpl();
         props1.setProperties(CollectionUtil.newList(prop1));

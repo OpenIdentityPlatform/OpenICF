@@ -39,8 +39,11 @@
  */
 package org.identityconnectors.framework.impl.api;
 
+import java.util.Set;
+
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.framework.api.ConfigurationProperty;
+import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.common.objects.ConnectorMessages;
 
 
@@ -86,6 +89,11 @@ public class ConfigurationPropertyImpl implements ConfigurationProperty {
      */
     private Class<?> _type;
 
+    /**
+     * The set of operations for which this property applies
+     */
+    private Set<Class<? extends APIOperation>> _operations;
+    
 
     /**
      * The container. Not serialized in this object. Set when this
@@ -139,6 +147,14 @@ public class ConfigurationPropertyImpl implements ConfigurationProperty {
     
     public void setParent(ConfigurationPropertiesImpl parent) {
         _parent = parent;
+    }
+    
+    public Set<Class<? extends APIOperation>> getOperations() {
+        return _operations;
+    }
+    
+    public void setOperations(Set<Class<? extends APIOperation>> set) {
+        _operations = CollectionUtil.newReadOnlySet(set);
     }
     
     private String formatMessage(String key, String dflt, Object...args) {
@@ -226,6 +242,9 @@ public class ConfigurationPropertyImpl implements ConfigurationProperty {
                 return false;
             }
             if (!CollectionUtil.equals(getType(),other.getType())) {
+                return false;
+            }
+            if (!CollectionUtil.equals(_operations, other._operations)) {
                 return false;
             }
             

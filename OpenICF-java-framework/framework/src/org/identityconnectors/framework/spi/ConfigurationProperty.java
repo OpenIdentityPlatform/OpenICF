@@ -44,6 +44,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.identityconnectors.framework.spi.operations.SPIOperation;
+
 
 /**
  * The {@link Configuration} interface is traversed through reflection. This
@@ -79,4 +81,13 @@ public @interface ConfigurationProperty {
      * the application when persisted?
      */
     public boolean confidential() default false;
+    
+    /**
+     * List of operations for which this property must be specified.
+     * This is used for the case where a connector may or may not
+     * implement certain operations depending in the configuration.
+     * The default value of "empty array" is special in that
+     * it means that this property is applicable to all operations.
+     */
+    public Class<? extends SPIOperation> [] operations() default {};
 }

@@ -50,16 +50,21 @@ import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.framework.api.operations.APIOperation;
+import org.identityconnectors.framework.common.FrameworkUtil;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.serializer.SerializerUtil;
 import org.identityconnectors.framework.impl.api.ConfigurationPropertiesImpl;
 import org.identityconnectors.framework.impl.api.ConfigurationPropertyImpl;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
+import org.identityconnectors.framework.spi.operations.SPIOperation;
 
 
 /**
@@ -156,12 +161,23 @@ public class JavaClassProperties
             prop.setOrder(order);
             prop.setValue(value);
             prop.setType(type);
+            prop.setOperations(options == null ? null : translateOperations(options.operations()));
             
             temp.add(prop);
 
         }
         properties.setProperties(temp);
         return properties;
+    }
+    
+    private static Set<Class<? extends APIOperation>> translateOperations(Class<? extends SPIOperation> [] ops)
+    {
+        Set<Class<? extends APIOperation>> set =
+            new HashSet<Class<? extends APIOperation>>();
+        for (Class<? extends SPIOperation> spi : ops) {
+            set.addAll(FrameworkUtil.spi2apis(spi));
+        }
+        return set;
     }
 
     private static Configuration createBean2(
