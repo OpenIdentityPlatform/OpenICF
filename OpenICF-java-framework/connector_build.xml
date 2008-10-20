@@ -294,7 +294,7 @@
     <!--
         Test Targets 
     -->
-    <target name="test" depends="jar, run-unit-tests, report-tests" />
+    <target name="test" depends="jar, run-unit-tests, run-contract-tests, report-tests" />
     <target name="test-init">
         <!-- clear out previous test results -->
         <delete dir="${reports}/junit" />
@@ -382,7 +382,7 @@
             </batchtest>
         </junit>
     </target>
-    <target name="report-tests" depends="report-junits, report-instrument"/>
+    <target name="report-tests" depends="report-junits, report-contracts, report-instrument"/>
     <target name="report-instrument" if="useCobertura">
         <mkdir dir="${reports}/coverage" />
         <delete dir="${reports}/coverage" />
@@ -410,7 +410,12 @@
     <property name="contract-package" value="org.identityconnectors.contract"/>
     <property name="data.provider" value="${contract-package}.data.DefaultDataProvider"/>
 
-    <target name="contract-dist" depends="jar"> 
+    <target name="contracts-init" if="contracts.run">
+        <!-- clear out previous test results -->
+        <delete dir="${reports}/contracts" />
+        <mkdir dir="${reports}/contracts" />
+    </target>
+    <target name="contract-dist" if="contracts.run" depends="jar"> 
         <!-- creates a temparary jar for contract testing -->
         <delete dir="${reports}/rejar"/>
         <mkdir dir="${reports}/rejar"/>
@@ -424,7 +429,7 @@
             <fileset dir="${reports}/rejar"/>
         </jar>
     </target>
-    <target name="contract-tests">
+    <target name="contract-tests" if="contracts.run">
         <!-- set a default for test.parameters.outFile -->
         <property name="test.parameters.outFile" value=""/>
         <!-- set a default for defaultdataprovider.propertyFile -->
@@ -440,7 +445,7 @@
             <sysproperty key="test.parameters.outFile" value="${test.parameters.outFile}"/>
             <sysproperty key="defaultdataprovider.propertyFile" value="${defaultdataprovider.propertyFile}"/>
             
-            <test todir="${reports}/junit"
+            <test todir="${reports}/contracts"
                 name="${contract-package}.test.ContractTestSuite" />
             <formatter type="xml" usefile="yes" />
             <formatter type="plain" usefile="false" />
@@ -450,10 +455,15 @@
             </classpath>
         </junit>
     </target>
+    <target name="report-contracts" if="contracts.run" unless="useExternalReporting"> 
+        <junitreport todir="${reports}">
+            <fileset dir="${reports}/contracts" includes="TEST-*.xml"/>
+            <report format="noframes" todir="${reports}"/>
+        </junitreport>
+    </target>
+    <target name="run-contract-tests" depends="contracts-init, contract-dist, contract-tests"/>
     
-    <target name="run-contract-tests" depends="test-init, contract-dist, contract-tests"/>
-    
-    <target name="run-gw-contract-tests" depends="test-init, contract-tests"/>
+    <target name="run-gw-contract-tests" depends="contracts-init, contract-tests"/>
     
     
     <target name="console" depends="jar">
