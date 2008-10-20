@@ -55,7 +55,7 @@
     <condition property="userlib"
         value="${user.home}/.${ant.project.name}/lib"
         else="${user.home}/.${ant.project.name}-${configuration}/lib">
-        <equals arg1="${configuration}" arg2="" trim="true"/>
+        <equals arg1="${configuration}" arg2="default" trim="true"/>
     </condition>
     <!-- load local properties -->
     <property file="build.properties" />
