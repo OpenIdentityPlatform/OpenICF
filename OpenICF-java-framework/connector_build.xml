@@ -449,8 +449,8 @@
             <sysproperty key="test.parameters.outFile" value="${test.parameters.outFile}"/>
             <sysproperty key="defaultdataprovider.propertyFile" value="${defaultdataprovider.propertyFile}"/>
             
-            <test todir="${reports}/contracts"
-                name="${contract-package}-${configuration}" />
+            <test todir="${reports}/contracts" outfile="TEST-${contract-package}.test.ContractTestSuite-${configuration}"
+                name="${contract-package}.test.ContractTestSuite" />
             <formatter type="xml" usefile="yes" />
             <formatter type="plain" usefile="false" />
             <classpath>
