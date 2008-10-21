@@ -49,5 +49,23 @@
         <copy todir="${lib}">
             <fileset dir="${databasecommon.dir}/dist" includes="*.jar"/>
         </copy>
-    </target>	  
+    </target>
+    
+    <target name="run-contract-tests" depends="contract-init">
+        <!-- mysql configuration -->
+        <antcall target="contract-dist" inheritAll="false">
+            <param name="configuration" value="mysql"/>
+        </antcall>
+        <antcall target="contract-tests" inheritAll="false">
+            <param name="configuration" value="mysql"/>
+        </antcall>
+        
+        <!-- mssql configuration -->
+        <antcall target="contract-dist" inheritAll="false">
+            <param name="configuration" value="mssql"/>
+        </antcall>
+        <antcall target="contract-tests" inheritAll="false">
+            <param name="configuration" value="mssql"/>
+        </antcall>
+    </target> 	  
 </project>
