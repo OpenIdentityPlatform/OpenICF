@@ -1028,8 +1028,9 @@ public class DatabaseConnectorTests {
         assertEquals(1, objectInfos.size());
         // get the fields from the test account
         final Set<Attribute> attributeSet = TestAccount.createTestAccount().toAttributeSet();
-        final Map<String, Attribute> expected = AttributeUtil.toMap(attributeSet);
-        final Set<String> keys = CollectionUtil.newSet(expected.keySet());
+        final Map<String,Attribute> expected = AttributeUtil.toMap(attributeSet);
+        final Set<String> keys = CollectionUtil.newCaseInsensitiveSet();
+        keys.addAll(expected.keySet());
 
         // iterate through ObjectClassInfo Set
         for (ObjectClassInfo objectInfo : objectInfos) {

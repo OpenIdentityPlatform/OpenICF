@@ -53,7 +53,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.identityconnectors.common.Assertions;
-import org.identityconnectors.common.CaseInsensitiveMap;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.GUID;
 import org.identityconnectors.common.StringUtil;
@@ -712,7 +711,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      */
     private Set<AttributeInfo> buildAttributeInfoSet(ResultSet rset) throws SQLException {
         Set<AttributeInfo> attrInfo = new HashSet<AttributeInfo>();
-        this.columnClassNames = new CaseInsensitiveMap<Class<?>>();
+        this.columnClassNames = CollectionUtil.<Class<?>>newCaseInsensitiveMap();
         ResultSetMetaData meta = rset.getMetaData();
         int count = meta.getColumnCount();
         for (int i = 1; i <= count; i++) {
