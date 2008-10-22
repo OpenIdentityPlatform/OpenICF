@@ -57,6 +57,7 @@ import java.util.Set;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.contract.data.DataProvider;
+import org.identityconnectors.contract.data.DefaultDataProvider;
 import org.identityconnectors.contract.exceptions.ContractException;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.APIConfiguration;
@@ -483,10 +484,22 @@ public class ConnectorHelper {
                 if(!attributeInfo.is(Uid.NAME)) {                    
                     String dataName = attributeName;
                     if(qualifier.length() > 0) {
-                        dataName = dataName + "." + qualifier;
+                        // TODO: this is a hack, because GroovyDataProvider must have qualifier before attribute name
+                        if (dataProvider instanceof DefaultDataProvider) {
+                            dataName = dataName + "." + qualifier;
+                        }
+                        else {
+                            dataName = qualifier + "." + dataName;
+                        }
                     }
-                    if (attributeInfo.isMultiValue()) {
-                        dataName = dataName + "." + MULTI_VALUE_TYPE_PREFIX;
+                    if (attributeInfo.isMultiValue()) {                        
+                        if (dataProvider instanceof DefaultDataProvider) {
+                            dataName = dataName + "." + MULTI_VALUE_TYPE_PREFIX;
+                        }
+                        else {
+                            // TODO: multi must be part of typeName in case of GroovyDataProvider
+                            // right now we will omit it and generate only single value for multivalue attributes
+                        }
                     }
                     Object attributeValue = get(dataProvider, testName, attributeInfo.getType()
                             .getName(), dataName, objectClassInfo.getType(), sequenceNumber);
@@ -573,7 +586,7 @@ public class ConnectorHelper {
      * @param operation
      * @return
      */
-    public static boolean operationSupported(ConnectorFacade connectorFacade, String typeQuery, 
+    public static boolean operationSupported(ConnectorFacade connectorFacade, ObjectClass oClass, 
             Class<? extends APIOperation> operation) {
         boolean opSupported = false;
         
@@ -585,8 +598,7 @@ public class ConnectorHelper {
         // for each ObjectClassInfo in the schema ...
         for (ObjectClassInfo ocInfo : ocInfoSet) {
             // get the type of the ObjectClassInfo
-            String type = ocInfo.getType();
-            if (type.equals(typeQuery)) {
+            if (ConnectorHelper.getObjectClassFromObjectClassInfo(ocInfo).equals(oClass)) {
                 opSupported = true;
                 break;
             } 
@@ -610,7 +622,7 @@ public class ConnectorHelper {
         Set<ObjectClassInfo> objectClassInfoSet = schema.getObjectClassInfo();
         
         for(ObjectClassInfo objectClassInfo : objectClassInfoSet) {
-            if(operationSupported(connectorFacade, objectClassInfo.getType(), operation)) {
+            if(operationSupported(connectorFacade, ConnectorHelper.getObjectClassFromObjectClassInfo(objectClassInfo), operation)) {
                 opSupported = true;
                 break;
             }

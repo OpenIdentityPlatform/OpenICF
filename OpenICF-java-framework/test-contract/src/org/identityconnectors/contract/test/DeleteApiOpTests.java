@@ -117,7 +117,7 @@ public class DeleteApiOpTests extends ObjectClassRunner {
     @Test
     public void testDeleteThrowUnknownUid() {
         // run the contract test only if delete is supported
-        if (ConnectorHelper.operationSupported(getConnectorFacade(), getAPIOperation())) {
+        if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), getAPIOperation())) {
             Uid uid = null;
             
             try {
