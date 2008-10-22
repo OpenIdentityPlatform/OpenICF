@@ -48,6 +48,7 @@ import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.AbstractConfiguration;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
+import org.identityconnectors.framework.spi.operations.SyncOp;
 
 
 /**
@@ -223,6 +224,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
 
     /**
      * Password Column getter
+     * 
      * @return
      */
     @ConfigurationProperty(order = 8, helpMessageKey = "PASSWORD_HELP", displayMessageKey = "PASSWORD_DISPLAY")
@@ -232,6 +234,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
 
     /**
      * Password Column setter
+     * 
      * @param value
      */
     public void setPasswordColumn(String value) {
@@ -321,7 +324,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * Log Column is required be SyncOp
      * @return Log Column 
      */
-    @ConfigurationProperty(order = 11, helpMessageKey = "CHANGE_LOG_COLUMN_HELP", displayMessageKey = "CHANGE_LOG_COLUMN_DISPLAY")
+    @ConfigurationProperty(order = 11, helpMessageKey = "CHANGE_LOG_COLUMN_HELP", 
+            displayMessageKey = "CHANGE_LOG_COLUMN_DISPLAY", operations = SyncOp.class)
     public String getChangeLogColumn() {
         return this.changeLogColumn;
     }
