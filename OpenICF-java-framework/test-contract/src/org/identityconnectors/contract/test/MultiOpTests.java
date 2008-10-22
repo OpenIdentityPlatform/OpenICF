@@ -123,14 +123,14 @@ public class MultiOpTests extends ObjectClassRunner {
         
         try {
             /* SearchApiOp - get objects stored in connector resource before test */
-            if (ConnectorHelper.operationSupported(getConnectorFacade(), SearchApiOp.class)) {
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), SearchApiOp.class)) {
                 // null filter
                 coBeforeTest = ConnectorHelper.search(getConnectorFacade(), getObjectClass(), null,
                         getOperationOptionsByOp(SearchApiOp.class));
             }
             
             /* SyncApiOp - start synchronizing from now */
-            if (ConnectorHelper.operationSupported(getConnectorFacade(), SyncApiOp.class)) {
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), SyncApiOp.class)) {
                 // start synchronizing from now
                 token = getConnectorFacade().getLatestSyncToken();
             }
@@ -146,7 +146,7 @@ public class MultiOpTests extends ObjectClassRunner {
             }            
             
             /* GetApiOp - check that objects were created with attributes as requested */
-            if (ConnectorHelper.operationSupported(getConnectorFacade(), GetApiOp.class)) {
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), GetApiOp.class)) {
                 for (int i = 0; i < recordCount; i++) {
                     ConnectorObject obj = getConnectorFacade().getObject(getObjectClass(),
                             uids.get(i), getOperationOptionsByOp(GetApiOp.class));
@@ -157,13 +157,13 @@ public class MultiOpTests extends ObjectClassRunner {
             }
 
             /* TestApiOp */
-            if (ConnectorHelper.operationSupported(getConnectorFacade(), TestApiOp.class)) {
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), TestApiOp.class)) {
                 // should NOT throw
                 getConnectorFacade().test();
             }
 
             /* SyncApiOp - check sync of created objects */
-            if (ConnectorHelper.operationSupported(getConnectorFacade(), SyncApiOp.class)) {
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), SyncApiOp.class)) {
                 if (SyncApiOpTests.canSyncAfterOp(CreateApiOp.class)) {
                     // sync after create
                     deltas = ConnectorHelper.sync(getConnectorFacade(), getObjectClass(), token,
@@ -192,7 +192,7 @@ public class MultiOpTests extends ObjectClassRunner {
                     getOperationOptionsByOp(DeleteApiOp.class));
 
             /* SearchApiOp - search with null filter */
-            if (ConnectorHelper.operationSupported(getConnectorFacade(), SearchApiOp.class)) {
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), SearchApiOp.class)) {
                 List<ConnectorObject> coFound = ConnectorHelper.search(getConnectorFacade(),
                         getObjectClass(), null, getOperationOptionsByOp(SearchApiOp.class));
                 assertTrue(
@@ -215,7 +215,7 @@ public class MultiOpTests extends ObjectClassRunner {
             /* UpdateApiOp - update one object */
             Uid updateUid = null;
             Set<Attribute> replaceAttributes = null; 
-            if (ConnectorHelper.operationSupported(getConnectorFacade(), UpdateApiOp.class)) {
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), UpdateApiOp.class)) {
                 updateUid = uids.remove(0);
                 attrs.remove(0);
                 replaceAttributes = ConnectorHelper.getUpdateableAttributes(getDataProvider(),
@@ -238,7 +238,7 @@ public class MultiOpTests extends ObjectClassRunner {
                 }
 
                 /* SearchApiOp - search with Uid filter */
-                if (ConnectorHelper.operationSupported(getConnectorFacade(), SearchApiOp.class)) {
+                if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), SearchApiOp.class)) {
                     // search by Uid
                     Filter fltUid = FilterBuilder.equalTo(updateUid);
                     List<ConnectorObject> coFound = ConnectorHelper.search(getConnectorFacade(), getObjectClass(),
@@ -251,7 +251,7 @@ public class MultiOpTests extends ObjectClassRunner {
             }
             
             /* SyncApiOp - sync after one delete and one possible update */
-            if (ConnectorHelper.operationSupported(getConnectorFacade(), SyncApiOp.class)) {
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), SyncApiOp.class)) {
                 if (SyncApiOpTests.canSyncAfterOp(DeleteApiOp.class)
                         || SyncApiOpTests.canSyncAfterOp(UpdateApiOp.class)) {
                     
@@ -288,7 +288,7 @@ public class MultiOpTests extends ObjectClassRunner {
             }
 
             /* ValidateApiOp */
-            if (ConnectorHelper.operationSupported(getConnectorFacade(), ValidateApiOp.class)) {
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), ValidateApiOp.class)) {
                 // should NOT throw
                 getConnectorFacade().validate();
             }
@@ -302,7 +302,7 @@ public class MultiOpTests extends ObjectClassRunner {
             assertNotNull("Create returned null Uid.", createUid);
 
             /* GetApiOp */
-            if (ConnectorHelper.operationSupported(getConnectorFacade(), GetApiOp.class)) {
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), GetApiOp.class)) {
                 // get the object to make sure it exist now
                 ConnectorObject obj = getConnectorFacade().getObject(getObjectClass(), createUid,
                         getOperationOptionsByOp(GetApiOp.class));
@@ -320,7 +320,7 @@ public class MultiOpTests extends ObjectClassRunner {
                     getOperationOptionsByOp(DeleteApiOp.class));
 
             /* SyncApiOp - after delete, create */
-            if (ConnectorHelper.operationSupported(getConnectorFacade(), SyncApiOp.class)) {
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), SyncApiOp.class)) {
                 if (SyncApiOpTests.canSyncAfterOp(DeleteApiOp.class)
                         || SyncApiOpTests.canSyncAfterOp(CreateApiOp.class)) {
                     deltas = ConnectorHelper.sync(getConnectorFacade(), getObjectClass(), token,
@@ -361,7 +361,7 @@ public class MultiOpTests extends ObjectClassRunner {
             }
 
             /* SyncApiOp - all objects were deleted */
-            if (ConnectorHelper.operationSupported(getConnectorFacade(), SyncApiOp.class)
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), SyncApiOp.class)
                     && SyncApiOpTests.canSyncAfterOp(DeleteApiOp.class)) {
                 deltas = ConnectorHelper.sync(getConnectorFacade(), getObjectClass(), token,
                         getOperationOptionsByOp(SyncApiOp.class))
