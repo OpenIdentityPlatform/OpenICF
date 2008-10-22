@@ -39,13 +39,12 @@
  */
 package org.identityconnectors.dbcommon;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.List;
 
 import org.identityconnectors.common.logging.Log;
-import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.spi.Configuration;
 
@@ -139,79 +138,26 @@ public class DatabaseConnection  {
     }
 
     /**
-     * <p>
-     * This method replaces the "?" markers in SQL statement with the parameters given as <i>values</i>. It
-     * concentrates the replacement of all params. <code>GuardedString</code> are handled so the password is never
-     * visible.
-     * </p>
-     * <p>
-     * Note: the implementation directly uses java.sql.PreparedStatement .
-     * </p>
-     * 
+     * Indirect call of prepare statement
      * @param sql a <CODE>String</CODE> sql statement definition
-     * @param params a <CODE>List</CODE> of the object arguments
      * @return return a prepared statement
      * @throws SQLException an exception in statement
      */
-    public PreparedStatement prepareStatement(final String sql, final List<Object> params) throws SQLException {
-        final PreparedStatement statement = getConnection().prepareStatement(sql);
-        if(params == null) {
-            return statement;
-        }
-        for (int i = 0; i < params.size(); i++) {
-            final int idx = i + 1;
-            Object val = params.get(i);
-            // Guarded string conversion
-            if (val instanceof GuardedString) {
-                setGuardedStringParam(statement, idx, (GuardedString) val);
-            } else {
-                setParam(statement, idx, val);
-            }
-        }
-        return statement;
+    public PreparedStatement prepareStatement(final String sql) throws SQLException {
+        return getConnection().prepareStatement(sql);
     }
-
+    
+        
+    
     /**
-     * Set the statement parameter
-     * <p> It is ready for overloading if necessary</p>
-     * @param stmt a <CODE>PreparedStatement</CODE> to set the params
-     * @param idx an index of the parameter
-     * @param param a parameter Value
-     * @throws SQLException a SQL exception 
+     * Indirect call of prepareCall
+     * @param sql a <CODE>String</CODE> sql statement definition
+     * @return return a callable statement
+     * @throws SQLException an exception in statement
      */
-    protected void setParam(final PreparedStatement stmt, final int idx, Object param) throws SQLException {
-        stmt.setObject(idx, param);
-    }
-
-    /**
-     * The helper guardedString bind method
-     * @param stmt to bind to
-     * @param idx index of the object
-     * @param a <CODE>GuardedString</CODE> parameter
-     * @throws SQLException
-     */
-    protected void setGuardedStringParam(final PreparedStatement stmt, final int idx, GuardedString guard)
-            throws SQLException {
-        try {
-            guard.access(new GuardedString.Accessor() {
-                public void access(char[] clearChars) {
-                    try {
-                        setParam(stmt, idx, new String(clearChars));
-                    } catch (SQLException e) {
-                        // checked exception are not allowed in the access method 
-                        // Lets use the exception softening pattern
-                        throw new RuntimeException(e);
-                    }
-                }
-            });
-        } catch (RuntimeException e) {
-            // determine if there's a SQLException and re-throw that..
-            if (e.getCause() instanceof SQLException) {
-                throw (SQLException) e.getCause();
-            }
-            throw e;
-        }
-    }
+    public CallableStatement prepareCall(final String sql) throws SQLException {
+        return getConnection().prepareCall(sql);
+    }    
 
     /**
      * TODO: Plan to support DataSource in the near future. The advantage is the administrator can configure the

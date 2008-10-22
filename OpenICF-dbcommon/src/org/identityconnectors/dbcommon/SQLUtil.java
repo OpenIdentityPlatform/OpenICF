@@ -42,14 +42,17 @@ package org.identityconnectors.dbcommon;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Blob;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.identityconnectors.common.Assertions;
@@ -412,6 +415,93 @@ public final class SQLUtil {
 
         return newValue;
     }
+    
+        
+    
+
+    /**
+     * <p>
+     * This method binds the "?" markers in SQL statement with the parameters given as <i>values</i>. It
+     * concentrates the replacement of all params. <code>GuardedString</code> are handled so the password is never
+     * visible.
+     * </p>
+     * 
+     * @param statement
+     * @param params a <CODE>List</CODE> of the object arguments
+     * @throws SQLException an exception in statement
+     */
+    public static void setParams(final PreparedStatement statement, final List<Object> params) throws SQLException {
+        if(statement == null || params == null) {
+            return;
+        }
+        for (int i = 0; i < params.size(); i++) {
+            final int idx = i + 1;
+            setParam(statement, idx, params.get(i));
+        }
+    }
+    
+    /**
+     * <p>
+     * This method binds the "?" markers in SQL statement with the parameters given as <i>values</i>. It
+     * concentrates the replacement of all params. <code>GuardedString</code> are handled so the password is never
+     * visible.
+     * </p>
+     * 
+     * @param statement
+     * @param params a <CODE>List</CODE> of the object arguments
+     * @throws SQLException an exception in statement
+     */
+    public static void setParams(final CallableStatement statement, final List<Object> params) throws SQLException {
+        //The same as for prepared statements
+        setParams( (PreparedStatement) statement, params);
+    }    
+
+    /**
+     * Set the statement parameter
+     * <p> It is ready for overloading if necessary</p>
+     * @param stmt a <CODE>PreparedStatement</CODE> to set the params
+     * @param idx an index of the parameter
+     * @param val a parameter Value
+     * @throws SQLException a SQL exception 
+     */
+    public static void setParam(final PreparedStatement stmt, final int idx, Object val) throws SQLException {
+        // Guarded string conversion
+        if (val instanceof GuardedString) {
+            setGuardedStringParam(stmt, idx, (GuardedString) val);
+        } else {
+            stmt.setObject(idx, val);
+        }       
+    }
+
+    /**
+     * The helper guardedString bind method
+     * @param stmt to bind to
+     * @param idx index of the object
+     * @param guard a <CODE>GuardedString</CODE> parameter
+     * @throws SQLException
+     */
+    private static void setGuardedStringParam(final PreparedStatement stmt, final int idx, GuardedString guard)
+            throws SQLException {
+        try {
+            guard.access(new GuardedString.Accessor() {
+                public void access(char[] clearChars) {
+                    try {
+                        stmt.setObject(idx, new String(clearChars));
+                    } catch (SQLException e) {
+                        // checked exception are not allowed in the access method 
+                        // Lets use the exception softening pattern
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
+        } catch (RuntimeException e) {
+            // determine if there's a SQLException and re-throw that..
+            if (e.getCause() instanceof SQLException) {
+                throw (SQLException) e.getCause();
+            }
+            throw e;
+        }
+    }    
 
 }
 
