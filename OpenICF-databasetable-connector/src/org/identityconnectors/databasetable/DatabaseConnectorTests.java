@@ -559,7 +559,8 @@ public class DatabaseConnectorTests {
             expected.setChanged(changed);
             values.add(changed);
             values.add(uid.getUidValue());
-            ps = conn.prepareStatement(SQL_TEMPLATE, values);
+            ps = conn.prepareStatement(SQL_TEMPLATE);
+            SQLUtil.setParams(ps, values);
             ps.execute();
             conn.commit();
         } finally {
@@ -610,7 +611,8 @@ public class DatabaseConnectorTests {
             expected.setAge(null); //The age as a changeLogColumn will not be in the result
             values.add(changed);
             values.add(uid.getUidValue());
-            ps = conn.prepareStatement(SQL_TEMPLATE, values);
+            ps = conn.prepareStatement(SQL_TEMPLATE);
+            SQLUtil.setParams(ps, values);
             ps.execute();
             conn.commit();
         } finally {
@@ -661,7 +663,8 @@ public class DatabaseConnectorTests {
             expected.setAccessed(null); //The age as a changeLogColumn will not be in the result
             values.add(changed);
             values.add(uid.getUidValue());
-            ps = conn.prepareStatement(SQL_TEMPLATE, values);
+            ps = conn.prepareStatement(SQL_TEMPLATE);
+            SQLUtil.setParams(ps, values);
             ps.execute();
             conn.commit();
         } finally {
@@ -707,7 +710,8 @@ public class DatabaseConnectorTests {
             List<Object> values = new ArrayList<Object>();
             values.add(changed);
             values.add(uid.getUidValue());
-            ps = conn.prepareStatement(SQL_TEMPLATE, values);
+            ps = conn.prepareStatement(SQL_TEMPLATE);
+            SQLUtil.setParams(ps, values);
             ps.execute();
             conn.commit();
         } finally {
@@ -892,7 +896,8 @@ public class DatabaseConnectorTests {
 
             List<Object> values = new ArrayList<Object>();
             values.add(uid.getUidValue());
-            ps = conn.prepareStatement(sql, values);
+            ps = conn.prepareStatement(sql);
+            SQLUtil.setParams(ps, values);
             ps.execute();
             conn.commit();
 

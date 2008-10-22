@@ -253,7 +253,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
 
         PreparedStatement pstmt = null;
         try {
-            pstmt = conn.prepareStatement(sql, bld.getParams());
+            pstmt = conn.prepareStatement(sql);
+            SQLUtil.setParams(pstmt, bld.getParams());
             // execute the SQL statement
             pstmt.execute();
         } catch (SQLException e) {
@@ -373,7 +374,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         PreparedStatement stmt = null;
         try {
             // create the prepared statement..
-            stmt = conn.prepareStatement(sql, params);
+            stmt = conn.prepareStatement(sql);
+            SQLUtil.setParams(stmt, params);
             stmt.execute();
         } catch (SQLException e) {
             SQLUtil.rollbackQuietly(conn);
@@ -431,7 +433,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         PreparedStatement statement = null;
         final String sql = query.getSQL();
         try {
-            statement = conn.prepareStatement(sql, query.getParams());
+            statement = conn.prepareStatement(sql);
+            SQLUtil.setParams(statement, query.getParams());
             result = statement.executeQuery();
             while (result.next()) {
                 final Set<Attribute> attributeSet = SQLUtil.getAttributeSet(result);
@@ -486,7 +489,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         PreparedStatement statement = null;
         final String sql = query.getSQL();
         try {
-            statement = conn.prepareStatement(sql, query.getParams());
+            statement = conn.prepareStatement(sql);
+            SQLUtil.setParams(statement, query.getParams());
             result = statement.executeQuery();
             while (result.next()) {
                 final Set<Attribute> attributeSet = SQLUtil.getAttributeSet(result);
@@ -520,7 +524,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         ResultSet rset = null;
         try {
             // create the prepared statement..
-            stmt = conn.prepareStatement(sql, null);
+            stmt = conn.prepareStatement(sql);
             rset = stmt.executeQuery();
             if (rset.next()) {
                 ret = new SyncToken(SQLUtil.convertToSupportedType(rset.getObject(1)));
@@ -596,7 +600,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         ResultSet result = null;
         try {
             // replace the ? in the SQL_AUTH statement with real data
-            stmt = conn.prepareStatement(sql, values);
+            stmt = conn.prepareStatement(sql);
+            SQLUtil.setParams(stmt, values);
             result = stmt.executeQuery();
             if (!result.next()) {
                 throw new InvalidCredentialException("user: " + username
