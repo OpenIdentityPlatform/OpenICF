@@ -104,10 +104,16 @@ OperationOptionInfo | SyncDeltaType | SyncToken | SyncDelta
 <!ELEMENT ByteArray (#PCDATA)>
 <!ELEMENT Class (#PCDATA)>
 <!ELEMENT Map ((MapEntry)*)>
+<!ATTLIST Map
+    caseInsensitive CDATA #IMPLIED
+>
 <!ELEMENT MapEntry ((%xmlObject;),(%xmlObject;))> 
 <!ELEMENT Keys ((%xmlObject;)*)>
 <!ELEMENT List ((%xmlObject;)*)>
 <!ELEMENT Set ((%xmlObject;)*)>
+<!ATTLIST Set
+    caseInsensitive CDATA #IMPLIED
+>
 <!ELEMENT Locale EMPTY> 
 <!ATTLIST Locale
     language CDATA #IMPLIED
@@ -170,7 +176,7 @@ OperationOptionInfo | SyncDeltaType | SyncToken | SyncDelta
 <!--= Common Objects                                      =-->
 <!--=                                                     =-->
 <!--=======================================================-->
-<!ELEMENT Attribute (Values)> 
+<!ELEMENT Attribute (Values)?> 
 <!ELEMENT Values ((%xmlObject;)*)>
 <!ATTLIST Attribute
     name CDATA #REQUIRED

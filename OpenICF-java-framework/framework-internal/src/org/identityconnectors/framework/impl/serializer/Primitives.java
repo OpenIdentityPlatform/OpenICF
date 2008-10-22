@@ -54,6 +54,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 
+import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.security.EncryptorFactory;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.common.security.SecurityUtil;
@@ -392,19 +393,38 @@ class Primitives {
                 new AbstractObjectSerializationHandler(Map.class,"Map") {
             
             public Object deserialize(ObjectDecoder decoder)  {
-                Map<Object,Object> rv = new HashMap<Object,Object>();
-                int count = decoder.getNumSubObjects();
-                for ( int i = 0; i < count; i++ ) {
-                    MapEntry entry = (MapEntry)decoder.readObjectContents(i);
-                    rv.put(entry.key, entry.value);
+                boolean caseInsensitive =
+                    decoder.readBooleanField("caseInsensitive", false);
+                if ( caseInsensitive ) {
+                    SortedMap<String,Object> rv = CollectionUtil.<Object>newCaseInsensitiveMap();
+                    int count = decoder.getNumSubObjects();
+                    for ( int i = 0; i < count; i++ ) {
+                        MapEntry entry = (MapEntry)decoder.readObjectContents(i);
+                        rv.put(String.valueOf(entry.key), entry.value);
+                    }
+                    return rv;                    
                 }
-                return rv;
+                else {
+                    Map<Object,Object> rv = new HashMap<Object,Object>();
+                    int count = decoder.getNumSubObjects();
+                    for ( int i = 0; i < count; i++ ) {
+                        MapEntry entry = (MapEntry)decoder.readObjectContents(i);
+                        rv.put(entry.key, entry.value);
+                    }
+                    return rv;
+                }
             }
 
             public void serialize(Object object, ObjectEncoder encoder)
-                     {
+            {
                 Map<?,?> map = (Map<?,?>)object;
-                if ( map instanceof SortedMap ) {
+                //special case - for case insensitive maps
+                if ( CollectionUtil.isCaseInsensitiveMap(map)) {
+                    encoder.writeBooleanField("caseInsensitive", true);
+                }
+                //for all other sorted maps, we don't know how
+                //to serialize them
+                else if ( map instanceof SortedMap ) {
                     throw new IllegalArgumentException("Serialization of SortedMap not supported");
                 }
                 for (Map.Entry<?, ?> entry : map.entrySet()) {
@@ -450,19 +470,38 @@ class Primitives {
                 new AbstractObjectSerializationHandler(Set.class,"Set") {
             
             public Object deserialize(ObjectDecoder decoder)  {
-                Set<Object> rv = new HashSet<Object>();
-                int count = decoder.getNumSubObjects();
-                for ( int i = 0; i < count; i++) {
-                    Object obj = decoder.readObjectContents(i);
-                    rv.add(obj);
+                boolean caseInsensitive =
+                    decoder.readBooleanField("caseInsensitive", false);
+                if (caseInsensitive) {
+                    Set<String> rv = CollectionUtil.newCaseInsensitiveSet();
+                    int count = decoder.getNumSubObjects();
+                    for ( int i = 0; i < count; i++) {
+                        String str = String.valueOf(decoder.readObjectContents(i));
+                        rv.add(str);
+                    }
+                    return rv;                    
                 }
-                return rv;
+                else {
+                    Set<Object> rv = new HashSet<Object>();
+                    int count = decoder.getNumSubObjects();
+                    for ( int i = 0; i < count; i++) {
+                        Object obj = decoder.readObjectContents(i);
+                        rv.add(obj);
+                    }
+                    return rv;
+                }
             }
 
             public void serialize(Object object, ObjectEncoder encoder)
                      {
                 Set<?> set = (Set<?>)object;
-                if ( set instanceof SortedSet ) {
+                //special case - for case insensitive sets
+                if ( CollectionUtil.isCaseInsensitiveSet(set)) {
+                    encoder.writeBooleanField("caseInsensitive", true);
+                }
+                //for all other sorted sets, we don't know how
+                //to serialize them
+                else if ( set instanceof SortedSet ) {
                     throw new IllegalArgumentException("Serialization of SortedSet not supported");
                 }
                 for (Object obj : set) {

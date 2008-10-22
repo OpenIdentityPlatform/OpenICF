@@ -39,7 +39,6 @@
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;

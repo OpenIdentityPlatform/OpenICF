@@ -44,7 +44,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.identityconnectors.common.Assertions;
-import org.identityconnectors.common.CaseInsensitiveMap;
 import org.identityconnectors.common.CollectionUtil;
 
 
@@ -68,7 +67,8 @@ public final class AttributeInfoUtil {
      */
     public static Map<String, AttributeInfo> toMap(
             Collection<? extends AttributeInfo> attributes) {
-        Map<String, AttributeInfo> ret = new CaseInsensitiveMap<AttributeInfo>();
+        Map<String, AttributeInfo> ret = 
+            CollectionUtil.<AttributeInfo>newCaseInsensitiveMap();
         for (AttributeInfo attr : attributes) {
             ret.put(attr.getName(), attr);
         }

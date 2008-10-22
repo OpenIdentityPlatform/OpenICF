@@ -43,6 +43,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -50,6 +51,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 public final class CollectionUtil {
 
@@ -59,6 +64,59 @@ public final class CollectionUtil {
     private CollectionUtil() {
         throw new AssertionError();
     }
+    
+    /**
+     * Creates a case-insensitive set
+     * @return An empty case-insensitive set
+     */
+    public static SortedSet<String> newCaseInsensitiveSet() {
+        TreeSet<String> rv = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+        return rv;
+    }
+    
+    /**
+     * Returns true if the given set is a case-insensitive set
+     * @param set The set. May be null.
+     * @return true iff the given set is a case-insensitive set
+     */
+    public static boolean isCaseInsensitiveSet(Set<?> set) {
+        if ( set instanceof SortedSet ) {
+            SortedSet<?> sortedSet =
+                (SortedSet<?>)set;
+            Comparator<?> comp = sortedSet.comparator();
+            if ( comp.equals(String.CASE_INSENSITIVE_ORDER) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+    /**
+     * Creates a case-insenstive map
+     * @param <T> The object type of the map
+     * @return An empty case-insensitive map
+     */
+    public static <T> SortedMap<String,T> newCaseInsensitiveMap() {
+        TreeMap<String,T> rv = new TreeMap<String,T>(String.CASE_INSENSITIVE_ORDER);
+        return rv;
+    }
+    
+    /**
+     * Returns true if the given map is a case-insensitive map
+     * @param map The map. May be null.
+     * @return true iff the given map is a case-insensitive map
+     */
+    public static boolean isCaseInsensitiveMap(Map<?,?> map) {
+        if ( map instanceof SortedMap ) {
+            SortedMap<?,?> sortedMap =
+                (SortedMap<?,?>)map;
+            Comparator<?> comp = sortedMap.comparator();
+            if ( comp.equals(String.CASE_INSENSITIVE_ORDER) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     /**
      * Protects from <code>null</code> and returns a new instance of
@@ -118,7 +176,15 @@ public final class CollectionUtil {
     }
     
     public static <T, K> Map<T, K> asReadOnlyMap(Map<T, K> map) {
-        return Collections.unmodifiableMap(nullAsEmpty(map));
+        if ( map instanceof SortedMap ) {
+            @SuppressWarnings("unchecked")
+            SortedMap<T,K> sortedMap =
+                (SortedMap)map;
+            return Collections.unmodifiableSortedMap(sortedMap);
+        }
+        else {
+            return Collections.unmodifiableMap(nullAsEmpty(map));
+        }
     }
 
     public static <T> Map<T, T> newReadOnlyMap(T[][] kv) {

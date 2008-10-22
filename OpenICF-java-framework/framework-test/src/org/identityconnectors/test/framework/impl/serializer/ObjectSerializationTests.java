@@ -78,6 +78,7 @@ import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
+import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.Name;
@@ -356,6 +357,20 @@ public class ObjectSerializationTests {
     }
     
     @Test
+    public void testCaseInsensitiveMap() {
+        Set<Attribute> set = new HashSet<Attribute>();
+        set.add(AttributeBuilder.build("foo1"));
+        set.add(AttributeBuilder.build("foo2"));
+        Map<String,Attribute> map = AttributeUtil.toMap(set);
+        Assert.assertTrue(map.containsKey("Foo1"));
+        Assert.assertTrue(map.containsKey("Foo2"));
+        @SuppressWarnings("unchecked")
+        Map<String,Attribute> map2 = (Map)cloneObject(map);
+        Assert.assertTrue(map2.containsKey("Foo1"));
+        Assert.assertTrue(map2.containsKey("Foo2"));        
+    }
+    
+    @Test
     public void testList() throws Exception {
         List<Object> v1 = new ArrayList<Object>();
         v1.add("val1");
@@ -371,6 +386,16 @@ public class ObjectSerializationTests {
         v1.add("val2");
         Set<?> v2 = (Set<?>)cloneObject(v1);
         Assert.assertEquals(v1,v2);
+    }
+    
+    @Test
+    public void testCaseInsensitiveSet() {
+        Set<String> v1 = CollectionUtil.newCaseInsensitiveSet();
+        v1.add("foo");
+        v1.add("foo2");
+        Set<?> v2 = (Set<?>)cloneObject(v1);
+        Assert.assertTrue(v2.contains("Foo"));
+        Assert.assertTrue(v2.contains("Foo2"));
     }
     
     @Test
