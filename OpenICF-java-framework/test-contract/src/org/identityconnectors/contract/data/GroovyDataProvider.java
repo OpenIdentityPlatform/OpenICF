@@ -59,6 +59,7 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.contract.data.groovy.Get;
 import org.identityconnectors.contract.data.groovy.Lazy;
 import org.identityconnectors.contract.data.groovy.Random;
+import org.identityconnectors.contract.exceptions.ContractException;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.junit.Assert;
 
@@ -97,29 +98,24 @@ public class GroovyDataProvider implements DataProvider {
 
     private static final String PROPERTY_SEPARATOR = ".";
     private static final String CONTRACT_TESTS_FILE_NAME = "contract-tests.groovy";
+    private static final String BOOTSTRAP_FILE_NAME = "bootstrap.groovy";
     
-
     /** holds the parsed config file */
     private ConfigObject configObject;
 
-    /** cache for retrieved values */
+    /** cache for resolved values */
     private Map<String, Object> cache = new HashMap<String, Object>();
 
-    /** contains property name that user asked last time */
-    private String currentQuery = null; // TODO try to eliminate this var. to
-    // make it thread safe
-
-    private static/*
-                     * TODO delete static, it's just here because of for Unit
-                     * tests.
-                     */final ConfigSlurper cs = new ConfigSlurper();
+    private final ConfigSlurper cs = new ConfigSlurper();
 
     private static final Log LOG = Log.getLog(GroovyDataProvider.class);
 
-    /* *********************** */
+    
+    /* TODO: these two properties should be used for outputting of generated properties' values
+     * and then loading it
+     */
     private static final String PARAM_PROPERTY_FILE = "defaultdataprovider.propertyFile";
     private static final String PARAM_PROPERTY_OUT_FILE = "test.parameters.outFile";
-    private static final String GLOBAL_PROPERTY_FILE = "dataprovider-global.properties";
 
     // private File _propertyOutFile = null; // TODO implement output to
     // property files, as was in DefaultDataProvider.
@@ -129,11 +125,8 @@ public class GroovyDataProvider implements DataProvider {
      */
     public GroovyDataProvider() {
         configObject = doBootstrap();
-
-        ConfigObject configObjectNew = loadProjectProperties();
-
-        ConfigObject tmp = mergeConfigObjects(configObject, configObjectNew);
-        configObject = tmp;
+        ConfigObject projectConfig = loadProjectConfigurations();
+        configObject = mergeConfigObjects(configObject, projectConfig);
     }
 
     /**
@@ -154,11 +147,8 @@ public class GroovyDataProvider implements DataProvider {
     }
 
     /** load the bootstrap configuration */
-    private ConfigObject doBootstrap() {
-        final String BOOTSTRAP_LOCATION = "bootstrap.groovy";
-
-        URL url = getClass().getClassLoader().getResource(BOOTSTRAP_LOCATION);
-
+    private ConfigObject doBootstrap() {        
+        URL url = getClass().getClassLoader().getResource(BOOTSTRAP_FILE_NAME);
         return cs.parse(url);
     }
 
@@ -171,7 +161,7 @@ public class GroovyDataProvider implements DataProvider {
      * </ul>
      * 
      */
-    private static ConfigObject loadProjectProperties() {
+    private ConfigObject loadProjectConfigurations() {
         /*
          * main config object, that will contain the merged result form 2
          * configuration files.
@@ -184,44 +174,39 @@ public class GroovyDataProvider implements DataProvider {
         if (StringUtil.isNotBlank(prjName)) {
             // list of filePaths to configuration files
             List<String> configurations = null;
-            {
-                configurations = new LinkedList<String>();
-                // #1: user-home/.connector-name/contract-tests.groovy
-                String directoryPath = userHome.getAbsolutePath()
-                        + File.separatorChar + "." + prjName;
-                configurations.add(directoryPath + File.separatorChar
-                        + CONTRACT_TESTS_FILE_NAME);
-                // #2: determine the configuration property
-                String cfg = System.getProperty("configuration", null);
-                if (StringUtil.isNotBlank(cfg)) {
-                    directoryPath = directoryPath + "-" + cfg;
-                    configurations.add(directoryPath + File.separatorChar
-                            + CONTRACT_TESTS_FILE_NAME);
-                }
+            configurations = new LinkedList<String>();
+            
+            // #1: user-home/.connector-name/contract-tests.groovy
+            String directoryPath = userHome.getAbsolutePath() + File.separatorChar + "." + prjName;
+            configurations.add(directoryPath + File.separatorChar + CONTRACT_TESTS_FILE_NAME);
+            
+            // determine the configuration property
+            String cfg = System.getProperty("configuration", null);
+            if (StringUtil.isNotBlank(cfg)) {
+                directoryPath = directoryPath + "-" + cfg;
+                // #2: user-home/.connector-name-configuration/contract-tests.groovy
+                configurations.add(directoryPath + File.separatorChar + CONTRACT_TESTS_FILE_NAME);
+            }
 
-                for (String configFile : configurations) {
-                    // read the config file's contents and merge it:
-                    File cnfg = new File(configFile);
-                    if (cnfg.exists()) {
-                        ConfigObject lowPriorityCObj = parsePropertyFile(cnfg
-                                .getAbsolutePath());
-                        if (co != null) {
-                            ConfigObject merged = mergeConfigObjects(co,
-                                    lowPriorityCObj);
-                            co = merged; // co holds the final ConfigObject
-                        } else {
-                            co = lowPriorityCObj;
-                        }
+            for (String configFile : configurations) {
+                // read the config file's contents and merge it:
+                File cnfg = new File(configFile);
+                if (cnfg.exists()) {
+                    ConfigObject lowPriorityCObj = parseConfigFile(cnfg);
+                    if (co != null) {
+                        co = mergeConfigObjects(co, lowPriorityCObj);
+                    } else {
+                        co = lowPriorityCObj;
                     }
                 }
-            }// configuration init
+            }
 
         }
 
         return co;
     }
 
-    public static ConfigObject mergeConfigObjects(ConfigObject lowPriorityCO,
+    static ConfigObject mergeConfigObjects(ConfigObject lowPriorityCO,
             ConfigObject highPriorityCO) {
         return (ConfigObject) lowPriorityCO.merge(highPriorityCO);
     }
@@ -232,61 +217,34 @@ public class GroovyDataProvider implements DataProvider {
      * @param path
      * @return
      */
-    public static ConfigObject parsePropertyFile(String path) {
-        ConfigObject result = null;
-
-        File f = new File(path);
-
+    private ConfigObject parseConfigFile(File file) {
         try {
             // parse the configuration file once
-            URL url = f.toURL();
-            result = cs.parse(url);
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
+            URL url = file.toURL();
+            return cs.parse(url);
+        } catch (Exception e) {
+            LOG.error("Exception thrown during parsing of config file: " + e);
+            throw ContractException.wrap(e);
         }
-
-        return result;
     }
 
-    // /**
-    // * TODO javadoc
-    // *
-    // * @param name
-    // * property name
-    // * @return the value for given property
-    // * @throws Exception
-    // * @Deprecated
-    // */
-    // public Object get(String name) throws ObjectNotFoundException {
-    // return get(name, String.class, true);
-    // }
 
     /**
      * 
-     * 
-     * 
-     * 
-     * 
-     * GET -- main entrance to the resolution chain
-     * 
-     * 
-     * 
-     * 
+     * Main get method. Property lookup starts here.
      * 
      */
     public Object get(String name, String type, boolean useDefault)
             throws ObjectNotFoundException {
-        currentQuery = name; // save the original query (will be used later)
-        // when caching... see get())
         Object o = null;
 
         try {
-            o = recursiveGet(currentQuery);
+            o = propertyRecursiveGet(name);
         } catch (ObjectNotFoundException onfe) {
             // What to do in case of missing property value:
             if (useDefault) {
                 // generate a default value
-                o = recursiveGet(type);
+                o = propertyRecursiveGet(type);
             } else {
                 throw onfe;
             }
@@ -296,6 +254,9 @@ public class GroovyDataProvider implements DataProvider {
         if (o instanceof ObjectNotFoundException) {
             throw (ObjectNotFoundException) o;
         }
+        
+        // cache resolved value
+        cache.put(name, o);
         return o;
     }
 
@@ -305,39 +266,44 @@ public class GroovyDataProvider implements DataProvider {
      * @param name
      * @return
      */
-    private Object recursiveGet(String name) throws ObjectNotFoundException {
+    private Object propertyRecursiveGet(String name) throws ObjectNotFoundException {
         Object response = null;
-
-        try {
-
-            // get the property for given name
-            // (in case property is not found, ObjectNotFoundException will be
-            // thrown.)
-            response = get(name, this.configObject);
-
-        } catch (ObjectNotFoundException onfe) {
-            // we did not found the property for given name, try to search it
-            // recursively
-            // by deleting the first prefix
-            int separatorIndex = name.indexOf(PROPERTY_SEPARATOR, 0);
-
-            if (separatorIndex != -1) {
-                separatorIndex++;
-                if (separatorIndex < name.length()) {
-                    return recursiveGet(name.substring(separatorIndex));
-                }
-            } else {
-                throw new ObjectNotFoundException(
-                        "Can't find object for key:  " + this.currentQuery);
-            }// fi
-        }// catch
+        
+        if (!cache.containsKey(name)) {
+            try {
+    
+                // get the property for given name
+                // (in case property is not found, ObjectNotFoundException will be
+                // thrown.)
+                response = configObjectRecursiveGet(name, this.configObject);
+    
+            } catch (ObjectNotFoundException onfe) {
+                // we did not found the property for given name, try to search it
+                // recursively
+                // by deleting the first prefix
+                int separatorIndex = name.indexOf(PROPERTY_SEPARATOR, 0);
+    
+                if (separatorIndex != -1) {
+                    separatorIndex++;
+                    if (separatorIndex < name.length()) {
+                        return propertyRecursiveGet(name.substring(separatorIndex));
+                    }
+                } else {
+                    throw new ObjectNotFoundException(
+                            "Can't find object for key:  " + name);
+                }// fi
+            }// catch
+        }
+        else {
+            response = cache.get(name);
+        }
 
         return response;
     }
 
     /**
      * contains key functionality for acquiring properties with hierarchical
-     * names (e.g. foo.bar.spam)
+     * names (e.g. foo.bar.spam) from ConfigObject
      * 
      * @param name
      *            property name
@@ -347,7 +313,7 @@ public class GroovyDataProvider implements DataProvider {
      * @return
      * @throws ObjectNotFoundException
      */
-    private Object get(String name, ConfigObject co)
+    private Object configObjectRecursiveGet(String name, ConfigObject co)
             throws ObjectNotFoundException {
         int dotIndex = name.indexOf(PROPERTY_SEPARATOR);
         if (dotIndex >= 0) {
@@ -356,12 +322,12 @@ public class GroovyDataProvider implements DataProvider {
             /*
              * request the property name from parsed config file
              */
-            Object o = callGet(co, currentNamePart);
+            Object o = configObjectGet(co, currentNamePart);
 
             if (o instanceof ConfigObject) {
                 // recursively resolve the hierarchical names (containing
                 // multiple dots.
-                return get(name.substring(dotIndex + 1), (ConfigObject) o);
+                return configObjectRecursiveGet(name.substring(dotIndex + 1), (ConfigObject) o);
             } else {
 
                 Assert.fail("It should not get here. Unexpected instance: "
@@ -370,12 +336,11 @@ public class GroovyDataProvider implements DataProvider {
             }// fi inner
 
         } else {
-
             /*
              * request the property name from parsed config file
              */
-            return callGet(co, name);
-        }// fi outer
+            return configObjectGet(co, name);
+        }
     }
 
     /**
@@ -387,7 +352,7 @@ public class GroovyDataProvider implements DataProvider {
      * @return the value for given property name
      * @throws ObjectNotFoundException
      */
-    private Object callGet(ConfigObject co, String currentNamePart)
+    private Object configObjectGet(ConfigObject co, String currentNamePart)
             throws ObjectNotFoundException {
 
         /*
@@ -402,9 +367,7 @@ public class GroovyDataProvider implements DataProvider {
                 throw new ObjectNotFoundException();
             }
         } else {
-
             result = resolvePropObject(result);
-
         }// fi
         return result;
     }
@@ -416,25 +379,17 @@ public class GroovyDataProvider implements DataProvider {
      * @return
      */
     private Object resolvePropObject(Object o) {
-        /** holds the queried string */
-        Object tmpResult = o;
+        Object resolved = o;
 
-        if (!cache.containsKey(currentQuery)) {
-            // cache the queried parameter for the first time
-            if (o instanceof Lazy) {
-                Lazy lazy = (Lazy) o;
+        if (o instanceof Lazy) {
+            Lazy lazy = (Lazy) o;
 
-                tmpResult = resolveLazy(lazy);
-            } else if (o instanceof List) {
-                List list = (List) o;
-                tmpResult = resolveList(list);
-            }
-
-            cache.put(currentQuery, tmpResult);
+            resolved = resolveLazy(lazy);
+        } else if (o instanceof List) {
+            List list = (List) o;
+            resolved = resolveList(list);
         }
-
-        // return cached property
-        return cache.get(currentQuery);
+        return resolved;
     }
 
     /**
@@ -471,18 +426,11 @@ public class GroovyDataProvider implements DataProvider {
             }
             if (lazy instanceof Get) {
                 Assert.assertTrue(value instanceof String);
-
-                if (cache.containsKey(value)) {
-                    resolvedValue = cache.get(value);
-                } else {
-                    resolvedValue = get((String) value, this.configObject);
-                }
-
+                resolvedValue = get((String)value, null, false);
             } else if (lazy instanceof Random) {
                 Assert.assertTrue(value instanceof String);
                 Random rnd = (Random) lazy;
-                resolvedValue = rnd.generate();// RandomGenerator.generate((String)
-                // value);
+                resolvedValue = rnd.generate();
             }
         }
 
@@ -521,12 +469,18 @@ public class GroovyDataProvider implements DataProvider {
         // recursively
 
         String shortTypeName = getShortTypeName(dataTypeName);
+        
+        Assert.assertFalse(cache.keySet().contains("param.sequenceNumber"));
+        Assert.assertFalse(cache.keySet().contains("param.componentName"));
+        Assert.assertFalse(cache.keySet().contains("param.name"));
+        Assert.assertFalse(cache.keySet().contains("param.dataTypeName"));
 
         StringBuffer sbPath = new StringBuffer();
         if (sequenceNumber != -1) {
             sbPath.append("i");// sequence marker e.g.: i1, i2, i3 ...
             sbPath.append(sequenceNumber);
             sbPath.append(".");
+            cache.put("param.sequenceNumber", "i" + String.valueOf(sequenceNumber));
         }
 
         sbPath.append(componentName);
@@ -534,6 +488,10 @@ public class GroovyDataProvider implements DataProvider {
         sbPath.append(name);
         LOG.info("getting data for ''{0}'', type: ''{1}''", sbPath,
                 dataTypeName);
+        
+        cache.put("param.componentName", componentName);
+        cache.put("param.name", name);
+        cache.put("param.dataTypeName", shortTypeName);
 
         try {
 
@@ -549,6 +507,16 @@ public class GroovyDataProvider implements DataProvider {
             throw ex;
         } catch (Exception ex) {
             LOG.error(ex, "Error occured expanding macro");
+        } finally {
+            cache.remove("param.dataTypeName");
+            cache.remove("param.name");
+            cache.remove("param.componentName");
+            cache.remove("param.sequenceNumber");
+
+            Assert.assertFalse(cache.keySet().contains("param.sequenceNumber"));
+            Assert.assertFalse(cache.keySet().contains("param.componentName"));
+            Assert.assertFalse(cache.keySet().contains("param.name"));
+            Assert.assertFalse(cache.keySet().contains("param.dataTypeName"));
         }
         // found nothing, so return nothing
         throw new ObjectNotFoundException("Can't find object for key:  " + name);
