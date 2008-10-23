@@ -227,7 +227,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * 
      * @return
      */
-    @ConfigurationProperty(order = 8, helpMessageKey = "PASSWORD_HELP", displayMessageKey = "PASSWORD_DISPLAY")
+    @ConfigurationProperty(order = 8, helpMessageKey = "PASSWORD_COLUMN_HELP", displayMessageKey = "PASSWORD_COLUMN_DISPLAY")
     public String getPasswordColumn() {
         return this.passwordColumn;
     }
