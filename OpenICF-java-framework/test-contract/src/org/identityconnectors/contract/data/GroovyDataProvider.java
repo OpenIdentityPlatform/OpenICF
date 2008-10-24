@@ -246,7 +246,12 @@ public class GroovyDataProvider implements DataProvider {
                 // generate a default value
                 o = propertyRecursiveGet(type);
             } else {
-                throw onfe;
+                if (useDefault) {
+                    throw new ObjectNotFoundException("Missing property definition: " + name
+                            + ", data type: " + type);
+                } else {
+                    throw new ObjectNotFoundException("Missing property definition: " + name);
+                }
             }
         }
 

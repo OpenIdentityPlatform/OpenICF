@@ -412,7 +412,7 @@
     -->
     <property name="contract.jar.file" value="${reports}/connector.jar" />
     <property name="contract-package" value="org.identityconnectors.contract"/>
-    <property name="data.provider" value="${contract-package}.data.DefaultDataProvider"/>
+    <property name="data.provider" value="${contract-package}.data.GroovyDataProvider"/>
 
     <target name="contract-init" if="contracts.run">
         <!-- clear out previous test results -->
