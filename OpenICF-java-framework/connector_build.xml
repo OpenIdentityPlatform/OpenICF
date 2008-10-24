@@ -438,6 +438,7 @@
         <property name="test.parameters.outFile" value=""/>
         <!-- set a default for defaultdataprovider.propertyFile -->
         <property name="defaultdataprovider.propertyFile" value=""/>
+        <property name="contract.suite.classname" value="${contract-package}.test.ContractTestSuite"/>
         
         <!-- run all the contract tests against this connector -->
         <junit fork="yes" printsummary="yes" forkmode="once"
@@ -450,7 +451,7 @@
             <sysproperty key="defaultdataprovider.propertyFile" value="${defaultdataprovider.propertyFile}"/>
             
             <test todir="${reports}/contracts" outfile="TEST-${contract-package}.test.ContractTestSuite-${configuration}"
-                name="${contract-package}.test.ContractTestSuite" />
+                name="${contract.suite.classname}"/>
             <formatter type="xml" usefile="yes" />
             <formatter type="plain" usefile="false" />
             <classpath>
