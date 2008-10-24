@@ -68,9 +68,10 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     private String url;
 
     /**
-     * @return
+     * Return the connectionUrl 
+     * @return url value
      */
-    @ConfigurationProperty(order = 1, helpMessageKey = "URL_TEMPLATE_HELP", displayMessageKey = "URL_TEMPLATE_DISPLAY")
+    @ConfigurationProperty(order = 1, displayMessageKey="connectionUrl.display", helpMessageKey="connectionUrl.help")
     public String getConnectionUrl() {
         return url;
     }
@@ -90,9 +91,9 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     private String driver;
 
     /**
-     * @return
+     * @return driver value
      */
-    @ConfigurationProperty(order = 2, helpMessageKey = "DRIVER_HELP", displayMessageKey = "DRIVER_DISPLAY")
+    @ConfigurationProperty(order = 2)
     public String getDriver() {
         return this.driver;
     }
@@ -112,9 +113,9 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     private String login;
 
     /**
-     * @return
+     * @return login value
      */
-    @ConfigurationProperty(order = 3, helpMessageKey = "LOGIN_HELP", displayMessageKey = "LOGIN_DISPLAY")
+    @ConfigurationProperty(order = 3)
     public String getLogin() {
         return this.login;
     }
@@ -134,9 +135,9 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     private GuardedString password;
 
     /**
-     * @return
+     * @return password value
      */
-    @ConfigurationProperty ( order=4, helpMessageKey="PWD_HELP", displayMessageKey="PWD_DISPLAY", confidential=true )
+    @ConfigurationProperty ( order=4, confidential=true )
     public GuardedString getPassword() {
         return this.password;
     }
@@ -157,9 +158,9 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
 
     /**
      * connection validation query getter
-     * @return
+     * @return validConnectionQuery value
      */
-    @ConfigurationProperty(order = 5, helpMessageKey = "VALIDATION_CONNECTION_QUERY_HELP", displayMessageKey = "VALIDATION_CONNECTION_QUERY_DISPLAY")
+    @ConfigurationProperty(order = 5)
     public String getValidConnectionQuery() {
         return this.validConnectionQuery;
     }
@@ -179,18 +180,20 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     private String dbTable;
 
     /**
-     * @return
+     * The table name
+     * @return the user account table name
+     * Please notice, there are used non default message keys
      */
-    @ConfigurationProperty(order = 6, helpMessageKey = "DB_TABLE_HELP", displayMessageKey = "DB_TABLE_DISPLAY")
+    @ConfigurationProperty(order = 6, displayMessageKey="usersTable.display", helpMessageKey="usersTable.help")
     public String getDBTable() {
         return this.dbTable;
     }
 
     /**
-     * @param value
+     * @param dbTable value
      */
-    public void setDBTable(String value) {
-        this.dbTable = value;
+    public void setDBTable(String dbTable) {
+        this.dbTable = dbTable;
     }
 
     /**
@@ -201,19 +204,19 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
 
     /**
      * Key Column getter
-     * @return
+     * @return keyColumn value
      */
-    @ConfigurationProperty(order = 7, helpMessageKey = "KEY_COLUMN_HELP", displayMessageKey = "KEY_COLUMN_DISPLAY")
+    @ConfigurationProperty(order = 7)
     public String getKeyColumn() {
         return this.keyColumn;
     }
 
     /**
      * Key Column setter
-     * @param value
+     * @param keyColumn value
      */
-    public void setKeyColumn(String value) {
-        this.keyColumn = value;
+    public void setKeyColumn(String keyColumn) {
+        this.keyColumn = keyColumn;
     }
 
     /**
@@ -225,9 +228,9 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     /**
      * Password Column getter
      * 
-     * @return
+     * @return passwordColumn value
      */
-    @ConfigurationProperty(order = 8, helpMessageKey = "PASSWORD_COLUMN_HELP", displayMessageKey = "PASSWORD_COLUMN_DISPLAY")
+    @ConfigurationProperty(order = 8)
     public String getPasswordColumn() {
         return this.passwordColumn;
     }
@@ -275,9 +278,9 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
 
     /**
      * NameQoute getter 
-     * @return
+     * @return nameQuote value
      */
-    @ConfigurationProperty(order = 9, helpMessageKey = "NAME_QUOTE_HELP", displayMessageKey = "NAME_QUOTE_DISPLAY")
+    @ConfigurationProperty(order = 9)
     public String getNameQuote() {
         return this.nameQuote;
     }
@@ -300,7 +303,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * Generate UID getter method
      * @return true/false 
      */
-    @ConfigurationProperty(order = 10, helpMessageKey = "GENERATE_UID_HELP", displayMessageKey = "GENERATE_UID_DISPLAY")
+    @ConfigurationProperty(order = 10)
     public Boolean getGenerateUid() {
         return this.generateUid;
     }
@@ -324,8 +327,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * Log Column is required be SyncOp
      * @return Log Column 
      */
-    @ConfigurationProperty(order = 11, helpMessageKey = "CHANGE_LOG_COLUMN_HELP", 
-            displayMessageKey = "CHANGE_LOG_COLUMN_DISPLAY", operations = SyncOp.class)
+    @ConfigurationProperty(order = 11, operations = SyncOp.class)
     public String getChangeLogColumn() {
         return this.changeLogColumn;
     }
@@ -339,7 +341,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     /**
      * Used to escape the table or column name.
      * @param value Value to be quoted
-     * @return 
+     * @return the quoted column name
      */
     public String quoteName(String value) {
         String quoting = getNameQuote();
@@ -370,7 +372,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * Convert the attribute name to resource specific columnName
      * 
      * @param attributeName
-     * @return
+     * @return the Column Name value
      */
     public String getColumnName(String attributeName) {
         if(Name.NAME.equalsIgnoreCase(attributeName)) {
