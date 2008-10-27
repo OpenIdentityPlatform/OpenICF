@@ -65,7 +65,7 @@ import java.util.TreeSet;
  * Any other character inside the pattern is directly printed to the output.
  * </p>
  * <p>
- * Backslash is used to escape any character. For instance pattern "###.##"
+ * Backslash is used to escape any character. For instance pattern "###\.##"
  * prints a floating point random number
  * </p>
  * 
