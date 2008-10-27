@@ -42,6 +42,26 @@ package org.identityconnectors.framework.common.objects;
 import static org.identityconnectors.framework.common.objects.AttributeInfoBuilder.build;
 
 public class PredefinedAttributeInfos {
+    
+    /**
+     * Attribute that should hold a reasonable value to
+     * display for the value of an object.  If this is not present, then the
+     * application will have to use the NAME to show the value.
+     */
+    public static final AttributeInfo SHORT_NAME = 
+        build(PredefinedAttributes.SHORT_NAME,
+              String.class,
+              false, true, true, true);
+    
+    /**
+     * Attribute that should hold the value of the object's description,
+     * if one is available.
+     */
+    public static final AttributeInfo DESCRIPTION = 
+        build(PredefinedAttributes.DESCRIPTION,
+              String.class,
+              false, true, true, true);
+    
     /**
      * Read-only attribute that shows the last date/time the password was
      * changed.

@@ -48,6 +48,19 @@ import static org.identityconnectors.framework.common.objects.AttributeUtil.crea
 public class PredefinedAttributes {
 
     /**
+     * Attribute that should hold a reasonable value to
+     * display for the value of an object.  If this is not present, then the
+     * application will have to use the NAME to show the value.
+     */
+    public static final String SHORT_NAME = createSpecialName("SHORT_NAME");
+    
+    /**
+     * Attribute that should hold the value of the object's description,
+     * if one is available.
+     */
+    public static final String DESCRIPTION = createSpecialName("DESCRIPTION");
+    
+    /**
      * Read-only attribute that shows the last date/time the password was
      * changed.
      */
