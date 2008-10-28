@@ -94,4 +94,12 @@ public final class OperationOptionInfoBuilder {
     public static OperationOptionInfo buildRunWithUser() {
         return build(OperationOptions.OP_RUN_AS_USER);
     }
+    
+    public static OperationOptionInfo buildScope() {
+        return build(OperationOptions.OP_SCOPE);
+    }
+    
+    public static OperationOptionInfo buildContainer() {
+        return build(OperationOptions.OP_CONTAINER,QualifiedUid.class);
+    }
 }

@@ -88,6 +88,7 @@ import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
 import org.identityconnectors.framework.common.objects.OperationOptionInfo;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
+import org.identityconnectors.framework.common.objects.QualifiedUid;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.ScriptContext;
 import org.identityconnectors.framework.common.objects.ScriptContextBuilder;
@@ -626,9 +627,11 @@ public class ObjectSerializationTests {
         builder.setMultiValue(true);
         ObjectClassInfoBuilder obld = new ObjectClassInfoBuilder();
         obld.addAttributeInfo(builder.build());
+        obld.setContainer(true);
         ObjectClassInfo v1 = obld.build();
         ObjectClassInfo v2 = (ObjectClassInfo)cloneObject(v1);
         Assert.assertEquals(v1, v2);
+        Assert.assertTrue(v2.isContainer());
     }
     
     @Test
@@ -1042,6 +1045,16 @@ public class ObjectSerializationTests {
         GuardedString v1 = new GuardedString("foobar".toCharArray());
         GuardedString v2 = (GuardedString)cloneObject(v1);
         Assert.assertEquals("foobar", decryptToString(v2));
+    }
+    
+    @Test
+    public void testQualifiedUid() {
+        QualifiedUid v1 = new QualifiedUid(new ObjectClass("myclass"),
+                new Uid("myuid"));
+        QualifiedUid v2 = (QualifiedUid)cloneObject(v1);
+        Assert.assertEquals(v1, v2);
+        Assert.assertEquals("myclass", v2.getObjectClass().getObjectClassValue());
+        Assert.assertEquals("myuid", v2.getUid().getUidValue());
     }
     
     /**

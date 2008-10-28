@@ -70,6 +70,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.OperationOptionInfo;
 import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.QualifiedUid;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.ScriptContext;
 import org.identityconnectors.framework.common.objects.SyncDelta;
@@ -390,13 +391,15 @@ class CommonObjectHandlers {
                 
                 String type = 
                     decoder.readStringField("type",null);
+                boolean container =
+                    decoder.readBooleanField("container", false);
                 
                 @SuppressWarnings("unchecked")
                 Set<AttributeInfo> attrInfo =
                     (Set)decoder.readObjectField("AttributeInfos",Set.class,null);
                 
                 
-                return new ObjectClassInfo(type,attrInfo);
+                return new ObjectClassInfo(type,attrInfo,container);
             }
     
             public void serialize(Object object, ObjectEncoder encoder)
@@ -404,6 +407,7 @@ class CommonObjectHandlers {
                 ObjectClassInfo val = (ObjectClassInfo)object;
                 
                 encoder.writeStringField("type",val.getType());
+                encoder.writeBooleanField("container", val.isContainer());
                 encoder.writeObjectField("AttributeInfos", val.getAttributeInfo(),true);
             }
                 
@@ -621,6 +625,24 @@ class CommonObjectHandlers {
                     encoder.writeObjectField("SyncToken", val.getToken(), true);
                     encoder.writeObjectField("Uid", val.getUid(), true);
                     encoder.writeObjectField("ConnectorObject", val.getObject(), true);
+                }
+                    
+            });
+        HANDLERS.add(
+                
+                new AbstractObjectSerializationHandler(QualifiedUid.class,"QualifiedUid") {
+                
+                public Object deserialize(ObjectDecoder decoder)  {
+                    ObjectClass objectClass = (ObjectClass)decoder.readObjectField("ObjectClass", ObjectClass.class,null);
+                    Uid uid = (Uid)decoder.readObjectField("Uid",Uid.class,null);
+                    return new QualifiedUid(objectClass,uid);
+                }
+        
+                public void serialize(Object object, ObjectEncoder encoder)
+                {
+                    QualifiedUid val = (QualifiedUid)object;
+                    encoder.writeObjectField("ObjectClass", val.getObjectClass(), true);
+                    encoder.writeObjectField("Uid", val.getUid(), true);
                 }
                     
             });

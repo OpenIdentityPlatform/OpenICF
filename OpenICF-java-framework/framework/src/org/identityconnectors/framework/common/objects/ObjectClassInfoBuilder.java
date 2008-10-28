@@ -51,6 +51,7 @@ import org.identityconnectors.common.CollectionUtil;
  */
 public final class ObjectClassInfoBuilder {
 
+    private boolean _isContainer;
     private String _type;
     private Map<String, AttributeInfo> _info;
 
@@ -98,6 +99,14 @@ public final class ObjectClassInfoBuilder {
         }
         return this;
     }
+    
+    /**
+     * Set to true to indicate this is a container type.
+     * @param container True iff this is a container type.
+     */
+    public void setContainer(boolean container) {
+        _isContainer = container;
+    }
 
     /**
      * Constructs an instance of {@link ObjectClassInfo} with any
@@ -113,6 +122,6 @@ public final class ObjectClassInfoBuilder {
                 AttributeInfoBuilder.build(Name.NAME, String.class, true);
             _info.put(Name.NAME, nameInfo);
         }
-        return new ObjectClassInfo(_type, CollectionUtil.newSet(_info.values()));
+        return new ObjectClassInfo(_type, CollectionUtil.newSet(_info.values()),_isContainer);
     }
 }

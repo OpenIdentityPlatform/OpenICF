@@ -41,9 +41,9 @@ package org.identityconnectors.framework.common.objects;
 
 import java.util.Set;
 import java.util.Map;
-import java.util.LinkedHashMap;
 
 import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.framework.common.serializer.SerializerUtil;
 
 
 /**
@@ -57,17 +57,30 @@ public final class ObjectClassInfo {
 
     private final String _type;
     private final Set<AttributeInfo> _info;
+    private final boolean _isContainer;
 
+    /**
+     * Public only for serialization; Use ObjectClassInfoBuilder instead.
+     * @param type The name of the object class.
+     * @param attrInfo The attributes of the object class.
+     * @param isContainer True if this can contain other object classes.
+     */
     public ObjectClassInfo(String type, 
-            Set<AttributeInfo> attrInfo) {
+            Set<AttributeInfo> attrInfo,
+            boolean isContainer) {
         _type = type;
         _info = CollectionUtil.newReadOnlySet(attrInfo);
+        _isContainer = isContainer;
         // check to make sure name exists and if not throw
         Map<String, AttributeInfo> map = AttributeInfoUtil.toMap(attrInfo);
         if (!map.containsKey(Name.NAME)) {
             final String MSG = "Missing 'Name' attribute info.";
             throw new IllegalArgumentException(MSG);
         }
+    }
+    
+    public boolean isContainer() {
+        return _isContainer;
     }
 
     public Set<AttributeInfo> getAttributeInfo() {
@@ -89,6 +102,9 @@ public final class ObjectClassInfo {
                                           other.getAttributeInfo())) {
                 return false;
             }
+            if (!_isContainer == other._isContainer) {
+                return false;
+            }
             return true;            
         }
         return false;
@@ -103,9 +119,6 @@ public final class ObjectClassInfo {
 
     @Override
     public String toString() {
-        Map<String, Object> map = new LinkedHashMap<String, Object>();
-        map.put("Type", _type);
-        map.put("Attributes", _info);
-        return map.toString();
+        return SerializerUtil.serializeXmlObject(this, false);
     }
 }

@@ -129,6 +129,28 @@ public final class OperationOptionsBuilder {
         _options.put(OperationOptions.OP_RUN_AS_USER, user);
         return this;
     }
+    
+    /**
+     * Convenience method to set {@link OperationOptions#OP_SCOPE}
+     * @param scope The scope. May not be null.
+     * @return A this reference to allow chaining
+     */
+    public OperationOptionsBuilder setScope(String scope) {
+        Assertions.nullCheck(scope, "scope");
+        _options.put(OperationOptions.OP_SCOPE, scope);
+        return this;
+    }
+    
+    /**
+     * Convenience method to set {@link OperationOptions#OP_CONTAINER}
+     * @param container The container. May not be null.
+     * @return A this reference to allow chaining
+     */
+    public OperationOptionsBuilder setContainer(QualifiedUid container) {
+        Assertions.nullCheck(container, "container");
+        _options.put(OperationOptions.OP_CONTAINER, container);
+        return this;
+    }
 
     /**
      * Returns a mutable reference of the options map.

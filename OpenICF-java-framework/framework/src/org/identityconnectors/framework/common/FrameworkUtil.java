@@ -66,6 +66,9 @@ import org.identityconnectors.framework.api.operations.SyncApiOp;
 import org.identityconnectors.framework.api.operations.TestApiOp;
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.api.operations.ValidateApiOp;
+import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.QualifiedUid;
+import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.operations.AdvancedUpdateOp;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
@@ -320,11 +323,32 @@ public final class FrameworkUtil {
      */
     public static void checkOperationOptionType(final Class<?> clazz) {
         //the set of supported operation option types
-        //is the same as that for configuration beans
-        if (!FrameworkUtil.isSupportedConfigurationType(clazz)) {
-            final String MSG = "ConfigurationOption type '+"+clazz.getName()+"+' is not supported.";
-            throw new IllegalArgumentException(MSG);
+        //is the same as that for configuration beans plus Name,
+        //ObjectClass, Uid, and QualifiedUid
+        
+        if ( clazz.isArray() ) {
+            checkOperationOptionType(clazz.getComponentType());
+            return;
         }
+                
+        if (FrameworkUtil.isSupportedConfigurationType(clazz)) {
+            return; //ok
+        }
+
+        if (ObjectClass.class.isAssignableFrom(clazz)) {
+            return; //ok
+        }
+        
+        if (Uid.class.isAssignableFrom(clazz)) {
+            return; //ok
+        }
+        
+        if (QualifiedUid.class.isAssignableFrom(clazz)) {
+            return; //ok
+        }
+        
+        final String MSG = "ConfigurationOption type '+"+clazz.getName()+"+' is not supported.";
+        throw new IllegalArgumentException(MSG);
     }
     /**
      * Determines if the class of the object is a supported attribute type.
