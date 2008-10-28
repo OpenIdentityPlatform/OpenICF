@@ -173,10 +173,10 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
-    public final void authenticate(final String username, 
+    public final Uid authenticate(final String username, 
             final GuardedString password,
             final OperationOptions options) {
-        ((AuthenticationApiOp) this
+        return ((AuthenticationApiOp) this
                 .getOperationCheckSupported(AuthenticationApiOp.class)).authenticate(
                 username, password, options);
     }

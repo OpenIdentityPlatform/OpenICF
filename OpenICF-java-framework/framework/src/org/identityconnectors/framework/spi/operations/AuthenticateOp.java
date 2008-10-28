@@ -42,6 +42,7 @@ package org.identityconnectors.framework.spi.operations;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.InvalidPasswordException;
 import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.Connector;
 
 /**
@@ -74,9 +75,10 @@ public interface AuthenticateOp extends SPIOperation {
      *            If the caller passes null, the framework will convert this into
      *            an empty set of options, so SPI need not worry
      *            about this ever being null.
+     * @return Uid The uid of the account that was used to authenticate
      * @throws RuntimeException
      *             iff native authentication fails. If a native exception if
      *             available attempt to throw it.
      */
-    void authenticate(final String username, final GuardedString password, final OperationOptions options);
+    Uid authenticate(final String username, final GuardedString password, final OperationOptions options);
 }

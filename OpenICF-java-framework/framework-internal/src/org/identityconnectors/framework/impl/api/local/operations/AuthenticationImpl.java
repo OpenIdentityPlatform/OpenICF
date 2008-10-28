@@ -43,6 +43,7 @@ import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
+import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
 
@@ -61,7 +62,7 @@ public class AuthenticationImpl extends ConnectorAPIOperationRunner implements
      * 
      * @see AuthenticationOpTests#authenticate(String, String)
      */
-    public void authenticate(final String username, 
+    public Uid authenticate(final String username, 
             final GuardedString password,
             OperationOptions options) {
         Assertions.nullCheck(username, "username");
@@ -70,6 +71,6 @@ public class AuthenticationImpl extends ConnectorAPIOperationRunner implements
         if ( options == null ) {
             options = new OperationOptionsBuilder().build();
         }
-        ((AuthenticateOp) getConnector()).authenticate(username, password,options);
+        return ((AuthenticateOp) getConnector()).authenticate(username, password,options);
     }
 }

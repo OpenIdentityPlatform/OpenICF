@@ -72,6 +72,7 @@ import org.identityconnectors.framework.common.exceptions.ConnectorSecurityExcep
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.identityconnectors.framework.common.exceptions.InvalidPasswordException;
 import org.identityconnectors.framework.common.exceptions.OperationTimeoutException;
+import org.identityconnectors.framework.common.exceptions.PasswordExpiredException;
 import org.identityconnectors.framework.common.exceptions.PermissionDeniedException;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -825,6 +826,14 @@ public class ObjectSerializationTests {
             InvalidPasswordException v1 = new InvalidPasswordException("ex");
             InvalidPasswordException v2 = (InvalidPasswordException)cloneObject(v1);
             Assert.assertEquals("ex",v2.getMessage());
+        }
+        
+        {
+            PasswordExpiredException v1 = new PasswordExpiredException("ex");
+            v1.initUid(new Uid("myuid"));
+            PasswordExpiredException v2 = (PasswordExpiredException)cloneObject(v1);
+            Assert.assertEquals("ex",v2.getMessage());
+            Assert.assertEquals("myuid", v2.getUid().getUidValue());
         }
         
         {

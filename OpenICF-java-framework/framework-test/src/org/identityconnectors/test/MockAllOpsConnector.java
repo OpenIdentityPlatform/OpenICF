@@ -136,10 +136,11 @@ public class MockAllOpsConnector extends MockConnector implements CreateOp,
         return null;
     }
 
-    public void authenticate(String username, GuardedString password,
+    public Uid authenticate(String username, GuardedString password,
             OperationOptions options) {
         assert username != null && password != null;
         addCall(username, password);
+        return null;
     }
 
     public void test() {

@@ -41,6 +41,7 @@ package org.identityconnectors.framework.api.operations;
 
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.Uid;
 
 public interface AuthenticationApiOp extends APIOperation {
 
@@ -54,9 +55,10 @@ public interface AuthenticationApiOp extends APIOperation {
      * @param options
      *            additional options that impact the way this operation is run.
      *            May be null.
+     * @return Uid The uid of the account that was used to authenticate
      * @throws RuntimeException
      *             iff the credentials do not pass authentication otherwise
      *             nothing.
      */
-    public void authenticate(final String username, final GuardedString password, final OperationOptions options);
+    public Uid authenticate(final String username, final GuardedString password, final OperationOptions options);
 }

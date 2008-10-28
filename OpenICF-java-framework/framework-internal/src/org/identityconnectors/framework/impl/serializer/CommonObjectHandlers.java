@@ -58,6 +58,7 @@ import org.identityconnectors.framework.common.exceptions.ConnectorSecurityExcep
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.identityconnectors.framework.common.exceptions.InvalidPasswordException;
 import org.identityconnectors.framework.common.exceptions.OperationTimeoutException;
+import org.identityconnectors.framework.common.exceptions.PasswordExpiredException;
 import org.identityconnectors.framework.common.exceptions.PermissionDeniedException;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -122,12 +123,12 @@ class CommonObjectHandlers {
         }
         
         
-        public final Object deserialize(ObjectDecoder decoder)  {
+        public Object deserialize(ObjectDecoder decoder)  {
             String message = decoder.readStringField("message",null);
             return createException(message);
         }
 
-        public final void serialize(Object object, ObjectEncoder encoder)
+        public void serialize(Object object, ObjectEncoder encoder)
                  {
             Throwable val = (Throwable)object;
             encoder.writeStringField("message", val.getMessage());
@@ -190,6 +191,31 @@ class CommonObjectHandlers {
                 }
             });
         
+        
+        HANDLERS.add(
+                
+                new ThrowableHandler<PasswordExpiredException>(PasswordExpiredException.class,"PasswordExpiredException") {
+                
+                @Override
+                public Object deserialize(ObjectDecoder decoder)  {
+                    Uid uid = (Uid)decoder.readObjectField("Uid", Uid.class, null);
+                    PasswordExpiredException ex =
+                        (PasswordExpiredException)super.deserialize(decoder);
+                    return ex.initUid(uid);
+                }
+                
+                @Override
+                public void serialize(Object object, ObjectEncoder encoder)
+                {
+                    super.serialize(object, encoder);
+                    PasswordExpiredException val = (PasswordExpiredException)object;
+                    encoder.writeObjectField("Uid", val.getUid(), true);
+                }
+                
+                protected PasswordExpiredException createException(String message) {
+                    return new PasswordExpiredException(message);
+                }
+            });
         
         HANDLERS.add(
                 

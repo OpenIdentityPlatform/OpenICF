@@ -18,7 +18,7 @@
   | ConnectionFailedException | ConnectorIOException | InvalidPasswordException 
   | UnknownUidException | InvalidCredentialException | PermissionDeniedException
   | ConnectorSecurityException | OperationTimeoutException | ConnectorException
-  | RuntimeException | Exception | Throwable
+  | RuntimeException | Exception | Throwable | PasswordExpiredException
   ">
   
 <!ENTITY % messageTypes
@@ -212,6 +212,10 @@ OperationOptionInfo | SyncDeltaType | SyncToken | SyncDelta | QualifiedUid
 >
 <!ELEMENT InvalidPasswordException EMPTY> 
 <!ATTLIST InvalidPasswordException
+   message CDATA #IMPLIED
+>
+<!ELEMENT PasswordExpiredException (Uid?)> 
+<!ATTLIST PasswordExpiredException
    message CDATA #IMPLIED
 >
 <!ELEMENT UnknownUidException EMPTY> 

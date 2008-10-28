@@ -130,7 +130,7 @@ public class <%= resourceName %>Connector implements PoolableConnector, <%= inte
     /**
      * {@inheritDoc}
      */
-    public void authenticate(final String username, final GuardedString password, final OperationOptions options) { 
+    public Uid authenticate(final String username, final GuardedString password, final OperationOptions options) { 
        throw new UnsupportedOperationException();
     } <% } %>
     
