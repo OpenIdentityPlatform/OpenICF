@@ -574,7 +574,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      * 
      * 
      */
-    public void authenticate(String username, GuardedString password,
+    public Uid authenticate(String username, GuardedString password,
             OperationOptions options) {
 
         final String SQL_AUTH_QUERY = "SELECT {0} FROM {1} WHERE ( {0} = ? ) AND ( {2} = ? )";
@@ -614,6 +614,9 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             SQLUtil.closeQuietly(result);
             SQLUtil.closeQuietly(stmt);
         }
+        //TODO: return Uid
+        //TODO: throw PasswordExpiredException with Uid
+        return null;
     }
     
     /**
