@@ -591,22 +591,26 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
                 .getKeyColumn()), config.quoteName(config.getDBTable()), config
                 .quoteName(config.getPasswordColumn()));
 
-        List<Object> values = new ArrayList<Object>();
+        final List<Object> values = new ArrayList<Object>();
         values.add(username); // real username
         values.add(password); // real password
 
         PreparedStatement stmt = null;
         ResultSet result = null;
+        //No passwordExpired capability
         try {
             // replace the ? in the SQL_AUTH statement with real data
             stmt = conn.prepareStatement(sql);
             SQLUtil.setParams(stmt, values);
             result = stmt.executeQuery();
+            //No PasswordExpired capability
             if (!result.next()) {
                 throw new InvalidCredentialException("user: " + username
                         + " authentication failed");
             }
+            final Uid uid = new Uid( result.getString(1));
             log.info("user: {0} authenticated ", username);
+            return uid;
         } catch (SQLException e) {
             log.error(e, "user: {0} authentication failed ", username);
             throw ConnectorException.wrap(e);
@@ -614,9 +618,6 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             SQLUtil.closeQuietly(result);
             SQLUtil.closeQuietly(stmt);
         }
-        //TODO: return Uid
-        //TODO: throw PasswordExpiredException with Uid
-        return null;
     }
     
     /**

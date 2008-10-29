@@ -779,8 +779,9 @@ public class DatabaseConnectorTests {
         assertTrue(oci.size() >= 1); 
 
         // this should not throw any RuntimeException, on invalid authentication
-        facade.authenticate(testAccount.getAccountId(), new GuardedString(testAccount.getPassword().toCharArray()),
+        final Uid auid = facade.authenticate(testAccount.getAccountId(), new GuardedString(testAccount.getPassword().toCharArray()),
                 null);
+        assertEquals(uid, auid);
 
         // cleanup (should not throw any exception.)
         facade.delete(ObjectClass.ACCOUNT, uid, null);
