@@ -435,7 +435,7 @@ public class ConnectorHelper {
     public static Set<Attribute> getUpdateableAttributes(DataProvider dataProvider, 
             ObjectClassInfo objectClassInfo, 
             String testName, String qualifier, int sequenceNumber, boolean checkRequired, boolean onlyMultiValue) {
-        return getAttributes(dataProvider, objectClassInfo, testName, qualifier, sequenceNumber, false, onlyMultiValue, false, true);
+        return getAttributes(dataProvider, objectClassInfo, testName, qualifier, sequenceNumber, checkRequired, onlyMultiValue, false, true);
     }
     
     /**
