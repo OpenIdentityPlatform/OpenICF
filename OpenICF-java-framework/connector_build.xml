@@ -455,7 +455,6 @@
             <formatter type="xml" usefile="yes" />
             <formatter type="plain" usefile="false" />
             <classpath>
-                <fileset dir="${basedir}" includes="${contract.jar.file}"/>
                 <fileset dir="${framework.dir}/dist" includes="*.jar"/>
             </classpath>
         </junit>
