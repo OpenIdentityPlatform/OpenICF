@@ -99,6 +99,7 @@ public class GroovyDataProvider implements DataProvider {
     private static final String PROPERTY_SEPARATOR = ".";
     private static final String CONTRACT_TESTS_FILE_NAME = "contract-tests.groovy";
     private static final String BOOTSTRAP_FILE_NAME = "bootstrap.groovy";
+    private static final String CONNECTORS_DIR = ".connectors";
     
     /** holds the parsed config file */
     private ConfigObject configObject;
@@ -176,16 +177,15 @@ public class GroovyDataProvider implements DataProvider {
             List<String> configurations = null;
             configurations = new LinkedList<String>();
             
-            // #1: user-home/.connector-name/contract-tests.groovy
-            String directoryPath = userHome.getAbsolutePath() + File.separatorChar + "." + prjName;
+            // #1: user-home/.connectors/connector-name/contract-tests.groovy
+            String directoryPath = userHome.getAbsolutePath() + File.separatorChar + CONNECTORS_DIR + File.separatorChar + prjName;
             configurations.add(directoryPath + File.separatorChar + CONTRACT_TESTS_FILE_NAME);
             
             // determine the configuration property
             String cfg = System.getProperty("configuration", null);
             if (StringUtil.isNotBlank(cfg)) {
-                directoryPath = directoryPath + "-" + cfg;
-                // #2: user-home/.connector-name-configuration/contract-tests.groovy
-                configurations.add(directoryPath + File.separatorChar + CONTRACT_TESTS_FILE_NAME);
+                // #2: user-home/.connectors/connector-name/${configuration}/contract-tests.groovy
+                configurations.add(directoryPath + File.separatorChar + cfg + File.separatorChar + CONTRACT_TESTS_FILE_NAME);
             }
 
             for (String configFile : configurations) {
