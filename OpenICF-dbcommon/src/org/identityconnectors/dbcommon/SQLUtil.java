@@ -55,6 +55,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.sql.DataSource;
+
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.StringUtil;
@@ -86,6 +88,21 @@ public final class SQLUtil {
     }
 
 
+
+    /**
+     * Get the connection from the datasource
+     * @param datasourceName 
+     * @return the connection get from default jndi context
+     */
+    public static Connection getDatasourceConnection(String datasourceName) {
+        try {
+            javax.naming.InitialContext ic = new javax.naming.InitialContext();
+            DataSource ds = (DataSource)ic.lookup(datasourceName);
+            return ds.getConnection();
+        } catch (Exception e) {
+            throw ConnectorException.wrap(e);
+        }
+    }        
     /**
      * Gets a {@link java.sql.Connection} using the basic driver manager.
      * @param driver jdbc driver name
@@ -501,7 +518,6 @@ public final class SQLUtil {
             }
             throw e;
         }
-    }    
-
+    }
 }
 
