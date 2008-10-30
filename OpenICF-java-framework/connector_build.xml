@@ -449,6 +449,7 @@
             <sysproperty key="configuration" value="${configuration}"/>
             <sysproperty key="test.parameters.outFile" value="${test.parameters.outFile}"/>
             <sysproperty key="defaultdataprovider.propertyFile" value="${defaultdataprovider.propertyFile}"/>
+            <sysproperty key="org.identityconnectors.common.logging.class" value="org.identityconnectors.common.logging.impl.JDKLogger"/>
             
             <test todir="${reports}/contracts" outfile="TEST-${contract-package}.test.ContractTestSuite-${configuration}"
                 name="${contract.suite.classname}"/>
