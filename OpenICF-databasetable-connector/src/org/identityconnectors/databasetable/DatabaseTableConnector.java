@@ -884,12 +884,16 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      * @return a new {@link DatabaseTableConnection} connection
      */
     static DatabaseTableConnection newConnection( DatabaseTableConfiguration config ) {
-        final java.sql.Connection connection = 
-            SQLUtil.getDriverMangerConnection(
+        java.sql.Connection connection; 
+        if(StringUtil.isNotBlank(config.getDatasource())){
+            connection = SQLUtil.getDatasourceConnection(config.getDatasource());
+        } else {
+            connection = SQLUtil.getDriverMangerConnection(
                     config.getDriver(),
                     config.getConnectionUrl(), 
                     config.getLogin(), 
                     config.getPassword());
+        }
         return new DatabaseTableConnection(connection, config);    
     }    
 }

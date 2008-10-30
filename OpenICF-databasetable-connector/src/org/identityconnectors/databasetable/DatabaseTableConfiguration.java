@@ -61,6 +61,29 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     // DatabaseTableConfiguration
     // =======================================================================
     
+    
+    /**
+     * The datasource name is used to connect to database.
+     */
+    private String datasource;
+
+    /**
+     * Return the datasource 
+     * @return datasource value
+     */
+    @ConfigurationProperty(order = 0)
+    public String getDatasource() {
+        return datasource;
+    }
+
+    /**
+     * @param value
+     */
+    public void setDatasource(String value) {
+        this.datasource = value;
+    }
+    
+    
     /**
      * Database connection URL. The url is used to connect to database.
      * Required configuration property, and should be validated
@@ -409,13 +432,15 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
         // check that there is a table to query..
         Assertions.blankCheck(getDBTable(), "dbTable");
         // check that there is a driver..
-        Assertions.blankCheck(getDriver(), "driver");
+        if(StringUtil.isBlank(getDatasource())){ // datasource or driver and connectionUrl must be defined
+            Assertions.blankCheck(getDriver(), "driver");
+            // check that there is a table to query..
+            Assertions.blankCheck(getConnectionUrl(), "connectionUrl");            
+        }
         // determine if you can get a connection to the database..
         Assertions.nullCheck(getLogin(), "login");
         // check that there is a table to query..
         Assertions.nullCheck(getPassword(), "password");
-        // check that there is a table to query..
-        Assertions.blankCheck(getConnectionUrl(), "connectionUrl");
       
         // make sure the driver is in the class path..
         try {
