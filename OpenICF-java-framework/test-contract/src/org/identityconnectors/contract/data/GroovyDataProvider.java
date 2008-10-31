@@ -72,8 +72,8 @@ import org.junit.Assert;
  * Order of lookup for the property files follows (latter overrides previous):
  * </p>
  * <ul>
- * <li>1) user-home/.bundle-name/contract-tests.groovy
- * <li>2)user-home/.bundle-name-${configuration}/contract-tests.groovy<br />
+ * <li>1) user-home/.connectors/bundle-name/contract-tests.groovy
+ * <li>2)user-home/.connectors/bundle-name/${configuration}/contract-tests.groovy<br />
  * in case ${configuration} is specified
  * </ul>
  * <p>
@@ -156,8 +156,8 @@ public class GroovyDataProvider implements DataProvider {
     /**
      * load properties in the following order (latter overrides previous):
      * <ul>
-     * <li>1) user-home/.bundle-name/contract-tests.groovy
-     * <li>2)user-home/.bundle-name-${configuration}/contract-tests.groovy<br />
+     * <li>1) user-home/.connectors/bundle-name/contract-tests.groovy
+     * <li>2)user-home/.connectors/bundle-name/${configuration}/contract-tests.groovy<br />
      * in case ${configuration} is specified
      * </ul>
      * 
