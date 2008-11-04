@@ -72,8 +72,8 @@ import org.junit.Assert;
  * Order of lookup for the property files follows (latter overrides previous):
  * </p>
  * <ul>
- * <li>1) user-home/.connectors/bundle-name/contract-tests.groovy
- * <li>2)user-home/.connectors/bundle-name/${configuration}/contract-tests.groovy<br />
+ * <li>1) user-home/.connectors/bundle-name/build.groovy
+ * <li>2)user-home/.connectors/bundle-name/${configuration}/build.groovy<br />
  * in case ${configuration} is specified
  * </ul>
  * <p>
@@ -97,7 +97,7 @@ import org.junit.Assert;
 public class GroovyDataProvider implements DataProvider {
 
     private static final String PROPERTY_SEPARATOR = ".";
-    private static final String CONTRACT_TESTS_FILE_NAME = "contract-tests.groovy";
+    private static final String CONTRACT_TESTS_FILE_NAME = "build.groovy";
     private static final String BOOTSTRAP_FILE_NAME = "bootstrap.groovy";
     private static final String CONNECTORS_DIR = ".connectors";
     
@@ -156,8 +156,8 @@ public class GroovyDataProvider implements DataProvider {
     /**
      * load properties in the following order (latter overrides previous):
      * <ul>
-     * <li>1) user-home/.connectors/bundle-name/contract-tests.groovy
-     * <li>2)user-home/.connectors/bundle-name/${configuration}/contract-tests.groovy<br />
+     * <li>1) user-home/.connectors/bundle-name/build.groovy
+     * <li>2)user-home/.connectors/bundle-name/${configuration}/build.groovy<br />
      * in case ${configuration} is specified
      * </ul>
      * 
@@ -177,14 +177,14 @@ public class GroovyDataProvider implements DataProvider {
             List<String> configurations = null;
             configurations = new LinkedList<String>();
             
-            // #1: user-home/.connectors/connector-name/contract-tests.groovy
+            // #1: user-home/.connectors/connector-name/build.groovy
             String directoryPath = userHome.getAbsolutePath() + File.separatorChar + CONNECTORS_DIR + File.separatorChar + prjName;
             configurations.add(directoryPath + File.separatorChar + CONTRACT_TESTS_FILE_NAME);
             
             // determine the configuration property
             String cfg = System.getProperty("configuration", null);
             if (StringUtil.isNotBlank(cfg)) {
-                // #2: user-home/.connectors/connector-name/${configuration}/contract-tests.groovy
+                // #2: user-home/.connectors/connector-name/${configuration}/build.groovy
                 configurations.add(directoryPath + File.separatorChar + cfg + File.separatorChar + CONTRACT_TESTS_FILE_NAME);
             }
 
