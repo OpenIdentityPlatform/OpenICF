@@ -43,10 +43,8 @@
     +  /(_)\                                                                  +
     + =========================================================S=U=N=.=C=O=M= +
     </description>
-    <!-- load user overrides -->
-    <property file="${user.home}/.${ant.project.name}.properties" />
     <!-- load global user overrides -->
-    <property file="${user.home}/.connectors.properties" />
+    <property file="${user.home}/.connectors/connectors.properties" />
     <!-- load build properties -->
     <property file="build.properties" />
     <!-- calculate the version from various properties -->

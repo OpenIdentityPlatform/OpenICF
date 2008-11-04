@@ -45,16 +45,17 @@
     </description>
     <!-- set a default for configuration -->
     <property name="configuration" value="default"/>
-    <!-- load user project-configuration properties -->
-    <property file="${user.home}/.${ant.project.name}-${configuration}.properties" />
-    <!-- load user project properties -->
-    <property file="${user.home}/.${ant.project.name}.properties" />
+<!-- the following two imports should not be necessary -->
+<!--load user project-configuration properties -->
+<!--<property file="${user.home}/.connectors/${ant.project.name}/${configuration}/build.groovy" /> -->
+<!--load user project properties -->
+<!--<property file="${user.home}/.connectors/${ant.project.name}.groovy" /> -->
     <!-- load user global properties -->
-    <property file="${user.home}/.connectors.properties" />
+    <property file="${user.home}/.connectors/connectors.properties" />
     <!-- configuration based directory for user libs -->
     <condition property="userlib"
-        value="${user.home}/.${ant.project.name}/lib"
-        else="${user.home}/.${ant.project.name}-${configuration}/lib">
+        value="${user.home}/.connectors/${ant.project.name}/lib"
+        else="${user.home}/.connectors/${ant.project.name}/${configuration}/lib">
         <equals arg1="${configuration}" arg2="default" trim="true"/>
     </condition>
     <!-- load local properties -->
