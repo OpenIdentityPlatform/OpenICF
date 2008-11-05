@@ -197,7 +197,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
      */
     @Test
     public void testUpdateToSameAttributes() {
-        if (ConnectorHelper.operationSupported(getConnectorFacade(), getAPIOperation())) {
+        if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), getAPIOperation())) {
             Uid uid1 = null;
             Uid uid2 = null;
             

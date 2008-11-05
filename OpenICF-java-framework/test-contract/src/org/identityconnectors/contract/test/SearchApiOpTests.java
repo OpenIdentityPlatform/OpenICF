@@ -207,31 +207,37 @@ public class SearchApiOpTests extends ObjectClassRunner {
      */
     @Test
     public void testSearchWithoutAttrsToGet() {
-        Uid uid = null;
+        // run the contract test only if search is supported by tested object class
+        if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(),
+                getAPIOperation())) {
+            Uid uid = null;
 
-        try {
-            Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
-                    getObjectClassInfo(), getTestName(), 0, true, false);
+            try {
+                Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
+                        getObjectClassInfo(), getTestName(), 0, true, false);
 
-            uid = getConnectorFacade().create(getSupportedObjectClass(), attrs, null);
-            assertNotNull("Create returned null uid.", uid);
+                uid = getConnectorFacade().create(getSupportedObjectClass(), attrs, null);
+                assertNotNull("Create returned null uid.", uid);
 
-            // get the user to make sure it exists now
-            Filter fltUid = FilterBuilder.equalTo(uid);
-            List<ConnectorObject> coObjects = ConnectorHelper.search(getConnectorFacade(),
-                    getSupportedObjectClass(), fltUid, null);
-            assertTrue("Search filter by uid with no OperationOptions failed, expected to return one object, but returned "
-                            + coObjects.size(), coObjects.size() == 1);
+                // get the user to make sure it exists now
+                Filter fltUid = FilterBuilder.equalTo(uid);
+                List<ConnectorObject> coObjects = ConnectorHelper.search(getConnectorFacade(),
+                        getSupportedObjectClass(), fltUid, null);
+                assertTrue(
+                        "Search filter by uid with no OperationOptions failed, expected to return one object, but returned "
+                                + coObjects.size(), coObjects.size() == 1);
 
-            assertNotNull("Unable to retrieve newly created object", coObjects.get(0));
+                assertNotNull("Unable to retrieve newly created object", coObjects.get(0));
 
-            // compare requested attributes to retrieved attributes, but don't compare attrs which
-            // are not returned by default
-            ConnectorHelper.checkObject(getObjectClassInfo(), coObjects.get(0), attrs, false);
-        } finally {
-            if (uid != null) {
-                // delete the object
-                getConnectorFacade().delete(getSupportedObjectClass(), uid, null);
+                // compare requested attributes to retrieved attributes, but
+                // don't compare attrs which
+                // are not returned by default
+                ConnectorHelper.checkObject(getObjectClassInfo(), coObjects.get(0), attrs, false);
+            } finally {
+                if (uid != null) {
+                    // delete the object
+                    getConnectorFacade().delete(getSupportedObjectClass(), uid, null);
+                }
             }
         }
     }

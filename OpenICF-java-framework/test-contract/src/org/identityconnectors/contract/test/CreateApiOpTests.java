@@ -39,6 +39,7 @@
  */
 package org.identityconnectors.contract.test;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
@@ -117,16 +118,24 @@ public class CreateApiOpTests extends ObjectClassRunner {
     /**
      * Tests create method with invalid Attribute, RuntimeException is expected
      */
-    @Test(expected=java.lang.RuntimeException.class)
+    @Test
     public void testCreateFailUnsupportedAttribute() {
-        
-        //create not supported Attribute Set
-        Set<Attribute> attrs = null;
-        attrs.add(AttributeBuilder.build("NONEXISTINGATTRIBUTE"));
-        
-        //do the create call
-        //note - the ObjectClassInfo is always supported
-        getConnectorFacade().create(getSupportedObjectClass(), attrs, null);
+        // run the contract test only if create is supported by tested object class
+        if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(),
+                getAPIOperation())) {
+            // create not supported Attribute Set
+            Set<Attribute> attrs = new HashSet<Attribute>();
+            attrs.add(AttributeBuilder.build("NONEXISTINGATTRIBUTE"));
+
+            try {
+                // do the create call
+                // note - the ObjectClassInfo is always supported
+                getConnectorFacade().create(getObjectClass(), attrs, null);
+            }
+            catch (RuntimeException ex) {
+                // ok
+            }
+        }
     }
     
     /**
@@ -135,7 +144,8 @@ public class CreateApiOpTests extends ObjectClassRunner {
      */
     @Test
     public void testCreateWithSameAttributes() {
-        if (ConnectorHelper.operationSupported(getConnectorFacade(), getAPIOperation())) {
+        // run the contract test only if create is supported by tested object class
+        if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), getAPIOperation())) {
             Uid uid1 = null;
             Uid uid2 = null;
 

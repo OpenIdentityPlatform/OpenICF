@@ -213,8 +213,8 @@ public class SyncApiOpTests extends ObjectClassRunner {
     public void testSyncWithoutAttrsToGet() {
         // run the test only if sync is supported and also object class is
         // supported and connector can sync CREATEs
-        if (ConnectorHelper.operationSupported(getConnectorFacade(), getAPIOperation())
-                && isObjectClassSupported() && canSyncAfterOp(CreateApiOp.class)) {
+        if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), getAPIOperation())
+                && canSyncAfterOp(CreateApiOp.class)) {
             Uid uid = null;
             try {
                 // start synchronizing from now
@@ -251,9 +251,9 @@ public class SyncApiOpTests extends ObjectClassRunner {
      */
     @Test
     public void testLatestSyncToken() {
-        // run the test only if sync is supported and object class is supported
-        if (ConnectorHelper.operationSupported(getConnectorFacade(), getAPIOperation())
-                && isObjectClassSupported() && canSyncAfterOp(CreateApiOp.class)) {
+        // run the test only if sync is supported by the tested object class
+        if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), getAPIOperation())
+                && canSyncAfterOp(CreateApiOp.class)) {
             Uid uid1 = null;
             Uid uid2 = null;
             try {
