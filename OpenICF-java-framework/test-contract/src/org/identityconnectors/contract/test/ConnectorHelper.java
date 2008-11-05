@@ -57,7 +57,6 @@ import java.util.Set;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.contract.data.DataProvider;
-import org.identityconnectors.contract.data.DefaultDataProvider;
 import org.identityconnectors.contract.exceptions.ContractException;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.APIConfiguration;
@@ -485,21 +484,21 @@ public class ConnectorHelper {
                     String dataName = attributeName;
                     if(qualifier.length() > 0) {
                         // TODO: this is a hack, because GroovyDataProvider must have qualifier before attribute name
-                        if (dataProvider instanceof DefaultDataProvider) {
+                        /*if (dataProvider instanceof DefaultDataProvider) {
                             dataName = dataName + "." + qualifier;
                         }
-                        else {
+                        else {*/
                             dataName = qualifier + "." + dataName;
-                        }
+                        //}
                     }
                     if (attributeInfo.isMultiValue()) {                        
-                        if (dataProvider instanceof DefaultDataProvider) {
+                        /*if (dataProvider instanceof DefaultDataProvider) {
                             dataName = dataName + "." + MULTI_VALUE_TYPE_PREFIX;
                         }
-                        else {
+                        else {*/
                             // TODO: multi must be part of typeName in case of GroovyDataProvider
                             // right now we will omit it and generate only single value for multivalue attributes
-                        }
+                        //}
                     }
                     Object attributeValue = get(dataProvider, testName, attributeInfo.getType()
                             .getName(), dataName, objectClassInfo.getType(), sequenceNumber);

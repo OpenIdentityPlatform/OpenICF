@@ -40,7 +40,6 @@
 package org.identityconnectors.contract.test;
 
 import org.identityconnectors.contract.data.DataProvider;
-import org.identityconnectors.contract.data.DefaultDataProvider;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -68,9 +67,9 @@ public abstract class AbstractSimpleTest {
     @AfterClass
     public static void disposeOnce() {
         // call dispose (not in interface) on DefaultDataProvider
-        if (_dataProvider instanceof DefaultDataProvider) {
+        /*if (_dataProvider instanceof DefaultDataProvider) {
             ((DefaultDataProvider)_dataProvider).dispose();
-        }        
+        } */       
         _dataProvider = null;        
     }
     
