@@ -116,8 +116,7 @@
             <arg value="${resource.name}" />
         </groovy>
         
-        <copy file="misc/testProps.properties"
-              tofile="${user.home}/.connector-${resource.name.lower}.properties" />
+        <copy file="misc/build.groovy" todir="${user.home}/.connectors/connector-${resource.name.lower}" />
 
         <echo />
         <echo message="Finished. Switch to ${bundle.dir} and run &quot;ant&quot; to build this connector." />

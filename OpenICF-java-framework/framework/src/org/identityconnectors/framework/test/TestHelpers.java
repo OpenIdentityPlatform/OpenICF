@@ -40,6 +40,8 @@
 package org.identityconnectors.framework.test;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.net.URL;
 import java.util.List;
 import java.util.Properties;
 
@@ -261,7 +263,7 @@ public abstract class TestHelpers {
 			//load the private bundle properties file (if present)
 			try {
 				fName = CONNECTORS_DIR + prjName + "/build.groovy";
-				props = IOUtil.loadGroovyConfigFile(fName);
+				props = loadGroovyConfigFile(fName);
 				ret.putAll(props);
 			} catch (IOException e) {
 				LOG.info(ERR, fName);
@@ -272,7 +274,7 @@ public abstract class TestHelpers {
 				//load the configuration-specific properties file (if present)
 				try {
 					fName = CONNECTORS_DIR + prjName + "/" + cfg + "/build.groovy";
-					props = IOUtil.loadGroovyConfigFile(fName);
+					props = loadGroovyConfigFile(fName);
 					ret.putAll(props);
 				} catch (IOException e) {
 					LOG.info(ERR, fName);
@@ -284,6 +286,25 @@ public abstract class TestHelpers {
 		return ret;
 	}
 
+	private static Properties loadGroovyConfigFile(String fileName) throws IOException{
+		try {
+			Class slurper = Class.forName("groovy.util.ConfigSlurper");
+			Class configObject = Class.forName("groovy.util.ConfigObject");
+			Object slurpInstance = slurper.newInstance();
+			Method parse = slurper.getMethod("parse", URL.class);
+			Object config = parse.invoke(slurpInstance, IOUtil.makeURL(null, fileName));
+			Method toProps = configObject.getMethod("toProperties");
+			Object result = toProps.invoke(config);
+			return (Properties) result;
+		} catch (IOException e) { 
+			throw e;
+		} catch (Exception e) {
+			LOG.error("Could not load Groovy objects: {0}", e.getMessage());
+			return null;
+		} 
+		
+	}
+	 
 	abstract protected APIConfiguration createTestConfigurationImpl(
 			Class<? extends Connector> clazz, Configuration config);
 

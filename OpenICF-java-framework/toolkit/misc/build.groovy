@@ -41,6 +41,6 @@
 #This properties file must be located in the "user.home"
 #directory and be named according to the project-name
 #as defined in the Connector's build.xml file.
-HOST=0.0.0.0
-LOGIN=admin
-PASSWORD=password
+HOST="0.0.0.0"
+LOGIN="admin"
+PASSWORD="password"

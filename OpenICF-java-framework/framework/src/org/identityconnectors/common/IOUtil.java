@@ -60,8 +60,6 @@ import java.util.Properties;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.CRC32;
-import groovy.util.ConfigObject;
-import groovy.util.ConfigSlurper;
 
 /**
  * IO Utilities
@@ -611,20 +609,5 @@ public class IOUtil {
     public static Properties loadPropertiesFile(String string)
             throws IOException {
         return loadPropertiesFile(new File(string));
-    }
- 
-    /**
-     * Load a Groovy config file (ConfigSlurper file) based on a string base filename.
-     * 
-     * @param fileName
-     *			represents the file
-     * @return a Java Properties object representing the configuration
-     * @throws IOException
-     * 			if the file cannot be found or opened
-     */
-    public static Properties loadGroovyConfigFile(String fileName) throws IOException {
-    	ConfigSlurper slurper = new ConfigSlurper();
-    	ConfigObject config = slurper.parse(makeURL(null, fileName));
-    	return config.toProperties();
     }
 }
