@@ -48,9 +48,12 @@ import java.sql.Statement;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.naming.Context;
 
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.CollectionUtil;
@@ -880,20 +883,25 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
     
     /**
      * Test enabled create connection function
-     * @param config 
+     * 
+     * @param config
      * @return a new {@link DatabaseTableConnection} connection
      */
-    static DatabaseTableConnection newConnection( DatabaseTableConfiguration config ) {
-        java.sql.Connection connection; 
-        if(StringUtil.isNotBlank(config.getDatasource())){
-            connection = SQLUtil.getDatasourceConnection(config.getDatasource());
+    static DatabaseTableConnection newConnection(DatabaseTableConfiguration config) {
+        java.sql.Connection connection;
+        if (StringUtil.isNotBlank(config.getDatasource())) {
+            if (StringUtil.isNotBlank(config.getJndiFactory()) && StringUtil.isNotBlank(config.getJndiProvider())) {
+                Hashtable<String, String> env = new Hashtable<String, String>();
+                env.put(Context.INITIAL_CONTEXT_FACTORY, config.getJndiFactory());
+                env.put(Context.PROVIDER_URL, config.getJndiProvider());
+                connection = SQLUtil.getDatasourceConnection(config.getDatasource(), env);
+            } else {
+                connection = SQLUtil.getDatasourceConnection(config.getDatasource());
+            }
         } else {
-            connection = SQLUtil.getDriverMangerConnection(
-                    config.getDriver(),
-                    config.getConnectionUrl(), 
-                    config.getLogin(), 
-                    config.getPassword());
+            connection = SQLUtil.getDriverMangerConnection(config.getDriver(), config.getConnectionUrl(), config
+                    .getLogin(), config.getPassword());
         }
-        return new DatabaseTableConnection(connection, config);    
-    }    
+        return new DatabaseTableConnection(connection, config);
+    }
 }

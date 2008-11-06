@@ -60,6 +60,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     // =======================================================================
     // DatabaseTableConfiguration
     // =======================================================================
+
     
     
     /**
@@ -71,7 +72,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * Return the datasource 
      * @return datasource value
      */
-    @ConfigurationProperty(order = 0)
+    @ConfigurationProperty(order = 1)
     public String getDatasource() {
         return datasource;
     }
@@ -85,6 +86,49 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     
     
     /**
+     * The jndiFactory name is used to connect to database.
+     */
+    private String jndiFactory;
+
+    /**
+     * Return the jndiFactory 
+     * @return jndiFactory value
+     */
+    @ConfigurationProperty(order = 2)
+    public String getJndiFactory() {
+        return jndiFactory;
+    }
+
+    /**
+     * @param value
+     */
+    public void setJndiFactory(String value) {
+        this.jndiFactory = value;
+    }
+    
+    
+    /**
+     * The jndiProvider name is used to connect to database.
+     */
+    private String jndiProvider;
+
+    /**
+     * Return the jndiProvider 
+     * @return jndiProvider value
+     */
+    @ConfigurationProperty(order = 3)
+    public String getJndiProvider() {
+        return jndiProvider;
+    }
+
+    /**
+     * @param value
+     */
+    public void setJndiProvider(String value) {
+        this.jndiProvider = value;
+    }    
+    
+    /**
      * Database connection URL. The url is used to connect to database.
      * Required configuration property, and should be validated
      */
@@ -94,7 +138,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * Return the connectionUrl 
      * @return url value
      */
-    @ConfigurationProperty(order = 1, displayMessageKey="connectionUrl.display", helpMessageKey="connectionUrl.help")
+    @ConfigurationProperty(order = 4, displayMessageKey="connectionUrl.display", helpMessageKey="connectionUrl.help")
     public String getConnectionUrl() {
         return url;
     }
@@ -116,7 +160,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     /**
      * @return driver value
      */
-    @ConfigurationProperty(order = 2)
+    @ConfigurationProperty(order = 5)
     public String getDriver() {
         return this.driver;
     }
@@ -138,7 +182,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     /**
      * @return login value
      */
-    @ConfigurationProperty(order = 3)
+    @ConfigurationProperty(order = 6)
     public String getLogin() {
         return this.login;
     }
@@ -160,7 +204,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     /**
      * @return password value
      */
-    @ConfigurationProperty ( order=4, confidential=true )
+    @ConfigurationProperty ( order=7, confidential=true )
     public GuardedString getPassword() {
         return this.password;
     }
@@ -183,7 +227,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * connection validation query getter
      * @return validConnectionQuery value
      */
-    @ConfigurationProperty(order = 5)
+    @ConfigurationProperty(order = 8)
     public String getValidConnectionQuery() {
         return this.validConnectionQuery;
     }
@@ -207,7 +251,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return the user account table name
      * Please notice, there are used non default message keys
      */
-    @ConfigurationProperty(order = 6, displayMessageKey="usersTable.display", helpMessageKey="usersTable.help")
+    @ConfigurationProperty(order = 9, displayMessageKey="usersTable.display", helpMessageKey="usersTable.help")
     public String getDBTable() {
         return this.dbTable;
     }
@@ -229,7 +273,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * Key Column getter
      * @return keyColumn value
      */
-    @ConfigurationProperty(order = 7)
+    @ConfigurationProperty(order = 10)
     public String getKeyColumn() {
         return this.keyColumn;
     }
@@ -253,7 +297,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * 
      * @return passwordColumn value
      */
-    @ConfigurationProperty(order = 8)
+    @ConfigurationProperty(order = 11)
     public String getPasswordColumn() {
         return this.passwordColumn;
     }
@@ -303,7 +347,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * NameQoute getter 
      * @return nameQuote value
      */
-    @ConfigurationProperty(order = 9)
+    @ConfigurationProperty(order = 12)
     public String getNameQuote() {
         return this.nameQuote;
     }
@@ -326,7 +370,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * Generate UID getter method
      * @return true/false 
      */
-    @ConfigurationProperty(order = 10)
+    @ConfigurationProperty(order = 13)
     public Boolean getGenerateUid() {
         return this.generateUid;
     }
@@ -350,7 +394,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * Log Column is required be SyncOp
      * @return Log Column 
      */
-    @ConfigurationProperty(order = 11, operations = SyncOp.class)
+    @ConfigurationProperty(order = 14, operations = SyncOp.class)
     public String getChangeLogColumn() {
         return this.changeLogColumn;
     }
@@ -426,28 +470,36 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @see org.identityconnectors.framework.Configuration#validate()
      */
     @Override
-    public void validate() {
-        // determine if you can get a connection to the database..
-        Assertions.blankCheck(getKeyColumn(), "keyColumn");
-        // check that there is a table to query..
-        Assertions.blankCheck(getDBTable(), "dbTable");
-        // check that there is a driver..
-        if(StringUtil.isBlank(getDatasource())){ // datasource or driver and connectionUrl must be defined
-            Assertions.blankCheck(getDriver(), "driver");
-            // check that there is a table to query..
-            Assertions.blankCheck(getConnectionUrl(), "connectionUrl");            
-        }
+    public void validate() {        
         // determine if you can get a connection to the database..
         Assertions.nullCheck(getLogin(), "login");
         // check that there is a table to query..
         Assertions.nullCheck(getPassword(), "password");
-      
-        // make sure the driver is in the class path..
-        try {
-            Class.forName(getDriver());
-        } catch (ClassNotFoundException e) {
-            throw new IllegalArgumentException(e);
-        }
+        
+        // determine if you can get a connection to the database..
+        Assertions.blankCheck(getKeyColumn(), "keyColumn");
+        // check that there is a table to query..
+        Assertions.blankCheck(getDBTable(), "dbTable");
+        
+        // check that there is not a datasource
+        if(StringUtil.isBlank(getDatasource())){ 
+            // check that there is a table to query..
+            Assertions.blankCheck(getConnectionUrl(), "connectionUrl");    
+            // make sure the driver is in the class path..
+            Assertions.blankCheck(getDriver(), "driver");
+            try {
+                Class.forName(getDriver());
+            } catch (ClassNotFoundException e) {
+                throw new IllegalArgumentException(e);
+            }
+        } else { // Datasource is active         
+            // When JNDI provider is set up, factory need to be there too 
+            if (StringUtil.isNotBlank(getJndiProvider()) || StringUtil.isNotBlank(getJndiFactory())) {
+                Assertions.blankCheck(getJndiFactory(), "jndiFactory");
+                Assertions.blankCheck(getJndiProvider(), "jndiProvider");
+            }
+        }      
+
         // make sure the quoting is valid..
         quoteName("anything");
     }

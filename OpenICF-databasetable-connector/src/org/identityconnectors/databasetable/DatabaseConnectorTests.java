@@ -175,13 +175,30 @@ public class DatabaseConnectorTests {
             //expected
         }
     }
+    
+    /**
+     * Create the test configuration
+     * @return the initialized configuration
+     */
+    DatabaseTableConfiguration newConfiguration() {
+        DatabaseTableConfiguration config = new DatabaseTableConfiguration();
+        config.setDriver(DRIVER);
+        config.setLogin("");
+        config.setPassword(new GuardedString("".toCharArray()));
+        config.setDBTable(DB_TABLE);
+        config.setKeyColumn(TestAccount.ACCOUNTID);
+        config.setPasswordColumn(TestAccount.PASSWORD);
+        config.setConnectionUrl(getConnectionUrl());
+        config.setGenerateUid(true);
+        config.setChangeLogColumn(TestAccount.CHANGED);
+        return config;
+    }    
 
-    // Tests
     /**
      * test method
      */
     @Test
-    public void testProperties() {
+    public void testConfiguration() {
         // attempt to test driver info..
         DatabaseTableConfiguration config = new DatabaseTableConfiguration();
         // check defaults..
@@ -191,14 +208,78 @@ public class DatabaseConnectorTests {
         assertNull(config.getPassword());
         assertNull(config.getValidConnectionQuery());
         assertNull(config.getDBTable());
-        // assertNull(config.getPasswordColumn());
-        // assertNull(config.getPasswordDecrypt());
-        // assertNull(config.getPasswordEncrypt());
-        // check each to make sure they work..
+        assertNull(config.getDatasource());
+        assertNull(config.getJndiProvider());
+        assertNull(config.getJndiFactory());
+        
         config.setDriver(DRIVER);
         assertEquals(DRIVER, config.getDriver());
-
+        config.setKeyColumn(TestAccount.ACCOUNTID);
+        assertEquals(TestAccount.ACCOUNTID, config.getKeyColumn());
+        config.setDBTable(DB_TABLE);
+        assertEquals(DB_TABLE, config.getDBTable());
+        config.setConnectionUrl(getConnectionUrl());
+        assertEquals(getConnectionUrl(), config.getConnectionUrl());
+        config.setLogin(TestAccount.ACCOUNTID);
+        assertEquals(TestAccount.ACCOUNTID, config.getLogin());
+        config.setPassword(new GuardedString("".toCharArray()));
+        assertEquals(TestAccount.ACCOUNTID, config.getLogin());
+        config.validate();
     }
+    
+    /**
+     * test method
+     */
+    @Test
+    public void testConfigurationDataSource() {
+        // attempt to test driver info..
+        DatabaseTableConfiguration config = new DatabaseTableConfiguration();
+        // check defaults..
+
+        config.setKeyColumn(TestAccount.ACCOUNTID);
+        config.setDBTable(DB_TABLE);
+        config.setLogin(TestAccount.ACCOUNTID);
+        config.setPassword(new GuardedString("".toCharArray()));
+
+        config.setDatasource("DS");
+        assertEquals(TestAccount.ACCOUNTID, config.getLogin());
+
+        config.validate();
+    }    
+    
+    /**
+     * test method
+     */
+    @Test
+    public void testConfigurationJndi() {
+        // attempt to test driver info..
+        DatabaseTableConfiguration config = new DatabaseTableConfiguration();
+        // check defaults..
+
+        config.setKeyColumn(TestAccount.ACCOUNTID);
+        config.setDBTable(DB_TABLE);
+        config.setLogin(TestAccount.ACCOUNTID);
+        config.setPassword(new GuardedString("".toCharArray()));
+
+        config.setDatasource("DS");
+        assertEquals(TestAccount.ACCOUNTID, config.getLogin());
+        
+        config.setJndiFactory("JndiFactory");
+        assertEquals("JndiFactory", config.getJndiFactory());
+
+        try {
+            config.validate();
+            fail("JndiProvider is missing expected");
+        } catch (IllegalArgumentException expected) {
+            //expected
+        }
+                
+        config.setJndiProvider("JndiProvider");
+        assertEquals("JndiProvider", config.getJndiProvider());
+        
+        config.validate();
+        
+    }        
 
     /**
      * For testing purposes we creating connection an not the framework.
@@ -1064,20 +1145,6 @@ public class DatabaseConnectorTests {
         ConnectorFacadeFactory factory = ConnectorFacadeFactory.getInstance();
         APIConfiguration impl = TestHelpers.createTestConfiguration(DatabaseTableConnector.class, cfg);
         return factory.newInstance(impl);
-    }
-
-    DatabaseTableConfiguration newConfiguration() {
-        DatabaseTableConfiguration config = new DatabaseTableConfiguration();
-        config.setDriver(DRIVER);
-        config.setLogin("");
-        config.setPassword(new GuardedString("".toCharArray()));
-        config.setDBTable(DB_TABLE);
-        config.setKeyColumn(TestAccount.ACCOUNTID);
-        config.setPasswordColumn(TestAccount.PASSWORD);
-        config.setConnectionUrl(getConnectionUrl());
-        config.setGenerateUid(true);
-        config.setChangeLogColumn(TestAccount.CHANGED);
-        return config;
     }
 
     File getDBDirectory() {
