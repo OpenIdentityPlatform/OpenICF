@@ -257,32 +257,47 @@ public class SyncApiOpTests extends ObjectClassRunner {
             Uid uid1 = null;
             Uid uid2 = null;
             try {
-                // create two new objects
+                // create one new object
                 Set<Attribute> attrs1 = ConnectorHelper.getCreateableAttributes(getDataProvider(),
                         getObjectClassInfo(), getTestName(), 2, true, false);
                 uid1 = getConnectorFacade().create(getSupportedObjectClass(), attrs1, null);
                 assertNotNull("Create returned null uid.", uid1);
+                
+                // get latest sync token
+                SyncToken latestToken = getConnectorFacade().getLatestSyncToken();
+                
+                // sync with latest sync token, should return nothing
+                final LinkedList<SyncDelta> deltas = new LinkedList<SyncDelta>();
+                getConnectorFacade().sync(getObjectClass(), latestToken, new SyncResultsHandler() {
+                    public boolean handle(SyncDelta delta) {
+                        deltas.add(delta);
+                        return true;
+                    }
+                }, null);
+                
+                final String MSG1 = "Sync with previously retrieved latest sync token should not return any deltas, but returned: %d.";
+                assertTrue(String.format(MSG1, deltas.size()), deltas.size() == 0);
+                
+                // create another object
                 Set<Attribute> attrs2 = ConnectorHelper.getCreateableAttributes(getDataProvider(),
                         getObjectClassInfo(), getTestName(), 3, true, false);
                 uid2 = getConnectorFacade().create(getSupportedObjectClass(), attrs2, null);
                 assertNotNull("Create returned null uid.", uid2);
-
-                // get latest sync token with getLatestSyncToken
-                SyncToken latestToken = getConnectorFacade().getLatestSyncToken();
-
-                // iterate over all deltas and remember them
-                final LinkedList<SyncToken> tokens = new LinkedList<SyncToken>();
-                getConnectorFacade().sync(getObjectClass(), null, new SyncResultsHandler() {
+                         
+                // sync with the same latest sync token as previous sync
+                // should return one change this time
+                getConnectorFacade().sync(getObjectClass(), latestToken, new SyncResultsHandler() {
                     public boolean handle(SyncDelta delta) {
-                        tokens.add(delta.getToken());
+                        deltas.add(delta);
                         return true;
                     }
                 }, null);
-
-                final String MSG = "getLatestSyncToken returned: %s, but expected latest token is: %s";
-                assertEquals(String.format(MSG, latestToken, tokens.getLast()), latestToken, tokens
-                        .getLast());
-
+                
+                final String MSG2 = "Sync with latest sync token retrieved before one create should return one sync delta, but returned: %d";
+                assertTrue(String.format(MSG2, deltas.size()), deltas.size() == 1);
+                
+                ConnectorHelper.checkSyncDelta(getObjectClassInfo(), deltas.get(0), uid2, attrs2,
+                        SyncDeltaType.CREATE_OR_UPDATE, false);
             } finally {
                 // cleanup
                 getConnectorFacade().delete(getSupportedObjectClass(), uid1, null);
