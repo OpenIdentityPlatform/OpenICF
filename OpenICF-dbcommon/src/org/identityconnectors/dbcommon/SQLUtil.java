@@ -52,6 +52,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 
@@ -87,14 +88,28 @@ public final class SQLUtil {
         throw new AssertionError();
     }
 
-
+    /**
+     * Get the connection from the datasource
+     * @param datasourceName 
+     * @param env propertyHastable 
+     * @return the connection get from default jndi context
+     */
+    public static Connection getDatasourceConnection(final String datasourceName, final Hashtable<?,?> env) {
+        try {
+            javax.naming.InitialContext ic = new javax.naming.InitialContext(env);
+            DataSource ds = (DataSource)ic.lookup(datasourceName);
+            return ds.getConnection();
+        } catch (Exception e) {
+            throw ConnectorException.wrap(e);
+        }
+    }   
 
     /**
      * Get the connection from the datasource
      * @param datasourceName 
      * @return the connection get from default jndi context
      */
-    public static Connection getDatasourceConnection(String datasourceName) {
+    public static Connection getDatasourceConnection(final String datasourceName) {
         try {
             javax.naming.InitialContext ic = new javax.naming.InitialContext();
             DataSource ds = (DataSource)ic.lookup(datasourceName);
