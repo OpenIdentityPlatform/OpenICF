@@ -105,6 +105,36 @@ public final class SQLUtil {
     }   
 
     /**
+     * Get the connection from the dataSource with specified user and password
+     * @param datasourceName 
+     * @param user DB user 
+     * @param password DB password 
+     * @param env propertyHastable 
+     * @return the connection get from dataSource
+     */
+    public static Connection getDatasourceConnection(final String datasourceName,final String user,GuardedString password, final Hashtable<?,?> env) {
+        try {
+            javax.naming.InitialContext ic = new javax.naming.InitialContext(env);
+            final DataSource ds = (DataSource)ic.lookup(datasourceName);
+            final Connection[] ret = new Connection[1];
+            password.access(new GuardedString.Accessor() {
+                public void access(char[] clearChars) {
+                    try {
+                        ret[0] = ds.getConnection(user,new String(clearChars));
+                    } catch (SQLException e) {
+                        // checked exception are not allowed in the access method 
+                        // Lets use the exception softening pattern
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
+            return ret[0];
+        } catch (Exception e) {
+            throw ConnectorException.wrap(e);
+        }
+    }
+    
+    /**
      * Get the connection from the datasource
      * @param datasourceName 
      * @return the connection get from default jndi context
