@@ -508,10 +508,10 @@ public class GroovyDataProvider implements DataProvider {
             return obj;
 
         } catch (ObjectNotFoundException ex) {
-            LOG.info(ex, "Unable to find data for ''{0}''", sbPath.toString());
+            LOG.info("Unable to find data for ''{0}''", sbPath.toString());
             throw ex;
         } catch (Exception ex) {
-            LOG.error(ex, "Error occured expanding macro");
+            LOG.error(ex, "Error occured while resolving property ''{0}''", sbPath.toString());
         } finally {
             cache.remove("param.dataTypeName");
             cache.remove("param.name");
@@ -524,7 +524,7 @@ public class GroovyDataProvider implements DataProvider {
             Assert.assertFalse(cache.keySet().contains("param.dataTypeName"));
         }
         // found nothing, so return nothing
-        throw new ObjectNotFoundException("Can't find object for key:  " + name);
+        throw new ObjectNotFoundException("Can't find object for key:  " + sbPath.toString());
 
     }
 

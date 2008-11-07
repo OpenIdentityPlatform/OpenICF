@@ -319,7 +319,7 @@ public class MultiOpTests extends ObjectClassRunner {
             ConnectorHelper.deleteObject(getConnectorFacade(), getObjectClass(), deleteUid, true,
                     getOperationOptionsByOp(DeleteApiOp.class));
 
-            /* SyncApiOp - after delete, create */
+            /* SyncApiOp - after create, delete */
             if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), SyncApiOp.class)) {
                 if (SyncApiOpTests.canSyncAfterOp(DeleteApiOp.class)
                         || SyncApiOpTests.canSyncAfterOp(CreateApiOp.class)) {
@@ -332,20 +332,20 @@ public class MultiOpTests extends ObjectClassRunner {
                     for (int i = 0; i < deltas.size(); i++) {
                         SyncDelta delta = deltas.get(i);
                                                 
-                        if (i == 0) {
-                            if (SyncApiOpTests.canSyncAfterOp(DeleteApiOp.class)) {
-                                ConnectorHelper.checkSyncDelta(getObjectClassInfo(), delta,
-                                        deleteUid, null, SyncDeltaType.DELETE, true);
-                            }
-                            else if (SyncApiOpTests.canSyncAfterOp(CreateApiOp.class)) {
+                        if (i == 0) {                            
+                            if (SyncApiOpTests.canSyncAfterOp(CreateApiOp.class)) {
                                 ConnectorHelper.checkSyncDelta(getObjectClassInfo(), delta,
                                         createUid, attrs11, SyncDeltaType.CREATE_OR_UPDATE, true);
+                            }
+                            else if (SyncApiOpTests.canSyncAfterOp(DeleteApiOp.class)) {
+                                ConnectorHelper.checkSyncDelta(getObjectClassInfo(), delta,
+                                        deleteUid, null, SyncDeltaType.DELETE, true);
                             }
                         }
                         // second must be create
                         else {                            
                             ConnectorHelper.checkSyncDelta(getObjectClassInfo(), delta,
-                                    updateUid, replaceAttributes, SyncDeltaType.CREATE_OR_UPDATE, true);
+                                    deleteUid, replaceAttributes, SyncDeltaType.DELETE, true);
                         }
                         
                         // remember last token
