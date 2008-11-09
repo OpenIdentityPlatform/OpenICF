@@ -75,8 +75,8 @@ public final class SecurityUtil {
      * that might allocate additional buffers for the potentially
      * sensitive data. This guarantees the caller that they only
      * need to cleanup the input and result.
-     * @param chars The chars
-     * @return The bytes
+     * @param bytes The bytes (to convert into characters).
+     * @return The characters (converted from the specified bytes).
      */
     public static char[] bytesToChars(byte [] bytes)
     {
@@ -138,8 +138,8 @@ public final class SecurityUtil {
     
     /**
      * Computes the base 64 encoded SHA1 hash of the input
-     * @param input The input bytes
-     * @return the hash
+     * @param bytes The input bytes.
+     * @return the hash (computed from the input bytes).
      */
     public static String computeBase64SHA1Hash(byte [] bytes)
     {        
@@ -158,10 +158,10 @@ public final class SecurityUtil {
     }
 
     /**
-     * Verifies the base 64 encoded SHA1 hash of the input
+     * Verifies the base 64-encoded SHA1 hash of the input.
      * @param input The input chars
      * @param hash The expected hash
-     * @return true if the match
+     * @return true if the hash of the input characters matches the expected hash.
      */
     public static boolean verifyBase64SHA1Hash(char [] input, String hash)
     {
