@@ -42,7 +42,8 @@ package org.identityconnectors.framework.api;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 /**
- * Manages a pool of connectors for use by a provisioner.
+ * Allows an application to obtain a {@link ConnectorFacade connector instance}.
+ * Manages a pool of connector instances.
  * 
  * @author Will Droste
  * @version $Revision $

@@ -42,22 +42,24 @@ package org.identityconnectors.framework.api;
 import java.util.List;
 
 /**
- * Class responsible for maintaing a list of <code>ConnectorInfo</code>
- * associated with a set of connector bundles.
+ * Maintains a list of <code>ConnectorInfo</code> instances,
+ * each of which describes a connector that is available.
+ * 
+ * @see ConnectorInfoManagerFactory
  */
 public interface ConnectorInfoManager {
     /**
-     * Returns the list of <code>ConnectorInfo</code>
-     * @return the list of <code>ConnectorInfo</code>
+     * Returns the list of <code>ConnectorInfo</code> instances.
+     * @return the list of <code>ConnectorInfo</code> instances.
      */
     public List<ConnectorInfo> getConnectorInfos();
     
     /**
-     * Given a <code>ConnectorKey</code>, returns the
-     * associated <code>ConnectorInfo</code>.
-     * @param key The key of the connector.
-     * @return The <code>ConnectorInfo</code> or null if it couldn't
-     *         be found.
+     * Returns the <code>ConnectorInfo</code> that is 
+     * associated with the specified <code>ConnectorKey</code>.
+     * @param key The key of a connector.
+     * @return The <code>ConnectorInfo</code> 
+     *  or <code>null</code> if none was associated with the specified key.
      */
     public ConnectorInfo findConnectorInfo(ConnectorKey key);
 }

@@ -57,7 +57,11 @@ import org.identityconnectors.framework.api.operations.ValidateApiOp;
 
 
 /**
- * Main interface for which consumers call the Connector API logic.
+ * Main interface through which an application invokes Connector operations.
+ * Represents at the API level a specific instance of a Connector
+ * that has been configured in a specific way.
+ * 
+ * @see ConnectorFacadeFactory
  * 
  * @author Will Droste
  * @version $Revision $

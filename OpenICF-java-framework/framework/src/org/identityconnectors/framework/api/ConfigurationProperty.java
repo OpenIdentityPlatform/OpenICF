@@ -45,7 +45,8 @@ import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.spi.Configuration;
 
 /**
- * Translation from {@link Configuration} at the SPI layer to the API.
+ * Represents at the API level a property of a Connector's 
+ * {@link Configuration Configuration at the SPI layer}.
  */
 public interface ConfigurationProperty {
 
@@ -60,12 +61,13 @@ public interface ConfigurationProperty {
     public String getHelpMessage(String def);
 
     /**
-     * Get the display name for the is configuration
+     * Get the display name for this configuration property.
      */
     public String getDisplayName(String def);
 
     /**
-     * Get the value from the property. This should be the default value.
+     * Get the value from the property. 
+     * This value should be the default value.
      */
     public Object getValue();
     

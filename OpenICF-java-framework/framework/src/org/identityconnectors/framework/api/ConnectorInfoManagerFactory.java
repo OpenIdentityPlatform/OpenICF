@@ -46,8 +46,8 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 
 /**
- * The main entry point into connectors. This allows you
- * to load the connector classes from a set of bundles.
+ * An application's primary entry point into connectors. 
+ * Allows an application to load the connector classes from a set of bundles.
  */
 public abstract class ConnectorInfoManagerFactory {
     

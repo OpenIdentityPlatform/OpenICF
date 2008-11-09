@@ -45,15 +45,17 @@ import org.identityconnectors.framework.spi.Configuration;
 
 
 /**
- * Configuration properties encapsulates the {@link Configuration} and uses
- * reflection to determine the properties available for manipulation.
+ * Encapsulates the {@link Configuration Configuration at the SPI layer} and
+ * uses reflection to identify the individual properties 
+ * that are available for an application to manipulate.
  */
 public interface ConfigurationProperties {
 
     /**
      * Get the list of properties names for this {@link Configuration}.
      * 
-     * @return get the list of properties names.
+     * @return a list containing the names of properties 
+     * that an application can configure for a connector.
      */
     List<String> getPropertyNames();
 
