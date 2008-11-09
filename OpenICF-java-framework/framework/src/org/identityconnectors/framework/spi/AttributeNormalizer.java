@@ -27,7 +27,7 @@ import org.identityconnectors.framework.spi.operations.UpdateOp;
  *    <li>The <code>Uid</code> returned from {@link UpdateOp}.</li>
  *    <li>The attributes passed to {@link CreateOp}.</li>
  *    <li>The <code>Uid</code> returned from {@link CreateOp}.</li>
- *    <li>The <code>Uid</code> passed to {@link DeleteOp}.</li>
+ *    <li>The <code>Uid</code> passed to {@link org.identityconnectors.framework.spi.operations.DeleteOp}.</li>
  * </ol>
  */
 public interface AttributeNormalizer 
