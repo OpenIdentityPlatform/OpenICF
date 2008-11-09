@@ -39,17 +39,24 @@
  */
 package org.identityconnectors.common;
 
+/**
+ * Utility package for base64 encoding and decoding.
+ * 
+ * @author Will Droste
+ * @version $Revision $
+ * @since 1.0
+ */
 public class Base64 {
     private Base64() {
         
     }
     /**
-     * Returns a String of base64-encoded characters to represent the passed
+     * Returns a String of base64-encoded characters to represent the specified
      * data array.
      * 
      * @param data
-     *            the array of bytes to encode
-     * @return String base64-coded characters
+     *            The array of bytes to encode.
+     * @return A String containing base64-encoded characters.
      */
     static public String encode(byte[] data) {
 
@@ -89,12 +96,11 @@ public class Base64 {
     }
 
     /**
-     * Returns an array of decoded bytes which were encoded in the passed byte
-     * array.
+     * Decodes a specified base64-encoded String and returns the resulting bytes.
      * 
-     * @param data
-     *            the array of base64-encoded characters
-     * @return byte[] the decoded data array
+     * @param encdata
+     *            A String containing base64-encoded characters.
+     * @return The base64-decoded array of bytes.
      */
     static public byte[] decode(String encdata) {
 
