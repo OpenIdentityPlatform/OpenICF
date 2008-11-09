@@ -137,7 +137,7 @@ public abstract class ObjectSerializerFactory {
      * NOTE: Consider using {@link SerializerUtil#deserializeXmlObject(String,boolean)}
      * for convenience deserializing a single object.
      * 
-     * NOTE2: Do not mix and match {@link SerializerUtil#deserializeXmlObject(Object,boolean)}
+     * NOTE2: Do not mix and match {@link SerializerUtil#deserializeXmlObject(String,boolean)}
      * with {{@link #newXmlSerializer(Writer, boolean, boolean)}. 
      *
      * @param is The input source

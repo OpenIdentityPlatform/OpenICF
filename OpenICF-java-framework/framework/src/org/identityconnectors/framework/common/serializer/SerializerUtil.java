@@ -103,7 +103,7 @@ public final class SerializerUtil {
 
     /**
      * Deserializes the given object from xml
-     * @param bytes The xml to deserialize
+     * @param str The xml to deserialize
      * @param validate True if we are to validate the xml
      * @return The object
      * @see ObjectSerializerFactory for a list of supported types
