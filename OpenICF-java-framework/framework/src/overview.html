@@ -48,7 +48,7 @@ but a Connector bundle enables any calling application
 to manage objects that exist on the target resource.  
 
 <p>Calling applications use the Connector API; Connector bundles implement the Connector SPI.
-The Connector API (<code>com.sun.openconnectors.framework.api</code>)
+The Connector API (<code>org.identityconnectors.framework.api</code>)
 is generic (in that it can be used to manipulate any type of object, not merely accounts),
 but the Connector API is optimized to support provisioning operations and password management. 
 Every supported operation is synchronous to the caller. 
@@ -60,7 +60,7 @@ and to test the bundle within the Connector framework
 so there is no need to implement it or test it within the context of each calling application.
 
 <p>The developer of a Connector bundle is expected to implement the operations 
-(Java interfaces within the <code>com.sun.openconnectors.framework.spi.operations</code> package) 
+(Java interfaces within the <code>org.identityconnectors.framework.spi.operations</code> package) 
 that make the most sense for the target resource the developer intends to support. 
 The developer is expected to be appropriately flexible in tolerating inputs, 
 to be as reasonably robust in handling errors,  
