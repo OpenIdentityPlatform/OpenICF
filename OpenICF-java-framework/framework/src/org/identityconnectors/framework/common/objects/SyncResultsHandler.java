@@ -42,17 +42,19 @@ package org.identityconnectors.framework.common.objects;
 import org.identityconnectors.framework.api.operations.SyncApiOp;
 
 /**
- * Callback interface provided by the application to handle results from
- * {@link SyncApiOp} in a stream-processing fashion.
+ * Callback interface that an application implements in order to 
+ * handle results from {@link SyncApiOp} in a stream-processing fashion.
  */
 public interface SyncResultsHandler {
 
     /**
-     * Called to handle a delta in the stream. Will be called multiple times,
-     * once for each result. Although a callback, this is still invoked
-     * synchronously. That is, it is guaranteed that following a call to
-     * {@link SyncApiOp#sync(ObjectClass, SyncToken, SyncResultsHandler)} no
-     * more invocations to {@link #handle(SyncDelta)} will be performed.
+     * Called to handle a delta in the stream. The Connector framework will call
+     * this method multiple times, once for each result. 
+     * Although this method is callback, the framework will invoke it synchronously.
+     * Thus, the framework guarantees that once an application's call to
+     * {@link SyncApiOp#sync SyncApiOp#sync()} returns, 
+     * the framework will no longer call this method 
+     * to handle results from that <code>sync()</code> operation.
      * 
      * @param delta
      *            The change
@@ -60,7 +62,7 @@ public interface SyncResultsHandler {
      *         results.
      * @throws RuntimeException
      *             If the application encounters an exception. This will stop
-     *             the interation and the exception will be propogated back to
+     *             iteration and the exception will propagate to
      *             the application.
      */
     public boolean handle(SyncDelta delta);

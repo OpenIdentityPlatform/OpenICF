@@ -81,9 +81,12 @@ import org.identityconnectors.framework.api.operations.UpdateApiOp;
  * regardless of the underlying type of the native identifier on the target.
  * The string value of any native id must be canonical.
  * <p>
- * Uid is never allowed to appear in the {@link Schema}, or in the attribute set of
- * a {@link Create} operation. This is because it is not a true attribute of an object, but
- * rather a reference to that object. It extends {@link Attribute} simply so that it can be searchable
+ * Uid is never allowed to appear in the {@link Schema}, 
+ * nor may Uid appear in the attribute set of a 
+ * {@link CreateApiOp#create create} operation. 
+ * This is because Uid is not a true attribute of an object, but
+ * rather a reference to that object. 
+ * Uid extends {@link Attribute} only so that Uid can be searchable
  * and compatible with the filter translators.
  */
  public final class Uid extends Attribute {

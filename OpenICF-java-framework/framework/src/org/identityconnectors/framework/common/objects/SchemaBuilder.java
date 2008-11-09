@@ -311,12 +311,15 @@ public final class SchemaBuilder {
     }
     
     /**
-     * Clears the operation-specific supported options. Normally, when
-     * you add an OperationOptionInfo, using {@link #defineOperationOption(OperationOptionInfo)(ObjectClassInfo)},
-     * it is added to all operations. You may then remove those that you need
-     * using {@link #removeSupportedOperationOption(Class, OperationOptionInfo)}. You
-     * may wish, as an alternative to clear everything out and instead add using
-     * {@link #addSupportedOperationOption(Class, OperationOptionInfo)}. 
+     * Clears the operation-specific supported options. 
+     * Normally, when you add an OperationOptionInfo 
+     * using {@link #defineOperationOption(OperationOptionInfo)},
+     * this adds the option to all operations. You may then remove the option from any operation
+     * that does not support the option
+     * using {@link #removeSupportedOperationOption(Class, OperationOptionInfo)}. 
+     * An alternative approach is to clear everything out (using this method) 
+     * and then add each option to every operation that supports the option 
+     * using {@link #addSupportedOperationOption(Class, OperationOptionInfo)}. 
      */
     public void clearSupportedOptionsByOperation() {
         for (Set<OperationOptionInfo> values : 
