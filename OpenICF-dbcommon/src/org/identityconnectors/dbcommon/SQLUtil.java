@@ -56,6 +56,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 
+import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.identityconnectors.common.Assertions;
@@ -96,7 +97,7 @@ public final class SQLUtil {
      */
     public static Connection getDatasourceConnection(final String datasourceName, final Hashtable<?,?> env) {
         try {
-            javax.naming.InitialContext ic = new javax.naming.InitialContext(env);
+            javax.naming.InitialContext ic = getInitialContext(env);
             DataSource ds = (DataSource)ic.lookup(datasourceName);
             return ds.getConnection();
         } catch (Exception e) {
@@ -112,9 +113,9 @@ public final class SQLUtil {
      * @param env propertyHastable 
      * @return the connection get from dataSource
      */
-    public static Connection getDatasourceConnection(final String datasourceName,final String user,GuardedString password, final Hashtable<?,?> env) {
+    public static Connection getDatasourceConnection(final String datasourceName,final String user,GuardedString password, final Hashtable<?,?> env) {        
         try {
-            javax.naming.InitialContext ic = new javax.naming.InitialContext(env);
+            javax.naming.InitialContext ic = getInitialContext(env);
             final DataSource ds = (DataSource)ic.lookup(datasourceName);
             final Connection[] ret = new Connection[1];
             password.access(new GuardedString.Accessor() {
@@ -133,6 +134,34 @@ public final class SQLUtil {
             throw ConnectorException.wrap(e);
         }
     }
+    /**
+     * Get the connection from the dataSource with specified user and password
+     * @param datasourceName 
+     * @param user DB user 
+     * @param password DB password 
+     * @param env propertyHastable 
+     * @return the connection get from dataSource
+     */
+    public static Connection getDatasourceConnection(final String datasourceName,final String user,GuardedString password) {        
+        return getDatasourceConnection(datasourceName, user, password, null);
+    }    
+
+    /**
+     * Get the initial context method
+     * @param env environment hastable is null or empty aware  
+     * @return The Context
+     * @throws NamingException
+     */
+    private static javax.naming.InitialContext getInitialContext(final Hashtable<?, ?> env) throws NamingException {
+        javax.naming.InitialContext ic = null;
+        if(env == null || env.size() == 0) {
+            //Default context
+            ic = new javax.naming.InitialContext();
+        } else {
+            ic = new javax.naming.InitialContext(env);
+        }
+        return ic;
+    }
     
     /**
      * Get the connection from the datasource
@@ -140,13 +169,7 @@ public final class SQLUtil {
      * @return the connection get from default jndi context
      */
     public static Connection getDatasourceConnection(final String datasourceName) {
-        try {
-            javax.naming.InitialContext ic = new javax.naming.InitialContext();
-            DataSource ds = (DataSource)ic.lookup(datasourceName);
-            return ds.getConnection();
-        } catch (Exception e) {
-            throw ConnectorException.wrap(e);
-        }
+        return getDatasourceConnection(datasourceName, null);
     }        
     /**
      * Gets a {@link java.sql.Connection} using the basic driver manager.
