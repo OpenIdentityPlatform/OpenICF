@@ -48,8 +48,8 @@ import java.util.TreeSet;
 
 /**
  * <p>
- * Random generator uses a pattern to generate a random sequence based on given
- * pattern.
+ * Random generator uses a <strong>pattern</strong> to generate a random
+ * sequence based on given pattern.
  * </p>
  * <p>
  * the supported characters are (can appear in pattern string):
@@ -65,13 +65,17 @@ import java.util.TreeSet;
  * Any other character inside the pattern is directly printed to the output.
  * </p>
  * <p>
- * Backslash is used to escape any character. For instance pattern "###\.##"
+ * Backslash is used to escape any character. For instance pattern "###\\.##"
  * prints a floating point random number
  * </p>
  * 
  * <p>
  * org.identityconnectors.contract.data.macro.RandomMacro -- written by Dan
  * Vernon, the original source of random generating functionality.
+ * </p>
+ * <p>
+ * Note: This is just a helper class. Users will directly use methods get() and
+ * random() of class {@link org.identityconnectors.contract.data.groovy.Lazy}.
  * </p>
  * 
  * @author David Adam, Zdenek Louzensky
@@ -84,11 +88,25 @@ public class RandomGenerator {
         rnd = new Random(System.currentTimeMillis());
     }
 
+    /**
+     * generate a random string based on given pattern
+     * @param pattern see the definition in class header
+     */
     public static String generate(String pattern) {
 
         return createRandomString(pattern, getDefaultCharacterSetMap());
     }
 
+    /**
+     * <p>
+     * generates a random string based on given pattern, finally tries to call
+     * constructor on the given class accepting a string argument.
+     * </p>
+     * 
+     * @param pattern
+     *            see the definition in class header
+     * @return object initialized with random string
+     */
     public static Object generate(String pattern, Class clazz) {
         Constructor c;
         try {

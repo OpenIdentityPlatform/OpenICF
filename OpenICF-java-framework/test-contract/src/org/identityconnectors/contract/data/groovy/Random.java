@@ -42,6 +42,13 @@ package org.identityconnectors.contract.data.groovy;
 import org.identityconnectors.contract.data.RandomGenerator;
 
 /**
+ * <p>
+ * Generate random strings based on given pattern
+ * </p>
+ * <p>
+ * This is a Helper class, users of tests will access methods:
+ * {@link Lazy#random(Object)} and {@link Lazy#get(Object)})
+ * </p>
  * 
  * @author Zdenek Louzensky
  * 
@@ -50,15 +57,34 @@ public class Random extends Lazy {
 
     private Class clazz;
 
+    /**
+     * Creates a random string based on given pattern.
+     * 
+     * @param pattern
+     *            format of pattern
+     * @see {@link org.identityconnectors.contract.data.RandomGenerator#generate(String)}
+     */
     protected Random(Object pattern) {
         this(pattern, String.class);
     }
 
+    /**
+     * Creates a random object of given type
+     * 
+     * @param pattern
+     * @see {@link org.identityconnectors.contract.data.RandomGenerator#generate(String)}
+     * @param clazz
+     *            the class that will be the type of generated object
+     */
     protected Random(Object pattern, Class clazz) {
         value = pattern;
         this.clazz = clazz;
     }
 
+    /**
+     * create a random value, that is created once. However further queries will
+     * return the same random value.
+     */
     public Object generate() {
         return RandomGenerator.generate(value.toString(), clazz);
     }

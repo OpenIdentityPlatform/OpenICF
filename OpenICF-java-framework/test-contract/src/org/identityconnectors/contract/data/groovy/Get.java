@@ -40,6 +40,13 @@
 package org.identityconnectors.contract.data.groovy;
 
 /**
+ * <p>
+ * Lazily get a property
+ * </p>
+ * <p>
+ * This is a Helper class, users of tests will access methods:
+ * {@link Lazy#random(Object)} and {@link Lazy#get(Object)})
+ * </p>
  * 
  * @author Zdenek Louzensky
  * 
