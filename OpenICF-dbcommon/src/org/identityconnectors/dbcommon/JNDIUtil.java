@@ -30,16 +30,18 @@ public abstract class JNDIUtil {
 		Hashtable<String, String> result = new Hashtable<String, String>();
         if (entries != null) {
             for (String entry : entries) {
-                int firstEq = entry.indexOf('=');
-                if (firstEq == -1) {
-                    throwFormatException(messages, entry, "Invalid value in JNDI entry");
+                if (entry != null) {
+                    int firstEq = entry.indexOf('=');
+                    if (firstEq == -1) {
+                        throwFormatException(messages, entry, "Invalid value in JNDI entry");
+                    }
+                    if (firstEq == 0) {
+                        throwFormatException(messages, entry, "First character cannot be =");
+                    }
+                    final String key = entry.substring(0, firstEq);
+                    final String value = firstEq == entry.length() - 1 ? null : entry.substring(firstEq + 1);
+                    result.put(key, value);
                 }
-                if (firstEq == 0) {
-                    throwFormatException(messages, entry, "First character cannot be =");
-                }
-                final String key = entry.substring(0, firstEq);
-                final String value = firstEq == entry.length() - 1 ? null : entry.substring(firstEq + 1);
-                result.put(key, value);
             }
         }
 		return result;

@@ -29,6 +29,7 @@ public class JNDIUtilTest {
 	/**
 	 * test for testArrayToHashtable fail
 	 */
+	@Test
 	public void testArrayToHashtableFail() {
 		try{
 			String[] entries2 = {"a=A","b="};
@@ -48,6 +49,17 @@ public class JNDIUtilTest {
 		
 	}
 	
+    /**
+     * test for testArrayToHashtable fail
+     */
+    @Test
+    public void testArrayToHashtableNull() {
+        JNDIUtil.arrayToHashtable(null,null);
+        String[] entries2 = {};
+        JNDIUtil.arrayToHashtable(entries2,null);
+        String[] entries3 = {null,null};
+        JNDIUtil.arrayToHashtable(entries3,null);
+    }
 	
 
 }
