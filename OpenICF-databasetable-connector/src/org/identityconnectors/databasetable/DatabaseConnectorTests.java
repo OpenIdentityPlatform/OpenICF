@@ -209,8 +209,7 @@ public class DatabaseConnectorTests {
         assertNull(config.getValidConnectionQuery());
         assertNull(config.getDBTable());
         assertNull(config.getDatasource());
-        assertNull(config.getJndiProvider());
-        assertNull(config.getJndiFactory());
+        assertNull(config.getJndiProperties());
         
         config.setDriver(DRIVER);
         assertEquals(DRIVER, config.getDriver());
@@ -238,12 +237,7 @@ public class DatabaseConnectorTests {
 
         config.setKeyColumn(TestAccount.ACCOUNTID);
         config.setDBTable(DB_TABLE);
-        config.setLogin(TestAccount.ACCOUNTID);
-        config.setPassword(new GuardedString("".toCharArray()));
-
         config.setDatasource("DS");
-        assertEquals(TestAccount.ACCOUNTID, config.getLogin());
-
         config.validate();
     }    
     
@@ -258,28 +252,33 @@ public class DatabaseConnectorTests {
 
         config.setKeyColumn(TestAccount.ACCOUNTID);
         config.setDBTable(DB_TABLE);
-        config.setLogin(TestAccount.ACCOUNTID);
-        config.setPassword(new GuardedString("".toCharArray()));
+        config.setDatasource(TestAccount.ACCOUNTID);
+        assertEquals(TestAccount.ACCOUNTID, config.getDatasource());
+        
+        final String[] tstpr = {"a=A","b=B"};
+        config.setJndiProperties(tstpr);
+        assertEquals(tstpr[0], config.getJndiProperties()[0]);
+        assertEquals(tstpr[1], config.getJndiProperties()[1]);
 
-        config.setDatasource("DS");
-        assertEquals(TestAccount.ACCOUNTID, config.getLogin());
-        
-        config.setJndiFactory("JndiFactory");
-        assertEquals("JndiFactory", config.getJndiFactory());
+        config.validate();      
+    }   
+    
+    /**
+     * test method
+     */
+    @Test(expected=IllegalArgumentException.class)
+    public void testConfigurationInvalidJndi() {
+        // attempt to test driver info..
+        DatabaseTableConfiguration config = new DatabaseTableConfiguration();
+        // check defaults..
 
-        try {
-            config.validate();
-            fail("JndiProvider is missing expected");
-        } catch (IllegalArgumentException expected) {
-            //expected
-        }
-                
-        config.setJndiProvider("JndiProvider");
-        assertEquals("JndiProvider", config.getJndiProvider());
-        
-        config.validate();
-        
-    }        
+        config.setKeyColumn(TestAccount.ACCOUNTID);
+        config.setDBTable(DB_TABLE);
+        config.setDatasource("DS");      
+        final String[] tstpr = {"a=A","b"};
+        config.setJndiProperties(tstpr);
+        config.validate();      
+    }   
 
     /**
      * For testing purposes we creating connection an not the framework.

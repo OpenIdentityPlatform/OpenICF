@@ -53,8 +53,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.naming.Context;
-
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.GUID;
@@ -64,6 +62,7 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.dbcommon.DatabaseQueryBuilder;
 import org.identityconnectors.dbcommon.FilterWhereBuilder;
 import org.identityconnectors.dbcommon.InsertIntoBuilder;
+import org.identityconnectors.dbcommon.JNDIUtil;
 import org.identityconnectors.dbcommon.SQLUtil;
 import org.identityconnectors.dbcommon.UpdateSetBuilder;
 import org.identityconnectors.dbcommon.DatabaseQueryBuilder.OrderBy;
@@ -889,18 +888,22 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      */
     static DatabaseTableConnection newConnection(DatabaseTableConfiguration config) {
         java.sql.Connection connection;
-        if (StringUtil.isNotBlank(config.getDatasource())) {
-            if (StringUtil.isNotBlank(config.getJndiFactory()) && StringUtil.isNotBlank(config.getJndiProvider())) {
-                Hashtable<String, String> env = new Hashtable<String, String>();
-                env.put(Context.INITIAL_CONTEXT_FACTORY, config.getJndiFactory());
-                env.put(Context.PROVIDER_URL, config.getJndiProvider());
-                connection = SQLUtil.getDatasourceConnection(config.getDatasource(), env);
+        final String login = config.getLogin();
+        final GuardedString password = config.getPassword();
+        final String datasource = config.getDatasource();
+        final String[] jndiProperties = config.getJndiProperties();
+        final ConnectorMessages connectorMessages = config.getConnectorMessages();
+        if (StringUtil.isNotBlank(datasource)) {
+            Hashtable<String, String> prop = JNDIUtil.arrayToHashtable(jndiProperties, connectorMessages);                
+            if(StringUtil.isNotBlank(login) && password != null) {
+                connection = SQLUtil.getDatasourceConnection(datasource, login, password, prop);
             } else {
-                connection = SQLUtil.getDatasourceConnection(config.getDatasource());
-            }
+                connection = SQLUtil.getDatasourceConnection(datasource, prop);
+            } 
         } else {
-            connection = SQLUtil.getDriverMangerConnection(config.getDriver(), config.getConnectionUrl(), config
-                    .getLogin(), config.getPassword());
+            final String driver = config.getDriver();
+            final String connectionUrl = config.getConnectionUrl();
+            connection = SQLUtil.getDriverMangerConnection(driver, connectionUrl, login, password);
         }
         return new DatabaseTableConnection(connection, config);
     }

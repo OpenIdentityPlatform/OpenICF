@@ -42,6 +42,7 @@ package org.identityconnectors.databasetable;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.dbcommon.JNDIUtil;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -88,45 +89,23 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     /**
      * The jndiFactory name is used to connect to database.
      */
-    private String jndiFactory;
+    private String[] jndiProperties;
 
     /**
      * Return the jndiFactory 
      * @return jndiFactory value
      */
     @ConfigurationProperty(order = 2)
-    public String getJndiFactory() {
-        return jndiFactory;
+    public String[] getJndiProperties() {
+        return jndiProperties;
     }
 
     /**
      * @param value
      */
-    public void setJndiFactory(String value) {
-        this.jndiFactory = value;
+    public void setJndiProperties(String[] value) {
+        this.jndiProperties = value;
     }
-    
-    
-    /**
-     * The jndiProvider name is used to connect to database.
-     */
-    private String jndiProvider;
-
-    /**
-     * Return the jndiProvider 
-     * @return jndiProvider value
-     */
-    @ConfigurationProperty(order = 3)
-    public String getJndiProvider() {
-        return jndiProvider;
-    }
-
-    /**
-     * @param value
-     */
-    public void setJndiProvider(String value) {
-        this.jndiProvider = value;
-    }    
     
     /**
      * Database connection URL. The url is used to connect to database.
@@ -470,12 +449,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @see org.identityconnectors.framework.Configuration#validate()
      */
     @Override
-    public void validate() {        
-        // determine if you can get a connection to the database..
-        Assertions.nullCheck(getLogin(), "login");
-        // check that there is a table to query..
-        Assertions.nullCheck(getPassword(), "password");
-        
+    public void validate() {
         // determine if you can get a connection to the database..
         Assertions.blankCheck(getKeyColumn(), "keyColumn");
         // check that there is a table to query..
@@ -483,6 +457,10 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
         
         // check that there is not a datasource
         if(StringUtil.isBlank(getDatasource())){ 
+            // determine if you can get a connection to the database..
+            Assertions.nullCheck(getLogin(), "login");
+            // check that there is a table to query..
+            Assertions.nullCheck(getPassword(), "password");
             // check that there is a table to query..
             Assertions.blankCheck(getConnectionUrl(), "connectionUrl");    
             // make sure the driver is in the class path..
@@ -492,14 +470,10 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
             } catch (ClassNotFoundException e) {
                 throw new IllegalArgumentException(e);
             }
-        } else { // Datasource is active         
-            // When JNDI provider is set up, factory need to be there too 
-            if (StringUtil.isNotBlank(getJndiProvider()) || StringUtil.isNotBlank(getJndiFactory())) {
-                Assertions.blankCheck(getJndiFactory(), "jndiFactory");
-                Assertions.blankCheck(getJndiProvider(), "jndiProvider");
-            }
-        }      
-
+        } else {
+            //Validate the JNDI properties
+            JNDIUtil.arrayToHashtable(getJndiProperties(), getConnectorMessages());
+        }
         // make sure the quoting is valid..
         quoteName("anything");
     }
