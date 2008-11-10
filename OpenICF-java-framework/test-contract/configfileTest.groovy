@@ -88,7 +88,7 @@ randomPure="aaa" + Lazy.random("####") + "." + Lazy.random("####")
 foo.bla.horror.random="aaa" + Lazy.random("####") + "." + Lazy.random("####") + Lazy.get("a"+Lazy.get("b"))
 
 // test nested parameters
-Schema {
+SchemaXX {
 	sample = 'Mysterious universe'
 }// Schema
 

@@ -92,7 +92,7 @@ public class GroovyDataProviderTest {
     public void testNonExistingProperty() throws Exception {
         Assert.assertTrue(new File(CONFIG_FILE_PATH)
                 .exists());
-        Object o = getProperty(gdp, NON_EXISTING_PROPERTY);// gdp.get(NON_EXISTING_PROPERTY);
+        Object o = getProperty(gdp, NON_EXISTING_PROPERTY);
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof ConfigObject);
         if (o instanceof ConfigObject) {
@@ -105,7 +105,7 @@ public class GroovyDataProviderTest {
     public void testSimpleMapAcquire() throws Exception {
         Assert.assertTrue(new File(CONFIG_FILE_PATH)
                 .exists());
-        Object o = getProperty(gdp, "sampleMap");// gdp.get("sampleMap");
+        Object o = getProperty(gdp, "sampleMap");
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof Map);
         printMap(o);
@@ -115,7 +115,7 @@ public class GroovyDataProviderTest {
     public void testDotInNameMapAcquire() throws Exception {
         Assert.assertTrue(new File(CONFIG_FILE_PATH)
                 .exists());
-        Object o = getProperty(gdp, "sampleMap.foo.bar");// .get("sampleMap.foo.bar");
+        Object o = getProperty(gdp, "sampleMap.foo.bar");
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof Map);
         printMap(o);
@@ -129,7 +129,7 @@ public class GroovyDataProviderTest {
         // the DataProvider should try to evaluate substrings of the property
         // name (divided by .)
         // and find "abc"
-        Object o = getProperty(gdp, "foo.abc");// .get("foo.abc");
+        Object o = getProperty(gdp, "foo.abc");
         Assert.assertNotNull(o);
         Assert.assertEquals("abc", o.toString());
         printMap(o);
@@ -139,7 +139,7 @@ public class GroovyDataProviderTest {
     public void testDotNameString() throws Exception {
         Assert.assertTrue(new File(CONFIG_FILE_PATH)
                 .exists());
-        Object o = getProperty(gdp, "eggs.spam.sausage"); // .get("eggs.spam.sausage");
+        Object o = getProperty(gdp, "eggs.spam.sausage");
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof String);
         Assert.assertEquals("the spanish inquisition", o.toString());
@@ -152,8 +152,8 @@ public class GroovyDataProviderTest {
         Assert.assertTrue(new File(CONFIG_FILE_PATH)
                 .exists());
 
-        Object response = getProperty(gdp, "randomValue"); // .get("randomValue");
-        Object responseTwo = getProperty(gdp, "randomValue"); // .get("randomValue");
+        Object response = getProperty(gdp, "randomValue");
+        Object responseTwo = getProperty(gdp, "randomValue");
 
         Assert.assertNotNull(response);
         Assert.assertNotNull(responseTwo);
@@ -172,8 +172,8 @@ public class GroovyDataProviderTest {
     public void testRandom() throws Exception {
         Assert.assertTrue(new File(CONFIG_FILE_PATH)
                 .exists());
-        Object o = getProperty(gdp, "random"); // .get("eggs.spam.sausage");
-        Object o2 = getProperty(gdp, "random"); // .get("eggs.spam.sausage");
+        Object o = getProperty(gdp, "random");
+        Object o2 = getProperty(gdp, "random");
         Assert.assertNotNull(o);
         Assert.assertEquals(o, o2);
     }
@@ -182,8 +182,8 @@ public class GroovyDataProviderTest {
     public void testRandomHierarchicalName() throws Exception {
         Assert.assertTrue(new File(CONFIG_FILE_PATH)
                 .exists());
-        Object o = getProperty(gdp, "foo.bla.horror.random"); // .get("eggs.spam.sausage");
-        Object o2 = getProperty(gdp, "foo.bla.horror.random"); // .get("eggs.spam.sausage");
+        Object o = getProperty(gdp, "foo.bla.horror.random");
+        Object o2 = getProperty(gdp, "foo.bla.horror.random");
         Assert.assertNotNull(o);
         Assert.assertEquals(o, o2);
     }
@@ -247,7 +247,6 @@ public class GroovyDataProviderTest {
             Assert.assertTrue(o.toString() == "Good morning!");
         }
 
-        // attributeMapSecond['stringSec'] = 'Good morning!'
         {
             Object o = getProperty(gdp, "attributeMapSecond.stringSec");
             Assert.assertNotNull(o);
@@ -300,8 +299,6 @@ public class GroovyDataProviderTest {
 
     @Test
     public void multiStringRecursiveTest() throws Exception {
-        // multi.recursive.Tstring=[Lazy.random("AAAAA##") ,
-        // [Lazy.random("AAAAA##") , Lazy.random("AAAAA##")]]
 
         Object o = getProperty(gdp, "multi.recursive.Tstring", false);
         Assert.assertNotNull(o);
@@ -361,7 +358,7 @@ public class GroovyDataProviderTest {
 
     @Test
     public void testNestedPropertyQuery() throws Exception {
-        Object o = getProperty(gdp, "Schema.sample");
+        Object o = getProperty(gdp, "SchemaXX.sample");
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof String
                 && o.toString() == "Mysterious universe");
@@ -403,8 +400,7 @@ public class GroovyDataProviderTest {
     }
 
     /**
-     * just call the get, and do some println for neat output. Maybe will erase
-     * this TODO
+     * just call the get, and do some println for neat output.
      * 
      * @param gdp2
      * @param propertyName
@@ -417,6 +413,10 @@ public class GroovyDataProviderTest {
         return getProperty(gdp2, propertyName, true);
     }
 
+    /**
+     * helper method that retrieves the parameter from the properties file and
+     * tries to display useful information about its contents on System.out
+     */
     private Object getProperty(GroovyDataProvider gdp2, String propertyName,
             boolean printOut) throws Exception {
         // doing the acquire of property!
