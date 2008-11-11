@@ -46,13 +46,14 @@ import groovy.util.ConfigSlurper;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
-import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
@@ -96,6 +97,10 @@ import org.junit.Assert;
  */
 public class GroovyDataProvider implements DataProvider {
 
+    //TODO erase this just for testing purposes
+    private static final boolean DEBUG_ON = false;
+    private static final String EMPTY_PREFIX = "";
+    
     private static final String PROPERTY_SEPARATOR = ".";
     private static final String CONTRACT_TESTS_FILE_NAME = "build.groovy";
     private static final String BOOTSTRAP_FILE_NAME = "bootstrap.groovy";
@@ -631,4 +636,242 @@ public class GroovyDataProvider implements DataProvider {
         return "T" + shortName;
     }
 
+    /* **************** SNAPSHOT GENERATOR METHODS **************** */
+    /**
+     * writes key, value to _propertyOutFile
+     */
+    Object writeDataToFile() {
+        // parsed configuration information to flatten
+        return flatten(configObject);
+    }
+
+    /**
+     * create a snapshot of values recursively
+     * 
+     * @param obj
+     *            an object to flatten
+     * @return string representation
+     */
+    private String flatten(Object obj) {
+        return flatten(obj, Chooser.QUOTED, EMPTY_PREFIX);
+    }
+    
+    private String flatten(Object obj, String prefix) {
+        return flatten(obj, Chooser.QUOTED, prefix);
+    }
+
+    /**
+     * main entrance to flattening methods.
+     * 
+     * @param isQuoted
+     *            turns on quoting
+     */
+    private String flatten(Object obj, Chooser choice, String prefix) {
+        String svalue = null;
+
+        if (obj instanceof ConfigObject) {
+
+            svalue = flattenCO(obj, prefix);
+
+        } else if (obj instanceof Map) {
+
+            svalue = flattenMap(obj);
+
+        } else if (obj instanceof List) {
+
+            svalue = flattenList(obj);
+
+//        } 
+//        else if (obj instanceof Lazy) {
+//            
+//            svalue = flattenLazy(obj);
+            
+        }else {
+            // resolve as "Object" and use quotes, if needed
+            switch (choice) {
+            case QUOTED:
+                svalue = String.format("\"%s\"", obj.toString());
+                break;
+            case NOT_QUOTED:
+                svalue = obj.toString();
+                break;
+            }
+        }
+
+        return svalue;
+    }
+
+    private String flattenLazy(Object obj) {
+        String svalue = null;
+        Lazy lazy = (Lazy) obj;
+        Object value = lazy.getValue();
+        Object resolvedValue = null;
+        
+        if (lazy instanceof Get) {
+            Assert.assertTrue(value instanceof String);
+            resolvedValue = get((String) value, null, false);
+        } else if (lazy instanceof Random) {
+            Assert.assertTrue(value instanceof String);
+            Random rnd = (Random) lazy;
+            resolvedValue = rnd.generate();
+        }
+        
+        if (!lazy.getSuccessors().isEmpty()) {
+            svalue = concatenate(resolvedValue, lazy.getSuccessors());
+        } else {
+            svalue = resolvedValue.toString();
+        }
+        
+        return svalue;
+    }
+
+    private String flattenCO(Object obj, String prefix) {
+        String svalue = null;
+        StringBuilder sb = new StringBuilder();
+        boolean first = false;
+        Collection collection = ((Map<Object, Object>) obj).entrySet();
+
+        for (Iterator iterator = collection.iterator(); iterator.hasNext();) {
+            // pick an _entry_ for further flattening
+            Map.Entry<Object, Object> entry = (Map.Entry<Object, Object>) iterator
+                    .next();
+
+            /*
+             * entry is made of _key_ and _value_ pair
+             */
+            // #1 _value_ part of the entry:
+            String value = flatten(entry.getValue(), concatToPrefix(prefix, entry.getKey()));
+
+            // if there are nested maps (representing hierarchical names,
+            // e.g. foo.bar.laa):
+            if (entry.getValue() instanceof ConfigObject) {
+                // #2 _key_ part of the entry:
+                String key = null;
+                if (first) {
+                    // if first, no quotes are needed:
+                    key = debugStr("FST|")
+                            + flatten(entry.getKey(), Chooser.NOT_QUOTED, concatToPrefix(prefix, entry.getKey()));
+                } else {
+                    key = debugStr("MID|") + flatten(entry.getKey(), concatToPrefix(prefix, entry.getKey()));
+                }// fi (first)
+                sb.append(String.format("%s%s%s", key, PROPERTY_SEPARATOR, value));
+
+            } else {// fi (entry.getValue())
+                // no nested property names left (no foo.bar.laa)
+                String key = null;
+                if (iterator.hasNext() && prefix.equals(EMPTY_PREFIX)) {
+                    key = debugStr("LSTinSNGL|")
+                            + flatten(entry.getKey(), Chooser.NOT_QUOTED, prefix);
+                } else {
+                    key = debugStr("LSTinMULT|") + flatten(entry.getKey(), concatToPrefix(prefix, entry.getKey()));
+                }
+
+                sb.append(String.format("%s=%s\n", batchAddQuotes(first, prefix) + key, value));
+            }// fi (entry.getValue())
+
+            first = true;
+
+        }// for
+
+        svalue = sb.toString();
+
+        return svalue;
+    }
+    
+    private String batchAddQuotes(boolean first, String prefix) {
+        String result = null;
+        if (!first || prefix == null || prefix.length() == 0) {
+            result = EMPTY_PREFIX;
+        } else {
+            result = debugStr("Pfix:") + transformPrefix(prefix) + PROPERTY_SEPARATOR + debugStr(":"); // TODO CHANGE THIS, erase the debug string.
+        }
+        return result;
+    }
+
+    /**
+     * quotes every supart of prefix foo.bar.boo, so the result would be: foo."bar"."boo"
+     * @param prefix
+     * @return
+     * 
+     * Assert.assertEquals("foo.\"bar\".\"boo\".\"bla\"", gdp.transformPrefix("foo.bar.boo.bla")); //TODO delete this
+     */
+    private String transformPrefix(String prefix) {
+        String[] parts = prefix.split("\\" + PROPERTY_SEPARATOR);
+        StringBuilder result = new StringBuilder();
+        
+        for (int i = 0; i < parts.length; i++) {
+            if (i == 0) {
+                result.append(parts[i]);
+            } else {
+                result.append(String.format("%s\"%s\"", PROPERTY_SEPARATOR, parts[i]));
+            }
+        }
+        return result.toString();
+    }
+
+    private String concatToPrefix(String prefix, Object key) {
+        return prefix + ((prefix == null || prefix.length() == 0)? EMPTY_PREFIX :PROPERTY_SEPARATOR) + key;
+    }
+
+    private String debugStr(String string) {
+        if (DEBUG_ON) {
+            return string;
+        }
+        return "";
+    }
+
+    private String flattenList(Object obj) {
+        String svalue = null;
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        
+        for (Object item : ((List) obj)) {
+            if (!first) {
+                sb.append(", ");
+            }
+            sb.append(flatten(item));
+            first = false;
+        }
+
+        svalue = String.format("[ %s ]", sb.toString());
+        
+        return svalue;
+    }
+
+    /**
+     * flattens a Map
+     * @param obj
+     * @return the string representation
+     */
+    private String flattenMap(Object obj) {
+        String svalue = null;
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        
+        for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) obj)
+                .entrySet()) {
+            String key = flatten(entry.getKey());
+            String value = flatten(entry.getValue());
+            if (!first) {
+                sb.append(", ");
+            }
+            sb.append(String.format(" %s : %s ", key, value));
+            first = false;
+        }
+        
+        svalue = String.format("[ %s ]", sb.toString());
+        
+        return svalue;
+    }
+
+    public void dispose() {
+        System.err.println("BLABLA"); 
+        //writeDataToFile();
+    }
+}
+
+/** helper enum */
+enum Chooser {
+    QUOTED, 
+    NOT_QUOTED
 }
