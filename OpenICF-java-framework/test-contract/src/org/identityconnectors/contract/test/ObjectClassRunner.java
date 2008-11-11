@@ -42,8 +42,10 @@ package org.identityconnectors.contract.test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.GetApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
@@ -71,6 +73,11 @@ import org.junit.Test;
  */
 public abstract class ObjectClassRunner extends AbstractSimpleTest {
 
+    /**
+     * Logging..
+     */
+    private static final Log LOG = Log.getLog(ObjectClassRunner.class);
+    
     private final ObjectClass _objectClass;
     private ObjectClassInfo _objectClassInfo;
     private ObjectClass _supportedObjectClass;    
@@ -120,6 +127,9 @@ public abstract class ObjectClassRunner extends AbstractSimpleTest {
         //run the contract test for supported operation only
         if (ConnectorHelper.operationSupported(getConnectorFacade(), getAPIOperation())) {
             try {
+                LOG.info("--------------------------------------------------------------------------------------");
+                LOG.info("Running test ''{0}'' for object class ''{1}''.", getTestName(), getObjectClass());
+                LOG.info("--------------------------------------------------------------------------------------");
                 testRun();
                 if (!isObjectClassSupported()) {
                     //should throw RuntimeException
@@ -131,7 +141,11 @@ public abstract class ObjectClassRunner extends AbstractSimpleTest {
                     fail("Unexpected RuntimeException thrown: " + e);
                 }
             }
-
+        }
+        else {
+            LOG.info("--------------------------------------------------------------------------------------");
+            LOG.info("Skipping test ''{0}'' for object class ''{1}''.", getTestName(), getObjectClass());
+            LOG.info("--------------------------------------------------------------------------------------");
         }
     }
 
@@ -146,9 +160,14 @@ public abstract class ObjectClassRunner extends AbstractSimpleTest {
      */
     @Parameters
     public static List<Object[]> data() {
-        return Arrays.asList(new Object[][] { { ObjectClass.ACCOUNT },
-                { ObjectClass.GROUP }, { ObjectClass.ORGANIZATION },
-                { ObjectClass.PERSON }, { new ObjectClass("NONEXISTING") } });
+        Schema schema = ConnectorHelper.createConnectorFacade(getDataProvider()).schema();
+        List<Object[]> oclasses = new LinkedList<Object[]>();
+        for (ObjectClassInfo ocInfo : schema.getObjectClassInfo()) {
+            oclasses.add(new Object[] {ConnectorHelper.getObjectClassFromObjectClassInfo(ocInfo)});
+        }
+        
+        oclasses.add(new Object[] {new ObjectClass("NONEXISTING")});
+        return oclasses;
     }
 
     /**
