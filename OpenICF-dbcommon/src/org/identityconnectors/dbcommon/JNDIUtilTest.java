@@ -59,6 +59,9 @@ public class JNDIUtilTest {
         JNDIUtil.arrayToHashtable(entries2,null);
         String[] entries3 = {null,null};
         JNDIUtil.arrayToHashtable(entries3,null);
+        String[] entries4 = {""," "};
+        JNDIUtil.arrayToHashtable(entries4,null);
+        
     }
 	
 

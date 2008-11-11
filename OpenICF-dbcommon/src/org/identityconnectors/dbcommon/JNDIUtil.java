@@ -5,6 +5,7 @@ package org.identityconnectors.dbcommon;
 
 import java.util.Hashtable;
 
+import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.framework.common.objects.ConnectorMessages;
 
 /**
@@ -19,8 +20,9 @@ public abstract class JNDIUtil {
 	public static final String INVALID_JNDI_ENTRY = "invalid.jndi.entry"; 
 	
 	/**
-	 * Parses arrays of string as entries of properties. Each entry mus be in form
+	 * Parses arrays of string as entries of properties. Each entry must be in form
 	 * <code>key=value</code>. We use <strong>=</strong> as only separator and treat only first occurrence of =.
+	 * Blank entries are skipped.
 	 * @param entries could be null or size = 0
 	 * @param messages the error messages from the configuration resource bundle
 	 * @return hashtable of given entries
@@ -30,7 +32,7 @@ public abstract class JNDIUtil {
 		Hashtable<String, String> result = new Hashtable<String, String>();
         if (entries != null) {
             for (String entry : entries) {
-                if (entry != null) {
+                if (StringUtil.isNotBlank(entry)) {
                     int firstEq = entry.indexOf('=');
                     if (firstEq == -1) {
                         throwFormatException(messages, entry, "Invalid value in JNDI entry");
