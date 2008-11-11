@@ -264,6 +264,11 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                 }
             }
         }
+        else {
+            LOG.info("----------------------------------------------------------------------------------------");
+            LOG.info("Skipping test ''testUpdateToSameAttributes'' for object class ''{0}''.", getObjectClass());
+            LOG.info("----------------------------------------------------------------------------------------");
+        }
     }
 
     @Override

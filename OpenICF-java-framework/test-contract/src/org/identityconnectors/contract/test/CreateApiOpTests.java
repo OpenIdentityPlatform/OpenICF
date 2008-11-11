@@ -136,6 +136,11 @@ public class CreateApiOpTests extends ObjectClassRunner {
                 // ok
             }
         }
+        else {
+            LOG.info("----------------------------------------------------------------------------------------");
+            LOG.info("Skipping test ''testCreateFailUnsupportedAttribute'' for object class ''{0}''.", getObjectClass());
+            LOG.info("----------------------------------------------------------------------------------------");
+        }
     }
     
     /**
@@ -193,6 +198,11 @@ public class CreateApiOpTests extends ObjectClassRunner {
                             false, getOperationOptionsByOp(DeleteApiOp.class));
                 }
             }
+        }
+        else {
+            LOG.info("----------------------------------------------------------------------------------------");
+            LOG.info("Skipping test ''testCreateWithSameAttributes'' for object class ''{0}''.", getObjectClass());
+            LOG.info("----------------------------------------------------------------------------------------");
         }
     }
 

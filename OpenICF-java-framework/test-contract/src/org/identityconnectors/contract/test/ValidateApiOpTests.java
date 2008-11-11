@@ -92,6 +92,11 @@ public class ValidateApiOpTests extends AbstractSimpleTest {
                 // expected
             }
         }
+        else {
+            LOG.info("--------------------------------");
+            LOG.info("Skipping test ''testValidateFail''.");
+            LOG.info("--------------------------------");
+        }
     }
     
     /**

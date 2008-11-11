@@ -240,6 +240,11 @@ public class SearchApiOpTests extends ObjectClassRunner {
                 }
             }
         }
+        else {
+            LOG.info("----------------------------------------------------------------------------------------");
+            LOG.info("Skipping test ''testSearchWithoutAttrsToGet'' for object class ''{0}''.", getObjectClass());
+            LOG.info("----------------------------------------------------------------------------------------");
+        }
     }
 
     /**

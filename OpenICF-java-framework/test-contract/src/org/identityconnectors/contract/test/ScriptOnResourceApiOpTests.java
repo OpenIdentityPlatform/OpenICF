@@ -114,6 +114,11 @@ public class ScriptOnResourceApiOpTests extends AbstractSimpleTest {
                 LOG.info("Test properties not set, skipping the test " + TEST_NAME);
             }
         }
+        else {
+            LOG.info("---------------------------------");
+            LOG.info("Skipping test ''testRunScript''.");
+            LOG.info("---------------------------------");
+        }
     }
     
     /**
@@ -132,6 +137,11 @@ public class ScriptOnResourceApiOpTests extends AbstractSimpleTest {
                 // expected
             }
         }
+        else {
+            LOG.info("----------------------------------------------------");
+            LOG.info("Skipping test ''testRunScriptFailUnknownLanguage''.");
+            LOG.info("----------------------------------------------------");
+        }
     }
 
     /**
@@ -148,6 +158,11 @@ public class ScriptOnResourceApiOpTests extends AbstractSimpleTest {
             } catch (RuntimeException ex) {
                 // expected
             }
+        }
+        else {
+            LOG.info("----------------------------------------------------");
+            LOG.info("Skipping test ''testRunScriptFailEmptyScriptText''.");
+            LOG.info("----------------------------------------------------");
         }
     }
 

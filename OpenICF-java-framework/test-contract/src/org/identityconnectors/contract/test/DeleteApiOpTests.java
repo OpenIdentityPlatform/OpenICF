@@ -143,6 +143,11 @@ public class DeleteApiOpTests extends ObjectClassRunner {
                         getOperationOptionsByOp(DeleteApiOp.class));
             }
         }
+        else {
+            LOG.info("----------------------------------------------------------------------------------------");
+            LOG.info("Skipping test ''testDeleteThrowUnknownUid'' for object class ''{0}''.", getObjectClass());
+            LOG.info("----------------------------------------------------------------------------------------");
+        }
     }
 
 

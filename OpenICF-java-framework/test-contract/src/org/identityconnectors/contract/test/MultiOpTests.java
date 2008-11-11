@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
@@ -81,6 +82,11 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class MultiOpTests extends ObjectClassRunner {
 
+    /**
+     * Logging..
+     */
+    private static final Log LOG = Log.getLog(MultiOpTests.class);
+    
     private static final String TEST_NAME = "Multi";
     private static final String MODIFIED = "modified";
 
@@ -418,6 +424,11 @@ public class MultiOpTests extends ObjectClassRunner {
 
             //check ENABLE for false
             checkEnableOpAttribute(false);
+        }
+        else {
+            LOG.info("----------------------------------------------------------------------------------------");
+            LOG.info("Skipping test ''testEnableOpAttribute'' for object class ''{0}''.", getObjectClass());
+            LOG.info("----------------------------------------------------------------------------------------");
         }
     }
 

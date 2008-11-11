@@ -241,8 +241,9 @@ public class SyncApiOpTests extends ObjectClassRunner {
                 getConnectorFacade().delete(getSupportedObjectClass(), uid, null);
             }
         } else {
-            LOG.info("testSyncWithoutAttrsToGet is skipped for tested object class ''{0}''.",
-                    getObjectClass());
+            LOG.info("----------------------------------------------------------------------------------------");
+            LOG.info("Skipping test ''testSyncWithoutAttrsToGet'' for object class ''{0}''.", getObjectClass());
+            LOG.info("----------------------------------------------------------------------------------------");
         }
     }
 
@@ -304,8 +305,9 @@ public class SyncApiOpTests extends ObjectClassRunner {
                 getConnectorFacade().delete(getSupportedObjectClass(), uid2, null);
             }
         } else {
-            LOG.info("testLatestSyncToken is skipped for tested object class ''{0}''.",
-                    getObjectClass());
+            LOG.info("----------------------------------------------------------------------------------------");
+            LOG.info("Skipping test ''testLatestSyncToken'' for object class ''{0}''.", getObjectClass());
+            LOG.info("----------------------------------------------------------------------------------------");
         }
     }
 

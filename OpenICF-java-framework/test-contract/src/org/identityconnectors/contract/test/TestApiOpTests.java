@@ -97,6 +97,11 @@ public class TestApiOpTests extends AbstractSimpleTest {
                 // expected
             }
         }
+        else {
+            LOG.info("--------------------------------");
+            LOG.info("Skipping test ''testTestFail''.");
+            LOG.info("--------------------------------");
+        }
     }
 
     /**
