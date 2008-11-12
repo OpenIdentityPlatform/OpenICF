@@ -67,6 +67,7 @@ import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.api.ConnectorInfoManager;
 import org.identityconnectors.framework.api.ConnectorInfoManagerFactory;
+import org.identityconnectors.framework.api.ConnectorKey;
 import org.identityconnectors.framework.api.RemoteFrameworkConnectionInfo;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.TestApiOp;
@@ -725,12 +726,17 @@ public class ConnectorHelper {
     public static APIConfiguration getDefaultConfigurationProperties(DataProvider dataProvider,
             ConnectorInfoManager manager) throws ObjectNotFoundException {
         
-        List<ConnectorInfo> infos = manager.getConnectorInfos();
-        Assert.assertTrue("BundleJars has to contain *exactly* one connector!", infos.size() == 1);
-               
-        ConnectorInfo info = infos.get(0);        
-        Assert.assertNotNull(info);
-        System.out.println(info.getConnectorKey().toString());
+        String bundleName = (String) dataProvider.getTestSuiteAttribute(String.class.getName(),
+                "bundleName");
+        String bundleVersion = (String) dataProvider.getTestSuiteAttribute(String.class.getName(),
+                "bundleVersion");
+        String connectorName = (String) dataProvider.getTestSuiteAttribute(String.class.getName(),
+                "connectorName");
+        ConnectorKey key = new ConnectorKey(bundleName, bundleVersion, connectorName);
+        ConnectorInfo info = manager.findConnectorInfo(key);
+        final String MSG = "Connector info wasn't found. Check values of bundleName, bundleVersion and connectorName properties." + 
+                            "\nbundleName:%s\nbundleVersion:%s\nconnectorName:%s";                            
+        Assert.assertNotNull(String.format(MSG, bundleName, bundleVersion, connectorName), info);
         APIConfiguration apiConfig = info.createDefaultAPIConfiguration();
 
         return apiConfig;
