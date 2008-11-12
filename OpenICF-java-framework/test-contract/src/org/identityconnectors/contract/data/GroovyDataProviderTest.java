@@ -463,7 +463,7 @@ public class GroovyDataProviderTest {
                 String[] arr = currentLine.split(gdp.ASSIGNMENT_MARK);
                 if (arr.length == 2) {
                     String leftPart = arr[0];
-                    Assert.assertTrue(!leftPart.isEmpty());
+                    Assert.assertTrue(!leftPart.equals(""));
 
                     // split the left side based on "." separators
                     String[] subparts = leftPart.split(gdp.PROPERTY_SEPARATOR);
