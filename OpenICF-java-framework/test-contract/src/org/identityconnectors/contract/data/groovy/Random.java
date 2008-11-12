@@ -88,4 +88,11 @@ public class Random extends Lazy {
     public Object generate() {
         return RandomGenerator.generate(value.toString(), clazz);
     }
+
+    /**
+     * @return the type of generated random class
+     */
+    public Class getClazz() {
+        return clazz;
+    }
 }

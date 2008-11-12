@@ -42,7 +42,11 @@ package org.identityconnectors.contract.data;
 import groovy.util.ConfigObject;
 import groovy.util.ConfigSlurper;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -143,29 +147,6 @@ public class GroovyDataProviderTest {
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof String);
         Assert.assertEquals("the spanish inquisition", o.toString());
-    }
-
-    @Test
-    @Ignore
-    /** this test is no longer used */
-    public void testRandomMacroValue() throws Exception {
-        Assert.assertTrue(new File(CONFIG_FILE_PATH)
-                .exists());
-
-        Object response = getProperty(gdp, "randomValue");
-        Object responseTwo = getProperty(gdp, "randomValue");
-
-        Assert.assertNotNull(response);
-        Assert.assertNotNull(responseTwo);
-
-        Assert.assertTrue(response instanceof String
-                && responseTwo instanceof String);
-
-        // two responses should return the same result, as random macro is
-        // evaluated once, and than cached.
-        Assert.assertEquals(response, responseTwo);
-        System.out.println("response #1: " + response.toString()
-                + "\n response #2: " + responseTwo.toString());
     }
 
     @Test
@@ -438,5 +419,88 @@ public class GroovyDataProviderTest {
         }
 
         return o;
+    }
+    /* *********************** SNAPSHOT GENERATING FEATURE TESTS ************************** */
+    
+    /** Test of Lazy.get() and Lazy.random()*/
+    @Test
+    public void getPropertyTest() {
+        Assert.assertTrue(gdp.get("rumulus", null, false).equals(
+                gdp.get("rumulus", null, false)));
+        Assert.assertTrue(gdp.get("remus", null, false).equals(
+                gdp.get("rumulus", null, false)));
+    }
+
+    /** Test of left sides for the snapshot output */
+    @Test
+    public void testSnapshotGenerating() throws IOException {
+        Object o = gdp.writeDataToFile();
+
+        // read the file line by line
+        List<String> lines = readLines(CONFIG_FILE_PATH);
+
+        // parse and control the properties in the written file
+        // FOR NOW just left side from the assigment is controlled.
+        parseAndControl(lines);
+
+        // output, might comment this out
+        // System.out.println(o.toString());
+    }
+
+    /**
+     * method controls, if single parameters are correctly quoted, and multi
+     * params.
+     * 
+     * Correct quotation means: foo."bar"."boo" = "baa" bar = "baa"
+     * 
+     * @param lines
+     */
+    private void parseAndControl(List<String> lines) {
+        for (String currentLine : lines) {
+            // divide the line based on "=" delimiter
+            if (currentLine.contains(gdp.ASSIGNMENT_MARK)) {
+                ;
+                String[] arr = currentLine.split(gdp.ASSIGNMENT_MARK);
+                if (arr.length == 2) {
+                    String leftPart = arr[0];
+                    Assert.assertTrue(!leftPart.isEmpty());
+
+                    // split the left side based on "." separators
+                    String[] subparts = leftPart.split(gdp.PROPERTY_SEPARATOR);
+                    for (int i = 0; i < subparts.length; i++) {
+                        if (i == 0) {
+                            Assert.assertTrue(!subparts[i]
+                                    .startsWith(gdp.PROPERTY_SEPARATOR));
+                            Assert.assertTrue(!subparts[i]
+                                    .endsWith(gdp.PROPERTY_SEPARATOR));
+                        } else {
+                            Assert.assertTrue(subparts[i]
+                                    .startsWith(gdp.PROPERTY_SEPARATOR));
+                            Assert.assertTrue(subparts[i]
+                                    .endsWith(gdp.PROPERTY_SEPARATOR));
+                        }
+                    }
+                }
+            }
+        }// for
+    }
+
+    /** read lines from given file line by line */
+    private List<String> readLines(String configFilePath) throws IOException {
+        List<String> result = new ArrayList<String>();
+
+        // get the lines of the original property file
+        BufferedReader input = new BufferedReader(new FileReader(
+                CONFIG_FILE_PATH));
+        try {
+            String line = null; // not declared within while loop
+
+            while ((line = input.readLine()) != null) {
+                result.add(line);
+            }
+        } finally {
+            input.close();
+        }
+        return result;
     }
 }

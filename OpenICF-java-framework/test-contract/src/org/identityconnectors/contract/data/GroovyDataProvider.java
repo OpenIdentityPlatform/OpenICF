@@ -44,6 +44,8 @@ import groovy.util.ConfigObject;
 import groovy.util.ConfigSlurper;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
@@ -91,17 +93,27 @@ import org.junit.Assert;
  * random value.
  * </p>
  * 
+ * <p>
+ * <strong>Snapshot generation to output file</strong> -- this feature is
+ * implemented by method {@link GroovyDataProvider#flatten(Object)}. Snapshot
+ * generating works in one direction, but the snapshot itself cannot be directly 
+ * used as an input to next testing.
+ * </p>
+ * <p>
+ * <strong>Snapshots -- usage:</strong> add switch <code>-Dtest.parameters.outFile=generated.properties</code>
+ * as an ANT parameter. The result snapshot file will be included in the connector's directory.
+ * </p>
+ * <p>
+ * Note: snapshots for now support basic types such as Lazy, String. Other objects
+ * will be converted with toString() method to the output.
+ * </p>
  * 
  * @author David Adam
  * @author Zdenek Louzensky
  */
 public class GroovyDataProvider implements DataProvider {
-
-    //TODO erase this just for testing purposes
-    private static final boolean DEBUG_ON = false;
-    private static final String EMPTY_PREFIX = "";
     
-    private static final String PROPERTY_SEPARATOR = ".";
+    static final String PROPERTY_SEPARATOR = ".";
     private static final String CONTRACT_TESTS_FILE_NAME = "build.groovy";
     private static final String BOOTSTRAP_FILE_NAME = "bootstrap.groovy";
     private static final String CONNECTORS_DIR = ".connectors";
@@ -120,16 +132,42 @@ public class GroovyDataProvider implements DataProvider {
     /* TODO: these two properties should be used for outputting of generated properties' values
      * and then loading it
      */
-    private static final String PARAM_PROPERTY_FILE = "defaultdataprovider.propertyFile";
+    /* **** for snapshot generating **** */
+    /** command line switch for snapshots */
     private static final String PARAM_PROPERTY_OUT_FILE = "test.parameters.outFile";
-
-    // private File _propertyOutFile = null; // TODO implement output to
-    // property files, as was in DefaultDataProvider.
+    static final String ASSIGNMENT_MARK = "=";
+    /** Turn on debugging prefixes in parsing. Output: System.out */
+    private static final boolean DEBUG_ON = false;
+    private static final String EMPTY_PREFIX = "";
+    /** output file for concatenated snapshots */
+    private File _propertyOutFile = null;
+    
 
     /**
      * default constructor
      */
     public GroovyDataProvider() {
+        
+        // get snapshot output file, if provided
+        String pOut = System.getProperty(PARAM_PROPERTY_OUT_FILE);
+        if (StringUtil.isNotBlank(pOut)) {
+            try {
+                _propertyOutFile = new File(pOut);
+                if (!_propertyOutFile.exists()) {
+                    _propertyOutFile.createNewFile();
+                }
+                if (!_propertyOutFile.canWrite()) {
+                    _propertyOutFile = null;
+                    LOG.warn("Unable to write to ''{0}'' file, the test parameters will not be stored", pOut);
+                } else {
+                    LOG.info("Storing parameter values to ''{0}'', you can rerun the test with the same parameters later", pOut);
+                }
+            } catch (IOException iOException) {
+                LOG.warn("Unable to create ''{0}'' file, the test parameters will not be stored", pOut);
+            }
+        }
+        
+        // init
         configObject = doBootstrap();
         ConfigObject projectConfig = loadProjectConfigurations();
         configObject = mergeConfigObjects(configObject, projectConfig);
@@ -639,32 +677,41 @@ public class GroovyDataProvider implements DataProvider {
     /* **************** SNAPSHOT GENERATOR METHODS **************** */
     /**
      * writes key, value to _propertyOutFile
+     * @return the flattened properties as a String (only for test use)
      */
     Object writeDataToFile() {
-        // parsed configuration information to flatten
-        return flatten(configObject);
+        // do nothing if not having out file
+        if (_propertyOutFile == null) {
+            return null;
+        }
+        
+        // parse configuration information to flatten
+        String result = flatten(configObject);
+        
+        FileWriter fw = null;
+        try {
+            fw = new FileWriter(_propertyOutFile, true);
+            fw.append("\n\n\n ============================ NEW TEST ==================== \n\n\n");
+            fw.append(result);
+            fw.close();
+        } catch (IOException e) {
+            LOG.warn("Writing to contract test property out file failed ''{0}''", _propertyOutFile.getAbsolutePath());
+        }
+        
+        return result;
     }
 
     /**
-     * create a snapshot of values recursively
+     * <strong>Starting point</strong> of flattening methods.
      * 
      * @param obj
-     *            an object to flatten
-     * @return string representation
-     */
-    private String flatten(Object obj) {
-        return flatten(obj, Chooser.QUOTED, EMPTY_PREFIX);
-    }
-    
-    private String flatten(Object obj, String prefix) {
-        return flatten(obj, Chooser.QUOTED, prefix);
-    }
-
-    /**
-     * main entrance to flattening methods.
-     * 
-     * @param isQuoted
-     *            turns on quoting
+     *            the object to flatten
+     * @param choice
+     *            if there is qoutation needed in the output string
+     * @param prefix
+     *            is the previous part of property query, e.g. in case of query
+     *            for foo.bar.boo, when we are flattening bar, prefix contains
+     *            foo.
      */
     private String flatten(Object obj, Chooser choice, String prefix) {
         String svalue = null;
@@ -681,48 +728,90 @@ public class GroovyDataProvider implements DataProvider {
 
             svalue = flattenList(obj);
 
-//        } 
-//        else if (obj instanceof Lazy) {
-//            
-//            svalue = flattenLazy(obj);
-            
+        } 
+        else if (obj instanceof Lazy) {
+            Object resolvedObj = flattenLazy((Lazy) obj, prefix);
+            svalue = quoteLazyIfNeeded(resolvedObj.toString());
         }else {
             // resolve as "Object" and use quotes, if needed
+            /* simply print out a string for all types of objects, that are not recognized */
+            String output = obj.toString();
             switch (choice) {
             case QUOTED:
-                svalue = String.format("\"%s\"", obj.toString());
+                svalue = String.format("\"%s\"", output);
                 break;
             case NOT_QUOTED:
-                svalue = obj.toString();
+                svalue = output;
                 break;
             }
         }
 
         return svalue;
     }
+    
+    /**
+     * create a snapshot of values recursively
+     * 
+     * @param obj
+     *            an object to flatten
+     * @return string representation
+     * 
+     * @see {@link GroovyDataProvider#flatten(Object, Chooser, String)}
+     */
+    private String flatten(Object obj) {
+        return flatten(obj, Chooser.QUOTED, EMPTY_PREFIX);
+    }
+    
+    /** @see {@link GroovyDataProvider#flatten(Object, Chooser, String)} */
+    private String flatten(Object obj, String prefix) {
+        return flatten(obj, Chooser.QUOTED, prefix);
+    }
 
-    private String flattenLazy(Object obj) {
-        String svalue = null;
-        Lazy lazy = (Lazy) obj;
+    
+    /**
+     * if the String starts with Lazy.random... there is no quotation needed, 
+     * otherwise quote it.
+     * 
+     * @param string
+     * @return the correctly quoted string
+     * TODO this is quite dependent on implementation of the dataprovider
+     */
+    private String quoteLazyIfNeeded(String string) {
+        if (!string.startsWith("Lazy")) { // dependence on GroovyDataProvider Lazy loading method name
+            return String.format("\"%s\"", string);
+        }
+        return string;
+    }
+
+    private Object flattenLazy(Lazy lazy, String prefix) {
         Object value = lazy.getValue();
         Object resolvedValue = null;
-        
-        if (lazy instanceof Get) {
-            Assert.assertTrue(value instanceof String);
-            resolvedValue = get((String) value, null, false);
-        } else if (lazy instanceof Random) {
-            Assert.assertTrue(value instanceof String);
-            Random rnd = (Random) lazy;
-            resolvedValue = rnd.generate();
+        if (value != null) {
+            if (value instanceof Lazy) {
+                value = flattenLazy((Lazy) value, prefix);
+            }
+            if (lazy instanceof Get) {
+                Assert.assertTrue(value instanceof String);
+                resolvedValue = "Lazy.get(\"" + value + "\")";//get((String)value, null, false);
+            } else if (lazy instanceof Random) {
+                Random randomLazy = (Random) lazy;
+                // IF there is the queried value in cache, use it. 
+                // OTHERWISE put Lazy.random("originalPattern", typeArgument);
+                if (cache.containsKey(prefix)) {
+                    //use cached value:
+                    resolvedValue = cache.get(prefix).toString();
+                } else {
+                    //System.out.println("no key: " + prefix + " /In cache");
+                    resolvedValue = "Lazy.random(\"" + randomLazy.getValue() + "\", " + randomLazy.getClazz().getName() + ")";
+                }
+            }
         }
-        
+
         if (!lazy.getSuccessors().isEmpty()) {
-            svalue = concatenate(resolvedValue, lazy.getSuccessors());
+            return concatenate(resolvedValue, lazy.getSuccessors());
         } else {
-            svalue = resolvedValue.toString();
+            return resolvedValue;
         }
-        
-        return svalue;
     }
 
     private String flattenCO(Object obj, String prefix) {
@@ -759,14 +848,14 @@ public class GroovyDataProvider implements DataProvider {
             } else {// fi (entry.getValue())
                 // no nested property names left (no foo.bar.laa)
                 String key = null;
-                if (iterator.hasNext() && prefix.equals(EMPTY_PREFIX)) {
-                    key = debugStr("LSTinSNGL|")
-                            + flatten(entry.getKey(), Chooser.NOT_QUOTED, prefix);
+
+                if (prefix.equals(EMPTY_PREFIX)) {
+                    key = debugStr("LSTinSNGL|") + flatten(entry.getKey(), Chooser.NOT_QUOTED, prefix);
                 } else {
                     key = debugStr("LSTinMULT|") + flatten(entry.getKey(), concatToPrefix(prefix, entry.getKey()));
                 }
 
-                sb.append(String.format("%s=%s\n", batchAddQuotes(first, prefix) + key, value));
+                sb.append(String.format("%s%s%s\n", batchAddQuotes(first, prefix) + key, ASSIGNMENT_MARK, value));
             }// fi (entry.getValue())
 
             first = true;
@@ -783,7 +872,7 @@ public class GroovyDataProvider implements DataProvider {
         if (!first || prefix == null || prefix.length() == 0) {
             result = EMPTY_PREFIX;
         } else {
-            result = debugStr("Pfix:") + transformPrefix(prefix) + PROPERTY_SEPARATOR + debugStr(":"); // TODO CHANGE THIS, erase the debug string.
+            result = debugStr("Pfix:") + transformPrefix(prefix) + PROPERTY_SEPARATOR + debugStr(":");
         }
         return result;
     }
@@ -791,9 +880,6 @@ public class GroovyDataProvider implements DataProvider {
     /**
      * quotes every supart of prefix foo.bar.boo, so the result would be: foo."bar"."boo"
      * @param prefix
-     * @return
-     * 
-     * Assert.assertEquals("foo.\"bar\".\"boo\".\"bla\"", gdp.transformPrefix("foo.bar.boo.bla")); //TODO delete this
      */
     private String transformPrefix(String prefix) {
         String[] parts = prefix.split("\\" + PROPERTY_SEPARATOR);
@@ -813,6 +899,7 @@ public class GroovyDataProvider implements DataProvider {
         return prefix + ((prefix == null || prefix.length() == 0)? EMPTY_PREFIX :PROPERTY_SEPARATOR) + key;
     }
 
+    /** debugging outputs for the parser*/
     private String debugStr(String string) {
         if (DEBUG_ON) {
             return string;
@@ -820,6 +907,7 @@ public class GroovyDataProvider implements DataProvider {
         return "";
     }
 
+    /** does the same as {@link GroovyDataProvider#flattenMap(Object, String)} for lists*/
     private String flattenList(Object obj) {
         String svalue = null;
         StringBuilder sb = new StringBuilder();
@@ -865,12 +953,11 @@ public class GroovyDataProvider implements DataProvider {
     }
 
     public void dispose() {
-        System.err.println("BLABLA"); 
-        //writeDataToFile();
+        writeDataToFile();
     }
 }
 
-/** helper enum */
+/** helper enum, switch for quoting the strings in {@link GroovyDataProvider#flatten(Object)} method */
 enum Chooser {
     QUOTED, 
     NOT_QUOTED

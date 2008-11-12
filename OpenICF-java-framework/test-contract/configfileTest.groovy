@@ -94,3 +94,15 @@ SchemaXX {
 
 // attributes containing @@
 Schema."@@NAME@@".attribute.account = 'Ahoj ship!'
+
+// repetitive prefix
+aaa.bbb.xxx = "ahoj"
+
+// get test
+rumulus = Lazy.get("remus")
+
+// testing suffix parsing ConfigSlurper
+aaa.bbb.ccc = "ahoj"
+aaa.bbb.ddd = "ship2"
+aaa.bbb.eee = "ship"
+

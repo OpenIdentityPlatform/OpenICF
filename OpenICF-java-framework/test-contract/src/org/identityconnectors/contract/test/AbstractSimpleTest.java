@@ -66,10 +66,7 @@ public abstract class AbstractSimpleTest {
      */
     @AfterClass
     public static void disposeOnce() {
-        // call dispose (not in interface) on DefaultDataProvider
-        /*if (_dataProvider instanceof DefaultDataProvider) {
-            ((DefaultDataProvider)_dataProvider).dispose();
-        } */       
+        _dataProvider.dispose();       
         _dataProvider = null;        
     }
     

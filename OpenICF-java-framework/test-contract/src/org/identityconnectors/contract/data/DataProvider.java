@@ -130,4 +130,7 @@ public interface DataProvider {
     public Object getTestSuiteAttribute(String typeName, 
             String propName, String testName) throws ObjectNotFoundException;
     
+    /** free the allocated resources */
+    public void dispose();
+    
 }
