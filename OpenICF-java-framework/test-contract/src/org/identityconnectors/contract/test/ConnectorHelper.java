@@ -57,6 +57,7 @@ import java.util.Set;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.contract.data.DataProvider;
+import org.identityconnectors.contract.data.GroovyDataProvider;
 import org.identityconnectors.contract.exceptions.ContractException;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.APIConfiguration;
@@ -108,6 +109,7 @@ public class ConnectorHelper {
     private static final Log LOG = Log.getLog(ConnectorHelper.class);
     
     private static final String JVM_ARG_DATA_PROVIDER = "data-provider";
+    private static final Class DEFAULT_DATA_PROVIDER = GroovyDataProvider.class;
     private static final String WRONG_CONFIGURATION_PREFIX = "wrong";
     private static final String MULTI_VALUE_TYPE_PREFIX = "multi";
 
@@ -129,7 +131,8 @@ public class ConnectorHelper {
                 }
                 dp = (DataProvider) dpClass.newInstance();
             } else {
-                LOG.error("DataProvider class not specified");
+                LOG.info("DataProvider class not specified, using default ''{0}''.", DEFAULT_DATA_PROVIDER);
+                dp = (DataProvider) DEFAULT_DATA_PROVIDER.newInstance();
             }            
         } catch (Exception ex) {
             throw ContractException.wrap(ex);
