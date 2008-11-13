@@ -46,6 +46,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.contract.exceptions.ContractException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.GetApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
@@ -138,7 +139,7 @@ public abstract class ObjectClassRunner extends AbstractSimpleTest {
                 }
             } catch (RuntimeException e) {
                 if (isObjectClassSupported()) {
-                    fail("Unexpected RuntimeException thrown: " + e);
+                    throw new ContractException("Unexpected RuntimeException thrown during contract test.", e);
                 }
             }
         }
