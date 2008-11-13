@@ -111,7 +111,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * Database connection URL. The url is used to connect to database.
      * Required configuration property, and should be validated
      */
-    private String url;
+    private String connectionUrl;
 
     /**
      * Return the connectionUrl 
@@ -119,14 +119,14 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      */
     @ConfigurationProperty(order = 4, displayMessageKey="connectionUrl.display", helpMessageKey="connectionUrl.help")
     public String getConnectionUrl() {
-        return url;
+        return connectionUrl;
     }
 
     /**
      * @param value
      */
     public void setConnectionUrl(String value) {
-        this.url = value;
+        this.connectionUrl = value;
     }
 
 
