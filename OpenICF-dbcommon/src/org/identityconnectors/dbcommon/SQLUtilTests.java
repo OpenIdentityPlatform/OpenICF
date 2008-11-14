@@ -40,25 +40,19 @@
 package org.identityconnectors.dbcommon;
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
-import java.sql.Blob;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
+import java.sql.*;
+import java.util.*;
 import java.util.Date;
-import java.util.Set;
 
-import org.identityconnectors.framework.common.objects.Attribute;
-import org.identityconnectors.framework.common.objects.AttributeUtil;
-import org.junit.Assert;
-import org.junit.Test;
+import javax.naming.*;
+import javax.naming.spi.InitialContextFactory;
+import javax.sql.DataSource;
+
+import org.identityconnectors.framework.common.objects.*;
+import org.junit.*;
 
 
 /**
@@ -324,5 +318,33 @@ public class SQLUtilTests {
         assertNotNull(AttributeUtil.find(TEST2, actual));
         assertEquals(TEST_VAL1,AttributeUtil.find(TEST1, actual).getValue().get(0));
         assertEquals(TEST_VAL2,AttributeUtil.find(TEST2, actual).getValue().get(0));
-     }     
+     }
+    
+	/**
+	 * We need this helper class as InitialContextFactory class name value to Hashtable into InitialContext.
+	 * We must use instantiable classname and class must be accessible
+	 * @author kitko
+	 *
+	 */
+    public static class MockContextFactory implements InitialContextFactory{
+		public Context getInitialContext(Hashtable<?, ?> environment) throws NamingException {
+			ExpectProxy<DataSource> dsProxy = new ExpectProxy<DataSource>();
+			dsProxy.expectAndReturn("getConnection", new ExpectProxy<Connection>().getProxy(Connection.class));
+			ExpectProxy<Context> ctxProxy = new ExpectProxy<Context>();
+			ctxProxy.expectAndReturn("lookup", dsProxy.getProxy(DataSource.class));
+			return ctxProxy.getProxy(Context.class);
+		}
+	}
+    
+    /**
+     * Tests getting connection from dataSource
+     */
+    @Test
+    public void testGetConnectionFromDS(){
+    	Hashtable<String,String> properties = new Hashtable<String, String>();
+    	properties.put("java.naming.factory.initial",MockContextFactory.class.getName());
+    	final Connection conn = SQLUtil.getDatasourceConnection("",properties);
+    	assertNotNull("Connection returned from datasource is null",conn);
+    	
+    }
 }
