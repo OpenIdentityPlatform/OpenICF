@@ -3,7 +3,19 @@ package org.identityconnectors.dbcommon;
 import java.util.*;
 
 /**
- * Resolver of properties in UNIX/ant style
+ * Resolver of properties in UNIX/ant style.
+ * <br/>
+ * Example of usage :
+ * <br/>
+ * <code>
+ *  Properties p = new Properties();</br>
+ *  p.setProperty("p1","value1"); <br/>
+ *  p.setProperty("p2","Value of p1 is ${p1}"); <br/>
+ *  p = PropertiesResolver.resolveProperties(p);<br/>	
+ * </code> 
+ * 
+ * It is shield against recursion. 
+ * 
  * @author kitko
  *
  */
@@ -33,7 +45,7 @@ public class PropertiesResolver {
 			return null;
 		}
 		Properties copy = copyProperties(properties);
-		return resolveProperties(copy,copy,new HashSet<String>(5));
+		return resolveProperties(copy,new Properties(),new HashSet<String>(5));
 	}
 	
 
@@ -89,10 +101,10 @@ public class PropertiesResolver {
 					String varSubstring = value.substring(varStart, varEnd + 1);
 					String varName = varSubstring.substring(2, varSubstring.length() - 1);
 					String varValue = resolveName(varName,properties,resolvedProperties,justResolving);
-					if ("NOT_RESOLVED".equals(value)){
+					if ("NOT_RESOLVED".equals(varValue)){
 						varValue = varSubstring;
 					}
-					else if("RECUSRION".equals(value)){
+					else if("RECUSRION".equals(varValue)){
 						varValue = "${RECURSION!!!_" + varName + "}";
 					}
 					result.append(value.substring(index, varStart));
