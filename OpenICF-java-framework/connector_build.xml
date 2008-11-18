@@ -413,7 +413,8 @@
     -->
     <property name="contract.jar.file" value="${reports}/connector.jar" />
     <property name="contract-package" value="org.identityconnectors.contract"/>
-    <property name="data.provider" value="${contract-package}.data.GroovyDataProvider"/>
+    <property name="contract.suite.classname" value="${contract-package}.test.ContractTestSuite"/>
+    <property name="data.provider" value="${contract-package}.data.GroovyDataProvider"/>                
 
     <target name="contract-init" if="contracts.run">
         <!-- clear out previous test results -->
@@ -434,24 +435,25 @@
             <fileset dir="${reports}/rejar"/>
         </jar>
     </target>
-    <target name="contract-tests" if="contracts.run">
-        <!-- set a default for test.parameters.outFile -->
+    <target name="contract-tests" if="contracts.run">        
         <property name="test.parameters.outFile" value=""/>
-        <!-- set a default for defaultdataprovider.propertyFile -->
-        <property name="defaultdataprovider.propertyFile" value=""/>
-        <property name="contract.suite.classname" value="${contract-package}.test.ContractTestSuite"/>
-        
-        <!-- run all the contract tests against this connector -->
+        <!-- run all the contract tests -->
         <junit fork="yes" printsummary="yes" forkmode="once"
             failureproperty="test.failure" errorproperty="test.error" maxmemory="512M">
+            <!-- local connector properties -->
             <sysproperty key="bundleJar" value="${basedir}/${contract.jar.file}"/>
             <sysproperty key="bundleVersion" value="${ConnectorBundle-Version}"/>
             <sysproperty key="bundleName" value="${ConnectorBundle-Name}"/>
-            <sysproperty key="data-provider" value="${data.provider}"/>
+            <!-- connector server properties -->            
+            <sysproperty key="serverHost" value="${serverHost}"/>
+            <sysproperty key="serverPort" value="${serverPort}"/>
+            <sysproperty key="serverKey" value="${serverKey}"/>
+            <sysproperty key="useConnectorServer" value="${useConnectorServer}"/>            
+            <!-- common properties -->            
+            <sysproperty key="data-provider" value="${data.provider}"/>            
             <sysproperty key="project.name" value="${ant.project.name}"/>
             <sysproperty key="configuration" value="${configuration}"/>
             <sysproperty key="test.parameters.outFile" value="${test.parameters.outFile}"/>
-            <sysproperty key="defaultdataprovider.propertyFile" value="${defaultdataprovider.propertyFile}"/>
             <sysproperty key="org.identityconnectors.common.logging.class" value="org.identityconnectors.common.logging.impl.JDKLogger"/>
             
             <test todir="${reports}/contracts" outfile="TEST-${contract-package}.test.ContractTestSuite-${configuration}"
@@ -466,8 +468,14 @@
 
     <target name="run-contract-tests" depends="contract-init, contract-dist, contract-tests"/>
     
-    <target name="run-gw-contract-tests" depends="contract-init, contract-tests"/>
+    <target name="run-cs-contract-tests" depends="contract-init-cs, contract-init, contract-tests"/>
     
+    <target name="contract-init-cs">
+        <property name="useConnectorServer" value="true"/>
+        <property name="serverHost" value=""/>
+        <property name="serverPort" value=""/>
+        <property name="serverKey" value=""/>
+    </target>
     
     <target name="console" depends="jar">
         <java classname="groovy.ui.Console" dir="${basedir}" classpathref="console.path" fork="true" spawn="true"/>

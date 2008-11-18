@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.contract.data.DataProvider;
@@ -642,19 +643,18 @@ public class ConnectorHelper {
     public static ConnectorInfoManager getInfoManager(final DataProvider dataProvider) {
         ConnectorInfoManagerFactory fact = ConnectorInfoManagerFactory.getInstance();
         ConnectorInfoManager manager = null;
-
-        // try to get remote manager
-        // throws in case configuration is ok, but cannot connect
-        // returns null if configuration is not provided
-        manager = getRemoteManager(dataProvider, fact);
-
-        if (manager == null) {
-            // try to get local manager
-            // throws in case configuration is ok, but cannot use manager
+        
+        String useConnectorServer = System.getProperty("useConnectorServer"); 
+        if ("true".equals(useConnectorServer)) {
+            LOG.info("TESTING CONNECTOR ON CONNECTOR SERVER.");
+            manager = getRemoteManager(dataProvider, fact);
+        }
+        else {
+            LOG.info("TESTING LOCAL CONNECTOR.");
             manager = getLocalManager(dataProvider, fact);
         }
         
-        assertNotNull("Manager wasn't created - check *REQUIRED* test configuration properties.", manager);
+        assertNotNull("Manager wasn't created - check *MANDATORY* properties.", manager);
         
         return manager;
     }
@@ -667,25 +667,18 @@ public class ConnectorHelper {
      * @throws RuntimeException if creation fails although properties were provided
      */
     private static ConnectorInfoManager getLocalManager(final DataProvider dataProvider,
-            final ConnectorInfoManagerFactory fact) {
+            final ConnectorInfoManagerFactory fact) {      
         ConnectorInfoManager manager = null;
-
+        
+        // try to load bundleJar property (which should be set by ant)
+        File bundleJar = new File(((String) dataProvider.getTestSuiteAttribute(String.class
+                .getName(), "bundleJar")).trim());
+        Assert.assertTrue("BundleJar does not exist: " + bundleJar.getAbsolutePath(), bundleJar
+                .isFile());
         try {
-            // try to load bundleJar property (which should be set by ant)
-            File bundleJar = new File(((String) dataProvider.getTestSuiteAttribute(String.class
-                    .getName(), "bundleJar")).trim());
-            Assert.assertTrue("BundleJar does not exist: " + bundleJar.getAbsolutePath(), bundleJar
-                    .isFile());
-
             manager = fact.getLocalManager(bundleJar.toURL());
-        } catch (ObjectNotFoundException ex) {
-            LOG.warn("bundleJar testsuite property is not provided.");
         } catch (MalformedURLException ex) {
-            // shouldn't happen
-        } catch (RuntimeException ex) {
-            LOG.warn("Cannot use local manager although configuration is provided.");
-            // rethrow 
-            throw ex;
+            throw ContractException.wrap(ex);
         }
 
         return manager;
@@ -693,35 +686,61 @@ public class ConnectorHelper {
 
     /**
      * Returns remote manager or null.
+     * 
      * @param dataProvider
      * @param fact
      * @return null in case configuration is NOT provided
-     * @throws RuntimeException in case creation fails although configuration properties were provided
+     * @throws RuntimeException
+     *             in case creation fails although configuration properties were
+     *             provided
      */
     private static ConnectorInfoManager getRemoteManager(final DataProvider dataProvider,
-            final ConnectorInfoManagerFactory fact) {
+            final ConnectorInfoManagerFactory fact) {        
         ConnectorInfoManager manager = null;
 
+        String host = null;
+        Integer port = null;
+        String key = null;
+        // load properties from config file and then override them with system properties
         try {
-            // try to get connectorserver properties if not provided exception is thrown            
-            String gwhost = (String) dataProvider.getTestSuiteAttribute(String.class.getName(),
-                    "gwhost");
-            Integer gwport = Integer.parseInt((String) dataProvider.getTestSuiteAttribute(
-                    Integer.class.getName(), "gwport"));
-            String gwkey = (String) dataProvider.getTestSuiteAttribute(String.class.getName(),
-                    "gwkey");
-
-            // try to connect to remote manager
-            manager = fact.getRemoteManager(new RemoteFrameworkConnectionInfo(
-                    gwhost, gwport, new GuardedString(gwkey.toCharArray())));
-        } catch (ObjectNotFoundException ex) {
-            LOG.warn("Connector server configuration is not provided or correct.");
-        } catch (RuntimeException ex) {
-            LOG.warn("Cannot connect to remote manager although configuration is provided.");
-            // rethrow 
-            throw ex;
+            host = (String)dataProvider.getTestSuiteAttribute(String.class.getName(), "serverHost");
         }
-        
+        catch (ObjectNotFoundException ex) {  //ok
+        }
+        try {
+            port = (Integer)dataProvider.getTestSuiteAttribute(Integer.class.getName(), "serverPort");
+        }
+        catch (ObjectNotFoundException ex) {  //ok
+        }
+        try {
+            key = (String)dataProvider.getTestSuiteAttribute(String.class.getName(), "serverKey");
+        }
+        catch (ObjectNotFoundException ex) {  //ok
+        }        
+        // now override with system properties, if set
+        if (StringUtil.isNotBlank(System.getProperty("serverHost"))) {               
+            host = System.getProperty("serverHost");
+        }
+        if (StringUtil.isNotBlank(System.getProperty("serverPort"))) {               
+            port = Integer.parseInt(System.getProperty("serverPort"));
+        }
+        if (StringUtil.isNotBlank(System.getProperty("serverKey"))) {               
+            key = System.getProperty("serverKey");
+        }
+                
+        Assert.assertTrue("Connector server host not set.", StringUtil.isNotBlank(host));
+        Assert.assertNotNull("Connector server port not set.", port);
+        Assert.assertTrue("Connector server key not set.", StringUtil.isNotBlank(key));
+
+        try {
+            // try to connect to remote manager
+            manager = fact.getRemoteManager(new RemoteFrameworkConnectionInfo(host, port,
+                new GuardedString(key.toCharArray())));
+        }
+        catch (Throwable t) {
+            // wrap in exception rather to fail to have full stacktrace
+            throw new ContractException("Cannot create remote manager. Check connector server settings.", t);
+        }
 
         return manager;
     }
