@@ -48,11 +48,13 @@ import java.util.List;
 import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
 import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
@@ -60,6 +62,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -74,6 +77,13 @@ public class SearchApiOpTests extends ObjectClassRunner {
      */
     private static final Log LOG = Log.getLog(SearchApiOpTests.class);
     private static final String TEST_NAME = "Search";
+    
+    /**
+     * Properties' prefixes to enable case insensitive search tests
+     * (Connectors by default are not capable of this.)
+     */
+    private static final String CASE_INSENSITIVE_PREFIX = "caseinsensitive";
+    private static final String DISABLE = "disable";
     
     public SearchApiOpTests(ObjectClass oclass) {
         super(oclass);
@@ -253,6 +263,113 @@ public class SearchApiOpTests extends ObjectClassRunner {
     @Override
     public String getTestName() {
         return TEST_NAME;
+    }
+    
+    /**
+     * Test search with insensitive NAME attribute // TODO
+     */
+    @Test @Ignore
+    public void testCaseInsensitiveSearch() {
+        // run the contract test only if search is supported by tested object
+        // class
+        if (ConnectorHelper.operationSupported(getConnectorFacade(),
+                getObjectClass(), getAPIOperation()) && canSearchCaseInsensitive()) {
+            Uid uid = null;
+
+            try {
+                Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(
+                        getDataProvider(), getObjectClassInfo(), getTestName(),
+                        0, true, false);
+
+                uid = getConnectorFacade().create(getSupportedObjectClass(),
+                        attrs, null);
+                assertNotNull("Create returned null uid.", uid);
+
+                // get the user to make sure it exists now
+                String uidStr = uid.getUidValue();
+                // shuffle the case of the original uid randomly
+                String shuffledCaseUid = randomChangeCase(uidStr);
+                Attribute attr_lowerCaseUID = AttributeBuilder.build(uid.getName(), shuffledCaseUid);
+                
+                Filter fltUid = FilterBuilder.equalTo(attr_lowerCaseUID);
+                List<ConnectorObject> coObjects = ConnectorHelper.search(
+                        getConnectorFacade(), getSupportedObjectClass(),
+                        fltUid, null);
+                assertTrue(
+                        "Search filter by uid with no OperationOptions failed, expected to return one object, but returned "
+                                + coObjects.size(), coObjects.size() == 1);
+
+                assertNotNull("Unable to retrieve newly created object",
+                        coObjects.get(0));
+
+                // compare requested attributes to retrieved attributes, but
+                // don't compare attrs which
+                // are not returned by default
+                ConnectorHelper.checkObject(getObjectClassInfo(), coObjects
+                        .get(0), attrs, false);
+                //ConnectorHelper.checkObjectCaseInsensitive(getObjectClassInfo(), coObjects.get(0), attrs);
+                // TODO add case insensitive comparation, Attribute.equals(), CollectionUtil...
+            } finally {
+                if (uid != null) {
+                    // delete the object
+                    getConnectorFacade().delete(getSupportedObjectClass(), uid,
+                            null);
+                }
+            }
+        } else {
+            LOG
+                    .info("----------------------------------------------------------------------------------------");
+            LOG
+                    .info(
+                            "Skipping test ''testCaseInsensitiveSearch'' for object class ''{0}''.",
+                            getObjectClass());
+            LOG
+                    .info("----------------------------------------------------------------------------------------");
+        }
+    }
+
+
+    /** shuffle upper and lowercase letters */
+    static String randomChangeCase(String str_uid) {
+        char[] result = new char[str_uid.length()];
+        boolean b = false;
+        for (int i = 0; i < str_uid.length(); i++) {
+            if (Character.isLowerCase(str_uid.charAt(i))) {
+                result[i] = Character.toUpperCase(str_uid.charAt(i));
+            } else {
+                result[i] = Character.toLowerCase(str_uid.charAt(i));
+            }
+        }
+        
+        return new String(result);
+    }
+    
+    /**
+     * <p>
+     * Returns true if tests are configured to enable case insensitive tests
+     * {@link SearchApiOpTests#testCaseInsensitiveSearch()}.
+     * </p>
+     * 
+     * <p>
+     * Returns true if tests are configured to test connector's sync after
+     * specified operation. Some connectors implement sync but are not capable
+     * to sync all changes' types.
+     * </p>
+     */
+    protected static boolean canSearchCaseInsensitive() {
+        // by default it's supposed that case insensitive search is disabled.
+        Boolean canSearchCIns = true;
+        try {
+            canSearchCIns = !(Boolean) getDataProvider().getTestSuiteAttribute(
+                    Boolean.class.getName(),
+                    DISABLE + "." + CASE_INSENSITIVE_PREFIX, TEST_NAME);
+
+        } catch (ObjectNotFoundException ex) {
+            // exceptions is throw in case property definition is not found
+            // ok -- indicates enabling the property
+        }
+
+        return canSearchCIns;
     }
 
 
