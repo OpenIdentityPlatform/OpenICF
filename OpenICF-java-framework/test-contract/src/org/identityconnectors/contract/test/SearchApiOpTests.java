@@ -139,10 +139,10 @@ public class SearchApiOpTests extends ObjectClassRunner {
                     attNameValue, getOperationOptionsByOp(SearchApiOp.class));
             ConnectorHelper.checkObject(getObjectClassInfo(), coFound, attrs.get(0));
             
-            //search by all non special attributes
+            //search by all non special readable attributes
             Filter fltAllAtts = null;
             for (Attribute attribute : attrs.get(0)) {
-                if (!AttributeUtil.isSpecial(attribute)) {                    
+                if (!AttributeUtil.isSpecial(attribute) && ConnectorHelper.isReadable(getObjectClassInfo(), attribute)) {                    
                     if (fltAllAtts == null) {
                         fltAllAtts = FilterBuilder.equalTo(attribute);
                     } else {
@@ -150,7 +150,7 @@ public class SearchApiOpTests extends ObjectClassRunner {
                     }                    
                 }
             }            
-            // skip test when there are no special attributes 
+            // skip test when there are no special readable attributes 
             // (results in null filter - tested explicitly)
             if (fltAllAtts != null) {
                 coObjects = ConnectorHelper.search(getConnectorFacade(), getObjectClass(), fltAllAtts,
