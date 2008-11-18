@@ -41,19 +41,27 @@ package org.identityconnectors.contract.test;
 
 import static org.junit.Assert.*;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.SchemaApiOp;
+import org.identityconnectors.framework.api.operations.ScriptOnConnectorApiOp;
+import org.identityconnectors.framework.api.operations.ScriptOnResourceApiOp;
+import org.identityconnectors.framework.api.operations.TestApiOp;
+import org.identityconnectors.framework.api.operations.ValidateApiOp;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
+import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.spi.operations.ScriptOnConnectorOp;
 import org.junit.Test;
 
 /**
@@ -112,12 +120,64 @@ public class SchemaApiOpTests extends AbstractSimpleTest {
             }
         }
     }
-
+    
     /**
-     * Tests that returned schema by connector is the same as expected schema to be returned.
+     * Tests that every object class contains {@link Name} among its attributes.
      */
     @Test
-    public void testSchemaValidity() {
+    public void testNamePresent() {
+        final Schema schema = getConnectorFacade().schema();
+        Set<ObjectClassInfo> ocInfos = schema.getObjectClassInfo();
+        for (ObjectClassInfo ocInfo : ocInfos) {
+            Set<AttributeInfo> attInfos = ocInfo.getAttributeInfo();
+            // ensure there is NAME present
+            boolean found = false;            
+            for (AttributeInfo attInfo : attInfos) {               
+                if (attInfo.is(Name.NAME)) found = true;
+            }
+            final String MSG = "Name is not present among attributes of object class '%s'.";
+            assertTrue(String.format(MSG, ocInfo.getType()), found);
+        }
+    }
+        
+    /**
+     * List of all operations which must be supported by all object classes when
+     * supported at all.
+     */
+    private static final List<Class<? extends APIOperation>> opSupportedByAllOClasses = new LinkedList<Class<? extends APIOperation>>();
+    static {
+        opSupportedByAllOClasses.add(ScriptOnConnectorApiOp.class);
+        opSupportedByAllOClasses.add(ScriptOnResourceApiOp.class);
+        opSupportedByAllOClasses.add(TestApiOp.class);
+        opSupportedByAllOClasses.add(ValidateApiOp.class);
+    }
+
+    /**
+     * Test ensures that following operations are supported by all object
+     * classes when supported at all: ScriptOnConnectorApiOp, ScriptOnResourceApiOp,
+     * TestApiOp, ValidateApiOp.
+     */
+    @Test
+    public void testOpSupportedByAllOClasses() {
+        final Schema schema = getConnectorFacade().schema();
+        Set<ObjectClassInfo> ocInfos = schema.getObjectClassInfo();
+        for (Class<? extends APIOperation> apiOp : opSupportedByAllOClasses) {
+            Set<ObjectClassInfo> suppOClasses = schema.getSupportedObjectClassesByOperation(apiOp);
+            if (!suppOClasses.isEmpty()) {
+                // operation is supported for at least one object class
+                // then it must be supported for all object classes
+                final String MSG = "Operation %s must be in the schema supported by all object classes which supports connector.";
+                assertTrue(String.format(MSG, apiOp), CollectionUtil.equals(suppOClasses, ocInfos));
+            }
+        }
+    }
+
+    /**
+     * Tests that returned schema by connector is the same as expected schema to
+     * be returned.
+     */
+    @Test
+    public void testSchemaExpected() {
         final Schema schema = getConnectorFacade().schema();
         String msg = null;
         
