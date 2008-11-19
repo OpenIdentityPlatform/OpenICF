@@ -126,7 +126,8 @@ public abstract class ObjectClassRunner extends AbstractSimpleTest {
     @Test
     public void testContract() {
         //run the contract test for supported operation only
-        if (ConnectorHelper.operationSupported(getConnectorFacade(), getAPIOperation())) {
+        if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), 
+        		getAPIOperation())) {
             try {
                 LOG.info("--------------------------------------------------------------------------------------");
                 LOG.info("Running test ''{0}'' for object class ''{1}''.", getTestName(), getObjectClass());
