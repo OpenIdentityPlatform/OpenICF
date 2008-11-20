@@ -265,18 +265,24 @@ public class SearchApiOpTests extends ObjectClassRunner {
         return TEST_NAME;
     }
     
+    /* ***************** CASE INSENSITIVE SEARCH ********************* */
     /**
-     * Test search with insensitive NAME attribute // TODO
+     * Test case <strong>insensitive</strong> search for UID attribute.
+     * 
+     * There is twice Search performed, once with changed case. The results should be identical.
      */
-    @Test @Ignore
+    @Test
     public void testCaseInsensitiveSearch() {
         // run the contract test only if search is supported by tested object
         // class
+        boolean bool = canSearchCaseInsensitive();
         if (ConnectorHelper.operationSupported(getConnectorFacade(),
-                getObjectClass(), getAPIOperation()) && canSearchCaseInsensitive()) {
+                getObjectClass(), getAPIOperation())
+                && canSearchCaseInsensitive()) {
             Uid uid = null;
 
             try {
+                // create a new dummy object
                 Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(
                         getDataProvider(), getObjectClassInfo(), getTestName(),
                         0, true, false);
@@ -285,33 +291,21 @@ public class SearchApiOpTests extends ObjectClassRunner {
                         attrs, null);
                 assertNotNull("Create returned null uid.", uid);
 
-                // get the user to make sure it exists now
-                String uidStr = uid.getUidValue();
-                // shuffle the case of the original uid randomly
-                String shuffledCaseUid = randomChangeCase(uidStr);
-                Attribute attr_lowerCaseUID = AttributeBuilder.build(uid.getName(), shuffledCaseUid);
+                // 1st search, contains the original object
+                ConnectorObject searchResult = searchForUid(uid.getUidValue(), "[query by original uid]");
                 
-                Filter fltUid = FilterBuilder.equalTo(attr_lowerCaseUID);
-                List<ConnectorObject> coObjects = ConnectorHelper.search(
-                        getConnectorFacade(), getSupportedObjectClass(),
-                        fltUid, null);
+                // get created uid and change its case, than perform 2nd search for uid with changed case
+                String uidStr = uid.getUidValue();
+                String caseChngd_uidStr = changeCase(uidStr); // inverts the case of the original uid (example: BvZAO96 --> bVzao96)
+                ConnectorObject searchWithChngdCaseResult = searchForUid(
+                        caseChngd_uidStr, "[query by changed case uid]");
+
                 assertTrue(
-                        "Search filter by uid with no OperationOptions failed, expected to return one object, but returned "
-                                + coObjects.size(), coObjects.size() == 1);
-
-                assertNotNull("Unable to retrieve newly created object",
-                        coObjects.get(0));
-
-                // compare requested attributes to retrieved attributes, but
-                // don't compare attrs which
-                // are not returned by default
-                ConnectorHelper.checkObject(getObjectClassInfo(), coObjects
-                        .get(0), attrs, false);
-                //ConnectorHelper.checkObjectCaseInsensitive(getObjectClassInfo(), coObjects.get(0), attrs);
-                // TODO add case insensitive comparation, Attribute.equals(), CollectionUtil...
+                        "The search responses differ for changed case query and simple query.",
+                        searchWithChngdCaseResult.equals(searchResult));
             } finally {
                 if (uid != null) {
-                    // delete the object
+                    // delete the dummy object
                     getConnectorFacade().delete(getSupportedObjectClass(), uid,
                             null);
                 }
@@ -328,9 +322,24 @@ public class SearchApiOpTests extends ObjectClassRunner {
         }
     }
 
+    /** search for given Uid and return first item in the response list */
+    private ConnectorObject searchForUid(String uidValue, String msg) {
+        // get the user to make sure it exists now
+        Filter fltUid = FilterBuilder.equalTo(AttributeBuilder.build(Uid.NAME, uidValue));
+        List<ConnectorObject> coObjects = ConnectorHelper.search(
+                getConnectorFacade(), getSupportedObjectClass(), fltUid, null);
+        assertTrue(
+                msg
+                        + " Search filter by uid with no OperationOptions failed, expected to return one object, but returned "
+                        + coObjects.size(), coObjects.size() == 1);
 
-    /** shuffle upper and lowercase letters */
-    static String randomChangeCase(String str_uid) {
+        assertNotNull("Unable to retrieve newly created object", coObjects
+                .get(0));
+        return coObjects.get(0);
+    }
+
+    /** replace upper and lowercase letters */
+    static String changeCase(String str_uid) {
         char[] result = new char[str_uid.length()];
         boolean b = false;
         for (int i = 0; i < str_uid.length(); i++) {
