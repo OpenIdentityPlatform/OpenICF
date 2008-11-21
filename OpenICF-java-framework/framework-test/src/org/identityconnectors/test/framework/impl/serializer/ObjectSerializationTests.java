@@ -426,7 +426,7 @@ public class ObjectSerializationTests {
         Assert.assertTrue(v1 != v2);
         
         Assert.assertEquals(v1,v2);
-        
+        Assert.assertEquals(1, v2.getMaxObjects());
         Assert.assertEquals(2, v2.getMaxIdle());
         Assert.assertEquals(3, v2.getMaxWait());
         Assert.assertEquals(4, v2.getMinEvictableIdleTimeMillis());
