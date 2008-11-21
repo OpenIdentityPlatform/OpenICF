@@ -54,22 +54,22 @@ import org.identityconnectors.framework.spi.Connector;
  * caller to update (i.e., modify or replace) objects on the target resource.
  * <p>
  * This update method modifies a target object based on the specified deltas.
- * The set of {@link Attribute}s contains the {@link Uid} necessary to find the
- * object in question. The rest of the {@link Attribute}s are deltas.
+ * The input set of {@code Attribute} instances contains the {@link Uid} necessary to find the
+ * object in question. The rest of the input {@code Attribute} instances are deltas.
  * <p>
- * This update method is simpler to implement than {@link AdvancedUpdateOp},
+ * This update method is simpler to implement than {@code AdvancedUpdateOp},
  * which must handle any of several different types of update that the caller
  * may specify.
  * <p>
- * The developer of a {@link Connector} need to only implement one
- * {@link UpdateOp} or {@link AdvancedUpdateOp}; there is no need to implement
- * both. The common code in the framework prefers <code>AdvanceUpdateOp</code>
- * if <code>AdvanceUpdateOp</code> is implemented. If
- * <code>AdvanceUpdateOp</code> is not implemented, then the common code in
+ * The developer of a {@code Connector} needs to implement only one of
+ * {@code UpdateOp} or {@code AdvancedUpdateOp}; there is no need to implement
+ * both. The common code in the framework prefers {@code AdvanceUpdateOp}
+ * if {@code AdvanceUpdateOp} is implemented. If
+ * {@code AdvanceUpdateOp} is not implemented, then the common code in
  * the framework performs the processing that is needed to support incremental
- * update. The common code fetches the current <code>ConnectorObject</code>,
- * applies the values from the set of {@link Attribute}s, and passes the merged
- * data as input to the Connector's implementation of <code>UpdateOp</code>.
+ * update. The common code fetches the current {@code ConnectorObject},
+ * applies the values from each attribute in the the input set, and passes the merged
+ * attributes as input to the Connector's implementation of {@code UpdateOp}.
  * 
  * @author Will Droste
  * @version $Revision $
@@ -80,16 +80,16 @@ public interface UpdateOp extends SPIOperation {
      * Modify the target object based on the information provided. 
      * <p>
      * Replace the current values of each attribute with the values provided.
-     * That is, for each attribute that the input ConnectorObject contains,
+     * That is, for each attribute in the input set
      * replace all of the current values of that attribute in the target object
-     * with the values of that attribute from the input ConnectorObject.
+     * with the values from that attribute in the input set.
      * <p>
      * If the target object does not currently contain an attribute that the
-     * input <code>ConnectorObject</code> contains, then add this attribute
+     * input set contains, then add this attribute
      * (along with the provided values) to the target object.
      * <p>
-     * If the value of an attribute in the input ConnectorObject is
-     * <code>null</code>, then do one of the following, depending on which is
+     * If the value of an attribute in the input set is <code>null</code>, 
+     * then do one of the following, depending on which is
      * most appropriate for the target:
      * <ul>
      * <li>If possible, <em>remove</em> that attribute from the target object
@@ -115,10 +115,8 @@ public interface UpdateOp extends SPIOperation {
      *            If the caller passes null, the framework will convert this into
      *            an empty set of options, so SPI need not worry
      *            about this ever being null.
-     * @return Uid because any modification could change the native identifier.
-     *         If the Connector implementation constructs <code>Uid</code>
-     *         based on a combination of the {@link Attribute} values, then this
-     *         method must return the new <code>Uid</code>.
+     * @return the {@code Uid} of the updated object in case this update
+     *         operation changes the values that form the unique identifier.
      */
     Uid update(final ObjectClass objclass, final Set<Attribute> attrs, final OperationOptions options);
 }
