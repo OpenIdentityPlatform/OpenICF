@@ -42,6 +42,7 @@ package org.identityconnectors.contract.test;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -70,7 +71,17 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 /**
+ * <p>
  * Test that attributes satisfy contract.
+ * </p>
+ * Tests check:
+ * <ul>
+ * <li>non-readable attributes are not returnedByDefault</li>
+ * <li>attributes which are not returnedByDefault really are not returned
+ * unless</li>
+ * specified in attrsToGet </li>
+ * <li>update of non-updateable attribute will fail</li>
+ * </ul>
  * 
  * @author David Adam
  */
@@ -111,6 +122,7 @@ public class AttributeTests extends ObjectClassRunner {
         return TEST_NAME;
     }
 
+    /* ******************** TEST METHODS ******************** */
     /**
      * <p>
      * Non readable attributes are not returned by default
@@ -125,9 +137,6 @@ public class AttributeTests extends ObjectClassRunner {
                 getObjectClass(), CreateApiOp.class)) {
             Uid uid = null;
             try {
-                ObjectClass occ = getObjectClass();
-                ObjectClassInfo ocii = getObjectClassInfo();
-
                 ObjectClassInfo oci = getObjectClassInfo();
 
                 // create a new user
@@ -181,7 +190,7 @@ public class AttributeTests extends ObjectClassRunner {
      * specified in attributesToGet ({@link OperationOptions})
      * </p>
      * <p>
-     * API operations of acquiring attributes: <code>GetApiOp</code>
+     * API operations of acquiring attributes:
      * </p>
      * <ul>
      * <li>{@link GetApiOp}</li>
@@ -195,7 +204,125 @@ public class AttributeTests extends ObjectClassRunner {
             testReturnedByDefault(apiop);
         }
     }
+    
+    /**
+     * update of non-updateable attribute will fail
+     * 
+     * <p>
+     * API operations of acquiring attributes: {@link GetApiOp}
+     * </p>
+     */
+    @Test
+    public void testNonUpdateable() {
+        /** is exception caugth? */
+        boolean exception = false;
+        /** is there any non updateable item? */
+        boolean isChanged = false;
+        try {
+            if (ConnectorHelper.operationSupported(getConnectorFacade(),
+                    getObjectClass(), UpdateApiOp.class)) {
+                ConnectorObject obj = null;
+                Uid uid = null;
 
+                try {
+                    // create an object to update
+                    uid = ConnectorHelper.createObject(getConnectorFacade(),
+                            getDataProvider(), getObjectClassInfo(),
+                            getTestName(), 0,
+                            getOperationOptionsByOp(CreateApiOp.class));
+                    assertNotNull("Create returned null Uid.", uid);
+
+                    // get by uid
+                    obj = getConnectorFacade().getObject(
+                            getSupportedObjectClass(), uid,
+                            getOperationOptionsByOp(GetApiOp.class));
+                    assertNotNull("Cannot retrieve created object.", obj);
+
+                    /*
+                     * Acquire replaceable attributes, delete them from all
+                     * attributes set.
+                     */
+                    Set<Attribute> replaceableAttributes = ConnectorHelper
+                            .getUpdateableAttributes(getDataProvider(),
+                                    getObjectClassInfo(), getTestName(),
+                                    SyncApiOpTests.MODIFIED, 0, false, false);
+
+                    Set<Attribute> allAttributes = obj.getAttributes();
+                    Set<Attribute> modAllAttributes = new HashSet<Attribute>(
+                            allAttributes);
+                    boolean changed = modAllAttributes
+                            .removeAll(replaceableAttributes);
+                    isChanged = changed; // update the indicator
+                    allAttributes = modAllAttributes;
+
+                    if (changed || !isObjectClassSupported()) {
+                        // update only in case there is something to update or
+                        // when
+                        // object class is not supported
+                        allAttributes.add(uid);
+
+                        assertTrue("no update attributes were found",
+                                (allAttributes.size() > 0));
+                        Uid newUid = getConnectorFacade().update(
+                                UpdateApiOp.Type.REPLACE, getObjectClass(),
+                                allAttributes,
+                                getOperationOptionsByOp(UpdateApiOp.class));
+
+                        // Update change of Uid must be propagated to
+                        // replaceAttributes
+                        // set
+                        if (!newUid.equals(uid)) {
+                            allAttributes.remove(uid);
+                            allAttributes.add(newUid);
+                            uid = newUid;
+                        }
+                    } else {
+                        // no non-updateable attrs. found, skipping this test.
+                        LOG
+                                .info("----------------------------------------------------------------------------------------");
+                        LOG
+                                .info(
+                                        "Skipping test ''testNonUpdateable'' for object class ''{0}''. (Reason: non-updateable attrs. missing)",
+                                        getObjectClass());
+                        LOG
+                                .info("----------------------------------------------------------------------------------------");
+                    }
+
+                    // verify the change
+                    obj = getConnectorFacade().getObject(
+                            getSupportedObjectClass(), uid,
+                            getOperationOptionsByOp(GetApiOp.class));
+                    assertNotNull("Cannot retrieve updated object.", obj);
+                    ConnectorHelper.checkObject(getObjectClassInfo(), obj,
+                            allAttributes);
+                } finally {
+                    if (uid != null) {
+                        // finally ... get rid of the object
+                        ConnectorHelper.deleteObject(getConnectorFacade(),
+                                getSupportedObjectClass(), uid, false,
+                                getOperationOptionsByOp(DeleteApiOp.class));
+                    }
+                }
+            }
+        } catch (IllegalArgumentException ex) {
+            // OK
+            exception = true;
+        } finally { // TODO test
+            if (exception) {
+                //OK
+            } else {
+                if (isChanged) {
+                    // WARN
+                    assertTrue("NO EXC, bad", false);
+                } else {
+                    //OK
+                }
+            }
+                
+        }
+    }
+
+    /* ******************** HELPER METHODS ******************** */
     /**
      * {@link AttributeTests#testReturnedByDefault()}
      * 
@@ -443,7 +570,7 @@ public class AttributeTests extends ObjectClassRunner {
 
         return null;
     }
-}
+}// end of class AttributeTests
 
 /** helper inner class for passing the type of tested operations */
 enum ApiOperations {
@@ -464,4 +591,4 @@ enum ApiOperations {
     public Class<? extends APIOperation> getClazz() {
         return clazz;
     }
-}
+}// end of enum ApiOperations
