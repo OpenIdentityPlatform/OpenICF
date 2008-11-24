@@ -75,7 +75,7 @@ public class SyncApiOpTests extends ObjectClassRunner {
      */
     private static final Log LOG = Log.getLog(SyncApiOpTests.class);
     private static final String TEST_NAME = "Sync";
-    private static final String MODIFIED = "modified";
+    public static final String MODIFIED = "modified";
 
     /*
      * Properties' prefixes to disable particular sync change types.
