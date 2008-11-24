@@ -21,7 +21,9 @@ import java.util.*;
  */
 public class PropertiesResolver {
 	
-	private PropertiesResolver(){}
+	private PropertiesResolver(){
+	    //empty
+	}
 	
 	/** Resolves properties
 	 * @param properties properties we want to resolve

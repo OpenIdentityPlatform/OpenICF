@@ -71,7 +71,7 @@ public class UpdateSetBuilder {
      * @param name name
      * @param value value
      * @param index 
-     * @return 
+     * @return self
      */
     public UpdateSetBuilder addBind(String name, Object value) {
         return addBind(name,"?", value);
@@ -83,7 +83,7 @@ public class UpdateSetBuilder {
      * @param name of the column
      * @param expression the Comparable expression
      * @param param the value to bind
-     * @return 
+     * @return self
      */
     public UpdateSetBuilder addBind(String name, String expression, Object param) {
         if(set.length()>0) {

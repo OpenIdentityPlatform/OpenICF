@@ -43,6 +43,8 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -131,7 +133,7 @@ public class DatabaseConnection  {
     /**
      * Get the internal JDBC connection.
      * 
-     * @return
+     * @return the connection
      */
     public Connection getConnection() {
         return this.conn;
@@ -140,23 +142,43 @@ public class DatabaseConnection  {
     /**
      * Indirect call of prepare statement
      * @param sql a <CODE>String</CODE> sql statement definition
+     * @param params the bind parameter values
      * @return return a prepared statement
      * @throws SQLException an exception in statement
      */
-    public PreparedStatement prepareStatement(final String sql) throws SQLException {
-        return getConnection().prepareStatement(sql);
+    public PreparedStatement prepareStatement(final String sql, final List<Object> params) throws SQLException {
+        final List<Object> out = new ArrayList<Object>();
+        final String nomalized = SQLUtil.normalizeNullValues(sql, params, out);
+        final PreparedStatement prepareStatement = getConnection().prepareStatement(nomalized);
+        SQLUtil.setParams(prepareStatement, out);
+        return prepareStatement;
     }
     
+    
+    /**
+     * Indirect call of prepare statement
+     * @param query DatabaseQueryBuilder query
+     * @return return a prepared statement
+     * @throws SQLException an exception in statement
+     */
+    public PreparedStatement prepareStatement(DatabaseQueryBuilder query) throws SQLException {
+        return prepareStatement(query.getSQL(), query.getParams());
+    }
         
     
     /**
      * Indirect call of prepareCall
      * @param sql a <CODE>String</CODE> sql statement definition
+     * @param params the bind parameter values
      * @return return a callable statement
      * @throws SQLException an exception in statement
      */
-    public CallableStatement prepareCall(final String sql) throws SQLException {
-        return getConnection().prepareCall(sql);
+    public CallableStatement prepareCall(final String sql, final List<Object> params) throws SQLException {
+        final List<Object> out = new ArrayList<Object>();
+        final String nomalized = SQLUtil.normalizeNullValues(sql, params, out);
+        final CallableStatement prepareCall = getConnection().prepareCall(nomalized);
+        SQLUtil.setParams(prepareCall, out);
+        return prepareCall;
     }    
 
     /**

@@ -65,7 +65,7 @@ public class ExpectProxy<T> implements InvocationHandler {
      * Program the expected function call
      * @param methodName the expected method name
      * @param retVal the expected return value or proxy
-     * @return
+     * @return the proxy
      */
     public ExpectProxy<T> expectAndReturn(final String methodName, final Object retVal) {
         this.methodNames.add(methodName);
@@ -76,7 +76,7 @@ public class ExpectProxy<T> implements InvocationHandler {
     /**
      * Program the expected method call
      * @param methodName the expected method name
-     * @return
+     * @return the proxy
      */
     public ExpectProxy<T> expect(final String methodName) {
         this.methodNames.add(methodName);
@@ -90,7 +90,7 @@ public class ExpectProxy<T> implements InvocationHandler {
      * Program the expected method call
      * @param methodName the expected method name
      * @param throwEx the expected exception
-     * @return
+     * @return the proxy
      */
     public ExpectProxy<T> expectAndThrow(final String methodName, final Throwable throwEx) {
         return this.expectAndReturn(methodName, throwEx);
@@ -98,7 +98,7 @@ public class ExpectProxy<T> implements InvocationHandler {
     
     /**
      * Test that all expected was called in the order
-     * @return
+     * @return true/false all was called
      */
     public boolean isDone() {
         return count == methodNames.size();

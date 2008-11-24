@@ -63,6 +63,7 @@ public class DatabaseConnectionTest {
     private static final String LOGIN = "login";
     private static final String NAME = "name";
     private static final String TEST_SQL_STATEMENT = "SELECT * FROM dummy";
+    private static final String SELECT_SQL_STATEMENT = "SELECT * FROM dummy WHERE login = ? and name = ?";
     
     private List<Object> values;
 
@@ -159,7 +160,7 @@ public class DatabaseConnectionTest {
         tpc.expectAndReturn("prepareStatement", xps);
 
         DatabaseConnection dbc = new DatabaseConnection(tpc.getProxy(Connection.class));
-        dbc.prepareStatement(TEST_SQL_STATEMENT);
+        dbc.prepareStatement(TEST_SQL_STATEMENT, null);
 
         assertTrue("statement created", tpc.isDone());
         assertTrue("value binded", tps.isDone());
@@ -177,9 +178,7 @@ public class DatabaseConnectionTest {
         tpc.expectAndReturn("prepareStatement", xps);
 
         DatabaseConnection dbc = new DatabaseConnection(tpc.getProxy(Connection.class));
-        dbc.prepareStatement(TEST_SQL_STATEMENT);
-        SQLUtil.setParams(xps, new ArrayList<Object>());
-       
+        dbc.prepareStatement(TEST_SQL_STATEMENT, new ArrayList<Object>());
         assertTrue("statement created", tpc.isDone());
         assertTrue("value binded", tps.isDone());
     }    
@@ -199,8 +198,7 @@ public class DatabaseConnectionTest {
         tps.expectAndReturn("execute", true);
 
         DatabaseConnection dbc = new DatabaseConnection(tpc.getProxy(Connection.class));
-        final PreparedStatement ps = dbc.prepareStatement(TEST_SQL_STATEMENT);
-        SQLUtil.setParams(xps, values);
+        final PreparedStatement ps = dbc.prepareStatement(SELECT_SQL_STATEMENT, values);
         ps.execute();
        
         assertTrue("statement created", tpc.isDone());
@@ -223,8 +221,7 @@ public class DatabaseConnectionTest {
         tps.expectAndReturn("execute", true);
 
         DatabaseConnection dbc = new DatabaseConnection(tpc.getProxy(Connection.class));
-        final PreparedStatement ps = dbc.prepareStatement(TEST_SQL_STATEMENT);
-        SQLUtil.setParams(cs, values);
+        final PreparedStatement ps = dbc.prepareStatement(SELECT_SQL_STATEMENT, values);
         ps.execute();
        
         assertTrue("statement created", tpc.isDone());

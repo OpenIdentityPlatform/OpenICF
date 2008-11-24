@@ -79,7 +79,7 @@ public class DatabaseFilterTranslatorTests {
             assertEquals(1, blist.size());
             final FilterWhereBuilder b = blist.get(0);
             assertEquals("count " + ops[i] + " ?", b.getWhereClause());
-            assertEquals(expected, b.getParams());
+            assertEquals(expected.size(), b.getParams().size());
         }
     }
 
@@ -103,14 +103,14 @@ public class DatabaseFilterTranslatorTests {
         FilterWhereBuilder b = blist.get(0);
         assertEquals("count > ? AND count < ?", b.getWhereClause());
         // test or
-        assertEquals(expected, b.getParams());
+        assertEquals(expected.size(), b.getParams().size());
         f = FilterBuilder.or(lf, rf);
         DatabaseFilterTranslator tr2 = getDatabaseFilterTranslator();     
         blist = tr2.translate(f);
         assertEquals(1, blist.size());
         b = blist.get(0);
         assertEquals("count > ? OR count < ?", b.getWhereClause());
-        assertEquals(expected, b.getParams());
+        assertEquals(expected.size(), b.getParams().size());
         // test xor
         // assertEquals(expected, actual);
     }
@@ -135,7 +135,7 @@ public class DatabaseFilterTranslatorTests {
         assertEquals(1, blist.size());
         final FilterWhereBuilder b = blist.get(0);
         assertEquals("count <= ? AND count >= ?", b.getWhereClause());
-        assertEquals(expected, b.getParams());
+        assertEquals(expected.size(), b.getParams().size());
     }
 
     /**
@@ -160,7 +160,7 @@ public class DatabaseFilterTranslatorTests {
         assertEquals(1, blist.size());
         final FilterWhereBuilder b = blist.get(0);
         assertEquals("( count > ? OR count < ? ) AND count = ?", b.getWhereClause());
-        assertEquals(expected, b.getParams());
+        assertEquals(expected.size(), b.getParams().size());
     }
 
     /**
@@ -222,7 +222,7 @@ public class DatabaseFilterTranslatorTests {
         assertEquals(1, blist.size());
         final FilterWhereBuilder b = blist.get(0);
         assertEquals("( count > ? OR count < ? ) AND NOT count = ?", b.getWhereClause());
-        assertEquals(expected, b.getParams());
+        assertEquals(expected.size(), b.getParams().size());
     }
 
     /**
@@ -241,7 +241,7 @@ public class DatabaseFilterTranslatorTests {
         assertEquals("count <= ?", b.getWhereClause());
         List<Object> expected = new ArrayList<Object>();
         expected.add(4);
-        assertEquals(expected, b.getParams());
+        assertEquals(expected.size(), b.getParams().size());
     }
     
     DatabaseFilterTranslator getDatabaseFilterTranslator() {

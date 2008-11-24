@@ -215,7 +215,7 @@ public class DatabaseQueryBuilder {
 
     /**
      * Values in wrapped object
-     * @return
+     * @return the where values
      */
     public List<Object> getParams() {
         if(where==null) {

@@ -242,6 +242,17 @@ public class SQLUtilTests {
         assertEquals(expected.getClass(), actual.getClass());
         assertEquals(expected, actual);
     }    
+    
+    /**
+     * Test method
+     * @throws SQLException 
+     */
+    @Test
+    public void testConvertNullToJDBC() {
+        Object actual = SQLUtil.convertToJDBC(null, Long.class);
+        assertNull(actual);
+    }    
+    
     /**
      * Test method
      * @throws SQLException 
@@ -283,7 +294,69 @@ public class SQLUtilTests {
         assertEquals(expected, actual);
     }     
     
+
+    /**
+     * Test method
+     * @throws SQLException 
+     */
+    @Test
+    public void testNormalizeNullValues() {
+        final String sql = "insert into table values(?, ?, ?)";
+        final List<Object> params = new ArrayList<Object>();
+        params.add("test");
+        params.add(null);
+        params.add(1);
+        final List<Object> out = new ArrayList<Object>();
+        String actual = SQLUtil.normalizeNullValues(sql, params, out);
+        assertNotNull("sql",actual);
+        assertEquals("sql","insert into table values(?, null, ?)", actual);
+        assertEquals("out value", 2, out.size());
+    }    
+
+    /**
+     * Test method
+     * @throws SQLException 
+     */
+    @Test
+    public void testNormalizeNullValuesSame() {
+        final String sql = "insert into table values(?, ?, ?)";
+        final List<Object> params = new ArrayList<Object>();
+        params.add("test");
+        params.add(3);
+        params.add(1);
+        final List<Object> out = new ArrayList<Object>();
+        String actual = SQLUtil.normalizeNullValues(sql, params, out);
+        assertNotNull("sql",actual);
+        assertEquals("sql","insert into table values(?, ?, ?)", actual);
+        assertEquals("out value", 3, out.size());
+    }  
     
+    /**
+     * Test method
+     * @throws SQLException 
+     */
+    @Test
+    public void testNormalizeNullValuesLess() {
+        final String sql = "insert into table values(?, ?, ?)";
+        final List<Object> params = new ArrayList<Object>();
+        params.add("test");
+        params.add(3);
+        final List<Object> out = new ArrayList<Object>();
+        try {
+            SQLUtil.normalizeNullValues(sql, params, out);
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException expected) {
+            // expected
+        }
+        params.add(3);
+        params.add(3);
+        try {
+            SQLUtil.normalizeNullValues(sql, params, out);
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException expected) {
+            // expected
+        }
+    } 
     /**
      * GetAttributeSet test method
      * @throws SQLException 

@@ -15,7 +15,9 @@ import org.identityconnectors.framework.common.objects.ConnectorMessages;
  */
 public abstract class JNDIUtil {
     /** */
-	private JNDIUtil(){}
+	private JNDIUtil() {
+        //empty
+    }
 	/**	 */
 	public static final String INVALID_JNDI_ENTRY = "invalid.jndi.entry"; 
 	

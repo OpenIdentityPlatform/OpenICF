@@ -112,14 +112,31 @@ public class FilterWhereBuilder {
      * 
      * @param name of the column
      * @param operator an operator to compare  
-     * @param param value to bu set as param
+     * @param param value to builder
      * @param index 
      */
     public void addBind(final String name, final String operator, final Object param) {
+        if (param == null) throw new IllegalArgumentException("null.param.not.suported");
         where.append(name);
         where.append(" ").append(operator).append(" ?");
         params.add(param);        
     }
+    
+    /**
+     * Add null value
+     * The names are quoted using the {@link #columnQuote} value
+     * 
+     * @see FilterWhereBuilder#getWhereClause()
+     * 
+     * @param name of the column
+     * @param operator an operator to compare  
+     * @param param value to builder
+     * @param index 
+     */
+    public void addNull(final String name) {
+        where.append(name);
+        where.append(" IS NULL");
+    }    
     
     /**
      * There is a need to put the content into brackets
@@ -132,7 +149,7 @@ public class FilterWhereBuilder {
     
     /**
      * @param columnQuote The required quote type
-     * @return
+     * @return the where clause as a String
      */
     public String getWhereClause() {
         return this.getWhere().toString();

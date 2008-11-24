@@ -31,21 +31,27 @@ public class JNDIUtilTest {
 	 */
 	@Test
 	public void testArrayToHashtableFail() {
-		try{
-			String[] entries2 = {"a=A","b="};
-			JNDIUtil.arrayToHashtable(entries2,null);
-			fail();
-		}catch(RuntimeException e){}
-		try{
-			String[] entries2 = {"a=A","="};
-			JNDIUtil.arrayToHashtable(entries2,null);
-			fail();
-		}catch(RuntimeException e){}
-		try{
-			String[] entries2 = {"a=A","=B"};
-			JNDIUtil.arrayToHashtable(entries2,null);
-			fail();
-		}catch(RuntimeException e){}
+		try {
+            String[] entries2 = { "a=A", "b=" };
+            JNDIUtil.arrayToHashtable(entries2, null);
+            fail();
+        } catch (RuntimeException e) {
+            //expected
+        }
+        try {
+            String[] entries2 = { "a=A", "=" };
+            JNDIUtil.arrayToHashtable(entries2, null);
+            fail();
+        } catch (RuntimeException e) {
+            //expected
+        }
+        try {
+            String[] entries2 = { "a=A", "=B" };
+            JNDIUtil.arrayToHashtable(entries2, null);
+            fail();
+        } catch (RuntimeException e) {
+            //expected
+        }
 		
 	}
 	

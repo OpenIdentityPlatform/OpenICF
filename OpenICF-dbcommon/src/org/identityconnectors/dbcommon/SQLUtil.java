@@ -41,6 +41,8 @@ package org.identityconnectors.dbcommon;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -50,6 +52,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -460,10 +463,15 @@ public final class SQLUtil {
      * @return a converted value
      */
     public static Object convertToJDBC(Object param, Class<?> clazz) {
+        // check the param null value
+        if (param == null) {
+            return param;
+        }
+        
         // check the conversion to is valid
         if (clazz == null) {
             return param;
-        }
+        }        
 
         // Date, Timestamps conversion support for now
         if (param.getClass().equals(Long.class)) {
@@ -477,6 +485,91 @@ public final class SQLUtil {
         }
         return param;
 
+    }
+    
+    /**
+     * The null param vlaue normalizator
+     * @param sql
+     * @param params list
+     * @param out out param list
+     * @return the modified string
+     */
+    public static String normalizeNullValues(final String sql, final List<Object> params, List<Object> out) {
+        StringBuilder ret = new StringBuilder();
+        int size = (params == null) ? 0 : params.size();
+        //extend for extra space
+        final String sqlext = sql+" ";
+        String[] values = sqlext.split("\\?"); 
+        if(values.length != (size + 1 )) throw new IllegalStateException("bind.params.count.not.same");
+        for (int i = 0; i < values.length; i++) {
+            String string = values[i];
+            ret.append(string);
+            if(params != null && i < params.size()) {
+                if (params.get(i) == null) {
+                  ret.append("null");
+                } else {
+                  ret.append("?");
+                  out.add(params.get(i));
+                }
+            }
+        }
+        //return sql less the extra space
+        return ret.substring(0, ret.length()-1);
+
+    }    
+    
+    /**
+     * Convert database type to connector supported set of attribute types
+     * @param sqlType #{@link Types}
+     * @return a connector supported class
+     */
+    public static Class<?> getAttributeDataType(int sqlType) {
+        switch (sqlType) {
+        //Known conversions
+        case Types.DECIMAL:
+            return BigDecimal.class;
+        case Types.DOUBLE:
+            return Double.class;
+        case Types.FLOAT:
+            return Float.class;
+        case Types.REAL:
+            return Float.class;
+        case Types.INTEGER:
+            return Integer.class;
+        case Types.TINYINT:
+            return Byte.class;
+        case Types.BLOB:
+        case Types.BINARY:
+        case Types.VARBINARY:
+        case Types.LONGVARBINARY:
+            return byte[].class;
+        case Types.BIGINT:
+            return BigInteger.class;
+        case Types.TIMESTAMP:
+        case Types.DATE:
+            return Long.class;
+        case Types.BIT:
+        case Types.BOOLEAN:
+            return Boolean.class;
+        }
+        return String.class;
+    }
+    
+    static class NullHolder {
+        /**
+         * @param sqlType
+         */
+        public NullHolder(int sqlType) {
+            this.sqlType = sqlType;
+        }
+
+        private int sqlType;
+
+        public int getSqlType() {
+            return sqlType;
+        }
+        
+        
     }
     
     /**
@@ -536,7 +629,7 @@ public final class SQLUtil {
      * @param params a <CODE>List</CODE> of the object arguments
      * @throws SQLException an exception in statement
      */
-    public static void setParams(final CallableStatement statement, final List<Object> params) throws SQLException {
+    static void setParams(final CallableStatement statement, final List<Object> params) throws SQLException {
         //The same as for prepared statements
         setParams( (PreparedStatement) statement, params);
     }    
@@ -549,12 +642,14 @@ public final class SQLUtil {
      * @param val a parameter Value
      * @throws SQLException a SQL exception 
      */
-    public static void setParam(final PreparedStatement stmt, final int idx, Object val) throws SQLException {
+    static void setParam(final PreparedStatement stmt, final int idx, Object val) throws SQLException {
         // Guarded string conversion
         if (val instanceof GuardedString) {
             setGuardedStringParam(stmt, idx, (GuardedString) val);
+        } else if (val instanceof NullHolder) {            
+            stmt.setNull(idx, ((NullHolder) val).getSqlType());
         } else {
-            stmt.setObject(idx, val);
+          stmt.setObject(idx, val);
         }       
     }
 

@@ -107,14 +107,18 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if (!validateSearchAttribute(attribute)) {
             return null;
         }
-        final Object singleValue = AttributeUtil.getSingleValue(attribute);
+        final Object value = AttributeUtil.getSingleValue(attribute);
         final String dbname = getDatabaseColumnName(attribute, oclass, options);
         if (dbname == null) {
             return null;
         }        
         final FilterWhereBuilder ret = createBuilder();
         if (not) ret.getWhere().append("NOT ");
-        ret.addBind(dbname, "=", singleValue);
+        if (value == null) {
+            ret.addNull(dbname);
+            return ret;
+        }
+        ret.addBind(dbname, "=", value);
         return ret;
     }
    
@@ -128,9 +132,13 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if (dbname == null) {
             return null;
         }        
+        String value = AttributeUtil.getAsStringValue(attribute);
+        //Null value filter is not supported
+        if (value == null) {
+            return null;
+        }        
         final FilterWhereBuilder ret = createBuilder();
         if (not) ret.getWhere().append("NOT ");
-        String value = AttributeUtil.getAsStringValue(attribute);
         //To be sure, this is not already quoted
         if(!value.startsWith("%")) {
             value = "%" + value;
@@ -152,9 +160,13 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if (dbname == null) {
             return null;
         }        
+        String value = AttributeUtil.getAsStringValue(attribute);
+        //Null value filter is not supported
+        if (value == null) {
+            return null;
+        }            
         final FilterWhereBuilder ret = createBuilder();
         if (not) ret.getWhere().append("NOT ");
-        String value = AttributeUtil.getAsStringValue(attribute);
         //To be sure, this is not already quoted
         if(!value.startsWith("%")) {
             value = "%" + value;
@@ -172,10 +184,14 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         final String dbname = getDatabaseColumnName(attribute, oclass, options);
         if (dbname == null) {
             return null;
-        }        
+        }     
+        String value = AttributeUtil.getAsStringValue(attribute);
+        //Null value filter is not supported
+        if (value == null) {
+            return null;
+        }            
         final FilterWhereBuilder ret = createBuilder();
         if (not) ret.getWhere().append("NOT ");
-        String value = AttributeUtil.getAsStringValue(attribute);
         //To be sure, this is not already quoted
         if(!value.endsWith("%")) {
             value = value + "%";
@@ -193,10 +209,15 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         final String dbname = getDatabaseColumnName(attribute, oclass, options);
         if (dbname == null) {
             return null;
+        }   
+        final String value = AttributeUtil.getAsStringValue(attribute);
+        //Null value filter is not supported
+        if (value == null) {
+            return null;
         }        
         final FilterWhereBuilder ret = createBuilder();
         final String op = not ? "<=" : ">";
-        ret.addBind(dbname, op, AttributeUtil.getSingleValue(attribute));
+        ret.addBind(dbname, op, value);
         return ret;
     }
     
@@ -210,9 +231,14 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if (dbname == null) {
             return null;
         }        
+        final String value = AttributeUtil.getAsStringValue(attribute);
+        //Null value filter is not supported
+        if (value == null) {
+            return null;
+        }        
         final FilterWhereBuilder ret = createBuilder();
         final String op = not ? "<" : ">=";
-        ret.addBind(dbname, op, AttributeUtil.getSingleValue(attribute));
+        ret.addBind(dbname, op, value);
         return ret;
     }
     
@@ -225,10 +251,15 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         final String dbname = getDatabaseColumnName(attribute, oclass, options);
         if (dbname == null) {
             return null;
-        }        
+        }      
+        final String value = AttributeUtil.getAsStringValue(attribute);
+        //Null value filter is not supported
+        if (value == null) {
+            return null;
+        }         
         final FilterWhereBuilder ret = createBuilder();
         final String op = not ? ">=" : "<";
-        ret.addBind(dbname, op, AttributeUtil.getSingleValue(attribute));
+        ret.addBind(dbname, op, value);
         return ret;
     }
     
@@ -242,9 +273,14 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if (dbname == null) {
             return null;
         }
+        final String value = AttributeUtil.getAsStringValue(attribute);
+        //Null value filter is not supported
+        if (value == null) {
+            return null;
+        }         
         final FilterWhereBuilder ret = createBuilder();
         final String op = not ? ">" : "<=";
-        ret.addBind(dbname, op, AttributeUtil.getSingleValue(attribute));
+        ret.addBind(dbname, op, value);
         return ret;
     }
     
