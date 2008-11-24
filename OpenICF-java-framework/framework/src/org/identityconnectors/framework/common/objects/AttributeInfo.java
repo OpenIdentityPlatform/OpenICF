@@ -46,6 +46,7 @@ import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.operations.GetApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
+import org.identityconnectors.framework.api.operations.SyncApiOp;
 import org.identityconnectors.framework.common.FrameworkUtil;
 
 /**
@@ -162,8 +163,8 @@ public final class AttributeInfo {
 
 	/**
 	 * Determines if the attribute is returned by default. Indicates if an
-	 * {@link Attribute} will be returned during {@link SearchApiOp} or
-	 * {@link GetApiOp} inside a {@link ConnectorObject} by default. The default
+	 * {@link Attribute} will be returned during {@link SearchApiOp}, {@link SyncApiOp}
+	 * or {@link GetApiOp} inside a {@link ConnectorObject} by default. The default
 	 * value is <code>true</code>.
 	 * 
 	 * @return false iff the attribute should not be returned by default.
