@@ -41,8 +41,6 @@ package org.identityconnectors.dbcommon;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -52,7 +50,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Types;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -517,61 +514,7 @@ public final class SQLUtil {
         return ret.substring(0, ret.length()-1);
 
     }    
-    
-    /**
-     * Convert database type to connector supported set of attribute types
-     * @param sqlType #{@link Types}
-     * @return a connector supported class
-     */
-    public static Class<?> getAttributeDataType(int sqlType) {
-        switch (sqlType) {
-        //Known conversions
-        case Types.DECIMAL:
-            return BigDecimal.class;
-        case Types.DOUBLE:
-            return Double.class;
-        case Types.FLOAT:
-            return Float.class;
-        case Types.REAL:
-            return Float.class;
-        case Types.INTEGER:
-            return Integer.class;
-        case Types.TINYINT:
-            return Byte.class;
-        case Types.BLOB:
-        case Types.BINARY:
-        case Types.VARBINARY:
-        case Types.LONGVARBINARY:
-            return byte[].class;
-        case Types.BIGINT:
-            return BigInteger.class;
-        case Types.TIMESTAMP:
-        case Types.DATE:
-            return Long.class;
-        case Types.BIT:
-        case Types.BOOLEAN:
-            return Boolean.class;
-        }
-        return String.class;
-    }
-    
-    static class NullHolder {
-        /**
-         * @param sqlType
-         */
-        public NullHolder(int sqlType) {
-            this.sqlType = sqlType;
-        }
 
-        private int sqlType;
-
-        public int getSqlType() {
-            return sqlType;
-        }
-        
-        
-    }
-    
     /**
      * Make a blob conversion
      * 
@@ -646,8 +589,6 @@ public final class SQLUtil {
         // Guarded string conversion
         if (val instanceof GuardedString) {
             setGuardedStringParam(stmt, idx, (GuardedString) val);
-        } else if (val instanceof NullHolder) {            
-            stmt.setNull(idx, ((NullHolder) val).getSqlType());
         } else {
           stmt.setObject(idx, val);
         }       
