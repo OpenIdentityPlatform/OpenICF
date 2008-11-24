@@ -512,6 +512,40 @@ public class DatabaseConnectorTests {
      * Test creating of the connector object, searching using UID and update
      */
     @Test
+    public void testUpdateNull() {
+        ConnectorFacade facade = getFacade();
+        TestAccount tst = TestAccount.createTestAccount();
+
+        // create the object
+        final Uid uid = facade.create(ObjectClass.ACCOUNT, tst.toAttributeSet(), null);
+        assertNotNull(uid);
+
+        // retrieve the object
+        FindUidObjectHandler handler = new FindUidObjectHandler(uid);
+        facade.search(ObjectClass.ACCOUNT, new EqualsFilter(uid), handler, null);
+        assertNotNull(handler.connectorObject);
+
+        // create updated connector object
+        ConnectorObjectBuilder coBuilder = new ConnectorObjectBuilder();
+        coBuilder.setName(handler.connectorObject.getName());
+        coBuilder.setUid(uid);
+        coBuilder.setObjectClass(ObjectClass.ACCOUNT);
+        tst.setSalary(null);
+        for (Attribute attribute : tst.toAttributeSet()) {
+            coBuilder.addAttribute(attribute);
+        }
+        ConnectorObject coBeforeUpdate = coBuilder.build();
+
+        // do the update
+        Set<Attribute> changeSet = CollectionUtil.newSet(coBeforeUpdate.getAttributes());
+        changeSet.remove(coBeforeUpdate.getName());
+        facade.update(UpdateApiOp.Type.REPLACE, ObjectClass.ACCOUNT, changeSet, null);
+    }
+    
+    /**
+     * Test creating of the connector object, searching using UID and update
+     */
+    @Test
     public void testCreateAndUpdate() {
         ConnectorFacade facade = getFacade();
         TestAccount tst = TestAccount.createTestAccount();
@@ -639,8 +673,7 @@ public class DatabaseConnectorTests {
             expected.setChanged(changed);
             values.add(changed);
             values.add(uid.getUidValue());
-            ps = conn.prepareStatement(SQL_TEMPLATE);
-            SQLUtil.setParams(ps, values);
+            ps = conn.prepareStatement(SQL_TEMPLATE, values);
             ps.execute();
             conn.commit();
         } finally {
@@ -691,8 +724,7 @@ public class DatabaseConnectorTests {
             expected.setAge(null); //The age as a changeLogColumn will not be in the result
             values.add(changed);
             values.add(uid.getUidValue());
-            ps = conn.prepareStatement(SQL_TEMPLATE);
-            SQLUtil.setParams(ps, values);
+            ps = conn.prepareStatement(SQL_TEMPLATE, values);
             ps.execute();
             conn.commit();
         } finally {
@@ -743,8 +775,7 @@ public class DatabaseConnectorTests {
             expected.setAccessed(null); //The age as a changeLogColumn will not be in the result
             values.add(changed);
             values.add(uid.getUidValue());
-            ps = conn.prepareStatement(SQL_TEMPLATE);
-            SQLUtil.setParams(ps, values);
+            ps = conn.prepareStatement(SQL_TEMPLATE, values );
             ps.execute();
             conn.commit();
         } finally {
@@ -790,8 +821,7 @@ public class DatabaseConnectorTests {
             List<Object> values = new ArrayList<Object>();
             values.add(changed);
             values.add(uid.getUidValue());
-            ps = conn.prepareStatement(SQL_TEMPLATE);
-            SQLUtil.setParams(ps, values);
+            ps = conn.prepareStatement(SQL_TEMPLATE, values);
             ps.execute();
             conn.commit();
         } finally {
@@ -977,8 +1007,7 @@ public class DatabaseConnectorTests {
 
             List<Object> values = new ArrayList<Object>();
             values.add(uid.getUidValue());
-            ps = conn.prepareStatement(sql);
-            SQLUtil.setParams(ps, values);
+            ps = conn.prepareStatement(sql, values);
             ps.execute();
             conn.commit();
 

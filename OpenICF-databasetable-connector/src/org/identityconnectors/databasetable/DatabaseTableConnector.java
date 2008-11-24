@@ -254,8 +254,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
 
         PreparedStatement pstmt = null;
         try {
-            pstmt = conn.prepareStatement(sql);
-            SQLUtil.setParams(pstmt, bld.getParams());
+            pstmt = conn.prepareStatement(sql, bld.getParams());
             // execute the SQL statement
             pstmt.execute();
         } catch (SQLException e) {
@@ -375,8 +374,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         PreparedStatement stmt = null;
         try {
             // create the prepared statement..
-            stmt = conn.prepareStatement(sql);
-            SQLUtil.setParams(stmt, params);
+            stmt = conn.prepareStatement(sql, params);
             stmt.execute();
         } catch (SQLException e) {
             SQLUtil.rollbackQuietly(conn);
@@ -432,10 +430,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
 
         ResultSet result = null;
         PreparedStatement statement = null;
-        final String sql = query.getSQL();
         try {
-            statement = conn.prepareStatement(sql);
-            SQLUtil.setParams(statement, query.getParams());
+            statement = conn.prepareStatement(query);
             result = statement.executeQuery();
             while (result.next()) {
                 final Set<Attribute> attributeSet = SQLUtil.getAttributeSet(result);
@@ -488,10 +484,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
 
         ResultSet result = null;
         PreparedStatement statement = null;
-        final String sql = query.getSQL();
         try {
-            statement = conn.prepareStatement(sql);
-            SQLUtil.setParams(statement, query.getParams());
+            statement = conn.prepareStatement(query);
             result = statement.executeQuery();
             while (result.next()) {
                 final Set<Attribute> attributeSet = SQLUtil.getAttributeSet(result);
@@ -525,7 +519,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         ResultSet rset = null;
         try {
             // create the prepared statement..
-            stmt = conn.prepareStatement(sql);
+            stmt = conn.getConnection().prepareStatement(sql);
             rset = stmt.executeQuery();
             if (rset.next()) {
                 ret = new SyncToken(SQLUtil.convertToSupportedType(rset.getObject(1)));
@@ -602,8 +596,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         //No passwordExpired capability
         try {
             // replace the ? in the SQL_AUTH statement with real data
-            stmt = conn.prepareStatement(sql);
-            SQLUtil.setParams(stmt, values);
+            stmt = conn.prepareStatement(sql, values);
             result = stmt.executeQuery();
             //No PasswordExpired capability
             if (!result.next()) {
