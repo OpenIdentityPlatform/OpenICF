@@ -656,7 +656,10 @@ public class GroovyDataProvider implements DataProvider {
             shortName = "floatarray";
         } else if (typeName.equals("[Ljava.lang.Boolean;")
                 || typeName.equals("[Z")) {
-            shortName = "floatarray";
+            shortName = "booleanarray";
+        } else if (typeName.equals("[Ljava.lang.Character;")
+                || typeName.equals("[C")) {
+            shortName = "characterarray";
         } else if (typeName.equals("[Ljava.net.URI;")) {
             shortName = "uriarray";
         } else if (typeName.equals("[Ljava.io.File;")) {

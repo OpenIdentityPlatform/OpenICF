@@ -82,6 +82,7 @@ Tbigdecimal=Lazy.random("#####\\.##", java.math.BigDecimal.class)
 Tboolean=false
 Tbytearray=Lazy.random(".............", byte[].class)
 Tcharacter=Lazy.random(".", Character.class)
+Tchar=Lazy.random(".", Character.class)
 
 
 
