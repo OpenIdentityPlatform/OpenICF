@@ -67,5 +67,13 @@
         <antcall target="contract-tests" inheritAll="false">
             <param name="configuration" value="mssql"/>
         </antcall>
+        
+        <!-- db2 configuration -->
+        <antcall target="contract-dist" inheritAll="false">
+            <param name="configuration" value="db2"/>
+        </antcall>
+        <antcall target="contract-tests" inheritAll="false">
+            <param name="configuration" value="db2"/>
+        </antcall>
     </target> 	  
 </project>
