@@ -39,8 +39,7 @@
  */
 package org.identityconnectors.contract.test;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.HashSet;
 import java.util.List;
@@ -81,6 +80,7 @@ import org.junit.runners.Parameterized;
  * unless</li>
  * specified in attrsToGet </li>
  * <li>update of non-updateable attribute will fail</li>
+ * <li>required attributes must be creatable</li>
  * </ul>
  * 
  * @author David Adam
@@ -91,7 +91,7 @@ public class AttributeTests extends ObjectClassRunner {
     /**
      * Logging..
      */
-    private static final Log LOG = Log.getLog(GetApiOpTests.class);
+    private static final Log LOG = Log.getLog(AttributeTests.class);
     private static final String TEST_NAME = "Attribute";
 
     public AttributeTests(ObjectClass oclass) {
@@ -200,6 +200,7 @@ public class AttributeTests extends ObjectClassRunner {
      */
     @Test
     public void testReturnedByDefault() {
+        //run the test for GetApiOp, SearchApiOp and SyncApiOp
         for (ApiOperations apiop : ApiOperations.values()) {
             testReturnedByDefault(apiop);
         }
@@ -214,10 +215,12 @@ public class AttributeTests extends ObjectClassRunner {
      */
     @Test
     public void testNonUpdateable() {
-        /** is exception caugth? */
+        /** is exception caught? (indicating attempt to update non-updateable item) */
         boolean exception = false;
-        /** is there any non updateable item? */
+        /** is there any non updateable item? (if not skip this test)*/
         boolean isChanged = false;
+        /** cache for exception type */
+        Exception exCache = null;
         try {
             if (ConnectorHelper.operationSupported(getConnectorFacade(),
                     getObjectClass(), UpdateApiOp.class)) {
@@ -307,18 +310,83 @@ public class AttributeTests extends ObjectClassRunner {
         } catch (IllegalArgumentException ex) {
             // OK
             exception = true;
-        } finally { // TODO test
+            exCache = ex;
+        } finally { 
+            String msg;
             if (exception) {
-                //OK
+                if (isChanged) {
+                    //OK
+                    msg = String.format("unexpected exception type caught: %s", (exCache != null) ? exCache.getClass().getName() : "");
+                    assertTrue(msg, exCache.getClass().equals(IllegalArgumentException.class));
+                } else {
+                    //WARN
+                    msg = String.format("No non-updateable attribute is present, however %s exception caught.", (exCache != null) ? exCache.getClass().getName() : "");
+                    fail(msg);
+                }
             } else {
                 if (isChanged) {
                     // WARN
-                    assertTrue("NO EXC, bad", false);
+                    fail("No exception thrown when non-updateable argument was changed");
                 } else {
                     //OK
                 }
             }
                 
+        }
+    }
+    
+    /**
+     * Required attributes must be creatable. It is a fialure if a required
+     * attribute is not creatable.
+     */
+    @Test
+    public void testRequirableIsCreatable() {
+        if (ConnectorHelper.operationSupported(getConnectorFacade(),
+                getObjectClass(), CreateApiOp.class)) {
+            Uid uid = null;
+            try {
+                ObjectClassInfo oci = getObjectClassInfo();
+
+                // create a new user
+                Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(
+                        getDataProvider(), oci, getTestName(), 0, true, false);
+                // should throw UnsupportedObjectClass if not supported
+                uid = getConnectorFacade().create(getSupportedObjectClass(),
+                        attrs, getOperationOptionsByOp(CreateApiOp.class));
+
+                // get the user to make sure it exists now
+                ConnectorObject obj = getConnectorFacade().getObject(
+                        getObjectClass(), uid,
+                        getOperationOptionsByOp(GetApiOp.class));
+
+                assertNotNull("Unable to retrieve newly created object", obj);
+
+                // check: Required attributes must be creatable.
+                for (Attribute attr : obj.getAttributes()) {
+                    if (ConnectorHelper.isRequired(oci, attr)) {
+                        if (!ConnectorHelper.isCreateable(oci, attr)) {
+                            //WARN
+                            String msg = String.format("Required attribute is not createable. Attribute name: %s", attr.getName());
+                            fail(msg);
+                        }
+                    }
+                }
+            } finally {
+                if (uid != null) {
+                    // delete the object
+                    getConnectorFacade().delete(getSupportedObjectClass(), uid,
+                            getOperationOptionsByOp(DeleteApiOp.class));
+                }
+            }
+        } else {
+            LOG
+                    .info("----------------------------------------------------------------------------------------");
+            LOG
+                    .info(
+                            "Skipping test ''testNonReadable'' for object class ''{0}''.",
+                            getObjectClass());
+            LOG
+                    .info("----------------------------------------------------------------------------------------");
         }
     }
 
@@ -330,6 +398,9 @@ public class AttributeTests extends ObjectClassRunner {
      *            the type of ApiOperation, that shall be tested.
      */
     private void testReturnedByDefault(ApiOperations apiOp) {
+        /** marker in front of every assert message */
+        String testMarkMsg = String.format("[testReturnedByDefault/%s]", apiOp);
+        
         // run the contract test only if <strong>apiOp</strong> APIOperation is
         // supported
         if (ConnectorHelper.operationSupported(getConnectorFacade(),
@@ -345,13 +416,15 @@ public class AttributeTests extends ObjectClassRunner {
             try {
                 ObjectClassInfo oci = getObjectClassInfo();
 
-                // create a new user
+                /*
+                 * CREATE a new user
+                 */ 
                 Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(
                         getDataProvider(), oci, getTestName(), 0, true, false);
                 // should throw UnsupportedObjectClass if not supported
                 uid = getConnectorFacade().create(getObjectClass(), attrs,
-                        getOperationOptionsByOp(CreateApiOp.class));
-                assertNotNull("Create returned null uid.", uid);
+                        null);
+                assertNotNull(testMarkMsg + " Create returned null uid.", uid);
 
                 /*
                  * ************ GetApiOp ************
@@ -368,40 +441,42 @@ public class AttributeTests extends ObjectClassRunner {
                     Filter fltUid = FilterBuilder.equalTo(AttributeBuilder
                             .build(Uid.NAME, uid.getUidValue()));
 
-                    assertTrue(fltUid != null);
+                    assertTrue(testMarkMsg + " filterUid is null", fltUid != null);
 
                     List<ConnectorObject> coObjects = ConnectorHelper.search(
                             getConnectorFacade(), getSupportedObjectClass(),
                             fltUid, null);
 
-                    assertTrue(
-                            "Search filter by uid with no OperationOptions failed, expected to return one object, but returned "
+                    assertTrue(testMarkMsg + 
+                            " Search filter by uid with no OperationOptions failed, expected to return one object, but returned "
                                     + coObjects.size(), coObjects.size() == 1);
 
-                    assertNotNull("Unable to retrieve newly created object",
+                    assertNotNull(testMarkMsg + " Unable to retrieve newly created object",
                             coObjects.get(0));
 
                     obj = coObjects.get(0);
                     break;// SEARCH
 
                 case SYNC:
-                    obj = testSync(uid, token, attrs, oci);
+                    uid = testSync(uid, token, attrs, oci, testMarkMsg);
                     break;// SYNC
-                }
-
-                assertNotNull("Unable to retrieve newly created object", obj);
+                }//switch
 
                 /*
                  * Check if attribute set contains non-returned by default
                  * Attributes. This is specific for AttributeTests
                  */
-                checkAttributes(obj, oci);
+                if (!apiOp.equals(ApiOperations.SYNC)) {
+                    assertNotNull("Unable to retrieve newly created object", obj);
+                    // obj is null for sync tests
+                    checkAttributes(obj, oci, apiOp);
+                }
 
             } finally {
                 if (uid != null) {
-                    // delete the created user
-                    getConnectorFacade().delete(getSupportedObjectClass(), uid,
-                            getOperationOptionsByOp(DeleteApiOp.class));
+                    // cleanup test data
+                    ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid,
+                            false, getOperationOptionsByOp(DeleteApiOp.class));
                 }
             }
         } else {
@@ -416,15 +491,17 @@ public class AttributeTests extends ObjectClassRunner {
         }
     }
 
-    /** Main checking of "no returned by default" attributes */
-    private void checkAttributes(ConnectorObject obj, ObjectClassInfo oci) {
+    /** Main checking of "no returned by default" attributes 
+     * @param testName 
+     * @param apiOp */
+    private void checkAttributes(ConnectorObject obj, ObjectClassInfo oci, ApiOperations apiOp) {
         // Check if attribute set contains non-returned by default
         // Attributes.
         for (Attribute attr : obj.getAttributes()) {
             String msg = String
                     .format(
-                            "Attribute %s returned. However it is _not_ returned by default.",
-                            attr.getName());
+                            "[testReturnedByDefault / %s]Attribute %s returned. However it is _not_ returned by default.",
+                            apiOp, attr.getName());
             /*
              * this is a hack that skips control of UID, as it is presently 
              * non returned by default, however it is automatically returned.
@@ -448,10 +525,11 @@ public class AttributeTests extends ObjectClassRunner {
      *            the newly created object
      * @param oci
      *            object class info
-     * @return the connector object that contains the differences.
+     * @param testMarkMsg test marker
+     * @return the updated Uid
      */
-    private ConnectorObject testSync(Uid uid, SyncToken token,
-            Set<Attribute> attrs, ObjectClassInfo oci) {
+    private Uid testSync(Uid uid, SyncToken token,
+            Set<Attribute> attrs, ObjectClassInfo oci, String testMarkMsg) {
         List<SyncDelta> deltas = null;
         String msg = null;
 
@@ -464,22 +542,22 @@ public class AttributeTests extends ObjectClassRunner {
             // sync after create
             deltas = ConnectorHelper.sync(getConnectorFacade(),
                     getObjectClass(), token,
-                    getOperationOptionsByOp(SyncApiOp.class));
+                    null);
 
             // check that returned one delta
-            msg = "Sync should have returned one sync delta after creation of one object, but returned: %d";
-            assertTrue(String.format(msg, deltas.size()), deltas.size() == 1);
+            msg = "%s Sync should have returned one sync delta after creation of one object, but returned: %d";
+            assertTrue(String.format(msg, testMarkMsg, deltas.size()), deltas.size() == 1);
 
             // check delta
             ConnectorHelper.checkSyncDelta(getObjectClassInfo(), deltas.get(0),
-                    uid, attrs, SyncDeltaType.CREATE_OR_UPDATE, true);
+                    uid, attrs, SyncDeltaType.CREATE_OR_UPDATE, false);
 
             /*
              * check the attributes inside delta This is specific for
              * AttributeTests
              */
             ConnectorObject obj = deltas.get(0).getObject();
-            checkAttributes(obj, oci);
+            checkAttributes(obj, oci, ApiOperations.SYNC);
 
             token = deltas.get(0).getToken();
         }
@@ -499,12 +577,12 @@ public class AttributeTests extends ObjectClassRunner {
             if (replaceAttributes.size() > 0) {
                 replaceAttributes.add(uid);
 
-                assertTrue("no update attributes were found",
+                assertTrue(testMarkMsg + " no update attributes were found",
                         (replaceAttributes.size() > 0));
                 Uid newUid = getConnectorFacade().update(
                         UpdateApiOp.Type.REPLACE, getSupportedObjectClass(),
                         replaceAttributes,
-                        getOperationOptionsByOp(UpdateApiOp.class));
+                        null);
 
                 // Update change of Uid must be propagated to
                 // replaceAttributes
@@ -517,24 +595,24 @@ public class AttributeTests extends ObjectClassRunner {
                 // sync after update
                 deltas = ConnectorHelper.sync(getConnectorFacade(),
                         getObjectClass(), token,
-                        getOperationOptionsByOp(SyncApiOp.class));
+                        null);
 
                 // check that returned one delta
-                msg = "Sync should have returned one sync delta after update of one object, but returned: %d";
-                assertTrue(String.format(msg, deltas.size()),
+                msg = "%s Sync should have returned one sync delta after update of one object, but returned: %d";
+                assertTrue(String.format(msg, testMarkMsg, deltas.size()),
                         deltas.size() == 1);
 
                 // check delta
                 ConnectorHelper.checkSyncDelta(getObjectClassInfo(), deltas
                         .get(0), uid, replaceAttributes,
-                        SyncDeltaType.CREATE_OR_UPDATE, true);
+                        SyncDeltaType.CREATE_OR_UPDATE, false);
 
                 /*
                  * check the attributes inside delta This is specific for
                  * AttributeTests
                  */
                 ConnectorObject obj = deltas.get(0).getObject();
-                checkAttributes(obj, oci);
+                checkAttributes(obj, oci, ApiOperations.SYNC);
 
                 token = deltas.get(0).getToken();
             }
@@ -545,30 +623,29 @@ public class AttributeTests extends ObjectClassRunner {
         if (SyncApiOpTests.canSyncAfterOp(DeleteApiOp.class)) {
             // delete object
             getConnectorFacade().delete(getObjectClass(), uid,
-                    getOperationOptionsByOp(DeleteApiOp.class));
+                    null);
 
             // sync after delete
             deltas = ConnectorHelper.sync(getConnectorFacade(),
                     getObjectClass(), token,
-                    getOperationOptionsByOp(SyncApiOp.class));
+                    null);
 
             // check that returned one delta
-            msg = "Sync should have returned one sync delta after delete of one object, but returned: %d";
-            assertTrue(String.format(msg, deltas.size()), deltas.size() == 1);
+            msg = "%s Sync should have returned one sync delta after delete of one object, but returned: %d";
+            assertTrue(String.format(msg, testMarkMsg, deltas.size()), deltas.size() == 1);
 
             // check delta
             ConnectorHelper.checkSyncDelta(getObjectClassInfo(), deltas.get(0),
-                    uid, null, SyncDeltaType.DELETE, true);
+                    uid, null, SyncDeltaType.DELETE, false);
 
             /*
              * check the attributes inside delta This is specific for
              * AttributeTests
              */
             ConnectorObject obj = deltas.get(0).getObject();
-            checkAttributes(obj, oci);
+            checkAttributes(obj, oci, ApiOperations.SYNC);
         }
-
-        return null;
+        return uid;
     }
 }// end of class AttributeTests
 

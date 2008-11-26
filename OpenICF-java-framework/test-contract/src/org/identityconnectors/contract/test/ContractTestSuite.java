@@ -44,6 +44,7 @@ import org.junit.runners.Suite;
  
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+  AttributeTests.class,
   AuthenticationApiOpTests.class,
   ConfigurationTests.class,
   CreateApiOpTests.class,

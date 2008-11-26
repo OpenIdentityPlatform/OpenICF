@@ -404,6 +404,36 @@ public class ConnectorHelper {
     }
     
     /**
+     * Whether is attribute required.
+     */
+    public static boolean isRequired(ObjectClassInfo objectClassInfo, Attribute attribute) {
+        boolean isRequired = false;
+        Set<AttributeInfo> attributeInfoSet = objectClassInfo.getAttributeInfo();
+        for(AttributeInfo attributeInfo : attributeInfoSet) {
+            if(attributeInfo.is(attribute.getName())) {
+                isRequired = attributeInfo.isRequired();
+                break;
+            }
+        }
+        return isRequired;
+    }
+    
+    /**
+     * Whether is attribute Createable.
+     */
+    public static boolean isCreateable(ObjectClassInfo objectClassInfo, Attribute attribute) {
+        boolean isCreateable = false;
+        Set<AttributeInfo> attributeInfoSet = objectClassInfo.getAttributeInfo();
+        for(AttributeInfo attributeInfo : attributeInfoSet) {
+            if(attributeInfo.is(attribute.getName())) {
+                isCreateable = attributeInfo.isCreateable();
+                break;
+            }
+        }
+        return isCreateable;
+    }
+    
+    /**
      * Whether is attribute readable.
      */
     public static boolean isUpdateable(ObjectClassInfo objectClassInfo, Attribute attribute) {
