@@ -43,6 +43,9 @@ import static org.junit.Assert.*;
 
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -50,6 +53,7 @@ import java.util.Set;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.operations.APIOperation;
+import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
 import org.identityconnectors.framework.api.operations.GetApiOp;
@@ -60,9 +64,13 @@ import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.api.operations.ValidateApiOp;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
+import org.identityconnectors.framework.common.objects.PredefinedAttributes;
+import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncToken;
@@ -412,18 +420,25 @@ public class MultiOpTests extends ObjectClassRunner {
         return TEST_NAME;
     }
 
+    /*
+     * *****************************
+     * OPERATIONAL ATTRIBUTES TESTS:
+     * *****************************
+     */
+    
     /**
      * Tests ENABLE attribute contract 
      */
     @Test
     public void testEnableOpAttribute() {
-        if (isOperationAttributeSupported(OperationalAttributes.ENABLE_NAME)) {
+        if (isObjectClassSupported()
+                && ConnectorHelper.isCRU(getObjectClassInfo(), OperationalAttributes.ENABLE_NAME)) {
 
-            //check ENABLE for true
-            checkEnableOpAttribute(true);
+            // check ENABLE for true
+            checkOpAttribute(OperationalAttributes.ENABLE_NAME, true, false, Boolean.class);
 
-            //check ENABLE for false
-            checkEnableOpAttribute(false);
+            // check ENABLE for false
+            checkOpAttribute(OperationalAttributes.ENABLE_NAME, false, true, Boolean.class);
         }
         else {
             LOG.info("----------------------------------------------------------------------------------------");
@@ -431,29 +446,149 @@ public class MultiOpTests extends ObjectClassRunner {
             LOG.info("----------------------------------------------------------------------------------------");
         }
     }
+    
+    /**
+     * Tests ENABLE_DATE attribute contract 
+     */
+    @Test
+    public void testEnableDateOpAttribute() {
+        if (isObjectClassSupported()
+                && ConnectorHelper.isCRU(getObjectClassInfo(), OperationalAttributes.ENABLE_DATE_NAME)) {
+            
+            // check ENABLE_DATE for "now" and "1.1.1970"
+            checkOpAttribute(OperationalAttributes.ENABLE_DATE_NAME, new Date(),
+                    new Date(0), Long.class);
+        }
+        else {
+            LOG.info("----------------------------------------------------------------------------------------");
+            LOG.info("Skipping test ''testEnableDateOpAttribute'' for object class ''{0}''.", getObjectClass());
+            LOG.info("----------------------------------------------------------------------------------------");
+        }
+    }
+    
+    /**
+     * Tests DISABLE_DATE attribute contract 
+     */
+    @Test
+    public void testDisableDateOpAttribute() {
+        if (isObjectClassSupported()
+                && ConnectorHelper.isCRU(getObjectClassInfo(), OperationalAttributes.DISABLE_DATE_NAME)) {
+
+            // check DISABLE_DATE for "now" and "1.1.1970"
+            checkOpAttribute(OperationalAttributes.DISABLE_DATE_NAME, new Date(),
+                    new Date(0), Long.class);
+        }
+        else {
+            LOG.info("----------------------------------------------------------------------------------------");
+            LOG.info("Skipping test ''testDisableDateOpAttribute'' for object class ''{0}''.", getObjectClass());
+            LOG.info("----------------------------------------------------------------------------------------");
+        }
+    }
+    
+    /**
+     * Tests LOCK_OUT attribute contract 
+     */
+    @Test
+    public void testLockOutOpAttribute() {
+        if (isObjectClassSupported()
+                && ConnectorHelper.isCRU(getObjectClassInfo(), OperationalAttributes.LOCK_OUT_NAME)) {
+
+         // check ENABLE for true
+            checkOpAttribute(OperationalAttributes.LOCK_OUT_NAME, true, false, Boolean.class);
+
+            // check ENABLE for false
+            checkOpAttribute(OperationalAttributes.LOCK_OUT_NAME, false, true, Boolean.class);
+        }
+        else {
+            LOG.info("----------------------------------------------------------------------------------------");
+            LOG.info("Skipping test ''testLockOutOpAttribute'' for object class ''{0}''.", getObjectClass());
+            LOG.info("----------------------------------------------------------------------------------------");
+        }
+    }
+    
+    /**
+     * Tests PASSWORD_EXPIRATION_DATE attribute contract 
+     */
+    @Test
+    public void testPasswordExpirationDateOpAttribute() {
+        if (isObjectClassSupported()
+                && ConnectorHelper.isCRU(getObjectClassInfo(), OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME)) {
+
+            // check PASSWORD_EXPIRATION_DATE for "now" and "1.1.1970"
+            checkOpAttribute(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME, new Date(),
+                    new Date(0), Long.class);
+        }
+        else {
+            LOG.info("----------------------------------------------------------------------------------------");
+            LOG.info("Skipping test ''testPasswordExpirationDateOpAttribute'' for object class ''{0}''.", getObjectClass());
+            LOG.info("----------------------------------------------------------------------------------------");
+        }
+    }
+    
+    /**
+     * Tests PASSWORD_EXPIRED attribute contract 
+     */
+    @Test
+    public void testPasswordExpiredOpAttribute() {
+        if (isObjectClassSupported()
+                && ConnectorHelper.isCRU(getObjectClassInfo(), OperationalAttributes.PASSWORD_EXPIRED_NAME)) {
+
+            // check PASSWORD_EXPIRED for true
+            checkOpAttribute(OperationalAttributes.PASSWORD_EXPIRED_NAME, true, false, Boolean.class);
+
+            // check PASSWORD_EXPIRED for false
+            checkOpAttribute(OperationalAttributes.PASSWORD_EXPIRED_NAME, false, true, Boolean.class);
+        }
+        else {
+            LOG.info("----------------------------------------------------------------------------------------");
+            LOG.info("Skipping test ''testPasswordExpiredOpAttribute'' for object class ''{0}''.", getObjectClass());
+            LOG.info("----------------------------------------------------------------------------------------");
+        }
+    }
+    
+    /**
+     * Tests PASSWORD_CHANGE_INTERVAL attribute contract 
+     */
+    @Test
+    public void testPasswordChangeIntervalPredAttribute() {
+        if (isObjectClassSupported()
+                && ConnectorHelper.isCRU(getObjectClassInfo(), PredefinedAttributes.PASSWORD_CHANGE_INTERVAL_NAME)) {
+
+            // check PASSWORD_CHANGE_INTERVAL for 120 days and 30 days
+            checkOpAttribute(PredefinedAttributes.PASSWORD_CHANGE_INTERVAL_NAME, 10368000000L, 2592000000L, Long.class);
+        }
+        else {
+            LOG.info("----------------------------------------------------------------------------------------");
+            LOG.info("Skipping test ''testPasswordChangeIntervalPredAttribute'' for object class ''{0}''.", getObjectClass());
+            LOG.info("----------------------------------------------------------------------------------------");
+        }
+    }
 
     /**
-     * Method to check the ENABLE attribute contract
+     * Method to check the attrName's attribute contract
      * 
-     * @param enabled ENABLE state
+     * @param attrName attribute to be checked
+     * @param createValue value used for create
+     * @param updateValue value used for update
+     * @param type expected type of the value
      */
-    private void checkEnableOpAttribute(boolean enabled) {
+    private void checkOpAttribute(String attrName, Object createValue, Object updateValue, Class<?> type) {
 
         Set<Attribute> attrs = null;
 
         attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(), getObjectClassInfo(),
                 getTestName(), 0, true, false);
 
-        //remove ENABLE if present
+        //remove attrName if present
         for (Attribute attribute : attrs) {
-            if (attribute.is(OperationalAttributes.ENABLE_NAME)) {
+            if (attribute.is(attrName)) {
                 attrs.remove(attribute);
                 break;
             }
         }
 
-        //add ENABLE
-        attrs.add(AttributeBuilder.buildEnabled(enabled));
+        //add attrName with create value
+        attrs.add(AttributeBuilder.build(attrName, createValue));
 
         Uid uid = null;
 
@@ -461,14 +596,14 @@ public class MultiOpTests extends ObjectClassRunner {
             //create
             uid = getConnectorFacade().create(getSupportedObjectClass(), attrs, null);
 
-            checkEnableAttribute(uid, enabled);
+            // check value of attribute with create value
+            checkAttribute(attrName, uid, createValue, type);
 
-            // get attributes with the same values but only updateable
-            attrs = ConnectorHelper.getUpdateableAttributes(getDataProvider(),
-                    getObjectClassInfo(), getTestName(), "", 0, false, false);
+            // clear attrs
+            attrs.clear();
             
-            //add ENABLE
-            attrs.add(AttributeBuilder.buildEnabled(!enabled));
+            //add update value
+            attrs.add(AttributeBuilder.build(attrName, updateValue));
 
             // add uid for update
             attrs.add(uid);
@@ -476,8 +611,8 @@ public class MultiOpTests extends ObjectClassRunner {
             //update
             uid = getConnectorFacade().update(UpdateApiOp.Type.REPLACE, getSupportedObjectClass(), attrs, null);
 
-            //check again
-            checkEnableAttribute(uid, !enabled);
+            //check again with update value
+            checkAttribute(attrName, uid, updateValue, type);
 
         } finally {
             ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid, false, null);
@@ -485,28 +620,377 @@ public class MultiOpTests extends ObjectClassRunner {
     }
 
     /**
-     * Gets the ConnectorObject and check the value of ENABLE attribute is as
+     * Gets the ConnectorObject and check the value of attribute is as
      * expected
      * 
-     * @param uid Uid to get
-     * @param enabled expected ENABLE value
+     * @param uid Uid of object to get
+     * @param expValue expected value of the attribute
+     * @param type expected type of the attribute
      */
-    private void checkEnableAttribute(Uid uid, boolean enabled) {
+    private void checkAttribute(String attrName, Uid uid, Object expValue, Class<?> type) {
         //get the object
         ConnectorObject obj = getConnectorFacade().getObject(getSupportedObjectClass(), uid, null);
 
         //check we have the correct value
         for (Attribute attribute : obj.getAttributes()) {
-            if (attribute.is(OperationalAttributes.ENABLE_NAME)) {
+            if (attribute.is(attrName)) {
                 List<Object> vals = attribute.getValue();
                 assertTrue(String.format("Operational attribute %s must contain exactly one value.",
-                        OperationalAttributes.ENABLE_NAME), vals.size() == 1);
-                assertTrue(String.format("Operational attribute %s value type must be Boolean.",
-                        OperationalAttributes.ENABLE_NAME), vals.get(0) instanceof Boolean);
-                Boolean value = (Boolean) vals.get(0);
-                assertTrue(String.format("Operational attribute %s value is different, expected: %s, returned: %s",
-                        OperationalAttributes.ENABLE_NAME, enabled, value), value == enabled);
+                        attrName), vals.size() == 1);
+                Object val = vals.get(0);
+                assertEquals(String.format(
+                        "Operational attribute %s value type must be %s, but is %s.", attrName,
+                        type.getSimpleName(), val.getClass().getSimpleName()), type, val.getClass());
+                
+                assertEquals(String.format("Operational attribute %s value is different, expected: %s, returned: %s",
+                        attrName, expValue, val), expValue, val);
             }
         }
+    }
+    
+    /**
+     * Tests GROUPS attribute contract
+     */
+    @Test
+    public void testGroupsPredAttribute() {
+        final ObjectClassInfo accountInfo = findOInfo(ObjectClass.ACCOUNT);
+        final ObjectClassInfo groupInfo = findOInfo(ObjectClass.GROUP);
+
+        // run test only in case ACCOUNT and GROUP are supported and GROUPS is supported for ACCOUNT
+        if (accountInfo != null && groupInfo != null
+                && ConnectorHelper.isCRU(accountInfo, PredefinedAttributes.GROUPS_NAME)) {
+
+            Uid groupUid1 = null;
+            Uid groupUid2 = null;
+            Uid accountUid1 = null;
+            try {
+                // create 1st group
+                Set<Attribute> groupAttrs1 = ConnectorHelper.getCreateableAttributes(
+                        getDataProvider(), groupInfo, getTestName(), 0, true, false);                
+                groupUid1 = getConnectorFacade().create(ObjectClass.GROUP, groupAttrs1, null);
+
+                // create an account with GROUPS set to created GROUP
+                Set<Attribute> accountAttrs1 = ConnectorHelper.getCreateableAttributes(
+                        getDataProvider(), accountInfo, getTestName(), 0, true, false);
+                for (Attribute attr : accountAttrs1) {
+                    if (attr.is(PredefinedAttributes.GROUPS_NAME)) {
+                        accountAttrs1.remove(attr);
+                        break;
+                    }
+                }
+                accountAttrs1.add(AttributeBuilder.build(PredefinedAttributes.GROUPS_NAME,
+                        groupUid1));
+                
+                accountUid1 = getConnectorFacade().create(ObjectClass.ACCOUNT, accountAttrs1, null);
+
+                // get the account to make sure it exists now
+                ConnectorObject obj = getConnectorFacade().getObject(ObjectClass.ACCOUNT,
+                        accountUid1, getOperationOptionsByOp(GetApiOp.class));
+
+                // check that object was created properly
+                ConnectorHelper.checkObject(accountInfo, obj, accountAttrs1);
+
+                // continue test only if update is supported for account and GROUPS is multiValue
+                if (ConnectorHelper.operationSupported(getConnectorFacade(), ObjectClass.ACCOUNT,
+                        UpdateApiOp.class) && ConnectorHelper.isMultiValue(accountInfo, PredefinedAttributes.GROUPS_NAME)) {
+                    // create another group
+                    Set<Attribute> groupAttrs2 = ConnectorHelper.getCreateableAttributes(
+                            getDataProvider(), groupInfo, getTestName(), 1, true, false);                    
+                    groupUid2 = getConnectorFacade().create(ObjectClass.GROUP, groupAttrs2, null);
+
+                    // update account to contain both groups
+                    Set<Attribute> accountAttrs2 = new HashSet<Attribute>();
+                    accountAttrs2.add(AttributeBuilder.build(PredefinedAttributes.GROUPS_NAME,
+                            groupUid2));
+                    accountAttrs2.add(accountUid1);
+                    accountUid1 = getConnectorFacade().update(UpdateApiOp.Type.ADD,
+                            ObjectClass.ACCOUNT, accountAttrs2, null);
+
+                    // get the account to make sure it exists now and values are correct
+                    obj = getConnectorFacade().getObject(ObjectClass.ACCOUNT, accountUid1,
+                            getOperationOptionsByOp(GetApiOp.class));
+
+                    // check that object was created properly
+                    ConnectorHelper.checkObject(accountInfo, obj, UpdateApiOpTests
+                            .mergeAttributeSets(accountAttrs1, accountAttrs2));
+                }
+
+            } finally {
+                ConnectorHelper.deleteObject(getConnectorFacade(), ObjectClass.GROUP, groupUid1,
+                        false, null);
+                ConnectorHelper.deleteObject(getConnectorFacade(), ObjectClass.GROUP, groupUid2,
+                        false, null);
+                ConnectorHelper.deleteObject(getConnectorFacade(), ObjectClass.ACCOUNT,
+                        accountUid1, false, null);
+            }
+
+        } else {
+            LOG.info("----------------------------------------------------------------------------------------");
+            LOG.info("Skipping test ''testGroupsPredAttribute''.");
+            LOG.info("----------------------------------------------------------------------------------------");
+        }
+    }
+    
+    /**
+     * Tests ORGANIZATIONS attribute contract
+     */
+    @Test
+    public void testOrganizationsPredAttribute() {
+        final ObjectClassInfo accountInfo = findOInfo(ObjectClass.ACCOUNT);
+        final ObjectClassInfo orgInfo = findOInfo(ObjectClass.ORGANIZATION);
+
+        // run test only in case ACCOUNT and ORGANIZATION are supported and ORGANIZATIONS is supported for ACCOUNT
+        if (accountInfo != null && orgInfo != null
+                && ConnectorHelper.isCRU(accountInfo, PredefinedAttributes.ORGANIZATION_NAME)) {
+
+            Uid orgUid1 = null;
+            Uid orgUid2 = null;
+            Uid accountUid1 = null;
+            try {
+                // create 1st org
+                Set<Attribute> orgAttrs1 = ConnectorHelper.getCreateableAttributes(
+                        getDataProvider(), orgInfo, getTestName(), 0, true, false);                
+                orgUid1 = getConnectorFacade().create(ObjectClass.ORGANIZATION, orgAttrs1, null);
+
+                // create an account with ORGANIZATIONS set to created org
+                Set<Attribute> accountAttrs1 = ConnectorHelper.getCreateableAttributes(
+                        getDataProvider(), accountInfo, getTestName(), 0, true, false);
+                for (Attribute attr : accountAttrs1) {
+                    if (attr.is(PredefinedAttributes.ORGANIZATION_NAME)) {
+                        accountAttrs1.remove(attr);
+                        break;
+                    }
+                }
+                accountAttrs1.add(AttributeBuilder.build(PredefinedAttributes.ORGANIZATION_NAME,
+                        orgUid1));
+                
+                accountUid1 = getConnectorFacade().create(ObjectClass.ACCOUNT, accountAttrs1, null);
+
+                // get the account to make sure it exists now
+                ConnectorObject obj = getConnectorFacade().getObject(ObjectClass.ACCOUNT,
+                        accountUid1, getOperationOptionsByOp(GetApiOp.class));
+
+                // check that object was created properly
+                ConnectorHelper.checkObject(accountInfo, obj, accountAttrs1);
+
+                // continue test only if update is supported for account and ORGANIZATIONS is multiValue
+                if (ConnectorHelper.operationSupported(getConnectorFacade(), ObjectClass.ACCOUNT,
+                        UpdateApiOp.class) && ConnectorHelper.isMultiValue(accountInfo, PredefinedAttributes.ORGANIZATION_NAME)) {
+                    // create another org
+                    Set<Attribute> orgAttrs2 = ConnectorHelper.getCreateableAttributes(
+                            getDataProvider(), orgInfo, getTestName(), 1, true, false);                    
+                    orgUid2 = getConnectorFacade().create(ObjectClass.ORGANIZATION, orgAttrs2, null);
+
+                    // update account to contain both orgs
+                    Set<Attribute> accountAttrs2 = new HashSet<Attribute>();
+                    accountAttrs2.add(AttributeBuilder.build(PredefinedAttributes.ORGANIZATION_NAME,
+                            orgUid2));
+                    accountAttrs2.add(accountUid1);
+                    accountUid1 = getConnectorFacade().update(UpdateApiOp.Type.ADD,
+                            ObjectClass.ACCOUNT, accountAttrs2, null);
+
+                    // get the account to make sure it exists now and values are correct
+                    obj = getConnectorFacade().getObject(ObjectClass.ACCOUNT, accountUid1,
+                            getOperationOptionsByOp(GetApiOp.class));
+
+                    // check that object was created properly
+                    ConnectorHelper.checkObject(accountInfo, obj, UpdateApiOpTests
+                            .mergeAttributeSets(accountAttrs1, accountAttrs2));
+                }
+
+            } finally {
+                ConnectorHelper.deleteObject(getConnectorFacade(), ObjectClass.ORGANIZATION, orgUid1,
+                        false, null);
+                ConnectorHelper.deleteObject(getConnectorFacade(), ObjectClass.ORGANIZATION, orgUid2,
+                        false, null);
+                ConnectorHelper.deleteObject(getConnectorFacade(), ObjectClass.ACCOUNT,
+                        accountUid1, false, null);
+            }
+
+        } else {
+            LOG.info("----------------------------------------------------------------------------------------");
+            LOG.info("Skipping test ''testOrganizationsPredAttribute''.");
+            LOG.info("----------------------------------------------------------------------------------------");
+        }
+    }
+    
+    /**
+     * Tests ACCOUNTS attribute contract for object class organization
+     */
+    @Test
+    public void testAccountsPredAttributeOrg() {
+        final ObjectClassInfo accountInfo = findOInfo(ObjectClass.ACCOUNT);
+        final ObjectClassInfo orgInfo = findOInfo(ObjectClass.ORGANIZATION);
+
+        // run test only in case ACCOUNT and ORGANIZATION are supported and ACCOUNTS is supported for ORGANIZATIONS
+        if (accountInfo != null && orgInfo != null
+                && ConnectorHelper.isCRU(accountInfo, PredefinedAttributes.ACCOUNTS_NAME)) {
+
+            Uid accountUid1 = null;
+            Uid accountUid2 = null;
+            Uid orgUid1 = null;
+            try {
+                // create 1st account
+                Set<Attribute> accountAttrs1 = ConnectorHelper.getCreateableAttributes(
+                        getDataProvider(), accountInfo, getTestName(), 0, true, false);                
+                accountUid1 = getConnectorFacade().create(ObjectClass.ACCOUNT, accountAttrs1, null);
+
+                // create an org with ACCOUNTS set to created account
+                Set<Attribute> orgAttrs1 = ConnectorHelper.getCreateableAttributes(
+                        getDataProvider(), orgInfo, getTestName(), 0, true, false);
+                for (Attribute attr : orgAttrs1) {
+                    if (attr.is(PredefinedAttributes.ACCOUNTS_NAME)) {
+                        orgAttrs1.remove(attr);
+                        break;
+                    }
+                }
+                orgAttrs1.add(AttributeBuilder.build(PredefinedAttributes.ACCOUNTS_NAME,
+                        accountUid1));
+                
+                orgUid1 = getConnectorFacade().create(ObjectClass.ORGANIZATION, orgAttrs1, null);
+
+                // get the org to make sure it exists now
+                ConnectorObject obj = getConnectorFacade().getObject(ObjectClass.ORGANIZATION,
+                        orgUid1, getOperationOptionsByOp(GetApiOp.class));
+
+                // check that object was created properly
+                ConnectorHelper.checkObject(orgInfo, obj, orgAttrs1);
+
+                // continue test only if update is supported for org and ACCOUNTS is multiValue
+                if (ConnectorHelper.operationSupported(getConnectorFacade(), ObjectClass.ORGANIZATION,
+                        UpdateApiOp.class) && ConnectorHelper.isMultiValue(orgInfo, PredefinedAttributes.ACCOUNTS_NAME)) {
+                    // create another account
+                    Set<Attribute> accountAttrs2 = ConnectorHelper.getCreateableAttributes(
+                            getDataProvider(), accountInfo, getTestName(), 1, true, false);                    
+                    accountUid2 = getConnectorFacade().create(ObjectClass.ACCOUNT, accountAttrs2, null);
+
+                    // update org to contain both accounts
+                    Set<Attribute> orgAttrs2 = new HashSet<Attribute>();
+                    orgAttrs2.add(AttributeBuilder.build(PredefinedAttributes.ACCOUNTS_NAME,
+                            accountUid2));
+                    orgAttrs2.add(orgUid1);
+                    orgUid1 = getConnectorFacade().update(UpdateApiOp.Type.ADD,
+                            ObjectClass.ORGANIZATION, orgAttrs2, null);
+
+                    // get the org to make sure it exists now and values are correct
+                    obj = getConnectorFacade().getObject(ObjectClass.ORGANIZATION, orgUid1,
+                            getOperationOptionsByOp(GetApiOp.class));
+
+                    // check that object was created properly
+                    ConnectorHelper.checkObject(orgInfo, obj, UpdateApiOpTests
+                            .mergeAttributeSets(orgAttrs1, orgAttrs2));
+                }
+
+            } finally {
+                ConnectorHelper.deleteObject(getConnectorFacade(), ObjectClass.ACCOUNT, accountUid1,
+                        false, null);
+                ConnectorHelper.deleteObject(getConnectorFacade(), ObjectClass.ACCOUNT, accountUid2,
+                        false, null);
+                ConnectorHelper.deleteObject(getConnectorFacade(), ObjectClass.ORGANIZATION,
+                        orgUid1, false, null);
+            }
+
+        } else {
+            LOG.info("----------------------------------------------------------------------------------------");
+            LOG.info("Skipping test ''testAccountsPredAttributeOrg''.");
+            LOG.info("----------------------------------------------------------------------------------------");
+        }
+    }
+    
+    /**
+     * Tests ACCOUNTS attribute contract for object class group
+     */
+    @Test
+    public void testAccountsPredAttributeGroup() {
+        final ObjectClassInfo accountInfo = findOInfo(ObjectClass.ACCOUNT);
+        final ObjectClassInfo groupInfo = findOInfo(ObjectClass.GROUP);
+
+        // run test only in case ACCOUNT and GROUP are supported and ACCOUNTS is supported for GROUPS
+        if (accountInfo != null && groupInfo != null
+                && ConnectorHelper.isCRU(accountInfo, PredefinedAttributes.ACCOUNTS_NAME)) {
+
+            Uid accountUid1 = null;
+            Uid accountUid2 = null;
+            Uid groupUid1 = null;
+            try {
+                // create 1st account
+                Set<Attribute> accountAttrs1 = ConnectorHelper.getCreateableAttributes(
+                        getDataProvider(), accountInfo, getTestName(), 0, true, false);                
+                accountUid1 = getConnectorFacade().create(ObjectClass.ACCOUNT, accountAttrs1, null);
+
+                // create an org with ACCOUNTS set to created account
+                Set<Attribute> groupAttrs1 = ConnectorHelper.getCreateableAttributes(
+                        getDataProvider(), groupInfo, getTestName(), 0, true, false);
+                for (Attribute attr : groupAttrs1) {
+                    if (attr.is(PredefinedAttributes.ACCOUNTS_NAME)) {
+                        groupAttrs1.remove(attr);
+                        break;
+                    }
+                }
+                groupAttrs1.add(AttributeBuilder.build(PredefinedAttributes.ACCOUNTS_NAME,
+                        accountUid1));
+                
+                groupUid1 = getConnectorFacade().create(ObjectClass.GROUP, groupAttrs1, null);
+
+                // get the org to make sure it exists now
+                ConnectorObject obj = getConnectorFacade().getObject(ObjectClass.GROUP,
+                        groupUid1, getOperationOptionsByOp(GetApiOp.class));
+
+                // check that object was created properly
+                ConnectorHelper.checkObject(groupInfo, obj, groupAttrs1);
+
+                // continue test only if update is supported for group and ACCOUNTS is multiValue
+                if (ConnectorHelper.operationSupported(getConnectorFacade(), ObjectClass.GROUP,
+                        UpdateApiOp.class) && ConnectorHelper.isMultiValue(groupInfo, PredefinedAttributes.ACCOUNTS_NAME)) {
+                    // create another account
+                    Set<Attribute> accountAttrs2 = ConnectorHelper.getCreateableAttributes(
+                            getDataProvider(), accountInfo, getTestName(), 1, true, false);                    
+                    accountUid2 = getConnectorFacade().create(ObjectClass.ACCOUNT, accountAttrs2, null);
+
+                    // update group to contain both accounts
+                    Set<Attribute> groupAttrs2 = new HashSet<Attribute>();
+                    groupAttrs2.add(AttributeBuilder.build(PredefinedAttributes.ACCOUNTS_NAME,
+                            accountUid2));
+                    groupAttrs2.add(groupUid1);
+                    groupUid1 = getConnectorFacade().update(UpdateApiOp.Type.ADD,
+                            ObjectClass.GROUP, groupAttrs2, null);
+
+                    // get the org to make sure it exists now and values are correct
+                    obj = getConnectorFacade().getObject(ObjectClass.GROUP, groupUid1,
+                            getOperationOptionsByOp(GetApiOp.class));
+
+                    // check that object was created properly
+                    ConnectorHelper.checkObject(groupInfo, obj, UpdateApiOpTests
+                            .mergeAttributeSets(groupAttrs1, groupAttrs2));
+                }
+
+            } finally {
+                ConnectorHelper.deleteObject(getConnectorFacade(), ObjectClass.ACCOUNT, accountUid1,
+                        false, null);
+                ConnectorHelper.deleteObject(getConnectorFacade(), ObjectClass.ACCOUNT, accountUid2,
+                        false, null);
+                ConnectorHelper.deleteObject(getConnectorFacade(), ObjectClass.GROUP,
+                        groupUid1, false, null);
+            }
+
+        } else {
+            LOG.info("----------------------------------------------------------------------------------------");
+            LOG.info("Skipping test ''testAccountsPredAttributeGroup''.");
+            LOG.info("----------------------------------------------------------------------------------------");
+        }
+    }
+    
+    /**
+     * Returns ObjectClassInfo stored in connector schema for object class.
+     */
+    private ObjectClassInfo findOInfo(ObjectClass oclass) {
+        Schema schema = getConnectorFacade().schema();
+        for (ObjectClassInfo oinfo : schema.getObjectClassInfo()) {
+            if (oinfo.getType().equals(oclass.getObjectClassValue())) {
+                return oinfo;
+            }
+        }
+        
+        return null;
     }
 }

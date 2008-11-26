@@ -238,25 +238,6 @@ public abstract class ObjectClassRunner extends AbstractSimpleTest {
     }
     
     /**
-     * Checks wheter supplied OperationAttribute name is supported by the connector
-     * for current ObjectClass
-     * 
-     * @param name OperationAttribute name
-     * @return true if the OpereationAttribute is supported, false otherwise
-     */
-    public boolean isOperationAttributeSupported(String name) {
-        if (isObjectClassSupported()) {
-            ObjectClassInfo oinfo = getObjectClassInfo();            
-            for (AttributeInfo ainfo : oinfo.getAttributeInfo()) {
-				return ainfo.is(name) && ainfo.isReadable()
-						&& ainfo.isCreateable() && ainfo.isUpdateable();
-			}
-        }
-        return false;
-    }
-    
-
-    /**
      * {@inheritDoc}
      */
     @Override

@@ -366,7 +366,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
      * Returns new attribute set which contains all attributes from both sets. If attribute with the same name is present
      * in both sets then its values are merged.
      */
-    private Set<Attribute> mergeAttributeSets(Set<Attribute> attrSet1, Set<Attribute> attrSet2) {
+    protected static Set<Attribute> mergeAttributeSets(Set<Attribute> attrSet1, Set<Attribute> attrSet2) {
         Set<Attribute> attrs = new HashSet<Attribute>();
         Map<String, Attribute> attrMap2 = new HashMap<String, Attribute>();
         for (Attribute attr : attrSet2) {

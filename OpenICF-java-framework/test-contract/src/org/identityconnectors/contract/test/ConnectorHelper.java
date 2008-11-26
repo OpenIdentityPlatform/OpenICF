@@ -464,6 +464,49 @@ public class ConnectorHelper {
     }
     
     /**
+     * Whether is attribute multiValue.
+     */
+    public static boolean isMultiValue(ObjectClassInfo objectClassInfo, String attribute) {
+        boolean isMultiValue = false;
+        Set<AttributeInfo> attributeInfoSet = objectClassInfo.getAttributeInfo();
+        for(AttributeInfo attributeInfo : attributeInfoSet) {
+            if(attributeInfo.is(attribute)) {
+                isMultiValue = attributeInfo.isMultiValue();
+                break;
+            }
+        }
+        return isMultiValue;
+    }
+    
+    /**
+     * Whether is attribute creatable, updateable and readable.
+     */
+    public static boolean isCRU(ObjectClassInfo oinfo, String attribute) {
+        boolean cru = false;
+        for (AttributeInfo ainfo : oinfo.getAttributeInfo()) {
+            if (ainfo.is(attribute)) {
+                if (ainfo.isCreateable() && ainfo.isUpdateable() && ainfo.isReadable()) {
+                    cru = true;
+                }
+                break;
+            }
+        }
+        return cru;
+    }
+    
+    /**
+     * Whether is attribute supported.
+     */
+    public static boolean isAttrSupported(ObjectClassInfo oinfo, String attribute) {
+        for (AttributeInfo ainfo : oinfo.getAttributeInfo()) {
+            if (ainfo.is(attribute)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
      * Get updateable attributes' values.
      */
     public static Set<Attribute> getUpdateableAttributes(DataProvider dataProvider, 
