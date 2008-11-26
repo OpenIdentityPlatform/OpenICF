@@ -421,10 +421,15 @@ public class GroovyDataProvider implements DataProvider {
     }
 
     /**
-     * resolve the special types TODO javadoc
+     * Resolve the special types of property object (right side of assigment operator). 
+     * There are two types supported:
+     * <ul>
+     * <li>{@link List}</li>
+     * <li>{@link Lazy}</li>
+     * </ul>
      * 
      * @param o
-     * @return
+     * @return the resolved property object
      */
     private Object resolvePropObject(Object o) {
         Object resolved = o;
@@ -465,6 +470,11 @@ public class GroovyDataProvider implements DataProvider {
         return localList;
     }
 
+    /**
+     * Resolve lazy initialization objects.
+     * @param lazy
+     * @return the resolved up to date values
+     */
     private Object resolveLazy(Lazy lazy) {
         Object value = lazy.getValue();
         Object resolvedValue = null;
@@ -777,10 +787,9 @@ public class GroovyDataProvider implements DataProvider {
      * 
      * @param string
      * @return the correctly quoted string
-     * TODO this is quite dependent on implementation of the dataprovider
      */
     private String quoteLazyIfNeeded(String string) {
-        if (!string.startsWith("Lazy")) { // dependence on GroovyDataProvider Lazy loading method name
+        if (!string.startsWith("Lazy")) { // FIXME dependence on GroovyDataProvider Lazy loading method name
             return String.format("\"%s\"", string);
         }
         return string;
