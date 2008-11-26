@@ -316,17 +316,17 @@ public class AttributeTests extends ObjectClassRunner {
             if (exception) {
                 if (isChanged) {
                     //OK
-                    msg = String.format("unexpected exception type caught: %s", (exCache != null) ? exCache.getClass().getName() : "");
+                    msg = String.format("unexpected exception type caught: %s (expecting IllegalArgumentException)", (exCache != null) ? exCache.getClass().getName() : "");
                     assertTrue(msg, exCache.getClass().equals(IllegalArgumentException.class));
                 } else {
                     //WARN
-                    msg = String.format("No non-updateable attribute is present, however %s exception caught.", (exCache != null) ? exCache.getClass().getName() : "");
+                    msg = String.format("No non-updateable attribute is present, however %s exception caught. (Contact author of the test)", (exCache != null) ? exCache.getClass().getName() : "");
                     fail(msg);
                 }
             } else {
                 if (isChanged) {
                     // WARN
-                    fail("No exception thrown when non-updateable argument was changed");
+                    fail("No IllegalArgumentException thrown when non-updateable argument was changed");
                 } else {
                     //OK
                 }
