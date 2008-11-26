@@ -50,14 +50,55 @@ import org.identityconnectors.common.security.GuardedString;
 
 
 /**
- * Represents a named collection of values within a resource object, although
+ * Represents a named collection of values within a target object, although
  * the simplest case is a name-value pair (e.g., email, employeeID). Values can
  * be empty, null, or set with various types. Empty and null are supported
  * because it makes a difference on some resources (in particular database
  * resources).
- * 
+ * <p>
  * The developer of a Connector should use an {@link AttributeBuilder} to
  * construct an instance of Attribute.
+ * <p>
+ * The precise meaning of an instance of {@code Attribute} depends 
+ * on the context in which it occurs.
+ * <ul>
+ *  <li>When 
+ *      {@linkplain org.identityconnectors.framework.api.operations.GetApiOp#getObject 
+ *      an object is read} or is returned by 
+ *      {@linkplain org.identityconnectors.framework.api.operations.SearchApiOp#search search},
+ *      an {@code Attribute} represents the <i>complete state</i> of an attribute 
+ *      of the target object, current as of the point in time that the object was read.
+ *  </li>
+ *  <li>When an {@code Attribute} is supplied to 
+ *      {@linkplain org.identityconnectors.framework.api.operations.UpdateApiOp#update 
+ *      the update operation},
+ *      the {@code Attribute} represents a change 
+ *      to the corresponding attribute of the target object:
+ *      <ul>
+ *      <li>When the update type is 
+ *          {@link org.identityconnectors.framework.api.operations.UpdateApiOp.Type#REPLACE REPLACE},
+ *          the {@code Attribute} contains the <i>complete, intended state</i> of the attribute.
+ *      </li>
+ *      <li>When the update type is 
+ *          {@link org.identityconnectors.framework.api.operations.UpdateApiOp.Type#ADD ADD},
+ *          the {@code Attribute} contains <i>values to append</i>.
+ *      </li>
+ *      <li>When the update type is 
+ *          {@link org.identityconnectors.framework.api.operations.UpdateApiOp.Type#DELETE DELETE},
+ *          the {@code Attribute} contains <i>values to remove</i>.
+ *      </li>
+ *      </ul>
+ *  </li>
+ *  <li>When an {@code Attribute} is used to build a 
+ *      {@link org.identityconnectors.framework.common.objects.filter.Filter Filter} 
+ *      that is an argument to 
+ *      {@linkplain org.identityconnectors.framework.api.operations.SearchApiOp#search search},
+ *      an {@code Attribute} represents a <i>subset of the current state</i> of an attribute
+ *      that will be used as a search criterion.
+ *      Specifically, the {@code Attribute} {@linkplain #getName() names the attribute to match}
+ *      and {@linkplain #getValue() contains the values to match}.
+ *  </li>
+ * </ul>
  * 
  * TODO: define the set of allowed values
  * 
