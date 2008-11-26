@@ -75,5 +75,13 @@
         <antcall target="contract-tests" inheritAll="false">
             <param name="configuration" value="db2"/>
         </antcall>
+        
+        <!-- oracle configuration -->
+        <antcall target="contract-dist" inheritAll="false">
+            <param name="configuration" value="oracle"/>
+        </antcall>
+        <antcall target="contract-tests" inheritAll="false">
+            <param name="configuration" value="oracle"/>
+        </antcall>
     </target> 	  
 </project>
