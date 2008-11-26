@@ -307,7 +307,7 @@ public class AttributeTests extends ObjectClassRunner {
                     }
                 }
             }
-        } catch (IllegalArgumentException ex) {
+        } catch (RuntimeException ex) {
             // OK
             exception = true;
             exCache = ex;
@@ -316,7 +316,7 @@ public class AttributeTests extends ObjectClassRunner {
             if (exception) {
                 if (isChanged) {
                     //OK
-                    msg = String.format("unexpected exception type caught: %s (expecting IllegalArgumentException)", (exCache != null) ? exCache.getClass().getName() : "");
+                    msg = String.format("unexpected exception type caught: %s (expecting RuntimeException)", (exCache != null) ? exCache.getClass().getName() : "");
                     assertTrue(msg, exCache.getClass().equals(IllegalArgumentException.class));
                 } else {
                     //WARN
@@ -326,7 +326,7 @@ public class AttributeTests extends ObjectClassRunner {
             } else {
                 if (isChanged) {
                     // WARN
-                    fail("No IllegalArgumentException thrown when non-updateable argument was changed");
+                    fail("No RuntimeException thrown when non-updateable argument was updated. (hint: throw an exception)");
                 } else {
                     //OK
                 }
