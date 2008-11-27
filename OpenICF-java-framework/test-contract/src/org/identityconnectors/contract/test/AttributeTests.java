@@ -215,6 +215,7 @@ public class AttributeTests extends ObjectClassRunner {
      */
     @Test
     public void testNonUpdateable() {
+        boolean exceptionCaught = false;
         /** is there any non updateable item? (if not skip this test)*/
         boolean isChanged = false;
         /** cache for exception type */
@@ -300,6 +301,7 @@ public class AttributeTests extends ObjectClassRunner {
             }
         } catch (Exception ex) {
             String msg;
+            exceptionCaught = true;
             if (ex instanceof RuntimeException) {
                 if (isChanged) {
                     //OK
@@ -313,22 +315,36 @@ public class AttributeTests extends ObjectClassRunner {
             } else {
                 if (isChanged) {
                     // WARN
-                    fail("No RuntimeException thrown when non-updateable argument was updated. (hint: throw an exception)");
+                    fail(String.format("Expecting RuntimeException when non-updateable argument was updated. However %s thrown.", ex.getClass().getName()));
                 } else {
-                    // OK skipping tests
-                    LOG
-                            .info("----------------------------------------------------------------------------------------");
-                    LOG
-                            .info(
-                                    "Skipping test ''testNonUpdateable'' for object class ''{0}''. (Reason: non-updateable attrs. missing)",
-                                    getObjectClass());
-                    LOG
-                            .info("----------------------------------------------------------------------------------------");
+                    //OK
+                    skipTestsMsg();
                 }
             }
-        }//catch 
+        }//catch
+        
+        // in case no exception is thrown:
+        if (!exceptionCaught) {
+            if (isChanged) {
+                fail("No exception thrown when update is performed on non-updateable attribute. (hint: throw a RuntimeException)");
+            } else {
+                skipTestsMsg();//OK
+            }
+        }
     }
     
+    private void skipTestsMsg() {
+        LOG
+                .info("----------------------------------------------------------------------------------------");
+        LOG
+                .info(
+                        "Skipping test ''testNonUpdateable'' for object class ''{0}''. (Reason: non-updateable attrs. missing)",
+                        getObjectClass());
+        LOG
+                .info("----------------------------------------------------------------------------------------");
+
+    }
+
     /**
      * Required attributes must be creatable. It is a fialure if a required
      * attribute is not creatable.
