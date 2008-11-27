@@ -295,24 +295,24 @@ public class SchemaApiOpTests extends AbstractSimpleTest {
         assertEquals(String.format(msg, ATTRIBUTE_FIELD_TYPE, expectedValues
                 .get(ATTRIBUTE_FIELD_TYPE), attribute.getType().getName()), 
                 expectedValues.get(ATTRIBUTE_FIELD_TYPE), attribute.getType().getName());
-        assertEquals(String.format(msg, ATTRIBUTE_FILED_READABLE, new Boolean(expectedValues
-                .get(ATTRIBUTE_FILED_READABLE)), attribute.isReadable()), 
-                new Boolean(expectedValues.get(ATTRIBUTE_FILED_READABLE)), attribute.isReadable());
-        assertEquals(String.format(msg, ATTRIBUTE_FIELD_CREATEABLE, new Boolean(expectedValues
-                .get(ATTRIBUTE_FIELD_CREATEABLE)), attribute.isCreateable()), 
-                new Boolean(expectedValues.get(ATTRIBUTE_FIELD_CREATEABLE)), attribute.isCreateable());
-        assertEquals(String.format(msg, ATTRIBUTE_FIELD_UPDATEABLE, new Boolean(expectedValues
-                .get(ATTRIBUTE_FIELD_UPDATEABLE)), attribute.isUpdateable()), 
-                new Boolean(expectedValues.get(ATTRIBUTE_FIELD_UPDATEABLE)), attribute.isUpdateable());
-        assertEquals(String.format(msg, ATTRIBUTE_FIELD_REQUIRED, new Boolean(expectedValues
-                .get(ATTRIBUTE_FIELD_REQUIRED)), attribute.isRequired()), 
-                new Boolean(expectedValues.get(ATTRIBUTE_FIELD_REQUIRED)), attribute.isRequired());
-        assertEquals(String.format(msg, ATTRIBUTE_FIELD_MULTI_VALUE, new Boolean(expectedValues
-                .get(ATTRIBUTE_FIELD_MULTI_VALUE)), attribute.isMultiValue()), 
-                new Boolean(expectedValues.get(ATTRIBUTE_FIELD_MULTI_VALUE)), attribute.isMultiValue());
-        assertEquals(String.format(msg, ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT, new Boolean(
-                expectedValues.get(ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT)), attribute.isReturnedByDefault()), 
-                new Boolean(expectedValues.get(ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT)), attribute.isReturnedByDefault());
+        assertEquals(String.format(msg, ATTRIBUTE_FILED_READABLE, expectedValues
+                .get(ATTRIBUTE_FILED_READABLE), attribute.isReadable()), 
+                expectedValues.get(ATTRIBUTE_FILED_READABLE), attribute.isReadable());
+        assertEquals(String.format(msg, ATTRIBUTE_FIELD_CREATEABLE, expectedValues
+                .get(ATTRIBUTE_FIELD_CREATEABLE), attribute.isCreateable()), 
+                expectedValues.get(ATTRIBUTE_FIELD_CREATEABLE), attribute.isCreateable());
+        assertEquals(String.format(msg, ATTRIBUTE_FIELD_UPDATEABLE, expectedValues
+                .get(ATTRIBUTE_FIELD_UPDATEABLE), attribute.isUpdateable()), 
+                expectedValues.get(ATTRIBUTE_FIELD_UPDATEABLE), attribute.isUpdateable());
+        assertEquals(String.format(msg, ATTRIBUTE_FIELD_REQUIRED, expectedValues
+                .get(ATTRIBUTE_FIELD_REQUIRED), attribute.isRequired()), 
+                expectedValues.get(ATTRIBUTE_FIELD_REQUIRED), attribute.isRequired());
+        assertEquals(String.format(msg, ATTRIBUTE_FIELD_MULTI_VALUE, expectedValues
+                .get(ATTRIBUTE_FIELD_MULTI_VALUE), attribute.isMultiValue()), 
+                expectedValues.get(ATTRIBUTE_FIELD_MULTI_VALUE), attribute.isMultiValue());
+        assertEquals(String.format(msg, ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT, 
+                expectedValues.get(ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT), attribute.isReturnedByDefault()), 
+                expectedValues.get(ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT), attribute.isReturnedByDefault());
     }
     
     /**
