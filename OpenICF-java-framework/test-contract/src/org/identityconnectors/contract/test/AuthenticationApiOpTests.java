@@ -328,6 +328,77 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
     }
     
     /**
+     * Tests that connector respects order of PASSWORD and PASSWORD_EXPIRED attributes during update.
+     * PASSWORD should be performed before PASSWORD_EXPIRED.
+     */
+    @Test
+    public void testPasswordBeforePasswordExpired() {
+        // run test only in case operation is supported and both PASSWORD and PASSWORD_EXPIRED are supported
+        if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), getAPIOperation())
+                && isOperationalAttributeUpdateable(OperationalAttributes.PASSWORD_NAME)
+                && isOperationalAttributeUpdateable(OperationalAttributes.PASSWORD_EXPIRED_NAME)) {
+            Uid uid = null;
+            try {
+                // create an user
+                Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
+                        getObjectClassInfo(), getTestName(), 0, true, false);
+                uid = getConnectorFacade().create(getObjectClass(), attrs,
+                        getOperationOptionsByOp(CreateApiOp.class));
+                
+                // get username
+                String name = (String) getDataProvider().getTestSuiteAttribute(String.class.getName(),
+                        getObjectClass().getObjectClassValue() + "." + USERNAME_PROP, TEST_NAME);
+                                                
+                // get new password
+                String newpassword = ConnectorHelper.getString(getDataProvider(), getTestName(),
+                        OperationalAttributes.PASSWORD_NAME, UpdateApiOpTests.MODIFIED,
+                        getObjectClassInfo().getType(), 0);
+                
+                // change password and expire password
+                Set<Attribute> replaceAttrs = new HashSet<Attribute>();
+                replaceAttrs.add(AttributeBuilder.buildPassword(newpassword.toCharArray()));
+                replaceAttrs.add(AttributeBuilder.buildPasswordExpired(true));
+                replaceAttrs.add(uid);
+
+                if (ConnectorHelper.isAttrSupported(getObjectClassInfo(), OperationalAttributes.CURRENT_PASSWORD_NAME)) {
+                    // get old password
+                    String password = ConnectorHelper.getString(getDataProvider(),
+                            getTestName(), OperationalAttributes.PASSWORD_NAME,
+                            getObjectClassInfo().getType(), 0);
+                    
+                    // CURRENT_PASSWORD must be set to old password
+                    replaceAttrs.add(AttributeBuilder.buildCurrentPassword(password.toCharArray()));
+                }
+                // update to new password and expire password
+                uid = getConnectorFacade().update(UpdateApiOp.Type.REPLACE, getObjectClass(),
+                        replaceAttrs, getOperationOptionsByOp(UpdateApiOp.class));
+
+                boolean thrown = false;
+                try {
+                    // authenticate with new password                
+                    getConnectorFacade().authenticate(name,
+                        new GuardedString(newpassword.toCharArray()),
+                        getOperationOptionsByOp(AuthenticationApiOp.class));
+                }
+                catch (PasswordExpiredException ex) {
+                    // expected
+                    thrown = true;
+                }
+                
+                assertTrue("Authenticate should throw PasswordExpiredException.", thrown);
+                
+            } finally {
+                // delete the object
+                ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid,
+                        false, getOperationOptionsByOp(DeleteApiOp.class));
+            }
+        }
+        else {
+            LOG.info("Skipping test ''testPasswordBeforePasswordExpired'' for object class {0}", getObjectClass());
+        }
+    }
+    
+    /**
      * Returns true if operational attribute is supported and updateable.
      */
     private boolean isOperationalAttributeUpdateable(String name) {
