@@ -62,7 +62,9 @@ import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
+import org.identityconnectors.framework.common.objects.PredefinedAttributes;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -150,23 +152,79 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
             String MSG = "Authenticate returned wrong Uid, expected: %s, returned: %s.";
             assertEquals(String.format(MSG, uid, authenticatedUid), uid, authenticatedUid);
             
+            // test that PASSWORD change works, CURRENT_PASSWORD should be set
+            // to old password value if supported
+            if (isOperationalAttributeUpdateable(OperationalAttributes.PASSWORD_NAME)) {
+                String newpassword = ConnectorHelper.getString(getDataProvider(), getTestName(),
+                        OperationalAttributes.PASSWORD_NAME, UpdateApiOpTests.MODIFIED,
+                        getObjectClassInfo().getType(), 0);
+                Set<Attribute> replaceAttrs = new HashSet<Attribute>();
+                replaceAttrs.add(AttributeBuilder.buildPassword(newpassword.toCharArray()));
+                replaceAttrs.add(uid);
+
+                if (ConnectorHelper.isAttrSupported(getObjectClassInfo(),
+                        OperationalAttributes.CURRENT_PASSWORD_NAME)) {
+                    // CURRENT_PASSWORD must be set to old password
+                    replaceAttrs.add(AttributeBuilder.buildCurrentPassword(password.toCharArray()));
+                }
+                // update to new password
+                uid = getConnectorFacade().update(UpdateApiOp.Type.REPLACE, getObjectClass(),
+                        replaceAttrs, getOperationOptionsByOp(UpdateApiOp.class));
+
+                // authenticate with new password
+                authenticatedUid = getConnectorFacade().authenticate(name,
+                        new GuardedString(newpassword.toCharArray()),
+                        getOperationOptionsByOp(AuthenticationApiOp.class));
+
+                assertEquals(String.format(MSG, uid, authenticatedUid), uid, authenticatedUid);
+
+                // LAST_PASSWORD_CHANGE_DATE
+                if (ConnectorHelper.isAttrSupported(getObjectClassInfo(),
+                        PredefinedAttributes.LAST_PASSWORD_CHANGE_DATE_NAME)) {
+                    LOG.info("LAST_PASSWORD_CHANGE_DATE test.");
+                    // LAST_PASSWORD_CHANGE_DATE must be readable, we suppose it is
+                    // add LAST_PASSWORD_CHANGE_DATE to ATTRS_TO_GET
+                    OperationOptionsBuilder builder = new OperationOptionsBuilder();
+                    builder.setAttributesToGet(PredefinedAttributes.LAST_LOGIN_DATE_NAME);
+
+                    ConnectorObject lastPasswordChange = getConnectorFacade().getObject(
+                            getObjectClass(), uid, builder.build());
+
+                    // check that LAST_PASSWORD_CHANGE_DATE was set to a value
+                    assertNotNull("LAST_PASSWORD_CHANGE_DATE attribute is null.",
+                            lastPasswordChange.getAttributeByName(PredefinedAttributes.LAST_PASSWORD_CHANGE_DATE_NAME));
+                } else {
+                    LOG.info("Skipping LAST_PASSWORD_CHANGE_DATE test.");
+                }
+            }
+            
+            // LAST_LOGIN_DATE
+            if (ConnectorHelper.isAttrSupported(getObjectClassInfo(), PredefinedAttributes.LAST_LOGIN_DATE_NAME)) {
+                LOG.info("LAST_LOGIN_DATE test.");
+                // LAST_LOGIN_DATE must be readable, we suppose it is
+                // add LAST_LOGIN_DATE to ATTRS_TO_GET
+                OperationOptionsBuilder builder = new OperationOptionsBuilder();
+                builder.setAttributesToGet(PredefinedAttributes.LAST_LOGIN_DATE_NAME);
+                
+                ConnectorObject lastLogin = getConnectorFacade().getObject(getObjectClass(), uid,
+                        builder.build());
+                
+                // check that LAST_LOGIN_DATE was set to some value
+                assertNotNull("LAST_LOGIN_DATE attribute is null.", lastLogin.getAttributeByName(PredefinedAttributes.LAST_LOGIN_DATE_NAME));
+            }
+            else {
+                LOG.info("Skipping LAST_LOGIN_DATE test.");
+            }
+            
             // now try to set the password to be expired and authenticate again
-            // it's possible only in case Update and either PASSWORD_EXPIRED or
-            // PASSWORD_EXPIRATION_DATE are supported
+            // it's possible only in case Update and PASSWORD_EXPIRED
             if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(),UpdateApiOp.class)
-                    && (isOperationalAttributeUpdateable(OperationalAttributes.PASSWORD_EXPIRED_NAME) 
-                            || isOperationalAttributeUpdateable(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME))) {
-                LOG.info("PasswordExpirationException test follows.");
+                    && isOperationalAttributeUpdateable(OperationalAttributes.PASSWORD_EXPIRED_NAME)) {
+                LOG.info("PasswordExpirationException with PASSWORD_EXPIRED test follows.");
                 
                 Uid newUid = null;                                
                 Set<Attribute> updateAttrs = new HashSet<Attribute>();
-                if (isOperationalAttributeUpdateable(OperationalAttributes.PASSWORD_EXPIRED_NAME)) {                    
-                    updateAttrs.add(AttributeBuilder.buildPasswordExpired(true));
-                    
-                } else {
-                    // set PASSWORD_EXPIRATION_DATE to now
-                    updateAttrs.add(AttributeBuilder.buildPasswordExpirationDate(new Date()));
-                }
+                updateAttrs.add(AttributeBuilder.buildPasswordExpired(true));                                   
                 
                 // add uid for update
                 updateAttrs.add(uid);
@@ -193,8 +251,72 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                         authenticateFailed);
             }
             else {
-                LOG.info("Skipping PasswordExpirationException test.");
+                LOG.info("Skipping PasswordExpirationException with PASSWORD_EXPIRED test.");
             }
+            
+            // now try to set the password to be expired and authenticate again
+            // it's possible only in case Update and PASSWORD_EXPIRATION_DATE
+            if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(),UpdateApiOp.class)
+                    && isOperationalAttributeUpdateable(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME)) {
+                LOG.info("PasswordExpirationException with PASSWORD_EXPIRATION_DATE test follows.");
+                
+                Uid newUid = null;                                
+                Set<Attribute> updateAttrs = new HashSet<Attribute>();
+                // set PASSWORD_EXPIRATION_DATE to now
+                updateAttrs.add(AttributeBuilder.buildPasswordExpirationDate(new Date()));
+                
+                // add uid for update
+                updateAttrs.add(uid);
+                
+                newUid = getConnectorFacade().update(Type.REPLACE, getObjectClass(), updateAttrs, null);
+                if (!uid.equals(newUid) && newUid != null) {
+                    uid = newUid;
+                }
+
+                
+                // and now authenticate
+                authenticateFailed = false;
+                try {
+                    getConnectorFacade().authenticate(name, new GuardedString(password.toCharArray()),
+                            getOperationOptionsByOp(AuthenticationApiOp.class));
+                } catch (PasswordExpiredException ex) {
+                    // ok
+                    authenticateFailed = true;
+                    MSG = "PasswordExpiredException contains wrong Uid, expected: %s, returned: %s";
+                    assertEquals(String.format(MSG, uid, ex.getUid()), uid, ex.getUid());
+                }
+
+                assertTrue("Authenticate should throw PasswordExpiredException.",
+                        authenticateFailed);
+            }
+            else {
+                LOG.info("Skipping PasswordExpirationException with PASSWORD_EXPIRATION_DATE test.");
+            }
+            
+            // ENABLE
+            if (ConnectorHelper.isCRU(getObjectClassInfo(), OperationalAttributes.ENABLE_NAME)) {
+                LOG.info("Authenticate of DISABLED account test.");
+                // disable account
+                Set<Attribute> replaceAttrs = new HashSet<Attribute>();
+                replaceAttrs.add(AttributeBuilder.buildEnabled(false));
+                replaceAttrs.add(uid);
+                               
+                uid = getConnectorFacade().update(UpdateApiOp.Type.REPLACE, getObjectClass(),
+                        replaceAttrs, null);
+
+                boolean thrown = false;
+                // try to authenticate
+                try {
+                    getConnectorFacade().authenticate(name,
+                        new GuardedString(password.toCharArray()), null);
+                }
+                catch (RuntimeException ex) {
+                    thrown = true;
+                }
+                assertTrue("Authenticate must throw for disabled account", thrown);
+            } else {
+                LOG.info("Skipping authenticate of DISABLED account test.");
+            }                        
         } finally {
             if (uid != null) {
                 // delete the object

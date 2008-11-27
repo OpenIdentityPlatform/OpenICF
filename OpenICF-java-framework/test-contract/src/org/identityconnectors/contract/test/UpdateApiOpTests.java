@@ -77,7 +77,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
      */
     private static final Log LOG = Log.getLog(UpdateApiOpTests.class);
     
-    private static final String MODIFIED = "modified";
+    protected static final String MODIFIED = "modified";
     private static final String ADDED = "added";
     private static final String TEST_NAME = "Update";
 
