@@ -149,7 +149,7 @@ public class AttributeTests extends ObjectClassRunner {
                 // get the user to make sure it exists now
                 ConnectorObject obj = getConnectorFacade().getObject(
                         getObjectClass(), uid,
-                        getOperationOptionsByOp(GetApiOp.class));
+                        null/* GET returned by default attributes*/);
 
                 assertNotNull("Unable to retrieve newly created object", obj);
 
@@ -215,8 +215,6 @@ public class AttributeTests extends ObjectClassRunner {
      */
     @Test
     public void testNonUpdateable() {
-        /** is exception caught? (indicating attempt to update non-updateable item) */
-        boolean exception = false;
         /** is there any non updateable item? (if not skip this test)*/
         boolean isChanged = false;
         /** cache for exception type */
@@ -245,20 +243,23 @@ public class AttributeTests extends ObjectClassRunner {
                      * Acquire replaceable attributes, delete them from all
                      * attributes set.
                      */
-                    Set<Attribute> replaceableAttributes = ConnectorHelper
+                    Set<Attribute> updateableAttributes = ConnectorHelper
                             .getUpdateableAttributes(getDataProvider(),
                                     getObjectClassInfo(), getTestName(),
                                     SyncApiOpTests.MODIFIED, 0, false, false);
 
+                    // all the attributes
                     Set<Attribute> allAttributes = obj.getAttributes();
+                    // working copy of all attrs.
                     Set<Attribute> modAllAttributes = new HashSet<Attribute>(
                             allAttributes);
-                    boolean changed = modAllAttributes
-                            .removeAll(replaceableAttributes);
-                    isChanged = changed; // update the indicator
+                    // remove updateable attributes
+                    isChanged = modAllAttributes
+                            .removeAll(updateableAttributes);
+                    // now all attributes contain just non-updateable attrs.
                     allAttributes = modAllAttributes;
 
-                    if (changed || !isObjectClassSupported()) {
+                    if (isChanged || !isObjectClassSupported()) {
                         // update only in case there is something to update or
                         // when
                         // object class is not supported
@@ -279,25 +280,15 @@ public class AttributeTests extends ObjectClassRunner {
                             allAttributes.add(newUid);
                             uid = newUid;
                         }
-                    } else {
-                        // no non-updateable attrs. found, skipping this test.
-                        LOG
-                                .info("----------------------------------------------------------------------------------------");
-                        LOG
-                                .info(
-                                        "Skipping test ''testNonUpdateable'' for object class ''{0}''. (Reason: non-updateable attrs. missing)",
-                                        getObjectClass());
-                        LOG
-                                .info("----------------------------------------------------------------------------------------");
+                        
+                        // verify the change
+                        obj = getConnectorFacade().getObject(
+                                getSupportedObjectClass(), uid,
+                                getOperationOptionsByOp(GetApiOp.class));
+                        assertNotNull("Cannot retrieve updated object.", obj);
+                        ConnectorHelper.checkObject(getObjectClassInfo(), obj,
+                                allAttributes);
                     }
-
-                    // verify the change
-                    obj = getConnectorFacade().getObject(
-                            getSupportedObjectClass(), uid,
-                            getOperationOptionsByOp(GetApiOp.class));
-                    assertNotNull("Cannot retrieve updated object.", obj);
-                    ConnectorHelper.checkObject(getObjectClassInfo(), obj,
-                            allAttributes);
                 } finally {
                     if (uid != null) {
                         // finally ... get rid of the object
@@ -307,17 +298,13 @@ public class AttributeTests extends ObjectClassRunner {
                     }
                 }
             }
-        } catch (RuntimeException ex) {
-            // OK
-            exception = true;
-            exCache = ex;
-        } finally { 
+        } catch (Exception ex) {
             String msg;
-            if (exception) {
+            if (ex instanceof RuntimeException) {
                 if (isChanged) {
                     //OK
                     msg = String.format("unexpected exception type caught: %s (expecting RuntimeException)", (exCache != null) ? exCache.getClass().getName() : "");
-                    assertTrue(msg, exCache.getClass().isInstance(RuntimeException.class));
+                    assertTrue(msg, RuntimeException.class.isInstance(ex));
                 } else {
                     //WARN
                     msg = String.format("No non-updateable attribute is present, however %s exception caught. (Contact author of the test)", (exCache != null) ? exCache.getClass().getName() : "");
@@ -328,11 +315,18 @@ public class AttributeTests extends ObjectClassRunner {
                     // WARN
                     fail("No RuntimeException thrown when non-updateable argument was updated. (hint: throw an exception)");
                 } else {
-                    //OK
+                    // OK skipping tests
+                    LOG
+                            .info("----------------------------------------------------------------------------------------");
+                    LOG
+                            .info(
+                                    "Skipping test ''testNonUpdateable'' for object class ''{0}''. (Reason: non-updateable attrs. missing)",
+                                    getObjectClass());
+                    LOG
+                            .info("----------------------------------------------------------------------------------------");
                 }
             }
-                
-        }
+        }//catch 
     }
     
     /**
