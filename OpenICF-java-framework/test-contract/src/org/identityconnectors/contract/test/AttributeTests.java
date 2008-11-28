@@ -216,119 +216,123 @@ public class AttributeTests extends ObjectClassRunner {
     @Test
     public void testNonUpdateable() {
         boolean exceptionCaught = false;
-        /** is there any non updateable item? (if not skip this test)*/
+        /** is there any non updateable item? (if not skip this test) */
         boolean isChanged = false;
         /** cache for exception type */
         Exception exCache = null;
-        try {
-            if (ConnectorHelper.operationSupported(getConnectorFacade(),
-                    getObjectClass(), UpdateApiOp.class)) {
-                ConnectorObject obj = null;
-                Uid uid = null;
+        if (ConnectorHelper.operationSupported(getConnectorFacade(),
+                getObjectClass(), UpdateApiOp.class)) {
+            ConnectorObject obj = null;
+            Uid uid = null;
 
-                try {
-                    // create an object to update
-                    uid = ConnectorHelper.createObject(getConnectorFacade(),
-                            getDataProvider(), getObjectClassInfo(),
-                            getTestName(), 0,
-                            getOperationOptionsByOp(CreateApiOp.class));
-                    assertNotNull("Create returned null Uid.", uid);
+            try {
+                // create an object to update
+                uid = ConnectorHelper.createObject(getConnectorFacade(),
+                        getDataProvider(), getObjectClassInfo(), getTestName(),
+                        0, getOperationOptionsByOp(CreateApiOp.class));
+                assertNotNull("Create returned null Uid.", uid);
 
-                    // get by uid
+                // get by uid
+                obj = getConnectorFacade().getObject(getSupportedObjectClass(),
+                        uid, getOperationOptionsByOp(GetApiOp.class));
+                assertNotNull("Cannot retrieve created object.", obj);
+
+                /*
+                 * Acquire replaceable attributes, delete them from all
+                 * attributes set.
+                 */
+                Set<Attribute> updateableAttributes = ConnectorHelper
+                        .getUpdateableAttributes(getDataProvider(),
+                                getObjectClassInfo(), getTestName(),
+                                SyncApiOpTests.MODIFIED, 0, false, false);
+
+                // all the attributes
+                Set<Attribute> allAttributes = obj.getAttributes();
+                // working copy of all attrs.
+                Set<Attribute> modAllAttributes = new HashSet<Attribute>(
+                        allAttributes);
+                // remove updateable attributes
+                isChanged = modAllAttributes.removeAll(updateableAttributes);
+                // now all attributes contain just non-updateable attrs.
+                allAttributes = modAllAttributes;
+
+                if (isChanged || !isObjectClassSupported()) {
+                    // update only in case there is something to update or
+                    // when
+                    // object class is not supported
+                    allAttributes.add(uid);
+
+                    assertTrue("no update attributes were found",
+                            (allAttributes.size() > 0));
+                    Uid newUid = getConnectorFacade().update(
+                            UpdateApiOp.Type.REPLACE, getObjectClass(),
+                            allAttributes,
+                            getOperationOptionsByOp(UpdateApiOp.class));
+
+                    // Update change of Uid must be propagated to
+                    // replaceAttributes
+                    // set
+                    if (!newUid.equals(uid)) {
+                        allAttributes.remove(uid);
+                        allAttributes.add(newUid);
+                        uid = newUid;
+                    }
+
+                    // verify the change
                     obj = getConnectorFacade().getObject(
                             getSupportedObjectClass(), uid,
                             getOperationOptionsByOp(GetApiOp.class));
-                    assertNotNull("Cannot retrieve created object.", obj);
-
-                    /*
-                     * Acquire replaceable attributes, delete them from all
-                     * attributes set.
-                     */
-                    Set<Attribute> updateableAttributes = ConnectorHelper
-                            .getUpdateableAttributes(getDataProvider(),
-                                    getObjectClassInfo(), getTestName(),
-                                    SyncApiOpTests.MODIFIED, 0, false, false);
-
-                    // all the attributes
-                    Set<Attribute> allAttributes = obj.getAttributes();
-                    // working copy of all attrs.
-                    Set<Attribute> modAllAttributes = new HashSet<Attribute>(
+                    assertNotNull("Cannot retrieve updated object.", obj);
+                    ConnectorHelper.checkObject(getObjectClassInfo(), obj,
                             allAttributes);
-                    // remove updateable attributes
-                    isChanged = modAllAttributes
-                            .removeAll(updateableAttributes);
-                    // now all attributes contain just non-updateable attrs.
-                    allAttributes = modAllAttributes;
-
-                    if (isChanged || !isObjectClassSupported()) {
-                        // update only in case there is something to update or
-                        // when
-                        // object class is not supported
-                        allAttributes.add(uid);
-
-                        assertTrue("no update attributes were found",
-                                (allAttributes.size() > 0));
-                        Uid newUid = getConnectorFacade().update(
-                                UpdateApiOp.Type.REPLACE, getObjectClass(),
-                                allAttributes,
-                                getOperationOptionsByOp(UpdateApiOp.class));
-
-                        // Update change of Uid must be propagated to
-                        // replaceAttributes
-                        // set
-                        if (!newUid.equals(uid)) {
-                            allAttributes.remove(uid);
-                            allAttributes.add(newUid);
-                            uid = newUid;
-                        }
-                        
-                        // verify the change
-                        obj = getConnectorFacade().getObject(
-                                getSupportedObjectClass(), uid,
-                                getOperationOptionsByOp(GetApiOp.class));
-                        assertNotNull("Cannot retrieve updated object.", obj);
-                        ConnectorHelper.checkObject(getObjectClassInfo(), obj,
-                                allAttributes);
+                }
+            } catch (Exception ex) {
+                String msg;
+                exceptionCaught = true;
+                if (ex instanceof RuntimeException) {
+                    if (isChanged) {
+                        // OK
+                        msg = String
+                                .format(
+                                        "unexpected exception type caught: %s (expecting RuntimeException)",
+                                        ex.getClass().getName());
+                        assertTrue(msg, RuntimeException.class.isInstance(ex));
+                    } else {
+                        // WARN
+                        msg = String
+                                .format(
+                                        "No non-updateable attribute is present, however %s exception caught. (Contact author of the test)",
+                                        ex.getClass().getName());
+                        fail(msg);
                     }
-                } finally {
-                    if (uid != null) {
-                        // finally ... get rid of the object
-                        ConnectorHelper.deleteObject(getConnectorFacade(),
-                                getSupportedObjectClass(), uid, false,
-                                getOperationOptionsByOp(DeleteApiOp.class));
+                } else {
+                    if (isChanged) {
+                        // WARN
+                        fail(String
+                                .format(
+                                        "Expecting RuntimeException when non-updateable argument was updated. However %s thrown.",
+                                        ex.getClass().getName()));
+                    } else {
+                        // OK
+                        skipTestsMsg();
                     }
                 }
-            }
-        } catch (Exception ex) {
-            String msg;
-            exceptionCaught = true;
-            if (ex instanceof RuntimeException) {
-                if (isChanged) {
-                    //OK
-                    msg = String.format("unexpected exception type caught: %s (expecting RuntimeException)", (exCache != null) ? exCache.getClass().getName() : "");
-                    assertTrue(msg, RuntimeException.class.isInstance(ex));
-                } else {
-                    //WARN
-                    msg = String.format("No non-updateable attribute is present, however %s exception caught. (Contact author of the test)", (exCache != null) ? exCache.getClass().getName() : "");
-                    fail(msg);
-                }
-            } else {
-                if (isChanged) {
-                    // WARN
-                    fail(String.format("Expecting RuntimeException when non-updateable argument was updated. However %s thrown.", ex.getClass().getName()));
-                } else {
-                    //OK
-                    skipTestsMsg();
+            } finally {
+                if (uid != null) {
+                    // finally ... get rid of the object
+                    ConnectorHelper.deleteObject(getConnectorFacade(),
+                            getSupportedObjectClass(), uid, false,
+                            getOperationOptionsByOp(DeleteApiOp.class));
                 }
             }
-        }//catch
-        
+        }
+
         // in case no exception is thrown:
         if (!exceptionCaught) {
             if (isChanged) {
                 fail("No exception thrown when update is performed on non-updateable attribute. (hint: throw a RuntimeException)");
             } else {
-                skipTestsMsg();//OK
+                skipTestsMsg();// OK
             }
         }
     }
