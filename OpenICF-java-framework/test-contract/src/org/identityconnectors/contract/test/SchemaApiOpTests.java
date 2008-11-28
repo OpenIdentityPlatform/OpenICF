@@ -294,7 +294,7 @@ public class SchemaApiOpTests extends AbstractSimpleTest {
                 + "': field '%s' expected value is '%s', but returned '%s'.";        
         assertEquals(String.format(msg, ATTRIBUTE_FIELD_TYPE, expectedValues
                 .get(ATTRIBUTE_FIELD_TYPE), attribute.getType().getName()), 
-                expectedValues.get(ATTRIBUTE_FIELD_TYPE), attribute.getType().getName());
+                expectedValues.get(ATTRIBUTE_FIELD_TYPE), attribute.getType());
         assertEquals(String.format(msg, ATTRIBUTE_FILED_READABLE, expectedValues
                 .get(ATTRIBUTE_FILED_READABLE), attribute.isReadable()), 
                 expectedValues.get(ATTRIBUTE_FILED_READABLE), attribute.isReadable());
