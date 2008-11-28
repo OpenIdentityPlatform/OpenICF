@@ -522,8 +522,14 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             stmt = conn.getConnection().prepareStatement(sql);
             rset = stmt.executeQuery();
             if (rset.next()) {
-                ret = new SyncToken(SQLUtil.convertToSupportedType(rset.getObject(1)));
+            	Object value = rset.getObject(1);
+            	if(value != null){
+            		ret = new SyncToken(SQLUtil.convertToSupportedType(value));
+            	}
             }
+            conn.commit();
+            log.ok("getLatestSyncToken", ret);
+            return ret;
         } catch (SQLException e) {
             SQLUtil.rollbackQuietly(conn);
             log.error(e, "SQL: " + sql);
@@ -534,9 +540,6 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             SQLUtil.closeQuietly(stmt);
         }
         // commit changes
-        conn.commit();
-        log.ok("getLatestSyncToken", ret.getValue());
-        return ret;
     }
 
     // =======================================================================
