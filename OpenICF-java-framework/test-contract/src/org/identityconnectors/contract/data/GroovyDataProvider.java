@@ -129,9 +129,6 @@ public class GroovyDataProvider implements DataProvider {
     private static final Log LOG = Log.getLog(GroovyDataProvider.class);
 
     
-    /* TODO: these two properties should be used for outputting of generated properties' values
-     * and then loading it
-     */
     /* **** for snapshot generating **** */
     /** command line switch for snapshots */
     private static final String PARAM_PROPERTY_OUT_FILE = "test.parameters.outFile";
@@ -249,6 +246,14 @@ public class GroovyDataProvider implements DataProvider {
         return co;
     }
 
+    /**
+     * merge two config objects. If both of config objects contian the same 
+     * property key, then the value of <code>highPriorityCO</code> is propagated
+     * to the result.
+     * @param lowPriorityCO
+     * @param highPriorityCO
+     * @return the merged version of two config objects.
+     */
     static ConfigObject mergeConfigObjects(ConfigObject lowPriorityCO,
             ConfigObject highPriorityCO) {
         return (ConfigObject) lowPriorityCO.merge(highPriorityCO);
