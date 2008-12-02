@@ -47,7 +47,7 @@ import org.identityconnectors.common.CollectionUtil;
 
 
 /**
- * A ConnectorObject represents an object (e.g., a User or a Group) on the
+ * A ConnectorObject represents an object (e.g., an Account or a Group) on the
  * target resource. Each ConnectorObject represents a resource object as a UID
  * and a bag of attributes.
  * 
@@ -59,10 +59,10 @@ public final class ConnectorObject {
     final Map<String, Attribute> attrs;
 
     /**
-     * Create a {@link ConnectorObject} based on the attribute set passed in.
+     * Public only for serialization; please use {@link ConnectorObjectBuilder}.
      * 
-     * @throws IllegalStateException
-     *             iff {@link Name} or {@link Uid} are missing from the set.
+     * @throws IllegalArgumentException
+     *             iff {@link Name} or {@link Uid} is missing from the set.
      */
     public ConnectorObject(ObjectClass objectClass,
             Set<? extends Attribute> set) {
@@ -84,7 +84,7 @@ public final class ConnectorObject {
         // make sure the Name attribute was added..
         if (!this.attrs.containsKey(Name.NAME)) {
             final String MSG = "The Attribute set must contain a 'Name'.";
-            throw new IllegalStateException(MSG);
+            throw new IllegalArgumentException(MSG);
         }
     }
 
