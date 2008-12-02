@@ -68,6 +68,7 @@ import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
+import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.PredefinedAttributes;
 import org.identityconnectors.framework.common.objects.Schema;
@@ -714,6 +715,22 @@ public class MultiOpTests extends ObjectClassRunner {
                     ConnectorHelper.checkObject(accountInfo, obj, UpdateApiOpTests
                             .mergeAttributeSets(accountAttrs1, accountAttrs2));
                 }
+                
+                // ACCOUNTS must be supported for GROUPS to be able to check backward reference
+                if (ConnectorHelper.isReadable(groupInfo, PredefinedAttributes.ACCOUNTS_NAME)) {
+                    // check that ACCOUNTS is set properly
+                    OperationOptionsBuilder builder = new OperationOptionsBuilder();
+                    builder.setAttributesToGet(PredefinedAttributes.ACCOUNTS_NAME);
+                    ConnectorObject groupObj = getConnectorFacade().getObject(ObjectClass.GROUP,
+                            groupUid1, builder.build());
+                    assertNotNull("Cannot get group object.", groupObj);
+                    Attribute accounts = groupObj.getAttributeByName(PredefinedAttributes.ACCOUNTS_NAME);
+                    assertTrue("ACCOUNTS attribute should contain one value, but contains: "
+                            + accounts.getValue().size(), accounts.getValue().size() == 1);
+                    final String MSG = "ACCOUNTS attribute value is wrong, expected: %s, returned: %s.";
+                    assertTrue(String.format(MSG, accountUid1, accounts.getValue().get(0)),
+                            accounts.getValue().get(0).equals(accountUid1));
+                }
 
             } finally {
                 ConnectorHelper.deleteObject(getConnectorFacade(), ObjectClass.GROUP, groupUid1,
@@ -797,6 +814,22 @@ public class MultiOpTests extends ObjectClassRunner {
                     ConnectorHelper.checkObject(accountInfo, obj, UpdateApiOpTests
                             .mergeAttributeSets(accountAttrs1, accountAttrs2));
                 }
+                
+                // ACCOUNTS must be supported for ORGANIZATIONS to be able to check backward reference
+                if (ConnectorHelper.isReadable(orgInfo, PredefinedAttributes.ACCOUNTS_NAME)) {
+                    // check that ACCOUNTS is set properly
+                    OperationOptionsBuilder builder = new OperationOptionsBuilder();
+                    builder.setAttributesToGet(PredefinedAttributes.ACCOUNTS_NAME);
+                    ConnectorObject orgObj = getConnectorFacade().getObject(ObjectClass.ORGANIZATION,
+                            orgUid1, builder.build());
+                    assertNotNull("Cannot get organization object.", orgObj);
+                    Attribute accounts = orgObj.getAttributeByName(PredefinedAttributes.ACCOUNTS_NAME);
+                    assertTrue("ACCOUNTS attribute should contain one value, but contains: "
+                            + accounts.getValue().size(), accounts.getValue().size() == 1);
+                    final String MSG = "ACCOUNTS attribute value is wrong, expected: %s, returned: %s.";
+                    assertTrue(String.format(MSG, accountUid1, accounts.getValue().get(0)),
+                            accounts.getValue().get(0).equals(accountUid1));
+                }
 
             } finally {
                 ConnectorHelper.deleteObject(getConnectorFacade(), ObjectClass.ORGANIZATION, orgUid1,
@@ -879,6 +912,22 @@ public class MultiOpTests extends ObjectClassRunner {
                     // check that object was created properly
                     ConnectorHelper.checkObject(orgInfo, obj, UpdateApiOpTests
                             .mergeAttributeSets(orgAttrs1, orgAttrs2));
+                }
+                
+                // ORGANIZATION must be supported for ACCOUNTS to be able to check backward reference
+                if (ConnectorHelper.isReadable(accountInfo, PredefinedAttributes.ORGANIZATION_NAME)) {
+                    // check that ORGANIZATION is set properly
+                    OperationOptionsBuilder builder = new OperationOptionsBuilder();
+                    builder.setAttributesToGet(PredefinedAttributes.ORGANIZATION_NAME);
+                    ConnectorObject accObj = getConnectorFacade().getObject(ObjectClass.ACCOUNT,
+                            accountUid1, builder.build());
+                    assertNotNull("Cannot get account object.", accObj);
+                    Attribute organizations = accObj.getAttributeByName(PredefinedAttributes.ORGANIZATION_NAME);
+                    assertTrue("ORGANIZATIONS attribute should contain one value, but contains: "
+                            + organizations.getValue().size(), organizations.getValue().size() == 1);
+                    final String MSG = "ORGANIZATIONS attribute value is wrong, expected: %s, returned: %s.";
+                    assertTrue(String.format(MSG, orgUid1, organizations.getValue().get(0)),
+                            organizations.getValue().get(0).equals(orgUid1));
                 }
 
             } finally {

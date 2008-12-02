@@ -495,6 +495,19 @@ public class ConnectorHelper {
     }
     
     /**
+     * Whether is attribute readable.
+     */
+    public static boolean isReadable(ObjectClassInfo oinfo, String attribute) {
+        for (AttributeInfo ainfo : oinfo.getAttributeInfo()) {
+            if (ainfo.is(attribute)) {
+                return ainfo.isReadable();
+            }
+        }
+        
+        return false;        
+    }
+    
+    /**
      * Whether is attribute supported.
      */
     public static boolean isAttrSupported(ObjectClassInfo oinfo, String attribute) {
