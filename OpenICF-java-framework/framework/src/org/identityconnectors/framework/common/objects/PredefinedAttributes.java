@@ -48,9 +48,10 @@ import static org.identityconnectors.framework.common.objects.AttributeUtil.crea
 public class PredefinedAttributes {
 
     /**
-     * Attribute that should hold a reasonable value to
-     * display for the value of an object.  If this is not present, then the
-     * application will have to use the NAME to show the value.
+     * Attribute that should hold a reasonable value for an application
+     * to display as a label for an object.  
+     * If {@code SHORT_NAME} is not present, then the application
+     * should use the value of {@link Name the NAME attribute} as a label.
      */
     public static final String SHORT_NAME = createSpecialName("SHORT_NAME");
     
