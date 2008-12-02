@@ -50,29 +50,29 @@ public final class ObjectPoolConfiguration {
     /**
      * Max objects (idle+active). 
      */
-    private int _maxObjects = 5;
+    private int _maxObjects = 10;
 
     /**
      * Max idle objects.
      */
-    private int _maxIdle = 3;
+    private int _maxIdle = 10;
 
     /**
      * Max time to wait if the pool is waiting for a free object to become
      * available before failing. Zero means don't wait
      */
-    private long _maxWait = 60*1000;
+    private long _maxWait = 150 * 1000;
 
     /**
      * Minimum time to wait before evicting an idle object.
      * Zero means don't wait
      */
-    private long _minEvictableIdleTimeMillis = 60 * 1000;
+    private long _minEvictableIdleTimeMillis = 120 * 1000;
 
     /**
      * Minimum number of idle objects.
      */
-    private int _minIdle = 0;
+    private int _minIdle = 1;
 
 
     /**
