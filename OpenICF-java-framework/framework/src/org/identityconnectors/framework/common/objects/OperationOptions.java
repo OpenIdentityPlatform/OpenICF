@@ -58,9 +58,10 @@ import org.identityconnectors.framework.common.serializer.SerializerUtil;
 public final class OperationOptions {
     
     /**
-     * An option to use with {@link SearchApiOp} that specified the scope
-     * under which to perform the search. To be used in conjunction with
-     * {@link #OP_CONTAINER}. Must be one of the following values
+     * An option to use with {@link SearchApiOp} 
+     * (in conjunction with {@link #OP_CONTAINER})
+     * that specifies how far beneath the {@linkplain #OP_CONTAINER 
+     * specified container} to search.  Must be one of the following values:
      * <ol>
      *    <li>{@link #SCOPE_OBJECT}</li>
      *    <li>{@link #SCOPE_ONE_LEVEL}</li>
@@ -68,12 +69,27 @@ public final class OperationOptions {
      * </ol>
      */
     public static final String OP_SCOPE = "SCOPE";
+    /**
+     * A value of {@link #OP_SCOPE} that indicates
+     * to search for the {@linkplain #OP_CONTAINER 
+     * specified container} <em>object itself</em>.
+     */
     public static final String SCOPE_OBJECT = "object";
+    /**
+     * A value of {@link #OP_SCOPE} that indicates
+     * to search for objects that the {@linkplain #OP_CONTAINER 
+     * specified container} <em>directly contains</em>.
+     */
     public static final String SCOPE_ONE_LEVEL = "onelevel";
+    /**
+     * A value of {@link #OP_SCOPE} that indicates
+     * to search for objects that the {@linkplain #OP_CONTAINER 
+     * specified container} <em>directly or indirectly contains</em>.
+     */
     public static final String SCOPE_SUBTREE = "subtree";
     
     /**
-     * An option to use with {@link SearchApiOp} that specified the container
+     * An option to use with {@link SearchApiOp} that specifies the container
      * under which to perform the search. Must be of type {@link QualifiedUid}.
      * Should be implemented for those object classes whose {@link ObjectClassInfo#isContainer()}
      * returns true.
