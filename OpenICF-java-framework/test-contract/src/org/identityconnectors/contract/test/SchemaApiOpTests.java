@@ -207,7 +207,7 @@ public class SchemaApiOpTests extends AbstractSimpleTest {
                 }
 
                 // expected attribute values
-                Map expAttrValues = (Map) getTestPropertyOrFail(
+                Map<String, Object> expAttrValues = (Map<String, Object>) getTestPropertyOrFail(
                         Map.class.getName(), attr.getName() + ".attribute." + ocInfo.getType()
                                 + "." + SUPPORTED_OBJECT_CLASSES_PROPERTY_PREFIX, strictCheck);
 
@@ -271,7 +271,7 @@ public class SchemaApiOpTests extends AbstractSimpleTest {
      * Checks that attribute values are the same as expectedValues.
      */
     private void checkAttributeValues(ObjectClassInfo ocInfo, AttributeInfo attribute,
-            Map expectedValues) {        
+            Map<String, Object> expectedValues) {        
         // check that all attributes are provided
         String msg = "Missing property definition for field '%s' of attribute '" + attribute.getName()
                         + "' in object class " + ocInfo.getType();
