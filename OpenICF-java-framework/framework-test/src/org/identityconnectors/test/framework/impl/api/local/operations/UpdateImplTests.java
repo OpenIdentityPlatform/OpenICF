@@ -46,7 +46,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.identityconnectors.common.CollectionUtil;
-import org.identityconnectors.framework.api.operations.UpdateApiOp.Type;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.Name;
@@ -63,53 +62,39 @@ import org.junit.Test;
 public class UpdateImplTests {
 
     @Test(expected=NullPointerException.class)
-    public void validateTypeArg() {
-        UpdateImpl.validateInput(null, ObjectClass.ACCOUNT, new HashSet<Attribute>());
+    public void validateUidArg() {
+        UpdateImpl.validateInput(ObjectClass.ACCOUNT, null, new HashSet<Attribute>(),true);
     }
 
     @Test(expected=NullPointerException.class)
     public void validateObjectClassArg() {
-        UpdateImpl.validateInput(Type.ADD, null, new HashSet<Attribute>());
+        UpdateImpl.validateInput(null, new Uid("foo"), new HashSet<Attribute>(),true);
     }
     
     @Test(expected=NullPointerException.class)
     public void validateAttrsArg() {
-        UpdateImpl.validateInput(Type.ADD, ObjectClass.ACCOUNT, null);
+        UpdateImpl.validateInput(ObjectClass.ACCOUNT, new Uid("foo"),null,true);
     }
     
     @Test(expected=IllegalArgumentException.class)
-    public void validateNoUidAttribute() {
-        UpdateImpl.validateInput(Type.ADD, ObjectClass.ACCOUNT, new HashSet<Attribute>());
+    public void validateUidAttribute() {
+        Set<Attribute> attrs=new HashSet<Attribute>();
+        attrs.add(new Uid("foo"));
+        UpdateImpl.validateInput(ObjectClass.ACCOUNT, new Uid("foo"),attrs,true);
     }
     
     @Test(expected=IllegalArgumentException.class)
     public void validateAddWithNullAttribute() {
         Set<Attribute> attrs = new HashSet<Attribute>();
         attrs.add(AttributeBuilder.build("something"));
-        UpdateImpl.validateInput(Type.ADD, ObjectClass.ACCOUNT, attrs);        
+        UpdateImpl.validateInput(ObjectClass.ACCOUNT, new Uid("foo"), attrs, true);        
     }
-
-    @Test(expected=IllegalArgumentException.class)
-    public void validateDeleteWithNullAttribute() {
-        Set<Attribute> attrs = new HashSet<Attribute>();
-        attrs.add(AttributeBuilder.build("something"));
-        UpdateImpl.validateInput(Type.DELETE, ObjectClass.ACCOUNT, attrs);        
-    }
-
+    
     @Test(expected=IllegalArgumentException.class)
     public void validateAttemptToAddName() {
         Set<Attribute> attrs = new HashSet<Attribute>();
         attrs.add(new Name("fadf"));
-        attrs.add(new Uid("1"));
-        UpdateImpl.validateInput(Type.ADD, ObjectClass.ACCOUNT, attrs);                
-    }
-
-    @Test(expected=IllegalArgumentException.class)
-    public void validateAttemptToDeleteName() {
-        Set<Attribute> attrs = new HashSet<Attribute>();
-        attrs.add(new Name("fadf"));
-        attrs.add(new Uid("1"));
-        UpdateImpl.validateInput(Type.DELETE, ObjectClass.ACCOUNT, attrs);                
+        UpdateImpl.validateInput(ObjectClass.ACCOUNT, new Uid("foo"),attrs,true);                
     }
 
     @Test
@@ -124,9 +109,8 @@ public class UpdateImplTests {
         for (Attribute attr : list) {
             Set<Attribute> attrs = new HashSet<Attribute>();
             attrs.add(attr);
-            attrs.add(new Uid("1"));
             try {
-                UpdateImpl.validateInput(Type.DELETE, ObjectClass.ACCOUNT, attrs);
+                UpdateImpl.validateInput(ObjectClass.ACCOUNT, new Uid("1"), attrs,true);
                 Assert.fail("Failed: " + attr.getName());
             } catch (IllegalArgumentException e) {
                 // this is a good thing..
@@ -134,35 +118,18 @@ public class UpdateImplTests {
         }
     }
     
-    @Test(expected=IllegalArgumentException.class)
-    public void validateAttemptToAddNull() {
-        Set<Attribute> attrs = new HashSet<Attribute>();
-        attrs.add(AttributeBuilder.build("something w/ null"));
-        attrs.add(new Uid("1"));
-        UpdateImpl.validateInput(Type.ADD, ObjectClass.ACCOUNT, attrs);        
-    }
-    
-    @Test(expected=IllegalArgumentException.class)
-    public void validateAttemptToDeleteNull() {
-        Set<Attribute> attrs = new HashSet<Attribute>();
-        attrs.add(AttributeBuilder.build("something w/ null"));
-        attrs.add(new Uid("1"));
-        UpdateImpl.validateInput(Type.DELETE, ObjectClass.ACCOUNT, attrs);        
-    }
-
     @Test
     public void mergeAddAttribute() {
         UpdateImpl up = new UpdateImpl(null, null);
         Set<Attribute> actual;
-        Uid uid = new Uid("1");
-        Set<Attribute> base = CollectionUtil.<Attribute>newSet(uid);
-        Set<Attribute> expected = CollectionUtil.<Attribute>newSet(uid);
-        Set<Attribute> changeset = CollectionUtil.<Attribute>newSet(uid);
+        Set<Attribute> base = CollectionUtil.<Attribute>newSet();
+        Set<Attribute> expected = CollectionUtil.<Attribute>newSet();
+        Set<Attribute> changeset = CollectionUtil.<Attribute>newSet();
         // attempt to add a value to an attribute..
         Attribute cattr = AttributeBuilder.build("abc", 2);
         changeset.add(cattr);
         expected.add(AttributeBuilder.build("abc", 2));        
-        actual = up.merge(Type.ADD, changeset, base);
+        actual = up.merge(changeset, base, true);
         Assert.assertEquals(expected, actual);
     }
 
@@ -170,17 +137,16 @@ public class UpdateImplTests {
     public void mergeAddToExistingAttribute() {
         UpdateImpl up = new UpdateImpl(null, null);
         Set<Attribute> actual;
-        Uid uid = new Uid("1");
-        Set<Attribute> base = CollectionUtil.<Attribute>newSet(uid);
-        Set<Attribute> expected = CollectionUtil.<Attribute>newSet(uid);
-        Set<Attribute> changeset = CollectionUtil.<Attribute>newSet(uid);
+        Set<Attribute> base = CollectionUtil.<Attribute>newSet();
+        Set<Attribute> expected = CollectionUtil.<Attribute>newSet();
+        Set<Attribute> changeset = CollectionUtil.<Attribute>newSet();
         // attempt to add a value to an attribute..
         Attribute battr = AttributeBuilder.build("abc", 1);
         Attribute cattr = AttributeBuilder.build("abc", 2);
         base.add(battr);
         changeset.add(cattr);
         expected.add(AttributeBuilder.build("abc", 1, 2));        
-        actual = up.merge(Type.ADD, changeset, base);
+        actual = up.merge(changeset, base,true);
         Assert.assertEquals(expected, actual);
     }
     
@@ -188,14 +154,13 @@ public class UpdateImplTests {
     public void mergeDeleteNonExistentAttribute() {
         UpdateImpl up = new UpdateImpl(null, null);
         Set<Attribute> actual;
-        Uid uid = new Uid("1");
-        Set<Attribute> base = CollectionUtil.<Attribute>newSet(uid);
-        Set<Attribute> expected = CollectionUtil.<Attribute>newSet(uid);
-        Set<Attribute> changeset = CollectionUtil.<Attribute>newSet(uid);
+        Set<Attribute> base = CollectionUtil.<Attribute>newSet();
+        Set<Attribute> expected = CollectionUtil.<Attribute>newSet();
+        Set<Attribute> changeset = CollectionUtil.<Attribute>newSet();
         // attempt to add a value to an attribute..
         Attribute cattr = AttributeBuilder.build("abc", 2);
         changeset.add(cattr);
-        actual = up.merge(Type.DELETE, changeset, base);
+        actual = up.merge(changeset, base, false);
         Assert.assertEquals(expected, actual);
     }
 
@@ -203,17 +168,16 @@ public class UpdateImplTests {
     public void mergeDeleteToExistingAttribute() {
         UpdateImpl up = new UpdateImpl(null, null);
         Set<Attribute> actual;
-        Uid uid = new Uid("1");
-        Set<Attribute> base = CollectionUtil.<Attribute>newSet(uid);
-        Set<Attribute> expected = CollectionUtil.<Attribute>newSet(uid);
-        Set<Attribute> changeset = CollectionUtil.<Attribute>newSet(uid);
+        Set<Attribute> base = CollectionUtil.<Attribute>newSet();
+        Set<Attribute> expected = CollectionUtil.<Attribute>newSet();
+        Set<Attribute> changeset = CollectionUtil.<Attribute>newSet();
         // attempt to add a value to an attribute..
         Attribute battr = AttributeBuilder.build("abc", 1, 2);
         Attribute cattr = AttributeBuilder.build("abc", 2);
         base.add(battr);
         changeset.add(cattr);
         expected.add(AttributeBuilder.build("abc", 1));
-        actual = up.merge(Type.DELETE, changeset, base);
+        actual = up.merge(changeset, base, false);
         Assert.assertEquals(expected, actual);
     }
 
@@ -221,109 +185,18 @@ public class UpdateImplTests {
     public void mergeDeleteToExistingAttributeCompletely() {
         UpdateImpl up = new UpdateImpl(null, null);
         Set<Attribute> actual;
-        Uid uid = new Uid("1");
-        Set<Attribute> base = CollectionUtil.<Attribute>newSet(uid);
-        Set<Attribute> expected = CollectionUtil.<Attribute>newSet(uid);
-        Set<Attribute> changeset = CollectionUtil.<Attribute>newSet(uid);
+        Set<Attribute> base = CollectionUtil.<Attribute>newSet();
+        Set<Attribute> expected = CollectionUtil.<Attribute>newSet();
+        Set<Attribute> changeset = CollectionUtil.<Attribute>newSet();
         // attempt to add a value to an attribute..
         Attribute battr = AttributeBuilder.build("abc", 1, 2);
         Attribute cattr = AttributeBuilder.build("abc", 1, 2);
         base.add(battr);
         changeset.add(cattr);
         expected.add(AttributeBuilder.build("abc"));
-        actual = up.merge(Type.DELETE, changeset, base);
+        actual = up.merge(changeset, base, false);
         Assert.assertEquals(expected, actual);
     }
 
-    @Test
-    public void mergeReplaceExistingAttribute() {
-        UpdateImpl up = new UpdateImpl(null, null);
-        Set<Attribute> actual;
-        Uid uid = new Uid("1");
-        Set<Attribute> base = CollectionUtil.<Attribute>newSet(uid);
-        Set<Attribute> expected = CollectionUtil.<Attribute>newSet(uid);
-        Set<Attribute> changeset = CollectionUtil.<Attribute>newSet(uid);
-        // attempt to add a value to an attribute..
-        Attribute battr = AttributeBuilder.build("abc", 1, 2);
-        Attribute cattr = AttributeBuilder.build("abc", 2);
-        base.add(battr);
-        changeset.add(cattr);
-        expected.add(AttributeBuilder.build("abc", 2));
-        actual = up.merge(Type.REPLACE, changeset, base);
-        Assert.assertEquals(expected, actual);
-    }
     
-    @Test
-    public void mergeReplaceNonExistentAttribute() {
-        UpdateImpl up = new UpdateImpl(null, null);
-        Set<Attribute> actual;
-        Uid uid = new Uid("1");
-        Set<Attribute> base = CollectionUtil.<Attribute>newSet(uid);
-        Set<Attribute> expected = CollectionUtil.<Attribute>newSet(uid);
-        Set<Attribute> changeset = CollectionUtil.<Attribute>newSet(uid);
-        // attempt to add a value to an attribute..
-        Attribute cattr = AttributeBuilder.build("abc", 2);
-        changeset.add(cattr);
-        expected.add(AttributeBuilder.build("abc", 2));
-        actual = up.merge(Type.REPLACE, changeset, base);
-        Assert.assertEquals(expected, actual);
-    }
-    
-    @Test
-    public void mergeReplaceAttributeRemoval() {
-        UpdateImpl up = new UpdateImpl(null, null);
-        Set<Attribute> actual;
-        Uid uid = new Uid("1");
-        Set<Attribute> base = CollectionUtil.<Attribute>newSet(uid);
-        Set<Attribute> expected = CollectionUtil.<Attribute>newSet(uid);
-        Set<Attribute> changeset = CollectionUtil.<Attribute>newSet(uid);
-        // attempt to add a value to an attribute..
-        Attribute battr = AttributeBuilder.build("abc", 1, 2);
-        Attribute cattr = AttributeBuilder.build("abc");
-        base.add(battr);
-        changeset.add(cattr);
-        expected.add(AttributeBuilder.build("abc"));
-        actual = up.merge(Type.REPLACE, changeset, base);
-        Assert.assertEquals(expected, actual);
-    }
-    
-    @Test
-    public void mergeReplaceSameAttribute() {
-        UpdateImpl up = new UpdateImpl(null, null);
-        Set<Attribute> actual;
-        Uid uid = new Uid("1");
-        Set<Attribute> base = CollectionUtil.<Attribute>newSet(uid);
-        Set<Attribute> expected = CollectionUtil.<Attribute>newSet(uid);
-        Set<Attribute> changeset = CollectionUtil.<Attribute>newSet(uid);
-        // attempt to add a value to an attribute..
-        Attribute battr = AttributeBuilder.build("abc", 1);
-        Attribute cattr = AttributeBuilder.build("abc", 1);
-        base.add(battr);
-        changeset.add(cattr);
-        expected.add(cattr);
-        actual = up.merge(Type.REPLACE, changeset, base);
-        Assert.assertEquals(expected, actual);
-    }
-
-    @Test
-    public void mergeAddsBaseAttributes() {
-        UpdateImpl up = new UpdateImpl(null, null);
-        Set<Attribute> actual;
-        Uid uid = new Uid("1");
-        Set<Attribute> base = CollectionUtil.<Attribute>newSet(uid);
-        Set<Attribute> expected = CollectionUtil.<Attribute>newSet(uid);
-        Set<Attribute> changeset = CollectionUtil.<Attribute>newSet(uid);
-        // attempt to add a value to an attribute..
-        Attribute attr;
-        attr = AttributeBuilder.build("abc", 1);
-        base.add(attr);
-        changeset.add(attr);
-        expected.add(attr);
-        // add another one to base and it should be expected..
-        attr = AttributeBuilder.build("bbb", 2);
-        base.add(attr);
-        expected.add(attr);
-        actual = up.merge(Type.REPLACE, changeset, base);
-        Assert.assertEquals(expected, actual);
-    }
 }

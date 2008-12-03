@@ -13,7 +13,7 @@ RESOURCE_NAME = args[2]
 /* 
  * Add, update, or remove SPI Operations in this map:
  */
-spiOps = [ 1 : "AdvancedUpdateOp",
+spiOps = [ 1 : "UpdateAttributeValuesOp",
            2 : "AuthenticateOp",
            3 : "CreateOp",
            4 : "DeleteOp",

@@ -97,8 +97,7 @@ public class MockUpdateConnector implements Connector, UpdateOp, SearchOp<String
      * 
      * @see UpdateOp#update(ConnectorObject)
      */
-    public Uid update(ObjectClass objclass, Set<Attribute> attrs, OperationOptions options) {
-        Uid uid = AttributeUtil.getUidAttribute(attrs);
+    public Uid update(ObjectClass objclass, Uid uid, Set<Attribute> attrs, OperationOptions options) {
         String val = AttributeUtil.getAsStringValue(uid);
         int idx = Integer.valueOf(val).intValue();
         // get out the object..

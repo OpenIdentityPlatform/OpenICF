@@ -51,12 +51,12 @@ import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
 import org.identityconnectors.framework.api.operations.GetApiOp;
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
-import org.identityconnectors.framework.api.operations.UpdateApiOp.Type;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.identityconnectors.framework.common.exceptions.PasswordExpiredException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
+import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -168,8 +168,10 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                     replaceAttrs.add(AttributeBuilder.buildCurrentPassword(password.toCharArray()));
                 }
                 // update to new password
-                uid = getConnectorFacade().update(UpdateApiOp.Type.REPLACE, getObjectClass(),
-                        replaceAttrs, getOperationOptionsByOp(UpdateApiOp.class));
+                uid = getConnectorFacade().update(getObjectClass(),
+                        uid,
+                        AttributeUtil.filterUid(replaceAttrs), 
+                        getOperationOptionsByOp(UpdateApiOp.class));
 
                 // authenticate with new password
                 authenticatedUid = getConnectorFacade().authenticate(name,
@@ -229,7 +231,10 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                 // add uid for update
                 updateAttrs.add(uid);
                 
-                newUid = getConnectorFacade().update(Type.REPLACE, getObjectClass(), updateAttrs, null);
+                newUid = getConnectorFacade().update(getObjectClass(), 
+                        uid, 
+                        AttributeUtil.filterUid(updateAttrs), 
+                        null);
                 if (!uid.equals(newUid) && newUid != null) {
                     uid = newUid;
                 }
@@ -268,7 +273,9 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                 // add uid for update
                 updateAttrs.add(uid);
                 
-                newUid = getConnectorFacade().update(Type.REPLACE, getObjectClass(), updateAttrs, null);
+                newUid = getConnectorFacade().update(getObjectClass(), 
+                        uid,
+                        AttributeUtil.filterUid(updateAttrs), null);
                 if (!uid.equals(newUid) && newUid != null) {
                     uid = newUid;
                 }
@@ -301,8 +308,9 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                 replaceAttrs.add(AttributeBuilder.buildEnabled(false));
                 replaceAttrs.add(uid);
                                
-                uid = getConnectorFacade().update(UpdateApiOp.Type.REPLACE, getObjectClass(),
-                        replaceAttrs, null);
+                uid = getConnectorFacade().update(getObjectClass(),
+                        uid,
+                        AttributeUtil.filterUid(replaceAttrs), null);
 
                 boolean thrown = false;
                 // try to authenticate
@@ -370,8 +378,9 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                     replaceAttrs.add(AttributeBuilder.buildCurrentPassword(password.toCharArray()));
                 }
                 // update to new password and expire password
-                uid = getConnectorFacade().update(UpdateApiOp.Type.REPLACE, getObjectClass(),
-                        replaceAttrs, getOperationOptionsByOp(UpdateApiOp.class));
+                uid = getConnectorFacade().update(getObjectClass(),
+                        uid,
+                        AttributeUtil.filterUid(replaceAttrs), getOperationOptionsByOp(UpdateApiOp.class));
 
                 boolean thrown = false;
                 try {

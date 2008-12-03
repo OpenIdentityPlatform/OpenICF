@@ -70,21 +70,21 @@ import org.identityconnectors.common.security.GuardedString;
  *      of the target object, current as of the point in time that the object was read.
  *  </li>
  *  <li>When an {@code Attribute} is supplied to 
- *      {@linkplain org.identityconnectors.framework.api.operations.UpdateApiOp#update 
+ *      {@linkplain org.identityconnectors.framework.api.operations.UpdateApiOp 
  *      the update operation},
  *      the {@code Attribute} represents a change 
  *      to the corresponding attribute of the target object:
  *      <ul>
- *      <li>When the update type is 
- *          {@link org.identityconnectors.framework.api.operations.UpdateApiOp.Type#REPLACE REPLACE},
+ *      <li>For calls to 
+ *          {@link org.identityconnectors.framework.api.operations.UpdateApiOp#update(ObjectClass, Uid, java.util.Set, OperationOptions) update},
  *          the {@code Attribute} contains the <i>complete, intended state</i> of the attribute.
  *      </li>
  *      <li>When the update type is 
- *          {@link org.identityconnectors.framework.api.operations.UpdateApiOp.Type#ADD ADD},
+ *          {@link org.identityconnectors.framework.api.operations.UpdateApiOp#addAttributeValues(ObjectClass, Uid, java.util.Set, OperationOptions) addAttributeValues},
  *          the {@code Attribute} contains <i>values to append</i>.
  *      </li>
  *      <li>When the update type is 
- *          {@link org.identityconnectors.framework.api.operations.UpdateApiOp.Type#DELETE DELETE},
+ *          {@link org.identityconnectors.framework.api.operations.UpdateApiOp#removeAttributeValues(ObjectClass, Uid, java.util.Set, OperationOptions) removeAttributeValues},
  *          the {@code Attribute} contains <i>values to remove</i>.
  *      </li>
  *      </ul>

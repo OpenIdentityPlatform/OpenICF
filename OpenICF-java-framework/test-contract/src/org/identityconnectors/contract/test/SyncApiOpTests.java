@@ -55,6 +55,7 @@ import org.identityconnectors.framework.api.operations.DeleteApiOp;
 import org.identityconnectors.framework.api.operations.SyncApiOp;
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncDeltaType;
@@ -152,8 +153,8 @@ public class SyncApiOpTests extends ObjectClassRunner {
                     replaceAttributes.add(uid);
 
                     assertTrue("no update attributes were found", (replaceAttributes.size() > 0));
-                    Uid newUid = getConnectorFacade().update(UpdateApiOp.Type.REPLACE,
-                            getSupportedObjectClass(), replaceAttributes,
+                    Uid newUid = getConnectorFacade().update(
+                            getSupportedObjectClass(), uid, AttributeUtil.filterUid(replaceAttributes),
                             getOperationOptionsByOp(UpdateApiOp.class));
 
                     // Update change of Uid must be propagated to

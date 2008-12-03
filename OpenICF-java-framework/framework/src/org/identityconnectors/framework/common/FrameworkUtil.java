@@ -70,7 +70,6 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.QualifiedUid;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.Connector;
-import org.identityconnectors.framework.spi.operations.AdvancedUpdateOp;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
 import org.identityconnectors.framework.spi.operations.CreateOp;
 import org.identityconnectors.framework.spi.operations.DeleteOp;
@@ -81,6 +80,7 @@ import org.identityconnectors.framework.spi.operations.ScriptOnResourceOp;
 import org.identityconnectors.framework.spi.operations.SearchOp;
 import org.identityconnectors.framework.spi.operations.SyncOp;
 import org.identityconnectors.framework.spi.operations.TestOp;
+import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
 import org.identityconnectors.framework.spi.operations.UpdateOp;
 
 
@@ -106,7 +106,7 @@ public final class FrameworkUtil {
         SPI_TO_API.put(DeleteOp.class, DeleteApiOp.class);
         SPI_TO_API.put(SearchOp.class, SearchApiOp.class);
         SPI_TO_API.put(UpdateOp.class, UpdateApiOp.class);
-        SPI_TO_API.put(AdvancedUpdateOp.class, UpdateApiOp.class);
+        SPI_TO_API.put(UpdateAttributeValuesOp.class, UpdateApiOp.class);
         SPI_TO_API.put(SchemaOp.class, SchemaApiOp.class);
         SPI_TO_API.put(TestOp.class, TestApiOp.class);
         SPI_TO_API.put(ScriptOnConnectorOp.class, ScriptOnConnectorApiOp.class);

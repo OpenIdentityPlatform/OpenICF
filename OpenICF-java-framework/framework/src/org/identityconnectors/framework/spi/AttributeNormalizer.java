@@ -2,10 +2,10 @@ package org.identityconnectors.framework.spi;
 
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ObjectClass;
-import org.identityconnectors.framework.spi.operations.AdvancedUpdateOp;
 import org.identityconnectors.framework.spi.operations.CreateOp;
 import org.identityconnectors.framework.spi.operations.SearchOp;
 import org.identityconnectors.framework.spi.operations.SyncOp;
+import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
 import org.identityconnectors.framework.spi.operations.UpdateOp;
 
 /**
@@ -21,8 +21,8 @@ import org.identityconnectors.framework.spi.operations.UpdateOp;
  *    <li>The filter passed to {@link SearchOp}.</li>
  *    <li>The results returned from {@link SearchOp}.</li>
  *    <li>The results returned from {@link SyncOp}.</li>
- *    <li>The attributes passed to {@link AdvancedUpdateOp}.</li>
- *    <li>The <code>Uid</code> returned from {@link AdvancedUpdateOp}.</li>
+ *    <li>The attributes passed to {@link UpdateAttributeValuesOp}.</li>
+ *    <li>The <code>Uid</code> returned from {@link UpdateAttributeValuesOp}.</li>
  *    <li>The attributes passed to {@link UpdateOp}.</li>
  *    <li>The <code>Uid</code> returned from {@link UpdateOp}.</li>
  *    <li>The attributes passed to {@link CreateOp}.</li>

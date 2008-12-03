@@ -312,6 +312,36 @@ public final class AttributeUtil {
         }
         return ret;
     }
+    
+    /**
+     * Returns a mutable copy of the original set with the uid attribute removed.
+     * @param attrs The original set. Must not be null.
+     * @return A mutable copy of the original set with the uid attribute removed.
+     */
+    public static Set<Attribute> filterUid(Set<Attribute> attrs) {
+        Assertions.nullCheck(attrs, "attrs");
+        Set<Attribute> ret = new HashSet<Attribute>();
+        for (Attribute attr : attrs) {
+            if (!(attr instanceof Uid)) {
+                ret.add(attr);
+            }
+        }
+        return ret;        
+    }
+    
+    /**
+     * Returns a mutable copy of the original set with the uid attribute added.
+     * @param attrs The original set. Must not be null.
+     * @param uid The uid. Must not be null.
+     * @return A mutable copy of the original set with the uid attribute added.
+     */
+    public static Set<Attribute> addUid(Set<Attribute> attrs, Uid uid) {
+        Assertions.nullCheck(attrs, "attrs");
+        Assertions.nullCheck(uid, "uid");
+        Set<Attribute> ret = new HashSet<Attribute>(attrs);
+        ret.add(uid);
+        return ret;
+    }
 
     /**
      * Determines whether the specified attribute is a special attribute.

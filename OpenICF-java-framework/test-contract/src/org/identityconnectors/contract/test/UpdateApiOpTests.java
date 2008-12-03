@@ -121,8 +121,8 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                 replaceAttributes.add(uid);
 
                 assertTrue("no update attributes were found", (replaceAttributes.size() > 0));
-                Uid newUid = getConnectorFacade().update(UpdateApiOp.Type.REPLACE,
-                        getObjectClass(), replaceAttributes, getOperationOptionsByOp(UpdateApiOp.class));
+                Uid newUid = getConnectorFacade().update(
+                        getObjectClass(), uid, AttributeUtil.filterUid(replaceAttributes), getOperationOptionsByOp(UpdateApiOp.class));
 
                 // Update change of Uid must be propagated to replaceAttributes
                 // set
@@ -146,8 +146,9 @@ public class UpdateApiOpTests extends ObjectClassRunner {
             if (addDelAttrs.size() > 0) {
                 // uid must be present for update
                 addDelAttrs.add(uid);
-                Uid newUid = getConnectorFacade().update(UpdateApiOp.Type.ADD, getObjectClass(),
-                        addDelAttrs, getOperationOptionsByOp(UpdateApiOp.class));
+                Uid newUid = getConnectorFacade().removeAttributeValues(getObjectClass(),
+                        uid,
+                        AttributeUtil.filterUid(addDelAttrs), getOperationOptionsByOp(UpdateApiOp.class));
 
                 // Update change of Uid
                 if (!newUid.equals(uid)) {
@@ -169,8 +170,9 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                 addDelAttrs.add(uid);
 
                 // delete added attribute values
-                newUid = getConnectorFacade().update(UpdateApiOp.Type.DELETE, getObjectClass(),
-                        addDelAttrs, getOperationOptionsByOp(UpdateApiOp.class));
+                newUid = getConnectorFacade().removeAttributeValues(getObjectClass(),
+                        uid,
+                        AttributeUtil.filterUid(addDelAttrs), getOperationOptionsByOp(UpdateApiOp.class));
 
                 // Update change of Uid must be propagated to replaceAttributes
                 if (!newUid.equals(uid)) {
@@ -227,8 +229,8 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                     assertTrue("no update attributes were found", (nullAttributes.size() > 0));
                     
                     try {
-                        Uid newUid = getConnectorFacade().update(UpdateApiOp.Type.REPLACE,
-                            getObjectClass(), nullAttributes,
+                        Uid newUid = getConnectorFacade().update(
+                            getObjectClass(), uid, AttributeUtil.filterUid(nullAttributes),
                             getOperationOptionsByOp(UpdateApiOp.class));
                         
                         LOG.info("No exception was thrown, attributes should be removed or their values set to null.");
@@ -323,8 +325,8 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                 replaceAttributes.add(uid2);
                 
                 try {
-                    Uid newUid = getConnectorFacade().update(UpdateApiOp.Type.REPLACE,
-                        getSupportedObjectClass(), replaceAttributes, getOperationOptionsByOp(UpdateApiOp.class));
+                    Uid newUid = getConnectorFacade().update(
+                        getSupportedObjectClass(), uid2, AttributeUtil.filterUid(replaceAttributes), getOperationOptionsByOp(UpdateApiOp.class));
                 
                     if (!uid2.equals(newUid)) {
                         uid2 = newUid;

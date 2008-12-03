@@ -46,18 +46,33 @@ import java.util.Map;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.serializer.ObjectSerializerFactory;
+import org.identityconnectors.framework.common.serializer.SerializerUtil;
 
 /**
  * Builder for {@link OperationOptions}.
  */
 public final class OperationOptionsBuilder {
-    private final Map<String, Object> _options = new HashMap<String, Object>();
+    private final Map<String, Object> _options;
 
     /**
      * Create a builder with an empty set of options.
      */
     public OperationOptionsBuilder() {
-
+        _options = new HashMap<String, Object>();
+    }
+    
+    /**
+     * Create a builder from an existing set of options.
+     * @param options The existing set of options. Must not be null.
+     */
+    public OperationOptionsBuilder(OperationOptions options) {
+        Assertions.nullCheck(options, "options");
+        // clone options to do a deep copy in case anything
+        // is an array
+        @SuppressWarnings("unchecked")
+        Map<String, Object> operationOptionsClone = (Map<String, Object>) SerializerUtil
+                .cloneObject(options.getOptions());
+        _options = operationOptionsClone;
     }
 
     /**

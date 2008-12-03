@@ -39,7 +39,6 @@
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -60,8 +59,8 @@ import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.Connector;
-import org.identityconnectors.framework.spi.operations.AdvancedUpdateOp;
 import org.identityconnectors.framework.spi.operations.SearchOp;
+import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
 import org.identityconnectors.framework.spi.operations.UpdateOp;
 
 
@@ -71,15 +70,6 @@ import org.identityconnectors.framework.spi.operations.UpdateOp;
  */
 public class UpdateImpl extends ConnectorAPIOperationRunner implements
         org.identityconnectors.framework.api.operations.UpdateApiOp {
-    /**
-     * Static map between API/SPI update types.
-     */
-    private static final Map<Type, AdvancedUpdateOp.Type> CONV_TYPE = new HashMap<Type, AdvancedUpdateOp.Type>();
-    static {
-        CONV_TYPE.put(Type.ADD, AdvancedUpdateOp.Type.ADD);
-        CONV_TYPE.put(Type.DELETE, AdvancedUpdateOp.Type.DELETE);
-        CONV_TYPE.put(Type.REPLACE, AdvancedUpdateOp.Type.REPLACE);
-    }
 
     /**
      * Determines which type of update a connector supports and then uses that
@@ -100,71 +90,139 @@ public class UpdateImpl extends ConnectorAPIOperationRunner implements
         OPERATIONAL_ATTRIBUTE_NAMES.add(Name.NAME);
     };
 
-    /**
-     * Create a new instance of the handler for the type of update the connector
-     * can support and run it.
-     */
-    public Uid update(final Type type, final ObjectClass objclass,
-            final Set<Attribute> attributes,
+    public Uid update(final ObjectClass objclass,
+            Uid uid,
+            Set<Attribute> replaceAttributes,
             OperationOptions options) {
         // validate all the parameters..
-        validateInput(type, objclass, attributes);
+        validateInput(objclass,uid,replaceAttributes,false);
         //cast null as empty
         if ( options == null ) {
             options = new OperationOptionsBuilder().build();
         }
 
-        Uid ret = null;
-        Connector c = getConnector();
         final ObjectNormalizerFacade normalizer =
             getNormalizer(objclass);
-        final Set<Attribute> normalizedAttributes =
-            normalizer.normalizeAttributes(attributes);
-        if (c instanceof AdvancedUpdateOp) {
-            // easy way its an advance update
-            ret = ((AdvancedUpdateOp) c).update(CONV_TYPE.get(type), objclass, normalizedAttributes,options);
-        } else if (c instanceof UpdateOp) {
-            // check that this connector supports Search..
-            if (!(c instanceof SearchOp)) {
-                final String MSG = "Connector must support: " + SearchOp.class;
-                throw new UnsupportedOperationException(MSG);
-            }
-            // get the connector object from the resource...
-            Uid uid = AttributeUtil.getUidAttribute(normalizedAttributes);
-            ConnectorObject o = getConnectorObject(objclass, uid, options);
-            if (o == null) {
-                throw new UnknownUidException(uid, objclass);
-            }
-            // merge the update data..
-            Set<Attribute> mergeAttrs = merge(type, normalizedAttributes, o.getAttributes());
-            // update the object..
-            ret = ((UpdateOp) c).update(objclass, mergeAttrs, options);
+        uid = (Uid)normalizer.normalizeAttribute(uid);
+        replaceAttributes =
+            normalizer.normalizeAttributes(replaceAttributes);
+        UpdateOp op = (UpdateOp)getConnector();
+        Uid ret = op.update(objclass, uid, replaceAttributes, options);
+        return (Uid)normalizer.normalizeAttribute(ret);
+    }
+    
+    public Uid addAttributeValues(ObjectClass objclass,
+            Uid uid,
+            Set<Attribute> valuesToAdd,
+            OperationOptions options) {
+        // validate all the parameters..
+        validateInput(objclass,uid,valuesToAdd,true);
+        //cast null as empty
+        if ( options == null ) {
+            options = new OperationOptionsBuilder().build();
+        }
+        
+        final ObjectNormalizerFacade normalizer =
+            getNormalizer(objclass);
+        uid = (Uid)normalizer.normalizeAttribute(uid);
+        valuesToAdd =
+            normalizer.normalizeAttributes(valuesToAdd);
+        UpdateOp op = (UpdateOp)getConnector();
+        Uid ret;
+        if ( op instanceof UpdateAttributeValuesOp ) {
+            UpdateAttributeValuesOp valueOp =
+                (UpdateAttributeValuesOp)op;
+            ret = valueOp.addAttributeValues(objclass, uid, valuesToAdd, options);
+        }
+        else {
+            Set<Attribute> replaceAttributes =
+                fetchAndMerge(objclass,uid,valuesToAdd,true,options);
+            ret = op.update(objclass, uid, replaceAttributes, options);
         }
         return (Uid)normalizer.normalizeAttribute(ret);
+    }
+    
+    public Uid removeAttributeValues(ObjectClass objclass,
+            Uid uid,
+            Set<Attribute> valuesToRemove,
+            OperationOptions options) {
+        // validate all the parameters..
+        validateInput(objclass,uid,valuesToRemove,true);
+        //cast null as empty
+        if ( options == null ) {
+            options = new OperationOptionsBuilder().build();
+        }
+        
+        final ObjectNormalizerFacade normalizer =
+            getNormalizer(objclass);
+        uid = (Uid)normalizer.normalizeAttribute(uid);
+        valuesToRemove =
+            normalizer.normalizeAttributes(valuesToRemove);
+        UpdateOp op = (UpdateOp)getConnector();
+        Uid ret;
+        if ( op instanceof UpdateAttributeValuesOp ) {
+            UpdateAttributeValuesOp valueOp =
+                (UpdateAttributeValuesOp)op;
+            ret = valueOp.removeAttributeValues(objclass, uid, valuesToRemove, options);
+        }
+        else {
+            Set<Attribute> replaceAttributes =
+                fetchAndMerge(objclass,uid,valuesToRemove,false,options);
+            ret = op.update(objclass, uid, replaceAttributes, options);
+        }
+        return (Uid)normalizer.normalizeAttribute(ret);
+    }
+    
+    private Set<Attribute> fetchAndMerge(ObjectClass objclass, Uid uid, 
+            Set<Attribute> valuesToChange, 
+            boolean add,
+            OperationOptions options)
+    {
+        // check that this connector supports Search..
+        if (!(getConnector() instanceof SearchOp)) {
+            final String MSG = "Connector must support: " + SearchOp.class;
+            throw new UnsupportedOperationException(MSG);
+        }
+        
+        //add attrs to get to operation options, so that the
+        //object we fetch has exactly the set of attributes we require
+        //(there may be ones that are not in the default set)
+        OperationOptionsBuilder builder = new OperationOptionsBuilder(options);
+        Set<String> attrNames = new HashSet<String>();
+        for (Attribute attribute : valuesToChange) {
+            attrNames.add(attribute.getName());
+        }
+        builder.setAttributesToGet(attrNames);
+        options = builder.build();
+        
+        // get the connector object from the resource...
+        ConnectorObject o = getConnectorObject(objclass, uid, options);
+        if (o == null) {
+            throw new UnknownUidException(uid, objclass);
+        }
+        // merge the update data..
+        Set<Attribute> mergeAttrs = merge(valuesToChange, o.getAttributes(),add);
+        return mergeAttrs;
     }
 
     /**
      * Merges two connector objects into a single updated object.
      */
-    public Set<Attribute> merge(Type type, Set<Attribute> updateAttrs,
-            Set<Attribute> baseAttrs) {
+    public Set<Attribute> merge(Set<Attribute> updateAttrs,
+            Set<Attribute> baseAttrs, boolean add) {
         // return the merged attributes
         Set<Attribute> ret = new HashSet<Attribute>();
         // create map that can be modified to get the subset of changes 
         Map<String, Attribute> baseAttrMap = AttributeUtil.toMap(baseAttrs);
         // run through attributes of the current object..
         for (final Attribute updateAttr : updateAttrs) {
-            // ignore uid because its immutable..
-            if (updateAttr instanceof Uid) {
-                continue;
-            }
             // get the name of the update attributes
             String name = updateAttr.getName();
             // remove each attribute that is an update attribute..
             Attribute baseAttr = baseAttrMap.get(name);
             List<Object> values;
             final Attribute modifiedAttr; 
-            if (Type.ADD.equals(type)) {
+            if (add) {
                 if (baseAttr == null) {
                     modifiedAttr = updateAttr;
                 } else {
@@ -173,7 +231,8 @@ public class UpdateImpl extends ConnectorAPIOperationRunner implements
                     values.addAll(updateAttr.getValue());
                     modifiedAttr = AttributeBuilder.build(name, values);
                 }
-            } else if (Type.DELETE.equals(type)) {
+            } 
+            else {
                 if (baseAttr == null) {
                     // nothing to actually do the attribute do not exist
                     continue;                    
@@ -190,29 +249,16 @@ public class UpdateImpl extends ConnectorAPIOperationRunner implements
                         modifiedAttr = AttributeBuilder.build(name, values);
                     }
                 }
-            } else if (Type.REPLACE.equals(type)){
-                modifiedAttr = updateAttr;
-            } else {
-                throw new IllegalStateException("Unknown Type: " + type);
-            }
+            } 
             ret.add(modifiedAttr);
         }
-        // add the rest of the base attribute that were not update attrs
-        Map<String, Attribute> updateAttrMap = AttributeUtil.toMap(updateAttrs);
-        for (Attribute a : baseAttrs) {
-            if (!updateAttrMap.containsKey(a.getName())) {
-                ret.add(a);
-            }
-        }
-        // always add the UID..
-        ret.add(updateAttrMap.get(Uid.NAME));
         return ret;
     }
 
     /**
      * Get the {@link ConnectorObject} to modify.
      */
-    ConnectorObject getConnectorObject(ObjectClass oclass, Uid uid, OperationOptions options) {
+    private ConnectorObject getConnectorObject(ObjectClass oclass, Uid uid, OperationOptions options) {
         // attempt to get the connector object..
         GetApiOp get = new GetImpl(new SearchImpl(getOperationalContext(),
                 getConnector()));
@@ -222,26 +268,27 @@ public class UpdateImpl extends ConnectorAPIOperationRunner implements
     /**
      * Makes things easier if you can trust the input.
      */
-    public static void validateInput(final Type type, final ObjectClass objclass,
-            final Set<Attribute> attrs) {
+    public static void validateInput(final ObjectClass objclass,
+            final Uid uid,
+            final Set<Attribute> attrs, boolean isDelta) {
         final String OPERATIONAL_ATTRIBUTE_ERR = 
-            "Operational attribute '%s' can not be added or deleted only replaced.";
-        Assertions.nullCheck(type, "type");
+            "Operational attribute '%s' can not be added or removed.";
+        Assertions.nullCheck(uid, "uid");
         Assertions.nullCheck(objclass, "objclass");
         Assertions.nullCheck(attrs, "attrs");
-        // check to make sure there's a uid..
-        if (AttributeUtil.getUidAttribute(attrs) == null) {
+        // check to make sure there's not a uid..
+        if (AttributeUtil.getUidAttribute(attrs) != null) {
             throw new IllegalArgumentException(
-                    "Parameter 'attrs' must contain a 'Uid'!");
+                    "Parameter 'attrs' contains a uid.");
         }
         // check for things only valid during ADD/DELETE
-        if (Type.ADD.equals(type) || Type.DELETE.equals(type)) {
+        if (isDelta) {
             for (Attribute attr : attrs) {
                 Assertions.nullCheck(attr, "attr");
                 // make sure that none of the values are null..
                 if (attr.getValue() == null) {
                     throw new IllegalArgumentException(
-                            "Can not ADD or DELETE 'null' value.");
+                            "Can not add or remove a 'null' value.");
                 }
                 // make sure that if this an delete/add that it doesn't include
                 // certain attributes because it doesn't make any sense..

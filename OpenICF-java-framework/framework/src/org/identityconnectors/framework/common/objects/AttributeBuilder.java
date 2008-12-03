@@ -51,7 +51,6 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
 import org.identityconnectors.framework.common.FrameworkUtil;
-import org.identityconnectors.framework.spi.Connector;
 
 
 /**

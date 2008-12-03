@@ -47,7 +47,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.identityconnectors.framework.api.operations.APIOperation;
-import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
@@ -142,10 +141,7 @@ class CommonObjectHandlers {
     
     static { 
         
-        
-        HANDLERS.add( new EnumSerializationHandler(UpdateApiOp.Type.class,
-        "UpdateApiOpType") );
-        
+                
         HANDLERS.add(
                 
             new ThrowableHandler<AlreadyExistsException>(AlreadyExistsException.class,"AlreadyExistsException") {

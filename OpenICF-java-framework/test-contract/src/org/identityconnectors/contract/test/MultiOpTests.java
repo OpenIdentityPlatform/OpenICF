@@ -65,6 +65,7 @@ import org.identityconnectors.framework.api.operations.ValidateApiOp;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
+import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
@@ -240,8 +241,10 @@ public class MultiOpTests extends ObjectClassRunner {
                 if (replaceAttributes.size() > 0) {                    
                     // Uid must be present in attributes
                     replaceAttributes.add(updateUid);
-                    Uid newUid = getConnectorFacade().update(UpdateApiOp.Type.REPLACE,
-                            getObjectClass(), replaceAttributes, getOperationOptionsByOp(UpdateApiOp.class));
+                    Uid newUid = getConnectorFacade().update(
+                            getObjectClass(), 
+                            updateUid,
+                            AttributeUtil.filterUid(replaceAttributes), getOperationOptionsByOp(UpdateApiOp.class));
                     replaceAttributes.remove(updateUid);
                     
                     if (!updateUid.equals(newUid)) {
@@ -610,7 +613,8 @@ public class MultiOpTests extends ObjectClassRunner {
             attrs.add(uid);
             
             //update
-            uid = getConnectorFacade().update(UpdateApiOp.Type.REPLACE, getSupportedObjectClass(), attrs, null);
+            uid = getConnectorFacade().update(getSupportedObjectClass(), uid,
+                    AttributeUtil.filterUid(attrs), null);
 
             //check again with update value
             checkAttribute(attrName, uid, updateValue, type);
@@ -704,8 +708,8 @@ public class MultiOpTests extends ObjectClassRunner {
                     accountAttrs2.add(AttributeBuilder.build(PredefinedAttributes.GROUPS_NAME,
                             groupUid2));
                     accountAttrs2.add(accountUid1);
-                    accountUid1 = getConnectorFacade().update(UpdateApiOp.Type.ADD,
-                            ObjectClass.ACCOUNT, accountAttrs2, null);
+                    accountUid1 = getConnectorFacade().addAttributeValues(
+                            ObjectClass.ACCOUNT, accountUid1, AttributeUtil.filterUid(accountAttrs2), null);
 
                     // get the account to make sure it exists now and values are correct
                     obj = getConnectorFacade().getObject(ObjectClass.ACCOUNT, accountUid1,
@@ -803,8 +807,8 @@ public class MultiOpTests extends ObjectClassRunner {
                     accountAttrs2.add(AttributeBuilder.build(PredefinedAttributes.ORGANIZATION_NAME,
                             orgUid2));
                     accountAttrs2.add(accountUid1);
-                    accountUid1 = getConnectorFacade().update(UpdateApiOp.Type.ADD,
-                            ObjectClass.ACCOUNT, accountAttrs2, null);
+                    accountUid1 = getConnectorFacade().addAttributeValues(
+                            ObjectClass.ACCOUNT, accountUid1, AttributeUtil.filterUid(accountAttrs2), null);
 
                     // get the account to make sure it exists now and values are correct
                     obj = getConnectorFacade().getObject(ObjectClass.ACCOUNT, accountUid1,
@@ -902,8 +906,8 @@ public class MultiOpTests extends ObjectClassRunner {
                     orgAttrs2.add(AttributeBuilder.build(PredefinedAttributes.ACCOUNTS_NAME,
                             accountUid2));
                     orgAttrs2.add(orgUid1);
-                    orgUid1 = getConnectorFacade().update(UpdateApiOp.Type.ADD,
-                            ObjectClass.ORGANIZATION, orgAttrs2, null);
+                    orgUid1 = getConnectorFacade().addAttributeValues(
+                            ObjectClass.ORGANIZATION, orgUid1, AttributeUtil.filterUid(orgAttrs2), null);
 
                     // get the org to make sure it exists now and values are correct
                     obj = getConnectorFacade().getObject(ObjectClass.ORGANIZATION, orgUid1,
@@ -1001,8 +1005,8 @@ public class MultiOpTests extends ObjectClassRunner {
                     groupAttrs2.add(AttributeBuilder.build(PredefinedAttributes.ACCOUNTS_NAME,
                             accountUid2));
                     groupAttrs2.add(groupUid1);
-                    groupUid1 = getConnectorFacade().update(UpdateApiOp.Type.ADD,
-                            ObjectClass.GROUP, groupAttrs2, null);
+                    groupUid1 = getConnectorFacade().addAttributeValues(
+                            ObjectClass.GROUP, groupUid1, AttributeUtil.filterUid(groupAttrs2), null);
 
                     // get the org to make sure it exists now and values are correct
                     obj = getConnectorFacade().getObject(ObjectClass.GROUP, groupUid1,

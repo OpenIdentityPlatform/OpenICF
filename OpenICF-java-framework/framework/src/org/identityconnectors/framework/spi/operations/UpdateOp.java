@@ -44,32 +44,19 @@ import java.util.Set;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.identityconnectors.framework.spi.Connector;
 
 
 /**
  * The developer of a Connector should implement either this interface or the
- * {@link AdvancedUpdateOp} interface if the Connector will allow an authorized
+ * {@link UpdateAttributeValuesOp} interface if the Connector will allow an authorized
  * caller to update (i.e., modify or replace) objects on the target resource.
  * <p>
- * This update method modifies a target object based on the specified deltas.
- * The input set of {@code Attribute} instances contains the {@link Uid} necessary to find the
- * object in question. The rest of the input {@code Attribute} instances are deltas.
- * <p>
- * This update method is simpler to implement than {@code AdvancedUpdateOp},
+ * This update method is simpler to implement than {link UpdateAttributeValuesOp},
  * which must handle any of several different types of update that the caller
- * may specify.
- * <p>
- * The developer of a {@code Connector} needs to implement only one of
- * {@code UpdateOp} or {@code AdvancedUpdateOp}; there is no need to implement
- * both. The common code in the framework prefers {@code AdvanceUpdateOp}
- * if {@code AdvanceUpdateOp} is implemented. If
- * {@code AdvanceUpdateOp} is not implemented, then the common code in
- * the framework performs the processing that is needed to support incremental
- * update. The common code fetches the current {@code ConnectorObject},
- * applies the values from each attribute in the the input set, and passes the merged
- * attributes as input to the Connector's implementation of {@code UpdateOp}.
+ * may specify. However a true implementation of {link UpdateAttributeValuesOp}
+ * offers better performance and atomicity semantics.
  * 
  * @author Will Droste
  * @version $Revision $
@@ -77,46 +64,45 @@ import org.identityconnectors.framework.spi.Connector;
  */
 public interface UpdateOp extends SPIOperation {
     /**
-     * Modify the target object based on the information provided. 
+     * Update the object specified by the {@link ObjectClass} and {@link Uid}, 
+     * replacing the current values of each attribute with the values
+     * provided.
      * <p>
-     * Replace the current values of each attribute with the values provided.
-     * That is, for each attribute in the input set
-     * replace all of the current values of that attribute in the target object
-     * with the values from that attribute in the input set.
+     * For each input attribute, replace
+     * all of the current values of that attribute in the target object with
+     * the values of that attribute.
      * <p>
      * If the target object does not currently contain an attribute that the
-     * input set contains, then add this attribute
-     * (along with the provided values) to the target object.
+     * input set contains, then add this
+     * attribute (along with the provided values) to the target object.
      * <p>
-     * If the value of an attribute in the input set is <code>null</code>, 
-     * then do one of the following, depending on which is
-     * most appropriate for the target:
+     * If the value of an attribute in the input set is
+     * {@code null}, then do one of the following, depending on
+     * which is most appropriate for the target:
      * <ul>
-     * <li>If possible, <em>remove</em> that attribute from the target object
-     * entirely.</li>
+     * <li>If possible, <em>remove</em> that attribute from the target
+     * object entirely.</li>
      * <li>Otherwise, <em>replace all of the current values</em> of that
-     * attribute in the target object with a single value of <code>null</code>.</li>
+     * attribute in the target object with a single value of
+     * {@code null}.</li>
      * </ul>
-     * <p>
-     * If the operation cannot be accomplished with the information provided,
-     * then throw the subclass of {@link RuntimeException} that best describes
-     * the problem.
-     * <p>
-     * *Note: {@link Uid} is the only attribute guaranteed to be in the attribute set, and it
-     * is how you will reference the object to update.
-     * 
      * @param objclass
-     *            the type of object to update.
-     * 
-     * @param attrs
-     *            set of deltas and the {@link Uid} attribute to update.
+     *            the type of object to modify. Will never be null.
+     * @param uid
+     *            the uid of the object to modify. Will never be null.
+     * @param replaceAttributes
+     *            set of new {@link Attribute}. the values in this set
+     *            represent the new, merged values to be applied to the object. 
+     *            This set may also include {@link OperationalAttributes operational attributes}. 
+     *            Will never be null.
      * @param options
      *            additional options that impact the way this operation is run.
-     *            If the caller passes null, the framework will convert this into
-     *            an empty set of options, so SPI need not worry
-     *            about this ever being null.
-     * @return the {@code Uid} of the updated object in case this update
-     *         operation changes the values that form the unique identifier.
+     *            Will never be null.
+     * @return the {@link Uid} of the updated object in case the update changes
+     *         the formation of the unique identifier.
      */
-    Uid update(final ObjectClass objclass, final Set<Attribute> attrs, final OperationOptions options);
+    public Uid update(ObjectClass objclass,
+            Uid uid,
+            Set<Attribute> replaceAttributes,
+            OperationOptions options);
 }

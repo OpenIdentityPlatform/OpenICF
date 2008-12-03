@@ -55,6 +55,7 @@ import org.identityconnectors.framework.api.operations.SyncApiOp;
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
@@ -265,8 +266,9 @@ public class AttributeTests extends ObjectClassRunner {
                     assertTrue("no update attributes were found",
                             (allAttributes.size() > 0));
                     Uid newUid = getConnectorFacade().update(
-                            UpdateApiOp.Type.REPLACE, getObjectClass(),
-                            allAttributes,
+                            getObjectClass(),
+                            uid,
+                            AttributeUtil.filterUid(allAttributes),
                             getOperationOptionsByOp(UpdateApiOp.class));
 
                     // Update change of Uid must be propagated to
@@ -594,8 +596,9 @@ public class AttributeTests extends ObjectClassRunner {
                 assertTrue(testMarkMsg + " no update attributes were found",
                         (replaceAttributes.size() > 0));
                 Uid newUid = getConnectorFacade().update(
-                        UpdateApiOp.Type.REPLACE, getSupportedObjectClass(),
-                        replaceAttributes,
+                        getSupportedObjectClass(),
+                        uid,
+                        AttributeUtil.filterUid(replaceAttributes),
                         null);
 
                 // Update change of Uid must be propagated to

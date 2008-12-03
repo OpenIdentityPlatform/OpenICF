@@ -288,8 +288,8 @@ public abstract class TestHelpers {
 
 	private static Properties loadGroovyConfigFile(String fileName) throws IOException{
 		try {
-			Class slurper = Class.forName("groovy.util.ConfigSlurper");
-			Class configObject = Class.forName("groovy.util.ConfigObject");
+			Class<?> slurper = Class.forName("groovy.util.ConfigSlurper");
+			Class<?> configObject = Class.forName("groovy.util.ConfigObject");
 			Object slurpInstance = slurper.newInstance();
 			Method parse = slurper.getMethod("parse", URL.class);
 			Object config = parse.invoke(slurpInstance, IOUtil.makeURL(null, fileName));

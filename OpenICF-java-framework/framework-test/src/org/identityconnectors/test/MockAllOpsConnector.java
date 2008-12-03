@@ -51,7 +51,6 @@ import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.AbstractFilterTranslator;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
-import org.identityconnectors.framework.spi.operations.AdvancedUpdateOp;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
 import org.identityconnectors.framework.spi.operations.CreateOp;
 import org.identityconnectors.framework.spi.operations.DeleteOp;
@@ -59,11 +58,12 @@ import org.identityconnectors.framework.spi.operations.ScriptOnConnectorOp;
 import org.identityconnectors.framework.spi.operations.ScriptOnResourceOp;
 import org.identityconnectors.framework.spi.operations.SearchOp;
 import org.identityconnectors.framework.spi.operations.TestOp;
+import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
 import org.identityconnectors.framework.spi.operations.UpdateOp;
 
 
 public class MockAllOpsConnector extends MockConnector implements CreateOp,
-        DeleteOp, UpdateOp, SearchOp<String>, AdvancedUpdateOp, AuthenticateOp,
+        DeleteOp, UpdateOp, SearchOp<String>, UpdateAttributeValuesOp, AuthenticateOp,
         TestOp, ScriptOnConnectorOp, ScriptOnResourceOp {
 
     public Object runScriptOnConnector(ScriptContext request,
@@ -95,13 +95,29 @@ public class MockAllOpsConnector extends MockConnector implements CreateOp,
         addCall(objClass, uid);
     }
 
-    public Uid update(ObjectClass objclass, Set<Attribute> attrs,
+    public Uid update(ObjectClass objclass, Uid uid, Set<Attribute> attrs,
             OperationOptions options) {
         assert objclass != null && attrs != null;
         addCall(objclass, attrs);
         return null;
     }
-
+    
+    public Uid addAttributeValues(ObjectClass objclass,
+            Uid uid,
+            Set<Attribute> valuesToAdd,
+            OperationOptions options) {
+        addCall(objclass, valuesToAdd);
+        return null;
+    }
+    
+    public Uid removeAttributeValues(ObjectClass objclass,
+            Uid uid,
+            Set<Attribute> valuesToRemove,
+            OperationOptions options) {
+        addCall(objclass, valuesToRemove);
+        return null;
+    }
+    
     public FilterTranslator<String> createFilterTranslator(ObjectClass oclass,
             OperationOptions options) {
         assert oclass != null && options != null;
@@ -127,13 +143,6 @@ public class MockAllOpsConnector extends MockConnector implements CreateOp,
             OperationOptions options) {
         assert attrs != null;
         addCall(attrs);
-    }
-
-    public Uid update(AdvancedUpdateOp.Type type, ObjectClass objclass,
-            Set<Attribute> attrs, OperationOptions options) {
-        assert type != null && objclass != null && attrs != null;
-        addCall(type, objclass, attrs);
-        return null;
     }
 
     public Uid authenticate(String username, GuardedString password,

@@ -58,6 +58,7 @@ import org.identityconnectors.framework.api.operations.SearchApiOp;
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -257,9 +258,8 @@ public class ConnectorFacadeTests {
         testCallPattern(new TestOperationPattern() {
             public void makeCall(ConnectorFacade facade) {
                 Set<Attribute> attrs = new HashSet<Attribute>();
-                attrs.add(newUid(0));
                 attrs.add(AttributeBuilder.build("accountid"));
-                facade.update(UpdateApiOp.Type.REPLACE, ObjectClass.ACCOUNT, attrs, null);
+                facade.update(ObjectClass.ACCOUNT, newUid(0), attrs, null);
             }
 
             public void checkCalls(List<Call> calls) {
@@ -354,7 +354,7 @@ public class ConnectorFacadeTests {
         addAttrSet.add(AttributeBuilder.build(ATTR_NAME, ADDED));
         Name name = obj.getName();
         addAttrSet.remove(name);
-        Uid uid = facade.update(UpdateApiOp.Type.ADD, ACCOUNT, addAttrSet, null);
+        Uid uid = facade.addAttributeValues(ACCOUNT, obj.getUid(), AttributeUtil.filterUid(addAttrSet), null);
         // get back the object and see if there are the same..
         addAttrSet.add(name);
         ConnectorObject addO = new ConnectorObject(ACCOUNT, addAttrSet);
@@ -362,7 +362,7 @@ public class ConnectorFacadeTests {
         assertEquals(addO, obj);
         // attempt to add on to an existing attribute..
         addAttrSet.remove(name);
-        uid = facade.update(UpdateApiOp.Type.ADD, ACCOUNT, addAttrSet, null);
+        uid = facade.addAttributeValues(ACCOUNT, obj.getUid(), AttributeUtil.filterUid(addAttrSet), null);
         // get the object back out and check on it..
         obj = facade.getObject(ObjectClass.ACCOUNT, uid, null);
         expected = AttributeBuilder.build(ATTR_NAME, ADDED, ADDED);
@@ -371,7 +371,7 @@ public class ConnectorFacadeTests {
         // attempt to delete a value from an attribute..
         Set<Attribute> deleteAttrs = CollectionUtil.newSet(addO.getAttributes());
         deleteAttrs.remove(name);
-        uid = facade.update(UpdateApiOp.Type.DELETE, ACCOUNT, deleteAttrs, null);
+        uid = facade.removeAttributeValues(ACCOUNT, addO.getUid(), AttributeUtil.filterUid(deleteAttrs), null);
         obj = facade.getObject(ObjectClass.ACCOUNT, uid, null);
         expected = AttributeBuilder.build(ATTR_NAME, ADDED);
         actual = obj.getAttributeByName(ATTR_NAME);
@@ -380,7 +380,7 @@ public class ConnectorFacadeTests {
         Set<Attribute> nonExist = new HashSet<Attribute>();
         nonExist.add(newUid(1));
         nonExist.add(AttributeBuilder.build("does not exist", "asdfe"));
-        uid = facade.update(UpdateApiOp.Type.DELETE, ACCOUNT, nonExist, null);
+        uid = facade.removeAttributeValues(ACCOUNT, addO.getUid(), AttributeUtil.filterUid(nonExist), null);
         obj = facade.getObject(ObjectClass.ACCOUNT, newUid(1), null);
         assertTrue(obj.getAttributeByName("does not exist") == null);
     }

@@ -162,14 +162,39 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
-    public final Uid update(final UpdateApiOp.Type type,
-            final ObjectClass objclass, 
+    public final Uid update(
+            final ObjectClass objclass,
+            final Uid uid,
             final Set<Attribute> attrs,
             final OperationOptions options) {
         return ((UpdateApiOp) this.getOperationCheckSupported(UpdateApiOp.class))
-            .update(type, objclass, attrs, options);
+            .update(objclass, uid, attrs, options);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public final Uid addAttributeValues(
+            final ObjectClass objclass,
+            final Uid uid,
+            final Set<Attribute> attrs,
+            final OperationOptions options) {
+        return ((UpdateApiOp) this.getOperationCheckSupported(UpdateApiOp.class))
+            .addAttributeValues(objclass, uid, attrs, options);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public final Uid removeAttributeValues(
+            final ObjectClass objclass,
+            final Uid uid,
+            final Set<Attribute> attrs,
+            final OperationOptions options) {
+        return ((UpdateApiOp) this.getOperationCheckSupported(UpdateApiOp.class))
+            .removeAttributeValues(objclass, uid, attrs, options);
+    }
+    
     /**
      * {@inheritDoc}
      */

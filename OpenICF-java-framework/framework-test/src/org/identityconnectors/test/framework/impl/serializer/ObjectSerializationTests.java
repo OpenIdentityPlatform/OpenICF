@@ -60,7 +60,6 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.ConnectorKey;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
-import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.common.FrameworkUtil;
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
@@ -872,16 +871,7 @@ public class ObjectSerializationTests {
             Assert.assertEquals("my msg3", v2.getMessage());
         }
         
-    }
-        
-    @Test
-    public void testUpdateApiOpType() {
-        UpdateApiOp.Type v1 = UpdateApiOp.Type.ADD;
-        UpdateApiOp.Type v2 = (UpdateApiOp.Type)cloneObject(v1);
-        
-        Assert.assertEquals(v1, v2);
-    }
-    
+    }    
     
     @Test
     public void testHelloRequest() {
