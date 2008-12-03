@@ -89,13 +89,13 @@ public class ScriptOnConnectorApiOpTests extends AbstractSimpleTest {
                 // get test properties - optional
                 // if a property is not found test is skipped
                 String language = (String) getDataProvider().getTestSuiteAttribute(
-                        String.class.getName(), LANGUAGE_PROP_PREFIX, TEST_NAME);
+                        LANGUAGE_PROP_PREFIX, TEST_NAME);
                 String script = (String) getDataProvider().getTestSuiteAttribute(
-                        String.class.getName(), SCRIPT_PROP_PREFIX, TEST_NAME);
+                        SCRIPT_PROP_PREFIX, TEST_NAME);
                 Map<String, Object> arguments = (Map<String, Object>) getDataProvider()
-                        .getTestSuiteAttribute(Map.class.getName(), ARGUMENTS_PROP_PREFIX, TEST_NAME);
-                Object expResult = getDataProvider().getTestSuiteAttribute(Object.class.getName(),
-                        RESULT_PROP_PREFIX, TEST_NAME);
+                        .getTestSuiteAttribute(ARGUMENTS_PROP_PREFIX, TEST_NAME);
+                Object expResult = getDataProvider().getTestSuiteAttribute(RESULT_PROP_PREFIX,
+                        TEST_NAME);
 
                 // run the script
                 Object result = getConnectorFacade().runScriptOnConnector(

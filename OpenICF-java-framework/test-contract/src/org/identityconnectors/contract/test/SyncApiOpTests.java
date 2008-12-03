@@ -329,13 +329,13 @@ public class SyncApiOpTests extends ObjectClassRunner {
         try {
             if (operation.equals(CreateApiOp.class)) {
                 canSync = !(Boolean) getDataProvider().getTestSuiteAttribute(
-                        Boolean.class.getName(), DISABLE + "." + CREATE_PREFIX, TEST_NAME);
+                        DISABLE + "." + CREATE_PREFIX, TEST_NAME);
             } else if (operation.equals(UpdateApiOp.class)) {
                 canSync = !(Boolean) getDataProvider().getTestSuiteAttribute(
-                        Boolean.class.getName(), DISABLE + "." + UPDATE_PREFIX, TEST_NAME);
+                        DISABLE + "." + UPDATE_PREFIX, TEST_NAME);
             } else if (operation.equals(DeleteApiOp.class)) {
                 canSync = !(Boolean) getDataProvider().getTestSuiteAttribute(
-                        Boolean.class.getName(), DISABLE + "." + DELETE_PREFIX, TEST_NAME);
+                        DISABLE + "." + DELETE_PREFIX, TEST_NAME);
             }
         } catch (ObjectNotFoundException ex) {
             // exceptions is throw in case property definition is not found

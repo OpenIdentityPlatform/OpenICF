@@ -93,13 +93,13 @@ public class ScriptOnResourceApiOpTests extends AbstractSimpleTest {
                 // get test properties - optional
                 // if a property is not found test is skipped
                 String language = (String) getDataProvider().getTestSuiteAttribute(
-                        String.class.getName(), LANGUAGE_PROP_PREFIX, TEST_NAME);
+                        LANGUAGE_PROP_PREFIX, TEST_NAME);
                 String script = (String) getDataProvider().getTestSuiteAttribute(
-                        String.class.getName(), SCRIPT_PROP_PREFIX, TEST_NAME);
+                        SCRIPT_PROP_PREFIX, TEST_NAME);
                 Map<String, Object> arguments = (Map<String, Object>) getDataProvider()
-                        .getTestSuiteAttribute(Map.class.getName(), ARGUMENTS_PROP_PREFIX, TEST_NAME);
-                Object expResult = getDataProvider().getTestSuiteAttribute(Object.class.getName(),
-                        RESULT_PROP_PREFIX, TEST_NAME);
+                        .getTestSuiteAttribute(ARGUMENTS_PROP_PREFIX, TEST_NAME);
+                Object expResult = getDataProvider().getTestSuiteAttribute(RESULT_PROP_PREFIX,
+                        TEST_NAME);
 
                 // run the script
                 Object result = getConnectorFacade().runScriptOnResource(
@@ -202,7 +202,7 @@ public class ScriptOnResourceApiOpTests extends AbstractSimpleTest {
     private String getStringProperty(String name) {
         String value = null;
         try {
-            value = (String) getDataProvider().getTestSuiteAttribute(String.class.getName(), name, TEST_NAME);
+            value = (String) getDataProvider().getTestSuiteAttribute(name, TEST_NAME);
             LOG.info("Property ''{0}'' value ''{1}''.", name, value);
         } catch (ObjectNotFoundException ex) {
             // ok

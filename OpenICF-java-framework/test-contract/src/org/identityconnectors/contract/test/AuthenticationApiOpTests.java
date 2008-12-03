@@ -119,15 +119,15 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
             assertNotNull("Unable to retrieve newly created object", obj);
 
             // get username
-            String name = (String) getDataProvider().getTestSuiteAttribute(String.class.getName(),
-                    getObjectClass().getObjectClassValue() + "." + USERNAME_PROP, TEST_NAME);
+            String name = (String) getDataProvider().getTestSuiteAttribute(getObjectClass().getObjectClassValue() + "." + USERNAME_PROP,
+                    TEST_NAME);
 
             // test negative case with valid user, but wrong password
             boolean authenticateFailed = false;
 
             // get wrong password
-            String wrongPassword = (String) getDataProvider().getTestSuiteAttribute(String.class.getName(),
-                    getObjectClass().getObjectClassValue() + "." + WRONG_PASSWORD_PROP, TEST_NAME);
+            String wrongPassword = (String) getDataProvider().getTestSuiteAttribute(getObjectClass().getObjectClassValue() + "." + WRONG_PASSWORD_PROP,
+                    TEST_NAME);
 
             try {
                 getConnectorFacade().authenticate(name,new GuardedString(wrongPassword.toCharArray()),
@@ -346,8 +346,8 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                         getOperationOptionsByOp(CreateApiOp.class));
                 
                 // get username
-                String name = (String) getDataProvider().getTestSuiteAttribute(String.class.getName(),
-                        getObjectClass().getObjectClassValue() + "." + USERNAME_PROP, TEST_NAME);
+                String name = (String) getDataProvider().getTestSuiteAttribute(getObjectClass().getObjectClassValue() + "." + USERNAME_PROP,
+                        TEST_NAME);
                                                 
                 // get new password
                 String newpassword = ConnectorHelper.getString(getDataProvider(), getTestName(),

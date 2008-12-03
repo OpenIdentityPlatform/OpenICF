@@ -370,8 +370,8 @@ public class SearchApiOpTests extends ObjectClassRunner {
         Boolean canSearchCIns = true;
         try {
             canSearchCIns = !(Boolean) getDataProvider().getTestSuiteAttribute(
-                    Boolean.class.getName(),
-                    DISABLE + "." + CASE_INSENSITIVE_PREFIX, TEST_NAME);
+                    DISABLE + "." + CASE_INSENSITIVE_PREFIX,
+                    TEST_NAME);
 
         } catch (ObjectNotFoundException ex) {
             // exceptions is throw in case property definition is not found

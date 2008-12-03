@@ -615,7 +615,7 @@ public class GroovyDataProvider implements DataProvider {
     /**
      * {@inheritDoc}
      */
-    public Object getTestSuiteAttribute(String typeName, String propName)
+    public Object getTestSuiteAttribute(String propName)
             throws ObjectNotFoundException {
 
         return get("testsuite." + propName, null, false);
@@ -624,15 +624,14 @@ public class GroovyDataProvider implements DataProvider {
     /**
      * {@inheritDoc}
      */
-    public Object getTestSuiteAttribute(String typeName, String propName,
-            String testName) throws ObjectNotFoundException {
+    public Object getTestSuiteAttribute(String propName, String testName) throws ObjectNotFoundException {
         return get("testsuite." + testName + "." + propName, null, false);
     }
 
     /**
      * {@inheritDoc}
      */
-    public Object getConnectorAttribute(String typeName, String propName)
+    public Object getConnectorAttribute(String propName)
             throws ObjectNotFoundException {
 
         return get("connector." + propName, null, false);

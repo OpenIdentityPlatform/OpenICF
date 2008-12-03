@@ -186,7 +186,7 @@ public class ConnectorHelper {
                 else tmpPropName = propName;
                 
                 Object configObject = dataProvider.getConnectorAttribute(
-                        prop.getType().getName(), tmpPropName);
+                        tmpPropName);
                 
                 if (configObject != null) {
                     LOG.info("Setting property ''{0}'' to value ''{1}''",
@@ -757,8 +757,7 @@ public class ConnectorHelper {
         ConnectorInfoManager manager = null;
         
         // try to load bundleJar property (which should be set by ant)
-        File bundleJar = new File(((String) dataProvider.getTestSuiteAttribute(String.class
-                .getName(), "bundleJar")).trim());
+        File bundleJar = new File(((String) dataProvider.getTestSuiteAttribute("bundleJar")).trim());
         Assert.assertTrue("BundleJar does not exist: " + bundleJar.getAbsolutePath(), bundleJar
                 .isFile());
         try {
@@ -789,17 +788,17 @@ public class ConnectorHelper {
         String key = null;
         // load properties from config file and then override them with system properties
         try {
-            host = (String)dataProvider.getTestSuiteAttribute(String.class.getName(), "serverHost");
+            host = (String)dataProvider.getTestSuiteAttribute("serverHost");
         }
         catch (ObjectNotFoundException ex) {  //ok
         }
         try {
-            port = (Integer)dataProvider.getTestSuiteAttribute(Integer.class.getName(), "serverPort");
+            port = (Integer)dataProvider.getTestSuiteAttribute("serverPort");
         }
         catch (ObjectNotFoundException ex) {  //ok
         }
         try {
-            key = (String)dataProvider.getTestSuiteAttribute(String.class.getName(), "serverKey");
+            key = (String)dataProvider.getTestSuiteAttribute("serverKey");
         }
         catch (ObjectNotFoundException ex) {  //ok
         }        
@@ -834,12 +833,9 @@ public class ConnectorHelper {
     public static APIConfiguration getDefaultConfigurationProperties(DataProvider dataProvider,
             ConnectorInfoManager manager) throws ObjectNotFoundException {
         
-        String bundleName = (String) dataProvider.getTestSuiteAttribute(String.class.getName(),
-                "bundleName");
-        String bundleVersion = (String) dataProvider.getTestSuiteAttribute(String.class.getName(),
-                "bundleVersion");
-        String connectorName = (String) dataProvider.getTestSuiteAttribute(String.class.getName(),
-                "connectorName");
+        String bundleName = (String) dataProvider.getTestSuiteAttribute("bundleName");
+        String bundleVersion = (String) dataProvider.getTestSuiteAttribute("bundleVersion");
+        String connectorName = (String) dataProvider.getTestSuiteAttribute("connectorName");
         ConnectorKey key = new ConnectorKey(bundleName, bundleVersion, connectorName);
         ConnectorInfo info = manager.findConnectorInfo(key);
         final String MSG = "Connector info wasn't found. Check values of bundleName, bundleVersion and connectorName properties." + 

@@ -99,36 +99,31 @@ public interface DataProvider {
     
     /**
      * Gets data value by the specified parameters
-     * 
-     * @param typeName
      * @param propName
+     * 
      * @return
      * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
      */
-    public Object getConnectorAttribute(String typeName, 
-            String propName) throws ObjectNotFoundException;
+    public Object getConnectorAttribute(String propName) throws ObjectNotFoundException;
     
     /**
      * Gets test suite attribute
-     * 
-     * @param typeName
      * @param propName
+     * 
      * @return
      * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
      */
-    public Object getTestSuiteAttribute(String typeName, 
-            String propName) throws ObjectNotFoundException;
+    public Object getTestSuiteAttribute(String propName) throws ObjectNotFoundException;
     
     /**
      * Gets test suite attribute
-     * 
-     * @param typeName
      * @param propName
+     * 
      * @return
      * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
      */
-    public Object getTestSuiteAttribute(String typeName, 
-            String propName, String testName) throws ObjectNotFoundException;
+    public Object getTestSuiteAttribute(String propName, 
+            String testName) throws ObjectNotFoundException;
     
     /** free the allocated resources */
     public void dispose();

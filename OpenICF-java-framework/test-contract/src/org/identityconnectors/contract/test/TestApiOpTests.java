@@ -126,7 +126,7 @@ public class TestApiOpTests extends AbstractSimpleTest {
      */
     @Parameters
     public static List<Object[]> data() {
-        Integer i = Integer.parseInt((String)getDataProvider().getTestSuiteAttribute(Integer.class.getName(), "iterations", "Validate"));
+        Integer i = Integer.parseInt((String)getDataProvider().getTestSuiteAttribute("iterations", "Validate"));
 
         List<Object[]> list = new ArrayList<Object[]>();
         for (Integer j=1; j<=i; j++) {
