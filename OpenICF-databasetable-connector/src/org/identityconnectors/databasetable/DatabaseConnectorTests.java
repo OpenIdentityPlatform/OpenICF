@@ -505,7 +505,7 @@ public class DatabaseConnectorTests {
         Set<Attribute> changeSet = CollectionUtil.newSet(coBeforeUpdate.getAttributes());
         changeSet.remove(coBeforeUpdate.getName());
         ObjectClass objClass = new ObjectClass("NOTSUPPORTED");
-        facade.update(UpdateApiOp.Type.REPLACE, objClass, changeSet, null);
+        facade.update(objClass, coBeforeUpdate.getUid(),AttributeUtil.filterUid(changeSet), null);
     }
 
     /**
@@ -539,7 +539,7 @@ public class DatabaseConnectorTests {
         // do the update
         Set<Attribute> changeSet = CollectionUtil.newSet(coBeforeUpdate.getAttributes());
         changeSet.remove(coBeforeUpdate.getName());
-        facade.update(UpdateApiOp.Type.REPLACE, ObjectClass.ACCOUNT, changeSet, null);
+        facade.update(ObjectClass.ACCOUNT, coBeforeUpdate.getUid(), AttributeUtil.filterUid(changeSet), null);
     }
     
     /**
@@ -587,7 +587,7 @@ public class DatabaseConnectorTests {
         Set<Attribute> changeSet = CollectionUtil.newSet(coBeforeUpdate.getAttributes());
         changeSet.remove(coBeforeUpdate.getName());
 
-        final Uid uidUpdate = facade.update(UpdateApiOp.Type.REPLACE, ObjectClass.ACCOUNT, changeSet, null);
+        final Uid uidUpdate = facade.update(ObjectClass.ACCOUNT, coBeforeUpdate.getUid(), AttributeUtil.filterUid(changeSet), null);
 
         // uids should be the same
         assertEquals(uid.getUidValue(), uidUpdate.getUidValue());

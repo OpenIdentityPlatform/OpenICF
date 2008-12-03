@@ -321,6 +321,10 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         log.ok("Uid deleted: {0}", uid.getUidValue());
     }
 
+    public Uid update(ObjectClass obj, Uid uid, Set<Attribute> attrs, OperationOptions options) {
+        return update(obj, AttributeUtil.addUid(attrs, uid), options);
+    }
+    
     /**
      * Update the database row w/ the data provided.
      * 
@@ -331,7 +335,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      *              
      * @see UpdateOp#update(ObjectClass, Set, OperationOptions)
      */
-    public Uid update(final ObjectClass objclass, final Set<Attribute> attrs, final OperationOptions options) {
+    private Uid update(final ObjectClass objclass, final Set<Attribute> attrs, final OperationOptions options) {
         final String SQL_TEMPLATE = "UPDATE {0} SET {1} WHERE {2} = ?";
         // create the sql statement..
         
