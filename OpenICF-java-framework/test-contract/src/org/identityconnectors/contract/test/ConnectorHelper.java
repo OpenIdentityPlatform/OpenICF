@@ -592,7 +592,7 @@ public class ConnectorHelper {
                         //}
                     }
                     Object attributeValue = get(dataProvider, testName, attributeInfo.getType()
-                            .getName(), dataName, objectClassInfo.getType(), sequenceNumber);
+                            , dataName, objectClassInfo.getType(), sequenceNumber);
                     if(attributeValue instanceof Collection) {
                         attributes.add(AttributeBuilder.build(attributeName, (Collection)attributeValue));
                     } else {
@@ -899,7 +899,7 @@ public class ConnectorHelper {
     }
 
     public static Object get(DataProvider dataProvider, String componentName, 
-            String dataTypeName, String name, String objectClassName, 
+            Class dataTypeName, String name, String objectClassName, 
             int sequenceNumber) throws ObjectNotFoundException {
         return dataProvider.get(dataTypeName, formatDataName(name, objectClassName), 
                 componentName, sequenceNumber);

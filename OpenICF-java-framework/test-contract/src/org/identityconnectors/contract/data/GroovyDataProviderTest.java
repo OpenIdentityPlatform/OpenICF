@@ -53,6 +53,7 @@ import java.util.Set;
 
 import junit.framework.Assert;
 
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -350,6 +351,17 @@ public class GroovyDataProviderTest {
         Object o = getProperty(gdp, "Schema.@@NAME@@.attribute.account");
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof String && o.toString() == "Ahoj ship!");
+    }
+    
+    /**
+     * tests {@link GroovyDataProvider#getShortTypeName(Class)} method.
+     */
+    @Test
+    public void testGetShortTypeName() {
+        Assert.assertTrue(GroovyDataProvider.getShortTypeName(String.class).equals("Tstring"));
+        byte[] barr = new byte[0];
+        Assert.assertTrue(GroovyDataProvider.getShortTypeName(barr.getClass()).equals("Tbytearray"));
+        Assert.assertTrue(GroovyDataProvider.getShortTypeName(GuardedString.class).equals("Tstring"));
     }
 
     /* ************* UTILITY METHODS ***************** */

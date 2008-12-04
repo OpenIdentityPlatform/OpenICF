@@ -113,6 +113,7 @@ import org.junit.Assert;
  */
 public class GroovyDataProvider implements DataProvider {
     
+    private static final String ARRAY_MARKER = "array";
     static final String PROPERTY_SEPARATOR = ".";
     private static final String CONTRACT_TESTS_FILE_NAME = "build.groovy";
     private static final String BOOTSTRAP_FILE_NAME = "bootstrap.groovy";
@@ -526,12 +527,17 @@ public class GroovyDataProvider implements DataProvider {
     /**
      * {@inheritDoc}
      */
-    public Object get(String dataTypeName, String name, String componentName,
-            int sequenceNumber) throws ObjectNotFoundException {
+    public Object get(Class dataTypeName, String name, String componentName,
+            int sequenceNumber/*, boolean isMultivalue*/) throws ObjectNotFoundException {
         // put the parameters in the Map ... this will fail if called
         // recursively
 
         String shortTypeName = getShortTypeName(dataTypeName);
+//        TODO
+//        if (isMultivalue) {
+//            String tmp = String.format("multi%s%s", PROPERTY_SEPARATOR, shortTypeName);
+//            shortTypeName = tmp;
+//        }
         
         Assert.assertFalse(cache.keySet().contains("param.sequenceNumber"));
         Assert.assertFalse(cache.keySet().contains("param.componentName"));
@@ -589,7 +595,7 @@ public class GroovyDataProvider implements DataProvider {
     /**
      * {@inheritDoc}
      */
-    public Object get(String dataTypeName, String name, String componentName)
+    public Object get(Class dataTypeName, String name, String componentName)
             throws ObjectNotFoundException {
 
         return get(dataTypeName, name, componentName, -1);
@@ -600,7 +606,7 @@ public class GroovyDataProvider implements DataProvider {
      */
     public String getString(String name, String componentName,
             int sequenceNumber) throws ObjectNotFoundException {
-        return (String) get(String.class.getName(), name, componentName,
+        return (String) get(String.class, name, componentName,
                 sequenceNumber);
     }
 
@@ -609,7 +615,7 @@ public class GroovyDataProvider implements DataProvider {
      */
     public String getString(String name, String componentName)
             throws ObjectNotFoundException {
-        return (String) get(String.class.getName(), name, componentName);
+        return (String) get(String.class, name, componentName);
     }
 
     /**
@@ -645,50 +651,27 @@ public class GroovyDataProvider implements DataProvider {
      *            Name
      * @return Short Name
      */
-    private String getShortTypeName(String typeName) {
-        String shortName = typeName;
-
-        if (typeName.equals(GuardedString.class.getName())) {
-            shortName = "string";
-        } else if (typeName.equals("[B")) {
-            shortName = "bytearray";
-        } else if (typeName.equals("[Ljava.lang.String;")
-                || typeName
-                        .equals("[Lorg.identityconnectors.common.security.GuardedString;")) {
-            shortName = "stringarray";
-        } else if (typeName.equals("[Ljava.lang.Long;")
-                || typeName.equals("[J")) {
-            shortName = "longarray";
-        } else if (typeName.equals("[Ljava.lang.Integer;")
-                || typeName.equals("[I")) {
-            shortName = "integerarray";
-        } else if (typeName.equals("[Ljava.lang.Double;")
-                || typeName.equals("[D")) {
-            shortName = "doublearray";
-        } else if (typeName.equals("[Ljava.lang.Float;")
-                || typeName.equals("[F")) {
-            shortName = "floatarray";
-        } else if (typeName.equals("[Ljava.lang.Boolean;")
-                || typeName.equals("[Z")) {
-            shortName = "booleanarray";
-        } else if (typeName.equals("[Ljava.lang.Character;")
-                || typeName.equals("[C")) {
-            shortName = "characterarray";
-        } else if (typeName.equals("[Ljava.net.URI;")) {
-            shortName = "uriarray";
-        } else if (typeName.equals("[Ljava.io.File;")) {
-            shortName = "filearray";
-        } else {
-            int lindex = typeName.lastIndexOf(".");
-            if (lindex != -1) {
-                shortName = typeName.substring(lindex + 1);
-                shortName = shortName.toLowerCase();
+    static String getShortTypeName(Class dataType) {
+        /*
+         * in case of arrays "datatype[]" is returned
+         */
+        String shortName = dataType.getSimpleName();
+        final boolean isArray = dataType.isArray();
+        
+        if (dataType.equals(GuardedString.class)) {
+            shortName = String.class.getSimpleName();
+        }
+        
+        if (isArray) {
+            if (shortName.length() > 2) {
+                String tmp = shortName.replace("[]", ARRAY_MARKER);
+                shortName = tmp;
             } else {
-                LOG.warn("Can't get short type for ''{0}''", typeName);
+                LOG.warn("Can't get short type for ''{0}'' (missing array type)", dataType.getName());
             }
         }
 
-        return "T" + shortName;
+        return String.format("T%s", shortName.toLowerCase());
     }
 
     /* **************** SNAPSHOT GENERATOR METHODS **************** */
