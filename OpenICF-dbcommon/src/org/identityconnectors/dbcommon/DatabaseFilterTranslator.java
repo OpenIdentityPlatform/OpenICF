@@ -295,7 +295,7 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
      * Validate the attribute to supported search types
      * @param singleValue
      */
-    private boolean validateSearchAttribute(final Attribute attribute) {
+    protected boolean validateSearchAttribute(final Attribute attribute) {
         //Ignore streamed ( byte[] objects ) from query
         if(byte[].class.equals(AttributeUtil.getSingleValue(attribute).getClass())) {
             return false;
