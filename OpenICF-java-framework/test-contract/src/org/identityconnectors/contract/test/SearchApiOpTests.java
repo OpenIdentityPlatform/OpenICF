@@ -127,6 +127,10 @@ public class SearchApiOpTests extends ObjectClassRunner {
                 attrs.add(attr);
                 uids.add(luid);
             }
+            
+            // retrieve all objects including newly created
+            List<ConnectorObject> coAll = ConnectorHelper.search(getConnectorFacade(),
+                    getObjectClass(), null, getOperationOptionsByOp(SearchApiOp.class));
 
             //search by id 
             uid = uids.get(0);
@@ -136,7 +140,9 @@ public class SearchApiOpTests extends ObjectClassRunner {
             assertTrue("Search filter by uid failed, expected to return one object, but returned "
                     + coObjects.size(), coObjects.size() == 1);
             coFound = coObjects.get(0);
-            ConnectorHelper.checkObject(getObjectClassInfo(), coFound, attrs.get(0));
+
+            final Set<Attribute> searchBy = attrs.get(0);
+            ConnectorHelper.checkObject(getObjectClassInfo(), coFound, searchBy);
 
             //get name
             Attribute attName = coFound.getAttributeByName(Name.NAME);
@@ -147,11 +153,13 @@ public class SearchApiOpTests extends ObjectClassRunner {
             //search by name
             coFound = ConnectorHelper.findObjectByName(getConnectorFacade(), getObjectClass(),
                     attNameValue, getOperationOptionsByOp(SearchApiOp.class));
-            ConnectorHelper.checkObject(getObjectClassInfo(), coFound, attrs.get(0));
+
+            ConnectorHelper.checkObject(getObjectClassInfo(), coFound, searchBy);
             
             //search by all non special readable attributes
             Filter fltAllAtts = null;
-            for (Attribute attribute : attrs.get(0)) {
+
+            for (Attribute attribute : searchBy) {
                 if (!AttributeUtil.isSpecial(attribute) && ConnectorHelper.isReadable(getObjectClassInfo(), attribute)) {                    
                     if (fltAllAtts == null) {
                         fltAllAtts = FilterBuilder.equalTo(attribute);
@@ -163,11 +171,23 @@ public class SearchApiOpTests extends ObjectClassRunner {
             // skip test when there are no special readable attributes 
             // (results in null filter - tested explicitly)
             if (fltAllAtts != null) {
-                coObjects = ConnectorHelper.search(getConnectorFacade(), getObjectClass(), fltAllAtts,
+                // find how many object should pass filter
+                int count = 0;
+                for (ConnectorObject co : coAll) {
+                    if (fltAllAtts.accept(co)) {
+                        count++;
+                    }
+                }
+                coObjects = ConnectorHelper.search(getConnectorFacade(),
+                        getObjectClass(), fltAllAtts,
                         getOperationOptionsByOp(SearchApiOp.class));
-                assertEquals("Search by all non-special attributes returned " + coObjects.size()
-                        + "objects, but expected was 1.", 1, coObjects.size());
-                ConnectorHelper.checkObject(getObjectClassInfo(), coFound, attrs.get(0));
+
+                assertEquals("Search by all non-special attributes returned "
+                        + coObjects.size() + " objects, but expected was "
+                        + count + " .", count, coObjects.size());
+                ConnectorHelper.checkObject(getObjectClassInfo(), coFound,
+                        searchBy);
+
             }
             
             //check null filter
