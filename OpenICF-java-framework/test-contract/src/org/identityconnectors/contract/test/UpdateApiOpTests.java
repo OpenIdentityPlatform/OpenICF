@@ -146,7 +146,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
             if (addDelAttrs.size() > 0) {
                 // uid must be present for update
                 addDelAttrs.add(uid);
-                Uid newUid = getConnectorFacade().removeAttributeValues(getObjectClass(),
+                Uid newUid = getConnectorFacade().addAttributeValues(getObjectClass(),
                         uid,
                         AttributeUtil.filterUid(addDelAttrs), getOperationOptionsByOp(UpdateApiOp.class));
 
