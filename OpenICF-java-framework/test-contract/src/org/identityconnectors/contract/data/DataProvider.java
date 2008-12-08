@@ -126,6 +126,25 @@ public interface DataProvider {
     public Object getTestSuiteAttribute(String propName, 
             String testName) throws ObjectNotFoundException;
     
+    /* *********** METHODS FOR UNIT TESTS ************** */
+    
+    /**
+     * Acquire a property value for given name
+     */
+    public Object get(String name);
+    
+    /**
+     * Aquire a property value marked with given iteration,
+     * for example i1.testProperty
+     * 
+     * @param name the suffix
+     * @param sequenceNumber
+     * @return the property value
+     */
+    public Object get(String name, int sequenceNumber);
+    
+    /* ************************************************* */
+    
     /** free the allocated resources */
     public void dispose();
     

@@ -64,6 +64,7 @@ import org.identityconnectors.contract.data.groovy.Lazy;
 import org.identityconnectors.contract.data.groovy.Random;
 import org.identityconnectors.contract.exceptions.ContractException;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
+import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 import org.junit.Assert;
 
 /**
@@ -641,6 +642,22 @@ public class GroovyDataProvider implements DataProvider {
             throws ObjectNotFoundException {
 
         return get("connector." + propName, null, false);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public Object get(String name) {
+        return get(name, null, false);
+    }
+
+    /** 
+     * {@inheritDoc}
+     */
+    public Object get(String name, int sequenceNumber) {
+        String resolvedName = String.format("i%s%s%s", sequenceNumber, PROPERTY_SEPARATOR, name);
+
+        return get(resolvedName);
     }
 
     /* ************** AUXILIARY METHODS *********************** */

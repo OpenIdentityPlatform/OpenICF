@@ -57,7 +57,6 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -362,6 +361,17 @@ public class GroovyDataProviderTest {
         byte[] barr = new byte[0];
         Assert.assertTrue(GroovyDataProvider.getShortTypeName(barr.getClass()).equals("Tbytearray"));
         Assert.assertTrue(GroovyDataProvider.getShortTypeName(GuardedString.class).equals("Tstring"));
+    }
+    
+    @Test
+    /**
+     * test {@link GroovyDataProvider#get(String)}
+     * test {@link GroovyDataProvider#get(String, int)}
+     */
+    public void testSimpleGet() {
+        DataProvider dp = (DataProvider) gdp;
+        Assert.assertTrue(dp.get("aaa.bbb.xxx").equals("ahoj"));
+        Assert.assertTrue(dp.get("param", 9).equals("foobar"));
     }
 
     /* ************* UTILITY METHODS ***************** */

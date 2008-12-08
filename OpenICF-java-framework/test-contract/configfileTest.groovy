@@ -98,6 +98,9 @@ Schema."@@NAME@@".attribute.account = 'Ahoj ship!'
 // repetitive prefix
 aaa.bbb.xxx = "ahoj"
 
+// iterative parameter
+i9.param = "foobar"
+
 // get test
 rumulus = Lazy.get("remus")
 
