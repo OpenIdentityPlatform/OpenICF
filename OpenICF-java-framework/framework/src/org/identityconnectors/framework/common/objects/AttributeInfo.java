@@ -108,6 +108,9 @@ public final class AttributeInfo {
 		_name = name;
 		_type = type;
 		_flags = Collections.unmodifiableSet(EnumSet.copyOf(flags));
+		if (!isReadable() && isReturnedByDefault()) {
+		    throw new IllegalArgumentException("Attribute "+name+" is flagged as not-readable, so it should also be as not-returned-by-default.");
+		}
 	}
 
 	/**

@@ -84,7 +84,7 @@ public final class OperationalAttributeInfos {
      */
     public static final AttributeInfo PASSWORD = AttributeInfoBuilder.build(
             OperationalAttributes.PASSWORD_NAME, GuardedString.class,
-            EnumSet.of(Flags.REQUIRED,Flags.NOT_READABLE));
+            EnumSet.of(Flags.REQUIRED,Flags.NOT_READABLE,Flags.NOT_RETURNED_BY_DEFAULT));
     
     /**
      * Used in conjunction with password to do an account level password change.
@@ -93,7 +93,7 @@ public final class OperationalAttributeInfos {
      */
     public static final AttributeInfo CURRENT_PASSWORD = AttributeInfoBuilder.build(
             OperationalAttributes.CURRENT_PASSWORD_NAME, GuardedString.class,
-            EnumSet.of(Flags.NOT_READABLE));
+            EnumSet.of(Flags.NOT_READABLE,Flags.NOT_RETURNED_BY_DEFAULT));
 
     /**
      * Used to do an administrator reset of the password. The value is the reset
@@ -101,7 +101,7 @@ public final class OperationalAttributeInfos {
      */
     public static final AttributeInfo RESET_PASSWORD = AttributeInfoBuilder.build(
             OperationalAttributes.RESET_PASSWORD_NAME, GuardedString.class,
-            EnumSet.of(Flags.NOT_READABLE));
+            EnumSet.of(Flags.NOT_READABLE,Flags.NOT_RETURNED_BY_DEFAULT));
     
     
     /**
@@ -109,6 +109,6 @@ public final class OperationalAttributeInfos {
      */
     public static final AttributeInfo PASSWORD_EXPIRED = AttributeInfoBuilder.build(
             OperationalAttributes.PASSWORD_EXPIRED_NAME, boolean.class,
-            EnumSet.of(Flags.NOT_READABLE));
+            EnumSet.of(Flags.NOT_READABLE,Flags.NOT_RETURNED_BY_DEFAULT));
 
 }
