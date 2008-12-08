@@ -108,7 +108,6 @@ public final class OperationalAttributeInfos {
      * Used to determine if a password is expired or to expire a password.
      */
     public static final AttributeInfo PASSWORD_EXPIRED = AttributeInfoBuilder.build(
-            OperationalAttributes.PASSWORD_EXPIRED_NAME, boolean.class,
-            EnumSet.of(Flags.NOT_READABLE,Flags.NOT_RETURNED_BY_DEFAULT));
+            OperationalAttributes.PASSWORD_EXPIRED_NAME, boolean.class);
 
 }

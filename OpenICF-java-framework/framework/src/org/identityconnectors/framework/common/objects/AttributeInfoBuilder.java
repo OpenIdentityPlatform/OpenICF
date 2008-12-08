@@ -160,17 +160,12 @@ public final class AttributeInfoBuilder {
 		_type = value;
         return this;
 	}
-
+	
 	/**
 	 * Determines if the attribute is readable.
 	 */
 	public AttributeInfoBuilder setReadable(final boolean value) {
-	    if ( !value ) {
-	        _flags.add(Flags.NOT_READABLE);
-	    }
-	    else {
-	        _flags.remove(Flags.NOT_READABLE);
-	    }
+	    setFlag(Flags.NOT_READABLE,!value);
         return this;
 	}
 
@@ -178,12 +173,7 @@ public final class AttributeInfoBuilder {
 	 * Determines if the attribute is writable.
 	 */
 	public AttributeInfoBuilder setCreateable(final boolean value) {
-        if ( !value ) {
-            _flags.add(Flags.NOT_CREATABLE);
-        }
-        else {
-            _flags.remove(Flags.NOT_CREATABLE);
-        }
+        setFlag(Flags.NOT_CREATABLE,!value);
         return this;
 	}
 
@@ -191,12 +181,7 @@ public final class AttributeInfoBuilder {
 	 * Determines if this attribute is required.
 	 */
 	public AttributeInfoBuilder setRequired(final boolean value) {
-        if ( value ) {
-            _flags.add(Flags.REQUIRED);
-        }
-        else {
-            _flags.remove(Flags.REQUIRED);
-        }
+        setFlag(Flags.REQUIRED,value);
         return this;
 	}
 
@@ -204,12 +189,7 @@ public final class AttributeInfoBuilder {
 	 * Determines if this attribute supports multivalue.
 	 */
 	public AttributeInfoBuilder setMultiValued(final boolean value) {
-        if ( value ) {
-            _flags.add(Flags.MULTIVALUED);
-        }
-        else {
-            _flags.remove(Flags.MULTIVALUED);
-        }
+        setFlag(Flags.MULTIVALUED,value);
         return this;
 	}
 
@@ -217,22 +197,12 @@ public final class AttributeInfoBuilder {
 	 * Determines if this attribute writable during update.
 	 */
 	public AttributeInfoBuilder setUpdateable(final boolean value) {
-        if ( !value ) {
-            _flags.add(Flags.NOT_UPDATEABLE);
-        }
-        else {
-            _flags.remove(Flags.NOT_UPDATEABLE);
-        }
+        setFlag(Flags.NOT_UPDATEABLE,!value);
         return this;
 	}
 	
 	public AttributeInfoBuilder setReturnedByDefault(final boolean value) {
-	    if ( !value ) {
-	        _flags.add(Flags.NOT_RETURNED_BY_DEFAULT);
-	    }
-	    else {
-	        _flags.remove(Flags.NOT_RETURNED_BY_DEFAULT);
-	    }
+        setFlag(Flags.NOT_RETURNED_BY_DEFAULT,!value);
         return this;
 	}
 		
@@ -258,6 +228,15 @@ public final class AttributeInfoBuilder {
 	    }
 	    return this;
 	}
+	
+    private void setFlag(Flags flag, boolean value) {
+        if (value) {
+            _flags.add(flag);
+        }
+        else {
+            _flags.remove(flag);
+        }
+    }
 	
 	/**
 	 * Convenience method to create an AttributeInfo. Equivalent to
