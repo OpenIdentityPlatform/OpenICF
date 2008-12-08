@@ -319,18 +319,16 @@ class CommonObjectHandlers {
             new AbstractObjectSerializationHandler(AttributeInfo.class,"AttributeInfo") {
             
             public Object deserialize(ObjectDecoder decoder)  {
-                AttributeInfoBuilder builder = new AttributeInfoBuilder();
-                builder.setName(
-                        decoder.readStringField("name",null));
-                builder.setType(
-                        decoder.readClassField("type",null));
+                AttributeInfoBuilder builder = 
+                    new AttributeInfoBuilder(decoder.readStringField("name",null),
+                            decoder.readClassField("type",null));
                 builder.setRequired(
                         decoder.readBooleanField("required",false));
                 builder.setReadable(
                         decoder.readBooleanField("readable",false));
                 builder.setCreateable(
                         decoder.readBooleanField("creatable",false));
-                builder.setMultiValue(
+                builder.setMultiValued(
                         decoder.readBooleanField("multivalue",false));
                 builder.setUpdateable(
                 		decoder.readBooleanField("updateable",false));
@@ -347,7 +345,7 @@ class CommonObjectHandlers {
                 encoder.writeBooleanField("required", val.isRequired());
                 encoder.writeBooleanField("readable", val.isReadable());
                 encoder.writeBooleanField("creatable", val.isCreateable());
-                encoder.writeBooleanField("multivalue", val.isMultiValue());
+                encoder.writeBooleanField("multivalue", val.isMultiValued());
                 encoder.writeBooleanField("updateable", val.isUpdateable());
                 encoder.writeBooleanField("returnedbydefault", val.isReturnedByDefault());
             }

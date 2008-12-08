@@ -308,8 +308,8 @@ public class SchemaApiOpTests extends AbstractSimpleTest {
                 .get(ATTRIBUTE_FIELD_REQUIRED), attribute.isRequired()), 
                 expectedValues.get(ATTRIBUTE_FIELD_REQUIRED), attribute.isRequired());
         assertEquals(String.format(msg, ATTRIBUTE_FIELD_MULTI_VALUE, expectedValues
-                .get(ATTRIBUTE_FIELD_MULTI_VALUE), attribute.isMultiValue()), 
-                expectedValues.get(ATTRIBUTE_FIELD_MULTI_VALUE), attribute.isMultiValue());
+                .get(ATTRIBUTE_FIELD_MULTI_VALUE), attribute.isMultiValued()), 
+                expectedValues.get(ATTRIBUTE_FIELD_MULTI_VALUE), attribute.isMultiValued());
         assertEquals(String.format(msg, ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT, 
                 expectedValues.get(ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT), attribute.isReturnedByDefault()), 
                 expectedValues.get(ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT), attribute.isReturnedByDefault());

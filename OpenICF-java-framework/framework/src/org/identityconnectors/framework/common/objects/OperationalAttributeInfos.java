@@ -39,9 +39,11 @@
  */
 package org.identityconnectors.framework.common.objects;
 
-import static org.identityconnectors.framework.common.objects.AttributeInfoBuilder.build;
+
+import java.util.EnumSet;
 
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 
 /**
  * {@link AttributeInfo} for each operational attribute.
@@ -50,61 +52,63 @@ public final class OperationalAttributeInfos {
     /**
      * Gets/sets the enable status of an object.
      */
-    public static final AttributeInfo ENABLE = build(
+    public static final AttributeInfo ENABLE = AttributeInfoBuilder.build(
             OperationalAttributes.ENABLE_NAME, boolean.class);
 
     /**
      * Gets/sets the enable date for an object.
      */
-    public static final AttributeInfo ENABLE_DATE = build(
+    public static final AttributeInfo ENABLE_DATE = AttributeInfoBuilder.build(
             OperationalAttributes.ENABLE_DATE_NAME, long.class);
 
     /**
      * Gets/sets the disable date for an object.
      */
-    public static final AttributeInfo DISABLE_DATE = build(
+    public static final AttributeInfo DISABLE_DATE = AttributeInfoBuilder.build(
             OperationalAttributes.DISABLE_DATE_NAME, long.class);
 
     /**
      * Gets/sets the lock out attribute for an object.
      */
-    public static final AttributeInfo LOCK_OUT = build(
+    public static final AttributeInfo LOCK_OUT = AttributeInfoBuilder.build(
             OperationalAttributes.LOCK_OUT_NAME, boolean.class);
 
     /**
      * Gets/sets the password expiration date for an object.
      */
-    public static final AttributeInfo PASSWORD_EXPIRATION_DATE = build(
+    public static final AttributeInfo PASSWORD_EXPIRATION_DATE = AttributeInfoBuilder.build(
             OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME, long.class);
 
     /**
      * Normally this is a write-only attribute. Sets the password for an object.
      */
-    public static final AttributeInfo PASSWORD = build(
-            OperationalAttributes.PASSWORD_NAME, GuardedString.class, true,
-            false, true, true);
-
+    public static final AttributeInfo PASSWORD = AttributeInfoBuilder.build(
+            OperationalAttributes.PASSWORD_NAME, GuardedString.class,
+            EnumSet.of(Flags.REQUIRED,Flags.NOT_READABLE));
+    
     /**
      * Used in conjunction with password to do an account level password change.
      * This is for a non-administrator change of the password and therefore
      * requires the current password.
      */
-    public static final AttributeInfo CURRENT_PASSWORD = build(
+    public static final AttributeInfo CURRENT_PASSWORD = AttributeInfoBuilder.build(
             OperationalAttributes.CURRENT_PASSWORD_NAME, GuardedString.class,
-            false, false, true, true);
+            EnumSet.of(Flags.NOT_READABLE));
 
     /**
      * Used to do an administrator reset of the password. The value is the reset
      * password value.
      */
-    public static final AttributeInfo RESET_PASSWORD = build(
+    public static final AttributeInfo RESET_PASSWORD = AttributeInfoBuilder.build(
             OperationalAttributes.RESET_PASSWORD_NAME, GuardedString.class,
-            false, false, true, true);
+            EnumSet.of(Flags.NOT_READABLE));
+    
     
     /**
      * Used to determine if a password is expired or to expire a password.
      */
-    public static final AttributeInfo PASSWORD_EXPIRED = build(
-            OperationalAttributes.PASSWORD_EXPIRED_NAME, boolean.class);
+    public static final AttributeInfo PASSWORD_EXPIRED = AttributeInfoBuilder.build(
+            OperationalAttributes.PASSWORD_EXPIRED_NAME, boolean.class,
+            EnumSet.of(Flags.NOT_READABLE));
 
 }

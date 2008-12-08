@@ -46,7 +46,7 @@ import static org.identityconnectors.framework.common.objects.AttributeUtil.crea
  * resources have that are not operational in nature.
  */
 public class PredefinedAttributes {
-
+    
     /**
      * Attribute that should hold a reasonable value for an application
      * to display as a label for an object.  

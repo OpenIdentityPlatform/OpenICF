@@ -70,6 +70,10 @@ import org.identityconnectors.common.CollectionUtil;
  */
 public final class Name extends Attribute {
     public static final String NAME = AttributeUtil.createSpecialName("NAME");
+    public static final AttributeInfo INFO =
+        new AttributeInfoBuilder(NAME)
+        .setRequired(true)
+        .build();
     
     public Name(String value) {
         super(NAME, CollectionUtil.<Object>newReadOnlyList(value));

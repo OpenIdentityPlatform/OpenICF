@@ -39,7 +39,9 @@
  */
 package org.identityconnectors.framework.common.objects;
 
-import static org.identityconnectors.framework.common.objects.AttributeInfoBuilder.build;
+import java.util.EnumSet;
+
+import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 
 public class PredefinedAttributeInfos {
     
@@ -49,80 +51,76 @@ public class PredefinedAttributeInfos {
      * application will have to use the NAME to show the value.
      */
     public static final AttributeInfo SHORT_NAME = 
-        build(PredefinedAttributes.SHORT_NAME,
-              String.class,
-              false, true, true, true);
+        AttributeInfoBuilder.build(PredefinedAttributes.SHORT_NAME);
     
     /**
      * Attribute that should hold the value of the object's description,
      * if one is available.
      */
     public static final AttributeInfo DESCRIPTION = 
-        build(PredefinedAttributes.DESCRIPTION,
-              String.class,
-              false, true, true, true);
+        AttributeInfoBuilder.build(PredefinedAttributes.DESCRIPTION);
     
     /**
      * Read-only attribute that shows the last date/time the password was
      * changed.
      */
-    public static final AttributeInfo LAST_PASSWORD_CHANGE_DATE = build(
-            PredefinedAttributes.LAST_PASSWORD_CHANGE_DATE_NAME, long.class,
-            false, true, false, false);
+    public static final AttributeInfo LAST_PASSWORD_CHANGE_DATE = 
+         AttributeInfoBuilder.build(PredefinedAttributes.LAST_PASSWORD_CHANGE_DATE_NAME, 
+                 long.class,
+                 EnumSet.of(Flags.NOT_CREATABLE,
+                            Flags.NOT_UPDATEABLE));
 
     /**
      * Common password policy attribute where the password must be changed every
      * so often. The value for this attribute is milliseconds since its the
      * lowest common denominator.
      */
-    public static final AttributeInfo PASSWORD_CHANGE_INTERVAL = build(
-            PredefinedAttributes.PASSWORD_CHANGE_INTERVAL_NAME, long.class);
+    public static final AttributeInfo PASSWORD_CHANGE_INTERVAL = 
+        AttributeInfoBuilder.build(PredefinedAttributes.PASSWORD_CHANGE_INTERVAL_NAME, 
+                long.class);
 
     /**
      * Last login date for an account. This is usually used to determine
      * inactivity.
      */
-    public static final AttributeInfo LAST_LOGIN_DATE = build(
-            PredefinedAttributes.LAST_LOGIN_DATE_NAME, long.class, false, true,
-            false, false);
-
-    static {
-        // define GROUPS attribute info
-        AttributeInfoBuilder bld = new AttributeInfoBuilder();
-        bld.setName(PredefinedAttributes.GROUPS_NAME);
-        bld.setMultiValue(true);
-        bld.setReturnedByDefault(false);
-        GROUPS = bld.build();
-        // define ACCOUNTS attribute info
-        bld = new AttributeInfoBuilder();
-        bld.setName(PredefinedAttributes.ACCOUNTS_NAME);
-        bld.setMultiValue(true);
-        bld.setReturnedByDefault(false);
-        ACCOUNTS = bld.build();
-        // define ORGANIZATION
-        bld = new AttributeInfoBuilder();
-        bld.setName(PredefinedAttributes.ORGANIZATION_NAME);
-        bld.setReturnedByDefault(false);
-        ORGANIZATIONS = bld.build();
-    }
+    public static final AttributeInfo LAST_LOGIN_DATE = 
+        AttributeInfoBuilder.build(PredefinedAttributes.LAST_LOGIN_DATE_NAME, 
+                long.class,
+                EnumSet.of(Flags.NOT_CREATABLE,
+                        Flags.NOT_UPDATEABLE));
+                
 
     /**
      * Groups that an account or person belong to. The Attribute values are the
      * UID value of each group that an account has membership in.
      */
-    public static final AttributeInfo GROUPS;
+    public static final AttributeInfo GROUPS =
+        AttributeInfoBuilder.build(PredefinedAttributes.GROUPS_NAME,
+                String.class,
+                EnumSet.of(Flags.MULTIVALUED,
+                        Flags.NOT_RETURNED_BY_DEFAULT));
 
     /**
      * Accounts that are members of a group or organization. The Attribute
      * values are the UID value of each account the has a group or organization
      * membership.
      */
-    public static final AttributeInfo ACCOUNTS;
+    public static final AttributeInfo ACCOUNTS =
+        AttributeInfoBuilder.build(PredefinedAttributes.ACCOUNTS_NAME,
+                String.class,
+                EnumSet.of(Flags.MULTIVALUED,
+                        Flags.NOT_RETURNED_BY_DEFAULT));
+                
+        
 
     /**
      * Organizations that an account or person is a member of. The Attribute
      * values are the UID value of each organization that an account or person is
      * a member of.
      */
-    public static final AttributeInfo ORGANIZATIONS;
+    public static final AttributeInfo ORGANIZATIONS =
+        AttributeInfoBuilder.build(PredefinedAttributes.ORGANIZATION_NAME,
+                String.class,
+                EnumSet.of(Flags.NOT_RETURNED_BY_DEFAULT));
+        
 }

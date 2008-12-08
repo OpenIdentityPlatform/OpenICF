@@ -39,19 +39,22 @@
  */
 package org.identityconnectors.framework.common.objects;
 
+import java.util.EnumSet;
+import java.util.Set;
+
+import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.framework.common.FrameworkUtil;
+import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 
 /**
  * Simplifies the process of building 'AttributeInfo' objects. This class is
  * responsible for providing a default implementation of {@link AttributeInfo}.
  * 
  * <code>
- * AttributeInfoBuilder bld = new AttributeBuilder();
- * bld.setName("email");
+ * AttributeInfoBuilder bld = new AttributeInfoBuilder("email");
  * bld.setRequired(true);
  * AttributeInfo info = bld.build();
- * AttributeInfo info2 = AttributeInfoBuilder.build("someAttrInfo");
  * </code>
  * 
  * @author Will Droste
@@ -62,13 +65,44 @@ public final class AttributeInfoBuilder {
 
 	private String _name;
 	private Class<?> _type;
-	private boolean _readable;
-	private boolean _createable;
-	private boolean _required;
-	private boolean _multivalue;
-	private boolean _updateable;
-	private boolean _returnedByDefault;
+	private final EnumSet<Flags> _flags;
 
+    /**
+     * Creates an builder with all the defaults set. The name must be set before
+     * the 'build' method is called otherwise an {@link IllegalStateException}
+     * is thrown.
+     * 
+     * <pre>
+     * Name: &lt;not set&gt;
+     * Readable: true
+     * Writeable: true
+     * Required: false
+     * Type: string
+     * MultiValue: false
+     * </pre>
+     */
+    public AttributeInfoBuilder() {
+        setType(String.class);
+        _flags = EnumSet.noneOf(Flags.class);
+    }
+    
+    /**
+     * Creates an builder with all the defaults set. The name must be set before
+     * the 'build' method is called otherwise an {@link IllegalStateException}
+     * is thrown.
+     * 
+     * <pre>
+     * Name: &lt;not set&gt;
+     * Readable: true
+     * Writeable: true
+     * Required: false
+     * Type: string
+     * MultiValue: false
+     * </pre>
+     */
+    public AttributeInfoBuilder(String name) {
+        this(name,String.class);
+    }
 	/**
 	 * Creates an builder with all the defaults set. The name must be set before
 	 * the 'build' method is called otherwise an {@link IllegalStateException}
@@ -83,15 +117,11 @@ public final class AttributeInfoBuilder {
 	 * MultiValue: false
 	 * </pre>
 	 */
-	public AttributeInfoBuilder() {
-		_name = null;
-		_readable = true;
-		_createable = true;
-		_required = false;
-		_updateable = true;
-		_multivalue = false;
-		_type = String.class;
-		_returnedByDefault = true;
+	public AttributeInfoBuilder(String name, Class<?> type) {
+		setName(name);
+		setType(type);
+		//noneOf means the defaults
+		_flags = EnumSet.noneOf(Flags.class);
 	}
 
 	/**
@@ -100,8 +130,7 @@ public final class AttributeInfoBuilder {
 	 * @return {@link AttributeInfo} based on the properties set.
 	 */
 	public AttributeInfo build() {
-		return new AttributeInfo(_name, _type, _readable, _createable,
-				_required, _multivalue, _updateable, _returnedByDefault);
+		return new AttributeInfo(_name, _type, _flags);
 	}
 
 	/**
@@ -137,7 +166,12 @@ public final class AttributeInfoBuilder {
 	 * Determines if the attribute is readable.
 	 */
 	public AttributeInfoBuilder setReadable(final boolean value) {
-		_readable = value;
+	    if ( !value ) {
+	        _flags.add(Flags.NOT_READABLE);
+	    }
+	    else {
+	        _flags.remove(Flags.NOT_READABLE);
+	    }
         return this;
 	}
 
@@ -145,7 +179,12 @@ public final class AttributeInfoBuilder {
 	 * Determines if the attribute is writable.
 	 */
 	public AttributeInfoBuilder setCreateable(final boolean value) {
-		_createable = value;
+        if ( !value ) {
+            _flags.add(Flags.NOT_CREATABLE);
+        }
+        else {
+            _flags.remove(Flags.NOT_CREATABLE);
+        }
         return this;
 	}
 
@@ -153,15 +192,25 @@ public final class AttributeInfoBuilder {
 	 * Determines if this attribute is required.
 	 */
 	public AttributeInfoBuilder setRequired(final boolean value) {
-		_required = value;
+        if ( value ) {
+            _flags.add(Flags.REQUIRED);
+        }
+        else {
+            _flags.remove(Flags.REQUIRED);
+        }
         return this;
 	}
 
 	/**
 	 * Determines if this attribute supports multivalue.
 	 */
-	public AttributeInfoBuilder setMultiValue(final boolean value) {
-		_multivalue = value;
+	public AttributeInfoBuilder setMultiValued(final boolean value) {
+        if ( value ) {
+            _flags.add(Flags.MULTIVALUED);
+        }
+        else {
+            _flags.remove(Flags.MULTIVALUED);
+        }
         return this;
 	}
 
@@ -169,62 +218,85 @@ public final class AttributeInfoBuilder {
 	 * Determines if this attribute writable during update.
 	 */
 	public AttributeInfoBuilder setUpdateable(final boolean value) {
-		_updateable = value;
+        if ( !value ) {
+            _flags.add(Flags.NOT_UPDATEABLE);
+        }
+        else {
+            _flags.remove(Flags.NOT_UPDATEABLE);
+        }
         return this;
 	}
 	
 	public AttributeInfoBuilder setReturnedByDefault(final boolean value) {
-		_returnedByDefault = value;
+	    if ( !value ) {
+	        _flags.add(Flags.NOT_RETURNED_BY_DEFAULT);
+	    }
+	    else {
+	        _flags.remove(Flags.NOT_RETURNED_BY_DEFAULT);
+	    }
         return this;
 	}
-
-	// =======================================================================
-	// Static Helper methods..
-	// =======================================================================
-	public static AttributeInfo build(final String name) {
-		AttributeInfoBuilder bld = new AttributeInfoBuilder();
-		bld.setName(name);
-		return bld.build();
+		
+	/**
+	 * Sets all of the flags for this builder.
+	 * @param flags The set of attribute info flags. Null means clear all flags.
+	 * <p>
+	 * NOTE: EnumSet.noneOf(AttributeInfo.Flags.class) results in
+	 * an attribute with the default behavior:
+	 * <ul>
+	 *     <li>updateable</li>
+	 *     <li>creatable</li>
+     *     <li>returned by default</li>
+     *     <li>readable</li>
+     *     <li>single-valued</li>
+     *     <li>optional</li>
+	 * </ul>
+	 */
+	public AttributeInfoBuilder setFlags(Set<Flags> flags) {
+	    _flags.clear();
+	    if ( flags != null ) {
+    	    _flags.addAll(flags);
+	    }
+	    return this;
 	}
-
-	public static AttributeInfo build(final String name, final Class<?> type) {
-		AttributeInfoBuilder bld = new AttributeInfoBuilder();
-		bld.setName(name);
-		bld.setType(type);
-		return bld.build();
+	
+	/**
+	 * Convenience method to create an AttributeInfo. Equivalent to
+	 * <code>
+	 * new AttributeInfoBuilder(name,type).setFlags(flags).build()
+	 * </code>
+	 * @param name The name of the attribute
+	 * @param type The type of the attribute
+	 * @param flags The flags for the attribute. Null means clear all flags
+	 * @return The attribute info 
+	 */
+	public static AttributeInfo build(String name, Class<?> type,
+	        Set<Flags> flags) {
+	    return new AttributeInfoBuilder(name,type).setFlags(flags).build();
 	}
+    /**
+     * Convenience method to create an AttributeInfo. Equivalent to
+     * <code>
+     * AttributeInfoBuilder.build(name,type,null)
+     * </code>
+     * @param name The name of the attribute
+     * @param type The type of the attribute
+     * @param flags The flags for the attribute
+     * @return The attribute info 
+     */
+    public static AttributeInfo build(String name, Class<?> type) {
+        return build(name,type,null);
+    }
 
-	public static AttributeInfo build(final String name, final Class<?> type,
-			final boolean required) {
-		AttributeInfoBuilder bld = new AttributeInfoBuilder();
-		bld.setName(name);
-		bld.setType(type);
-		bld.setRequired(required);
-		return bld.build();
-	}
-
-	public static AttributeInfo build(final String name,
-			final boolean required, final boolean readable,
-			final boolean creatable, final boolean updateable) {
-		AttributeInfoBuilder bld = new AttributeInfoBuilder();
-		bld.setName(name);
-		bld.setRequired(required);
-		bld.setReadable(readable);
-		bld.setCreateable(creatable);
-        bld.setUpdateable(updateable);
-		return bld.build();
-	}
-
-	public static AttributeInfo build(final String name, final Class<?> type,
-			final boolean required, final boolean readable,
-			final boolean creatable, final boolean updateable) {
-		AttributeInfoBuilder bld = new AttributeInfoBuilder();
-		bld.setName(name);
-		bld.setType(type);
-		bld.setRequired(required);
-		bld.setReadable(readable);
-		bld.setCreateable(creatable);
-        bld.setUpdateable(updateable);
-		return bld.build();
-	}
+    /**
+     * Convenience method to create an AttributeInfo. Equivalent to
+     * <code>
+     * AttributeInfoBuilder.build(name,type)
+     * </code>
+     * @param name The name of the attribute
+     * @return The attribute info 
+     */
+    public static AttributeInfo build(String name) {
+        return build(name,String.class);
+    }
 }

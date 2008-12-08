@@ -39,15 +39,19 @@
  */
 package org.identityconnectors.framework.common.objects;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Set;
 
+import org.identityconnectors.common.Assertions;
+import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.operations.GetApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
 import org.identityconnectors.framework.api.operations.SyncApiOp;
 import org.identityconnectors.framework.common.FrameworkUtil;
+import org.identityconnectors.framework.common.serializer.SerializerUtil;
 
 /**
  * <i>AttributeInfo</i> is meta data responsible for describing an
@@ -62,17 +66,32 @@ public final class AttributeInfo {
 
 	private final String _name;
 	private final Class<?> _type;
-	private final boolean _required;
-	private final boolean _readable;
-	private final boolean _createable;
-	private final boolean _multivalue;
-	private final boolean _updateable;
-	private final boolean _returnedByDefault;
+	private final Set<Flags> _flags;
 
+	/**
+	 * Enum of modifier flags to use for attributes. Note that
+	 * this enum is designed for configuration by exception such that
+	 * an empty set of flags are the defaults:
+	 * <ul>
+     *     <li>updateable</li>
+     *     <li>creatable</li>
+     *     <li>returned by default</li>
+     *     <li>readable</li>
+     *     <li>single-valued</li>
+     *     <li>optional</li>
+     * </ul>
+	 */
+	public static enum Flags {
+	    REQUIRED,
+	    MULTIVALUED,
+	    NOT_CREATABLE,
+	    NOT_UPDATEABLE,
+	    NOT_READABLE,
+	    NOT_RETURNED_BY_DEFAULT
+	}
+	
 	AttributeInfo(final String name, final Class<?> type,
-			final boolean readable, final boolean createable,
-			final boolean required, final boolean multivalue,
-			final boolean updateable, final boolean returnedByDefault) {
+	        final Set<Flags> flags) {
         if (StringUtil.isBlank(name)) {
             throw new IllegalStateException("Name must not be blank!");
         }
@@ -83,16 +102,12 @@ public final class AttributeInfo {
             final String MSG = "Password based attributes must be of type GuardedString.";
             throw new IllegalArgumentException(MSG);
         }
+        Assertions.nullCheck(flags, "flags");
         // check the type..
         FrameworkUtil.checkAttributeType(type);
 		_name = name;
 		_type = type;
-		_readable = readable;
-		_createable = createable;
-		_required = required;
-		_multivalue = multivalue;
-		_updateable = updateable;
-		_returnedByDefault = returnedByDefault;
+		_flags = Collections.unmodifiableSet(EnumSet.copyOf(flags));
 	}
 
 	/**
@@ -113,6 +128,14 @@ public final class AttributeInfo {
 	public Class<?> getType() {
 		return _type;
 	}
+	
+	/**
+	 * Returns the set of flags associated with the attribute.
+	 * @return the set of flags associated with the attribute
+	 */
+	public Set<Flags> getFlags() {
+	    return _flags;
+	}
 
 	/**
 	 * Determines if the attribute is readable.
@@ -120,7 +143,7 @@ public final class AttributeInfo {
 	 * @return true if the attribute is readable else false.
 	 */
 	public boolean isReadable() {
-		return _readable;
+		return !_flags.contains(Flags.NOT_READABLE);
 	}
 
 	/**
@@ -129,7 +152,7 @@ public final class AttributeInfo {
 	 * @return true if the attribute is writable on create else false.
 	 */
 	public boolean isCreateable() {
-		return _createable;
+        return !_flags.contains(Flags.NOT_CREATABLE);
 	}
 
 	/**
@@ -138,7 +161,7 @@ public final class AttributeInfo {
 	 * @return true if the attribute is writable on update else false.
 	 */
 	public boolean isUpdateable() {
-		return _updateable;
+		return !_flags.contains(Flags.NOT_UPDATEABLE);
 	}
 
 	/**
@@ -147,7 +170,7 @@ public final class AttributeInfo {
 	 * @return true if the attribute is required for an object else false.
 	 */
 	public boolean isRequired() {
-		return _required;
+		return _flags.contains(Flags.REQUIRED);
 	}
 
 	/**
@@ -157,8 +180,8 @@ public final class AttributeInfo {
 	 * 
 	 * @return true if the attribute is multi-value otherwise false.
 	 */
-	public boolean isMultiValue() {
-		return _multivalue;
+	public boolean isMultiValued() {
+		return _flags.contains(Flags.MULTIVALUED);
 	}
 
 	/**
@@ -170,7 +193,7 @@ public final class AttributeInfo {
 	 * @return false iff the attribute should not be returned by default.
 	 */
 	public boolean isReturnedByDefault() {
-		return _returnedByDefault;
+		return !_flags.contains(Flags.NOT_RETURNED_BY_DEFAULT);
 	}
 
 	/**
@@ -195,23 +218,8 @@ public final class AttributeInfo {
 			if (!getType().equals(other.getType())) {
 				return false;
 			}
-			if (isReadable() != other.isReadable()) {
-				return false;
-			}
-			if (isCreateable() != other.isCreateable()) {
-				return false;
-			}
-			if (isRequired() != other.isRequired()) {
-				return false;
-			}
-			if (isMultiValue() != other.isMultiValue()) {
-				return false;
-			}
-			if (isReturnedByDefault() != other.isReturnedByDefault()) {
-				return false;
-			}
-			if (isUpdateable() != other.isUpdateable()) {
-				return false;
+			if (!CollectionUtil.equals(_flags, other._flags)) {
+			    return false;
 			}
 			return true;
 		}
@@ -225,16 +233,7 @@ public final class AttributeInfo {
 
 	@Override
 	public String toString() {
-		Map<String, Object> map = new LinkedHashMap<String, Object>();
-		map.put("Name", getName());
-		map.put("Type", getType());
-		map.put("Required", isRequired());
-		map.put("Readable", isReadable());
-		map.put("Createable", isCreateable());
-		map.put("MultiValue", isMultiValue());
-		map.put("Updateable", isUpdateable());
-		map.put("ReturnedByDefault", isReturnedByDefault());
-		return map.toString();
+	    return SerializerUtil.serializeXmlObject(this, false);
 	}
 
 }

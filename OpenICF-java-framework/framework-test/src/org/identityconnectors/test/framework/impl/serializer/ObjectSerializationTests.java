@@ -568,13 +568,11 @@ public class ObjectSerializationTests {
     @Test
     public void testAttributeInfo() {
         
-        AttributeInfoBuilder builder = new AttributeInfoBuilder();
-        builder.setName("foo");
-        builder.setType(String.class);
+        AttributeInfoBuilder builder = new AttributeInfoBuilder("foo",String.class);
         builder.setRequired(true);
         builder.setReadable(true);
         builder.setCreateable(true);
-        builder.setMultiValue(true);
+        builder.setMultiValued(true);
         builder.setUpdateable(false);
         builder.setReturnedByDefault(false);
         AttributeInfo v1 = builder.build();
@@ -582,7 +580,7 @@ public class ObjectSerializationTests {
         Assert.assertEquals(v1,v2);
         Assert.assertEquals("foo", v2.getName());
         Assert.assertEquals(String.class, v2.getType());
-        Assert.assertTrue(v2.isMultiValue());
+        Assert.assertTrue(v2.isMultiValued());
         Assert.assertTrue(v2.isReadable());
         Assert.assertTrue(v2.isRequired());
         Assert.assertTrue(v2.isCreateable());
@@ -618,13 +616,11 @@ public class ObjectSerializationTests {
     
     @Test
     public void testObjectClassInfo() {
-        AttributeInfoBuilder builder = new AttributeInfoBuilder();
-        builder.setName("foo");
-        builder.setType(String.class);
+        AttributeInfoBuilder builder = new AttributeInfoBuilder("foo",String.class);
         builder.setRequired(true);
         builder.setReadable(true);
         builder.setCreateable(true);
-        builder.setMultiValue(true);
+        builder.setMultiValued(true);
         ObjectClassInfoBuilder obld = new ObjectClassInfoBuilder();
         obld.addAttributeInfo(builder.build());
         obld.setContainer(true);

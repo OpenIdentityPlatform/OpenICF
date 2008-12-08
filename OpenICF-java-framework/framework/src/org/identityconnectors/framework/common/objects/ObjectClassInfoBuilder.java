@@ -118,9 +118,7 @@ public final class ObjectClassInfoBuilder {
     public ObjectClassInfo build() {
         // determine if name is missing and add it by default
         if (!_info.containsKey(Name.NAME)) {
-            AttributeInfo nameInfo = 
-                AttributeInfoBuilder.build(Name.NAME, String.class, true);
-            _info.put(Name.NAME, nameInfo);
+            _info.put(Name.NAME, Name.INFO);
         }
         return new ObjectClassInfo(_type, CollectionUtil.newSet(_info.values()),_isContainer);
     }

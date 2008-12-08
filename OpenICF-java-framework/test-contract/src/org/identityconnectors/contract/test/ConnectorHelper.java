@@ -471,7 +471,7 @@ public class ConnectorHelper {
         Set<AttributeInfo> attributeInfoSet = objectClassInfo.getAttributeInfo();
         for(AttributeInfo attributeInfo : attributeInfoSet) {
             if(attributeInfo.is(attribute)) {
-                isMultiValue = attributeInfo.isMultiValue();
+                isMultiValue = attributeInfo.isMultiValued();
                 break;
             }
         }
@@ -556,7 +556,7 @@ public class ConnectorHelper {
         
         
         for(AttributeInfo attributeInfo : objectClassInfo.getAttributeInfo()) {
-            if (onlyMultiValue && !attributeInfo.isMultiValue()) {
+            if (onlyMultiValue && !attributeInfo.isMultiValued()) {
                 continue;
             }
             if (onlyCreateable && !attributeInfo.isCreateable()) {
@@ -582,7 +582,7 @@ public class ConnectorHelper {
                             dataName = qualifier + "." + dataName;
                         //}
                     }
-                    if (attributeInfo.isMultiValue()) {                        
+                    if (attributeInfo.isMultiValued()) {                        
                         /*if (dataProvider instanceof DefaultDataProvider) {
                             dataName = dataName + "." + MULTI_VALUE_TYPE_PREFIX;
                         }
