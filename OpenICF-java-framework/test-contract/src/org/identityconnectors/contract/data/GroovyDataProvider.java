@@ -108,17 +108,37 @@ import org.junit.Assert;
  * Note: snapshots for now support basic types such as Lazy, String. Other objects
  * will be converted with toString() method to the output.
  * </p>
+ * <p>
+ * <strong>default values</strong> -- these values reside in file bootstrap.groovy. 
+ * When the property foo.bar.boo is queried the following queries are executed:
+ * <pre>
+ * 1) foo.bar.boo
+ * 2) bar.boo
+ * 3) boo
+ * </pre>
+ * In case none of these queries succeed, the default value is used based on the type of the query.
+ * </p>
+ * <p>
+ * <strong>isMultivalue</strong> boolean property -- is passed in get(...) methods 
+ * of GroovyDataProvider. It has influence on default values generated, when property is missing.
+ * </p>
  * 
  * @author David Adam
  * @author Zdenek Louzensky
  */
 public class GroovyDataProvider implements DataProvider {
     
+    private static final int SINGLE_VALUE_MARKER = -1;
     private static final String ARRAY_MARKER = "array";
     static final String PROPERTY_SEPARATOR = ".";
     private static final String CONTRACT_TESTS_FILE_NAME = "build.groovy";
+    
+    /** boostrap.groovy contains default values that are returned when the property is not found */
     private static final String BOOTSTRAP_FILE_NAME = "bootstrap.groovy";
     private static final String CONNECTORS_DIR = ".connectors";
+    
+    /** prefix of default values that are multi */
+    public static final String MULTI_VALUE_TYPE_PREFIX = "multi";
     
     /** holds the parsed config file */
     private ConfigObject configObject;
@@ -133,7 +153,7 @@ public class GroovyDataProvider implements DataProvider {
     
     /* **** for snapshot generating **** */
     /** command line switch for snapshots */
-    private static final String PARAM_PROPERTY_OUT_FILE = "test.parameters.outFile";
+    private static final String PARAM_PROPERTY_OUT_FILE = "test.parameters.outFile";   
     static final String ASSIGNMENT_MARK = "=";
     /** Turn on debugging prefixes in parsing. Output: System.out */
     private static final boolean DEBUG_ON = false;
@@ -338,7 +358,7 @@ public class GroovyDataProvider implements DataProvider {
                 // by deleting the first prefix
                 int separatorIndex = name.indexOf(PROPERTY_SEPARATOR, 0);
     
-                if (separatorIndex != -1) {
+                if (separatorIndex != SINGLE_VALUE_MARKER) {
                     separatorIndex++;
                     if (separatorIndex < name.length()) {
                         return propertyRecursiveGet(name.substring(separatorIndex));
@@ -529,16 +549,16 @@ public class GroovyDataProvider implements DataProvider {
      * {@inheritDoc}
      */
     public Object get(Class dataTypeName, String name, String componentName,
-            int sequenceNumber/*, boolean isMultivalue*/) throws ObjectNotFoundException {
+            int sequenceNumber, boolean isMultivalue) throws ObjectNotFoundException {
         // put the parameters in the Map ... this will fail if called
         // recursively
 
         String shortTypeName = getShortTypeName(dataTypeName);
-//        TODO
-//        if (isMultivalue) {
-//            String tmp = String.format("multi%s%s", PROPERTY_SEPARATOR, shortTypeName);
-//            shortTypeName = tmp;
-//        }
+        // for multi values add the multi prefix when searching for default value.
+        if (isMultivalue) {
+            String tmp = String.format("multi%s%s", PROPERTY_SEPARATOR, shortTypeName);
+            shortTypeName = tmp;
+        }
         
         Assert.assertFalse(cache.keySet().contains("param.sequenceNumber"));
         Assert.assertFalse(cache.keySet().contains("param.componentName"));
@@ -546,10 +566,10 @@ public class GroovyDataProvider implements DataProvider {
         Assert.assertFalse(cache.keySet().contains("param.dataTypeName"));
 
         StringBuffer sbPath = new StringBuffer();
-        if (sequenceNumber != -1) {
+        if (sequenceNumber != SINGLE_VALUE_MARKER) {
             sbPath.append("i");// sequence marker e.g.: i1, i2, i3 ...
             sbPath.append(sequenceNumber);
-            sbPath.append(".");
+            sbPath.append(PROPERTY_SEPARATOR);
             cache.put("param.sequenceNumber", "i" + String.valueOf(sequenceNumber));
         }
 
@@ -599,7 +619,7 @@ public class GroovyDataProvider implements DataProvider {
     public Object get(Class dataTypeName, String name, String componentName)
             throws ObjectNotFoundException {
 
-        return get(dataTypeName, name, componentName, -1);
+        return get(dataTypeName, name, componentName, SINGLE_VALUE_MARKER, false);
     }
 
     /**
@@ -608,7 +628,7 @@ public class GroovyDataProvider implements DataProvider {
     public String getString(String name, String componentName,
             int sequenceNumber) throws ObjectNotFoundException {
         return (String) get(String.class, name, componentName,
-                sequenceNumber);
+                sequenceNumber, false);
     }
 
     /**

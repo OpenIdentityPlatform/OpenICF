@@ -112,7 +112,6 @@ public class ConnectorHelper {
     private static final String JVM_ARG_DATA_PROVIDER = "data-provider";
     private static final Class DEFAULT_DATA_PROVIDER = GroovyDataProvider.class;
     private static final String WRONG_CONFIGURATION_PREFIX = "wrong";
-    private static final String MULTI_VALUE_TYPE_PREFIX = "multi";
 
     public static DataProvider createDataProvider() {
         DataProvider dp = null;
@@ -573,26 +572,15 @@ public class ConnectorHelper {
                 // UID and NAME to same values - check test would fail
                 if(!attributeInfo.is(Uid.NAME)) {                    
                     String dataName = attributeName;
-                    if(qualifier.length() > 0) {
-                        // TODO: this is a hack, because GroovyDataProvider must have qualifier before attribute name
-                        /*if (dataProvider instanceof DefaultDataProvider) {
-                            dataName = dataName + "." + qualifier;
-                        }
-                        else {*/
-                            dataName = qualifier + "." + dataName;
-                        //}
+                    if (qualifier.length() > 0) {
+                        dataName = qualifier + "." + dataName;
                     }
-                    if (attributeInfo.isMultiValued()) {                        
-                        /*if (dataProvider instanceof DefaultDataProvider) {
-                            dataName = dataName + "." + MULTI_VALUE_TYPE_PREFIX;
-                        }
-                        else {*/
-                            // TODO: multi must be part of typeName in case of GroovyDataProvider
-                            // right now we will omit it and generate only single value for multivalue attributes
-                        //}
-                    }
+
+                    // *multivalue* attributes have different default values. That is why we should
+                    // pass this to get().
                     Object attributeValue = get(dataProvider, testName, attributeInfo.getType()
-                            , dataName, objectClassInfo.getType(), sequenceNumber);
+                            , dataName, objectClassInfo.getType(), sequenceNumber, attributeInfo.isMultiValued());
+                    
                     if(attributeValue instanceof Collection) {
                         attributes.add(AttributeBuilder.build(attributeName, (Collection)attributeValue));
                     } else {
@@ -897,12 +885,12 @@ public class ConnectorHelper {
         return getString(dataProvider, componentName, name, "", 
                 objectClassName, sequenceNumber);
     }
-
+    
     public static Object get(DataProvider dataProvider, String componentName, 
             Class dataTypeName, String name, String objectClassName, 
-            int sequenceNumber) throws ObjectNotFoundException {
+            int sequenceNumber, boolean isMultivalue) throws ObjectNotFoundException {
         return dataProvider.get(dataTypeName, formatDataName(name, objectClassName), 
-                componentName, sequenceNumber);
+                componentName, sequenceNumber, isMultivalue);
     }
 
     /**

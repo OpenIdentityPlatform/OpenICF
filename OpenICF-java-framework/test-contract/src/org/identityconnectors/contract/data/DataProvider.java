@@ -56,12 +56,12 @@ public interface DataProvider {
      * @param name
      * @param componentName
      * @param sequenceNumber
-     * @param isMultivalue TODO
+     * @param isMultivalue switch between single and multivalue query
      * @return 
      * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
      */
     public Object get(Class dataTypeName, String name,
-            String componentName, int sequenceNumber/*, boolean isMultivalue*/) throws ObjectNotFoundException;
+            String componentName, int sequenceNumber, boolean isMultivalue) throws ObjectNotFoundException;
     
     /**
      * Gets data value by the specified parameters
