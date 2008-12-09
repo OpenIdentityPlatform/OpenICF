@@ -373,6 +373,21 @@ public class GroovyDataProviderTest {
         Assert.assertTrue(dp.get("aaa.bbb.xxx").equals("ahoj"));
         Assert.assertTrue(dp.get("param", 9).equals("foobar"));
     }
+    
+    @Test
+    /**
+     * Test queries for non-existing parameter "foo.bar"
+     * and expects a List to return based on one defined in multi.Tstring.
+     * (resides in bootsrap.groovy)
+     */
+    public void testDefaultValues() {
+        DataProvider dp = (DataProvider) gdp;
+        Object o = dp.get(String.class, "bar", "foo", -1, true);
+        Assert.assertNotNull(o);
+        Assert.assertTrue(o instanceof List && ((List) o).size() > 0);
+        List l = (List) o;
+        Assert.assertTrue(l.get(0) instanceof String);
+    }
 
     /* ************* UTILITY METHODS ***************** */
     /**
