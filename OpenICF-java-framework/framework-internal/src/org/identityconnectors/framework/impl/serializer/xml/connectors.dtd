@@ -254,18 +254,15 @@ OperationOptionInfo | SyncDeltaType | SyncToken | SyncDelta | QualifiedUid
 <!ATTLIST Throwable
    message CDATA #IMPLIED
 >
-<!ELEMENT AttributeInfo EMPTY>
+<!ELEMENT AttributeInfo (AttributeInfoFlag*)>
 <!ATTLIST AttributeInfo  
    name CDATA #REQUIRED
    type CDATA #REQUIRED
-   required CDATA #IMPLIED
-   readable CDATA #IMPLIED
-   creatable CDATA #IMPLIED
-   multivalue CDATA #IMPLIED
-   updateable CDATA #IMPLIED
-   returnedbydefault CDATA #IMPLIED
 >
-
+<!ELEMENT AttributeInfoFlag EMPTY>
+<!ATTLIST AttributeInfoFlag 
+   value ( REQUIRED | MULTIVALUED | NOT_CREATABLE | NOT_UPDATEABLE | NOT_READABLE | NOT_RETURNED_BY_DEFAULT ) #REQUIRED
+>
 <!ELEMENT ConnectorObject (ObjectClass,Attributes)>
 <!ELEMENT Attributes ((%attributeTypes;)*)>
 
@@ -301,7 +298,10 @@ OperationOptionInfo | SyncDeltaType | SyncToken | SyncDelta | QualifiedUid
    name CDATA #REQUIRED
    type CDATA #REQUIRED
 >
-<!ELEMENT SyncDeltaType (#PCDATA)>
+<!ELEMENT SyncDeltaType EMPTY>
+<!ATTLIST SyncDeltaType
+   value ( CREATE_OR_UPDATE | DELETE ) #REQUIRED
+>
 <!ELEMENT SyncToken (value)>
 <!ELEMENT SyncDelta (SyncDeltaType,SyncToken,Uid,ConnectorObject?)>
 

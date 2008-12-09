@@ -45,6 +45,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -97,6 +98,7 @@ import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
 import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 import org.identityconnectors.framework.common.objects.filter.AndFilter;
 import org.identityconnectors.framework.common.objects.filter.ContainsAllValuesFilter;
 import org.identityconnectors.framework.common.objects.filter.ContainsFilter;
@@ -586,6 +588,12 @@ public class ObjectSerializationTests {
         Assert.assertTrue(v2.isCreateable());
         Assert.assertFalse(v2.isUpdateable());
         Assert.assertFalse(v2.isReturnedByDefault());
+        
+        builder.setFlags(EnumSet.allOf(Flags.class));
+        v1 = builder.build();
+        v2 = (AttributeInfo)cloneObject(v1);
+        Assert.assertEquals(v1,v2);
+        
     }
     
     @Test

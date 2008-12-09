@@ -48,7 +48,7 @@ public class EnumSerializationHandler extends
     
     
     public Object deserialize(ObjectDecoder decoder) {
-        String val = decoder.readStringContents();
+        String val = decoder.readStringField("value",null);
         @SuppressWarnings("unchecked")
         Class enumClass = (Class)getHandledObjectType();
         @SuppressWarnings("unchecked")
@@ -59,7 +59,7 @@ public class EnumSerializationHandler extends
     public void serialize(Object object, ObjectEncoder encoder)
     {
         Enum<?> e = (Enum<?>)object;
-        encoder.writeStringContents(e.name());
+        encoder.writeStringField("value", e.name());
     }
 
 }

@@ -78,6 +78,7 @@ import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
 import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 
 
 /**
@@ -315,6 +316,10 @@ class CommonObjectHandlers {
         });
         
         HANDLERS.add(
+           new EnumSerializationHandler(Flags.class,"AttributeInfoFlag")
+           );
+        
+        HANDLERS.add(
                 
             new AbstractObjectSerializationHandler(AttributeInfo.class,"AttributeInfo") {
             
@@ -322,32 +327,27 @@ class CommonObjectHandlers {
                 AttributeInfoBuilder builder = 
                     new AttributeInfoBuilder(decoder.readStringField("name",null),
                             decoder.readClassField("type",null));
-                builder.setRequired(
-                        decoder.readBooleanField("required",false));
-                builder.setReadable(
-                        decoder.readBooleanField("readable",false));
-                builder.setCreateable(
-                        decoder.readBooleanField("creatable",false));
-                builder.setMultiValued(
-                        decoder.readBooleanField("multivalue",false));
-                builder.setUpdateable(
-                		decoder.readBooleanField("updateable",false));
-                builder.setReturnedByDefault(
-                        decoder.readBooleanField("returnedbydefault",true));
+                Set<Flags> flags = new HashSet<Flags>();
+                int count = decoder.getNumSubObjects();
+                for ( int i = 0; i < count; i++ ) {
+                    Object o = decoder.readObjectContents(i);
+                    if ( o instanceof AttributeInfo.Flags ) {
+                        flags.add((AttributeInfo.Flags)o);
+                    }
+                }
+                builder.setFlags(flags);
                 return builder.build();
             }
     
             public void serialize(Object object, ObjectEncoder encoder)
-                     {
+            {
                 AttributeInfo val = (AttributeInfo)object;
                 encoder.writeStringField("name", val.getName());
                 encoder.writeClassField("type", val.getType());
-                encoder.writeBooleanField("required", val.isRequired());
-                encoder.writeBooleanField("readable", val.isReadable());
-                encoder.writeBooleanField("creatable", val.isCreateable());
-                encoder.writeBooleanField("multivalue", val.isMultiValued());
-                encoder.writeBooleanField("updateable", val.isUpdateable());
-                encoder.writeBooleanField("returnedbydefault", val.isReturnedByDefault());
+                Set<Flags> flags = val.getFlags();
+                for (Flags flag : flags) {
+                    encoder.writeObjectContents(flag);
+                }
             }
             
         });
