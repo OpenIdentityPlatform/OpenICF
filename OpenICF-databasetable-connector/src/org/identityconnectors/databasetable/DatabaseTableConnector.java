@@ -507,7 +507,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         }        
     }
     
-    public SyncToken getLatestSyncToken() {
+    public SyncToken getLatestSyncToken(ObjectClass objectClass) {
 
         final String SQL_SELECT = "SELECT MAX( {0} ) FROM {1}";
         Assertions.blankCheck(config.getChangeLogColumn(), "changeLogColumn");
@@ -577,7 +577,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      * 
      * 
      */
-    public Uid authenticate(String username, GuardedString password,
+    public Uid authenticate(ObjectClass objectClass, String username, GuardedString password,
             OperationOptions options) {
 
         final String SQL_AUTH_QUERY = "SELECT {0} FROM {1} WHERE ( {0} = ? ) AND ( {2} = ? )";

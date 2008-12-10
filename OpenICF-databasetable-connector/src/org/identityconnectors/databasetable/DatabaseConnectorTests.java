@@ -829,7 +829,7 @@ public class DatabaseConnectorTests {
             SQLUtil.closeQuietly(conn);
         }
         // attempt to find the newly created object..
-        final SyncToken latestSyncToken = facade.getLatestSyncToken();
+        final SyncToken latestSyncToken = facade.getLatestSyncToken(ObjectClass.ACCOUNT);
         assertNotNull(latestSyncToken);
         final Object actual = latestSyncToken.getValue();
         assertEquals(changed.getTime(), actual);        
@@ -889,7 +889,7 @@ public class DatabaseConnectorTests {
         assertTrue(oci.size() >= 1); 
 
         // this should not throw any RuntimeException, on invalid authentication
-        final Uid auid = facade.authenticate(testAccount.getAccountId(), new GuardedString(testAccount.getPassword().toCharArray()),
+        final Uid auid = facade.authenticate(ObjectClass.ACCOUNT, testAccount.getAccountId(), new GuardedString(testAccount.getPassword().toCharArray()),
                 null);
         assertEquals(uid, auid);
 
@@ -914,7 +914,7 @@ public class DatabaseConnectorTests {
 
         // this should throw InvalidCredentials exception, as we query a
         // non-existing user
-        facade.authenticate(testAccount.getAccountId(), new GuardedString(testAccount.getPassword().toCharArray()),
+        facade.authenticate(ObjectClass.ACCOUNT, testAccount.getAccountId(), new GuardedString(testAccount.getPassword().toCharArray()),
                 null);
     }
 
@@ -949,7 +949,7 @@ public class DatabaseConnectorTests {
 
         // authentication should not be allowed -- will throw an
         // IllegalArgumentException
-        facade.authenticate(testAccount.getAccountId(), new GuardedString(testAccount.getPassword().toCharArray()),
+        facade.authenticate(ObjectClass.ACCOUNT, testAccount.getAccountId(), new GuardedString(testAccount.getPassword().toCharArray()),
                 null);
 
         // cleanup (should not throw any exception.)
