@@ -82,11 +82,6 @@ public class AttributeInfoUtilTests {
     public void testCurrentPasswordBuild() {
         AttributeInfoBuilder.build(OperationalAttributes.CURRENT_PASSWORD_NAME);
     }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testResetPasswordBuild() {
-        AttributeInfoBuilder.build(OperationalAttributes.RESET_PASSWORD_NAME);
-    }
     
     @Test
     public void testRegularPassword() {

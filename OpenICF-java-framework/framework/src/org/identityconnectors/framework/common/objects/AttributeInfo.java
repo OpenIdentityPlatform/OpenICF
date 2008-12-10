@@ -96,7 +96,6 @@ public final class AttributeInfo {
             throw new IllegalStateException("Name must not be blank!");
         }
         if ((OperationalAttributes.PASSWORD_NAME.equals(name) ||
-                OperationalAttributes.RESET_PASSWORD_NAME.equals(name) ||
                 OperationalAttributes.CURRENT_PASSWORD_NAME.equals(name)) &&
                 !GuardedString.class.equals(type)) {
             final String MSG = "Password based attributes must be of type GuardedString.";

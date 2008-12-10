@@ -95,11 +95,6 @@ public final class OperationalAttributes {
      * requires the current password.
      */
     public static final String CURRENT_PASSWORD_NAME = createSpecialName("CURRENT_PASSWORD");
-    /**
-     * Used to do an administrator reset of the password. The value is the reset
-     * password value.
-     */
-    public static final String RESET_PASSWORD_NAME = createSpecialName("RESET_PASSWORD");
 
     // =======================================================================
     // Helper Methods..
@@ -113,7 +108,6 @@ public final class OperationalAttributes {
             PASSWORD_EXPIRATION_DATE_NAME,
             PASSWORD_NAME, 
             CURRENT_PASSWORD_NAME, 
-            RESET_PASSWORD_NAME,
             PASSWORD_EXPIRED_NAME
         );
 

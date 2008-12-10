@@ -440,21 +440,6 @@ public final class AttributeUtil {
     }
 
     /**
-     * Get the reset password value from the provided set of {@link Attribute}s.
-     * 
-     * @param attrs
-     *            Set of {@link Attribute}s that may contain the reset password
-     *            {@link OperationalAttributes#RESET_PASSWORD_NAME}
-     *            {@link Attribute}.
-     * @return <code>null</code> if it does not exist in the {@link Set} else
-     *         the value.
-     */
-    public static GuardedString getResetPasswordValue(Set<Attribute> attrs) {
-        Attribute pwd = find(OperationalAttributes.RESET_PASSWORD_NAME, attrs);
-        return (pwd == null) ? null : getGuardedStringValue(pwd);
-    }
-
-    /**
      * Get the current password value from the provided set of {@link Attribute}s.
      * 
      * @param attrs

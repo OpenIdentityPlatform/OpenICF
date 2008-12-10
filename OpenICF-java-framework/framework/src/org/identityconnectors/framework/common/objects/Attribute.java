@@ -125,8 +125,7 @@ public class Attribute {
             throw new IllegalArgumentException("Name must not be blank!");
         }
         if (OperationalAttributes.PASSWORD_NAME.equals(name)
-                || OperationalAttributes.CURRENT_PASSWORD_NAME.equals(name)
-                || OperationalAttributes.RESET_PASSWORD_NAME.equals(name)) {
+                || OperationalAttributes.CURRENT_PASSWORD_NAME.equals(name)) {
             // check the value..
             if (value == null || value.size() != 1) {
                 final String MSG = "Must be a single value.";

@@ -346,37 +346,7 @@ public final class AttributeBuilder {
     public static Attribute buildCurrentPassword(final char[] password) {
         return buildCurrentPassword(new GuardedString(password));
     }
-
-    /**
-     * Builds an {@linkplain OperationalAttributes operational attribute} 
-     * that asks a connector to reset the password of an object on a target system or application. 
-     * 
-     * @param password
-     *            the string that represents a password.
-     * @return an {@code Attribute} with the 
-     * {@linkplain OperationalAttributes#RESET_PASSWORD_NAME
-     * predefined name for reset password}.
-     */
-    public static Attribute buildResetPassword(final GuardedString password) {
-        return build(OperationalAttributes.RESET_PASSWORD_NAME, password);
-    }
     
-    /**
-     * Builds an {@linkplain OperationalAttributes operational attribute} 
-     * that asks a connector to reset the password of an object on a target system or application. 
-     * <p>
-     * The caller is responsible for clearing out the array of characters.
-     * 
-     * @param password
-     *            the characters that represent a password.
-     * @return an {@code Attribute} with the 
-     * {@linkplain OperationalAttributes#RESET_PASSWORD_NAME
-     * predefined name for reset password}.
-     */
-    public static Attribute buildResetPassword(final char[] password) {
-        return buildResetPassword(new GuardedString(password));
-    }
-
     /**
      * Builds an {@linkplain OperationalAttributes operational attribute} 
      * that represents whether object is enabled on a target system or application.

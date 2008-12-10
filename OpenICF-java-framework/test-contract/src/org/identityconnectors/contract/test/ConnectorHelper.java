@@ -590,9 +590,6 @@ public class ConnectorHelper {
                         } else if (attributeInfo.is(OperationalAttributes.CURRENT_PASSWORD_NAME)) {
                             //current password attribute
                             attributes.add(AttributeBuilder.buildCurrentPassword(((String) attributeValue).toCharArray()));                            
-                        } else if (attributeInfo.is(OperationalAttributes.RESET_PASSWORD_NAME)) {
-                            //reset password attribute
-                            attributes.add(AttributeBuilder.buildResetPassword(((String) attributeValue).toCharArray()));                            
                         } else {
                             attributes.add(AttributeBuilder.build(attributeName, attributeValue));
                         }
