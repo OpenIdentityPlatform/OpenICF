@@ -434,7 +434,7 @@ public class ConnectorInfoManagerTests {
         ConnectorFacadeFactory facf = ConnectorFacadeFactory.getInstance();
         ConnectorFacade facade = facf.newInstance(api);
 
-        SyncToken latest = facade.getLatestSyncToken();
+        SyncToken latest = facade.getLatestSyncToken(ObjectClass.ACCOUNT);
         Assert.assertEquals("mylatest", latest.getValue());
         
         final List<SyncDelta> results = new ArrayList<SyncDelta>();

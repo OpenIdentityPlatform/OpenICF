@@ -149,7 +149,7 @@ public class ConnectorFacadeTests {
                 config);
         ConnectorFacade facade;
         facade = factory.newInstance(impl);
-        facade.authenticate("fadf", new GuardedString("fadsf".toCharArray()),null);
+        facade.authenticate(ObjectClass.ACCOUNT, "fadf", new GuardedString("fadsf".toCharArray()),null);
     }
     
     @Test
@@ -202,7 +202,7 @@ public class ConnectorFacadeTests {
     public void authenticateCallPattern() {
         testCallPattern(new TestOperationPattern() {
             public void makeCall(ConnectorFacade facade) {
-                facade.authenticate("dfadf", new GuardedString("fadfkj".toCharArray()),null);
+                facade.authenticate(ObjectClass.ACCOUNT, "dfadf", new GuardedString("fadfkj".toCharArray()),null);
             }
 
             public void checkCalls(List<Call> calls) {

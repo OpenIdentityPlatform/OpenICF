@@ -141,7 +141,7 @@ public class <%= resourceName %>Connector implements PoolableConnector, <%= inte
     /**
      * {@inheritDoc}
      */
-    public Uid authenticate(final String username, final GuardedString password, final OperationOptions options) { 
+    public Uid authenticate(final ObjectClass objectClass, final String username, final GuardedString password, final OperationOptions options) { 
        throw new UnsupportedOperationException();
     } <% } %>
     
@@ -210,7 +210,7 @@ public class <%= resourceName %>Connector implements PoolableConnector, <%= inte
     /**
      * {@inheritDoc}
      */   
-    public SyncToken getLatestSyncToken() {
+    public SyncToken getLatestSyncToken(ObjectClass objectClass) {
         throw new UnsupportedOperationException();
     } 
     <% } %>

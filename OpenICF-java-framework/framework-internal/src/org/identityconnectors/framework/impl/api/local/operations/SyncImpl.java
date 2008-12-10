@@ -80,8 +80,8 @@ public class SyncImpl extends ConnectorAPIOperationRunner implements SyncApiOp {
         ((SyncOp) getConnector()).sync(objClass, token, handler, options);
     }
     
-    public SyncToken getLatestSyncToken() {
-        return ((SyncOp) getConnector()).getLatestSyncToken();        
+    public SyncToken getLatestSyncToken(ObjectClass objectClass) {
+        return ((SyncOp) getConnector()).getLatestSyncToken(objectClass);        
     }
 
     /**

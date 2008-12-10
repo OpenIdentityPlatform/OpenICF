@@ -41,6 +41,7 @@ package org.identityconnectors.framework.spi.operations;
 
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.InvalidPasswordException;
+import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.Connector;
@@ -65,7 +66,8 @@ public interface AuthenticateOp extends SPIOperation {
      * informative exception as possible. In that regards there are several
      * exceptions provided in the exceptions package. For instance one of the
      * most common is {@link InvalidPasswordException}.
-     * 
+     * @param objectClass The object class to use for authenticate.
+     * Will typically be an account. Must not be null.
      * @param username
      *            the name based credential for authentication.
      * @param password
@@ -80,5 +82,5 @@ public interface AuthenticateOp extends SPIOperation {
      *             iff native authentication fails. If a native exception if
      *             available attempt to throw it.
      */
-    Uid authenticate(final String username, final GuardedString password, final OperationOptions options);
+    Uid authenticate(ObjectClass objectClass, final String username, final GuardedString password, final OperationOptions options);
 }

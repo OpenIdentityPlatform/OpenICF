@@ -40,6 +40,7 @@
 package org.identityconnectors.framework.api.operations;
 
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.Uid;
 
@@ -47,7 +48,8 @@ public interface AuthenticationApiOp extends APIOperation {
 
     /**
      * Most basic authentication available.
-     * 
+     * @param objectClass The object class to use for authenticate.
+     * Will typically be an account. Must not be null.
      * @param username
      *            string that represents the account or user id.
      * @param password
@@ -60,5 +62,6 @@ public interface AuthenticationApiOp extends APIOperation {
      *             iff the credentials do not pass authentication otherwise
      *             nothing.
      */
-    public Uid authenticate(final String username, final GuardedString password, final OperationOptions options);
+    public Uid authenticate(ObjectClass objectClass, String username, 
+            GuardedString password, OperationOptions options);
 }

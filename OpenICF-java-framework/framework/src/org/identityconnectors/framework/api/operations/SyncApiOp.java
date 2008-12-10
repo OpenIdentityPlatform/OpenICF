@@ -76,7 +76,9 @@ public interface SyncApiOp extends APIOperation {
      * Returns the token corresponding to the latest sync delta.
      * This is to support applications that may wish to sync starting
      * "now". 
+     * @param objClass
+     *            The object class to synchronize. Must not be null.
      * @return The latest token or null if there is no sync data.
      */
-    public SyncToken getLatestSyncToken();
+    public SyncToken getLatestSyncToken(ObjectClass objClass);
 }

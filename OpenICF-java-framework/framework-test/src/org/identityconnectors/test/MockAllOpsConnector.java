@@ -133,19 +133,7 @@ public class MockAllOpsConnector extends MockConnector implements CreateOp,
         addCall(oclass, query, handler, options);
     }
 
-    public void search(ObjectClass oclass, Filter filter,
-            ResultsHandler handler, OperationOptions options) {
-        assert filter != null;
-        addCall(filter);
-    }
-
-    public void authenticate(final Set<Attribute> attrs,
-            OperationOptions options) {
-        assert attrs != null;
-        addCall(attrs);
-    }
-
-    public Uid authenticate(String username, GuardedString password,
+    public Uid authenticate(ObjectClass objectClass, String username, GuardedString password,
             OperationOptions options) {
         assert username != null && password != null;
         addCall(username, password);

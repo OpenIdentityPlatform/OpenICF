@@ -198,12 +198,12 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
-    public final Uid authenticate(final String username, 
+    public final Uid authenticate(final ObjectClass objectClass, final String username, 
             final GuardedString password,
             final OperationOptions options) {
         return ((AuthenticationApiOp) this
                 .getOperationCheckSupported(AuthenticationApiOp.class)).authenticate(
-                username, password, options);
+                        objectClass, username, password, options);
     }
 
     /**
@@ -261,9 +261,9 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
-    public final SyncToken getLatestSyncToken() {
+    public final SyncToken getLatestSyncToken(ObjectClass objectClass) {
         return ((SyncApiOp)this.getOperationCheckSupported(SyncApiOp.class))
-        .getLatestSyncToken();
+        .getLatestSyncToken(objectClass);
     }
     
     private APIOperation getOperationCheckSupported(final Class<? extends APIOperation> api) {

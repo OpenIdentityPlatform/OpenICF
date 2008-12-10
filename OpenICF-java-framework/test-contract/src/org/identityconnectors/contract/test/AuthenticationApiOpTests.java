@@ -130,7 +130,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                     TEST_NAME);
 
             try {
-                getConnectorFacade().authenticate(name,new GuardedString(wrongPassword.toCharArray()),
+                getConnectorFacade().authenticate(ObjectClass.ACCOUNT, name,new GuardedString(wrongPassword.toCharArray()),
                         getOperationOptionsByOp(AuthenticationApiOp.class));
             } catch (InvalidCredentialException e) {
                 // it failed as it should have
@@ -145,7 +145,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                     getTestName(), OperationalAttributes.PASSWORD_NAME,
                     getObjectClassInfo().getType(), 0);
 
-            Uid authenticatedUid = getConnectorFacade().authenticate(name,
+            Uid authenticatedUid = getConnectorFacade().authenticate(ObjectClass.ACCOUNT, name,
                     new GuardedString(password.toCharArray()),
                     getOperationOptionsByOp(AuthenticationApiOp.class));
 
@@ -174,7 +174,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                         getOperationOptionsByOp(UpdateApiOp.class));
 
                 // authenticate with new password
-                authenticatedUid = getConnectorFacade().authenticate(name,
+                authenticatedUid = getConnectorFacade().authenticate(ObjectClass.ACCOUNT, name,
                         new GuardedString(newpassword.toCharArray()),
                         getOperationOptionsByOp(AuthenticationApiOp.class));
 
@@ -243,7 +243,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                 // and now authenticate
                 authenticateFailed = false;
                 try {
-                    getConnectorFacade().authenticate(name, new GuardedString(password.toCharArray()),
+                    getConnectorFacade().authenticate(ObjectClass.ACCOUNT, name, new GuardedString(password.toCharArray()),
                             getOperationOptionsByOp(AuthenticationApiOp.class));
                 } catch (PasswordExpiredException ex) {
                     // ok
@@ -284,7 +284,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                 // and now authenticate
                 authenticateFailed = false;
                 try {
-                    getConnectorFacade().authenticate(name, new GuardedString(password.toCharArray()),
+                    getConnectorFacade().authenticate(ObjectClass.ACCOUNT, name, new GuardedString(password.toCharArray()),
                             getOperationOptionsByOp(AuthenticationApiOp.class));
                 } catch (PasswordExpiredException ex) {
                     // ok
@@ -315,7 +315,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                 boolean thrown = false;
                 // try to authenticate
                 try {
-                    getConnectorFacade().authenticate(name,
+                    getConnectorFacade().authenticate(ObjectClass.ACCOUNT, name,
                         new GuardedString(password.toCharArray()), null);
                 }
                 catch (RuntimeException ex) {
@@ -385,7 +385,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                 boolean thrown = false;
                 try {
                     // authenticate with new password                
-                    getConnectorFacade().authenticate(name,
+                    getConnectorFacade().authenticate(ObjectClass.ACCOUNT, name,
                         new GuardedString(newpassword.toCharArray()),
                         getOperationOptionsByOp(AuthenticationApiOp.class));
                 }

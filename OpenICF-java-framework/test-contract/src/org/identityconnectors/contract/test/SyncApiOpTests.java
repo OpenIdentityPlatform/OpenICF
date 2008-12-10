@@ -112,7 +112,7 @@ public class SyncApiOpTests extends ObjectClassRunner {
 
         try {
             // start synchronizing from now
-            token = getConnectorFacade().getLatestSyncToken();
+            token = getConnectorFacade().getLatestSyncToken(getObjectClass());
 
             /* CREATE: */
 
@@ -219,7 +219,7 @@ public class SyncApiOpTests extends ObjectClassRunner {
             Uid uid = null;
             try {
                 // start synchronizing from now
-                SyncToken token = getConnectorFacade().getLatestSyncToken();
+                SyncToken token = getConnectorFacade().getLatestSyncToken(getObjectClass());
 
                 // create record
                 Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
@@ -266,7 +266,7 @@ public class SyncApiOpTests extends ObjectClassRunner {
                 assertNotNull("Create returned null uid.", uid1);
                 
                 // get latest sync token
-                SyncToken latestToken = getConnectorFacade().getLatestSyncToken();
+                SyncToken latestToken = getConnectorFacade().getLatestSyncToken(getObjectClass());
                 
                 // sync with latest sync token, should return nothing
                 final LinkedList<SyncDelta> deltas = new LinkedList<SyncDelta>();

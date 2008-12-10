@@ -148,7 +148,7 @@ public class MultiOpTests extends ObjectClassRunner {
             /* SyncApiOp - start synchronizing from now */
             if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), SyncApiOp.class)) {
                 // start synchronizing from now
-                token = getConnectorFacade().getLatestSyncToken();
+                token = getConnectorFacade().getLatestSyncToken(getObjectClass());
             }
 
             /* CreateApiOp - create initial objects */

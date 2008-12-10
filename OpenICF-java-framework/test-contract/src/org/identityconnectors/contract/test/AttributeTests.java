@@ -425,7 +425,7 @@ public class AttributeTests extends ObjectClassRunner {
             // start synchronizing from now
             SyncToken token = null;
             if (apiOp.equals(ApiOperations.SYNC)) { // just for SyncApiOp test
-                token = getConnectorFacade().getLatestSyncToken();
+                token = getConnectorFacade().getLatestSyncToken(getObjectClass());
             }
 
             Uid uid = null;
