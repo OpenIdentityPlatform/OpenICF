@@ -73,7 +73,7 @@ public interface SyncApiOp extends APIOperation {
      * occurred) immediately subsequent to the event from which the client obtained the token.
      * <p>
      * A client that wants to read synchronization events "starting now"
-     * can call {@link #getLatestSyncToken()} and then pass that token 
+     * can call {@link #getLatestSyncToken} and then pass that token 
      * into this {@code sync()} method.
      * 
      * @param objClass
@@ -97,13 +97,16 @@ public interface SyncApiOp extends APIOperation {
             OperationOptions options);
     
     /**
-     * Returns the token corresponding to the most recent synchronization event.
+     * Returns the token corresponding to the most recent synchronization event
+     * for any instance of the specified object class.
      * <p>
      * An application that wants to receive synchronization events "starting now"
      * --i.e., wants to receive only native changes that occur after this method is called--
      * should call this method and then pass the resulting token 
      * into {@linkplain #sync the sync() method}.
      *  
+     * @param objClass the class of object for which to find the most recent
+     *          synchronization event (if any).
      * @return A token if synchronization events exist; otherwise {@code null}.
      */
     public SyncToken getLatestSyncToken(ObjectClass objClass);
