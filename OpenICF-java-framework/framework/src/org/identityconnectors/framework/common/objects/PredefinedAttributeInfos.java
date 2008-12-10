@@ -114,11 +114,11 @@ public class PredefinedAttributeInfos {
         
 
     /**
-     * Organizations that an account or person is a member of. The Attribute
-     * values are the UID value of each organization that an account or person is
+     * Organization that an account or person is a member of. The Attribute
+     * value is the UID value of the organization that an account or person is
      * a member of.
      */
-    public static final AttributeInfo ORGANIZATIONS =
+    public static final AttributeInfo ORGANIZATION =
         AttributeInfoBuilder.build(PredefinedAttributes.ORGANIZATION_NAME,
                 String.class,
                 EnumSet.of(Flags.NOT_RETURNED_BY_DEFAULT));

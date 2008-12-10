@@ -84,7 +84,7 @@ public final class OperationalAttributeInfos {
      */
     public static final AttributeInfo PASSWORD = AttributeInfoBuilder.build(
             OperationalAttributes.PASSWORD_NAME, GuardedString.class,
-            EnumSet.of(Flags.REQUIRED,Flags.NOT_READABLE,Flags.NOT_RETURNED_BY_DEFAULT));
+            EnumSet.of(Flags.NOT_READABLE,Flags.NOT_RETURNED_BY_DEFAULT));
     
     /**
      * Used in conjunction with password to do an account level password change.
