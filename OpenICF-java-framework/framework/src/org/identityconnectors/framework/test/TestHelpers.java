@@ -299,7 +299,7 @@ public abstract class TestHelpers {
 		} catch (IOException e) { 
 			throw e;
 		} catch (Exception e) {
-			LOG.error("Could not load Groovy objects: {0}", e.getMessage());
+			LOG.error(e, "Could not load Groovy objects: {0}", e.getMessage());
 			return null;
 		} 
 		
