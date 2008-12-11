@@ -48,6 +48,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -62,7 +63,6 @@ import java.util.jar.Manifest;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.ReflectionUtil;
-import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorInfo;
@@ -358,20 +358,31 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         throws ConfigurationException
     {
         try {
-            final String prefix = getBundleNamePrefix(connector);
+            final String [] prefixes = getBundleNamePrefixes(connector);
             final String suffix = ".properties";
             ConnectorMessagesImpl rv = new ConnectorMessagesImpl();
-            for (String path : bundleContents) {
-                if ( path.startsWith(prefix) ) {
-                    String localeStr = path.substring(prefix.length());
-                    if ( localeStr.endsWith(suffix) ) {
-                        localeStr = localeStr.substring(0, localeStr.length()-suffix.length());
-                        Locale locale = parseLocale(localeStr);
-                        Properties properties = 
-                            IOUtil.getResourceAsProperties(loader, path);
-                        Map<String,String> map = 
-                            CollectionUtil.newMap(properties);
-                        rv.getCatalogs().put(locale, map);
+            //iterate last to first so that first one wins
+            for (int i = prefixes.length - 1; i >=0; i--) {
+                String prefix = prefixes[i];
+                for (String path : bundleContents) {
+                    if ( path.startsWith(prefix) ) {
+                        String localeStr = path.substring(prefix.length());
+                        if ( localeStr.endsWith(suffix) ) {
+                            localeStr = localeStr.substring(0, localeStr.length()-suffix.length());
+                            Locale locale = parseLocale(localeStr);
+                            Properties properties = 
+                                IOUtil.getResourceAsProperties(loader, path);
+                            //get or create map
+                            Map<String,String> map =
+                                rv.getCatalogs().get(locale);
+                            if ( map == null ) {
+                                map = new HashMap<String,String>();
+                                rv.getCatalogs().put(locale, map);
+                            }
+                            //merge properties into map, overwriting
+                            //any that already exist 
+                            map.putAll(CollectionUtil.newMap(properties));
+                        }
                     }
                 }
             }
@@ -413,17 +424,23 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         }
     }
     
-    private static String getBundleNamePrefix(Class<? extends Connector> connector) {
+    private static String [] getBundleNamePrefixes(Class<? extends Connector> connector) {
         // figure out the message catalog..
         ConnectorClass configOpts = connector.getAnnotation(
                 ConnectorClass.class);
-        String pkage = ReflectionUtil.getPackage(connector);
-        String messageCatalog = pkage + ".Messages";
-        if (configOpts != null
-                && StringUtil.isNotBlank(configOpts.messageCatalogPath())) {
-            messageCatalog = configOpts.messageCatalogPath();
+        String [] paths = null;
+        if ( configOpts != null ) {
+            paths = configOpts.messageCatalogPaths();
         }
-        return messageCatalog.replace('.', '/');
+        if ( paths == null || paths.length == 0 ) {
+            String pkage = ReflectionUtil.getPackage(connector);
+            String messageCatalog = pkage + ".Messages";
+            paths = new String[]{messageCatalog};
+        }
+        for (int i = 0; i < paths.length; i++) {
+            paths[i] = paths[i].replace('.', '/');
+        }
+        return paths;
     }
     
     public ConnectorInfo findConnectorInfo(ConnectorKey key) {

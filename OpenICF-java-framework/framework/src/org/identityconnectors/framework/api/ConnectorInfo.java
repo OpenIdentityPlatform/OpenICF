@@ -40,6 +40,7 @@
 package org.identityconnectors.framework.api;
 
 import org.identityconnectors.common.l10n.CurrentLocale;
+import org.identityconnectors.framework.common.objects.ConnectorMessages;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
 
@@ -56,6 +57,12 @@ public interface ConnectorInfo {
      * @return The friendly name
      */
     public String getConnectorDisplayName();
+    
+    /**
+     * Returns the connector messages for this connector
+     * @return The connector messages for this connector.
+     */
+    public ConnectorMessages getMessages();
 
     /**
      * Uniquely identifies this connector in a given installation

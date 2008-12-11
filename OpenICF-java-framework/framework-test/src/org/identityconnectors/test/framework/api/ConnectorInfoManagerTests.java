@@ -170,16 +170,18 @@ public class ConnectorInfoManagerTests {
         
         ConfigurationProperties props = api.getConfigurationProperties();
         ConfigurationProperty property  = props.getProperty("tstField");
-        
         Assert.assertNotNull(property);
         
         Set<Class<? extends APIOperation>> operations =
             property.getOperations();
         Assert.assertEquals(1, operations.size());
         Assert.assertEquals(SyncApiOp.class, operations.iterator().next());
-        
+
+        CurrentLocale.clear();
         Assert.assertEquals("Help for test field.",property.getHelpMessage(null));
         Assert.assertEquals("Display for test field.",property.getDisplayName(null));
+        Assert.assertEquals("Test Framework Value",
+                info.getMessages().format("TEST_FRAMEWORK_KEY", "empty"));
 
         Locale xlocale = new Locale("es");
         CurrentLocale.set(xlocale);
@@ -195,6 +197,7 @@ public class ConnectorInfoManagerTests {
         CurrentLocale.set(esARlocale);
         Assert.assertEquals("tstField.help_es",property.getHelpMessage(null));
         Assert.assertEquals("tstField.display_es",property.getDisplayName(null));
+
         
         CurrentLocale.clear();
         

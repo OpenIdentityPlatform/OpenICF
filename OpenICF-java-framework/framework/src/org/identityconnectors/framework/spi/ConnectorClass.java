@@ -64,8 +64,11 @@ public @interface ConnectorClass {
     String displayNameKey();
     
     /**
-     * The resource path to the message catalog.
+     * The resource path(s) to the message catalog.
+     * Message catalogs are searched in the order given such 
+     * that the first one wins. By default, if no paths are
+     * specified, we use <code>connector-package.Messages.properties</code>
      */
-    String messageCatalogPath() default "";
+    String [] messageCatalogPaths() default {};
 
 }

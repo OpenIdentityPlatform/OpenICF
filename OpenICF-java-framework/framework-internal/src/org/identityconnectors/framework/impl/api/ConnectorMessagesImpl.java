@@ -43,6 +43,8 @@ import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.framework.common.objects.ConnectorMessages;
@@ -110,12 +112,30 @@ public class ConnectorMessagesImpl implements ConnectorMessages {
             message = catalog.get(key);
         }
         if ( message == null ) {
+            message = getFrameworkMessage(locale,key);
+        }
+        if ( message == null ) {
             return dflt;
         }
         else {
             MessageFormat formater =
                 new MessageFormat(message,locale);
             return formater.format(args,new StringBuffer(),null).toString();
+        }
+    }
+    
+    private String getFrameworkMessage(Locale locale, String key) {
+        final String baseName =
+            ConnectorMessagesImpl.class.getPackage().getName()+".Messages";
+        //this will throw if not there, but there should always be
+        //at least a bundle
+        final ResourceBundle bundle =
+            ResourceBundle.getBundle(baseName,locale);
+        try {
+            return bundle.getString(key);
+        }
+        catch (MissingResourceException e) {
+            return null;
         }
     }
         
