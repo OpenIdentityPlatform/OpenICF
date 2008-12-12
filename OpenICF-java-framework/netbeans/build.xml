@@ -36,6 +36,6 @@
   "Portions Copyrighted [year] [name of copyright owner]"
 -->
 <project name="org.identityconnectors.toolkitmodule" default="netbeans" basedir=".">
-    <description>Builds, tests, and runs the project com.sun.openconnectors.toolkitmodule.</description>
+    <description>Builds, tests, and runs the project org.identityconnectors.toolkitmodule.</description>
     <import file="nbproject/build-impl.xml"/>
 </project>

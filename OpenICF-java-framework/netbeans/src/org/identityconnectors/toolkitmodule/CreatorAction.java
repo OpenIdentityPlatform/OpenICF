@@ -155,7 +155,7 @@ public final class CreatorAction extends CallableSystemAction {
             String resourceName = properties.getProperty("resource.name");
             eProps.setProperty("application.title", "Connector-" + resourceName);
             eProps.setProperty("application.vendor", System.getProperty("user.name"));
-            eProps.setProperty("dist.jar", "${dist.dir}/Connector-" + resourceName + "-1.0.0.0.jar");
+            eProps.setProperty("dist.jar", "${dist.dir}/Connector-" + resourceName + "-1.0.0.jar");
 
             String javadocPath = getJavadocPath(toolkitLoc);
 
@@ -304,7 +304,7 @@ public final class CreatorAction extends CallableSystemAction {
             out = new BufferedWriter(new FileWriter(temp));
             while (in.ready()) {
                 String line = in.readLine();
-                line = line.replaceAll("@@ProjectName@@", projectName);
+                line = line.replaceAll("Connector-Project", projectName);
                 out.write(line);
                 out.newLine();
             }
