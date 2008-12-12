@@ -44,6 +44,7 @@ import static org.junit.Assert.*;
 
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -158,17 +159,20 @@ public class SearchApiOpTests extends ObjectClassRunner {
             
             //search by all non special readable attributes
             Filter fltAllAtts = null;
-
+            // attributes which are used in filter must be the same for all filtered objects
+            Set<Attribute> filteredAttrs = new HashSet<Attribute>();
+            
             for (Attribute attribute : searchBy) {
                 if (!AttributeUtil.isSpecial(attribute) && ConnectorHelper.isReadable(getObjectClassInfo(), attribute)) {                    
                     if (fltAllAtts == null) {
                         fltAllAtts = FilterBuilder.equalTo(attribute);
                     } else {
                         fltAllAtts = FilterBuilder.and(fltAllAtts, FilterBuilder.equalTo(attribute));
-                    }                    
+                    }
+                    filteredAttrs.add(attribute);
                 }
             }            
-            // skip test when there are no special readable attributes 
+            // skip test when there are no non-special readable attributes 
             // (results in null filter - tested explicitly)
             if (fltAllAtts != null) {
                 // find how many object should pass filter
@@ -185,9 +189,11 @@ public class SearchApiOpTests extends ObjectClassRunner {
                 assertEquals("Search by all non-special attributes returned "
                         + coObjects.size() + " objects, but expected was "
                         + count + " .", count, coObjects.size());
-                ConnectorHelper.checkObject(getObjectClassInfo(), coFound,
-                        searchBy);
-
+                 
+                for (ConnectorObject coChecked : coObjects) {
+                    ConnectorHelper.checkObject(getObjectClassInfo(), coChecked,
+                        filteredAttrs);
+                }
             }
             
             //check null filter
