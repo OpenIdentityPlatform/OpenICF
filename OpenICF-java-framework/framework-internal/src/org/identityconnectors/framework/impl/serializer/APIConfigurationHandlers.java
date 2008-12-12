@@ -92,6 +92,7 @@ class APIConfigurationHandlers {
                 ConfigurationPropertyImpl rv = new ConfigurationPropertyImpl();
                 
                 rv.setOrder(decoder.readIntField("order",0));
+                rv.setRequired(decoder.readBooleanField("required",false));
                 rv.setConfidential(decoder.readBooleanField("confidential",false));
                 rv.setName(decoder.readStringField("name",null));
                 rv.setHelpMessageKey(
@@ -118,6 +119,7 @@ class APIConfigurationHandlers {
                         val.getOrder());
                 encoder.writeBooleanField("confidential", 
                         val.isConfidential());
+                encoder.writeBooleanField("required", val.isRequired());
                 encoder.writeStringField("name", 
                         val.getName());
                 encoder.writeStringField("helpMessageKey",

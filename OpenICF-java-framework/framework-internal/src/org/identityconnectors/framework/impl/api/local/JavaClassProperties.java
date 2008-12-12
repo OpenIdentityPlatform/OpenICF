@@ -109,6 +109,7 @@ public class JavaClassProperties
             String helpKey = name + ".help";
             String displKey = name + ".display";
             boolean confidential = false;
+            boolean required = false;
             if (options != null) {
                 // determine the display and help keys..
                 if (StringUtil.isNotBlank(options.helpMessageKey())) {
@@ -121,6 +122,7 @@ public class JavaClassProperties
                 order = options.order();
                 
                 confidential = options.confidential();
+                required = options.required();
             }
             Class<?> type;
             if ( desc instanceof IndexedPropertyDescriptor ) {
@@ -144,6 +146,7 @@ public class JavaClassProperties
             prop.setOrder(order);
             prop.setValue(value);
             prop.setType(type);
+            prop.setRequired(required);
             prop.setOperations(options == null ? null : translateOperations(options.operations()));
             
             temp.add(prop);

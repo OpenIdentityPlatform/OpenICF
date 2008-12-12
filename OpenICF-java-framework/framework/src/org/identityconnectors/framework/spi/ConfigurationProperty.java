@@ -66,6 +66,12 @@ public @interface ConfigurationProperty {
     public boolean confidential() default false;
     
     /**
+     * Is this property required?
+     * @return True iff the property is required
+     */
+    public boolean required() default false;
+    
+    /**
      * List of operations for which this property must be specified.
      * This is used for the case where a connector may or may not
      * implement certain operations depending in the configuration.

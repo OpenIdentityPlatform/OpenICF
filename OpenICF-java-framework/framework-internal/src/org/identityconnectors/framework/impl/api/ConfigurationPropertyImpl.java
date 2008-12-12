@@ -77,6 +77,11 @@ public class ConfigurationPropertyImpl implements ConfigurationProperty {
      */
     private Set<Class<? extends APIOperation>> _operations;
     
+    /**
+     * Is this property required?
+     */
+    private boolean _required;
+    
 
     /**
      * The container. Not serialized in this object. Set when this
@@ -134,6 +139,14 @@ public class ConfigurationPropertyImpl implements ConfigurationProperty {
     
     public Set<Class<? extends APIOperation>> getOperations() {
         return _operations;
+    }
+    
+    public boolean isRequired() {
+        return _required;
+    }
+    
+    public void setRequired(boolean v) {
+        _required = v;
     }
     
     public void setOperations(Set<Class<? extends APIOperation>> set) {
@@ -222,6 +235,9 @@ public class ConfigurationPropertyImpl implements ConfigurationProperty {
                 return false;
             }
             if (isConfidential() != other.isConfidential()) {
+                return false;
+            }
+            if (isRequired() != other.isRequired()) {
                 return false;
             }
             if (!CollectionUtil.equals(getType(),other.getType())) {

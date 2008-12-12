@@ -422,6 +422,7 @@ public class ObjectSerializationTests {
         ConfigurationPropertyImpl v1 = new ConfigurationPropertyImpl();
         v1.setOrder(1);
         v1.setConfidential(true);
+        v1.setRequired(true);
         v1.setName("foo");
         v1.setHelpMessageKey("help key");
         v1.setDisplayMessageKey("display key");
@@ -433,6 +434,7 @@ public class ObjectSerializationTests {
             cloneObject(v1);
         Assert.assertEquals(1, v2.getOrder());
         Assert.assertTrue(v2.isConfidential());
+        Assert.assertTrue(v2.isRequired());
         Assert.assertEquals("foo", v2.getName());
         Assert.assertEquals("help key", v2.getHelpMessageKey());
         Assert.assertEquals("display key", v2.getDisplayMessageKey());

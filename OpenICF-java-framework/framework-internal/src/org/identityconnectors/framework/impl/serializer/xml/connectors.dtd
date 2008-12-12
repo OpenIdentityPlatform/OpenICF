@@ -141,6 +141,7 @@ OperationOptionInfo | SyncDeltaType | SyncToken | SyncDelta | QualifiedUid
 <!ATTLIST ConfigurationProperty
     order CDATA #IMPLIED
     confidential CDATA #IMPLIED
+    required CDATA #IMPLIED
     name CDATA #REQUIRED  
     helpMessageKey CDATA #REQUIRED
     displayMessageKey CDATA #REQUIRED
