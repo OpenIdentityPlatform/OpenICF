@@ -153,6 +153,16 @@ public final class ObjectClass {
         return _type;
     }
     
+    /**
+     * Convenience method to build the display name key for
+     * an object class.  
+     * 
+     * @return The display name key.
+     */
+    public String getDisplayNameKey() {
+        return "MESSAGE_OBJECT_CLASS_"+_type.toUpperCase();
+    }
+    
     @Override
     public int hashCode() {
         return _type.hashCode();
