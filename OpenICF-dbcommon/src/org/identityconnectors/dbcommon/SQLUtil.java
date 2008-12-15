@@ -568,7 +568,7 @@ public final class SQLUtil {
      * @param val a parameter Value
      * @throws SQLException a SQL exception 
      */
-    static void setParam(final PreparedStatement stmt, final int idx, Object val) throws SQLException {
+    public static void setParam(final PreparedStatement stmt, final int idx, Object val) throws SQLException {
         // Guarded string conversion
         if (val instanceof GuardedString) {
             setGuardedStringParam(stmt, idx, (GuardedString) val);
