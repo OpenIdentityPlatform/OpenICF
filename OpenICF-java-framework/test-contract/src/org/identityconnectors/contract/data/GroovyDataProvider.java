@@ -194,6 +194,8 @@ public class GroovyDataProvider implements DataProvider {
     /** load the bootstrap configuration */
     private ConfigObject doBootstrap() {        
         URL url = getClass().getClassLoader().getResource(BOOTSTRAP_FILE_NAME);
+        String msg = String.format("Missing bootstrap file: %s. (Hint: copy it from the src folder: framework/test-contract/src)", BOOTSTRAP_FILE_NAME);
+        Assert.assertNotNull(msg, url);
         return cs.parse(url);
     }
 
