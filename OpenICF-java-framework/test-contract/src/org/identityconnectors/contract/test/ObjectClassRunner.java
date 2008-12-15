@@ -152,6 +152,14 @@ public abstract class ObjectClassRunner extends AbstractSimpleTest {
         }
         
         oclasses.add(new Object[] {new ObjectClass("NONEXISTING")});
+        
+        StringBuilder sb = new StringBuilder();
+        for (Object[] oc : oclasses) {
+            sb.append(oc[0].toString());
+            sb.append(",");
+        }
+        
+        LOG.info("Tested object classes will be: ''{0}''.", sb.toString());
         return oclasses;
     }
 
