@@ -652,6 +652,20 @@ public class GroovyDataProvider implements DataProvider {
     public Object get(String name) {
         return get(name, null, false);
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public Object generate(String pattern, Class clazz) {
+        return RandomGenerator.generate(pattern, clazz);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Object generate(String pattern) {
+        return RandomGenerator.generate(pattern);
+    }
 
     /** 
      * {@inheritDoc}

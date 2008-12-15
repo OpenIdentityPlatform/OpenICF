@@ -126,6 +126,41 @@ public interface DataProvider {
      */
     public Object get(String name, int sequenceNumber);
     
+    /**
+     * <p>
+     * Random generator uses a <strong>pattern</strong> to generate a random
+     * sequence based on given pattern.
+     * </p>
+     * <p>
+     * the supported characters are (can appear in pattern string):
+     * </p>
+     * <ul>
+     * <li># - numeric</li>
+     * <li>a - lowercase letter</li>
+     * <li>A - uppercase letter</li>
+     * <li>? - lowercase and uppercase letter</li>
+     * <li>. - any character</li>
+     * </ul>
+     * <p>
+     * Any other character inside the pattern is directly printed to the output.
+     * </p>
+     * <p>
+     * Backslash is used to escape any character. For instance pattern
+     * "###\\.##" prints a floating point random number
+     * </p>
+     * 
+     * @param pattern the pattern for generation
+     * @param clazz the type of returned random object
+     * @return randomly generated object with content based on given type. 
+     */
+    public Object generate(String pattern, Class clazz);
+    
+    /**
+     * generates a random string dynamically.
+     * {@link DataProvider#generate(String, Class)}
+     */
+    public Object generate(String pattern);
+    
     /* ************************************************* */
     
     /** free the allocated resources */
