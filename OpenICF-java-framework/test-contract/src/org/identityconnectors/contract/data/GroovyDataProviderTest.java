@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -370,6 +371,27 @@ public class GroovyDataProviderTest {
         Assert.assertTrue(o instanceof List && ((List) o).size() > 0);
         List l = (List) o;
         Assert.assertTrue(l.get(0) instanceof String);
+    }
+    
+    /**
+     * Tests the resolving of Lazy values inside map
+     */
+    @Test
+    public void testLazyMap() {
+        Object o = ((DataProvider) gdp).get("mapWithLazyCalls");
+        Assert.assertNotNull(o);
+        Assert.assertTrue(o instanceof Map);
+        Map m = (Map) o;
+        int cntr = 0;
+        for (Iterator iterator = m.entrySet().iterator(); iterator.hasNext();) {
+            Map.Entry current = (Map.Entry) iterator.next();
+            if (cntr == 0 || cntr == 1) {
+                Assert.assertTrue(current.getValue() instanceof String);
+                //System.out.println("k: " + current.getKey().toString() + " v: " + current.getValue().toString());
+            } else {
+                Assert.fail("should not be more than two items in the map");
+            }
+        }
     }
 
     /* ************* UTILITY METHODS ***************** */

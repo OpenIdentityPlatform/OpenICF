@@ -109,3 +109,4 @@ aaa.bbb.ccc = "ahoj"
 aaa.bbb.ddd = "ship2"
 aaa.bbb.eee = "ship"
 
+mapWithLazyCalls = [key1: Lazy.random("###"), key2: ("rrr" + Lazy.random("###"))]
