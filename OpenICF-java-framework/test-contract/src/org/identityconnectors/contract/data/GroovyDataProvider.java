@@ -452,8 +452,38 @@ public class GroovyDataProvider implements DataProvider {
         } else if (o instanceof List) {
             List list = (List) o;
             resolved = resolveList(list);
+        } else if (o instanceof Map) {
+            Map map = (Map) o;
+            resolved = resolveMap(map);
         }
         return resolved;
+    }
+
+    /**
+     * Method that resolves all Lazy values within the given map. Resolving 
+     * works recursively for nested Maps also.
+     * @param map
+     * @return
+     */
+    private Map resolveMap(Map map) {
+        Map localMap = map;
+        for (Iterator it = localMap.entrySet().iterator(); it.hasNext();) {
+            Map.Entry pairKV = (Map.Entry) it.next();
+            /** value */
+            Object object = pairKV.getValue();
+            
+            if (object instanceof Lazy) {
+                Lazy lazyO = (Lazy) object;
+                Object resolvedObj = resolveLazy(lazyO);
+                pairKV.setValue(resolvedObj);
+            } else if (object instanceof Map) {
+                // recursively resolve attributes in nested lists
+                Map arg = (Map) object;
+                Map resolvedMap = resolveMap(arg);
+                pairKV.setValue(resolvedMap);
+            }
+        }// for list
+        return localMap;
     }
 
     /**
