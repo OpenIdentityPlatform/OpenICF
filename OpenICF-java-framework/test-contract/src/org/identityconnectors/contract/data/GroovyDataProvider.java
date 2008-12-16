@@ -682,7 +682,12 @@ public class GroovyDataProvider implements DataProvider {
      * {@inheritDoc}
      */
     public Object get(String name) {
-        return get(name, null, false);
+        Object result = get(name, null, false);
+        if (result instanceof Map) {
+            Map map = (Map) result;
+            result = resolveMap(map);
+        }
+        return result;
     }
     
     /**
