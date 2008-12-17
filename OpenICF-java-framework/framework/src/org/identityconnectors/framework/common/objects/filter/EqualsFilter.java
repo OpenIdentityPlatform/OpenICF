@@ -25,19 +25,41 @@ package org.identityconnectors.framework.common.objects.filter;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 
+/**
+ * Determines whether an {@link ConnectorObject object} 
+ * contains an {@link Attribute attribute} that matches
+ * a specific attribute value.
+ */
 public final class EqualsFilter extends AttributeFilter {
 
     /**
-     * Determines if the attribute inside the {@link ConnectorObject} is equal
-     * to the {@link Attribute} provided.
+     * Public only as an artifact of the implementation.
+     * Please use {@link FilterBuilder#equalTo(Attribute) FilterBuilder} 
+     * to create an instance of {@code EqualsFilter}.
      */
     public EqualsFilter(Attribute attr) {
         super(attr);
     }
 
     /**
-     * Determines if the attribute exists in the {@link ConnectorObject} and if
-     * its equal to the one provided.
+     * Determines whether the specified {@link ConnectorObject} 
+     * contains an attribute that has the same name 
+     * and contains a value that is equals the value of
+     * the attribute that {@code FilterBuilder}
+     * placed into this filter.
+     * <p>
+     * Note that in the case of a multi-valued attribute,
+     * equality of values means that:
+     * <ul>
+     * <li> the value of the attribute in the connector object 
+     *      and the value of the attribute in the filter
+     *      must contain <em>the same number of elements</em>; and that
+     *</li>
+     * <li> each element within the value of the attribute in the connector object
+     *      must <em>equal the element that occupies the same position</em>
+     *      within the value of the attribute in the filter.
+     *</li>
+     *</ul>
      * 
      * @see Filter#accept(ConnectorObject)
      */

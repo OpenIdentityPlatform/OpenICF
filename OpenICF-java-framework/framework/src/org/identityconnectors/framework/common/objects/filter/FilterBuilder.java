@@ -26,9 +26,10 @@ import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 
 /**
- * FilterBuilder creates a {@link Filter} object 
- * that will {@link Filter#accept match} any <code>ConnectorObject</code> 
- * that satisfies all of the selection criteria specified using the builder.
+ * FilterBuilder creates a {@linkplain Filter filter} 
+ * that will {@linkplain Filter#accept match} any {@code ConnectorObject} 
+ * that satisfies all of the selection criteria 
+ * that were specified using this builder.
  * 
  * @author Will Droste
  * @version $Revision: 1.7 $

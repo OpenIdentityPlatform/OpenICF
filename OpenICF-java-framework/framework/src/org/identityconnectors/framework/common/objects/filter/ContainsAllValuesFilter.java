@@ -32,6 +32,13 @@ public class ContainsAllValuesFilter extends AttributeFilter {
     private final String _name;
     private final List<Object> _values;
 
+    /**
+     * Public only as an artifact of the implementation.
+     * Please use {@link FilterBuilder} 
+     * to create an instance of {@code ContainsAllValuesFilter}.
+     * 
+     * @param attr
+     */
     public ContainsAllValuesFilter(Attribute attr) {
         super(attr);
         _name = attr.getName();
@@ -39,9 +46,11 @@ public class ContainsAllValuesFilter extends AttributeFilter {
     }
 
     /**
-     * Determine if the {@link ConnectorObject} contains an {@link Attribute}
-     * which contains all the values provided in the {@link Attribute} passed
-     * into the filter.
+     * Determine whether the specified {@link ConnectorObject} 
+     * contains an {@link Attribute} that has the same name as
+     * <em>and contains all of the values of</em>
+     * the attribute that {@link FilterBuilder} 
+     * placed into this filter. 
      * 
      * {@inheritDoc}
      */

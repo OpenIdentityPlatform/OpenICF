@@ -36,9 +36,9 @@ public interface Filter {
      * Determines whether the specified {@link ConnectorObject} 
      * matches this filter.
      * @param obj - The specified ConnectorObject.
-     * @return <code>true</code> if the object matches
+     * @return {@code true} if the object matches
      *  (that is, satisfies all selection criteria of) this filter;
-     *  otherwise <code>false</code>.
+     *  otherwise {@code false}.
      */
     boolean accept(ConnectorObject obj);
 }
