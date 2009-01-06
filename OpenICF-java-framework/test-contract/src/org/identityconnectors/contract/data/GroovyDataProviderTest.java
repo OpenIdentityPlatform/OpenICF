@@ -393,6 +393,21 @@ public class GroovyDataProviderTest {
             }
         }
     }
+    
+    /**
+     * test acquiring a map all at once (good for unit tests)
+     */
+    @Test
+    public void testAcquireMap() {
+        Object o = ((DataProvider) gdp).get("abcAccount.all");
+        Assert.assertNotNull(o);
+        Assert.assertTrue(o instanceof Map);
+        Map m = (Map) o;
+        Assert.assertTrue(m.get("@@NAME@@") instanceof String);
+        Assert.assertTrue(((String) m.get("@@NAME@@")).startsWith("CONUSR-"));
+        Assert.assertTrue(m.get("@@PASSWORD@@") instanceof String);
+        Assert.assertTrue(((String) m.get("@@PASSWORD@@")).equals("tstpwd"));
+    }
 
     /* ************* UTILITY METHODS ***************** */
     /**
