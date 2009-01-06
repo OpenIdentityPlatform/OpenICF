@@ -35,11 +35,10 @@ import org.identityconnectors.framework.spi.Configuration;
 
 
 /**
- * Implements the {@link org.identityconnectors.common.pooling.Connection} interface to wrap JDBC connections.
- * <p>Define a protected {@link #getDriverMangerConnection()} method for instantiating the connection. 
- * This method can be overloaded to create a more connector specific connection if needed </p>
+ * The DatabaseConnection wraps the JDBC connection.
+ * Define the test method meaning the wrapped connection is still valid
+ * Defines come useful method to work with prepared statements 
  * 
- * @version $Revision $
  * @since 1.0
  */
 public class DatabaseConnection  {
@@ -84,7 +83,6 @@ public class DatabaseConnection  {
     /**
      * Determines if the underlying JDBC {@link java.sql.Connection} is valid.
      * 
-     * @see org.identityconnectors.framework.spi.Connection#test()
      * @throws RuntimeException
      *             if the underlying JDBC {@link java.sql.Connection} is not valid otherwise do nothing.
      */
@@ -123,7 +121,7 @@ public class DatabaseConnection  {
     }
 
     /**
-     * Indirect call of prepare statement
+     * Indirect call of prepare statement with mapped prepare statement parameters
      * @param sql a <CODE>String</CODE> sql statement definition
      * @param params the bind parameter values
      * @return return a prepared statement
@@ -139,7 +137,7 @@ public class DatabaseConnection  {
     
     
     /**
-     * Indirect call of prepare statement
+     * Indirect call of prepare statement using the query builder object
      * @param query DatabaseQueryBuilder query
      * @return return a prepared statement
      * @throws SQLException an exception in statement
@@ -150,7 +148,7 @@ public class DatabaseConnection  {
         
     
     /**
-     * Indirect call of prepareCall
+     * Indirect call of prepareCall statement with mapped callable statement parameters
      * @param sql a <CODE>String</CODE> sql statement definition
      * @param params the bind parameter values
      * @return return a callable statement
@@ -163,16 +161,6 @@ public class DatabaseConnection  {
         SQLUtil.setParams(prepareCall, out);
         return prepareCall;
     }    
-
-    /**
-     * TODO: Plan to support DataSource in the near future. The advantage is the administrator can configure the
-     * resource and it can use its own connection pooling.
-     * 
-     * @return
-     */
-    static Connection getDataSourceConnection() {
-        return null;
-    }
     
     
     /**
