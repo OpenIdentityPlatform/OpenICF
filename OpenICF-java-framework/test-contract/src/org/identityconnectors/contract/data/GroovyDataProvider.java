@@ -22,21 +22,26 @@
  */
 package org.identityconnectors.contract.data;
 
+import static org.junit.Assert.assertNotNull;
 import groovy.util.ConfigObject;
 import groovy.util.ConfigSlurper;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
+import java.util.Map.Entry;
 
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
@@ -46,7 +51,13 @@ import org.identityconnectors.contract.data.groovy.Lazy;
 import org.identityconnectors.contract.data.groovy.Random;
 import org.identityconnectors.contract.exceptions.ContractException;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
+import org.identityconnectors.contract.test.ConnectorHelper;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
+import org.identityconnectors.framework.common.objects.OperationalAttributes;
+import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.spi.Configuration;
 import org.junit.Assert;
 
 /**
@@ -713,6 +724,83 @@ public class GroovyDataProvider implements DataProvider {
         return get(resolvedName);
     }
 
+    /* ************** ADDITIONAL PROPERTY UTILS ******************* */
+    /**
+     * @param setName
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> getPropertyMap(final String setName) {
+        DataProvider dataProvider = ConnectorHelper.createDataProvider();
+        Map<String, Object> propMap = (Map<String, Object>) dataProvider
+                .get(setName);
+        return propMap;
+    }
+
+    /**
+     * @param propertySetName
+     * @return The set <CODE>Set<Attribute></CODE> of attributes
+     */
+    public Set<Attribute> getAttributeSet(final String propertySetName) {
+        Map<String, Object> propMap = getPropertyMap(propertySetName);
+        assertNotNull(propMap);
+        Set<Attribute> attrSet = new LinkedHashSet<Attribute>();
+        for (Entry<String, Object> entry : propMap.entrySet()) {
+            final String key = entry.getKey();
+            final Object value = entry.getValue();
+
+            if (Uid.NAME.equals(key)) {
+                attrSet.add(new Uid(value.toString()));
+            } else if (OperationalAttributes.PASSWORD_NAME.equals(key)) {
+                attrSet.add(AttributeBuilder.buildPassword(value.toString()
+                        .toCharArray()));
+            } else if (OperationalAttributes.CURRENT_PASSWORD_NAME.equals(key)) {
+                attrSet.add(AttributeBuilder.buildCurrentPassword(value
+                        .toString().toCharArray()));
+            } else if (OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME
+                    .equals(key)) {
+                attrSet.add(AttributeBuilder
+                        .buildPasswordExpirationDate((Long) value));
+            } else if (OperationalAttributes.PASSWORD_EXPIRED_NAME.equals(key)) {
+                attrSet.add(AttributeBuilder
+                        .buildPasswordExpired((Boolean) value));
+            } else if (OperationalAttributes.DISABLE_DATE_NAME.equals(key)) {
+                attrSet.add(AttributeBuilder.buildDisableDate((Long) value));
+            } else if (OperationalAttributes.ENABLE_DATE_NAME.equals(key)) {
+                attrSet.add(AttributeBuilder.buildEnableDate((Long) value));
+            } else if (OperationalAttributes.ENABLE_NAME.equals(key)) {
+                attrSet.add(AttributeBuilder.buildEnabled((Boolean) value));
+            } else if (OperationalAttributes.LOCK_OUT_NAME.equals(key)) {
+                attrSet.add(AttributeBuilder.buildLockOut((Boolean) value));
+            } else {
+                attrSet.add(AttributeBuilder.build(key, value));
+            }
+        }
+        return attrSet;
+    }
+
+    /**
+     * @param configName
+     * @throws NoSuchFieldException
+     * @throws IllegalAccessException
+     */
+    public void loadConfiguration(final String configName, Configuration cfg)
+            throws NoSuchFieldException, IllegalAccessException {
+        Map<String, Object> propMap = getPropertyMap(configName);
+        assertNotNull(propMap);
+        for (Entry<String, Object> entry : propMap.entrySet()) {
+            final String key = entry.getKey();
+            final Field fld = cfg.getClass().getDeclaredField(key);
+            final Object value = entry.getValue();
+            fld.setAccessible(true);
+            final Class<?> type = fld.getType();
+            if (type.isAssignableFrom(GuardedString.class)) {
+                fld.set(cfg, new GuardedString(value.toString().toCharArray()));
+            } else {
+                fld.set(cfg, value);
+            }
+        }
+    }
     /* ************** AUXILIARY METHODS *********************** */
     /**
      * gets short name for the type, eg. java.lang.String returns string

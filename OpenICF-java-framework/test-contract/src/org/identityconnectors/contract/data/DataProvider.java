@@ -22,7 +22,11 @@
  */
 package org.identityconnectors.contract.data;
 
+import java.util.Set;
+
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.spi.Configuration;
 
 /**
  * DataProvider is a facility used for getting (reading/generating) data for
@@ -160,6 +164,12 @@ public interface DataProvider {
      * {@link DataProvider#generate(String, Class)}
      */
     public Object generate(String pattern);
+    
+    /* ***************** ADDITIONAL PROPERTY UTILS ************** */
+    public void loadConfiguration(final String configName, Configuration cfg)
+        throws NoSuchFieldException, IllegalAccessException;
+    
+    public Set<Attribute> getAttributeSet(final String propertySetName);
     
     /* ************************************************* */
     
