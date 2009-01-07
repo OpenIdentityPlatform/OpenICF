@@ -46,7 +46,6 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -284,7 +283,6 @@ public class SearchApiOpTests extends ObjectClassRunner {
     public void testCaseInsensitiveSearch() {
         // run the contract test only if search is supported by tested object
         // class
-        boolean bool = canSearchCaseInsensitive();
         if (ConnectorHelper.operationSupported(getConnectorFacade(),
                 getObjectClass(), getAPIOperation())
                 && canSearchCaseInsensitive()) {
@@ -350,7 +348,6 @@ public class SearchApiOpTests extends ObjectClassRunner {
     /** replace upper and lowercase letters */
     static String changeCase(String str_uid) {
         char[] result = new char[str_uid.length()];
-        boolean b = false;
         for (int i = 0; i < str_uid.length(); i++) {
             if (Character.isLowerCase(str_uid.charAt(i))) {
                 result[i] = Character.toUpperCase(str_uid.charAt(i));
