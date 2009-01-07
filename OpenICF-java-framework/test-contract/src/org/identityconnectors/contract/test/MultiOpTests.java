@@ -443,8 +443,8 @@ public class MultiOpTests extends ObjectClassRunner {
                 && ConnectorHelper.isCRU(getObjectClassInfo(), OperationalAttributes.ENABLE_DATE_NAME)) {
             
             // check ENABLE_DATE for "now" and "1.1.1970"
-            checkOpAttribute(OperationalAttributes.ENABLE_DATE_NAME, new Date(),
-                    new Date(0), Long.class);
+            checkOpAttribute(OperationalAttributes.ENABLE_DATE_NAME, (new Date()).getTime(),
+                    (new Date(0)).getTime(), Long.class);
         }
         else {
             LOG.info("----------------------------------------------------------------------------------------");
@@ -462,8 +462,8 @@ public class MultiOpTests extends ObjectClassRunner {
                 && ConnectorHelper.isCRU(getObjectClassInfo(), OperationalAttributes.DISABLE_DATE_NAME)) {
 
             // check DISABLE_DATE for "now" and "1.1.1970"
-            checkOpAttribute(OperationalAttributes.DISABLE_DATE_NAME, new Date(),
-                    new Date(0), Long.class);
+            checkOpAttribute(OperationalAttributes.DISABLE_DATE_NAME, (new Date()).getTime(),
+                    (new Date(0)).getTime(), Long.class);
         }
         else {
             LOG.info("----------------------------------------------------------------------------------------");
@@ -502,8 +502,8 @@ public class MultiOpTests extends ObjectClassRunner {
                 && ConnectorHelper.isCRU(getObjectClassInfo(), OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME)) {
 
             // check PASSWORD_EXPIRATION_DATE for "now" and "1.1.1970"
-            checkOpAttribute(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME, new Date(),
-                    new Date(0), Long.class);
+            checkOpAttribute(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME, (new Date()).getTime(),
+                    (new Date(0)).getTime(), Long.class);
         }
         else {
             LOG.info("----------------------------------------------------------------------------------------");
@@ -667,7 +667,7 @@ public class MultiOpTests extends ObjectClassRunner {
                     }
                 }
                 accountAttrs1.add(AttributeBuilder.build(PredefinedAttributes.GROUPS_NAME,
-                        groupUid1));
+                        AttributeUtil.getStringValue(groupUid1)));
                 
                 accountUid1 = getConnectorFacade().create(ObjectClass.ACCOUNT, accountAttrs1, null);
 
@@ -689,7 +689,7 @@ public class MultiOpTests extends ObjectClassRunner {
                     // update account to contain both groups
                     Set<Attribute> accountAttrs2 = new HashSet<Attribute>();
                     accountAttrs2.add(AttributeBuilder.build(PredefinedAttributes.GROUPS_NAME,
-                            groupUid2));
+                    		AttributeUtil.getStringValue(groupUid2)));
                     accountAttrs2.add(accountUid1);
                     accountUid1 = getConnectorFacade().addAttributeValues(
                             ObjectClass.ACCOUNT, accountUid1, AttributeUtil.filterUid(accountAttrs2), null);
@@ -766,7 +766,7 @@ public class MultiOpTests extends ObjectClassRunner {
                     }
                 }
                 accountAttrs1.add(AttributeBuilder.build(PredefinedAttributes.ORGANIZATION_NAME,
-                        orgUid1));
+                		AttributeUtil.getStringValue(orgUid1)));
                 
                 accountUid1 = getConnectorFacade().create(ObjectClass.ACCOUNT, accountAttrs1, null);
 
@@ -788,7 +788,7 @@ public class MultiOpTests extends ObjectClassRunner {
                     // update account to contain both orgs
                     Set<Attribute> accountAttrs2 = new HashSet<Attribute>();
                     accountAttrs2.add(AttributeBuilder.build(PredefinedAttributes.ORGANIZATION_NAME,
-                            orgUid2));
+                    		AttributeUtil.getStringValue(orgUid2)));
                     accountAttrs2.add(accountUid1);
                     accountUid1 = getConnectorFacade().addAttributeValues(
                             ObjectClass.ACCOUNT, accountUid1, AttributeUtil.filterUid(accountAttrs2), null);
@@ -865,7 +865,7 @@ public class MultiOpTests extends ObjectClassRunner {
                     }
                 }
                 orgAttrs1.add(AttributeBuilder.build(PredefinedAttributes.ACCOUNTS_NAME,
-                        accountUid1));
+                		AttributeUtil.getStringValue(accountUid1)));
                 
                 orgUid1 = getConnectorFacade().create(ObjectClass.ORGANIZATION, orgAttrs1, null);
 
@@ -887,7 +887,7 @@ public class MultiOpTests extends ObjectClassRunner {
                     // update org to contain both accounts
                     Set<Attribute> orgAttrs2 = new HashSet<Attribute>();
                     orgAttrs2.add(AttributeBuilder.build(PredefinedAttributes.ACCOUNTS_NAME,
-                            accountUid2));
+                    		AttributeUtil.getStringValue(accountUid2)));
                     orgAttrs2.add(orgUid1);
                     orgUid1 = getConnectorFacade().addAttributeValues(
                             ObjectClass.ORGANIZATION, orgUid1, AttributeUtil.filterUid(orgAttrs2), null);
@@ -964,7 +964,7 @@ public class MultiOpTests extends ObjectClassRunner {
                     }
                 }
                 groupAttrs1.add(AttributeBuilder.build(PredefinedAttributes.ACCOUNTS_NAME,
-                        accountUid1));
+                		AttributeUtil.getStringValue(accountUid1)));
                 
                 groupUid1 = getConnectorFacade().create(ObjectClass.GROUP, groupAttrs1, null);
 
@@ -986,7 +986,7 @@ public class MultiOpTests extends ObjectClassRunner {
                     // update group to contain both accounts
                     Set<Attribute> groupAttrs2 = new HashSet<Attribute>();
                     groupAttrs2.add(AttributeBuilder.build(PredefinedAttributes.ACCOUNTS_NAME,
-                            accountUid2));
+                    		AttributeUtil.getStringValue(accountUid2)));
                     groupAttrs2.add(groupUid1);
                     groupUid1 = getConnectorFacade().addAttributeValues(
                             ObjectClass.GROUP, groupUid1, AttributeUtil.filterUid(groupAttrs2), null);
