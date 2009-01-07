@@ -202,8 +202,7 @@ public class AttributeTests extends ObjectClassRunner {
         boolean exceptionCaught = false;
         /** is there any non updateable item? (if not skip this test) */
         boolean isChanged = false;
-        /** cache for exception type */
-        Exception exCache = null;
+
         if (ConnectorHelper.operationSupported(getConnectorFacade(),
                 getObjectClass(), UpdateApiOp.class)) {
             ConnectorObject obj = null;
