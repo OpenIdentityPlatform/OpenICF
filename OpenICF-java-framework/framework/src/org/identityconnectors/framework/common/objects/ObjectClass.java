@@ -134,7 +134,7 @@ public final class ObjectClass {
      * Create a custom object class.
      * 
      * @param type
-     *            string representation for the name of the object class.
+     *            string representation (treated as case-insensitive) for the name of the object class.
      */
     public ObjectClass(String type) {
         if ( type == null ) {
@@ -165,14 +165,14 @@ public final class ObjectClass {
     
     @Override
     public int hashCode() {
-        return _type.hashCode();
+        return _type.toUpperCase().hashCode();
     }
     
     @Override
     public boolean equals(Object o) {
         if ( o instanceof ObjectClass ) {
             ObjectClass other = (ObjectClass)o;
-            return _type.equals(other._type);
+            return _type.equalsIgnoreCase(other._type);
         }
         return false;
     }

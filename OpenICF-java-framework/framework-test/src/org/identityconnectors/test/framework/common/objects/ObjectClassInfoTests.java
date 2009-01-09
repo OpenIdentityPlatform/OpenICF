@@ -22,6 +22,10 @@
  */
 package org.identityconnectors.test.framework.common.objects;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -66,4 +70,47 @@ public class ObjectClassInfoTests {
         set.add(AttributeInfoBuilder.build("bob", int.class));
         bld.addAllAttributeInfo(set);
     }
+    
+    @Test
+    public void testEquals() {
+        
+        // Test type case-insensitivity
+        ObjectClassInfoBuilder bld = new ObjectClassInfoBuilder();
+        Set<AttributeInfo> set = new HashSet<AttributeInfo>();
+        set.add(AttributeInfoBuilder.build("bob"));
+        bld.addAllAttributeInfo(set);
+        bld.setType("group");
+        ObjectClassInfo oci_lower = bld.build();
+
+        bld = new ObjectClassInfoBuilder();
+        set = new HashSet<AttributeInfo>();
+        set.add(AttributeInfoBuilder.build("bob"));
+        bld.addAllAttributeInfo(set);
+        bld.setType("Group");
+        ObjectClassInfo oci_upper = bld.build();
+
+        assertEquals(oci_lower, oci_upper);        
+    }
+
+    @Test
+    public void testHashCode() {
+        
+        // Test type case-insensitivity
+        ObjectClassInfoBuilder bld = new ObjectClassInfoBuilder();
+        Set<AttributeInfo> set = new HashSet<AttributeInfo>();
+        set.add(AttributeInfoBuilder.build("bob"));
+        bld.addAllAttributeInfo(set);
+        bld.setType("group");
+        ObjectClassInfo oci_lower = bld.build();
+
+        bld = new ObjectClassInfoBuilder();
+        set = new HashSet<AttributeInfo>();
+        set.add(AttributeInfoBuilder.build("bob"));
+        bld.addAllAttributeInfo(set);
+        bld.setType("Group");
+        ObjectClassInfo oci_upper = bld.build();
+
+        assertEquals(oci_lower.hashCode(), oci_upper.hashCode());        
+    }
+
 }

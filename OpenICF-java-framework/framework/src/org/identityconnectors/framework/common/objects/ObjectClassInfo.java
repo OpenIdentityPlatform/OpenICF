@@ -44,13 +44,17 @@ public final class ObjectClassInfo {
 
     /**
      * Public only for serialization; Use ObjectClassInfoBuilder instead.
-     * @param type The name of the object class.
+     * @param type The name of the object class, treated as case-insensitive.
      * @param attrInfo The attributes of the object class.
      * @param isContainer True if this can contain other object classes.
      */
     public ObjectClassInfo(String type, 
             Set<AttributeInfo> attrInfo,
-            boolean isContainer) {
+            boolean isContainer)
+    {        
+        if ( type == null ) {
+            throw new IllegalArgumentException("Type cannot be null.");
+        }
         _type = type;
         _info = CollectionUtil.newReadOnlySet(attrInfo);
         _isContainer = isContainer;
@@ -78,7 +82,7 @@ public final class ObjectClassInfo {
     public boolean equals(Object obj) {
         if (obj instanceof ObjectClassInfo) {
             ObjectClassInfo other = (ObjectClassInfo)obj;
-            if (!getType().equals(other.getType())) {
+            if (!getType().equalsIgnoreCase(other.getType())) {
                 return false;
             }
             if (!CollectionUtil.equals(getAttributeInfo(),
@@ -96,7 +100,7 @@ public final class ObjectClassInfo {
 
     @Override
     public int hashCode() {
-        return _type.hashCode();
+        return _type.toUpperCase().hashCode();
     }
 
 

@@ -42,6 +42,11 @@ public class ObjectClassTests {
 		assertFalse(actual.equals(ObjectClass.ACCOUNT));
 		ObjectClass expected = new ObjectClass("babbo");
 		assertEquals(expected, actual);
+		
+		// Test case-insensitivity
+		ObjectClass lower = new ObjectClass("group");
+		ObjectClass mixed = new ObjectClass("Group");
+		assertEquals(lower, mixed);
 	}
 
 	@Test
@@ -53,6 +58,11 @@ public class ObjectClassTests {
 		assertTrue(set.contains(ObjectClass.ACCOUNT));
 		assertTrue(set.contains(ObjectClass.GROUP));
 		assertTrue(2 == set.size());
-
+		
+		// Test case-insensitivity
+		set = new HashSet<ObjectClass>();
+		set.add(new ObjectClass("group"));
+		set.add(new ObjectClass("Group"));
+		assertTrue(1 == set.size());
 	}
 }

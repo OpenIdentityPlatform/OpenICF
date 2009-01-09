@@ -121,7 +121,7 @@ public final class Schema {
     public ObjectClassInfo findObjectClassInfo(String type) {
         Assertions.nullCheck(type, "type");
         for (ObjectClassInfo info : _declaredObjectClasses) {
-            if ( info.getType().equals(type) ) {
+            if ( info.getType().equalsIgnoreCase(type) ) {
                 return info;
             }
         }
