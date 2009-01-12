@@ -27,7 +27,7 @@ import org.identityconnectors.framework.spi.ConfigurationProperty;
 import org.identityconnectors.common.StringUtil;
 
 /**
- * Implements the {@link Configuration} interface to provide all the necessary
+ * Extends the {@link AbstractConfiguration} class to provide all the necessary
  * parameters to initialize the $resourceName Connector.
  *
  * @author $userName

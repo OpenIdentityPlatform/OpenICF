@@ -120,6 +120,7 @@ public class <%= resourceName %>Connector implements PoolableConnector, <%= inte
             OperationOptions options) {
         throw new UnsupportedOperationException();
     } <% } %>
+    
     <% if(interfaces.contains("AuthenticateOp")) { %>       
     /**
      * {@inheritDoc}

@@ -13,17 +13,17 @@ RESOURCE_NAME = args[2]
 /* 
  * Add, update, or remove SPI Operations in this map:
  */
-spiOps = [ 1 : "UpdateAttributeValuesOp",
-           2 : "AuthenticateOp",
-           3 : "CreateOp",
-           4 : "DeleteOp",
-           5 : "SchemaOp",
-           6 : "ScriptOnConnectorOp",
-           7 : "ScriptOnResourceOp",
-           8 : "SearchOp<String>",
-           9 : "SyncOp",
-          10 : "TestOp",
-          11 : "UpdateOp" ]
+spiOps = [ 1 : "AuthenticateOp",
+           2 : "CreateOp",
+           3 : "DeleteOp",
+           4 : "SchemaOp",
+           5 : "ScriptOnConnectorOp",
+           6 : "ScriptOnResourceOp",
+           7 : "SearchOp<String>",
+           8 : "SyncOp",
+           9 : "TestOp",
+          10 : "UpdateOp",
+          11 : "UpdateAttributeValuesOp" ]
 
 ant.echo ""
 ant.echo "Choose which SPI operations the " + RESOURCE_NAME + " connector will implement:"
@@ -60,6 +60,10 @@ interfaces = []
 operations.each {
     iName = spiOps[it]
     interfaces.add(iName)
+}
+if(interfaces.contains("UpdateAttributeValuesOp") && interfaces.contains("UpdateOp")) {
+	interfaces.remove("UpdateAttributeValuesOp")
+	ant.echo "Omitting 'UpdateAttributeValuesOp' because 'UpdateOp' was selected..."
 }
 
 baseDir = properties["basedir"]

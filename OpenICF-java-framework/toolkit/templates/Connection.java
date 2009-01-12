@@ -40,17 +40,17 @@ public class <%= resourceName %>Connection {
     }
 
     /**
-     * {@inheritDoc}
+     * Release internal resources
      */
     public void dispose() {
-       //release internal resources
+       //implementation
     }
 
     /**
-     * {@inheritDoc}
+     * If internal connection is not usable, throw IllegalStateException
      */
     public void test() {
-       //if internal connection is not usable, throw IllegalStateException
+       //implementation
     }
 
 }

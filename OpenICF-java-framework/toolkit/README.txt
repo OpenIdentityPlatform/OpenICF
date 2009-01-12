@@ -1,5 +1,5 @@
 Java Toolkit v1.0 for IdentityConnectors 
-https://openconnectors.dev.java.net/Java_Toolkit.html
+https://identityconnectors.dev.java.net/Java_Toolkit.html
 
 This toolkit includes the latest stable Connectors Framework and several utilities
 to help you get started developing Connectors. Note that this facility is targeted
@@ -39,5 +39,5 @@ in your Netbeans environment as well.
 Further Information:
 -------------------------------------------------------------------------------------------
 More details on how to use this toolkit and the Connector architecture in general can be 
-found on the OpenConnectors development site at http://openconnectors.dev.java.net/Java_Toolkit.html 
+found on the Identityconnectors development site at http://identityconnectors.dev.java.net/Java_Toolkit.html 
    
