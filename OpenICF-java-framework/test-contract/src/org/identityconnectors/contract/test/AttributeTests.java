@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
@@ -38,6 +39,8 @@ import org.identityconnectors.framework.api.operations.SyncApiOp;
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.AttributeInfo;
+import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -202,6 +205,8 @@ public class AttributeTests extends ObjectClassRunner {
         boolean exceptionCaught = false;
         /** is there any non updateable item? (if not skip this test) */
         boolean isChanged = false;
+        /** logging info bean */
+        LogInfo logInfo = null;
 
         if (ConnectorHelper.operationSupported(getConnectorFacade(),
                 getObjectClass(), UpdateApiOp.class)) {
@@ -220,45 +225,39 @@ public class AttributeTests extends ObjectClassRunner {
                         uid, getOperationOptionsByOp(GetApiOp.class));
                 assertNotNull("Cannot retrieve created object.", obj);
 
-                /*
-                 * Acquire replaceable attributes, delete them from all
-                 * attributes set.
-                 */
+                // ******************************
+                // Acquire updateable attributes
                 Set<Attribute> updateableAttributes = ConnectorHelper
                         .getUpdateableAttributes(getDataProvider(),
                                 getObjectClassInfo(), getTestName(),
                                 SyncApiOpTests.MODIFIED, 0, false, false);
 
                 // all the attributes
-                Set<Attribute> allAttributes = obj.getAttributes();
-                // working copy of all attrs.
-                Set<Attribute> modAllAttributes = new HashSet<Attribute>(
-                        allAttributes);
-                // remove updateable attributes
-                isChanged = modAllAttributes.removeAll(updateableAttributes);
-                // now all attributes contain just non-updateable attrs.
-                allAttributes = modAllAttributes;
+                Set<Attribute> allAttrs = obj.getAttributes();
 
-                if (isChanged || !isObjectClassSupported()) {
-                    // update only in case there is something to update or
-                    // when
-                    // object class is not supported
-                    allAttributes.add(uid);
+                // get non updateable attributes
+                Set<Attribute> nonUpdateableAttrs = minus(allAttrs, updateableAttributes, false);
+                // null indicates an empty set ==> no non-updateable attributes
+                isChanged = (nonUpdateableAttrs != null)? true : false;
+
+                if (isChanged) {
+                    //keep logging info
+                    logInfo = new LogInfo(getObjectClass(), nonUpdateableAttrs);
 
                     assertTrue("no update attributes were found",
-                            (allAttributes.size() > 0));
+                            (nonUpdateableAttrs.size() > 0));
                     Uid newUid = getConnectorFacade().update(
                             getObjectClass(),
                             uid,
-                            AttributeUtil.filterUid(allAttributes),
+                            AttributeUtil.filterUid(nonUpdateableAttrs),
                             getOperationOptionsByOp(UpdateApiOp.class));
 
                     // Update change of Uid must be propagated to
                     // replaceAttributes
                     // set
                     if (!newUid.equals(uid)) {
-                        allAttributes.remove(uid);
-                        allAttributes.add(newUid);
+                        nonUpdateableAttrs.remove(uid);
+                        nonUpdateableAttrs.add(newUid);
                         uid = newUid;
                     }
 
@@ -268,38 +267,29 @@ public class AttributeTests extends ObjectClassRunner {
                             getOperationOptionsByOp(GetApiOp.class));
                     assertNotNull("Cannot retrieve updated object.", obj);
                     ConnectorHelper.checkObject(getObjectClassInfo(), obj,
-                            allAttributes);
-                }
-            } catch (Exception ex) {
-                String msg;
-                exceptionCaught = true;
-                if (ex instanceof RuntimeException) {
-                    if (isChanged) {
-                        // OK
-                        msg = String
-                                .format(
-                                        "unexpected exception type caught: %s (expecting RuntimeException)",
-                                        ex.getClass().getName());
-                        assertTrue(msg, RuntimeException.class.isInstance(ex));
-                    } else {
-                        // WARN
-                        msg = String
-                                .format(
-                                        "No non-updateable attribute is present, however %s exception caught. (Contact author of the test)",
-                                        ex.getClass().getName());
-                        fail(msg);
-                    }
+                            nonUpdateableAttrs);
                 } else {
-                    if (isChanged) {
-                        // WARN
-                        fail(String
-                                .format(
-                                        "Expecting RuntimeException when non-updateable argument was updated. However %s thrown.",
-                                        ex.getClass().getName()));
-                    } else {
-                        // OK
-                        skipTestsMsg();
-                    }
+                    /*
+                     * SKIPPING THE TEST
+                     * no non-updateable attribute present
+                     */
+                    printSkipNonUpdateableTestMsg();
+                    return;
+                }
+                
+            } catch (Exception ex) {
+                /*
+                 * Expected behavior: 
+                 * in case non-updateable attribute is updated, Runtime exception
+                 * should be thrown.
+                 */
+                exceptionCaught = true;
+                if (!(ex instanceof RuntimeException)) {
+                    // WARN
+                    fail(String
+                            .format(
+                                    "Expecting RuntimeException when non-updateable attribute(s) was updated. However other exception was thrown: %s \n %s",
+                                    ex.getClass().getName(), ((logInfo != null)?logInfo.toString():"")));
                 }
             } finally {
                 if (uid != null) {
@@ -313,20 +303,62 @@ public class AttributeTests extends ObjectClassRunner {
 
         // in case no exception is thrown:
         if (!exceptionCaught) {
-            if (isChanged) {
-                fail("No exception thrown when update is performed on non-updateable attribute. (hint: throw a RuntimeException)");
-            } else {
-                skipTestsMsg();// OK
-            }
+            fail(String.format("No exception thrown when update is performed on non-updateable attribute(s). (hint: throw a RuntimeException) %s", ((logInfo != null)?logInfo.toString():"")));
         }
     }
     
-    private void skipTestsMsg() {
+    /**
+     * provides minus operation on sets {a,b}\{b}={a}
+     * 
+     * @param allAttrs
+     * @param updateableAttributes
+     * @return the result set or null in case of empty set
+     */
+    static Set<Attribute> minus(Set<Attribute> allAttrs, Set<Attribute> updateableAttributes) {
+        return minus(allAttrs, updateableAttributes, true);
+    }
+
+    /**
+     * provides minus operation on sets {a,b}\{b}={a}
+     * 
+     * @param allAttrs
+     * @param updateableAttributes
+     * @param isReadOnly
+     *            if the returned Set should be readOnly
+     * @return the result set or null in case of empty set
+     */
+    static Set<Attribute> minus(Set<Attribute> allAttrs, Set<Attribute> updateableAttributes,
+            boolean isReadOnly) {
+        Set<Attribute> result = new HashSet<Attribute>();
+        for (Attribute attribute : allAttrs) {
+//            if (!updateableAttributes.contains(attribute)) {
+//                result.add(attribute);
+//            }
+            if (AttributeUtil.find(attribute.getName(), updateableAttributes) == null) {
+                result.add(attribute);
+            }
+        }
+
+        if (result.size() == 0) {
+            return null;
+        }
+
+        if (isReadOnly) {
+            return CollectionUtil.newReadOnlySet(result);
+        }
+        return result;
+    }
+
+    /**
+     * prints log message when skipping
+     * {@link AttributeTests#testNonUpdateable()} test
+     */
+    private void printSkipNonUpdateableTestMsg() {
         LOG
                 .info("----------------------------------------------------------------------------------------");
         LOG
                 .info(
-                        "Skipping test ''testNonUpdateable'' for object class ''{0}''. (Reason: non-updateable attrs. missing)",
+                        "Skipping test ''testNonUpdateable'' for object class ''{0}''. (Reason: non-updateable attrs. are missing)",
                         getObjectClass());
         LOG
                 .info("----------------------------------------------------------------------------------------");
@@ -668,3 +700,29 @@ enum ApiOperations {
         return clazz;
     }
 }// end of enum ApiOperations
+
+/** helper inner class for saving log information */
+class LogInfo {
+    /** attribute set */
+    private Set<Attribute> attrSet;
+
+    /** object class */
+    private ObjectClass oc;
+    
+    public LogInfo(ObjectClass oc, Set<Attribute> attrSet) {
+        this.oc = oc;
+        this.attrSet = attrSet;
+    }
+    
+    public Set<Attribute> getAttrSet() {
+        return attrSet;
+    }
+
+    public ObjectClass getOc() {
+        return oc;
+    }
+    
+    public String toString() {
+        return " \n ObjectClass: " + oc.toString() + "\n AttributeSet: " + attrSet.toString();
+    }
+}// end of LogInfo
