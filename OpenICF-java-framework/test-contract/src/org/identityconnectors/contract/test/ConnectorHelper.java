@@ -503,7 +503,13 @@ public class ConnectorHelper {
     
     /**
      * Get updateable attributes' values.
-     */
+     * 
+     * Generate new values for updateable attributes based on contract test
+     * properties prefixed by <code>qualifier</code>
+     * 
+     * @param qualifier
+     *            the prefix for values used in update.
+     */ 
     public static Set<Attribute> getUpdateableAttributes(DataProvider dataProvider, 
             ObjectClassInfo objectClassInfo, 
             String testName, String qualifier, int sequenceNumber, boolean checkRequired, boolean onlyMultiValue) {
