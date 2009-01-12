@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
@@ -82,6 +83,8 @@ public class MultiOpTests extends ObjectClassRunner {
     
     private static final String TEST_NAME = "Multi";
     private static final String MODIFIED = "modified";
+    private static final String LOCKOUT_PREFIX = "lockout";
+    private static final String SKIP = "skip";
 
     // this operation should pass ObjectClassRunner#testContract condition
     private Class _apiOp = CreateApiOp.class;
@@ -478,7 +481,7 @@ public class MultiOpTests extends ObjectClassRunner {
     @Test
     public void testLockOutOpAttribute() {
         if (isObjectClassSupported()
-                && ConnectorHelper.isCRU(getObjectClassInfo(), OperationalAttributes.LOCK_OUT_NAME)) {
+                && ConnectorHelper.isCRU(getObjectClassInfo(), OperationalAttributes.LOCK_OUT_NAME) && canLockOut()) {
 
          // check ENABLE for true
             checkOpAttribute(OperationalAttributes.LOCK_OUT_NAME, true, false, Boolean.class);
@@ -1028,5 +1031,33 @@ public class MultiOpTests extends ObjectClassRunner {
         }
         
         return null;
+    }
+    
+    /**
+     * <p>
+     * Returns true if tests are configured to lockout tests
+     * {@link MultiOpTests#testLockOutOpAttribute()}.
+     * </p>
+     * 
+     * <p>
+     * Returns true if tests are configured to test connector's lockout
+     * operation. Some connectors implement lockout but are capable
+     * to unlock but not lock.
+     * </p>
+     */
+    private static boolean canLockOut() {
+        // by default it's supposed that case insensitive search is disabled.
+        Boolean canLockout = true;
+        try {
+            canLockout = !(Boolean) getDataProvider().getTestSuiteAttribute(
+                    SKIP + "." + LOCKOUT_PREFIX,
+                    TEST_NAME);
+
+        } catch (ObjectNotFoundException ex) {
+            // exceptions is throw in case property definition is not found
+            // ok -- indicates enabling the property
+        }
+
+        return canLockout;
     }
 }
