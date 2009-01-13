@@ -22,13 +22,15 @@
  */
 package org.identityconnectors.contract.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
@@ -40,12 +42,13 @@ import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
-import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
+import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
 import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncToken;
@@ -227,16 +230,9 @@ public class AttributeTests extends ObjectClassRunner {
 
                 // ******************************
                 // Acquire updateable attributes
-                Set<Attribute> updateableAttributes = ConnectorHelper
-                        .getUpdateableAttributes(getDataProvider(),
-                                getObjectClassInfo(), getTestName(),
-                                SyncApiOpTests.MODIFIED, 0, false, false);
+                Schema schema = getConnectorFacade().schema();
+                Set<Attribute> nonUpdateableAttrs = getNonUpdateableAttributes(schema, getObjectClass()); 
 
-                // all the attributes
-                Set<Attribute> allAttrs = obj.getAttributes();
-
-                // get non updateable attributes
-                Set<Attribute> nonUpdateableAttrs = minus(allAttrs, updateableAttributes, false);
                 // null indicates an empty set ==> no non-updateable attributes
                 isChanged = (nonUpdateableAttrs != null)? true : false;
 
@@ -309,45 +305,39 @@ public class AttributeTests extends ObjectClassRunner {
     }
     
     /**
-     * provides minus operation on sets {a,b}\{b}={a}
-     * 
-     * @param allAttrs
-     * @param updateableAttributes
-     * @return the result set or null in case of empty set
+     * return the Non-Updateable attributes for currently tested objectclass
+     * @param schema the schema of currently tested connector
+     * @param objectClass the currently tested objectclass
+     * @return
      */
-    static Set<Attribute> minus(Set<Attribute> allAttrs, Set<Attribute> updateableAttributes) {
-        return minus(allAttrs, updateableAttributes, true);
-    }
-
-    /**
-     * provides minus operation on sets {a,b}\{b}={a}
-     * 
-     * @param allAttrs
-     * @param updateableAttributes
-     * @param isReadOnly
-     *            if the returned Set should be readOnly
-     * @return the result set or null in case of empty set
-     */
-    static Set<Attribute> minus(Set<Attribute> allAttrs, Set<Attribute> updateableAttributes,
-            boolean isReadOnly) {
+    private Set<Attribute> getNonUpdateableAttributes(Schema schema,
+            ObjectClass objectClass) {
         Set<Attribute> result = new HashSet<Attribute>();
-        for (Attribute attribute : allAttrs) {
-//            if (!updateableAttributes.contains(attribute)) {
-//                result.add(attribute);
-//            }
-            if (AttributeUtil.find(attribute.getName(), updateableAttributes) == null) {
-                result.add(attribute);
+        
+        //objectClass that we search for
+        ObjectClassInfoBuilder oib = new ObjectClassInfoBuilder();
+        oib.setType(objectClass.getObjectClassValue());
+        ObjectClassInfo ocToFind = oib.build();
+        
+        Set<ObjectClassInfo> oci = schema.getObjectClassInfo();
+        for (ObjectClassInfo objectClassInfo : oci) {
+            if (objectClassInfo.getType().equals(ocToFind.getType())) {
+                // we found the currently tested object class
+
+                // do a scan through attributes and look for non-updateable ones.
+                Set<AttributeInfo> attrInfo = objectClassInfo.getAttributeInfo();
+                for (AttributeInfo attributeInfo : attrInfo) {
+                    if (!attributeInfo.isUpdateable()) {
+                        // create an empty list value for update
+                        Attribute attr = AttributeBuilder.build(attributeInfo.getName());
+                        // TODO might add some reasonable value for the attribute to update
+                        result.add(attr);
+                    }
+                }
             }
         }
-
-        if (result.size() == 0) {
-            return null;
-        }
-
-        if (isReadOnly) {
-            return CollectionUtil.newReadOnlySet(result);
-        }
-        return result;
+        
+        return (result.size() == 0)? null : result;
     }
 
     /**
