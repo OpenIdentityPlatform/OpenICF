@@ -299,12 +299,13 @@ public class AttributeTests extends ObjectClassRunner {
                             getOperationOptionsByOp(DeleteApiOp.class));
                 }
             }
+            
+            // in case no exception is thrown:
+            if (!exceptionCaught) {
+                fail(String.format("No exception thrown when update is performed on non-updateable attribute(s). (hint: throw a RuntimeException) %s", ((logInfo != null)?logInfo.toString():"")));
+            }
         }
-
-        // in case no exception is thrown:
-        if (!exceptionCaught) {
-            fail(String.format("No exception thrown when update is performed on non-updateable attribute(s). (hint: throw a RuntimeException) %s", ((logInfo != null)?logInfo.toString():"")));
-        }
+        
     }
     
     /**
