@@ -10,7 +10,7 @@ import java.util.List
 
 //static properties
 static final String BUNDLE_NAME = "Connector-<%= resourceName %>";
-static final String BUNDLE_VERSION = "1.0.0.0"; 
+static final String BUNDLE_VERSION = "1.0.0"; 
 static final String BUNDLE_JAR_PATH = "<%= bundleDir %>/dist";
 static final String CONNECTOR_CLASS = "<%= packageName + "." + resourceName %>Connector"
     

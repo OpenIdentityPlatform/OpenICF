@@ -47,6 +47,7 @@ import org.openide.util.actions.CallableSystemAction;
 import org.openide.execution.ExecutorTask;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
+import org.openide.filesystems.FileSystem;
 
 public final class CreatorAction extends CallableSystemAction {
 
@@ -91,9 +92,9 @@ public final class CreatorAction extends CallableSystemAction {
                             if (result != null) {
                                 JOptionPane.showMessageDialog(null, result, "Creation Wizard Error", JOptionPane.ERROR_MESSAGE);
                             }
-                        } catch(IOException ex) {
+                        } catch (IOException ex) {
                             Exceptions.printStackTrace(ex);
-                        }finally {
+                        } finally {
                             progress.finish();
                         }
                     }
@@ -176,25 +177,9 @@ public final class CreatorAction extends CallableSystemAction {
             pm.saveProject(project);
 
             //replace standard project.xml with our custom version
-            File fromFile = new File(toolkitLoc + "/misc/netbeans/nbproject", "project.xml");
-            //FileObject's getPath() doesn't work correctly on all systems, so we change back to a File first
-            File toFile = new File(bundleDirFile.getPath() + "/nbproject", "project.xml");
-            copyFile(fromFile, toFile);
-            fixProjectName(toFile, "Connector-" + resourceName, toolkitLoc);
+            copyProjectXML(toolkitLoc, bundleDirFile.getPath(), resourceName);
 
-            //create nblibraries.properties
-            toFile = new File(bundleDirFile.getPath() + "/lib", "nblibraries.properties");
-            toFile.createNewFile();
-
-            pm.saveProject(project);
-            pm.clearNonProjectCache();
-            project = pm.findProject(bundleDir);
-
-            try { //allow filesystem to update before opening project
-                Thread.sleep(2000);
-            } catch (InterruptedException ex) {
-                Exceptions.printStackTrace(ex);
-            }
+            FileUtil.refreshAll();
 
             OpenProjects op = OpenProjects.getDefault();
             op.open(new Project[]{project}, false);
@@ -277,60 +262,34 @@ public final class CreatorAction extends CallableSystemAction {
         return jars[0];
     }
 
-    private void fixProjectName(File file, String projectName, String frameworkDir) {
-        BufferedReader in = null;
-        BufferedWriter out = null;
-        File temp = null;
+    private void copyProjectXML(String toolkitLoc, String bundleDir, String resourceName) {
+        Scanner scanner = null;
+        BufferedWriter writer = null;
         try {
-            in = new BufferedReader(new FileReader(file));
-            temp = new File(file.getAbsolutePath() + ".tmp");
-            out = new BufferedWriter(new FileWriter(temp));
-            while (in.ready()) {
-                String line = in.readLine();
-                line = line.replaceAll("Connector-Project", projectName);
-                out.write(line);
-                out.newLine();
+            File fromFile = new File(toolkitLoc + "/misc/netbeans/nbproject", "project.xml");
+            String nbprojectPath = bundleDir + "/nbproject";
+            File toFile = new File(nbprojectPath, "project.xml");
+            toFile.delete();
+
+            scanner = new Scanner(fromFile);
+            writer = new BufferedWriter(new FileWriter(toFile));
+
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                String outLine = line.replaceAll("Connector-Project", "Connector-" + resourceName);
+                writer.write(outLine);
+                writer.newLine();
             }
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
         } finally {
             try {
-                in.close();
-                out.close();
-                copyFile(temp, file);
-                temp.delete();
+                writer.close();
+                scanner.close();
             } catch (IOException ex) {
                 Exceptions.printStackTrace(ex);
             }
         }
-    }
-
-    private void copyDirectory(File srcDir, File dstDir) throws IOException {
-        if (srcDir.isDirectory()) {
-            if (!dstDir.exists()) {
-                dstDir.mkdir();
-            }
-            String[] children = srcDir.list();
-            for (int i = 0; i < children.length; i++) {
-                copyDirectory(new File(srcDir, children[i]), new File(dstDir, children[i]));
-            }
-        } else if (srcDir.isFile()) {
-            copyFile(srcDir, dstDir);
-        }
-    }
-
-    private void copyFile(File src, File dst) throws IOException {
-        dst.delete(); //destructive copy
-        InputStream in = new FileInputStream(src);
-        OutputStream out = new FileOutputStream(dst);
-        // Transfer bytes from in to out
-        byte[] buf = new byte[1024];
-        int len;
-        while ((len = in.read(buf)) > 0) {
-            out.write(buf, 0, len);
-        }
-        in.close();
-        out.close();
     }
 
     /**

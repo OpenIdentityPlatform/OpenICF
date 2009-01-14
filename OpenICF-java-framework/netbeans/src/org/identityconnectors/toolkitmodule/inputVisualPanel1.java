@@ -118,7 +118,6 @@ public final class inputVisualPanel1 extends JPanel {
         org.openide.awt.Mnemonics.setLocalizedText(lblBundleDir, "Bundle Directory:"); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(lblResourceName, "Resource Name:"); // NOI18N
-        lblResourceName.setToolTipText("null");
 
         org.openide.awt.Mnemonics.setLocalizedText(lblPackageName, "Package Name:"); // NOI18N
 

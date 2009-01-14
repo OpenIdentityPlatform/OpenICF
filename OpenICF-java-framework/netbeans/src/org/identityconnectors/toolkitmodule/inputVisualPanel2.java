@@ -35,17 +35,17 @@ public final class inputVisualPanel2 extends JPanel {
     private static final Map<String, Integer> ops = new TreeMap<String, Integer>();
     static { //The names here do not matter but they MUST map to the same number
              //as the map in the toolkit's creator.groovy
-             ops.put("AdvancedUpdate", 1);
-             ops.put("Authenticate", 2);
-             ops.put("Create", 3);
-             ops.put("Delete", 4);
-             ops.put("Schema", 5);
-             ops.put("ScriptOnConnector", 6);
-             ops.put("ScriptOnResource", 7);
-             ops.put("Search", 8);
-             ops.put("Sync", 9);
-             ops.put("Test", 10);
-             ops.put("Update", 11);
+             ops.put("Authenticate", 1);
+             ops.put("Create", 2);
+             ops.put("Delete", 3);
+             ops.put("Schema", 4);
+             ops.put("ScriptOnConnector", 5);
+             ops.put("ScriptOnResource", 6);
+             ops.put("Search", 7);
+             ops.put("Sync", 8);
+             ops.put("Test", 9);
+             ops.put("Update", 10);
+             ops.put("UpdateAttributeValues", 11);
     }
 
     private DefaultListModel leftModel, rightModel;

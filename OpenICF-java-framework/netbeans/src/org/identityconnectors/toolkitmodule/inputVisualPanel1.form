@@ -105,9 +105,6 @@
     <Component class="javax.swing.JLabel" name="lblResourceName">
       <Properties>
         <Property name="text" type="java.lang.String" value="Resource Name:" noResource="true"/>
-        <Property name="toolTipText" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-          <ResourceString bundle="" key="inputVisualPanel1.lblResourceName.toolTipText" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
-        </Property>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="lblPackageName">
