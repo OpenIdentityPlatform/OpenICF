@@ -201,7 +201,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                 Set<Attribute> nullAttributes = new HashSet<Attribute>();
                 for (AttributeInfo attInfo : getObjectClassInfo().getAttributeInfo()) {
                     if (attInfo.isUpdateable() && !attInfo.isRequired() && !AttributeUtil.isSpecial(attInfo)) {
-                        nullAttributes.add(AttributeBuilder.build(attInfo.getName(), (Object) null));
+                        nullAttributes.add(AttributeBuilder.build(attInfo.getName()));
                     }
                 }
 
