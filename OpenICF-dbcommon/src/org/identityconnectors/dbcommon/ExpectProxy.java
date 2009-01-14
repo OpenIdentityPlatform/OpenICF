@@ -28,7 +28,6 @@ import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Assert;
 
 /**
  * This is a Test helper class for testing expected method calls and return values of interfaces
@@ -99,8 +98,7 @@ public class ExpectProxy<T> implements InvocationHandler {
             }
             return ret;
         }
-        Assert.fail("The call of method :" + method+ " was not ecpected. To do so, please call expectAndReturn(methodName,retVal)");
-        return null;
+        throw new AssertionError("The call of method :" + method+ " was not ecpected. To do so, please call expectAndReturn(methodName,retVal)");
     }
 
     /**
