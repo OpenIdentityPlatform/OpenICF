@@ -844,6 +844,12 @@ public class ObjectSerializationTests {
         
         {
             IllegalArgumentException v1 = new IllegalArgumentException("my msg");
+            IllegalArgumentException v2 = (IllegalArgumentException)cloneObject(v1);
+            Assert.assertEquals("my msg", v2.getMessage());
+        }
+        
+        {
+        	RuntimeException v1 = new RuntimeException("my msg");
             RuntimeException v2 = (RuntimeException)cloneObject(v1);
             Assert.assertEquals("my msg", v2.getMessage());
         }

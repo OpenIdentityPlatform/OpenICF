@@ -264,13 +264,22 @@ class CommonObjectHandlers {
         
         HANDLERS.add(
                 
+                new ThrowableHandler<IllegalArgumentException>(IllegalArgumentException.class,"IllegalArgumentException") {
+                
+                protected IllegalArgumentException createException(String message) {
+                    return new IllegalArgumentException(message);
+                }
+            });
+        
+        HANDLERS.add(
+                
             new ThrowableHandler<RuntimeException>(RuntimeException.class,"RuntimeException") {
             
             protected RuntimeException createException(String message) {
                 return new RuntimeException(message);
             }
         });
-
+        
         HANDLERS.add(
                 
             new ThrowableHandler<Exception>(Exception.class,"Exception") {
