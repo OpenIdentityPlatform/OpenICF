@@ -400,9 +400,8 @@ public class GroovyDataProvider implements DataProvider {
                 // multiple dots.
                 return configObjectRecursiveGet(name.substring(dotIndex + 1), (ConfigObject) o);
             } else {
-
-                Assert.fail("It should not get here. Unexpected instance: "
-                        + o.getClass().getName());
+                final String MSG = "Unexpected object instance. Searching property: '%s', found value: '%s', expected value is ConfigObject. Please check that property '%s' is defined - it can collide with attribute value definition.";
+                Assert.fail(String.format(MSG, name, o.toString(), name));
                 return null;
             }// fi inner
 
