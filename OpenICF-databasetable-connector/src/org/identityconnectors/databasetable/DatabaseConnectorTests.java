@@ -54,7 +54,6 @@ import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
-import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
@@ -133,7 +132,7 @@ public class DatabaseConnectorTests {
         final DatabaseTableConfiguration config = new DatabaseTableConfiguration();
         config.setDriver(DRIVER);
         config.setConnectionUrl(MessageFormat.format(URL_TEMPLATE, f));
-        final DatabaseTableConnection con = DatabaseTableConnector.newConnection(config);
+        final DatabaseTableConnection con = DatabaseTableConnection.getConnection(config);
         final Connection conn = con.getConnection();
         // create the database..
         final Statement stmt = conn.createStatement();
@@ -649,7 +648,7 @@ public class DatabaseConnectorTests {
         PreparedStatement ps = null;
         DatabaseTableConnection conn = null;
         try {
-            conn = DatabaseTableConnector.newConnection(newConfiguration());
+            conn = DatabaseTableConnection.getConnection(newConfiguration());
 
             List<Object> values = new ArrayList<Object>();
             final Timestamp changed = new Timestamp(System.currentTimeMillis());
@@ -701,7 +700,7 @@ public class DatabaseConnectorTests {
         DatabaseTableConnection conn = null;
         Integer changed = new Long(System.currentTimeMillis()).intValue();
         try {
-            conn = DatabaseTableConnector.newConnection(cfg);
+            conn = DatabaseTableConnection.getConnection(cfg);
 
             List<Object> values = new ArrayList<Object>();
             expected.setAge(null); //The age as a changeLogColumn will not be in the result
@@ -752,7 +751,7 @@ public class DatabaseConnectorTests {
         DatabaseTableConnection conn = null;
         Integer changed = new Long(System.currentTimeMillis()).intValue();
         try {
-            conn = DatabaseTableConnector.newConnection(cfg);
+            conn = DatabaseTableConnection.getConnection(cfg);
 
             List<Object> values = new ArrayList<Object>();
             expected.setAccessed(null); //The age as a changeLogColumn will not be in the result
@@ -799,7 +798,7 @@ public class DatabaseConnectorTests {
         PreparedStatement ps = null;
         DatabaseTableConnection conn = null;
         try {
-            conn = DatabaseTableConnector.newConnection(newConfiguration());
+            conn = DatabaseTableConnection.getConnection(newConfiguration());
 
             List<Object> values = new ArrayList<Object>();
             values.add(changed);

@@ -213,7 +213,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return the user account table name
      * Please notice, there are used non default message keys
      */
-    @ConfigurationProperty(order = 9, displayMessageKey="usersTable.display", helpMessageKey="usersTable.help")
+    @ConfigurationProperty(order = 9, required=true, displayMessageKey="usersTable.display", helpMessageKey="usersTable.help")
     public String getDBTable() {
         return this.dbTable;
     }
@@ -235,7 +235,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * Key Column getter
      * @return keyColumn value
      */
-    @ConfigurationProperty(order = 10)
+    @ConfigurationProperty(order = 10, required = true)
     public String getKeyColumn() {
         return this.keyColumn;
     }

@@ -24,16 +24,20 @@ package org.identityconnectors.databasetable;
 
 import java.sql.Connection;
 import java.sql.Statement;
+import java.util.Hashtable;
 
 import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.dbcommon.DatabaseConnection;
+import org.identityconnectors.dbcommon.JNDIUtil;
 import org.identityconnectors.dbcommon.SQLUtil;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.ConnectorMessages;
 import org.identityconnectors.framework.spi.Configuration;
 
 
 /**
- * Implements the {@link Connection} interface to wrap JDBC connections.
+ * Wraps JDBC connections extends the DatabaseConnection overriding the test method.
  */
 public class DatabaseTableConnection extends DatabaseConnection {
 
@@ -54,7 +58,7 @@ public class DatabaseTableConnection extends DatabaseConnection {
      * @throws RuntimeException
      *             if there is a problem creating a {@link java.sql.Connection}.
      */
-    public DatabaseTableConnection(Connection conn, DatabaseTableConfiguration config) {
+    private DatabaseTableConnection(Connection conn, DatabaseTableConfiguration config) {
         super(conn);
         this.config = config;
     }
@@ -93,5 +97,33 @@ public class DatabaseTableConnection extends DatabaseConnection {
                 SQLUtil.closeQuietly(stmt);
             }
         }
+    }
+
+    /**
+     * Get the instance method
+     * 
+     * @param config a {@link DatabaseTableConfiguration} object
+     * @return a new {@link DatabaseTableConnection} connection
+     */
+    static DatabaseTableConnection getConnection(DatabaseTableConfiguration config) {
+        java.sql.Connection connection;
+        final String login = config.getLogin();
+        final GuardedString password = config.getPassword();
+        final String datasource = config.getDatasource();
+        if (StringUtil.isNotBlank(datasource)) {
+            final String[] jndiProperties = config.getJndiProperties();
+            final ConnectorMessages connectorMessages = config.getConnectorMessages();
+            final Hashtable<String, String> prop = JNDIUtil.arrayToHashtable(jndiProperties, connectorMessages);                
+            if(StringUtil.isNotBlank(login) && password != null) {
+                connection = SQLUtil.getDatasourceConnection(datasource, login, password, prop);
+            } else {
+                connection = SQLUtil.getDatasourceConnection(datasource, prop);
+            } 
+        } else {
+            final String driver = config.getDriver();
+            final String connectionUrl = config.getConnectionUrl();
+            connection = SQLUtil.getDriverMangerConnection(driver, connectionUrl, login, password);
+        }
+        return new DatabaseTableConnection(connection, config);
     }
 }
