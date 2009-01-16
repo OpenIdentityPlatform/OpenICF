@@ -763,10 +763,10 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             } else if (columnName.equalsIgnoreCase(config.getPasswordColumn())) {
                 // No Password in the result object
             } else if (columnName.equalsIgnoreCase(config.getChangeLogColumn())) {
-                // TODO decide change log column is in ConnectorObject, comment out following line
-                // bld.addAttribute(AttributeBuilder.build(columnName, value));
+            	//No changelogcolumn attribute in the results
             } else {
-                // java.lang.AssertionError: Attribute 'Attribute: {Name=AGE, Value=null}' was neither removed nor its value set to null.
+                // TODO Check his fix is required. It seem to be invalid contract tests
+                // if conndition to avoid the: java.lang.AssertionError: Attribute 'Attribute: {Name=AGE, Value=null}' was neither removed nor its value set to null.
                 if(value != null) { 
                     bld.addAttribute(AttributeBuilder.build(columnName, value));
                 }
