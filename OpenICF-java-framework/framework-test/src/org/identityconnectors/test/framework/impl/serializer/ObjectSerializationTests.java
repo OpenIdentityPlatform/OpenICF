@@ -1047,7 +1047,7 @@ public class ObjectSerializationTests {
                 new Uid("myuid"));
         QualifiedUid v2 = (QualifiedUid)cloneObject(v1);
         Assert.assertEquals(v1, v2);
-        Assert.assertEquals("myclass", v2.getObjectClass().getObjectClassValue());
+        Assert.assertTrue(v2.getObjectClass().is("myclass"));
         Assert.assertEquals("myuid", v2.getUid().getUidValue());
     }
     

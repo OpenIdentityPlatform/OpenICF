@@ -25,6 +25,7 @@ package org.identityconnectors.framework.common.objects;
 import java.util.Set;
 import java.util.Map;
 
+import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.framework.common.serializer.SerializerUtil;
 
@@ -44,7 +45,7 @@ public final class ObjectClassInfo {
 
     /**
      * Public only for serialization; Use ObjectClassInfoBuilder instead.
-     * @param type The name of the object class, treated as case-insensitive.
+     * @param type The name of the object class
      * @param attrInfo The attributes of the object class.
      * @param isContainer True if this can contain other object classes.
      */
@@ -52,9 +53,7 @@ public final class ObjectClassInfo {
             Set<AttributeInfo> attrInfo,
             boolean isContainer)
     {        
-        if ( type == null ) {
-            throw new IllegalArgumentException("Type cannot be null.");
-        }
+        Assertions.nullCheck(type, "type");
         _type = type;
         _info = CollectionUtil.newReadOnlySet(attrInfo);
         _isContainer = isContainer;
@@ -78,24 +77,47 @@ public final class ObjectClassInfo {
         return _type;
     }
 
+    /**
+     * Determines if the 'name' matches this {@link ObjectClassInfo}.
+     * 
+     * @param name
+     *            case-insensitive string representation of the ObjectClassInfo's
+     *            type.
+     * @return <code>true</code> if the case insensitive type is equal to
+     *         that of the one in this {@link ObjectClassInfo}.
+     */
+    public final boolean is(String name) {
+        return _type.equalsIgnoreCase(name);
+    }
+    
     @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof ObjectClassInfo) {
-            ObjectClassInfo other = (ObjectClassInfo)obj;
-            if (!getType().equalsIgnoreCase(other.getType())) {
-                return false;
-            }
-            if (!CollectionUtil.equals(getAttributeInfo(),
-                                          other.getAttributeInfo())) {
-                return false;
-            }
-            if (!_isContainer == other._isContainer) {
-                return false;
-            }
-            return true;            
+    public final boolean equals(Object obj) {
+        // test identity
+        if (this == obj) {
+            return true;
         }
-        return false;
-
+        // test for null..
+        if (obj == null) {
+            return false;
+        }
+        // test that the exact class matches
+        if (!(getClass().equals(obj.getClass()))) {
+            return false;
+        }
+        
+        ObjectClassInfo other = (ObjectClassInfo)obj;
+        
+        if(!is(other.getType())) {
+            return false;
+        }
+        if (!CollectionUtil.equals(getAttributeInfo(),
+                                      other.getAttributeInfo())) {
+            return false;
+        }
+        if (!_isContainer == other._isContainer) {
+            return false;
+        }
+        return true;
     }
 
     @Override

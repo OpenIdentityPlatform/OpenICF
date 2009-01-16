@@ -72,20 +72,29 @@ public class ObjectClassInfoTests {
     }
     
     @Test
+    public void testIs() {
+        // Test type case-insensitivity
+        ObjectClassInfoBuilder bld = new ObjectClassInfoBuilder();
+        bld.addAttributeInfo(AttributeInfoBuilder.build("bob"));
+        bld.setType("group");
+        ObjectClassInfo oci = bld.build();
+
+        assertTrue(oci.is("group"));
+        assertTrue(oci.is("Group"));
+        assertFalse(oci.is("admin"));
+    }
+    
+    @Test
     public void testEquals() {
         
         // Test type case-insensitivity
         ObjectClassInfoBuilder bld = new ObjectClassInfoBuilder();
-        Set<AttributeInfo> set = new HashSet<AttributeInfo>();
-        set.add(AttributeInfoBuilder.build("bob"));
-        bld.addAllAttributeInfo(set);
+        bld.addAttributeInfo(AttributeInfoBuilder.build("bob"));
         bld.setType("group");
         ObjectClassInfo oci_lower = bld.build();
 
         bld = new ObjectClassInfoBuilder();
-        set = new HashSet<AttributeInfo>();
-        set.add(AttributeInfoBuilder.build("bob"));
-        bld.addAllAttributeInfo(set);
+        bld.addAttributeInfo(AttributeInfoBuilder.build("bob"));
         bld.setType("Group");
         ObjectClassInfo oci_upper = bld.build();
 
@@ -97,16 +106,12 @@ public class ObjectClassInfoTests {
         
         // Test type case-insensitivity
         ObjectClassInfoBuilder bld = new ObjectClassInfoBuilder();
-        Set<AttributeInfo> set = new HashSet<AttributeInfo>();
-        set.add(AttributeInfoBuilder.build("bob"));
-        bld.addAllAttributeInfo(set);
+        bld.addAttributeInfo(AttributeInfoBuilder.build("bob"));
         bld.setType("group");
         ObjectClassInfo oci_lower = bld.build();
 
         bld = new ObjectClassInfoBuilder();
-        set = new HashSet<AttributeInfo>();
-        set.add(AttributeInfoBuilder.build("bob"));
-        bld.addAllAttributeInfo(set);
+        bld.addAttributeInfo(AttributeInfoBuilder.build("bob"));
         bld.setType("Group");
         ObjectClassInfo oci_upper = bld.build();
 

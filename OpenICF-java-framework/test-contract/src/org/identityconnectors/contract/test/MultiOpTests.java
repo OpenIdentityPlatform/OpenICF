@@ -1025,7 +1025,7 @@ public class MultiOpTests extends ObjectClassRunner {
     private ObjectClassInfo findOInfo(ObjectClass oclass) {
         Schema schema = getConnectorFacade().schema();
         for (ObjectClassInfo oinfo : schema.getObjectClassInfo()) {
-            if (oinfo.getType().equalsIgnoreCase(oclass.getObjectClassValue())) {
+            if (oinfo.is(oclass.getObjectClassValue())) {
                 return oinfo;
             }
         }

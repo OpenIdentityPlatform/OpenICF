@@ -134,7 +134,7 @@ public final class ObjectClass {
      * Create a custom object class.
      * 
      * @param type
-     *            string representation (treated as case-insensitive) for the name of the object class.
+     *            string representation for the name of the object class.
      */
     public ObjectClass(String type) {
         if ( type == null ) {
@@ -163,18 +163,45 @@ public final class ObjectClass {
         return "MESSAGE_OBJECT_CLASS_"+_type.toUpperCase();
     }
     
+    /**
+     * Determines if the 'name' matches this {@link ObjectClass}.
+     * 
+     * @param name
+     *            case-insensitive string representation of the ObjectClass's
+     *            type.
+     * @return <code>true</code> if the case-insensitive name is equal to
+     *         that of the one in this {@link ObjectClass}.
+     */
+    public boolean is(String name) {
+        return _type.equalsIgnoreCase(name);    
+    }
+    
     @Override
     public int hashCode() {
         return _type.toUpperCase().hashCode();
     }
     
     @Override
-    public boolean equals(Object o) {
-        if ( o instanceof ObjectClass ) {
-            ObjectClass other = (ObjectClass)o;
-            return _type.equalsIgnoreCase(other._type);
+    public final boolean equals(Object obj) {
+        // test identity
+        if (this == obj) {
+            return true;
         }
-        return false;
+        // test for null..
+        if (obj == null) {
+            return false;
+        }
+        // test that the exact class matches
+        if (!(getClass().equals(obj.getClass()))) {
+            return false;
+        }
+        
+        ObjectClass other = (ObjectClass)obj;
+        
+        if(!is(other.getObjectClassValue())) {
+            return false;
+        }
+        return true;
     }
     
     @Override

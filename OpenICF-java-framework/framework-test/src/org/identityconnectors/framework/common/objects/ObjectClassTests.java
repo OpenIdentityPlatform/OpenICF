@@ -34,6 +34,15 @@ import org.junit.Test;
  */
 public class ObjectClassTests {
 
+    @Test
+    public void testIs() {
+        ObjectClass actual = new ObjectClass("group");
+        
+        assertTrue(actual.is("group"));
+        assertTrue(actual.is("Group"));
+        assertFalse(actual.is("admin"));
+    }
+    
 	@Test
 	public void testEquals() {
 		Object actual = new ObjectClass(ObjectClass.ACCOUNT_NAME);
