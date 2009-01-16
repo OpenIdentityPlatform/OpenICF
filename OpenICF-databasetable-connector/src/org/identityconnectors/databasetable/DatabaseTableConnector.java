@@ -766,7 +766,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
                 // TODO decide change log column is in ConnectorObject, comment out following line
                 // bld.addAttribute(AttributeBuilder.build(columnName, value));
             } else {
-                //org.identityconnectors.contract.test.UpdateApiOpTests.testUpdateToNull[0]
+                // java.lang.AssertionError: Attribute 'Attribute: {Name=AGE, Value=null}' was neither removed nor its value set to null.
                 if(value != null) { 
                     bld.addAttribute(AttributeBuilder.build(columnName, value));
                 }
