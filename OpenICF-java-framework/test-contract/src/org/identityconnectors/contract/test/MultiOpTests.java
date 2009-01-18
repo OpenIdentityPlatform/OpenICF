@@ -22,20 +22,18 @@
  */
 package org.identityconnectors.contract.test;
 
-import static org.junit.Assert.*;
-
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
-import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
@@ -48,7 +46,6 @@ import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.api.operations.ValidateApiOp;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
-import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -400,6 +397,18 @@ public class MultiOpTests extends ObjectClassRunner {
     @Override
     public Class<? extends APIOperation> getAPIOperation() {
         return _apiOp;
+    }
+    
+    /**
+     * {@inheritDoc}     
+     */
+    @Override
+    public Set<Class<? extends APIOperation>> getAPIOperations() {
+        Set<Class<? extends APIOperation>> s = new HashSet<Class<? extends APIOperation>>();
+        // list of required operations by this test:
+        s.add(CreateApiOp.class);
+        s.add(DeleteApiOp.class);
+        return s;
     }
 
     /**
@@ -1025,7 +1034,7 @@ public class MultiOpTests extends ObjectClassRunner {
     private ObjectClassInfo findOInfo(ObjectClass oclass) {
         Schema schema = getConnectorFacade().schema();
         for (ObjectClassInfo oinfo : schema.getObjectClassInfo()) {
-            if (oinfo.is(oclass.getObjectClassValue())) {
+            if (oinfo.getType().equalsIgnoreCase(oclass.getObjectClassValue())) {
                 return oinfo;
             }
         }
@@ -1060,4 +1069,6 @@ public class MultiOpTests extends ObjectClassRunner {
 
         return canLockout;
     }
+
+
 }

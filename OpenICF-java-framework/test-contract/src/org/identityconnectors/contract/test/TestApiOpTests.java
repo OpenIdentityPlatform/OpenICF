@@ -26,13 +26,13 @@ package org.identityconnectors.contract.test;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
-import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.TestApiOp;
-import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -93,6 +93,17 @@ public class TestApiOpTests extends AbstractSimpleTest {
     @Override
     public Class<? extends APIOperation> getAPIOperation() {
         return TestApiOp.class;
+    }
+    
+    /**
+     * {@inheritDoc}     
+     */
+    @Override
+    public Set<Class<? extends APIOperation>> getAPIOperations() {
+        Set<Class<? extends APIOperation>> s = new HashSet<Class<? extends APIOperation>>();
+        // list of required operations by this test:
+        s.add(TestApiOp.class);
+        return s;
     }
 
     /**

@@ -22,13 +22,13 @@
  */
 package org.identityconnectors.contract.test;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
@@ -80,6 +80,18 @@ public class SyncApiOpTests extends ObjectClassRunner {
     @Override
     public Class<? extends APIOperation> getAPIOperation() {
         return SyncApiOp.class;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Set<Class<? extends APIOperation>> getAPIOperations() {
+        Set<Class<? extends APIOperation>> s = new HashSet<Class<? extends APIOperation>>();
+        // list of required operations by this test:
+        s.add(SyncApiOp.class);
+        s.add(CreateApiOp.class);
+        return s;
     }
 
     /**
@@ -328,5 +340,7 @@ public class SyncApiOpTests extends ObjectClassRunner {
 
         return canSync;
     }
+
+
 
 }

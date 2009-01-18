@@ -22,11 +22,14 @@
  */
 package org.identityconnectors.contract.test;
 
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.contract.exceptions.ContractException;
@@ -41,16 +44,10 @@ import org.identityconnectors.framework.common.objects.OperationOptionInfo;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Schema;
-import org.junit.runners.Parameterized.Parameters;
-
-import static org.junit.Assert.*;
-
-
-import java.util.Iterator;
-import java.util.Set;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runners.Parameterized.Parameters;
 
 /**
  * Simple base class that will run through all the {@link ObjectClass}s.
@@ -109,8 +106,8 @@ public abstract class ObjectClassRunner extends AbstractSimpleTest {
     @Test
     public void testContract() {
         //run the contract test for supported operation only
-        if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), 
-        		getAPIOperation())) {
+        if (ConnectorHelper.operationsSupported(getConnectorFacade(), getObjectClass(), 
+        		getAPIOperations())) {
             try {
                 LOG.info("--------------------------------------------------------------------------------------");
                 LOG.info("Running test ''{0}'' for object class ''{1}''.", getTestName(), getObjectClass());
@@ -178,11 +175,6 @@ public abstract class ObjectClassRunner extends AbstractSimpleTest {
     public ObjectClass getSupportedObjectClass() {
         return _supportedObjectClass;
     }
-
-    /**
-     * Ask the subclass for the {@link APIOperation}.
-     */
-    public abstract Class<? extends APIOperation> getAPIOperation();
     
     //=================================================================
     // Helper methods

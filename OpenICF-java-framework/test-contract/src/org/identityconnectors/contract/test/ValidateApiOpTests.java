@@ -26,11 +26,16 @@ package org.identityconnectors.contract.test;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.operations.APIOperation;
+import org.identityconnectors.framework.api.operations.CreateApiOp;
+import org.identityconnectors.framework.api.operations.GetApiOp;
+import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.api.operations.ValidateApiOp;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -91,6 +96,17 @@ public class ValidateApiOpTests extends AbstractSimpleTest {
     }
     
     /**
+     * {@inheritDoc}     
+     */
+    @Override
+    public Set<Class<? extends APIOperation>> getAPIOperations() {
+        Set<Class<? extends APIOperation>> s = new HashSet<Class<? extends APIOperation>>();
+        // list of required operations by this test:
+        s.add(ValidateApiOp.class);
+        return s;
+    }
+    
+    /**
      * Returns this iteration number.
      * @return Iteration number.
      */
@@ -112,5 +128,7 @@ public class ValidateApiOpTests extends AbstractSimpleTest {
         
         return list;
     }
+
+
 
 }

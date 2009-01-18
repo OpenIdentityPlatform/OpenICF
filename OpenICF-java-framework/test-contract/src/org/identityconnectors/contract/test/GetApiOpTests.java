@@ -24,6 +24,7 @@ package org.identityconnectors.contract.test;
 
 import static org.junit.Assert.assertNotNull;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
@@ -62,6 +63,18 @@ public class GetApiOpTests extends ObjectClassRunner {
     @Override
     public Class<? extends APIOperation> getAPIOperation() {
         return GetApiOp.class;
+    }
+    
+    /**
+     * {@inheritDoc}     
+     */
+    @Override
+    public Set<Class<? extends APIOperation>> getAPIOperations() {
+        // list of required operations by this test:
+        Set<Class<? extends APIOperation>> s = new HashSet<Class<? extends APIOperation>>();
+        s.add(GetApiOp.class);
+        s.add(CreateApiOp.class);
+        return s;
     }
 
     /**
@@ -113,5 +126,7 @@ public class GetApiOpTests extends ObjectClassRunner {
     public String getTestName() {
         return TEST_NAME;
     }
+
+    
 
 }

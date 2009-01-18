@@ -23,7 +23,6 @@
 package org.identityconnectors.contract.test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -31,11 +30,11 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+
+import junit.framework.Assert;
 
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
@@ -59,12 +58,12 @@ import org.identityconnectors.framework.api.operations.TestApiOp;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
-import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.SyncDelta;
@@ -74,9 +73,6 @@ import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
-
-import junit.framework.Assert;
-import org.identityconnectors.framework.common.objects.OperationalAttributes;
 
 
 /**
@@ -670,6 +666,48 @@ public class ConnectorHelper {
         
         return opSupported;
     }    
+    
+    /**
+     * check to see if a particular objectclass supports a particular operations
+     * To succedd all the operations must be supported.
+     * 
+     * @param connectorFacade
+     * @param typeQuery
+     * @param operation
+     * @return
+     */
+    public static boolean operationsSupported(ConnectorFacade connectorFacade, ObjectClass oClass, 
+            Set<Class<? extends APIOperation>> operations) {
+        List<Boolean> opsSupported = new ArrayList<Boolean>();
+        
+        // get the schema
+        Schema schema = connectorFacade.schema();
+        Assert.assertNotNull("Connector did not return a schema", schema);
+        for (Class<? extends APIOperation> op : operations) {
+            Set<ObjectClassInfo> ocInfoSet = schema.getSupportedObjectClassesByOperation(op);
+
+            // for each ObjectClassInfo in the schema ...
+            boolean currentOpSupported = false;
+            for (ObjectClassInfo ocInfo : ocInfoSet) {
+                // get the type of the ObjectClassInfo
+                if (ConnectorHelper.getObjectClassFromObjectClassInfo(ocInfo).equals(oClass)) {
+                    currentOpSupported = true;
+                    break;
+                } 
+            }//for each object class
+            
+            opsSupported.add(currentOpSupported);
+        }//for each operation
+        
+        // do and throughout results of every operation
+        // to verify if all are supported
+        boolean result = true;
+        for (Boolean bool : opsSupported) {
+            result = result & bool;
+        }
+        
+        return result;
+    }
         
     /**
      * check to see if ANY objectclass supports a particular operation

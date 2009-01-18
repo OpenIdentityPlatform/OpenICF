@@ -22,6 +22,10 @@
  */
 package org.identityconnectors.contract.test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,6 +37,7 @@ import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
 import org.identityconnectors.framework.api.operations.GetApiOp;
+import org.identityconnectors.framework.api.operations.ScriptOnConnectorApiOp;
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.identityconnectors.framework.common.exceptions.PasswordExpiredException;
@@ -41,10 +46,8 @@ import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
-import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
-import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.PredefinedAttributes;
@@ -52,8 +55,6 @@ import org.identityconnectors.framework.common.objects.Uid;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import static org.junit.Assert.*;
 
 /**
  * Contract test of {@link AuthenticationApiOp}
@@ -79,6 +80,20 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
     @Override
     public Class<? extends APIOperation> getAPIOperation() {
         return AuthenticationApiOp.class;
+    }
+    
+    /**
+     * {@inheritDoc}     
+     */
+    @Override
+    public Set<Class<? extends APIOperation>> getAPIOperations() {
+        Set<Class<? extends APIOperation>> requiredOps = new HashSet<Class<? extends APIOperation>>();
+        // list of required operations by this test:
+        requiredOps.add(CreateApiOp.class);
+        requiredOps.add(UpdateApiOp.class);
+        requiredOps.add(AuthenticationApiOp.class);
+        requiredOps.add(GetApiOp.class);
+        return requiredOps;
     }
 
     /**
@@ -325,7 +340,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
     @Test
     public void testPasswordBeforePasswordExpired() {
         // run test only in case operation is supported and both PASSWORD and PASSWORD_EXPIRED are supported
-        if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), getAPIOperation())
+        if (ConnectorHelper.operationsSupported(getConnectorFacade(), getObjectClass(), getAPIOperations())
                 && isOperationalAttributeUpdateable(OperationalAttributes.PASSWORD_NAME)
                 && isOperationalAttributeUpdateable(OperationalAttributes.PASSWORD_EXPIRED_NAME)) {
             Uid uid = null;

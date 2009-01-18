@@ -22,23 +22,25 @@
  */
 package org.identityconnectors.contract.test;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import junit.framework.Assert;
 
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
 import org.identityconnectors.framework.api.operations.GetApiOp;
+import org.identityconnectors.framework.api.operations.TestApiOp;
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
-import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -46,8 +48,6 @@ import org.identityconnectors.framework.common.objects.Uid;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import static org.junit.Assert.*;
 
 
 /**
@@ -74,6 +74,19 @@ public class UpdateApiOpTests extends ObjectClassRunner {
     @Override
     public Class<? extends APIOperation> getAPIOperation() {
         return UpdateApiOp.class;
+    }
+    
+    /**
+     * {@inheritDoc}     
+     */
+    @Override
+    public Set<Class<? extends APIOperation>> getAPIOperations() {
+        Set<Class<? extends APIOperation>> s = new HashSet<Class<? extends APIOperation>>();
+        // list of required operations by this test:
+        s.add(UpdateApiOp.class);
+        s.add(CreateApiOp.class);
+        s.add(GetApiOp.class);
+        return s;
     }
     
     /**
@@ -379,4 +392,6 @@ public class UpdateApiOpTests extends ObjectClassRunner {
 
         return attrs;
     }
+
+
 }

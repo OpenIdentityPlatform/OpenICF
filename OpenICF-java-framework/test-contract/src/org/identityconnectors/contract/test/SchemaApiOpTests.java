@@ -22,8 +22,12 @@
  */
 package org.identityconnectors.contract.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +48,6 @@ import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.identityconnectors.framework.spi.operations.ScriptOnConnectorOp;
 import org.junit.Test;
 
 /**
@@ -86,6 +89,17 @@ public class SchemaApiOpTests extends AbstractSimpleTest {
     @Override
     public Class<? extends APIOperation> getAPIOperation() {
         return SchemaApiOp.class;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Set<Class<? extends APIOperation>> getAPIOperations() {
+        Set<Class<? extends APIOperation>> s = new HashSet<Class<? extends APIOperation>>();
+        // list of required operations by this test:
+        s.add(SchemaApiOp.class);
+        return s;
     }
     
     /**
@@ -329,5 +343,7 @@ public class SchemaApiOpTests extends AbstractSimpleTest {
 
         return propValue;
     }
+
+
 
 }

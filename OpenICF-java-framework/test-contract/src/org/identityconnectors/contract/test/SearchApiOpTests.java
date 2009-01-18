@@ -36,6 +36,7 @@ import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
+import org.identityconnectors.framework.api.operations.ScriptOnConnectorApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
@@ -78,6 +79,18 @@ public class SearchApiOpTests extends ObjectClassRunner {
     @Override
     public Class<? extends APIOperation> getAPIOperation() {
         return SearchApiOp.class;
+    }
+    
+    /**
+     * {@inheritDoc}     
+     */
+    @Override
+    public Set<Class<? extends APIOperation>> getAPIOperations() {
+        Set<Class<? extends APIOperation>> requiredOps = new HashSet<Class<? extends APIOperation>>();
+        // list of required operations by this test:
+        requiredOps.add(CreateApiOp.class);
+        requiredOps.add(SearchApiOp.class);
+        return requiredOps;
     }
     
     /**
@@ -226,8 +239,8 @@ public class SearchApiOpTests extends ObjectClassRunner {
     @Test
     public void testSearchWithoutAttrsToGet() {
         // run the contract test only if search is supported by tested object class
-        if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(),
-                getAPIOperation())) {
+        if (ConnectorHelper.operationsSupported(getConnectorFacade(), getObjectClass(),
+                getAPIOperations())) {
             Uid uid = null;
 
             try {
@@ -283,8 +296,8 @@ public class SearchApiOpTests extends ObjectClassRunner {
     public void testCaseInsensitiveSearch() {
         // run the contract test only if search is supported by tested object
         // class
-        if (ConnectorHelper.operationSupported(getConnectorFacade(),
-                getObjectClass(), getAPIOperation())
+        if (ConnectorHelper.operationsSupported(getConnectorFacade(),
+                getObjectClass(), getAPIOperations())
                 && canSearchCaseInsensitive()) {
             Uid uid = null;
 
@@ -386,6 +399,8 @@ public class SearchApiOpTests extends ObjectClassRunner {
 
         return canSearchCIns;
     }
+
+
 
 
 

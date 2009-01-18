@@ -22,10 +22,11 @@
  */
 package org.identityconnectors.contract.test;
 
+import java.util.Set;
+
 import org.identityconnectors.contract.data.DataProvider;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.operations.APIOperation;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -68,11 +69,19 @@ public abstract class AbstractSimpleTest {
     public void dispose() {
         _connFacade = null;
     }
-
+    
     /**
-     * Ask the subclass for the {@link APIOperation}.
+     * Ask the subclass for the {@link APIOperation}. This is the main 
+     * {@link APIOperation} tested by the subclass.
      */
     public abstract Class<? extends APIOperation> getAPIOperation();
+
+    /**
+     * Ask the subclasses for the {@link APIOperation}.
+     * Method returns set of required API operations that are prerequisites for
+     * running certain contract test.
+     */
+    public abstract Set<Class<? extends APIOperation>> getAPIOperations();
     
     //=================================================================
     // Helper methods

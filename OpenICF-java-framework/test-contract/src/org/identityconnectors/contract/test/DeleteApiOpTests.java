@@ -27,10 +27,15 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.operations.APIOperation;
+import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
 import org.identityconnectors.framework.api.operations.GetApiOp;
+import org.identityconnectors.framework.api.operations.ScriptOnConnectorApiOp;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -61,6 +66,19 @@ public class DeleteApiOpTests extends ObjectClassRunner {
     @Override
     public Class<? extends APIOperation> getAPIOperation() {
         return DeleteApiOp.class;
+    }
+    
+    /**
+     * {@inheritDoc}     
+     */
+    @Override
+    public Set<Class<? extends APIOperation>> getAPIOperations() {
+        Set<Class<? extends APIOperation>> requiredOps = new HashSet<Class<? extends APIOperation>>();
+        // list of required operations by this test:
+        requiredOps.add(DeleteApiOp.class);
+        requiredOps.add(CreateApiOp.class);
+        requiredOps.add(GetApiOp.class);
+        return requiredOps;
     }
 
     /**
@@ -100,7 +118,7 @@ public class DeleteApiOpTests extends ObjectClassRunner {
     @Test
     public void testDeleteThrowUnknownUid() {
         // run the contract test only if delete is supported
-        if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), getAPIOperation())) {
+        if (ConnectorHelper.operationsSupported(getConnectorFacade(), getObjectClass(), getAPIOperations())) {
             Uid uid = null;
             
             try {

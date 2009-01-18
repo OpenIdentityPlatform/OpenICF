@@ -22,11 +22,13 @@
  */
 package org.identityconnectors.contract.test;
 
-import static org.junit.Assert.fail;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
@@ -58,10 +60,21 @@ public class ScriptOnResourceApiOpTests extends AbstractSimpleTest {
     private static final String RESULT_PROP_PREFIX = "result";
 
     /**
-     * Returns 
+     * {@inheritDoc} 
      */
     public Class<? extends APIOperation> getAPIOperation() {
         return ScriptOnResourceApiOp.class;
+    }
+    
+    /**
+     * {@inheritDoc} 
+     */
+    @Override
+    public Set<Class<? extends APIOperation>> getAPIOperations() {
+        Set<Class<? extends APIOperation>> s = new HashSet<Class<? extends APIOperation>>();
+        // list of required operations by this test:
+        s.add(ScriptOnResourceApiOp.class);
+        return s;
     }
 
     
@@ -193,5 +206,8 @@ public class ScriptOnResourceApiOpTests extends AbstractSimpleTest {
 
         return value;
     }
+
+
+
 
 }

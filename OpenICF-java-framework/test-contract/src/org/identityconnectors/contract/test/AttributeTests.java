@@ -26,7 +26,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -36,6 +35,7 @@ import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
 import org.identityconnectors.framework.api.operations.GetApiOp;
+import org.identityconnectors.framework.api.operations.SchemaApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
 import org.identityconnectors.framework.api.operations.SyncApiOp;
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
@@ -96,6 +96,18 @@ public class AttributeTests extends ObjectClassRunner {
         return CreateApiOp.class; // because without create the tests could
         // not be run.
     }
+    
+    @Override
+    public Set<Class<? extends APIOperation>> getAPIOperations() {
+        Set<Class<? extends APIOperation>> res = new HashSet<Class<? extends APIOperation>>();
+        // list of required operations by this test:
+        res.add(CreateApiOp.class);
+        res.add(UpdateApiOp.class);
+        res.add(GetApiOp.class);
+        res.add(SchemaApiOp.class);
+        return res;
+    }
+
 
     /**
      * {@inheritDoc}
@@ -123,8 +135,8 @@ public class AttributeTests extends ObjectClassRunner {
      */
     @Test
     public void testNonReadable() {
-        if (ConnectorHelper.operationSupported(getConnectorFacade(),
-                getObjectClass(), CreateApiOp.class)) {
+        if (ConnectorHelper.operationsSupported(getConnectorFacade(),
+                getObjectClass(), getAPIOperations())) {
             Uid uid = null;
             try {
                 ObjectClassInfo oci = getObjectClassInfo();
@@ -163,14 +175,7 @@ public class AttributeTests extends ObjectClassRunner {
                 }
             }
         } else {
-            LOG
-                    .info("----------------------------------------------------------------------------------------");
-            LOG
-                    .info(
-                            "Skipping test ''testNonReadable'' for object class ''{0}''.",
-                            getObjectClass());
-            LOG
-                    .info("----------------------------------------------------------------------------------------");
+            printSkipTestMsg("testNonReadable");
         }
     }
 
@@ -190,9 +195,14 @@ public class AttributeTests extends ObjectClassRunner {
      */
     @Test
     public void testReturnedByDefault() {
-        //run the test for GetApiOp, SearchApiOp and SyncApiOp
-        for (ApiOperations apiop : ApiOperations.values()) {
-            testReturnedByDefault(apiop);
+        if (ConnectorHelper.operationSupported(getConnectorFacade(),
+                getObjectClass(), CreateApiOp.class)) {
+            // run the test for GetApiOp, SearchApiOp and SyncApiOp
+            for (ApiOperations apiop : ApiOperations.values()) {
+                testReturnedByDefault(apiop);
+            }
+        } else {
+            printSkipTestMsg("testReturnedByDefault");
         }
     }
     
@@ -211,8 +221,8 @@ public class AttributeTests extends ObjectClassRunner {
         /** logging info bean */
         LogInfo logInfo = null;
 
-        if (ConnectorHelper.operationSupported(getConnectorFacade(),
-                getObjectClass(), UpdateApiOp.class)) {
+        if (ConnectorHelper.operationsSupported(getConnectorFacade(),
+                getObjectClass(), getAPIOperations())) {
             ConnectorObject obj = null;
             Uid uid = null;
 
@@ -300,6 +310,8 @@ public class AttributeTests extends ObjectClassRunner {
             if (!exceptionCaught) {
                 fail(String.format("No exception thrown when update is performed on non-updateable attribute(s). (hint: throw a RuntimeException) %s", ((logInfo != null)?logInfo.toString():"")));
             }
+        } else {
+            printSkipTestMsg("testNonUpdateable");
         }
         
     }
@@ -345,12 +357,22 @@ public class AttributeTests extends ObjectClassRunner {
      * {@link AttributeTests#testNonUpdateable()} test
      */
     private void printSkipNonUpdateableTestMsg() {
+        printSkipTestMsg("testNonUpdateable");
+    }
+    
+    /**
+     * prints log message when skipping
+     * {@link AttributeTests#testNonUpdateable()} test
+     * 
+     * @param testName the name of the test to print
+     */
+    private void printSkipTestMsg(String testName) {
         LOG
                 .info("----------------------------------------------------------------------------------------");
         LOG
                 .info(
-                        "Skipping test ''testNonUpdateable'' for object class ''{0}''. (Reason: non-updateable attrs. are missing)",
-                        getObjectClass());
+                        "Skipping test ''{0}'' for object class ''{1}''. (Reason: non-updateable attrs. are missing)",
+                        testName, getObjectClass());
         LOG
                 .info("----------------------------------------------------------------------------------------");
 
@@ -363,7 +385,9 @@ public class AttributeTests extends ObjectClassRunner {
     @Test
     public void testRequirableIsCreatable() {
         if (ConnectorHelper.operationSupported(getConnectorFacade(),
-                getObjectClass(), CreateApiOp.class)) {
+                getObjectClass(), CreateApiOp.class)
+                && ConnectorHelper.operationSupported(getConnectorFacade(),
+                        getObjectClass(), GetApiOp.class)) {
             Uid uid = null;
             try {
                 ObjectClassInfo oci = getObjectClassInfo();
@@ -669,6 +693,7 @@ public class AttributeTests extends ObjectClassRunner {
         }
         return uid;
     }
+
 }// end of class AttributeTests
 
 /** helper inner class for passing the type of tested operations */
