@@ -33,11 +33,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import javax.naming.NamingException;
 import javax.sql.DataSource;
@@ -606,5 +602,60 @@ public final class SQLUtil {
             throw e;
         }
     }
+    
+    /**
+     * Selects single value (first column) from select.
+     * It fetches only first row, does not check whether more rows are returned by select
+     * @param conn JDBC connection
+     * @param sql Select statement with or without parameters
+     * @param params Parameters to use in statement
+     * @return first row and first column value 
+     * @throws SQLException
+     */
+    public static Object selectFirstRowFirstValue(Connection conn, String sql, Object ...params) throws SQLException{
+        PreparedStatement st = null;
+        ResultSet rs = null;
+        try{
+            st = conn.prepareStatement(sql);
+            setParams(st, Arrays.asList(params));
+            rs = st.executeQuery(sql);
+            Object value = null;
+            if(rs.next()){
+                value = rs.getObject(1);
+                return value;
+            }
+            else{
+                throw new IllegalStateException("No row found");
+            }
+        }
+        finally{
+            closeQuietly(rs);
+            closeQuietly(st);
+        }
+    }
+    
+    /**
+     * Executes DML sql statement. This can be useful to execute insert/update/delete or some
+     * database specific statement in one call
+     * @param conn
+     * @param sql
+     * @param params
+     * @return number of rows affected as defined by {@link PreparedStatement#executeUpdate()}
+     * @throws SQLException
+     */
+    public static int executeUpdateStatement(Connection conn, String sql, Object ...params) throws SQLException{
+        PreparedStatement st = null;
+        try{
+            st = conn.prepareStatement(sql);
+            setParams(st, Arrays.asList(params));
+            return st.executeUpdate();
+        }
+        finally{
+            closeQuietly(st);
+        }
+    }
+    
+    
+    
 }
 
