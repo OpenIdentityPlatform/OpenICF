@@ -40,6 +40,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.Map.Entry;
 
@@ -54,7 +55,6 @@ import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.contract.test.ConnectorHelper;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
-import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.Configuration;
@@ -146,13 +146,24 @@ public class GroovyDataProvider implements DataProvider {
     
     /* **** for snapshot generating **** */
     /** command line switch for snapshots */
-    private static final String PARAM_PROPERTY_OUT_FILE = "test.parameters.outFile";   
-    static final String ASSIGNMENT_MARK = "=";
-    /** Turn on debugging prefixes in parsing. Output: System.out */
-    private static final boolean DEBUG_ON = false;
-    private static final String EMPTY_PREFIX = "";
+    private final String PARAM_PROPERTY_OUT_FILE = "test.parameters.outFile";
+    /** command line switch for creating queried properties' dump */
+    private final String PARAM_QUERIED_PROPERTY_OUT_FILE = "test.parameters.outQueriedFile";
+    /** buffer for queried properties log */
+    private StringBuffer dumpBuffer = null;
+    /** buffer for queried properties -- that were not found -- log */
+    private StringBuffer dumpBufferNotFound = null;
+    /** default values generated for */
+    private StringBuffer dumpBufferDefaultVal = null;
     /** output file for concatenated snapshots */
     private File _propertyOutFile = null;
+    /** output file for queried properties dump */
+    private File _queriedPropsOutFile = null;
+    static final String ASSIGNMENT_MARK = "=";
+    private final String FOUND_MSG = "found";
+    /** Turn on debugging prefixes in parsing. Output: System.out */
+    private final boolean DEBUG_ON = false;
+    private final String EMPTY_PREFIX = "";
     
 
     /**
@@ -160,6 +171,41 @@ public class GroovyDataProvider implements DataProvider {
      */
     public GroovyDataProvider() {
         
+        initSnapshot();
+        initQueriedPropsDump();
+        
+        // init
+        configObject = doBootstrap();
+        ConfigObject projectConfig = loadProjectConfigurations();
+        configObject = mergeConfigObjects(configObject, projectConfig);
+    }
+
+    private void initQueriedPropsDump() {
+        // get snapshot output file, if provided
+        String pOut = System.getProperty(PARAM_QUERIED_PROPERTY_OUT_FILE);
+        if (StringUtil.isNotBlank(pOut)) {
+            try {
+                _queriedPropsOutFile = new File(pOut);
+                if (!_queriedPropsOutFile.exists()) {
+                    _queriedPropsOutFile.createNewFile();
+                }
+                if (!_queriedPropsOutFile.canWrite()) {
+                    _queriedPropsOutFile = null;
+                    LOG.warn("Unable to write to ''{0}'' file, the test parameters will not be stored", pOut);
+                } else {
+                    LOG.info("Storing parameter values to ''{0}'', you can rerun the test with the same parameters later", pOut);
+                }
+            } catch (IOException iOException) {
+                LOG.warn("Unable to create ''{0}'' file, the test parameters will not be stored", pOut);
+            }
+        }
+        
+        this.dumpBuffer = new StringBuffer();
+        this.dumpBufferNotFound = new StringBuffer();
+        this.dumpBufferDefaultVal = new StringBuffer();
+    }
+
+    private void initSnapshot() {
         // get snapshot output file, if provided
         String pOut = System.getProperty(PARAM_PROPERTY_OUT_FILE);
         if (StringUtil.isNotBlank(pOut)) {
@@ -178,11 +224,6 @@ public class GroovyDataProvider implements DataProvider {
                 LOG.warn("Unable to create ''{0}'' file, the test parameters will not be stored", pOut);
             }
         }
-        
-        // init
-        configObject = doBootstrap();
-        ConfigObject projectConfig = loadProjectConfigurations();
-        configObject = mergeConfigObjects(configObject, projectConfig);
     }
 
     /**
@@ -303,15 +344,21 @@ public class GroovyDataProvider implements DataProvider {
     public Object get(String name, String type, boolean useDefault)
             throws ObjectNotFoundException {
         Object o = null;
+        /** indicates if default value used */
+        boolean isDefaultValue = false;
+        /** indicates if the property was properly found */
+        boolean isFound = true;
 
         try {
             o = propertyRecursiveGet(name);
         } catch (ObjectNotFoundException onfe) {
             // What to do in case of missing property value:
             if (useDefault) {
+                isDefaultValue = true;
                 // generate a default value
                 o = propertyRecursiveGet(type);
             } else {
+                isFound = false;
                 if (useDefault) {
                     throw new ObjectNotFoundException("Missing property definition: " + name
                             + ", data type: " + type);
@@ -326,9 +373,35 @@ public class GroovyDataProvider implements DataProvider {
             throw (ObjectNotFoundException) o;
         }
         
+        if (_queriedPropsOutFile != null) {
+            logQueriedProperties(o, name, type, isDefaultValue, isFound);
+        }
         // cache resolved value
         cache.put(name, o);
         return o;
+    }
+
+    /**
+     * dump the current property query results into local buffer
+     * @param queriedObject the object value that was returned from query
+     * @param name the name of property that was queried
+     * @param type 
+     * @param isDefaultValue if default value was returned
+     * @param isFound if it was succesfully found
+     */
+    private void logQueriedProperties(Object queriedObject, String name, String type,
+            boolean isDefaultValue, boolean isFound) {
+        String msg = "name: '%s' type: '%s' defaultReturned: '%s' %s: '%s'";
+        String appendInfo = String.format(msg, name, type, 
+                Boolean.toString(isDefaultValue), FOUND_MSG, Boolean.toString(isFound))
+                + ((queriedObject != null)? (" value: " + flatten(queriedObject)):"") + "\n";
+        this.dumpBuffer.append(appendInfo);
+        if (isFound == false) {
+            this.dumpBufferNotFound.append(appendInfo);
+        }
+        if (isDefaultValue == true) {
+            this.dumpBufferDefaultVal.append(appendInfo);
+        }
     }
 
     /**
@@ -858,6 +931,52 @@ public class GroovyDataProvider implements DataProvider {
         
         return result;
     }
+    
+    /**
+     * save the dump into its file
+     */
+    private String writeQueriedDumpToFile() {
+        // do nothing if not having out file
+        if (_queriedPropsOutFile == null) {
+            return null;
+        }
+        
+        FileWriter fw = null;
+        try {
+            fw = new FileWriter(_queriedPropsOutFile, true);
+            fw.append("<dumpSummary>\n");
+            // MISSING PROPS
+            fw.append("  <missingProperties>\n");
+            String notFoundPropsList = this.dumpBufferNotFound.toString();
+            if (StringUtil.isBlank(notFoundPropsList)) {
+                fw.append("every property was found\n");
+            } else {
+                fw.append("The following properties WERE NOT FOUND:\n");
+            }//fi
+            fw.append(this.dumpBufferNotFound.toString() + "\n");
+            fw.append("  </missingProperties>\n");
+            // PROPS WITH DEFAULT VALUE
+            fw.append("  <defaultValueGeneratedForProperties>\n");
+            if (StringUtil.isBlank(this.dumpBufferDefaultVal.toString())) {
+                fw.append("no default value was used.");
+            } else {
+                fw.append("the following default values were used.");
+            }
+            fw.append(this.dumpBufferDefaultVal.toString() + "\n");
+            fw.append("  </defaultValueGeneratedForProperties>\n");
+            fw.append("</dumpSummary> \n\n\n");
+            
+            fw.append("\n\n\n ============================ NEW TEST ==================== \n\n\n");
+            fw.append(this.dumpBuffer.toString() + "\n");
+            fw.close();
+        } catch (IOException e) {
+            LOG.warn("Writing to contract test property out file failed ''{0}''", _queriedPropsOutFile.getAbsolutePath());
+        }
+        
+        LOG.info("Dump file of queried properties written to: ''{0}''", _queriedPropsOutFile.getAbsolutePath());
+        
+        return this.dumpBuffer.toString();
+    }
 
     /**
      * <strong>Starting point</strong> of flattening methods.
@@ -1111,6 +1230,7 @@ public class GroovyDataProvider implements DataProvider {
 
     public void dispose() {
         writeDataToFile();
+        writeQueriedDumpToFile();
     }
 }
 
