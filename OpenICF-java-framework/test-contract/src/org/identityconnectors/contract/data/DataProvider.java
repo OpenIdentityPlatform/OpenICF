@@ -166,9 +166,59 @@ public interface DataProvider {
     public Object generate(String pattern);
     
     /* ***************** ADDITIONAL PROPERTY UTILS ************** */
-    public void loadConfiguration(final String configName, Configuration cfg)
+    /**
+     * adds to 'cfg' the complete map defined by property 'propertyName'
+     * 
+     * @param propertyName
+     *            the name of property which represents the submap that will be
+     *            converted to configuration
+     * @param cfg
+     *            the configuration that will be updated by information from
+     *            property 'propertyName'
+     *            <p>
+     *            Sample usage:<br>
+     * 
+     * <pre>
+     *     static final String DEFAULT_CONFIGURATINON = "configuration"
+     *     
+     *     // attempt to create the database in the directory..
+     *     config = new ConnectorConfiguration();   
+     *     
+     *     // LOAD THE submap in 'configuration' <strong>prefix</prefix> to 'config' object.
+     *     dataProvider.loadConfiguration(DEFAULT_CONFIGURATINON, config); 
+     * //////// The groovy configuration 
+     * 
+     *     // account configurations   
+     *     configuration{
+     *       init.driver="foo"    
+     *       init.hostName="bar"
+     *       init.port="boo"
+     *     }
+     * </pre>
+     */
+    public void loadConfiguration(final String propertyName, Configuration cfg)
         throws NoSuchFieldException, IllegalAccessException;
     
+    /**
+     * converts the given property submap to Attribute set.
+     * 
+     * @param propertySetName the property that marks the submap for conversion.
+     * @return the converted attribute set
+     * <p>
+     * Sample usage:
+     * <pre>
+     *  createAttrs = dataProvider.getAttributeSet("configuration");
+     *  
+     *  //////// The groovy configuration 
+     * 
+     *     // account configurations   
+     *     configuration{
+     *       init.driver="foo"    
+     *       init.hostName="bar"
+     *       init.port="boo"
+     *     } 
+     * </pre>
+     */
     public Set<Attribute> getAttributeSet(final String propertySetName);
     
     /* ************************************************* */
