@@ -36,14 +36,18 @@ import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
+import org.identityconnectors.framework.api.operations.GetApiOp;
 import org.identityconnectors.framework.api.operations.ScriptOnConnectorApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
@@ -90,6 +94,7 @@ public class SearchApiOpTests extends ObjectClassRunner {
         // list of required operations by this test:
         requiredOps.add(CreateApiOp.class);
         requiredOps.add(SearchApiOp.class);
+        requiredOps.add(GetApiOp.class);
         return requiredOps;
     }
     
@@ -316,12 +321,30 @@ public class SearchApiOpTests extends ObjectClassRunner {
                 
                 // get created uid and change its case, than perform 2nd search for uid with changed case
                 String uidStr = uid.getUidValue();
+
+                
+                // change the case in UID
                 String caseChngd_uidStr = changeCase(uidStr); // inverts the case of the original uid (example: BvZAO96 --> bVzao96)
+                
+                // change the case in NAME
+                String name = getName(uid);
+                String caseChngd_NAME = changeCase(name);
+                
+                
+                //perform search with changed case UID
                 ConnectorObject searchWithChngdCaseResult = searchForUid(
                         caseChngd_uidStr, "[query by changed case uid]");
 
                 assertTrue(
-                        "The search responses differ for changed case query and simple query.",
+                        "The search responses differ for changed case query [UID] and simple query.",
+                        searchWithChngdCaseResult.equals(searchResult));
+                
+                //perform search with changed case NAME
+                searchWithChngdCaseResult = searchForName(
+                        caseChngd_NAME, "[query by changed case name]");
+
+                assertTrue(
+                        "The search responses differ for changed case query [NAME] and simple query.",
                         searchWithChngdCaseResult.equals(searchResult));
             } finally {
                 if (uid != null) {
@@ -340,6 +363,30 @@ public class SearchApiOpTests extends ObjectClassRunner {
             LOG
                     .info("----------------------------------------------------------------------------------------");
         }
+    }
+
+    private ConnectorObject searchForName(String caseChngd_NAME, String msg) {
+        // get the user to make sure it exists now
+        Filter fltUid = FilterBuilder.equalTo(AttributeBuilder.build(Name.NAME, caseChngd_NAME));
+        List<ConnectorObject> coObjects = ConnectorHelper.search(
+                getConnectorFacade(), getSupportedObjectClass(), fltUid, null);
+        assertTrue(
+                msg
+                        + " Search filter by uid with no OperationOptions failed, expected to return one object, but returned "
+                        + coObjects.size(), coObjects.size() == 1);
+
+        assertNotNull("Unable to retrieve newly created object", coObjects
+                .get(0));
+        return coObjects.get(0);
+    }
+
+    /** get the name for uid */
+    private String getName(Uid uid) {
+        OperationOptionsBuilder oob = new OperationOptionsBuilder();
+        oob.setAttributesToGet(Name.NAME);
+        ConnectorObject o = getConnectorFacade().getObject(getObjectClass(), uid, oob.build()); // get the name
+        Attribute attrName = o.getAttributeByName(Name.NAME);
+        return attrName.getValue().get(0).toString();
     }
 
     /** search for given Uid and return first item in the response list */
