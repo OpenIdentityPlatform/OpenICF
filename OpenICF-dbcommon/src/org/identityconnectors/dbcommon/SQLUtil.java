@@ -33,7 +33,14 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.*;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Set;
 
 import javax.naming.NamingException;
 import javax.sql.DataSource;
@@ -59,6 +66,21 @@ public final class SQLUtil {
      * Setup logging for the {@link DatabaseTableConnector}.
      */
     static final Log log = Log.getLog(SQLUtil.class);
+
+    /**
+     * Timestamp format
+     */
+    static final SimpleDateFormat TMS_FMT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+    
+    /**
+     * Time format
+     */
+    static final SimpleDateFormat TM_FMT = new SimpleDateFormat("hh:mm:ss");
+
+    /**
+     * Date format
+     */
+    static final SimpleDateFormat DT_FMT = new SimpleDateFormat("yyyy-MM-dd");
 
     
     /**
@@ -336,8 +358,8 @@ public final class SQLUtil {
             if (Blob.class.isAssignableFrom(clazz)) {
                 // convert to base object..
                 clazz = byte[].class;
-            } else if (Date.class.isAssignableFrom(clazz)) {
-                clazz = Long.class;
+            } else if (java.util.Date.class.isAssignableFrom(clazz)) {
+                clazz = String.class;
             }            
             return clazz;
         } catch (ClassNotFoundException e) {
@@ -385,18 +407,59 @@ public final class SQLUtil {
      */
     public static Object convertToSupportedType(final Object value) throws SQLException {
         Object ret = null;
-        // TODO must be able to convert any data value to supported types
-        // fix any discrepancies between what the schema
-        // method reports the type of an attribute, and
-        // what we actually return
         if (value instanceof Blob) {
-            ret = makeConversion((Blob) value);
-        } else if (value instanceof Date) {
-            // All Date, Timestamp are convered to long 
-            ret = ((Date) value).getTime();
+            ret = blobConversion((Blob) value);
+        } else if (value instanceof java.sql.Timestamp) {
+            ret = timestamp2String((java.sql.Timestamp) value);
+        } else if (value instanceof java.sql.Time) {
+            ret = time2String((java.sql.Time) value);
+        } else if (value instanceof java.sql.Date) {
+            ret = date2String((java.sql.Date) value);
+        } else if (value instanceof java.util.Date) {
+            ret = utilDate2String((java.util.Date) value);
         } else {
             ret = value;
         }
+        return ret;
+    }
+
+    /**
+     * Date to String
+     * @param value Date value
+     * @return String value
+     */
+    public static String utilDate2String(final java.util.Date value) {
+        final String ret = TMS_FMT.format(value);
+        return ret;
+    }
+    
+    /**
+     * Date to string
+     * @param value Date value
+     * @return String value
+     */
+    public static String date2String(final java.sql.Date value) {
+        final String ret = DT_FMT.format(value);
+        return ret;
+    }
+
+    /**
+     * Time to String format
+     * @param value Time value
+     * @return String value
+     */
+    public static String time2String(final java.sql.Time value) {      
+        final String ret = TM_FMT.format(value);
+        return ret;
+    }
+
+    /**
+     * Convert timestamp to string
+     * @param value <code>Timestamp</code> 
+     * @return the string value
+     */
+    public static String timestamp2String(final java.sql.Timestamp value) {
+        final String ret = TMS_FMT.format(value);
         return ret;
     }    
     /**
@@ -433,34 +496,114 @@ public final class SQLUtil {
      * 
      * @param param
      *            the value to convert
-     * @param clazz
+     * @param expClass
      *            expected class
      * 
      * @return a converted value
      */
-    public static Object convertToJDBC(Object param, Class<?> clazz) {
+    public static Object convertToJDBC(Object param, Class<?> expClass) {
         // check the param null value
         if (param == null) {
             return param;
         }
         
         // check the conversion to is valid
-        if (clazz == null) {
+        if (expClass == null) {
             return param;
         }        
 
         // Date, Timestamps conversion support for now
-        if (param.getClass().equals(Long.class)) {
-            if (clazz.equals(java.util.Date.class)) {
-                return new java.util.Date((Long) param);
-            } else if (clazz.equals(java.sql.Date.class)) {
-                return new java.sql.Date((Long) param);
-            } else if (clazz.equals(java.sql.Timestamp.class)) {
-                return new java.sql.Timestamp((Long) param);
-            }
+        if (expClass.equals(java.sql.Timestamp.class)) {
+            return string2Timestamp((String) param);
+        } else if (expClass.equals(java.sql.Date.class)) {
+            return sring2Date((String) param);
+        } else if (expClass.equals(java.sql.Time.class)) {
+            return string2Time((String) param);
+        } else if (expClass.equals(java.util.Date.class)) {
+            return string2UtilDate((String) param);
         }
         return param;
 
+    }
+
+    /**
+     * String to Date
+     * @param param String value
+     * @return Date value 
+     */
+    public static java.util.Date string2UtilDate(String param) {
+        java.util.Date parsedDate;
+        try {
+            parsedDate = TMS_FMT.parse(param);
+        } catch (ParseException e) {
+            final DateFormat dfmt = DateFormat.getDateInstance();
+            try {
+                parsedDate = dfmt.parse(param);
+            } catch (ParseException e1) {
+                throw new IllegalArgumentException(e1);
+            }
+        }
+        return new java.util.Date(parsedDate.getTime());
+    }
+
+    /**
+     * String to Time
+     * @param param String
+     * @return the Time value
+     */
+    public static java.sql.Time string2Time(String param) {
+        java.util.Date parsedDate;
+        try {
+            parsedDate = TM_FMT.parse(param);
+        } catch (ParseException e) {
+            final DateFormat dfmt = DateFormat.getTimeInstance();
+            try {
+                parsedDate = dfmt.parse(param);
+            } catch (ParseException e1) {
+                throw new IllegalArgumentException(e1);
+            }
+        }
+        return new java.sql.Time(parsedDate.getTime());
+    }
+
+    /**
+     * String to Date
+     * @param param the String value
+     * @return Date value
+     */
+    public static java.sql.Date sring2Date(String param) {
+        java.util.Date parsedDate;
+        try {
+            parsedDate = DT_FMT.parse(param);
+        } catch (ParseException e) {
+            final DateFormat dfmt = DateFormat.getDateTimeInstance();
+            try {
+                parsedDate = dfmt.parse(param);
+            } catch (ParseException e1) {
+                throw new IllegalArgumentException(e1);
+            }
+        }
+        return new java.sql.Date(parsedDate.getTime());
+    }
+
+    /**
+     * Convert string to Timestamp
+     * @param param String value
+     * @return Timestamp value
+     */
+    private static java.sql.Timestamp string2Timestamp(String param) {
+        java.util.Date parsedDate;
+        try {
+            parsedDate = TMS_FMT.parse(param);
+        } catch (ParseException e) {
+            final DateFormat dfmt = DateFormat.getDateTimeInstance();
+            try {
+                parsedDate = dfmt.parse(param);
+            } catch (ParseException e1) {
+                throw new IllegalArgumentException(e1);
+            }
+        }
+        return new java.sql.Timestamp(parsedDate.getTime());
     }
     
     /**
@@ -502,7 +645,7 @@ public final class SQLUtil {
      * @return a converted value
      * @throws SQLException
      */
-    protected static byte[] makeConversion(Blob blobValue) throws SQLException {
+    protected static byte[] blobConversion(Blob blobValue) throws SQLException {
         byte[] newValue = null;
 
         // convert from Blob to byte[]

@@ -26,16 +26,27 @@ package org.identityconnectors.dbcommon;
 import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
-import java.sql.*;
-import java.util.*;
-import java.util.Date;
+import java.sql.Blob;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Set;
 
-import javax.naming.*;
+import javax.naming.Context;
+import javax.naming.NamingException;
 import javax.naming.spi.InitialContextFactory;
 import javax.sql.DataSource;
 
-import org.identityconnectors.framework.common.objects.*;
-import org.junit.*;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeUtil;
+import org.junit.Assert;
+import org.junit.Test;
 
 
 /**
@@ -179,10 +190,9 @@ public class SQLUtilTests {
     @Test
     public void testConvertDateToAttribute() throws SQLException {
         Timestamp src = new Timestamp(System.currentTimeMillis());
-        long expected = src.getTime();
         Attribute actual = SQLUtil.convertToAttribute("test", src);
         final Object object = AttributeUtil.getSingleValue(actual);
-        assertEquals(expected, object);
+        assertEquals(SQLUtil.timestamp2String(src).toString(), object);
     }    
     
     /**
@@ -192,7 +202,7 @@ public class SQLUtilTests {
     @Test
     public void testConvertTimestampClassNameToJDBC() {
         Timestamp expected = new Timestamp(System.currentTimeMillis());
-        long src = expected.getTime();
+        String src = SQLUtil.timestamp2String(expected);
         Object actual = SQLUtil.convertToJDBC(src, expected.getClass().getName());
         assertNotNull(actual);
         assertEquals(expected.getClass(), actual.getClass());
@@ -206,7 +216,7 @@ public class SQLUtilTests {
     @Test
     public void testConvertTimestampToJDBC() {
         Timestamp expected = new Timestamp(System.currentTimeMillis());
-        long src = expected.getTime();
+        String src = SQLUtil.timestamp2String(expected);
         Object actual = SQLUtil.convertToJDBC(src, expected.getClass());
         assertNotNull(actual);
         assertEquals(expected.getClass(), actual.getClass());
@@ -218,13 +228,27 @@ public class SQLUtilTests {
      */
     @Test
     public void testConvertDateToJDBC() {
-        Date expected = new Date(System.currentTimeMillis());
-        long src = expected.getTime();
+        java.sql.Date expected = new java.sql.Date(System.currentTimeMillis());
+        String src = SQLUtil.date2String(expected);
         Object actual = SQLUtil.convertToJDBC(src, expected.getClass());
         assertNotNull(actual);
         assertEquals(expected.getClass(), actual.getClass());
-        assertEquals(expected, actual);
+        assertEquals(expected.toString(), actual.toString());
     }    
+    
+    /**
+     * Test method
+     * @throws SQLException 
+     */
+    @Test
+    public void testConvertUtilDateToJDBC() {
+        java.util.Date expected = new java.util.Date(System.currentTimeMillis());
+        String src = SQLUtil.utilDate2String(expected);
+        Object actual = SQLUtil.convertToJDBC(src, expected.getClass());
+        assertNotNull(actual);
+        assertEquals(expected.getClass(), actual.getClass());
+        assertEquals(expected.toString(), actual.toString());
+    }  
     
     /**
      * Test method
@@ -243,11 +267,11 @@ public class SQLUtilTests {
     @Test
     public void testConvertSqlDateToJDBC() {
         java.sql.Date expected = new java.sql.Date(System.currentTimeMillis());
-        long src = expected.getTime();
+        String src = SQLUtil.date2String(expected);
         Object actual = SQLUtil.convertToJDBC(src, expected.getClass());
         assertNotNull(actual);
         assertEquals(expected.getClass(), actual.getClass());
-        assertEquals(expected, actual);
+        assertEquals(expected.toString(), actual.toString());
     }  
    
         
