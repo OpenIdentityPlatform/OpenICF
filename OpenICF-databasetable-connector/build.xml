@@ -26,7 +26,7 @@
     <import file="${framework.dir}/connector_build.xml"/>
     <property name="databasecommon.dir" value="../dbcommon"/>
     <target name="-pre-clean-extra">
-        <delete>
+        <delete failonerror="false">
             <fileset dir="${lib}" includes="*common*jar"/>
         </delete>
     </target>

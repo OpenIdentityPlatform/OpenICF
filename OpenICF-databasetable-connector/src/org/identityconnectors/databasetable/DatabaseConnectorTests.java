@@ -560,6 +560,8 @@ public class DatabaseConnectorTests {
         tst.setPassword(tst.getPassword().substring(strUpdateLen) + strUpdate);
         tst.setSalary(new BigDecimal(1000));
         tst.setTitle(tst.getTitle().substring(strUpdateLen) + strUpdate);
+        tst.setChanged(new Timestamp(System.currentTimeMillis()));
+        tst.setEnrolled(new Date(System.currentTimeMillis()));
         for (Attribute attribute : tst.toAttributeSet()) {
             coBuilder.addAttribute(attribute);
         }
@@ -665,7 +667,8 @@ public class DatabaseConnectorTests {
         System.out.println("Uid: " + uid);
         FindUidSyncHandler ok = new FindUidSyncHandler(uid);
         // attempt to find the newly created object..
-        facade.sync(ObjectClass.ACCOUNT, new SyncToken(System.currentTimeMillis() - 1000), ok, null);
+        final Timestamp tmsVal = new Timestamp(System.currentTimeMillis() - 1000);
+        facade.sync(ObjectClass.ACCOUNT, new SyncToken(SQLUtil.timestamp2String(tmsVal)), ok, null);
         assertTrue(ERR1, ok.found);
         // Test the created attributes are equal the searched
         assertNotNull(ok.attributes);
@@ -814,7 +817,7 @@ public class DatabaseConnectorTests {
         final SyncToken latestSyncToken = facade.getLatestSyncToken(ObjectClass.ACCOUNT);
         assertNotNull(latestSyncToken);
         final Object actual = latestSyncToken.getValue();
-        assertEquals(changed.getTime(), actual);        
+        assertEquals(changed.toString(), actual);        
     } 
     
     /**
@@ -1139,8 +1142,8 @@ public class DatabaseConnectorTests {
                 Attribute fa = expected.get(fieldName); 
                 assertNotNull("Field:" + fieldName + "  was duplicated", fa);
                 Object field = AttributeUtil.getSingleValue(fa);
-                Class<?> expClass = field.getClass();
-                assertEquals("field: " + fieldName, expClass, attInfo.getType());
+                Class<?> valueClass = field.getClass();
+                assertEquals("field: " + fieldName, attInfo.getType(), valueClass);
             }
             // all the attribute has to be removed
             assertEquals("There are missing attributes which were not included in the schema ", 0, keys.size());
@@ -1440,11 +1443,11 @@ public class DatabaseConnectorTests {
                 } else if (SALARY.equalsIgnoreCase(name)) {
                     ret.setSalary(AttributeUtil.getBigDecimalValue(attr));
                 } else if (ENROLLED.equalsIgnoreCase(name)) {
-                    ret.setEnrolled(AttributeUtil.getDateValue(attr));
+                    ret.setEnrolled(SQLUtil.string2UtilDate(AttributeUtil.getStringValue(attr)));
                 } else if (CHANGED.equalsIgnoreCase(name)) {
-                    final Long longValue = AttributeUtil.getLongValue(attr);
-                    if(longValue !=null) {
-                        ret.setChanged(new Timestamp(longValue));
+                    final String strValue = AttributeUtil.getStringValue(attr);
+                    if(strValue !=null) {
+                        ret.setChanged(Timestamp.valueOf(strValue));
                     }
                 }
             }
@@ -1483,7 +1486,7 @@ public class DatabaseConnectorTests {
             ret.add(AttributeBuilder.build(ACCESSED, getAccessed()));
             ret.add(AttributeBuilder.build(SALARY, getSalary()));
             ret.add(AttributeBuilder.build(JPEGPHOTO, getJpegPhoto()));
-            ret.add(AttributeBuilder.build(ENROLLED, getEnrolled().getTime()));
+            ret.add(AttributeBuilder.build(ENROLLED, SQLUtil.utilDate2String(getEnrolled())));
             return ret;
         }        
 

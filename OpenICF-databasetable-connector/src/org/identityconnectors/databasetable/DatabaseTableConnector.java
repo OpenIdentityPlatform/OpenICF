@@ -445,7 +445,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             throw new IllegalArgumentException("Unsupported objectclass '" + objClass + "'");
         }
         Assertions.nullCheck(handler, "handler");
-        Assertions.blankCheck(config.getChangeLogColumn(), "changeLogColumn"); 
+        Assertions.blankCheck(config.getChangeLogColumn(), "changeLogColumn");
         
         // Names
         final String tblname = config.quoteName(config.getDBTable());
@@ -460,8 +460,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         final FilterWhereBuilder where = new FilterWhereBuilder();
         if(token != null) {
             final Class<?> clazz = getColumnType(config.getChangeLogColumn());
-            final Object parameter = SQLUtil.convertToJDBC(token.getValue(), clazz );            
-            where.addBind(changeLogColumnName, ">", parameter);            
+            final Object parameter = SQLUtil.convertToJDBC(token.getValue(), clazz );
+            where.addBind(changeLogColumnName, ">", parameter);
         }
         final DatabaseQueryBuilder query = new DatabaseQueryBuilder(tblname, columnNames);
         query.setWhere(where);
