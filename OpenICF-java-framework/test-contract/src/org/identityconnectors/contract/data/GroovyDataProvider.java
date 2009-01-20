@@ -366,6 +366,10 @@ public class GroovyDataProvider implements DataProvider {
                     throw new ObjectNotFoundException("Missing property definition: " + name);
                 }
             }
+        } finally {
+            if (_queriedPropsOutFile != null) {
+                logQueriedProperties(o, name, type, isDefaultValue, isFound);
+            }
         }
 
         // resolve o.n.f.e.
@@ -373,9 +377,6 @@ public class GroovyDataProvider implements DataProvider {
             throw (ObjectNotFoundException) o;
         }
         
-        if (_queriedPropsOutFile != null) {
-            logQueriedProperties(o, name, type, isDefaultValue, isFound);
-        }
         // cache resolved value
         cache.put(name, o);
         return o;
