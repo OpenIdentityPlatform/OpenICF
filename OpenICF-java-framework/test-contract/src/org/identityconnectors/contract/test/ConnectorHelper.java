@@ -522,6 +522,20 @@ public class ConnectorHelper {
     }
     
     /**
+     * Returns set of attributes' names which are readable.
+     */
+    public static Set<String> getReadableAttributesNames(ObjectClassInfo ocInfo) {
+        Set<String> readableAttrs = new HashSet<String>();
+        for (AttributeInfo ainfo : ocInfo.getAttributeInfo()) {
+            if (ainfo.isReadable()) {
+                readableAttrs.add(ainfo.getName());
+            }
+        }
+        
+        return readableAttrs;
+    }
+    
+    /**
      * get attribute values (concatenates the qualifier with the name)
      * @param dataProvider
      * @param objectClassInfo

@@ -46,10 +46,12 @@ import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.api.operations.ValidateApiOp;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
+import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.PredefinedAttributes;
@@ -683,9 +685,14 @@ public class MultiOpTests extends ObjectClassRunner {
                 
                 accountUid1 = getConnectorFacade().create(ObjectClass.ACCOUNT, accountAttrs1, null);
 
+                // build attributes to get
+                OperationOptionsBuilder oob = new OperationOptionsBuilder();                                
+                oob.setAttributesToGet(ConnectorHelper.getReadableAttributesNames(accountInfo));
+                OperationOptions attrsToGet = oob.build();
+                
                 // get the account to make sure it exists now
                 ConnectorObject obj = getConnectorFacade().getObject(ObjectClass.ACCOUNT,
-                        accountUid1, getOperationOptionsByOp(GetApiOp.class));
+                        accountUid1, attrsToGet);
 
                 // check that object was created properly
                 ConnectorHelper.checkObject(accountInfo, obj, accountAttrs1);
@@ -708,7 +715,7 @@ public class MultiOpTests extends ObjectClassRunner {
 
                     // get the account to make sure it exists now and values are correct
                     obj = getConnectorFacade().getObject(ObjectClass.ACCOUNT, accountUid1,
-                            getOperationOptionsByOp(GetApiOp.class));
+                            attrsToGet);
 
                     // check that object was created properly
                     ConnectorHelper.checkObject(accountInfo, obj, UpdateApiOpTests
@@ -782,9 +789,14 @@ public class MultiOpTests extends ObjectClassRunner {
                 
                 accountUid1 = getConnectorFacade().create(ObjectClass.ACCOUNT, accountAttrs1, null);
 
+                // build attributes to get
+                OperationOptionsBuilder oob = new OperationOptionsBuilder();                                
+                oob.setAttributesToGet(ConnectorHelper.getReadableAttributesNames(accountInfo));
+                OperationOptions attrsToGet = oob.build();
+                
                 // get the account to make sure it exists now
                 ConnectorObject obj = getConnectorFacade().getObject(ObjectClass.ACCOUNT,
-                        accountUid1, getOperationOptionsByOp(GetApiOp.class));
+                        accountUid1, attrsToGet);
 
                 // check that object was created properly
                 ConnectorHelper.checkObject(accountInfo, obj, accountAttrs1);
@@ -807,7 +819,7 @@ public class MultiOpTests extends ObjectClassRunner {
 
                     // get the account to make sure it exists now and values are correct
                     obj = getConnectorFacade().getObject(ObjectClass.ACCOUNT, accountUid1,
-                            getOperationOptionsByOp(GetApiOp.class));
+                            attrsToGet);
 
                     // check that object was created properly
                     ConnectorHelper.checkObject(accountInfo, obj, UpdateApiOpTests
@@ -881,9 +893,14 @@ public class MultiOpTests extends ObjectClassRunner {
                 
                 orgUid1 = getConnectorFacade().create(ObjectClass.ORGANIZATION, orgAttrs1, null);
 
+                // build attributes to get
+                OperationOptionsBuilder oob = new OperationOptionsBuilder();                                
+                oob.setAttributesToGet(ConnectorHelper.getReadableAttributesNames(orgInfo));
+                OperationOptions attrsToGet = oob.build();
+                
                 // get the org to make sure it exists now
                 ConnectorObject obj = getConnectorFacade().getObject(ObjectClass.ORGANIZATION,
-                        orgUid1, getOperationOptionsByOp(GetApiOp.class));
+                        orgUid1, attrsToGet);
 
                 // check that object was created properly
                 ConnectorHelper.checkObject(orgInfo, obj, orgAttrs1);
@@ -906,7 +923,7 @@ public class MultiOpTests extends ObjectClassRunner {
 
                     // get the org to make sure it exists now and values are correct
                     obj = getConnectorFacade().getObject(ObjectClass.ORGANIZATION, orgUid1,
-                            getOperationOptionsByOp(GetApiOp.class));
+                            attrsToGet);
 
                     // check that object was created properly
                     ConnectorHelper.checkObject(orgInfo, obj, UpdateApiOpTests
@@ -980,9 +997,14 @@ public class MultiOpTests extends ObjectClassRunner {
                 
                 groupUid1 = getConnectorFacade().create(ObjectClass.GROUP, groupAttrs1, null);
 
+                // build attributes to get
+                OperationOptionsBuilder oob = new OperationOptionsBuilder();                                
+                oob.setAttributesToGet(ConnectorHelper.getReadableAttributesNames(groupInfo));
+                OperationOptions attrsToGet = oob.build();
+                
                 // get the org to make sure it exists now
                 ConnectorObject obj = getConnectorFacade().getObject(ObjectClass.GROUP,
-                        groupUid1, getOperationOptionsByOp(GetApiOp.class));
+                        groupUid1, attrsToGet);
 
                 // check that object was created properly
                 ConnectorHelper.checkObject(groupInfo, obj, groupAttrs1);
@@ -1005,7 +1027,7 @@ public class MultiOpTests extends ObjectClassRunner {
 
                     // get the org to make sure it exists now and values are correct
                     obj = getConnectorFacade().getObject(ObjectClass.GROUP, groupUid1,
-                            getOperationOptionsByOp(GetApiOp.class));
+                            attrsToGet);
 
                     // check that object was created properly
                     ConnectorHelper.checkObject(groupInfo, obj, UpdateApiOpTests
