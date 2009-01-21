@@ -58,13 +58,6 @@ public class ScriptOnResourceApiOpTests extends AbstractSimpleTest {
     private static final String SCRIPT_PROP_PREFIX = "script";
     private static final String ARGUMENTS_PROP_PREFIX = "arguments";
     private static final String RESULT_PROP_PREFIX = "result";
-
-    /**
-     * {@inheritDoc} 
-     */
-    public Class<? extends APIOperation> getAPIOperation() {
-        return ScriptOnResourceApiOp.class;
-    }
     
     /**
      * {@inheritDoc} 
@@ -84,7 +77,7 @@ public class ScriptOnResourceApiOpTests extends AbstractSimpleTest {
     @Test
     public void testRunScript() {
         // run test only in case operation is supported
-        if (ConnectorHelper.operationSupported(getConnectorFacade(), getAPIOperation())) {
+        if (ConnectorHelper.operationsSupported(getConnectorFacade(), getAPIOperations())) {
             try {
                 // get test properties - optional
                 // if a property is not found test is skipped
@@ -123,7 +116,7 @@ public class ScriptOnResourceApiOpTests extends AbstractSimpleTest {
     @Test
     public void testRunScriptFailUnknownLanguage() {
         // run test only in case operation is supported
-        if (ConnectorHelper.operationSupported(getConnectorFacade(), getAPIOperation())) {
+        if (ConnectorHelper.operationsSupported(getConnectorFacade(), getAPIOperations())) {
             try {
                 getConnectorFacade().runScriptOnResource(
                         new ScriptContext("NONEXISTING LANGUAGE", "script",
@@ -146,7 +139,7 @@ public class ScriptOnResourceApiOpTests extends AbstractSimpleTest {
     @Test
     public void testRunScriptFailEmptyScriptText() {
         // run test only in case operation is supported
-        if (ConnectorHelper.operationSupported(getConnectorFacade(), getAPIOperation())) {
+        if (ConnectorHelper.operationsSupported(getConnectorFacade(), getAPIOperations())) {
             try {
                 getConnectorFacade().runScriptOnResource(
                         new ScriptContext("LANGUAGE", "", new HashMap<String, Object>()), null);

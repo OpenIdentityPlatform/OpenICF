@@ -390,14 +390,6 @@ public class MultiOpTests extends ObjectClassRunner {
         }
 
     }
-
-    /**
-     * {@inheritDoc}     
-     */
-    @Override
-    public Class<? extends APIOperation> getAPIOperation() {
-        return _apiOp;
-    }
     
     /**
      * {@inheritDoc}     

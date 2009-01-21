@@ -57,13 +57,6 @@ public class GetApiOpTests extends ObjectClassRunner {
         super(oclass);
     }
 
-    /**
-     * {@inheritDoc}     
-     */
-    @Override
-    public Class<? extends APIOperation> getAPIOperation() {
-        return GetApiOp.class;
-    }
     
     /**
      * {@inheritDoc}     

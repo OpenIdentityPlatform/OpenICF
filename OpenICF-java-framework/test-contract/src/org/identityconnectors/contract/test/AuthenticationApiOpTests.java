@@ -72,14 +72,6 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
     public AuthenticationApiOpTests(ObjectClass oclass) {
         super(oclass);
     }
-
-    /**
-     * {@inheritDoc}     
-     */
-    @Override
-    public Class<? extends APIOperation> getAPIOperation() {
-        return AuthenticationApiOp.class;
-    }
     
     /**
      * {@inheritDoc}     

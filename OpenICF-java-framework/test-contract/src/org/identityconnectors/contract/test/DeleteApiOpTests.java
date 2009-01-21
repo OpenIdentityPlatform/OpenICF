@@ -57,14 +57,6 @@ public class DeleteApiOpTests extends ObjectClassRunner {
     public DeleteApiOpTests(ObjectClass oclass) {
         super(oclass);
     }
-
-    /**
-     * {@inheritDoc}     
-     */
-    @Override
-    public Class<? extends APIOperation> getAPIOperation() {
-        return DeleteApiOp.class;
-    }
     
     /**
      * {@inheritDoc}     

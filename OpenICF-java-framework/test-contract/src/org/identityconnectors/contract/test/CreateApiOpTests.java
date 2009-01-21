@@ -68,14 +68,6 @@ public class CreateApiOpTests extends ObjectClassRunner {
         requiredOps.add(GetApiOp.class);
         return requiredOps;
     }
-    
-    /**
-     * {@inheritDoc}     
-     */
-    @Override
-    public Class<? extends APIOperation> getAPIOperation() {
-        return CreateApiOp.class;
-    }
         
     /**
      * {@inheritDoc}

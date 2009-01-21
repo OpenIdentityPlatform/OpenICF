@@ -64,7 +64,7 @@ public class ValidateApiOpTests extends AbstractSimpleTest {
     @Test
     public void testValidateFail() {
         // run test only in case operation is supported
-        if (ConnectorHelper.operationSupported(getConnectorFacade(), getAPIOperation())) {
+        if (ConnectorHelper.operationsSupported(getConnectorFacade(), getAPIOperations())) {
             // create connector with invalid configuration            
             _connFacade = ConnectorHelper.createConnectorFacadeWithWrongConfiguration(getDataProvider(), getIterationNumber());
             try {
@@ -81,14 +81,6 @@ public class ValidateApiOpTests extends AbstractSimpleTest {
             LOG.info("Skipping test ''testValidateFail''.");
             LOG.info("--------------------------------");
         }
-    }
-    
-    /**
-     * {@inheritDoc}     
-     */
-    @Override
-    public Class<? extends APIOperation> getAPIOperation() {
-        return ValidateApiOp.class;
     }
     
     /**

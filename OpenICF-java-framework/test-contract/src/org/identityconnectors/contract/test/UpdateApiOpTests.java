@@ -71,14 +71,6 @@ public class UpdateApiOpTests extends ObjectClassRunner {
      * {@inheritDoc}     
      */
     @Override
-    public Class<? extends APIOperation> getAPIOperation() {
-        return UpdateApiOp.class;
-    }
-    
-    /**
-     * {@inheritDoc}     
-     */
-    @Override
     public Set<Class<? extends APIOperation>> getAPIOperations() {
         Set<Class<? extends APIOperation>> s = new HashSet<Class<? extends APIOperation>>();
         // list of required operations by this test:
@@ -199,8 +191,8 @@ public class UpdateApiOpTests extends ObjectClassRunner {
      */
     @Test
     public void testUpdateToNull() {
-        if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(),
-                getAPIOperation())) {
+        if (ConnectorHelper.operationsSupported(getConnectorFacade(), getObjectClass(),
+                getAPIOperations())) {
             ConnectorObject obj = null;
             Uid uid = null;
 
@@ -280,7 +272,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
      */
     @Test
     public void testUpdateToSameAttributes() {
-        if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), getAPIOperation())) {
+        if (ConnectorHelper.operationsSupported(getConnectorFacade(), getObjectClass(), getAPIOperations())) {
             Uid uid1 = null;
             Uid uid2 = null;
             

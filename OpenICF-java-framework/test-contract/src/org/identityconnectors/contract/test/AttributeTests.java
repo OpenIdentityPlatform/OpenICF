@@ -87,15 +87,6 @@ public class AttributeTests extends ObjectClassRunner {
     public AttributeTests(ObjectClass oclass) {
         super(oclass);
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Class<? extends APIOperation> getAPIOperation() {
-        return CreateApiOp.class; // because without create the tests could
-        // not be run.
-    }
     
     @Override
     public Set<Class<? extends APIOperation>> getAPIOperations() {

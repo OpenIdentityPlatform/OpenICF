@@ -82,14 +82,6 @@ public class SchemaApiOpTests extends AbstractSimpleTest {
     private static final String ATTRIBUTE_FIELD_UPDATEABLE = "updateable";
     private static final String ATTRIBUTE_FILED_READABLE = "readable";
     private static final String ATTRIBUTE_FIELD_TYPE = "type";
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Class<? extends APIOperation> getAPIOperation() {
-        return SchemaApiOp.class;
-    }
     
     /**
      * {@inheritDoc}

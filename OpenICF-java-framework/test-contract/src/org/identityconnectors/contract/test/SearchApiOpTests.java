@@ -73,14 +73,6 @@ public class SearchApiOpTests extends ObjectClassRunner {
     public SearchApiOpTests(ObjectClass oclass) {
         super(oclass);
     }
-
-    /**
-     * {@inheritDoc}     
-     */
-    @Override
-    public Class<? extends APIOperation> getAPIOperation() {
-        return SearchApiOp.class;
-    }
     
     /**
      * {@inheritDoc}     

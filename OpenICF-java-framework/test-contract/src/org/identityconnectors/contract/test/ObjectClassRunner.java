@@ -31,6 +31,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.contract.exceptions.ContractException;
 import org.identityconnectors.framework.api.operations.APIOperation;
@@ -62,7 +63,7 @@ public abstract class ObjectClassRunner extends AbstractSimpleTest {
     private final ObjectClass _objectClass;
     private ObjectClassInfo _objectClassInfo;
     private ObjectClass _supportedObjectClass;    
-    private boolean _ocSupported;
+    private boolean _ocSupported = false;
     
 
     /**
@@ -78,17 +79,39 @@ public abstract class ObjectClassRunner extends AbstractSimpleTest {
     @Before
     public void init() {
         super.init();
-        Set<ObjectClassInfo> oinfos = getSchema().getSupportedObjectClassesByOperation(getAPIOperation());
+
+        // get all the required operations for current contract test
+        Set<Class<? extends APIOperation>> apiOps = getAPIOperations();
+        /** set of objectclasses that support all apiOps required by current test */
+        Set<ObjectClassInfo> oinfos = null;
+
+        // Create an intersection of supported objectclasses by the connector.
+        // These objectclasses should support all apioperations.
+        for (Class<? extends APIOperation> apiOperation : apiOps) {
+            if (oinfos == null) {
+                oinfos = getSchema().getSupportedObjectClassesByOperation(
+                        apiOperation);
+            } else {
+                Set<ObjectClassInfo> currOinfos = getSchema()
+                        .getSupportedObjectClassesByOperation(apiOperation);
+                Set<ObjectClassInfo> tmp = CollectionUtil.intersection(oinfos, currOinfos);
+                oinfos = tmp;
+            }
+        }
+
+        // Find the objectclass in set of supported objectclasses (oinfos),
+        // that is currently tested. If it is present set the indicator _ocSupported accordingly.
         for (Iterator<ObjectClassInfo> it = oinfos.iterator(); it.hasNext();) {
             _objectClassInfo = it.next();
-            _supportedObjectClass = ConnectorHelper.getObjectClassFromObjectClassInfo(_objectClassInfo);
-            if (_supportedObjectClass.equals(getObjectClass())){                
+            _supportedObjectClass = ConnectorHelper
+                    .getObjectClassFromObjectClassInfo(_objectClassInfo);
+            if (_supportedObjectClass.equals(getObjectClass())) {
                 _ocSupported = true;
                 break;
             }
         }
     }
-    
+
     /**
      * Dispose the test environment, do the cleanup
      */
@@ -209,15 +232,6 @@ public abstract class ObjectClassRunner extends AbstractSimpleTest {
      */
     public boolean isObjectClassSupported() {
         return _ocSupported;
-    }
-    
-    /**
-     * Gets supported {@link OperationOptionInfo}s by the operation
-     * 
-     * @return {@link Set<OperationOptionInfo>} set of supported options
-     */
-    public Set<OperationOptionInfo> getOperationOptions() {
-        return getSchema().getSupportedOptionsByOperation(getAPIOperation());
     }
     
     /**

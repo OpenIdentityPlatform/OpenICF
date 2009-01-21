@@ -71,12 +71,6 @@ public abstract class AbstractSimpleTest {
     }
     
     /**
-     * Ask the subclass for the {@link APIOperation}. This is the main 
-     * {@link APIOperation} tested by the subclass.
-     */
-    public abstract Class<? extends APIOperation> getAPIOperation();
-
-    /**
      * Ask the subclasses for the {@link APIOperation}.
      * Method returns set of required API operations that are prerequisites for
      * running certain contract test.

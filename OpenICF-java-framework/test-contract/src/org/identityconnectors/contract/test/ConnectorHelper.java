@@ -36,6 +36,7 @@ import java.util.Set;
 
 import junit.framework.Assert;
 
+import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
@@ -651,39 +652,47 @@ public class ConnectorHelper {
 
         return connectorFacade.create(getObjectClassFromObjectClassInfo(objectClassInfo), attributes, opOptions);
     }
-        
-  
+    
     /**
      * check to see if a particular objectclass supports a particular operation
+     * 
      * @param connectorFacade
      * @param typeQuery
      * @param operation
      * @return
      */
-    public static boolean operationSupported(ConnectorFacade connectorFacade, ObjectClass oClass, 
-            Class<? extends APIOperation> operation) {
-        boolean opSupported = false;
+    public static boolean operationSupported(ConnectorFacade connectorFacade,
+            ObjectClass oClass, Class<? extends APIOperation> operation) {
         
-        // get the schema
-        Schema schema = connectorFacade.schema();
-        Assert.assertNotNull("Connector did not return a schema", schema);
-        Set<ObjectClassInfo> ocInfoSet = schema.getSupportedObjectClassesByOperation(operation);       
+        Set<Class<? extends APIOperation>> s = new HashSet<Class<? extends APIOperation>>();
+        s.add(operation);
 
-        // for each ObjectClassInfo in the schema ...
-        for (ObjectClassInfo ocInfo : ocInfoSet) {
-            // get the type of the ObjectClassInfo
-            if (ConnectorHelper.getObjectClassFromObjectClassInfo(ocInfo).equals(oClass)) {
-                opSupported = true;
-                break;
-            } 
-        }
-        
-        return opSupported;
-    }    
+        return operationsSupported(connectorFacade, oClass, s);
+    }
     
     /**
      * check to see if a particular objectclass supports a particular operations
-     * To succedd all the operations must be supported.
+     * 
+     * @param connectorFacade
+     * @param typeQuery
+     * @param operation1
+     * @param operation2
+     * @return
+     */
+    public static boolean operationSupported(ConnectorFacade connectorFacade,
+            ObjectClass oClass, Class<? extends APIOperation> operation1,
+            Class<? extends APIOperation> operation2) {
+
+        Set<Class<? extends APIOperation>> s = new HashSet<Class<? extends APIOperation>>();
+        s.add(operation1);
+        s.add(operation2);
+
+        return operationsSupported(connectorFacade, oClass, s);
+    }
+    
+    /**
+     * check to see if a particular objectclass supports a particular operations
+     * To succeed all the operations must be supported.
      * 
      * @param connectorFacade
      * @param typeQuery
@@ -718,6 +727,9 @@ public class ConnectorHelper {
         boolean result = true;
         for (Boolean bool : opsSupported) {
             result = result & bool;
+            if (result == false) {
+                break;
+            }
         }
         
         return result;
@@ -731,6 +743,36 @@ public class ConnectorHelper {
      */
     public static boolean operationSupported(ConnectorFacade connectorFacade,
             Class<? extends APIOperation> operation) {
+        Set<Class<? extends APIOperation>> s = new HashSet<Class<? extends APIOperation>>();
+        s.add(operation);
+        
+        return operationsSupported(connectorFacade, s);
+    }
+    
+    /**
+     * check to see if ANY objectclass supports a particular operation
+     * @param connectorFacade
+     * @param operation1
+     * @param operation2
+     * @return
+     */
+    public static boolean operationSupported(ConnectorFacade connectorFacade,
+            Class<? extends APIOperation> operations1, Class<? extends APIOperation> operations2) {
+        Set<Class<? extends APIOperation>> s = new HashSet<Class<? extends APIOperation>>();
+        s.add(operations1);
+        s.add(operations2);
+        
+        return operationsSupported(connectorFacade, s);
+    }
+    
+    /**
+     * check to see if ANY objectclass supports a particular operations
+     * @param connectorFacade
+     * @param operation
+     * @return
+     */
+    public static boolean operationsSupported(ConnectorFacade connectorFacade,
+            Set<Class<? extends APIOperation>> operations) {
         boolean opSupported = false;
         
         Schema schema = connectorFacade.schema();
@@ -738,7 +780,7 @@ public class ConnectorHelper {
         Set<ObjectClassInfo> objectClassInfoSet = schema.getObjectClassInfo();
         
         for(ObjectClassInfo objectClassInfo : objectClassInfoSet) {
-            if(operationSupported(connectorFacade, ConnectorHelper.getObjectClassFromObjectClassInfo(objectClassInfo), operation)) {
+            if(operationsSupported(connectorFacade, ConnectorHelper.getObjectClassFromObjectClassInfo(objectClassInfo), operations)) {
                 opSupported = true;
                 break;
             }
