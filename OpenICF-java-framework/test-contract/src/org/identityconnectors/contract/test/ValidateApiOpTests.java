@@ -30,12 +30,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.operations.APIOperation;
-import org.identityconnectors.framework.api.operations.CreateApiOp;
-import org.identityconnectors.framework.api.operations.GetApiOp;
-import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.api.operations.ValidateApiOp;
 import org.junit.Test;
 import org.junit.runner.RunWith;

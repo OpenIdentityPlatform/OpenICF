@@ -102,6 +102,13 @@ import org.junit.Assert;
  * will be converted with toString() method to the output.
  * </p>
  * <p>
+ * <strong>
+ * Snapshots of queried properties -- usage:
+ * </strong>
+ * add switch <code>-Dtest.parameters.outQueriedFile=dumpedq.properties</code>
+ * as an ANT parameter. The result snapshot file will be included in the connector's directory.
+ * </p>
+ * <p>
  * <strong>default values</strong> -- these values reside in file bootstrap.groovy. 
  * When the property foo.bar.boo is queried the following queries are executed:
  * <pre>

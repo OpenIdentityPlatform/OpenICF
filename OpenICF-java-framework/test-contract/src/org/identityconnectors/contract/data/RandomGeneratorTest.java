@@ -24,8 +24,6 @@ package org.identityconnectors.contract.data;
 
 import junit.framework.Assert;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -35,22 +33,11 @@ import org.junit.Test;
  * 
  */
 public class RandomGeneratorTest {
-    private static RandomGenerator rg;
-
-    @Before
-    public void setUp() {
-        rg = new RandomGenerator();
-    }
-
-    @After
-    public void tearDown() {
-        rg = null;
-    }
 
     @Test
     public void testRandomLongGenerator() {
         {
-            Object o = rg.generate("#####", Long.class);
+            Object o = RandomGenerator.generate("#####", Long.class);
             Assert.assertNotNull(o);
             Assert.assertTrue(o instanceof Long);
             System.out.println(o.toString());
@@ -61,7 +48,7 @@ public class RandomGeneratorTest {
     @Test
     public void testRgen2() {
         {
-            Object o = rg.generate("###X##");
+            Object o = RandomGenerator.generate("###X##");
             Assert.assertNotNull(o);
             Assert.assertTrue(o.toString().contains("X"));
             System.out.println(o.toString());
@@ -71,7 +58,7 @@ public class RandomGeneratorTest {
     @Test
     public void testRgen3() {
         {
-            Object o = rg.generate("###\\.##", Float.class); // this means
+            Object o = RandomGenerator.generate("###\\.##", Float.class); // this means
                                                                 // ###\.##
             Assert.assertNotNull(o);
             Assert.assertTrue(o instanceof Float);
