@@ -201,56 +201,49 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                 uid = ConnectorHelper.createObject(getConnectorFacade(), getDataProvider(),
                         getObjectClassInfo(), getTestName(), 2, getOperationOptionsByOp(CreateApiOp.class));
                 assertNotNull("Create returned null Uid.", uid);
-
-                Set<Attribute> nullAttributes = new HashSet<Attribute>();
+                
                 for (AttributeInfo attInfo : getObjectClassInfo().getAttributeInfo()) {
                     if (attInfo.isUpdateable() && !attInfo.isRequired() && !AttributeUtil.isSpecial(attInfo)) {
-                        nullAttributes.add(AttributeBuilder.build(attInfo.getName()));
-                    }
-                }
-
-                if (nullAttributes.size() > 0) {
-                    // update only in case there is something to update
-                    nullAttributes.add(uid);
-
-                    assertTrue("no update attributes were found", (nullAttributes.size() > 0));
-                    
-                    try {
-                        Uid newUid = getConnectorFacade().update(
-                            getObjectClass(), uid, AttributeUtil.filterUid(nullAttributes),
-                            getOperationOptionsByOp(UpdateApiOp.class));
+                        Set<Attribute> nullAttributes = new HashSet<Attribute>();
+                        Attribute attr = AttributeBuilder.build(attInfo.getName());
+                        nullAttributes.add(attr);
                         
-                        LOG.info("No exception was thrown, attributes should be removed or their values set to null.");
-                        
-                        // update uid
-                        if (!newUid.equals(uid)) {
-                            uid = newUid;
-                        }
-                        
-                        // verify the change
-                        obj = getConnectorFacade().getObject(getObjectClass(), uid,
-                                getOperationOptionsByOp(GetApiOp.class));
-                        assertNotNull("Cannot retrieve updated object.", obj);
-                        
-                        // check that nulled attributes were removed or set to null
-                        for (Attribute attribute : nullAttributes) {                            
-                            if (ConnectorHelper.isReadable(getObjectClassInfo(), attribute)) {
+                        try {
+                            Uid newUid = getConnectorFacade().update(
+                                getObjectClass(), uid, nullAttributes,
+                                getOperationOptionsByOp(UpdateApiOp.class));
+                            
+                            LOG.info("No exception was thrown, attributes should be either removed or their values set to null.");
+                            
+                            // update uid
+                            if (!uid.equals(newUid)) {
+                                uid = newUid;
+                            }
+                            
+                            // verify the change
+                            obj = getConnectorFacade().getObject(getObjectClass(), uid,
+                                    getOperationOptionsByOp(GetApiOp.class));
+                            assertNotNull("Cannot retrieve updated object.", obj);
+                            
+                            // check that nulled attributes were removed or set to null             
+                            if (ConnectorHelper.isReadable(getObjectClassInfo(), attr)) {
                                 // null in case attribute is not present
-                                Attribute checkedAttribute = obj.getAttributeByName(attribute.getName());
+                                Attribute checkedAttribute = obj.getAttributeByName(attInfo.getName());
                                 final String MSG = "Attribute '%s' was neither removed nor its value set to null.";
-                                assertTrue(String.format(MSG, attribute), checkedAttribute == null || checkedAttribute.equals(attribute));
+                                assertTrue(String.format(MSG, attInfo.getName()), checkedAttribute == null || checkedAttribute.equals(attr));
                             }
                         }
+                        catch (RuntimeException ex) {
+                            // ok, this option is possible in case connector cannot neither remove the attribute entirely
+                            // nor set its value to null
+                            // every RuntimeException except for NPE is possible
+                            assertFalse(String.format("Update of attribute '%s' to null thrown NullPointerException.",
+                                    attInfo.getName()), ex instanceof NullPointerException);
+                            LOG.info(String.format("RuntimeException was thrown when trying to update '%s' to null.",
+                                                    attInfo.getName()));
+                        }  
                     }
-                    catch (IllegalArgumentException ex) {
-                        // ok, this option is possible in case connector cannot neither remove the attribute entirely
-                        // nor set its value to null
-                        LOG.info("IllegalArgumentException was thrown.");
-                    }                                                            
-                }   
-                else {
-                    LOG.info("No attributes which can be set to null for object class ''{0}''.", getObjectClass());
-                }
+                }               
             } finally {
                 if (uid != null) {
                     // finally ... get rid of the object
