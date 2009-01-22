@@ -54,4 +54,13 @@ public class DatabaseTableFilterTranslator extends DatabaseFilterTranslator {
         return config.quoteName(config.getColumnName(attribute.getName()));
     }
 
+    /* (non-Javadoc)
+     * @see org.identityconnectors.dbcommon.DatabaseFilterTranslator#getDatabaseColumnType(org.identityconnectors.framework.common.objects.Attribute, org.identityconnectors.framework.common.objects.ObjectClass, org.identityconnectors.framework.common.objects.OperationOptions)
+     */
+    @Override
+    protected Integer getDatabaseColumnType(Attribute attribute, ObjectClass oclass, OperationOptions options) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

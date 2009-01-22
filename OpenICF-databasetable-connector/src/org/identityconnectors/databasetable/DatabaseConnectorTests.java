@@ -817,7 +817,7 @@ public class DatabaseConnectorTests {
         final SyncToken latestSyncToken = facade.getLatestSyncToken(ObjectClass.ACCOUNT);
         assertNotNull(latestSyncToken);
         final Object actual = latestSyncToken.getValue();
-        assertEquals(changed.toString(), actual);        
+        assertEquals(changed,Timestamp.valueOf((String) actual));
     } 
     
     /**
@@ -1109,6 +1109,44 @@ public class DatabaseConnectorTests {
         assertEquals("getEnrolled", expected.getEnrolled(), actual.getEnrolled());
     }
 
+    
+    /**
+     * doTestTimestampColumn1 , doTestTimestampColumn2, doTestTsColAcctIter1 and 
+     * doTestTsColAcctIter2 operates on the table 'bug17551table', which was created 
+     * using the following SQL automatically.
+     *
+     * CREATE TABLE bug17551table (
+     *              Login_Id VARCHAR(50) NOT NULL, Password VARCHAR(50),
+     *              Email VARCHAR(50), time_stamp TIMESTAMP 
+     * )
+     * @throws Exception 
+     */
+    public void setupBug17551Table() throws Exception {
+        String dropTableSql = "DROP TABLE bug17551table";
+        String createTableSql = "CREATE TABLE bug17551table (Login_Id VARCHAR(50) NOT NULL, Password VARCHAR(50), Email VARCHAR(50), time_stamp TIMESTAMP)";
+
+        java.sql.Connection con = null;
+        java.sql.Statement stmt = null;
+
+        try {
+            con = DatabaseTableConnection.getConnection(newConfiguration()).getConnection();
+            stmt = con.createStatement();
+            try {
+                stmt.execute(dropTableSql);
+            }
+            catch (java.sql.SQLException sex) {
+                //expected
+            }
+            stmt.execute(createTableSql);
+        }
+        finally {
+            stmt.close();
+            stmt = null;
+            con.close();
+            con = null;
+        }
+    } 
+    
     /**
      * check validity of the schema
      * 
@@ -1143,7 +1181,7 @@ public class DatabaseConnectorTests {
                 assertNotNull("Field:" + fieldName + "  was duplicated", fa);
                 Object field = AttributeUtil.getSingleValue(fa);
                 Class<?> valueClass = field.getClass();
-                assertEquals("field: " + fieldName, attInfo.getType(), valueClass);
+                assertEquals("field: " + fieldName, valueClass, attInfo.getType());
             }
             // all the attribute has to be removed
             assertEquals("There are missing attributes which were not included in the schema ", 0, keys.size());
@@ -1171,6 +1209,7 @@ public class DatabaseConnectorTests {
     static String getResourceAsString(String res) {
         return IOUtil.getResourceAsString(DatabaseConnectorTests.class, res);
     }    
+    
     
     /**
      * Test object 
