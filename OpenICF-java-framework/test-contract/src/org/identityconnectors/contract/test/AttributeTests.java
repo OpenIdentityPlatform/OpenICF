@@ -274,20 +274,13 @@ public class AttributeTests extends ObjectClassRunner {
                     return;
                 }
                 
-            } catch (Exception ex) {
+            } catch (RuntimeException ex) {
                 /*
                  * Expected behavior: 
                  * in case non-updateable attribute is updated, Runtime exception
                  * should be thrown.
                  */
                 exceptionCaught = true;
-                if (!(ex instanceof RuntimeException)) {
-                    // WARN
-                    fail(String
-                            .format(
-                                    "Expecting RuntimeException when non-updateable attribute(s) was updated. However other exception was thrown: %s \n %s",
-                                    ex.getClass().getName(), ((logInfo != null)?logInfo.toString():"")));
-                }
             } finally {
                 if (uid != null) {
                     // finally ... get rid of the object
