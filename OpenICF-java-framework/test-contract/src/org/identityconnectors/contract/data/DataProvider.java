@@ -179,7 +179,7 @@ public interface DataProvider {
      *            Sample usage:<br>
      * 
      * <pre>
-     *     static final String DEFAULT_CONFIGURATINON = "configuration"
+     *     static final String DEFAULT_CONFIGURATINON = "configuration.init"
      *     
      *     // attempt to create the database in the directory..
      *     config = new ConnectorConfiguration();   
@@ -207,15 +207,19 @@ public interface DataProvider {
      * <p>
      * Sample usage:
      * <pre>
-     *  createAttrs = dataProvider.getAttributeSet("configuration");
+     *  createAttrs = dataProvider.getAttributeSet("account.create");
      *  
      *  //////// The groovy configuration 
      * 
-     *     // account configurations   
-     *     configuration{
-     *       init.driver="foo"    
-     *       init.hostName="bar"
-     *       init.port="boo"
+     *     // account sets   
+     *     account{
+     *       create.driver="foo"    
+     *       create.hostName="bar"
+     *       create.port="boo"
+     *       
+     *       update.driver="foo2"    
+     *       update.hostName="bar2"
+     *       update.port="boo2"
      *     } 
      * </pre>
      */
