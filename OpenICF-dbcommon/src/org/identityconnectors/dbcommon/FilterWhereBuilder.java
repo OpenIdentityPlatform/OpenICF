@@ -41,6 +41,7 @@ public class FilterWhereBuilder {
 
     private boolean in;
     private List<Object> params = new ArrayList<Object>();
+    private List<Integer> sqlTypes = new ArrayList<Integer>();
     private StringBuilder where = new StringBuilder();
   
 
@@ -71,6 +72,9 @@ public class FilterWhereBuilder {
         // The params
         params.addAll(l.getParams());
         params.addAll(r.getParams());
+        // The params
+        sqlTypes.addAll(l.getSQLTypes());
+        sqlTypes.addAll(r.getSQLTypes());
     }
     
     /**
@@ -79,6 +83,13 @@ public class FilterWhereBuilder {
     public List<Object> getParams() {
         return CollectionUtil.asReadOnlyList(params);
     }
+    
+    /**
+     * @return the params
+     */
+    public List<Integer> getSQLTypes() {
+        return CollectionUtil.asReadOnlyList(sqlTypes);
+    }    
     
     /**
      * @return the where
@@ -94,15 +105,17 @@ public class FilterWhereBuilder {
      * @see FilterWhereBuilder#getWhereClause()
      * 
      * @param name of the column
-     * @param operator an operator to compare  
+     * @param operator an operator to compare
      * @param param value to builder
+     * @param sqlType 
      * @param index 
      */
-    public void addBind(final String name, final String operator, final Object param) {
+    public void addBind(final String name, final String operator, final Object param, Integer sqlType) {
         if (param == null) throw new IllegalArgumentException("null.param.not.suported");
         where.append(name);
         where.append(" ").append(operator).append(" ?");
-        params.add(param);        
+        params.add(param);
+        sqlTypes.add(sqlType);
     }
     
     /**

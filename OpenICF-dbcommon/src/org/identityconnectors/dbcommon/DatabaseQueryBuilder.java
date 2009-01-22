@@ -206,7 +206,17 @@ public class DatabaseQueryBuilder {
         }
         return where.getParams();
     }
-    
+
+    /**
+     * The column types
+     * @return list of column types
+     */
+    public List<Integer> getSQLTypes() {
+        if(where==null) {
+            return new ArrayList<Integer>();
+        }
+        return where.getSQLTypes();
+    }    
     /**
      * The Required order by data subclass
      */

@@ -25,6 +25,8 @@ package org.identityconnectors.dbcommon;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.sql.Types;
+
 import org.junit.Test;
 
 
@@ -58,8 +60,8 @@ public class UpdateSetBuilderTest {
         assertNotNull(actual);
         
         // do the update
-        actual.addBind("test1","password(?)","val1");
-        actual.addBind("test2","max(?)","val2");
+        actual.addBind("test1","password(?)","val1", Types.CHAR);
+        actual.addBind("test2","max(?)","val2", Types.CHAR);
         
         assertNotNull(actual.getSQL());
         assertEquals("The update string","test1 = password(?) , test2 = max(?)",actual.getSQL());
@@ -78,14 +80,17 @@ public class UpdateSetBuilderTest {
         assertNotNull(actual);
 
         // do the update
-        actual.addBind(MYSQL_USER_COLUMN, NAME);
+        actual.addBind(MYSQL_USER_COLUMN, NAME, Types.CHAR);
         
         assertNotNull(actual.getSQL());
         assertEquals("The update string","User = ?",actual.getSQL());
         
         assertNotNull(actual.getParams());   
         assertNotNull(actual.getParams().get(0));
-        assertEquals("The values",NAME,actual.getParams().get(0));      
+        assertEquals("The values",NAME,actual.getParams().get(0));
+        assertNotNull(actual.getSQLTypes());   
+        assertNotNull(actual.getSQLTypes().get(0));
+        assertEquals("The values",Types.CHAR,actual.getSQLTypes().get(0).intValue());
     }
 
     /**
@@ -97,7 +102,7 @@ public class UpdateSetBuilderTest {
         assertNotNull(actual);
 
         // do the update
-        actual.addBind(MYSQL_USER_COLUMN, NAME);
+        actual.addBind(MYSQL_USER_COLUMN, NAME, Types.CHAR);
 
         
         assertNotNull(actual.getParams());

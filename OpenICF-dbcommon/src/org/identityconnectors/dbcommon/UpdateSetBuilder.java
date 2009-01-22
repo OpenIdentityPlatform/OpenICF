@@ -38,42 +38,38 @@ import org.identityconnectors.common.CollectionUtil;
  */
 public class UpdateSetBuilder {
     private List<Object> params = new ArrayList<Object>();
+    private List<Integer> sqlTypes = new ArrayList<Integer>();
     private StringBuilder set = new StringBuilder();
-    
-    /**
-     * @return the params
-     */
-    public List<Object> getParams() {
-        return CollectionUtil.newReadOnlyList(params);
-    }
     
     /**
      * Add column name and value pair
      * The names are quoted using the {@link #columnQuote} value
      * 
      * @param name name
-     * @param value value
-     * @param index 
+     * @param param value
+     * @param sqlType
      * @return self
      */
-    public UpdateSetBuilder addBind(String name, Object value) {
-        return addBind(name,"?", value);
+    public UpdateSetBuilder addBind(String name, Object param, Integer sqlType) {
+        return addBind(name,"?", param, sqlType);
     }
 
     /**
      * Add column name and expression value pair
      * The names are quoted using the {@link #columnQuote} value
      * @param name of the column
-     * @param expression the Comparable expression
+     * @param value the Comparable expression
      * @param param the value to bind
+     * @param sqlType the SQL database type
      * @return self
      */
-    public UpdateSetBuilder addBind(String name, String expression, Object param) {
+    public UpdateSetBuilder addBind(String name, Object value, Object param, Integer sqlType) {
         if(set.length()>0) {
             set.append(" , ");
         }
-        set.append(name).append(" = ").append(expression);
+        set.append(name).append(" = ").append(value);
         params.add(param);
+        sqlTypes.add(sqlType);
         return this;
     }    
     
@@ -83,5 +79,29 @@ public class UpdateSetBuilder {
      */
     public String getSQL() {
         return set.toString();
+    }
+
+    /**
+     * @param value
+     * @param sqlType
+     */
+    public void addValue(String value, int sqlType) {
+        params.add(value);
+        sqlTypes.add(sqlType);
+    }
+
+    
+    /**
+     * @return the param values
+     */
+    public List<Object> getParams() {
+        return CollectionUtil.newReadOnlyList(params);
+    }
+    
+    /**
+     * @return the sqlTypes
+     */
+    public List<Integer> getSQLTypes() {
+        return CollectionUtil.newReadOnlyList(sqlTypes);
     }
 }

@@ -38,6 +38,7 @@ import org.identityconnectors.common.CollectionUtil;
  */
 public class InsertIntoBuilder {
     private List<Object> params = new ArrayList<Object>();
+    private List<Integer> sqlTypes = new ArrayList<Integer>();
     private StringBuilder into = new StringBuilder();
     private StringBuilder values = new StringBuilder();
     private boolean first = true;
@@ -47,9 +48,10 @@ public class InsertIntoBuilder {
      * 
      * @param name name
      * @param param parameter
+     * @param sqlType 
      * @return self, builder pattern
      */
-    public InsertIntoBuilder addBind(String name, Object param) {
+    public InsertIntoBuilder addBind(String name, Object param, Integer sqlType) {
         if(!first) {
             into.append(", ");
             values.append(", ");
@@ -57,6 +59,7 @@ public class InsertIntoBuilder {
         into.append(name);
         values.append("?");
         params.add(param);
+        sqlTypes.add(sqlType);
         first = false;
         return this;
     }
@@ -78,9 +81,16 @@ public class InsertIntoBuilder {
     }
 
     /**
-     * @return the values
+     * @return the param values
      */
     public List<Object> getParams() {
         return CollectionUtil.asReadOnlyList(params);
+    }
+
+    /**
+     * @return the sqlTypes
+     */
+    public List<Integer> getSQLTypes() {
+        return CollectionUtil.asReadOnlyList(sqlTypes);
     }
 }

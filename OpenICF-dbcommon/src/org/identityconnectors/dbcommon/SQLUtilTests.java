@@ -33,6 +33,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
@@ -158,14 +159,13 @@ public class SQLUtilTests {
      * @throws SQLException 
      */
     @Test
-    public void testConvertBlobToAttribute() throws SQLException {
+    public void testConvertBlob() throws SQLException {
         ExpectProxy<Blob> tb = new ExpectProxy<Blob>();
         byte[] expected = new byte[] {'a','h','o','j'};
         final ByteArrayInputStream is = new ByteArrayInputStream(expected);
         tb.expectAndReturn("getBinaryStream", is);
         Blob blob = tb.getProxy(Blob.class);
-        Attribute actual = SQLUtil.convertToAttribute("test", blob);
-        final Object object = AttributeUtil.getSingleValue(actual);
+        final Object object = SQLUtil.jdbc2Attribute( blob);
         assertEquals(expected[0], ((byte[]) object)[0]);
         assertEquals(expected[3], ((byte[]) object)[3]);
         assertTrue(tb.isDone());
@@ -178,8 +178,7 @@ public class SQLUtilTests {
     @Test
     public void testConvertSringToAttribute() throws SQLException {
         String expected = "test";
-        Attribute actual = SQLUtil.convertToAttribute(expected, expected);
-        final Object object = AttributeUtil.getSingleValue(actual);
+        final Object object = SQLUtil.jdbc2Attribute(expected);
         assertEquals(expected, object);
     }
 
@@ -190,24 +189,10 @@ public class SQLUtilTests {
     @Test
     public void testConvertDateToAttribute() throws SQLException {
         Timestamp src = new Timestamp(System.currentTimeMillis());
-        Attribute actual = SQLUtil.convertToAttribute("test", src);
-        final Object object = AttributeUtil.getSingleValue(actual);
+        final Object object = SQLUtil.jdbc2Attribute( src);
         assertEquals(SQLUtil.timestamp2String(src).toString(), object);
     }    
-    
-    /**
-     * Test method
-     * @throws SQLException 
-     */
-    @Test
-    public void testConvertTimestampClassNameToJDBC() {
-        Timestamp expected = new Timestamp(System.currentTimeMillis());
-        String src = SQLUtil.timestamp2String(expected);
-        Object actual = SQLUtil.convertToJDBC(src, expected.getClass().getName());
-        assertNotNull(actual);
-        assertEquals(expected.getClass(), actual.getClass());
-        assertEquals(expected, actual);
-    }   
+
     
     /**
      * Test method
@@ -217,7 +202,7 @@ public class SQLUtilTests {
     public void testConvertTimestampToJDBC() {
         Timestamp expected = new Timestamp(System.currentTimeMillis());
         String src = SQLUtil.timestamp2String(expected);
-        Object actual = SQLUtil.convertToJDBC(src, expected.getClass());
+        Object actual = SQLUtil.string2Timestamp(src);
         assertNotNull(actual);
         assertEquals(expected.getClass(), actual.getClass());
         assertEquals(expected, actual);
@@ -227,38 +212,15 @@ public class SQLUtilTests {
      * @throws SQLException 
      */
     @Test
-    public void testConvertDateToJDBC() {
-        java.sql.Date expected = new java.sql.Date(System.currentTimeMillis());
-        String src = SQLUtil.date2String(expected);
-        Object actual = SQLUtil.convertToJDBC(src, expected.getClass());
-        assertNotNull(actual);
-        assertEquals(expected.getClass(), actual.getClass());
-        assertEquals(expected.toString(), actual.toString());
-    }    
-    
-    /**
-     * Test method
-     * @throws SQLException 
-     */
-    @Test
-    public void testConvertUtilDateToJDBC() {
+    public void testConvertDate() {
         java.util.Date expected = new java.util.Date(System.currentTimeMillis());
         String src = SQLUtil.utilDate2String(expected);
-        Object actual = SQLUtil.convertToJDBC(src, expected.getClass());
+        Object actual = SQLUtil.string2UtilDate(src);
         assertNotNull(actual);
         assertEquals(expected.getClass(), actual.getClass());
         assertEquals(expected.toString(), actual.toString());
-    }  
-    
-    /**
-     * Test method
-     * @throws SQLException 
-     */
-    @Test
-    public void testConvertNullToJDBC() {
-        Object actual = SQLUtil.convertToJDBC(null, Long.class);
-        assertNull(actual);
     }    
+
     
     /**
      * Test method
@@ -268,39 +230,11 @@ public class SQLUtilTests {
     public void testConvertSqlDateToJDBC() {
         java.sql.Date expected = new java.sql.Date(System.currentTimeMillis());
         String src = SQLUtil.date2String(expected);
-        Object actual = SQLUtil.convertToJDBC(src, expected.getClass());
+        Object actual = SQLUtil.string2Date(src);
         assertNotNull(actual);
         assertEquals(expected.getClass(), actual.getClass());
         assertEquals(expected.toString(), actual.toString());
     }  
-   
-        
-    /**
-     * Test method
-     * @throws SQLException 
-     */
-    @Test
-    public void testConvertStringToJDBC() {
-        String expected = "test";
-        Object actual = SQLUtil.convertToJDBC(expected, expected.getClass());
-        assertNotNull(actual);
-        assertEquals(expected.getClass(), actual.getClass());
-        assertEquals(expected, actual);
-    }  
-
-    /**
-     * Test method
-     * @throws SQLException 
-     */
-    @Test
-    public void testConvertLongToJDBC() {
-        Long expected = 10l;
-        Object actual = SQLUtil.convertToJDBC(expected, expected.getClass());
-        assertNotNull(actual);
-        assertEquals(expected.getClass(), actual.getClass());
-        assertEquals(expected, actual);
-    }     
-    
 
     /**
      * Test method
@@ -386,9 +320,11 @@ public class SQLUtilTests {
         trs.expectAndReturn("getMetaData",metaDataProxy);
         trsmd.expectAndReturn("getColumnCount", 2);
         trsmd.expectAndReturn("getColumnName", TEST1);
-        trs.expectAndReturn("getObject", TEST_VAL1);
+        trsmd.expectAndReturn("getColumnType", Types.VARCHAR);
+        trs.expectAndReturn("getString", TEST_VAL1);
         trsmd.expectAndReturn("getColumnName", TEST2);        
-        trs.expectAndReturn("getObject", TEST_VAL2);
+        trsmd.expectAndReturn("getColumnType", Types.VARCHAR);
+        trs.expectAndReturn("getString", TEST_VAL2);
         
         final Set<Attribute> actual = SQLUtil.getAttributeSet(resultSetProxy);
         assertTrue(trs.isDone());

@@ -25,6 +25,8 @@ package org.identityconnectors.dbcommon;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.sql.Types;
+
 import org.junit.Test;
 
 /**
@@ -57,7 +59,7 @@ public class InsertIntoBuilderTest {
         assertNotNull(actual);
 
         // do the update
-        actual.addBind("test1", "val1");
+        actual.addBind("test1", "val1", Types.CHAR);
 
         assertNotNull(actual.getInto());
         assertEquals("The update string", "test1", actual.getInto());
@@ -68,6 +70,10 @@ public class InsertIntoBuilderTest {
         assertNotNull(actual.getParams());
         assertEquals("The count", 1, actual.getParams().size());
         assertEquals("The val", "val1", actual.getParams().get(0));
+        
+        assertNotNull(actual.getSQLTypes());
+        assertEquals("The count", 1, actual.getSQLTypes().size());
+        assertEquals("The val", Types.CHAR, actual.getSQLTypes().get(0).intValue());
     }
 
     /**
@@ -79,8 +85,8 @@ public class InsertIntoBuilderTest {
         assertNotNull(actual);
 
         // do the update
-        actual.addBind("test1", "val1");
-        actual.addBind("test2", "val2");
+        actual.addBind("test1", "val1", Types.CHAR);
+        actual.addBind("test2", "val2", Types.VARCHAR);
 
         assertNotNull(actual.getInto());
         assertEquals("The update string", "test1, test2", actual.getInto());
@@ -92,5 +98,10 @@ public class InsertIntoBuilderTest {
         assertEquals("The count", 2, actual.getParams().size());
         assertEquals("The val", "val1", actual.getParams().get(0));
         assertEquals("The val", "val2", actual.getParams().get(1));
+        assertNotNull(actual.getParams());
+        
+        assertEquals("The count", 2, actual.getSQLTypes().size());
+        assertEquals("The val", Types.CHAR, actual.getSQLTypes().get(0).intValue());
+        assertEquals("The val", Types.VARCHAR, actual.getSQLTypes().get(1).intValue());
     }
 }

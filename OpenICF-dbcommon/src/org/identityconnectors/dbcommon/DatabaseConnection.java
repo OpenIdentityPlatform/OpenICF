@@ -131,9 +131,23 @@ public class DatabaseConnection  {
         final List<Object> out = new ArrayList<Object>();
         final String nomalized = SQLUtil.normalizeNullValues(sql, params, out);
         final PreparedStatement prepareStatement = getConnection().prepareStatement(nomalized);
-        SQLUtil.setParams(prepareStatement, out);
+        SQLUtil.setParams(prepareStatement, out, null);
         return prepareStatement;
     }
+    
+    /**
+     * Indirect call of prepare statement with mapped prepare statement parameters
+     * @param sql a <CODE>String</CODE> sql statement definition
+     * @param params the bind parameter values
+     * @param sqlTypes 
+     * @return return a prepared statement
+     * @throws SQLException an exception in statement
+     */
+    public PreparedStatement prepareStatement(final String sql, final List<Object> params, final List<Integer> sqlTypes) throws SQLException {
+        final PreparedStatement prepareStatement = getConnection().prepareStatement(sql);
+        SQLUtil.setParams(prepareStatement, params, sqlTypes);
+        return prepareStatement;
+    }    
     
     
     /**
@@ -143,7 +157,7 @@ public class DatabaseConnection  {
      * @throws SQLException an exception in statement
      */
     public PreparedStatement prepareStatement(DatabaseQueryBuilder query) throws SQLException {
-        return prepareStatement(query.getSQL(), query.getParams());
+        return prepareStatement(query.getSQL(), query.getParams(), query.getSQLTypes());
     }
         
     
@@ -158,9 +172,23 @@ public class DatabaseConnection  {
         final List<Object> out = new ArrayList<Object>();
         final String nomalized = SQLUtil.normalizeNullValues(sql, params, out);
         final CallableStatement prepareCall = getConnection().prepareCall(nomalized);
-        SQLUtil.setParams(prepareCall, out);
+        SQLUtil.setParams(prepareCall, out, null);
         return prepareCall;
     }    
+    
+    /**
+     * Indirect call of prepareCall statement with mapped callable statement parameters
+     * @param sql a <CODE>String</CODE> sql statement definition
+     * @param params the bind parameter values
+     * @param sqlTypes 
+     * @return return a callable statement
+     * @throws SQLException an exception in statement
+     */
+    public CallableStatement prepareCall(final String sql, final List<Object> params, final List<Integer> sqlTypes) throws SQLException {
+        final CallableStatement prepareCall = getConnection().prepareCall(sql);
+        SQLUtil.setParams(prepareCall, params, sqlTypes);
+        return prepareCall;
+    }        
     
     
     /**

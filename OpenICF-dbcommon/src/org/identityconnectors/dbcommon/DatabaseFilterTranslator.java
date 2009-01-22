@@ -22,6 +22,8 @@
  */
 package org.identityconnectors.dbcommon;
 
+import java.sql.Types;
+
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -94,14 +96,20 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         final String dbname = getDatabaseColumnName(attribute, oclass, options);
         if (dbname == null) {
             return null;
-        }        
+        }
+        
+        Integer sqlType = getDatabaseColumnType(attribute, oclass, options);
+        if (sqlType == null) {
+            sqlType = Types.NULL;
+        }
+        
         final FilterWhereBuilder ret = createBuilder();
         if (not) ret.getWhere().append("NOT ");
         if (value == null) {
             ret.addNull(dbname);
             return ret;
         }
-        ret.addBind(dbname, "=", value);
+        ret.addBind(dbname, "=", value, sqlType);
         return ret;
     }
    
@@ -120,6 +128,12 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if (value == null) {
             return null;
         }        
+        
+        Integer sqlType = getDatabaseColumnType(attribute, oclass, options);
+        if (sqlType == null) {
+            sqlType = Types.NULL;
+        }
+                
         final FilterWhereBuilder ret = createBuilder();
         if (not) ret.getWhere().append("NOT ");
         //To be sure, this is not already quoted
@@ -129,7 +143,7 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if(!value.endsWith("%")) {
             value = value + "%";
         }
-        ret.addBind(dbname, "LIKE", value);
+        ret.addBind(dbname, "LIKE", value, sqlType);
         return ret;
     }
     
@@ -142,7 +156,13 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         final String dbname = getDatabaseColumnName(attribute, oclass, options);
         if (dbname == null) {
             return null;
-        }        
+        }
+        
+        Integer sqlType = getDatabaseColumnType(attribute, oclass, options);
+        if (sqlType == null) {
+            sqlType = Types.NULL;
+        }
+                
         String value = AttributeUtil.getAsStringValue(attribute);
         //Null value filter is not supported
         if (value == null) {
@@ -154,7 +174,7 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if(!value.startsWith("%")) {
             value = "%" + value;
         }
-        ret.addBind(dbname, "LIKE", value);
+        ret.addBind(dbname, "LIKE", value, sqlType);
         return ret;
     }
     
@@ -167,7 +187,13 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         final String dbname = getDatabaseColumnName(attribute, oclass, options);
         if (dbname == null) {
             return null;
-        }     
+        }
+        
+        Integer sqlType = getDatabaseColumnType(attribute, oclass, options);
+        if (sqlType == null) {
+            sqlType = Types.NULL;
+        }
+                
         String value = AttributeUtil.getAsStringValue(attribute);
         //Null value filter is not supported
         if (value == null) {
@@ -179,7 +205,7 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if(!value.endsWith("%")) {
             value = value + "%";
         }
-        ret.addBind(dbname, "LIKE", value);
+        ret.addBind(dbname, "LIKE", value, sqlType);
         return ret;
     }
     
@@ -192,7 +218,12 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         final String dbname = getDatabaseColumnName(attribute, oclass, options);
         if (dbname == null) {
             return null;
-        }   
+        }  
+        Integer sqlType = getDatabaseColumnType(attribute, oclass, options);
+        if (sqlType == null) {
+            sqlType = Types.NULL;
+        }
+                
         final String value = AttributeUtil.getAsStringValue(attribute);
         //Null value filter is not supported
         if (value == null) {
@@ -200,7 +231,7 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         }        
         final FilterWhereBuilder ret = createBuilder();
         final String op = not ? "<=" : ">";
-        ret.addBind(dbname, op, value);
+        ret.addBind(dbname, op, value, sqlType);
         return ret;
     }
     
@@ -214,6 +245,11 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if (dbname == null) {
             return null;
         }        
+        Integer sqlType = getDatabaseColumnType(attribute, oclass, options);
+        if (sqlType == null) {
+            sqlType = Types.NULL;
+        }
+                
         final String value = AttributeUtil.getAsStringValue(attribute);
         //Null value filter is not supported
         if (value == null) {
@@ -221,7 +257,7 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         }        
         final FilterWhereBuilder ret = createBuilder();
         final String op = not ? "<" : ">=";
-        ret.addBind(dbname, op, value);
+        ret.addBind(dbname, op, value, sqlType);
         return ret;
     }
     
@@ -234,7 +270,12 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         final String dbname = getDatabaseColumnName(attribute, oclass, options);
         if (dbname == null) {
             return null;
-        }      
+        }
+        Integer sqlType = getDatabaseColumnType(attribute, oclass, options);
+        if (sqlType == null) {
+            sqlType = Types.NULL;
+        }
+        
         final String value = AttributeUtil.getAsStringValue(attribute);
         //Null value filter is not supported
         if (value == null) {
@@ -242,7 +283,7 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         }         
         final FilterWhereBuilder ret = createBuilder();
         final String op = not ? ">=" : "<";
-        ret.addBind(dbname, op, value);
+        ret.addBind(dbname, op, value, sqlType);
         return ret;
     }
     
@@ -256,6 +297,12 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if (dbname == null) {
             return null;
         }
+        
+        Integer sqlType = getDatabaseColumnType(attribute, oclass, options);
+        if (sqlType == null) {
+            sqlType = Types.NULL;
+        }
+        
         final String value = AttributeUtil.getAsStringValue(attribute);
         //Null value filter is not supported
         if (value == null) {
@@ -263,7 +310,7 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         }         
         final FilterWhereBuilder ret = createBuilder();
         final String op = not ? ">" : "<=";
-        ret.addBind(dbname, op, value);
+        ret.addBind(dbname, op, value, sqlType);
         return ret;
     }
     
@@ -274,6 +321,14 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
      */
     protected abstract String getDatabaseColumnName(Attribute attribute, ObjectClass oclass, OperationOptions options);
 
+    /**
+     * Get the name of database column type
+     * @param attribute to translate
+     * @return the expected column type or Types.NULL if cast to type is not required
+     * {@link java.sql.Types} 
+     */
+    protected abstract Integer getDatabaseColumnType(Attribute attribute, ObjectClass oclass, OperationOptions options);
+    
     /**
      * Validate the attribute to supported search types
      * @param singleValue

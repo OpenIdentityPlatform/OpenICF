@@ -26,6 +26,7 @@ import static org.identityconnectors.framework.common.objects.AttributeBuilder.b
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.*;
 import static org.junit.Assert.assertEquals;
 
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -232,6 +233,11 @@ public class DatabaseFilterTranslatorTests {
             @Override
             protected String getDatabaseColumnName(Attribute attribute, ObjectClass oclass, OperationOptions options) {
                 return attribute.getName();
+            }
+
+            @Override
+            protected Integer getDatabaseColumnType(Attribute attribute, ObjectClass oclass, OperationOptions options) {
+                return Types.CHAR;
             }
 
         };
