@@ -22,6 +22,8 @@
  */
 package org.identityconnectors.framework.common.objects;
 
+import java.util.Locale;
+
 /**
  * An instance of <code>ObjectClass</code> 
  * specifies a <i>category or type</i> of {@link ConnectorObject}.
@@ -160,7 +162,7 @@ public final class ObjectClass {
      * @return The display name key.
      */
     public String getDisplayNameKey() {
-        return "MESSAGE_OBJECT_CLASS_"+_type.toUpperCase();
+        return "MESSAGE_OBJECT_CLASS_"+_type.toUpperCase(Locale.US);
     }
     
     /**
@@ -173,12 +175,13 @@ public final class ObjectClass {
      *         that of the one in this {@link ObjectClass}.
      */
     public boolean is(String name) {
-        return _type.equalsIgnoreCase(name);    
+        return _type.toUpperCase(LocaleCache.getInstance()).equals(
+                name.toUpperCase(LocaleCache.getInstance()));
     }
     
     @Override
     public int hashCode() {
-        return _type.toUpperCase().hashCode();
+        return _type.toUpperCase(LocaleCache.getInstance()).hashCode();
     }
     
     @Override

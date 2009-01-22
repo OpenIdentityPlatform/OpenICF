@@ -22,17 +22,25 @@
  */
 package org.identityconnectors.framework.common.objects;
 
+import static org.identityconnectors.framework.common.objects.LocaleTestUtil.resetLocaleCache;
 import static org.junit.Assert.*;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
+import org.junit.Before;
 import org.junit.Test;
 
 /**
  * Make sure to test various methods of the object class.
  */
 public class ObjectClassTests {
+
+    @Before
+    public void before() {
+        resetLocaleCache();
+    }
 
     @Test
     public void testIs() {
@@ -74,4 +82,32 @@ public class ObjectClassTests {
 		set.add(new ObjectClass("Group"));
 		assertTrue(1 == set.size());
 	}
+
+    @Test
+    public void testEqualsObservesLocale() {
+        Locale defLocale = Locale.getDefault();
+        try {
+            Locale.setDefault(new Locale("tr"));
+            ObjectClass oc1 = new ObjectClass("i");
+            ObjectClass oc2 = new ObjectClass("I");
+            assertFalse(oc1.equals(oc2));
+        } finally {
+            Locale.setDefault(defLocale);
+        }
+    }
+
+    @Test
+    public void testHashCodeIndependentOnLocale() {
+        Locale defLocale = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.US);
+            final ObjectClass attribute = new ObjectClass("i");
+            final int hash1 = attribute.hashCode();
+            Locale.setDefault(new Locale("tr"));
+            int hash2 = attribute.hashCode();
+            assertEquals(hash1, hash2);
+        } finally {
+            Locale.setDefault(defLocale);
+        }
+    }
 }

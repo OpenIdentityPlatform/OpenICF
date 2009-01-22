@@ -22,11 +22,13 @@
  */
 package org.identityconnectors.test.framework.common.objects;
 
+import static org.identityconnectors.framework.common.objects.LocaleTestUtil.resetLocaleCache;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,10 +40,16 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 
 public class ObjectClassInfoTests {
+
+    @Before
+    public void before() {
+        resetLocaleCache();
+    }
 
     @Test(expected = IllegalArgumentException.class)
     public void testNoName() {
@@ -86,36 +94,54 @@ public class ObjectClassInfoTests {
     
     @Test
     public void testEquals() {
-        
         // Test type case-insensitivity
-        ObjectClassInfoBuilder bld = new ObjectClassInfoBuilder();
-        bld.addAttributeInfo(AttributeInfoBuilder.build("bob"));
-        bld.setType("group");
-        ObjectClassInfo oci_lower = bld.build();
+        ObjectClassInfo oci_lower = build("group");
+        ObjectClassInfo oci_upper = build("Group");
 
-        bld = new ObjectClassInfoBuilder();
-        bld.addAttributeInfo(AttributeInfoBuilder.build("bob"));
-        bld.setType("Group");
-        ObjectClassInfo oci_upper = bld.build();
-
-        assertEquals(oci_lower, oci_upper);        
+        assertEquals(oci_lower, oci_upper);
     }
 
     @Test
     public void testHashCode() {
-        
         // Test type case-insensitivity
-        ObjectClassInfoBuilder bld = new ObjectClassInfoBuilder();
-        bld.addAttributeInfo(AttributeInfoBuilder.build("bob"));
-        bld.setType("group");
-        ObjectClassInfo oci_lower = bld.build();
+        ObjectClassInfo oci_lower = build("group");
+        ObjectClassInfo oci_upper = build("Group");
 
-        bld = new ObjectClassInfoBuilder();
-        bld.addAttributeInfo(AttributeInfoBuilder.build("bob"));
-        bld.setType("Group");
-        ObjectClassInfo oci_upper = bld.build();
-
-        assertEquals(oci_lower.hashCode(), oci_upper.hashCode());        
+        assertEquals(oci_lower.hashCode(), oci_upper.hashCode());
     }
 
+    @Test
+    public void testEqualsObservesLocale() {
+        Locale defLocale = Locale.getDefault();
+        try {
+            Locale.setDefault(new Locale("tr"));
+            ObjectClassInfo oci1 = build("i");
+            ObjectClassInfo oci2 = build("I");
+            assertFalse(oci1.equals(oci2));
+        } finally {
+            Locale.setDefault(defLocale);
+        }
+    }
+
+    @Test
+    public void testHashCodeIndependentOnLocale() {
+        Locale defLocale = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.US);
+            final ObjectClassInfo attribute = build("i");
+            final int hash1 = attribute.hashCode();
+            Locale.setDefault(new Locale("tr"));
+            int hash2 = attribute.hashCode();
+            assertEquals(hash1, hash2);
+        } finally {
+            Locale.setDefault(defLocale);
+        }
+    }
+
+    private static ObjectClassInfo build(String name) {
+        ObjectClassInfoBuilder bld = new ObjectClassInfoBuilder();
+        bld.addAttributeInfo(AttributeInfoBuilder.build("bob"));
+        bld.setType(name);
+        return bld.build();
+    }
 }

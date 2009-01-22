@@ -127,7 +127,8 @@
         </fileset>
     </path>
     <fileset id="test.fileset" dir="${src-framework-test}">
-        <include name="**/*Test*.java" />
+        <include name="**/*Test.java" />
+        <include name="**/*Tests.java" />
         <!-- exclude helper class -->
         <exclude name="**/JMXTests.java" />
     </fileset>

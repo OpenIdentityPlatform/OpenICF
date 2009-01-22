@@ -362,7 +362,8 @@
             <assertions enableSystemAssertions="true" />
             <batchtest todir="${reports}/junit">
                 <fileset dir="${src}">
-                    <include name="**/*Test*.java" />
+                    <include name="**/*Test.java" />
+                    <include name="**/*Tests.java" />
                     <exclude name="**/AllTests.java" />
                 </fileset>
             </batchtest>

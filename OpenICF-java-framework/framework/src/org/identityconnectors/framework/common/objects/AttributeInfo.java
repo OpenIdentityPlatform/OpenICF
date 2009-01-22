@@ -185,7 +185,8 @@ public final class AttributeInfo {
 	 * Determines if the name parameter matches this {@link AttributeInfo}.
 	 */
 	public boolean is(String name) {
-		return getName().equalsIgnoreCase(name);
+		return getName().toUpperCase(LocaleCache.getInstance()).equals(
+				name.toUpperCase(LocaleCache.getInstance()));
 	}
 
 	// =======================================================================
@@ -197,7 +198,7 @@ public final class AttributeInfo {
 		boolean ret = false;
 		if (obj instanceof AttributeInfo) {
 			AttributeInfo other = (AttributeInfo) obj;
-			if (!getName().toUpperCase().equals(other.getName().toUpperCase())) {
+			if (!is(other.getName())) {
 				return false;
 			}
 			if (!getType().equals(other.getType())) {
@@ -213,7 +214,7 @@ public final class AttributeInfo {
 
 	@Override
 	public int hashCode() {
-		return getName().toUpperCase().hashCode();
+		return getName().toUpperCase(LocaleCache.getInstance()).hashCode();
 	}
 
 	@Override

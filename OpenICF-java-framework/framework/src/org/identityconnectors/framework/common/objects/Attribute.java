@@ -144,7 +144,8 @@ public class Attribute {
      *         that of the one in {@link Attribute}.
      */
     public boolean is(String name) {
-        return getName().equalsIgnoreCase(name);
+        return this.name.toUpperCase(LocaleCache.getInstance()).equals(
+                name.toUpperCase(LocaleCache.getInstance()));
     }
 
     // ===================================================================
@@ -152,7 +153,7 @@ public class Attribute {
     // ===================================================================
     @Override
     public final int hashCode() {
-        return getName().toUpperCase().hashCode();
+        return getName().toUpperCase(LocaleCache.getInstance()).hashCode();
     }
 
     @Override
@@ -183,7 +184,7 @@ public class Attribute {
         }
         // test name field..
         final Attribute other = (Attribute) obj;
-        if (!name.equalsIgnoreCase(other.name)) {
+        if (!is(other.name)) {
             return false;
         }
         

@@ -22,8 +22,8 @@
  */
 package org.identityconnectors.framework.common.objects;
 
-import java.util.Set;
 import java.util.Map;
+import java.util.Set;
 
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.CollectionUtil;
@@ -87,7 +87,8 @@ public final class ObjectClassInfo {
      *         that of the one in this {@link ObjectClassInfo}.
      */
     public final boolean is(String name) {
-        return _type.equalsIgnoreCase(name);
+        return _type.toUpperCase(LocaleCache.getInstance()).equals(
+                name.toUpperCase(LocaleCache.getInstance()));
     }
     
     @Override
@@ -122,7 +123,7 @@ public final class ObjectClassInfo {
 
     @Override
     public int hashCode() {
-        return _type.toUpperCase().hashCode();
+        return _type.toUpperCase(LocaleCache.getInstance()).hashCode();
     }
 
 

@@ -22,53 +22,21 @@
  */
 package org.identityconnectors.test.framework.common.objects;
 
-import static org.identityconnectors.framework.common.objects.AttributeBuilder.build;
+import static org.identityconnectors.framework.common.objects.AttributeInfoBuilder.build;
 import static org.identityconnectors.framework.common.objects.LocaleTestUtil.resetLocaleCache;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
-import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.junit.Before;
 import org.junit.Test;
 
-
-public class AttributeTests {
+public class AttributeInfoTests {
 
     @Before
     public void before() {
         resetLocaleCache();
-    }
-
-    /**
-     * Test the case insensitivity.
-     */
-    @Test
-    public void testName() {
-        Attribute actual = build("bob");
-        assertEquals(build("boB"), actual);
-        assertTrue(actual.is("BoB"));
-    }
-    
-    @Test
-    public void testArrays() {
-        List<byte[]> values1 = new ArrayList<byte[]>();
-        values1.add(new byte[]{0,1});                
-        List<byte[]> values2 = new ArrayList<byte[]>();
-        values2.add(new byte[]{0,1});        
-        Attribute attribute1 = build("test", values1);
-        Attribute attribute2 = build("test", values2);
-        assertEquals(attribute1, attribute2);
-    }
-
-    @Test
-    public void testNormal() {
-        assertEquals(build("test", 1, 2, 4), build("test", 1, 2, 4));
-        assertFalse(build("test", 1, 2, 4).equals(build("test", 2, 4)));
     }
 
     @Test
@@ -76,8 +44,8 @@ public class AttributeTests {
         Locale defLocale = Locale.getDefault();
         try {
             Locale.setDefault(new Locale("tr"));
-            Attribute attribute1 = build("i");
-            Attribute attribute2 = build("I");
+            AttributeInfo attribute1 = build("i");
+            AttributeInfo attribute2 = build("I");
             assertFalse(attribute1.equals(attribute2));
         } finally {
             Locale.setDefault(defLocale);
@@ -89,7 +57,7 @@ public class AttributeTests {
         Locale defLocale = Locale.getDefault();
         try {
             Locale.setDefault(Locale.US);
-            final Attribute attribute = build("i");
+            final AttributeInfo attribute = build("i");
             final int hash1 = attribute.hashCode();
             Locale.setDefault(new Locale("tr"));
             int hash2 = attribute.hashCode();
