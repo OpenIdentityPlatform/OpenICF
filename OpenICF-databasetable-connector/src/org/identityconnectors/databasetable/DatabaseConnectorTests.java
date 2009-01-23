@@ -34,10 +34,10 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -47,8 +47,8 @@ import java.util.Set;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.EqualsHashCodeBuilder;
 import org.identityconnectors.common.IOUtil;
-import org.identityconnectors.common.Pair;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.dbcommon.SQLParam;
 import org.identityconnectors.dbcommon.SQLUtil;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorFacade;
@@ -652,11 +652,11 @@ public class DatabaseConnectorTests {
         try {
             conn = DatabaseTableConnection.getConnection(newConfiguration());
 
-            List<Object> values = new ArrayList<Object>();
+            List<SQLParam> values = new ArrayList<SQLParam>();
             final Timestamp changed = new Timestamp(System.currentTimeMillis());
             expected.setChanged(changed);
-            values.add(changed);
-            values.add(uid.getUidValue());
+            values.add(new SQLParam(changed, Types.TIMESTAMP));
+            values.add(new SQLParam(uid.getUidValue(), Types.VARCHAR));
             ps = conn.prepareStatement(SQL_TEMPLATE, values);
             ps.execute();
             conn.commit();
@@ -705,10 +705,10 @@ public class DatabaseConnectorTests {
         try {
             conn = DatabaseTableConnection.getConnection(cfg);
 
-            List<Object> values = new ArrayList<Object>();
+            List<SQLParam> values = new ArrayList<SQLParam>();
             expected.setAge(null); //The age as a changeLogColumn will not be in the result
-            values.add(changed);
-            values.add(uid.getUidValue());
+            values.add(new SQLParam(changed, Types.INTEGER));
+            values.add(new SQLParam(uid.getUidValue(), Types.VARCHAR));
             ps = conn.prepareStatement(SQL_TEMPLATE, values);
             ps.execute();
             conn.commit();
@@ -756,10 +756,10 @@ public class DatabaseConnectorTests {
         try {
             conn = DatabaseTableConnection.getConnection(cfg);
 
-            List<Object> values = new ArrayList<Object>();
+            List<SQLParam> values = new ArrayList<SQLParam>();
             expected.setAccessed(null); //The age as a changeLogColumn will not be in the result
-            values.add(changed);
-            values.add(uid.getUidValue());
+            values.add(new SQLParam(changed, Types.INTEGER));
+            values.add(new SQLParam(uid.getUidValue(), Types.VARCHAR));
             ps = conn.prepareStatement(SQL_TEMPLATE, values );
             ps.execute();
             conn.commit();
@@ -803,9 +803,9 @@ public class DatabaseConnectorTests {
         try {
             conn = DatabaseTableConnection.getConnection(newConfiguration());
 
-            List<Object> values = new ArrayList<Object>();
-            values.add(changed);
-            values.add(uid.getUidValue());
+            List<SQLParam> values = new ArrayList<SQLParam>();
+            values.add(new SQLParam(changed, Types.INTEGER));
+            values.add(new SQLParam(uid.getUidValue(), Types.VARCHAR));
             ps = conn.prepareStatement(SQL_TEMPLATE, values);
             ps.execute();
             conn.commit();
@@ -819,37 +819,6 @@ public class DatabaseConnectorTests {
         final Object actual = latestSyncToken.getValue();
         assertEquals(changed,Timestamp.valueOf((String) actual));
     } 
-    
-    /**
-     * Test quoting method
-     * @throws Exception
-     */
-    @Test
-    public void testQuoting() throws Exception {
-        final Map<String, Pair<String, String>> data = new HashMap<String, Pair<String, String>>();
-        data.put("none", new Pair<String, String>("afklj", "afklj"));
-        data.put("double", new Pair<String, String>("123jd", "\"123jd\""));
-        data.put("single", new Pair<String, String>("di3nfd", "'di3nfd'"));
-        data.put("back", new Pair<String, String>("fadfk3", "`fadfk3`"));
-        data.put("brackets", new Pair<String, String>("fadlkfj", "[fadlkfj]"));
-        for (Map.Entry<String, Pair<String, String>> entry : data.entrySet()) {
-            DatabaseTableConfiguration config = new DatabaseTableConfiguration();
-            config.setNameQuote(entry.getKey());
-            String actual = config.quoteName(entry.getValue().first);
-            assertEquals(entry.getValue().second, actual);
-        }
-    }
-
-    /**
-     * Test method
-     */
-    @Test(expected = IllegalArgumentException.class)
-    public void testValidQuoting() {
-        // test the exception case..
-        DatabaseTableConfiguration config = new DatabaseTableConfiguration();
-        config.setNameQuote("fadsfd");
-        config.quoteName("anything");
-    }
 
     /**
      * Test method for
@@ -990,8 +959,8 @@ public class DatabaseConnectorTests {
             expected.setPassword((String) null);
             conn = connector.getConnection();
 
-            List<Object> values = new ArrayList<Object>();
-            values.add(uid.getUidValue());
+            List<SQLParam> values = new ArrayList<SQLParam>();
+            values.add(new SQLParam(uid.getUidValue(), Types.VARCHAR));
             ps = conn.prepareStatement(sql, values);
             ps.execute();
             conn.commit();

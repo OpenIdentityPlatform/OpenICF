@@ -26,9 +26,6 @@ import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.dbcommon.JNDIUtil;
-import org.identityconnectors.framework.common.objects.Name;
-import org.identityconnectors.framework.common.objects.OperationalAttributes;
-import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.AbstractConfiguration;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
@@ -367,56 +364,6 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     public void setChangeLogColumn(String value) {
         this.changeLogColumn = value;
     }
-    /**
-     * Used to escape the table or column name.
-     * @param value Value to be quoted
-     * @return the quoted column name
-     */
-    public String quoteName(String value) {
-        String quoting = getNameQuote();
-        StringBuilder bld = new StringBuilder();
-        if (StringUtil.isBlank(quoting) || "none".equalsIgnoreCase(quoting)) {
-            bld.append(value);
-        } else if ("double".equalsIgnoreCase(quoting)) {
-            // for SQL Server, MySQL, NOT DB2, NOT Oracle, Postgresql
-            bld.append('"').append(value).append('"');
-        } else if ("single".equalsIgnoreCase(quoting)) {
-            // for DB2, NOT Oracle, NOT SQL Server, NOT MySQL, ...
-            bld.append('\'').append(value).append('\'');
-        } else if ("back".equalsIgnoreCase(quoting)) {
-            // for MySQL, NOT Oracle, NOT DB2, NOT SQL Server, ...
-            bld.append('`').append(value).append('`');
-        } else if ("brackets".equalsIgnoreCase(quoting)) {
-            // MS SQL Server..
-            bld.append('[').append(value).append(']');
-        } else {
-            final String msg = "Invalid quoting parameter: " + quoting;
-            throw new IllegalArgumentException(msg);
-        }
-        return bld.toString();
-    }
-    
-
-    /**
-     * Convert the attribute name to resource specific columnName
-     * 
-     * @param attributeName
-     * @return the Column Name value
-     */
-    public String getColumnName(String attributeName) {
-        if(Name.NAME.equalsIgnoreCase(attributeName)) {
-            return getKeyColumn();
-        }
-        if(Uid.NAME.equalsIgnoreCase(attributeName)) {
-            return getKeyColumn();
-        }
-        if(!StringUtil.isBlank(getPasswordColumn()) && 
-                OperationalAttributes.PASSWORD_NAME.equalsIgnoreCase(attributeName)) {
-            return getPasswordColumn();
-        }
-        return attributeName;
-    }
-    
 
     // =======================================================================
     // DataSource
@@ -457,7 +404,5 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
             //Validate the JNDI properties
             JNDIUtil.arrayToHashtable(getJndiProperties(), getConnectorMessages());
         }
-        // make sure the quoting is valid..
-        quoteName("anything");
     }
 }

@@ -23,7 +23,9 @@
 package org.identityconnectors.databasetable;
 
 import org.identityconnectors.dbcommon.DatabaseFilterTranslator;
+import org.identityconnectors.dbcommon.SQLParam;
 import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 
@@ -35,15 +37,15 @@ import org.identityconnectors.framework.common.objects.OperationOptions;
  */
 public class DatabaseTableFilterTranslator extends DatabaseFilterTranslator {
 
-    DatabaseTableConfiguration config;
+    DatabaseTableConnector connector;
     /**
-     * @param config the database table configuration
+     * @param connector the database table connector
      * @param oclass
      * @param options
      */
-    public DatabaseTableFilterTranslator(DatabaseTableConfiguration config, ObjectClass oclass, OperationOptions options) {
+    public DatabaseTableFilterTranslator(DatabaseTableConnector connector, ObjectClass oclass, OperationOptions options) {
         super(oclass, options);
-        this.config = config;
+        this.connector = connector;
     }
 
     /* (non-Javadoc)
@@ -51,16 +53,19 @@ public class DatabaseTableFilterTranslator extends DatabaseFilterTranslator {
      */
     @Override
     protected String getDatabaseColumnName(Attribute attribute, ObjectClass oclass, OperationOptions options) {
-        return config.quoteName(config.getColumnName(attribute.getName()));
+        final String columnName = connector.getColumnName(attribute.getName());
+        return connector.quoteName(columnName);
     }
 
     /* (non-Javadoc)
      * @see org.identityconnectors.dbcommon.DatabaseFilterTranslator#getDatabaseColumnType(org.identityconnectors.framework.common.objects.Attribute, org.identityconnectors.framework.common.objects.ObjectClass, org.identityconnectors.framework.common.objects.OperationOptions)
      */
     @Override
-    protected Integer getDatabaseColumnType(Attribute attribute, ObjectClass oclass, OperationOptions options) {
-        // TODO Auto-generated method stub
-        return null;
+    protected SQLParam getSQLParam(Attribute attribute, ObjectClass oclass, OperationOptions options) {
+        final Object value = AttributeUtil.getSingleValue(attribute);
+        final String columnName = connector.getColumnName(attribute.getName());
+        final Integer columnType = connector.getColumnType(columnName);
+        return new SQLParam(value,columnType);
     }
 
 }
