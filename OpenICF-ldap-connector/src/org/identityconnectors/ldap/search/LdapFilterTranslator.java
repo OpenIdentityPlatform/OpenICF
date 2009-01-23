@@ -1,0 +1,216 @@
+/*
+ * ====================
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+ * 
+ * Copyright 2007-2008 Sun Microsystems, Inc. All rights reserved.     
+ * 
+ * The contents of this file are subject to the terms of the Common Development 
+ * and Distribution License("CDDL") (the "License").  You may not use this file 
+ * except in compliance with the License.
+ * 
+ * You can obtain a copy of the License at 
+ * http://IdentityConnectors.dev.java.net/legal/license.txt
+ * See the License for the specific language governing permissions and limitations 
+ * under the License. 
+ * 
+ * When distributing the Covered Code, include this CDDL Header Notice in each file
+ * and include the License file at identityconnectors/legal/license.txt.
+ * If applicable, add the following below this CDDL Header, with the fields 
+ * enclosed by brackets [] replaced by your own identifying information: 
+ * "Portions Copyrighted [year] [name of copyright owner]"
+ * ====================
+ */
+package org.identityconnectors.ldap.search;
+
+import static org.identityconnectors.ldap.LdapUtil.escapeAttrValue;
+
+import java.util.List;
+
+import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.filter.AbstractFilterTranslator;
+import org.identityconnectors.framework.common.objects.filter.AttributeFilter;
+import org.identityconnectors.framework.common.objects.filter.ContainsAllValuesFilter;
+import org.identityconnectors.framework.common.objects.filter.ContainsFilter;
+import org.identityconnectors.framework.common.objects.filter.EndsWithFilter;
+import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
+import org.identityconnectors.framework.common.objects.filter.GreaterThanFilter;
+import org.identityconnectors.framework.common.objects.filter.GreaterThanOrEqualFilter;
+import org.identityconnectors.framework.common.objects.filter.LessThanFilter;
+import org.identityconnectors.framework.common.objects.filter.LessThanOrEqualFilter;
+import org.identityconnectors.framework.common.objects.filter.SingleValueAttributeFilter;
+import org.identityconnectors.framework.common.objects.filter.StartsWithFilter;
+import org.identityconnectors.ldap.schema.LdapSchemaMapping;
+
+public class LdapFilterTranslator extends AbstractFilterTranslator<String> {
+
+    // XXX all objects values converted to string, is that OK?
+
+    // Notes:
+    //
+    // - The connector EqualsFilter matches an attribute and
+    // its values exactly, so we try to do the same.
+    //
+    // - The note in the openconnectors LDAP connector claiming that
+    // "(!(a > X)) is only the same as (a <= X) if every object has a value of a"
+    // seems incorrect. For an object not having an a attribute, (a <= X) will
+    // be Undefined (cf. RFC 4511, section 4.5.1.7). But (a > X) would be Undefined
+    // too, and so would be (!(a > X)).
+
+    private final ObjectClass objectClass;
+    private final LdapSchemaMapping mapping;
+
+    public LdapFilterTranslator(LdapSchemaMapping mapping, ObjectClass objectClass) {
+        this.mapping = mapping;
+        this.objectClass = objectClass;
+    }
+
+    @Override
+    public String createAndExpression(String leftExpression, String rightExpression) {
+        StringBuilder builder = createBuilder(false);
+        builder.append('&');
+        builder.append(leftExpression);
+        builder.append(rightExpression);
+        return finishBuilder(builder).toString();
+
+    }
+
+    @Override
+    public String createOrExpression(String leftExpression, String rightExpression) {
+        StringBuilder builder = createBuilder(false);
+        builder.append('|');
+        builder.append(leftExpression);
+        builder.append(rightExpression);
+        return finishBuilder(builder).toString();
+    }
+
+    @Override
+    public String createContainsExpression(ContainsFilter filter, boolean not) {
+        StringBuilder builder = createBuilder(not);
+        String attrName = mapping.getLdapAttribute(objectClass, filter.getAttribute());
+        if (attrName == null) {
+            return null;
+        }
+        builder.append(attrName);
+        builder.append('=');
+        builder.append('*');
+        if (escapeAttrValue(filter.getValue(), builder)) {
+            builder.append('*');
+        }
+        return finishBuilder(builder).toString();
+    }
+
+    @Override
+    public String createEndsWithExpression(EndsWithFilter filter, boolean not) {
+        StringBuilder builder = createBuilder(not);
+        String attrName = mapping.getLdapAttribute(objectClass, filter.getAttribute());
+        if (attrName == null) {
+            return null;
+        }
+        builder.append(attrName);
+        builder.append('=');
+        builder.append('*');
+        escapeAttrValue(filter.getValue(), builder);
+        return finishBuilder(builder).toString();
+    }
+
+    @Override
+    public String createEqualsExpression(EqualsFilter filter, boolean not) {
+        // XXX is there a way in LDAP to test that the values of an attribute
+        // exactly match a given list of values?
+        return createContainsAllValuesFilter(filter, not);
+    }
+
+    @Override
+    public String createGreaterThanExpression(GreaterThanFilter filter, boolean not) {
+        return createSingleValueFilter("<=", filter, !not);
+    }
+
+    @Override
+    public String createGreaterThanOrEqualExpression(GreaterThanOrEqualFilter filter, boolean not) {
+        return createSingleValueFilter(">=", filter, not);
+    }
+
+    @Override
+    public String createLessThanExpression(LessThanFilter filter, boolean not) {
+        return createSingleValueFilter(">=", filter, !not);
+    }
+
+    @Override
+    public String createLessThanOrEqualExpression(LessThanOrEqualFilter filter, boolean not) {
+        return createSingleValueFilter("<=", filter, not);
+    }
+
+    @Override
+    public String createStartsWithExpression(StartsWithFilter filter, boolean not) {
+        StringBuilder builder = createBuilder(not);
+        String attrName = mapping.getLdapAttribute(objectClass, filter.getAttribute());
+        if (attrName == null) {
+            return null;
+        }
+        builder.append(attrName);
+        builder.append('=');
+        escapeAttrValue(filter.getValue(), builder);
+        builder.append('*');
+        return finishBuilder(builder).toString();
+    }
+
+    @Override
+    public String createContainsAllValuesExpression(ContainsAllValuesFilter filter, boolean not) {
+        return createContainsAllValuesFilter(filter, not);
+    }
+
+    private String createSingleValueFilter(String type, SingleValueAttributeFilter filter, boolean not) {
+        StringBuilder builder = createBuilder(not);
+        String attrName = mapping.getLdapAttribute(objectClass, filter.getAttribute());
+        if (attrName == null) {
+            return null;
+        }
+        Object value = filter.getValue();
+        addSimpleFilter(builder, type, attrName, value);
+        return finishBuilder(builder).toString();
+    }
+
+    private void addSimpleFilter(StringBuilder builder, String type, String ldapAttr, Object value) {
+        builder.append(ldapAttr);
+        builder.append(type);
+        if (!escapeAttrValue(value, builder)) {
+            builder.append('*');
+        }
+    }
+
+    private String createContainsAllValuesFilter(AttributeFilter filter, boolean not) {
+        StringBuilder builder = createBuilder(not);
+        String attrName = mapping.getLdapAttribute(objectClass, filter.getAttribute());
+        if (attrName == null) {
+            return null;
+        }
+        List<Object> values = filter.getAttribute().getValue();
+        if (values == null) {
+            return null;
+        }
+        switch (values.size()) {
+        case 0:
+            return null;
+        case 1:
+            addSimpleFilter(builder, "=", attrName, values.get(0));
+            break;
+        default:
+            builder.append('&');
+            for (Object value : values) {
+                builder.append('(');
+                addSimpleFilter(builder, "=", attrName, value);
+                builder.append(')');
+            }
+        }
+        return finishBuilder(builder).toString();
+    }
+
+    private StringBuilder createBuilder(boolean not) {
+        return new StringBuilder(not ? "(!(" : "(");
+    }
+
+    private StringBuilder finishBuilder(StringBuilder builder) {
+        boolean not = builder.charAt(0) == '(' && builder.charAt(1) == '!';
+        return builder.append(not ? "))" : ")");
+    }
+}
