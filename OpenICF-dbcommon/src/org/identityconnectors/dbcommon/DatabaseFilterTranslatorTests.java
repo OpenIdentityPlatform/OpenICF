@@ -40,7 +40,6 @@ import org.junit.Test;
 
 /**
  * Attempts to test the Connector with the framework.
- * TODO test the mapped values
  */
 public class DatabaseFilterTranslatorTests {
 

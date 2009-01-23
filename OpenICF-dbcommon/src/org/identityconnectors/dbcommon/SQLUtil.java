@@ -788,7 +788,7 @@ public final class SQLUtil {
         case Types.BOOLEAN:
             if( val instanceof String) {
                 stmt.setBoolean(idx, string2Boolean((String) val));
-            } else if (val instanceof java.sql.Time) {
+            } else if (val instanceof Boolean) {
                 stmt.setBoolean(idx, (Boolean) val);
             } else {
                 stmt.setObject(idx, val);
