@@ -38,7 +38,7 @@ import org.junit.Test;
 public class UpdateSetBuilderTest {
 
     private static final String MYSQL_USER_COLUMN  = "User";
-    private static final String NAME = "name";
+    private static final SQLParam VALUE = new SQLParam("name", Types.VARCHAR);
 
    
     /**
@@ -60,8 +60,8 @@ public class UpdateSetBuilderTest {
         assertNotNull(actual);
         
         // do the update
-        actual.addBind("test1","password(?)","val1", Types.CHAR);
-        actual.addBind("test2","max(?)","val2", Types.CHAR);
+        actual.addBind("test1","password(?)",new SQLParam("val1"));
+        actual.addBind("test2","max(?)",new SQLParam("val2"));
         
         assertNotNull(actual.getSQL());
         assertEquals("The update string","test1 = password(?) , test2 = max(?)",actual.getSQL());
@@ -80,17 +80,15 @@ public class UpdateSetBuilderTest {
         assertNotNull(actual);
 
         // do the update
-        actual.addBind(MYSQL_USER_COLUMN, NAME, Types.CHAR);
+        actual.addBind(MYSQL_USER_COLUMN, VALUE);
         
         assertNotNull(actual.getSQL());
         assertEquals("The update string","User = ?",actual.getSQL());
         
         assertNotNull(actual.getParams());   
         assertNotNull(actual.getParams().get(0));
-        assertEquals("The values",NAME,actual.getParams().get(0));
-        assertNotNull(actual.getSQLTypes());   
-        assertNotNull(actual.getSQLTypes().get(0));
-        assertEquals("The values",Types.CHAR,actual.getSQLTypes().get(0).intValue());
+        assertEquals("The values",VALUE,actual.getParams().get(0));
+        assertEquals("The values",Types.VARCHAR,actual.getParams().get(0).getSqlType());
     }
 
     /**
@@ -102,13 +100,13 @@ public class UpdateSetBuilderTest {
         assertNotNull(actual);
 
         // do the update
-        actual.addBind(MYSQL_USER_COLUMN, NAME, Types.CHAR);
+        actual.addBind(MYSQL_USER_COLUMN, VALUE);
 
         
         assertNotNull(actual.getParams());
         assertEquals("The count",1,actual.getParams().size());        
         assertNotNull(actual.getParams().get(0));
-        assertEquals("The values",NAME,actual.getParams().get(0));
+        assertEquals("The values",VALUE,actual.getParams().get(0));
         assertEquals("The update string",MYSQL_USER_COLUMN+" = ?",actual.getSQL());
         }
 }

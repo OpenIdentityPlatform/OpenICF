@@ -74,18 +74,23 @@ public final class SQLUtil {
     /**
      * Timestamp format
      */
-    static final SimpleDateFormat TMS_FMT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+    static SimpleDateFormat TMS_FMT;
     
     /**
      * Time format
      */
-    static final SimpleDateFormat TM_FMT = new SimpleDateFormat("hh:mm:ss");
+    static SimpleDateFormat TM_FMT;
 
     /**
      * Date format
      */
-    static final SimpleDateFormat DT_FMT = new SimpleDateFormat("yyyy-MM-dd");
+    static SimpleDateFormat DT_FMT;
 
+    static {
+        TMS_FMT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        TM_FMT = new SimpleDateFormat("hh:mm:ss");
+        DT_FMT = new SimpleDateFormat("yyyy-MM-dd");
+    }
     
     /**
      * Never allow this to be instantiated.
@@ -100,15 +105,15 @@ public final class SQLUtil {
      * @param env propertyHastable 
      * @return the connection get from default jndi context
      */
-    public static Connection getDatasourceConnection(final String datasourceName, final Hashtable<?,?> env) {
+    public static Connection getDatasourceConnection(final String datasourceName, final Hashtable<?, ?> env) {
         try {
             javax.naming.InitialContext ic = getInitialContext(env);
-            DataSource ds = (DataSource)ic.lookup(datasourceName);
+            DataSource ds = (DataSource) ic.lookup(datasourceName);
             return ds.getConnection();
         } catch (Exception e) {
             throw ConnectorException.wrap(e);
         }
-    }   
+    }
 
     /**
      * Get the connection from the dataSource with specified user and password
@@ -118,15 +123,16 @@ public final class SQLUtil {
      * @param env propertyHastable 
      * @return the connection get from dataSource
      */
-    public static Connection getDatasourceConnection(final String datasourceName,final String user,GuardedString password, final Hashtable<?,?> env) {        
+    public static Connection getDatasourceConnection(final String datasourceName, final String user,
+            GuardedString password, final Hashtable<?, ?> env) {
         try {
             javax.naming.InitialContext ic = getInitialContext(env);
-            final DataSource ds = (DataSource)ic.lookup(datasourceName);
+            final DataSource ds = (DataSource) ic.lookup(datasourceName);
             final Connection[] ret = new Connection[1];
             password.access(new GuardedString.Accessor() {
                 public void access(char[] clearChars) {
                     try {
-                        ret[0] = ds.getConnection(user,new String(clearChars));
+                        ret[0] = ds.getConnection(user, new String(clearChars));
                     } catch (SQLException e) {
                         // checked exception are not allowed in the access method 
                         // Lets use the exception softening pattern
@@ -449,7 +455,7 @@ public final class SQLUtil {
      * @param out out param list
      * @return the modified string
      */
-    public static String normalizeNullValues(final String sql, final List<Object> params, List<Object> out) {
+    public static String normalizeNullValues(final String sql, final List<SQLParam> params, List<SQLParam> out) {
         StringBuilder ret = new StringBuilder();
         int size = (params == null) ? 0 : params.size();
         //extend for extra space
@@ -460,11 +466,12 @@ public final class SQLUtil {
             String string = values[i];
             ret.append(string);
             if(params != null && i < params.size()) {
-                if (params.get(i) == null) {
+                final SQLParam param = params.get(i);
+                if (param.getParam() == null && param.getSqlType() == Types.NULL) {
                   ret.append("null");
                 } else {
                   ret.append("?");
-                  out.add(params.get(i));
+                  out.add(param);
                 }
             }
         }
@@ -510,22 +517,14 @@ public final class SQLUtil {
      * @param sqlTypes 
      * @throws SQLException an exception in statement
      */
-    public static void setParams(final PreparedStatement statement, final List<Object> params, final List<Integer> sqlTypes) throws SQLException {
+    public static void setParams(final PreparedStatement statement, final List<SQLParam> params) throws SQLException {
         if(statement == null || params == null) {
             return;
         }
         for (int i = 0; i < params.size(); i++) {
             final int idx = i + 1;
-            final Object val = params.get(i);
-            if(sqlTypes != null && i < sqlTypes.size()) {
-                Integer sqlType = sqlTypes.get(i);
-                if(sqlType == null) {
-                    sqlType = Types.NULL;
-                }
-                setParam(statement, idx, val, sqlType);
-            } else {
-                setParam(statement, idx, val, Types.NULL);
-            }
+            final SQLParam parm = params.get(i);
+            setParam(statement, idx, parm);
         }
     }
 
@@ -538,33 +537,11 @@ public final class SQLUtil {
      * 
      * @param statement
      * @param params a <CODE>List</CODE> of the object arguments
-     * @param sqlTypes 
      * @throws SQLException an exception in statement
      */
-    public static void setParams(final PreparedStatement statement, final List<Object> params) throws SQLException {
-        if(statement == null || params == null) {
-            return;
-        }
-        for (int i = 0; i < params.size(); i++) {
-            final int idx = i + 1;
-            setParam(statement, idx, params.get(i), Types.NULL);
-        }
-    }    
-    
-    /**
-     * <p>
-     * This method binds the "?" markers in SQL statement with the parameters given as <i>values</i>. It
-     * concentrates the replacement of all params. <code>GuardedString</code> are handled so the password is never
-     * visible.
-     * </p>
-     * 
-     * @param statement
-     * @param params a <CODE>List</CODE> of the object arguments
-     * @throws SQLException an exception in statement
-     */
-    static void setParams(final CallableStatement statement, final List<Object> params, final List<Integer> sqlTypes) throws SQLException {
+    public static void setParams(final CallableStatement statement, final List<SQLParam> params) throws SQLException {
         //The same as for prepared statements
-        setParams( (PreparedStatement) statement, params, sqlTypes);
+        setParams( (PreparedStatement) statement, params);
     }    
 
     /**
@@ -572,16 +549,15 @@ public final class SQLUtil {
      * <p> It is ready for overloading if necessary</p>
      * @param stmt a <CODE>PreparedStatement</CODE> to set the params
      * @param idx an index of the parameter
-     * @param val a parameter Value
-     * @param sqlType 
+     * @param parm a parameter Value
      * @throws SQLException a SQL exception 
      */
-    public static void setParam(final PreparedStatement stmt, final int idx, Object val, int sqlType) throws SQLException {
+    public static void setParam(final PreparedStatement stmt, final int idx, SQLParam parm) throws SQLException {
         // Guarded string conversion
-        if (val instanceof GuardedString) {
-            setGuardedStringParam(stmt, idx, (GuardedString) val);
+        if (parm.getParam() instanceof GuardedString) {
+            setGuardedStringParam(stmt, idx, (GuardedString) parm.getParam());
         } else {
-          setSQLParam(stmt, idx, val, sqlType);
+          setSQLParam(stmt, idx, parm);
         }       
     }
 
@@ -710,13 +686,14 @@ public final class SQLUtil {
      * Convert database type to connector supported set of attribute types
      * @param stmt 
      * @param idx 
-     * @param val 
-     * @param sqlType #{@link Types}
+     * @param parm 
      * @throws SQLException 
      */
-    public static void setSQLParam(final PreparedStatement stmt, final int idx, Object val, int sqlType) throws SQLException {
-        log.info("setStmtParam {0} to value {1} for sqlType {2}", idx, val, sqlType);
+    public static void setSQLParam(final PreparedStatement stmt, final int idx, SQLParam parm) throws SQLException {
+        log.info("setStmtParam {0} to value {1} for sqlType {2}", parm.getParam(), parm.getSqlType());
         // Handle the null value
+        final Object val = parm.getParam();
+        final int sqlType = parm.getSqlType();
         if( val == null ) {
             stmt.setNull(idx, sqlType);
             return;
@@ -899,7 +876,7 @@ public final class SQLUtil {
         ResultSet rs = null;
         try{
             st = conn.prepareStatement(sql);
-            setParams(st, Arrays.asList(params), null);
+            setParams(st, SQLParam.asList(Arrays.asList(params)));
             rs = st.executeQuery(sql);
             Object value = null;
             if(rs.next()){
@@ -929,7 +906,7 @@ public final class SQLUtil {
         PreparedStatement st = null;
         try{
             st = conn.prepareStatement(sql);
-            setParams(st, Arrays.asList(params), null);
+            setParams(st, SQLParam.asList(Arrays.asList(params)));
             return st.executeUpdate();
         }
         finally{

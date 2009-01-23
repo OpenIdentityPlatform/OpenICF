@@ -37,8 +37,7 @@ import org.identityconnectors.common.CollectionUtil;
  * @since 1.0
  */
 public class UpdateSetBuilder {
-    private List<Object> params = new ArrayList<Object>();
-    private List<Integer> sqlTypes = new ArrayList<Integer>();
+    private List<SQLParam> params = new ArrayList<SQLParam>();
     private StringBuilder set = new StringBuilder();
     
     /**
@@ -50,8 +49,8 @@ public class UpdateSetBuilder {
      * @param sqlType
      * @return self
      */
-    public UpdateSetBuilder addBind(String name, Object param, Integer sqlType) {
-        return addBind(name,"?", param, sqlType);
+    public UpdateSetBuilder addBind(String name, SQLParam param) {
+        return addBind(name,"?", param);
     }
 
     /**
@@ -63,13 +62,12 @@ public class UpdateSetBuilder {
      * @param sqlType the SQL database type
      * @return self
      */
-    public UpdateSetBuilder addBind(String name, Object value, Object param, Integer sqlType) {
+    public UpdateSetBuilder addBind(String name, Object value, SQLParam param) {
         if(set.length()>0) {
             set.append(" , ");
         }
         set.append(name).append(" = ").append(value);
         params.add(param);
-        sqlTypes.add(sqlType);
         return this;
     }    
     
@@ -82,26 +80,19 @@ public class UpdateSetBuilder {
     }
 
     /**
-     * @param value
-     * @param sqlType
+     * Add the update value
+     * @param param 
      */
-    public void addValue(String value, int sqlType) {
-        params.add(value);
-        sqlTypes.add(sqlType);
+    public void addValue(SQLParam param) {
+        params.add(param);
     }
 
     
     /**
      * @return the param values
      */
-    public List<Object> getParams() {
+    public List<SQLParam> getParams() {
         return CollectionUtil.newReadOnlyList(params);
     }
-    
-    /**
-     * @return the sqlTypes
-     */
-    public List<Integer> getSQLTypes() {
-        return CollectionUtil.newReadOnlyList(sqlTypes);
-    }
+
 }

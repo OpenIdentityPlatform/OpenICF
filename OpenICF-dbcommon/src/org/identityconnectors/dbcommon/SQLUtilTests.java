@@ -23,7 +23,10 @@
 package org.identityconnectors.dbcommon;
 
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.sql.Blob;
@@ -243,11 +246,11 @@ public class SQLUtilTests {
     @Test
     public void testNormalizeNullValues() {
         final String sql = "insert into table values(?, ?, ?)";
-        final List<Object> params = new ArrayList<Object>();
-        params.add("test");
-        params.add(null);
-        params.add(1);
-        final List<Object> out = new ArrayList<Object>();
+        final List<SQLParam> params = new ArrayList<SQLParam>();
+        params.add(new SQLParam("test"));
+        params.add(new SQLParam(null)); //Null unspecified should be normalized
+        params.add(new SQLParam(null, Types.VARCHAR)); //Null typed should remain
+        final List<SQLParam> out = new ArrayList<SQLParam>();
         String actual = SQLUtil.normalizeNullValues(sql, params, out);
         assertNotNull("sql",actual);
         assertEquals("sql","insert into table values(?, null, ?)", actual);
@@ -261,11 +264,11 @@ public class SQLUtilTests {
     @Test
     public void testNormalizeNullValuesSame() {
         final String sql = "insert into table values(?, ?, ?)";
-        final List<Object> params = new ArrayList<Object>();
-        params.add("test");
-        params.add(3);
-        params.add(1);
-        final List<Object> out = new ArrayList<Object>();
+        final List<SQLParam> params = new ArrayList<SQLParam>();
+        params.add(new SQLParam("test"));
+        params.add(new SQLParam(1)); 
+        params.add(new SQLParam(5, Types.VARCHAR)); 
+        final List<SQLParam> out = new ArrayList<SQLParam>();
         String actual = SQLUtil.normalizeNullValues(sql, params, out);
         assertNotNull("sql",actual);
         assertEquals("sql","insert into table values(?, ?, ?)", actual);
@@ -279,18 +282,18 @@ public class SQLUtilTests {
     @Test
     public void testNormalizeNullValuesLess() {
         final String sql = "insert into table values(?, ?, ?)";
-        final List<Object> params = new ArrayList<Object>();
-        params.add("test");
-        params.add(3);
-        final List<Object> out = new ArrayList<Object>();
+        final List<SQLParam> params = new ArrayList<SQLParam>();
+        params.add(new SQLParam("test"));
+        params.add(new SQLParam(3)); 
+        final List<SQLParam> out = new ArrayList<SQLParam>();
         try {
             SQLUtil.normalizeNullValues(sql, params, out);
             fail("IllegalStateException expected");
         } catch (IllegalStateException expected) {
             // expected
         }
-        params.add(3);
-        params.add(3);
+        params.add(new SQLParam(3));
+        params.add(new SQLParam(3)); 
         try {
             SQLUtil.normalizeNullValues(sql, params, out);
             fail("IllegalStateException expected");

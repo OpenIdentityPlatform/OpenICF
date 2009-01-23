@@ -26,8 +26,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.sql.Types;
-
 import org.junit.Test;
 
 /**
@@ -37,7 +35,7 @@ import org.junit.Test;
  */
 public class FilterWhereBuilderTest {
 
-    private static final String VALUE = "value";
+    private static final SQLParam VALUE = new SQLParam("value");
     private static final String NAME = "name";
     private static final String OPERATOR = "=";
 
@@ -57,9 +55,9 @@ public class FilterWhereBuilderTest {
     @Test
     public void testJoin() {
         FilterWhereBuilder l = new FilterWhereBuilder();
-        l.addBind(NAME, OPERATOR, VALUE, Types.CHAR);
+        l.addBind(NAME, OPERATOR, VALUE);
         FilterWhereBuilder r = new FilterWhereBuilder();
-        r.addBind(NAME, OPERATOR, VALUE, Types.CHAR);
+        r.addBind(NAME, OPERATOR, VALUE);
         FilterWhereBuilder actual = new FilterWhereBuilder();
         actual.join("AND", l, r);
         assertNotNull(actual);
@@ -77,9 +75,8 @@ public class FilterWhereBuilderTest {
         FilterWhereBuilder actual = new FilterWhereBuilder();
         assertNotNull(actual);
         assertNotNull(actual.getParams());
-        actual.addBind(NAME, OPERATOR, VALUE, Types.CHAR);
+        actual.addBind(NAME, OPERATOR, VALUE);
         assertTrue(actual.getParams().contains(VALUE));
-        assertTrue(actual.getSQLTypes().contains(Types.CHAR));
     }
 
     /**
@@ -89,7 +86,7 @@ public class FilterWhereBuilderTest {
     public void testGetWhere() {
         FilterWhereBuilder actual = new FilterWhereBuilder();
         assertNotNull(actual);
-        actual.addBind(NAME, OPERATOR, VALUE, Types.CHAR);
+        actual.addBind(NAME, OPERATOR, VALUE);
         assertNotNull(actual.getWhere());
         assertEquals("name = ?", actual.getWhere().toString());
     }
@@ -114,9 +111,8 @@ public class FilterWhereBuilderTest {
         FilterWhereBuilder actual = new FilterWhereBuilder();
         assertNotNull(actual);
         assertNotNull(actual.getParams());
-        actual.addBind(NAME, OPERATOR, VALUE, Types.CHAR);
+        actual.addBind(NAME, OPERATOR, VALUE);
         assertTrue(actual.getParams().contains(VALUE));
-        assertTrue(actual.getSQLTypes().contains(Types.CHAR));
         assertEquals("name = ?", actual.getWhereClause());
     }
 
@@ -127,10 +123,9 @@ public class FilterWhereBuilderTest {
     public void testGetWhereClause() {
         FilterWhereBuilder actual = new FilterWhereBuilder();
         assertNotNull(actual);
-        actual.addBind(NAME, OPERATOR, VALUE, Types.CHAR);
+        actual.addBind(NAME, OPERATOR, VALUE);
         assertEquals("name = ?", actual.getWhereClause());
         assertEquals("not one value for binding", 1, actual.getParams().size());
-        assertEquals("not one value for binding", 1, actual.getSQLTypes().size());
     }
 
     /**
@@ -140,9 +135,8 @@ public class FilterWhereBuilderTest {
     public void testGetWhereClauseWithWhere() {
         FilterWhereBuilder actual = new FilterWhereBuilder();
         assertNotNull(actual);
-        actual.addBind(NAME, OPERATOR, VALUE, Types.CHAR);
+        actual.addBind(NAME, OPERATOR, VALUE);
         assertEquals("name = ?", actual.getWhereClause());
         assertEquals("not one value for binding", 1, actual.getParams().size());
-        assertEquals("not one value for binding", 1, actual.getSQLTypes().size());
     }
 }

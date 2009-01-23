@@ -59,7 +59,7 @@ public class InsertIntoBuilderTest {
         assertNotNull(actual);
 
         // do the update
-        actual.addBind("test1", "val1", Types.CHAR);
+        actual.addBind("test1", new SQLParam("val1"));
 
         assertNotNull(actual.getInto());
         assertEquals("The update string", "test1", actual.getInto());
@@ -69,11 +69,7 @@ public class InsertIntoBuilderTest {
 
         assertNotNull(actual.getParams());
         assertEquals("The count", 1, actual.getParams().size());
-        assertEquals("The val", "val1", actual.getParams().get(0));
-        
-        assertNotNull(actual.getSQLTypes());
-        assertEquals("The count", 1, actual.getSQLTypes().size());
-        assertEquals("The val", Types.CHAR, actual.getSQLTypes().get(0).intValue());
+        assertEquals("The val", "val1", actual.getParams().get(0).getParam());
     }
 
     /**
@@ -85,8 +81,8 @@ public class InsertIntoBuilderTest {
         assertNotNull(actual);
 
         // do the update
-        actual.addBind("test1", "val1", Types.CHAR);
-        actual.addBind("test2", "val2", Types.VARCHAR);
+        actual.addBind("test1", new SQLParam("val1"));
+        actual.addBind("test2", new SQLParam("val2", Types.VARCHAR));
 
         assertNotNull(actual.getInto());
         assertEquals("The update string", "test1, test2", actual.getInto());
@@ -96,12 +92,9 @@ public class InsertIntoBuilderTest {
 
         assertNotNull(actual.getParams());
         assertEquals("The count", 2, actual.getParams().size());
-        assertEquals("The val", "val1", actual.getParams().get(0));
-        assertEquals("The val", "val2", actual.getParams().get(1));
-        assertNotNull(actual.getParams());
-        
-        assertEquals("The count", 2, actual.getSQLTypes().size());
-        assertEquals("The val", Types.CHAR, actual.getSQLTypes().get(0).intValue());
-        assertEquals("The val", Types.VARCHAR, actual.getSQLTypes().get(1).intValue());
+        assertEquals("The val", "val1", actual.getParams().get(0).getParam());
+        assertEquals("The val", "val2", actual.getParams().get(1).getParam());
+        assertEquals("The val", Types.NULL, actual.getParams().get(0).getSqlType());
+        assertEquals("The val", Types.VARCHAR, actual.getParams().get(1).getSqlType());
     }
 }

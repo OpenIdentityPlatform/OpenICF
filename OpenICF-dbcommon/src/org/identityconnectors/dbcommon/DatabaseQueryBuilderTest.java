@@ -25,7 +25,6 @@ package org.identityconnectors.dbcommon;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -43,7 +42,7 @@ public class DatabaseQueryBuilderTest {
 
     private static final String SELECT = "SELECT * FROM Users";
     private static final String SELECT_WITH_WHERE = "SELECT * FROM Users WHERE test = 1";
-    private static final String VALUE = "value";
+    private static final SQLParam VALUE = new SQLParam("value");
     private static final String NAME = "name";
     private static final String OPERATOR = "=";
 
@@ -105,7 +104,7 @@ public class DatabaseQueryBuilderTest {
     @Test
     public void testGetSql() {
         FilterWhereBuilder where = new FilterWhereBuilder();
-        where.addBind(NAME, OPERATOR, VALUE, Types.CHAR);
+        where.addBind(NAME, OPERATOR, VALUE);
         DatabaseQueryBuilder actual = new DatabaseQueryBuilder(SELECT);
         actual.setWhere(where);
         assertNotNull(actual);
@@ -120,7 +119,7 @@ public class DatabaseQueryBuilderTest {
     @Test
     public void testGetSqlWithWhere() {
         FilterWhereBuilder where = new FilterWhereBuilder();
-        where.addBind(NAME, OPERATOR, VALUE, Types.CHAR);
+        where.addBind(NAME, OPERATOR, VALUE);
         DatabaseQueryBuilder actual = new DatabaseQueryBuilder(SELECT_WITH_WHERE);
         actual.setWhere(where);        
         assertNotNull(actual);
@@ -149,7 +148,7 @@ public class DatabaseQueryBuilderTest {
         attributesToGet.add("test1");
         attributesToGet.add("test2");        
         FilterWhereBuilder where = new FilterWhereBuilder();
-        where.addBind(NAME, OPERATOR, VALUE, Types.CHAR);
+        where.addBind(NAME, OPERATOR, VALUE);
         DatabaseQueryBuilder actual = new DatabaseQueryBuilder("table" , attributesToGet);
         actual.setWhere(where);
         assertEquals("SELECT test1 , test2 FROM table WHERE name = ?", actual.getSQL());
@@ -166,7 +165,7 @@ public class DatabaseQueryBuilderTest {
         attributesToGet.add("test1");
         attributesToGet.add("test2");        
         FilterWhereBuilder where = new FilterWhereBuilder();
-        where.addBind(NAME, OPERATOR, VALUE, Types.CHAR);
+        where.addBind(NAME, OPERATOR, VALUE);
         DatabaseQueryBuilder actual = new DatabaseQueryBuilder("table" , attributesToGet);
         actual.setWhere(where);
         actual.setTableName("table");
@@ -189,7 +188,7 @@ public class DatabaseQueryBuilderTest {
         orderBy.add(new OrderBy("test1", true));
         orderBy.add(new OrderBy("test2", false));
         FilterWhereBuilder where = new FilterWhereBuilder();
-        where.addBind(NAME, OPERATOR, VALUE, Types.CHAR);
+        where.addBind(NAME, OPERATOR, VALUE);
         DatabaseQueryBuilder actual = new DatabaseQueryBuilder("table" , attributesToGet);
         actual.setWhere(where);
         actual.setOrderBy(orderBy);

@@ -40,8 +40,7 @@ import org.identityconnectors.common.CollectionUtil;
 public class FilterWhereBuilder {
 
     private boolean in;
-    private List<Object> params = new ArrayList<Object>();
-    private List<Integer> sqlTypes = new ArrayList<Integer>();
+    private List<SQLParam> params = new ArrayList<SQLParam>();
     private StringBuilder where = new StringBuilder();
   
 
@@ -72,25 +71,16 @@ public class FilterWhereBuilder {
         // The params
         params.addAll(l.getParams());
         params.addAll(r.getParams());
-        // The params
-        sqlTypes.addAll(l.getSQLTypes());
-        sqlTypes.addAll(r.getSQLTypes());
     }
     
     /**
      * @return the params
      */
-    public List<Object> getParams() {
+    public List<SQLParam> getParams() {
         return CollectionUtil.asReadOnlyList(params);
     }
-    
-    /**
-     * @return the params
-     */
-    public List<Integer> getSQLTypes() {
-        return CollectionUtil.asReadOnlyList(sqlTypes);
-    }    
-    
+
+
     /**
      * @return the where
      */
@@ -107,15 +97,13 @@ public class FilterWhereBuilder {
      * @param name of the column
      * @param operator an operator to compare
      * @param param value to builder
-     * @param sqlType 
      * @param index 
      */
-    public void addBind(final String name, final String operator, final Object param, Integer sqlType) {
+    public void addBind(final String name, final String operator, final SQLParam param) {
         if (param == null) throw new IllegalArgumentException("null.param.not.suported");
         where.append(name);
         where.append(" ").append(operator).append(" ?");
         params.add(param);
-        sqlTypes.add(sqlType);
     }
     
     /**

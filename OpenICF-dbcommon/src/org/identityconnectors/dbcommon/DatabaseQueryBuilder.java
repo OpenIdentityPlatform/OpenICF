@@ -200,23 +200,13 @@ public class DatabaseQueryBuilder {
      * Values in wrapped object
      * @return the where values
      */
-    public List<Object> getParams() {
+    public List<SQLParam> getParams() {
         if(where==null) {
-            return new ArrayList<Object>();
+            return new ArrayList<SQLParam>();
         }
         return where.getParams();
     }
 
-    /**
-     * The column types
-     * @return list of column types
-     */
-    public List<Integer> getSQLTypes() {
-        if(where==null) {
-            return new ArrayList<Integer>();
-        }
-        return where.getSQLTypes();
-    }    
     /**
      * The Required order by data subclass
      */

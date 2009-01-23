@@ -48,16 +48,16 @@ public class DatabaseConnectionTest {
     private static final String TEST_SQL_STATEMENT = "SELECT * FROM dummy";
     private static final String SELECT_SQL_STATEMENT = "SELECT * FROM dummy WHERE login = ? and name = ?";
     
-    private List<Object> values;
+    private List<SQLParam> values;
 
     /**
      * @throws java.lang.Exception
      */
     @Before
     public void setUp() throws Exception {
-        values = new ArrayList<Object>();
-        values.add(LOGIN); 
-        values.add(NAME); 
+        values = new ArrayList<SQLParam>();
+        values.add(new SQLParam(LOGIN)); 
+        values.add(new SQLParam(NAME)); 
     }
 
     /**
@@ -161,7 +161,7 @@ public class DatabaseConnectionTest {
         tpc.expectAndReturn("prepareStatement", xps);
 
         DatabaseConnection dbc = new DatabaseConnection(tpc.getProxy(Connection.class));
-        dbc.prepareStatement(TEST_SQL_STATEMENT, new ArrayList<Object>());
+        dbc.prepareStatement(TEST_SQL_STATEMENT, new ArrayList<SQLParam>());
         assertTrue("statement created", tpc.isDone());
         assertTrue("value binded", tps.isDone());
     }    
