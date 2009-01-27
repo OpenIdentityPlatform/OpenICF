@@ -299,14 +299,14 @@ public class LdapConfiguration extends AbstractConfiguration {
     }
 
     public String[] getBaseDNs() {
-        return baseDNs;
+        return baseDNs.clone();
     }
 
     public void setBaseDNs(String... baseDNs) {
         if (baseDNs == null) {
             throw new ConfigurationException("The base DNs parameter cannot be null");
         }
-        this.baseDNs = baseDNs;
+        this.baseDNs = baseDNs.clone();
     }
 
     public String getBindDN() {
@@ -358,7 +358,7 @@ public class LdapConfiguration extends AbstractConfiguration {
     }
 
     public String[] getExtendedObjectClasses() {
-        return extendedObjectClasses;
+        return extendedObjectClasses.clone();
     }
 
     public void setExtendedObjectClasses(String... extendedObjectClasses) {
@@ -369,7 +369,7 @@ public class LdapConfiguration extends AbstractConfiguration {
     }
 
     public String[] getExtendedNamingAttributes() {
-        return extendedNamingAttributes;
+        return extendedNamingAttributes.clone();
     }
 
     public void setExtendedNamingAttributes(String... extendedNamingAttributes) {

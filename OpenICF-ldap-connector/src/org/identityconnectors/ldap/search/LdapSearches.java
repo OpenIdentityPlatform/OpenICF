@@ -73,7 +73,7 @@ public class LdapSearches {
         builder.setScope(OperationOptions.SCOPE_SUBTREE);
         builder.setAttributesToGet("entryDN");
 
-        LdapSearch search = new LdapSearch(conn, oclass, query.toString(), builder.build());
+        LdapSearch search = new LdapSearch(conn, oclass, query, builder.build());
         ConnectorObject object = search.getSingleResult();
         if (object != null) {
             return AttributeUtil.getStringValue(object.getAttributeByName("entryDN"));
@@ -93,7 +93,7 @@ public class LdapSearches {
         builder.setScope(OperationOptions.SCOPE_SUBTREE);
         builder.setAttributesToGet("entryDN");
 
-        LdapSearch search = new LdapSearch(conn, oclass, query.toString(), builder.build());
+        LdapSearch search = new LdapSearch(conn, oclass, query, builder.build());
         search.execute(new ResultsHandler() {
             public boolean handle(ConnectorObject object) {
                 result.add(object);

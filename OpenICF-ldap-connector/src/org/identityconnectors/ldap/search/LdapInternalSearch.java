@@ -65,7 +65,7 @@ public class LdapInternalSearch {
         LdapSearchStrategy strategy;
         if (pagedSearchEnabled && !simplePagedSearchPreferred && conn.supportsControl(VirtualListViewControl.OID)) {
             // TODO: VLV index strategy.
-            strategy = null;
+            strategy = new SimplePagedSearchStrategy(conn.getInitialContext(), baseDNs, query, controls, pageSize);
         } else if (pagedSearchEnabled && conn.supportsControl(PagedResultsControl.OID)) {
             strategy = new SimplePagedSearchStrategy(conn.getInitialContext(), baseDNs, query, controls, pageSize);
         } else {
