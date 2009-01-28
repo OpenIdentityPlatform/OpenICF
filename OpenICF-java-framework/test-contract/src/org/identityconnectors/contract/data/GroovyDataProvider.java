@@ -30,6 +30,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
@@ -864,22 +866,31 @@ public class GroovyDataProvider implements DataProvider {
      * @param configName
      * @throws NoSuchFieldException
      * @throws IllegalAccessException
+     * @throws InvocationTargetException 
+     * @throws NoSuchMethodException 
+     * @throws SecurityException 
      */
     public void loadConfiguration(final String configName, Configuration cfg)
-            throws NoSuchFieldException, IllegalAccessException {
+            throws IllegalAccessException, InvocationTargetException, SecurityException, NoSuchMethodException {
         Map<String, Object> propMap = getPropertyMap(configName);
         assertNotNull(propMap);
         for (Entry<String, Object> entry : propMap.entrySet()) {
             final String key = entry.getKey();
-            final Field fld = cfg.getClass().getDeclaredField(key);
             final Object value = entry.getValue();
-            fld.setAccessible(true);
-            final Class<?> type = fld.getType();
-            if (type.isAssignableFrom(GuardedString.class)) {
-                fld.set(cfg, new GuardedString(value.toString().toCharArray()));
-            } else {
-                fld.set(cfg, value);
-            }
+            final String methodName = "set"+key.substring(0, 1).toUpperCase()+key.substring(1);
+            try {
+                if (value instanceof String) { //Check to set the GuardedString
+                    final Method method = cfg.getClass().getDeclaredMethod(methodName, GuardedString.class);
+                    method.setAccessible(true);
+                    method.invoke(cfg, new GuardedString(value.toString().toCharArray()));
+                    return;
+                }
+            } catch (NoSuchMethodException expected) {
+                //expected
+            } 
+            final Method method = cfg.getClass().getDeclaredMethod(methodName, value.getClass());
+            method.setAccessible(true);
+            method.invoke(cfg, value);
         }
     }
     /* ************** AUXILIARY METHODS *********************** */

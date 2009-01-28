@@ -22,6 +22,7 @@
  */
 package org.identityconnectors.contract.data;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Set;
 
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
@@ -195,9 +196,13 @@ public interface DataProvider {
      *       init.port="boo"
      *     }
      * </pre>
+     * @throws NoSuchMethodException the Setter method for the property in the configuration does not exist
+     * @throws IllegalAccessException 
+     * @throws InvocationTargetException   
+     * @throws SecurityException 
      */
     public void loadConfiguration(final String propertyName, Configuration cfg)
-        throws NoSuchFieldException, IllegalAccessException;
+        throws IllegalAccessException, InvocationTargetException, SecurityException, NoSuchMethodException;
     
     /**
      * converts the given property submap to Attribute set.
