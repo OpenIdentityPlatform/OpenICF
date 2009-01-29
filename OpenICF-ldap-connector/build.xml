@@ -138,10 +138,6 @@
 
     <target name="opends-clean" depends="opends-init">
         <delete dir="${opends.dest.dir}"/>
-        <delete>
-            <fileset dir="${lib.dir}/test">
-                <patternset refid="opends.libs"/>
-            </fileset>
-        </delete>
+        <delete dir="${lib.dir}/test"/>
     </target>
 </project>
