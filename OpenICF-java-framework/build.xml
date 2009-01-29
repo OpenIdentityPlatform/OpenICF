@@ -61,6 +61,7 @@
     <property name="nbm-name" value="IdentityConnectors-Plugin.nbm" />
     <property name="coverage.file" location="${basedir}/cobertura.ser"/>
     <property name="license.file" value="LICENSE.txt" />
+    <property name="thirdpartyreadme.file" value="THIRDPARTYREADME.txt" />
 
     <!--
         Determine if this a coverage build.
@@ -211,6 +212,7 @@
                     <patternset refid="exclude.javasrc"/>
                 </fileset>
                 <fileset file="${license.file}" />
+                <fileset file="${thirdpartyreadme.file}" />
             </filesets>
         </jarframework>
         <jarframework file="${jar.file-internal}"
@@ -221,6 +223,7 @@
                     <patternset refid="exclude.javasrc"/>
                 </fileset>
                 <fileset file="${license.file}" />
+                <fileset file="${thirdpartyreadme.file}" />
             </filesets>
         </jarframework>
         <jarframework file="${jar.file-contract}" 
@@ -231,6 +234,7 @@
                     <patternset refid="exclude.javasrc"/>
                 </fileset>
                 <fileset file="${license.file}" />
+                <fileset file="${thirdpartyreadme.file}" />
             </filesets>
         </jarframework>
     </target>
