@@ -287,7 +287,8 @@
     <!--
         Test Targets 
     -->
-    <target name="test" depends="jar, run-unit-tests, run-contract-tests, report-tests" />
+    <target  name="-pre-test-extra" description="Override this to execute tasks before the unit tests run"/>
+    <target name="test" depends="jar, -pre-test-extra, run-unit-tests, run-contract-tests, report-tests" />
     <target name="test-init">
         <!-- clear out previous test results -->
         <delete dir="${reports}/junit" />
