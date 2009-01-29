@@ -60,6 +60,7 @@
     <property name="build-toolkit" location="build/${toolkit.name}"/>
     <property name="nbm-name" value="IdentityConnectors-Plugin.nbm" />
     <property name="coverage.file" location="${basedir}/cobertura.ser"/>
+    <property name="license.file" value="LICENSE.txt" />
 
     <!--
         Determine if this a coverage build.
@@ -209,6 +210,7 @@
                 <fileset dir="${src-framework}">
                     <patternset refid="exclude.javasrc"/>
                 </fileset>
+                <fileset file="${license.file}" />
             </filesets>
         </jarframework>
         <jarframework file="${jar.file-internal}"
@@ -218,6 +220,7 @@
                 <fileset dir="${src-framework-internal}">
                     <patternset refid="exclude.javasrc"/>
                 </fileset>
+                <fileset file="${license.file}" />
             </filesets>
         </jarframework>
         <jarframework file="${jar.file-contract}" 
@@ -227,6 +230,7 @@
                 <fileset dir="${src-contract-test}">
                     <patternset refid="exclude.javasrc"/>
                 </fileset>
+                <fileset file="${license.file}" />
             </filesets>
         </jarframework>
     </target>

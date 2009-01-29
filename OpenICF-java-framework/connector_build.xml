@@ -65,6 +65,7 @@
         value="${dist}/${ConnectorBundle-Name}-${ConnectorBundle-Version}.jar" />
     <property name="zip.file" 
         value="${ConnectorBundle-Name}-${ConnectorBundle-Version}.zip" />
+    <property name="license.file" value="${framework.dir}/LICENSE.txt" />    
     <!--
         Determine if this a coverage build.
     -->
@@ -206,6 +207,8 @@
             </fileset>
             <!-- include all 3rd party deps -->
             <fileset refid="dist.libs" />
+            <!-- include license -->
+            <fileset file="${license.file}"/>
             <manifest>
                 <attribute name="ConnectorBundle-FrameworkVersion"
                     value="${ConnectorBundle-FrameworkVersion}" />
