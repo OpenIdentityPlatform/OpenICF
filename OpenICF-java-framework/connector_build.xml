@@ -103,6 +103,9 @@
         <patternset refid='ignore'/>
         <exclude name="**/*.java" />
     </patternset>
+    <patternset id="exclude.user">
+        <exclude name="${user.exclude}" if="user.exclude"/>
+    </patternset>
     <patternset id="exclude.test">
         <patternset refid="ignore" />
         <exclude name="**/*Test*" />
@@ -200,6 +203,7 @@
             <fileset dir="${src}">
                 <patternset refid="exclude.javasrc" />
                 <patternset refid="exclude.test" />
+                <patternset refid="exclude.user" />
             </fileset>
             <!-- include all compiled classes -->
             <fileset dir="${build}">
