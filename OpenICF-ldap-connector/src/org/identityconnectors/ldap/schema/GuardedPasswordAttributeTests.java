@@ -58,7 +58,7 @@ public class GuardedPasswordAttributeTests {
         assertEquals(1, attribute[0].size());
         byte[] value = (byte[]) attribute[0].get();
         for (int i = 0; i < value.length; i++) {
-            assertEquals(0, value[i]);
+            assertEquals((byte) 0, value[i]);
         }
     }
     

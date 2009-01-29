@@ -29,8 +29,119 @@
         <copy file="${user.home}/.connectors/connector-ldap/lib/OpenDS.jar" todir="${lib}/build"/>
     </target>
 
-    <target name="-pre-clean-extra">
+    <target name="-pre-clean-extra" depends="opends-clean">
         <delete file="${lib}/ldapbp.jar"/>
         <delete dir="${lib}/build"/>
+    </target>
+
+    <target name="-pre-test-extra" depends="opends-setup"/>
+
+    <target name="opends-init">
+        <property name="opends.zip.default.dir" value="${user.home}/.connectors/connector-ldap"/>
+        <property name="opends.zip.default" value="${opends.zip.default.dir}/OpenDS-1.0.0.zip"/>
+        <property name="opends.ldif" location="opends"/>
+        <property name="opends.dest.dir" location="src/org/identityconnectors/ldap/opends"/>
+    	<property name="opends.setup.dir" location="${java.io.tmpdir}/opends-setup"/>
+    	<property name="lib.dir" value="lib"/>
+        <patternset id="opends.libs">
+            <include name="OpenDS.jar"/>
+            <include name="aspectjrt.jar"/>
+            <include name="je.jar"/>
+        </patternset>
+        <condition property="opends.zip" value="${opends.zip.default}">
+            <available file="${opends.zip.default}"/>
+        </condition>
+    </target>
+
+    <target name="opends-download" depends="opends-init" unless="opends.zip">
+        <mkdir dir="${opends.zip.default.dir}"/>
+        <property name="opends.zip" value="${opends.zip.default}"/>
+        <get src="http://www.opends.org/promoted-builds/1.0.0/OpenDS-1.0.0.zip" dest="${opends.zip}"/>
+    </target>
+
+    <target name="opends-setup" depends="opends-init,opends-download" unless="opends.setup.skip">
+    	<delete dir="${opends.setup.dir}"/>
+
+    	<unzip dest="${opends.setup.dir}" src="${opends.zip}">
+            <!-- Remove the "OpenDS-1.x.y" prefix. -->
+    		<regexpmapper from="[^/\\]+[/\\](.*)" to="\1"/>
+		</unzip>
+        <chmod perm="+x">
+            <fileset dir="${opends.setup.dir}">
+                <include name="bin/import-ldif"/>
+                <include name="bin/ldapmodify"/>
+                <include name="bin/make-ldif"/>
+                <include name="bin/start-ds"/>
+                <include name="bin/stop-ds"/>
+                <include name="lib/_client-script.sh"/>
+                <include name="lib/_mixed-script.sh"/>
+                <include name="lib/_server-script.sh"/>
+            </fileset>
+        </chmod>
+    	<copy tofile="${opends.setup.dir}/config/config.ldif" file="${opends.ldif}/config.ldif"/>
+
+        <exec executable="${opends.setup.dir}/bin/make-ldif" dir="${opends.setup.dir}">
+            <arg value="-t"/>
+            <arg value="${opends.ldif}/bigcompany.template"/>
+            <arg value="-o"/>
+            <arg value="${opends.setup.dir}/bigcompany.ldif"/>
+        </exec>
+        <exec executable="${opends.setup.dir}/bin/import-ldif" dir="${opends.setup.dir}">
+            <arg value="--clearBackend"/>
+            <arg value="--ldifFile"/>
+            <arg value="${opends.ldif}/data.ldif"/>
+            <arg value="--backendID"/>
+            <arg value="userRoot"/>
+        </exec>
+        <exec executable="${opends.setup.dir}/bin/import-ldif" dir="${opends.setup.dir}">
+            <arg value="--append"/>
+            <arg value="--ldifFile"/>
+            <arg value="${opends.setup.dir}/bigcompany.ldif"/>
+            <arg value="--backendID"/>
+            <arg value="userRoot"/>
+        </exec>
+
+        <exec executable="${opends.setup.dir}/bin/start-ds" dir="${opends.setup.dir}"/>
+        <exec executable="${opends.setup.dir}/bin/ldapmodify" dir="${opends.setup.dir}">
+            <arg value="-h"/>
+            <arg value="localhost"/>
+            <arg value="-p"/>
+            <arg value="1389"/>
+            <arg value="-D"/>
+            <arg value="cn=Directory Manager"/>
+            <arg value="-w"/>
+            <arg value="password"/>
+            <arg value="-f"/>
+            <arg value="${opends.ldif}/admin.ldif"/>
+        </exec>
+        <exec executable="${opends.setup.dir}/bin/stop-ds" dir="${opends.setup.dir}"/>
+
+        <copy todir="${lib.dir}/test" flatten="true">
+            <fileset dir="${opends.setup.dir}/lib">
+                <patternset refid="opends.libs"/>
+            </fileset>
+        </copy>
+        <delete dir="${opends.dest.dir}"/>
+        <mkdir dir="${opends.dest.dir}"/>
+        <copy todir="${opends.dest.dir}">
+            <fileset dir="${opends.setup.dir}">
+                <!-- This needs to be in sync with LdapConnectorTestBase. -->
+                <include name="config/schema/*.ldif"/>
+                <include name="config/admin-backend.ldif"/>
+                <include name="config/config.ldif"/>
+                <include name="db/userRoot/00000000.jdb"/>
+            </fileset>
+        </copy>
+
+    	<delete dir="${opends.setup.dir}"/>
+    </target>
+
+    <target name="opends-clean" depends="opends-init">
+        <delete dir="${opends.dest.dir}"/>
+        <delete>
+            <fileset dir="${lib.dir}/test">
+                <patternset refid="opends.libs"/>
+            </fileset>
+        </delete>
     </target>
 </project>

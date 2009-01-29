@@ -20,19 +20,39 @@
 # "Portions Copyrighted [year] [name of copyright owner]"
 # ====================
 # -- END LICENSE
-##
-## Manifest properties
-## Refer to https://identityconnectors.dev.java.net/connector_bundles.html
-##
-#
-# If you add this bundle into Sun's automated build system, uncomment
-# the following properties and remove the static "ConnectorBundle-Version"
-# property. The build will automatically name the bundle jar with dynamic
-# version information.
-# 
+define suffix=dc=example,dc=com
+define maildomain=example.com
+define numusers=10000
 
-ConnectorBundle-FrameworkVersion=1.0
-ConnectorBundle-Version=1.0.0.0
-ConnectorBundle-Name=org.identityconnectors.ldap
+branch: [suffix]
 
-user.exclude=**opends**
+branch: o=Big Company,[suffix]
+
+branch: ou=People,o=Big Company,[suffix]
+subordinateTemplate: person:[numusers]
+
+template: person
+rdnAttr: uid
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+givenName: <first>
+sn: <last>
+cn: {givenName} {sn}
+initials: {givenName:1}<random:chars:ABCDEFGHIJKLMNOPQRSTUVWXYZ:1>{sn:1}
+employeeNumber: <sequential:0>
+uid: user.{employeeNumber}
+mail: {uid}@[maildomain]
+userPassword: password
+telephoneNumber: <random:telephone>
+homePhone: <random:telephone>
+pager: <random:telephone>
+mobile: <random:telephone>
+street: <random:numeric:5> <file:streets> Street
+l: <file:cities>
+st: <file:states>
+postalCode: <random:numeric:5>
+postalAddress: {cn}${street}${l}, {st}  {postalCode}
+description: This is the description for {cn}.
+

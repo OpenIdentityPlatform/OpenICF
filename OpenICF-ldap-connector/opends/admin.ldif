@@ -20,19 +20,27 @@
 # "Portions Copyrighted [year] [name of copyright owner]"
 # ====================
 # -- END LICENSE
-##
-## Manifest properties
-## Refer to https://identityconnectors.dev.java.net/connector_bundles.html
-##
-#
-# If you add this bundle into Sun's automated build system, uncomment
-# the following properties and remove the static "ConnectorBundle-Version"
-# property. The build will automatically name the bundle jar with dynamic
-# version information.
-# 
+dn: uid=admin,dc=example,dc=com
+changetype: add
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+sn: Administrator
+cn: Administrator
+userPassword: password
+# Cf. https://www.opends.org/wiki/page/HowToManageRootUserGlobalAdministratorAndAdministratorAccounts
+# This is needed for searches like (objectClass=inetOrgPerson) which return almost all entries.
+ds-privilege-name: unindexed-search
+# To be able to change passwords.
+ds-privilege-name: password-reset
 
-ConnectorBundle-FrameworkVersion=1.0
-ConnectorBundle-Version=1.0.0.0
-ConnectorBundle-Name=org.identityconnectors.ldap
+dn: dc=example,dc=com
+changetype: modify
+add: aci
+aci: (targetattr = "*")(version 3.0; acl "Admin Access"; allow(all) userdn = "ldap:///uid=admin,dc=example,dc=com";)
 
-user.exclude=**opends**
+dn: cn=Access Control Handler,cn=config
+changetype: modify
+add: ds-cfg-global-aci
+ds-cfg-global-aci: (targetcontrol = "1.2.840.113556.1.4.319")(version 3.0; acl "Allow Simple Paged Control Admin Access"; allow(read) userdn = "ldap:///uid=admin,dc=example,dc=com";)

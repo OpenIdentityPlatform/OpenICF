@@ -178,7 +178,7 @@ public abstract class LdapConnectorTestBase {
             if (!parent.exists() && !parent.mkdirs()) {
                 throw new IOException(file.getAbsolutePath());
             }
-            IOUtil.extractResourceToFile(LdapConnectorTestBase.class, "test/opends/" + path, file);
+            IOUtil.extractResourceToFile(LdapConnectorTestBase.class, "opends/" + path, file);
         }
 
         File configDir = new File(root, "config");
