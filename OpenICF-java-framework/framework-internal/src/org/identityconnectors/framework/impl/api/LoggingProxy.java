@@ -78,6 +78,14 @@ public class LoggingProxy implements InvocationHandler {
             return ret;
         } catch (InvocationTargetException e) {
             Throwable root = e.getCause();
+            
+            try {
+                LOG.log(_op, methodName, LEVEL, "Exception: ", root);
+            }
+            catch (Throwable t) {
+                // Ignore.  Don't let a failed log prevent this from completing.
+            }
+            
             if (root instanceof RuntimeException) {
                 throw (RuntimeException) root;
             } else if (root instanceof Exception) {
