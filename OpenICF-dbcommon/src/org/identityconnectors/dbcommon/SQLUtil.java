@@ -40,11 +40,7 @@ import java.sql.Types;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import javax.naming.NamingException;
 import javax.sql.DataSource;
@@ -880,12 +876,47 @@ public final class SQLUtil {
             rs = st.executeQuery(sql);
             Object value = null;
             if(rs.next()){
+                //If needed , switch to getSQLParam
                 value = rs.getObject(1);
                 return value;
             }
             else{
                 throw new IllegalStateException("No row found");
             }
+        }
+        finally{
+            closeQuietly(rs);
+            closeQuietly(st);
+        }
+    }
+    
+    /**
+     * Selects all rows from select.
+     * It uses {@link ResultSet#getMetaData()} to find columns count and use {@link ResultSet#getObject(int)} to retrieve
+     * column value.  
+     * @param conn JDBC connection
+     * @param sql SQL select with or without params
+     * @param params
+     * @return list of selected rows
+     * @throws SQLException
+     */
+    public static List<Object[]> selectRows(Connection conn, String sql, Object ...params) throws SQLException{
+        PreparedStatement st = null;
+        ResultSet rs = null;
+        List<Object[]> rows = new ArrayList<Object[]>();
+        try{
+            st = conn.prepareStatement(sql);
+            setParams(st, SQLParam.asList(Arrays.asList(params)));
+            rs = st.executeQuery(sql);
+            final ResultSetMetaData metaData = rs.getMetaData();
+            while(rs.next()){
+                Object[] row = new Object[metaData.getColumnCount()];
+                for(int i = 0; i < row.length;i++){
+                    row[i] = getSQLParam(rs, i + 1, metaData.getColumnType(i + 1));
+                }
+                rows.add(row);
+            }
+            return rows;
         }
         finally{
             closeQuietly(rs);
