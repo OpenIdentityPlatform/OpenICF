@@ -118,10 +118,10 @@ public class AttributeTests extends ObjectClassRunner {
     /* ******************** TEST METHODS ******************** */
     /**
      * <p>
-     * Non readable attributes are not returned by default
+     * Non readable attributes should _not_ be returned by default
      * </p>
      * <p>
-     * API operations of acquiring attributes: <code>GetApiOp</code>
+     * API operations for acquiring attributes: <code>GetApiOp</code>
      * </p>
      */
     @Test
@@ -172,11 +172,11 @@ public class AttributeTests extends ObjectClassRunner {
 
     /**
      * <p>
-     * not returned by default attributes should not be returned, unless
+     * Not returned by default attributes should not be returned, unless
      * specified in attributesToGet ({@link OperationOptions})
      * </p>
      * <p>
-     * API operations of acquiring attributes:
+     * API operations for acquiring attributes:
      * </p>
      * <ul>
      * <li>{@link GetApiOp}</li>
@@ -198,10 +198,11 @@ public class AttributeTests extends ObjectClassRunner {
     }
     
     /**
-     * update of non-updateable attribute will fail
+     * Update of non-updateable attribute is not acceptable.
+     * Connector should throw a RuntimeException.
      * 
      * <p>
-     * API operations of acquiring attributes: {@link GetApiOp}
+     * API operations for acquiring attributes: {@link GetApiOp}
      * </p>
      */
     @Test
@@ -390,7 +391,7 @@ public class AttributeTests extends ObjectClassRunner {
 
                 assertNotNull("Unable to retrieve newly created object", obj);
 
-                // check: Required attributes must be creatable.
+                // check: Required attributes must be createable.
                 for (Attribute attr : obj.getAttributes()) {
                     if (ConnectorHelper.isRequired(oci, attr)) {
                         if (!ConnectorHelper.isCreateable(oci, attr)) {
