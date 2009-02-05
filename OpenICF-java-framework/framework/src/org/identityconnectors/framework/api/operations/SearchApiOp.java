@@ -29,11 +29,14 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 
 public interface SearchApiOp extends APIOperation {
     /**
-     * Search the resource for all objects that match the filter.
+     * Search the resource for all objects that match the object class and filter.
      * 
+     * @param oclass
+     *            reduces the number of entries to only those that match the
+     *            {@link ObjectClass} provided.
      * @param filter
      *            Reduces the number of entries to only those that match the
-     *            {@link Filter} provided.
+     *            {@link Filter} provided, if any. May be null.
      * @param handler
      *            class responsible for working with the objects returned from
      *            the search.
