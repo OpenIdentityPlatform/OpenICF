@@ -82,28 +82,5 @@ public class PredefinedAttributeInfos {
                 String.class,
                 EnumSet.of(Flags.MULTIVALUED,
                         Flags.NOT_RETURNED_BY_DEFAULT));
-
-    /**
-     * Accounts that are members of a group or organization. The Attribute
-     * values are the UID value of each account the has a group or organization
-     * membership.
-     */
-    public static final AttributeInfo ACCOUNTS =
-        AttributeInfoBuilder.build(PredefinedAttributes.ACCOUNTS_NAME,
-                String.class,
-                EnumSet.of(Flags.MULTIVALUED,
-                        Flags.NOT_RETURNED_BY_DEFAULT));
-                
-        
-
-    /**
-     * Organization that an account or person is a member of. The Attribute
-     * value is the UID value of the organization that an account or person is
-     * a member of.
-     */
-    public static final AttributeInfo ORGANIZATION =
-        AttributeInfoBuilder.build(PredefinedAttributes.ORGANIZATION_NAME,
-                String.class,
-                EnumSet.of(Flags.NOT_RETURNED_BY_DEFAULT));
         
 }

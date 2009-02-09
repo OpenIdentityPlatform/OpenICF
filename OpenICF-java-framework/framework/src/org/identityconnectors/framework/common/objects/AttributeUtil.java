@@ -32,7 +32,6 @@ import java.util.Set;
 
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.CollectionUtil;
-import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.security.GuardedString;
 
 /**
@@ -361,9 +360,7 @@ public final class AttributeUtil {
     }
 
     private static boolean isSpecialName(String name) {
-        // note this is dangerous because we need to be consistent
-        // in the naming of special attributes.
-        return (name.startsWith("@@") && name.endsWith("@@"));
+        return NameUtil.isSpecialName(name);
     }
 
     /**
@@ -373,13 +370,7 @@ public final class AttributeUtil {
      * {@link ObjectClass} or one of the {@link OperationalAttributes}.
      */
     public static String createSpecialName(String name) {
-        if (StringUtil.isBlank(name)) {
-            final String ERR = "Name parameter must not be blank!";
-            throw new IllegalArgumentException(ERR);
-        }
-        StringBuilder bld = new StringBuilder();
-        bld.append("@@").append(name).append("@@");
-        return bld.toString();
+        return NameUtil.createSpecialName(name);
     }
 
     /**

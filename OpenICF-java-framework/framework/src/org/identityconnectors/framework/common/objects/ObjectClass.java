@@ -22,6 +22,8 @@
  */
 package org.identityconnectors.framework.common.objects;
 
+import static org.identityconnectors.framework.common.objects.ObjectClassUtil.createSpecialName;
+
 import java.util.Locale;
 
 /**
@@ -36,8 +38,6 @@ import java.util.Locale;
  */
 public final class ObjectClass {
     
-
-
     // =======================================================================
     // Basic Types--i.e., common values of the ObjectClass attribute.
     // =======================================================================    
@@ -47,30 +47,14 @@ public final class ObjectClass {
      * {@linkplain #getObjectClassValue value of ObjectClass} 
      * that is reserved for {@link ObjectClass#ACCOUNT}.
      */
-    public static final String ACCOUNT_NAME = "account";
-
-    /**
-     * This constant defines a specific 
-     * {@linkplain #getObjectClassValue value of ObjectClass} 
-     * that is reserved for {@link ObjectClass#PERSON}.
-     */
-    public static final String PERSON_NAME = "person";
+    public static final String ACCOUNT_NAME = createSpecialName("account");
 
     /**
      * This constant defines a specific 
      * {@linkplain #getObjectClassValue value of ObjectClass} 
      * that is reserved for {@link ObjectClass#GROUP}.
      */
-    public static final String GROUP_NAME = "group";
-
-    /**
-     * This constant defines a specific 
-     * {@linkplain #getObjectClassValue value of ObjectClass} 
-     * that is reserved for {@link ObjectClass#ORGANIZATION}.
-     */
-    public static final String ORGANIZATION_NAME = "organization";
-    
-
+    public static final String GROUP_NAME = createSpecialName("group");
     
     // =======================================================================
     // Create only after all other static initializers
@@ -92,43 +76,12 @@ public final class ObjectClass {
     public static final ObjectClass ACCOUNT = new ObjectClass(ACCOUNT_NAME);
 
     /**
-     * Represents a human being <i>independent of any specific system or application</i>.
-     * <p>
-     * When an attribute matching this constant is found within a <code>ConnectorObject</code>,
-     * this indicates that the <code>ConnectorObject</code> represents a human being
-     * (actual or fictional) independent of any specific system or application.
-     * <p>
-     * Generally, a Person object describes "real-world" characteristics of a human being
-     * (such as email-address, home address, telephone numbers, gender, and so forth)
-     * that are <em>not</em> specific to any system or application.
-     * 
-     * NOTE: Few applications (other than provisioning systems) need a separate ObjectClass 
-     * for Person; most applications simply treat every user as an Account.  
-     * At a practical level, the most obvious distinction between Person and Account
-     * is that a <i>Person owns Accounts</i>.  That is, a human being is responsible for 
-     * properly using and securing his or her access to various systems and applications.
-     * @see #ACCOUNT
-     */
-    public static final ObjectClass PERSON = new ObjectClass(PERSON_NAME);
-
-    /**
      * Represents a collection that contains an object (such as a person or an account).
      * <p>
      * When an attribute matching this constant is found within a <code>ConnectorObject</code>,
      * this indicates that the <code>ConnectorObject</code> represents a group.
      */
     public static final ObjectClass GROUP = new ObjectClass(GROUP_NAME);
-
-    /**
-     * Represents (a portion of) the management hierarchy of a corporation that contains a person.
-     * <p>
-     * When an attribute matching this constant is found within a <code>ConnectorObject</code>,
-     * this indicates that the <code>ConnectorObject</code> represents an organization.
-     * An organization usually contains people, but may also contain other types of objects.
-     *
-     * @see #GROUP
-     */
-    public static final ObjectClass ORGANIZATION = new ObjectClass(ORGANIZATION_NAME);
 
     private final String _type;
     

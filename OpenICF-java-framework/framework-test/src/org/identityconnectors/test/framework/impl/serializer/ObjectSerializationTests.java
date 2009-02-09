@@ -644,7 +644,7 @@ public class ObjectSerializationTests {
         OperationOptionInfo opInfo =
             new OperationOptionInfo("name",Integer.class);
         ObjectClassInfoBuilder bld = new ObjectClassInfoBuilder();
-        bld.setType(ObjectClass.ORGANIZATION_NAME);
+        bld.setType(ObjectClass.ACCOUNT_NAME);
         ObjectClassInfo info = bld.build();
         Set<ObjectClassInfo> temp = CollectionUtil.newSet(info);
         Map<Class<? extends APIOperation>,Set<ObjectClassInfo>> map = 

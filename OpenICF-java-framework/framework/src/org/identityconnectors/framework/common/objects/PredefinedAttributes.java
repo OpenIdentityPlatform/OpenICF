@@ -76,35 +76,4 @@ public class PredefinedAttributes {
      */
     public static final String GROUPS_NAME = createSpecialName("GROUPS");
 
-    /**
-     * Attribute that refers to accounts that are members of 
-     * an {@linkplain ConnectorObject object}
-     * (usually a {@linkplain ObjectClass#GROUP group} 
-     * or an {@linkplain ObjectClass#ORGANIZATION organization}). 
-     * This {@code "ACCOUNTS"} attribute is intended for 
-     * {@link ObjectClass#GROUP} or {@link ObjectClass#ORGANIZATION},
-     * but another object-class that can have accounts as members
-     * could support this attribute.
-     * <p>
-     * Each (element within the) value of this attribute
-     * is the string value of a Uid.  Each Uid identifies 
-     * an instance of {@linkplain ObjectClass#ACCOUNT Account}.
-     */
-    public static final String ACCOUNTS_NAME = createSpecialName("ACCOUNTS");
-
-    /**
-     * Attribute that refers to the organization to which 
-     * an {@linkplain ConnectorObject object} 
-     * (usually an {@linkplain ObjectClass#ACCOUNT account}
-     * or a {@linkplain ObjectClass#PERSON person}) belongs. 
-     * This {@code "ORGANIZATION"} attribute is intended for 
-     * {@link ObjectClass#ACCOUNT} or {@link ObjectClass#PERSON},
-     * but another object-class that can belong to an organization
-     * could support this attribute.
-     * <p>
-     * This attribute should contain at most a single value.
-     * That value must be the string value of a Uid that identifies
-     * an instance of {@linkplain ObjectClass#ORGANIZATION organization}.
-     */
-    public static final String ORGANIZATION_NAME = createSpecialName("ORGANIZATION");
 }
