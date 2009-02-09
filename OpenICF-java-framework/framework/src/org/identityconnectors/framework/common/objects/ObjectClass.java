@@ -47,14 +47,14 @@ public final class ObjectClass {
      * {@linkplain #getObjectClassValue value of ObjectClass} 
      * that is reserved for {@link ObjectClass#ACCOUNT}.
      */
-    public static final String ACCOUNT_NAME = createSpecialName("account");
+    public static final String ACCOUNT_NAME = createSpecialName("ACCOUNT");
 
     /**
      * This constant defines a specific 
      * {@linkplain #getObjectClassValue value of ObjectClass} 
      * that is reserved for {@link ObjectClass#GROUP}.
      */
-    public static final String GROUP_NAME = createSpecialName("group");
+    public static final String GROUP_NAME = createSpecialName("GROUP");
     
     // =======================================================================
     // Create only after all other static initializers
