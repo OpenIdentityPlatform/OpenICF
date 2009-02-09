@@ -317,7 +317,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                 		"attributes as another object.", uid1.equals(uid2));
                 }
                 catch (RuntimeException ex) {
-                    // ok - update could throw this in case @@NAME@@ and @@UID@@ are the same attributes
+                    // ok - update could throw this in case __NAME__ and __UID__ are the same attributes
                 }
             } finally {
                 if (uid1 != null) {

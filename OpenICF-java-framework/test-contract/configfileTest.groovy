@@ -63,8 +63,8 @@ remus = Lazy.random("####", Integer.class);
 // map escaping of invalid names
 attributeMap['string'] = 'Good morning!'
 attributeMapSecond['stringSec'] = 'Good morning Mrs. Smith!'
-Delete.account['@@NAME@@'].string = 'blaf'
-account['@@NAME@@'].string = 'blaf blaf'
+Delete.account['__NAME__'].string = 'blaf'
+account['__NAME__'].string = 'blaf blaf'
 
 //literals macro replacement testing
 Tfloat= Lazy.random('#####\\.##', Float.class)
@@ -92,8 +92,8 @@ SchemaXX {
 	sample = 'Mysterious universe'
 }// Schema
 
-// attributes containing @@
-Schema."@@NAME@@".attribute.account = 'Ahoj ship!'
+// attributes containing __
+Schema."__NAME__".attribute.account = 'Ahoj ship!'
 
 // repetitive prefix
 aaa.bbb.xxx = "ahoj"
@@ -113,6 +113,6 @@ mapWithLazyCalls = [key1: Lazy.random("###"), key2: ("rrr" + Lazy.random("###"))
 
 
 abcAccount{
-    all."@@NAME@@"="CONUSR-" + Lazy.random("AAAAA")
-    all."@@PASSWORD@@"="tstpwd"
+    all."__NAME__"="CONUSR-" + Lazy.random("AAAAA")
+    all."__PASSWORD__"="tstpwd"
 }

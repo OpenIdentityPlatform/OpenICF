@@ -102,7 +102,7 @@ public final class ObjectClass {
      * Get the name of the object class.
      * (For example, the name of {@link ObjectClass#ACCOUNT}
      * is the value defined by {@link ObjectClass#ACCOUNT_NAME},
-     * which is <code>"@@ACCOUNT@@"</code>.)
+     * which is <code>"__ACCOUNT__"</code>.)
      */
     public String getObjectClassValue() {
         return _type;

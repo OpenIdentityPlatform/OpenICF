@@ -223,14 +223,14 @@ public class GroovyDataProviderTest {
                 .exists());
 
         {
-            Object o = getProperty(gdp, "Delete.account.@@NAME@@.string");
+            Object o = getProperty(gdp, "Delete.account.__NAME__.string");
             Assert.assertNotNull(o);
             Assert.assertTrue(o instanceof String);
             Assert.assertTrue(o.toString() == "blaf");
         }
 
         {
-            Object o = getProperty(gdp, "account.@@NAME@@.string");
+            Object o = getProperty(gdp, "account.__NAME__.string");
             Assert.assertNotNull(o);
             Assert.assertTrue(o instanceof String);
             Assert.assertTrue(o.toString() == "blaf blaf");
@@ -331,7 +331,7 @@ public class GroovyDataProviderTest {
 
     @Test
     public void testAtAtPropertyNamesQuery() throws Exception {
-        Object o = getProperty(gdp, "Schema.@@NAME@@.attribute.account");
+        Object o = getProperty(gdp, "Schema.__NAME__.attribute.account");
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof String && o.toString() == "Ahoj ship!");
     }
@@ -403,10 +403,10 @@ public class GroovyDataProviderTest {
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof Map);
         Map m = (Map) o;
-        Assert.assertTrue(m.get("@@NAME@@") instanceof String);
-        Assert.assertTrue(((String) m.get("@@NAME@@")).startsWith("CONUSR-"));
-        Assert.assertTrue(m.get("@@PASSWORD@@") instanceof String);
-        Assert.assertTrue(((String) m.get("@@PASSWORD@@")).equals("tstpwd"));
+        Assert.assertTrue(m.get("__NAME__") instanceof String);
+        Assert.assertTrue(((String) m.get("__NAME__")).startsWith("CONUSR-"));
+        Assert.assertTrue(m.get("__PASSWORD__") instanceof String);
+        Assert.assertTrue(((String) m.get("__PASSWORD__")).equals("tstpwd"));
     }
 
     /* ************* UTILITY METHODS ***************** */

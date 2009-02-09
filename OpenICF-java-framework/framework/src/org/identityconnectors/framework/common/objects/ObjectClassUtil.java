@@ -51,7 +51,7 @@ public class ObjectClassUtil {
     }
 
     /**
-     * Create a special name from the specified name. Add the <code>@@</code>
+     * Create a special name from the specified name. Add the <code>__</code>
      * string as both prefix and suffix. This indicates that a name
      * identifies a special object class such as a predefined one.
      */

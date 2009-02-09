@@ -364,7 +364,7 @@ public final class AttributeUtil {
     }
 
     /**
-     * Create a special name from the specified name. Add the <code>@@</code>
+     * Create a special name from the specified name. Add the <code>__</code>
      * string as both prefix and suffix. This indicates that an attribute name
      * identifies a "special attribute" such as {@link Uid},
      * {@link ObjectClass} or one of the {@link OperationalAttributes}.

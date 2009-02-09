@@ -29,7 +29,7 @@ class NameUtil {
     private NameUtil() {}
 
     public static boolean isSpecialName(String name) {
-        return (name.startsWith("@@") && name.endsWith("@@"));
+        return (name.startsWith("__") && name.endsWith("__"));
     }
 
     public static String createSpecialName(String name) {
@@ -38,7 +38,7 @@ class NameUtil {
             throw new IllegalArgumentException(ERR);
         }
         StringBuilder bld = new StringBuilder();
-        bld.append("@@").append(name).append("@@");
+        bld.append("__").append(name).append("__");
         return bld.toString();
     }
 }
