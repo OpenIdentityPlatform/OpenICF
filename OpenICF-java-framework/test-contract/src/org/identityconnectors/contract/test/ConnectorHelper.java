@@ -170,7 +170,7 @@ public class ConnectorHelper {
                 if (configObject != null) {
                     LOG.info("Setting property ''{0}'' to value ''{1}''",
                             propName, configObject.toString());
-                    if (prop.getType().equals(GuardedString.class)) {
+                    if (prop.getType().equals(GuardedString.class) && !(configObject instanceof GuardedString)) {
                         configObject = new GuardedString(configObject.toString().toCharArray());
                     }
                     properties.setPropertyValue(propName, configObject);
