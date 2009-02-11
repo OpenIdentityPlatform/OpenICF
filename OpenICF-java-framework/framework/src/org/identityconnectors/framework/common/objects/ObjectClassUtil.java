@@ -58,4 +58,15 @@ public class ObjectClassUtil {
     public static String createSpecialName(String name) {
         return NameUtil.createSpecialName(name);
     }
+
+    /**
+     * Compares two object class names for equality.
+     * @param name1 the first object class name.
+     * @param name2 the second object class name.
+     * @return true iff the two object class names are equal.
+     */
+    public static boolean namesEqual(String name1, String name2) {
+        return NameUtil.namesEqual(name1, name2);
+    }
+
 }

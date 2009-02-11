@@ -23,6 +23,7 @@
 package org.identityconnectors.test.framework.common.objects;
 
 import static org.identityconnectors.framework.common.objects.ObjectClassUtil.isSpecial;
+import static org.identityconnectors.framework.common.objects.ObjectClassUtil.namesEqual;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -35,5 +36,10 @@ public class ObjectClassUtilTests {
     public void testIsSpecial() {
         assertTrue(isSpecial(ObjectClass.ACCOUNT));
         assertFalse(isSpecial(new ObjectClass("o")));
+    }
+
+    @Test
+    public void testNamesEqual() {
+        assertTrue(namesEqual("ACCOUNT", "account"));
     }
 }

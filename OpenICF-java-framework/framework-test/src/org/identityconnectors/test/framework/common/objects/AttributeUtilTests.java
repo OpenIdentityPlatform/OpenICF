@@ -27,6 +27,7 @@ import static org.identityconnectors.framework.common.objects.AttributeUtil.getA
 import static org.identityconnectors.framework.common.objects.AttributeUtil.getIntegerValue;
 import static org.identityconnectors.framework.common.objects.AttributeUtil.getStringValue;
 import static org.identityconnectors.framework.common.objects.AttributeUtil.isSpecial;
+import static org.identityconnectors.framework.common.objects.AttributeUtil.namesEqual;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -189,7 +190,12 @@ public class AttributeUtilTests {
         assertTrue(isSpecial(new Uid("1")));
         assertFalse(isSpecial(build("b")));
     }
-    
+
+    @Test
+    public void testNamesEqual() {
+        assertTrue(namesEqual("givenName", "givenname"));
+    }
+
     @Test
     public void testIsMethod() {
         assertTrue(build("fad").is("Fad"));

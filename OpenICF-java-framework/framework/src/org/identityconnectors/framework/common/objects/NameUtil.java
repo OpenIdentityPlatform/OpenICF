@@ -41,4 +41,13 @@ class NameUtil {
         bld.append("__").append(name).append("__");
         return bld.toString();
     }
+
+    public static boolean namesEqual(String name1, String name2) {
+        return name1.toUpperCase(LocaleCache.getInstance()).equals(
+                name2.toUpperCase(LocaleCache.getInstance()));
+    }
+
+    public static int nameHashCode(String name) {
+        return name.toUpperCase(LocaleCache.getInstance()).hashCode();
+    }
 }

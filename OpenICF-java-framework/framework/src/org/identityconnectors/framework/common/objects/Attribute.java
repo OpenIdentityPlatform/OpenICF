@@ -22,6 +22,9 @@
  */
 package org.identityconnectors.framework.common.objects;
 
+import static org.identityconnectors.framework.common.objects.NameUtil.nameHashCode;
+import static org.identityconnectors.framework.common.objects.NameUtil.namesEqual;
+
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -144,8 +147,7 @@ public class Attribute {
      *         that of the one in {@link Attribute}.
      */
     public boolean is(String name) {
-        return this.name.toUpperCase(LocaleCache.getInstance()).equals(
-                name.toUpperCase(LocaleCache.getInstance()));
+        return namesEqual(this.name, name);
     }
 
     // ===================================================================
@@ -153,7 +155,7 @@ public class Attribute {
     // ===================================================================
     @Override
     public final int hashCode() {
-        return getName().toUpperCase(LocaleCache.getInstance()).hashCode();
+        return nameHashCode(name);
     }
 
     @Override

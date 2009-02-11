@@ -22,6 +22,9 @@
  */
 package org.identityconnectors.framework.common.objects;
 
+import static org.identityconnectors.framework.common.objects.NameUtil.nameHashCode;
+import static org.identityconnectors.framework.common.objects.NameUtil.namesEqual;
+
 import java.util.Map;
 import java.util.Set;
 
@@ -87,8 +90,7 @@ public final class ObjectClassInfo {
      *         that of the one in this {@link ObjectClassInfo}.
      */
     public final boolean is(String name) {
-        return _type.toUpperCase(LocaleCache.getInstance()).equals(
-                name.toUpperCase(LocaleCache.getInstance()));
+        return namesEqual(_type, name);
     }
     
     @Override
@@ -123,7 +125,7 @@ public final class ObjectClassInfo {
 
     @Override
     public int hashCode() {
-        return _type.toUpperCase(LocaleCache.getInstance()).hashCode();
+        return nameHashCode(_type);
     }
 
 

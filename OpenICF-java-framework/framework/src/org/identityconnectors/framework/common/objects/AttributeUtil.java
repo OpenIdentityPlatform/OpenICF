@@ -374,6 +374,16 @@ public final class AttributeUtil {
     }
 
     /**
+     * Compares two attribute names for equality.
+     * @param name1 the first attribute name.
+     * @param name2 the second attribute name.
+     * @return true iff the two attribute names are equal.
+     */
+    public static boolean namesEqual(String name1, String name2) {
+        return NameUtil.namesEqual(name1, name2);
+    }
+
+    /**
      * Get the {@link Name} attribute from the specified set of attributes.
      * 
      * @param attrs
