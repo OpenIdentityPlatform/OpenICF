@@ -203,7 +203,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                 assertNotNull("Create returned null Uid.", uid);
                 
                 for (AttributeInfo attInfo : getObjectClassInfo().getAttributeInfo()) {
-                    if (attInfo.isUpdateable() && !attInfo.isRequired() && !AttributeUtil.isSpecial(attInfo)) {
+                    if (attInfo.isUpdateable() && !attInfo.isRequired() && !AttributeUtil.isSpecial(attInfo) && !attInfo.getType().isPrimitive()) {
                         Set<Attribute> nullAttributes = new HashSet<Attribute>();
                         Attribute attr = AttributeBuilder.build(attInfo.getName());
                         nullAttributes.add(attr);
