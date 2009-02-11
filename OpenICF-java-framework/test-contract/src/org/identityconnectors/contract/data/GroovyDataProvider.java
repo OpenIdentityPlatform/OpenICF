@@ -879,18 +879,12 @@ public class GroovyDataProvider implements DataProvider {
             final Object value = entry.getValue();
             final String methodName = "set"+key.substring(0, 1).toUpperCase()+key.substring(1);
             try {
-                if (value instanceof String) { //Check to set the GuardedString
-                    final Method method = cfg.getClass().getDeclaredMethod(methodName, GuardedString.class);
-                    method.setAccessible(true);
-                    method.invoke(cfg, new GuardedString(value.toString().toCharArray()));
-                    return;
-                }
-            } catch (NoSuchMethodException expected) {
-                //expected
-            } 
-            final Method method = cfg.getClass().getDeclaredMethod(methodName, value.getClass());
-            method.setAccessible(true);
-            method.invoke(cfg, value);
+                final Method method = cfg.getClass().getDeclaredMethod(methodName, value.getClass());
+                method.setAccessible(true);
+                method.invoke(cfg, value);
+            } catch (NoSuchMethodException  expected) {
+                LOG.warn("The setter {0} in the configuration does not exist!", methodName);
+            }
         }
     }
     /* ************** AUXILIARY METHODS *********************** */
