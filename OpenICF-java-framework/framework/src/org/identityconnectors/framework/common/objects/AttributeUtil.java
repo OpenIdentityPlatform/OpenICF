@@ -359,7 +359,13 @@ public final class AttributeUtil {
         return isSpecialName(name);
     }
 
-    private static boolean isSpecialName(String name) {
+    /**
+     * Determines whether the specified attribute name is special in the
+     * sense of {@link #createSpecialName}.
+     * @param name the attribute name to test against.
+     * @return true iff the attribute name is special.
+     */
+    public static boolean isSpecialName(String name) {
         return NameUtil.isSpecialName(name);
     }
 

@@ -46,7 +46,13 @@ public class ObjectClassUtil {
         return isSpecialName(name);
     }
 
-    private static boolean isSpecialName(String name) {
+    /**
+     * Determines whether the specified object class name is special in the
+     * sense of {@link #createSpecialName}.
+     * @param name the object class name to test against.
+     * @return true iff the object class name is special.
+     */
+    public static boolean isSpecialName(String name) {
         return NameUtil.isSpecialName(name);
     }
 
