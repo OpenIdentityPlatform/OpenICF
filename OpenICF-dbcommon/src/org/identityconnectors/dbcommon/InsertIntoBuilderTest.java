@@ -69,7 +69,7 @@ public class InsertIntoBuilderTest {
 
         assertNotNull(actual.getParams());
         assertEquals("The count", 1, actual.getParams().size());
-        assertEquals("The val", "val1", actual.getParams().get(0).getParam());
+        assertEquals("The val", "val1", actual.getParams().get(0).getValue());
     }
 
     /**
@@ -92,8 +92,8 @@ public class InsertIntoBuilderTest {
 
         assertNotNull(actual.getParams());
         assertEquals("The count", 2, actual.getParams().size());
-        assertEquals("The val", "val1", actual.getParams().get(0).getParam());
-        assertEquals("The val", "val2", actual.getParams().get(1).getParam());
+        assertEquals("The val", "val1", actual.getParams().get(0).getValue());
+        assertEquals("The val", "val2", actual.getParams().get(1).getValue());
         assertEquals("The val", Types.NULL, actual.getParams().get(0).getSqlType());
         assertEquals("The val", Types.VARCHAR, actual.getParams().get(1).getSqlType());
     }

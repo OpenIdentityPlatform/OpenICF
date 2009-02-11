@@ -76,7 +76,7 @@ public final class SQLParam {
      * 
      * @return a value
      */
-    public Object getParam() {
+    public Object getValue() {
         return param.first;
     }
 

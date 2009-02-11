@@ -102,7 +102,7 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         final FilterWhereBuilder ret = createBuilder();
         if (not) ret.getWhere().append("NOT ");
         // Normalize NULLs
-        if (param.getParam() == null) {
+        if (param.getValue() == null) {
             ret.addNull(dbname);
             return ret;
         }
@@ -124,11 +124,11 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if (param == null) {
             return null;
         }
-        if (!(param.getParam() instanceof String)) {
+        if (!(param.getValue() instanceof String)) {
             return null;
         }
         
-        String value = (String) param.getParam();
+        String value = (String) param.getValue();
         //Null value filter is not supported
         if (value == null) {
             return null;
@@ -161,11 +161,11 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if (param == null) {
             return null;
         }
-        if (!(param.getParam() instanceof String)) {
+        if (!(param.getValue() instanceof String)) {
             return null;
         }
         
-        String value = (String) param.getParam();
+        String value = (String) param.getValue();
         //Null value filter is not supported
         if (value == null) {
             return null;
@@ -195,11 +195,11 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if (param == null) {
             return null;
         }
-        if (!(param.getParam() instanceof String)) {
+        if (!(param.getValue() instanceof String)) {
             return null;
         }
         
-        String value = (String) param.getParam();
+        String value = (String) param.getValue();
         //Null value filter is not supported
         if (value == null) {
             return null;
@@ -227,7 +227,7 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         }
         
         SQLParam param = getSQLParam(attribute, oclass, options);
-        if (param == null || param.getParam() == null) {
+        if (param == null || param.getValue() == null) {
             return null;
         }
         final FilterWhereBuilder ret = createBuilder();
@@ -247,7 +247,7 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
             return null;
         }        
         SQLParam param = getSQLParam(attribute, oclass, options);
-        if (param == null || param.getParam() == null) {
+        if (param == null || param.getValue() == null) {
             return null;
         }
         
@@ -268,7 +268,7 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
             return null;
         }
         SQLParam param = getSQLParam(attribute, oclass, options);
-        if (param == null || param.getParam() == null) {
+        if (param == null || param.getValue() == null) {
             return null;
         }
         
@@ -290,7 +290,7 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         }
         
         SQLParam param = getSQLParam(attribute, oclass, options);
-        if (param == null || param.getParam() == null) {
+        if (param == null || param.getValue() == null) {
             return null;
         }
         

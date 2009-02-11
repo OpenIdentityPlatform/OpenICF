@@ -43,7 +43,7 @@ public class SQLParamTests {
     @Test
     public void paramCreateValue() {
         SQLParam a = new SQLParam("A", 5);
-        assertEquals("A", a.getParam());
+        assertEquals("A", a.getValue());
         assertEquals(5, a.getSqlType());
     }
     
@@ -55,9 +55,9 @@ public class SQLParamTests {
         Object[] a = {"a","b",5};
         List<SQLParam> list = SQLParam.asList(Arrays.asList(a));
         assertEquals(3, list.size());
-        assertEquals("a", list.get(0).getParam());
-        assertEquals("b", list.get(1).getParam());
-        assertEquals(5, list.get(2).getParam());
+        assertEquals("a", list.get(0).getValue());
+        assertEquals("b", list.get(1).getValue());
+        assertEquals(5, list.get(2).getValue());
         assertEquals(0, list.get(0).getSqlType());
     }
 }

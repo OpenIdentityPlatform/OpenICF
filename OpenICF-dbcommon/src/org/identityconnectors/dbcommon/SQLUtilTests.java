@@ -168,22 +168,22 @@ public class SQLUtilTests {
         final ByteArrayInputStream is = new ByteArrayInputStream(expected);
         tb.expectAndReturn("getBinaryStream", is);
         Blob blob = tb.getProxy(Blob.class);
-        final Object object = SQLUtil.jdbc2Attribute( blob);
+        final Object object = SQLUtil.jdbc2AttributeValue( blob);
         assertEquals(expected[0], ((byte[]) object)[0]);
         assertEquals(expected[3], ((byte[]) object)[3]);
         assertTrue(tb.isDone());
     }
-
+    
     /**
      * Test method
      * @throws SQLException 
      */
     @Test
-    public void testConvertSringToAttribute() throws SQLException {
+    public void testConvertBooleanToAttribute() throws SQLException {
         String expected = "test";
-        final Object object = SQLUtil.jdbc2Attribute(expected);
+        final Object object = SQLUtil.jdbc2AttributeValue(expected);
         assertEquals(expected, object);
-    }
+    }    
 
     /**
      * Test method
@@ -191,11 +191,21 @@ public class SQLUtilTests {
      */
     @Test
     public void testConvertDateToAttribute() throws SQLException {
-        Timestamp src = new Timestamp(System.currentTimeMillis());
-        final Object object = SQLUtil.jdbc2Attribute( src);
-        assertEquals(SQLUtil.timestamp2String(src).toString(), object);
+        java.sql.Date src = new java.sql.Date(System.currentTimeMillis());
+        final Object object = SQLUtil.jdbc2AttributeValue( src);
+        assertEquals(src.toString(), object);
     }    
 
+    /**
+     * Test method
+     * @throws SQLException 
+     */
+    @Test
+    public void testConvertTimestampToAttribute() throws SQLException {
+        Timestamp src = new Timestamp(System.currentTimeMillis());
+        final Object object = SQLUtil.jdbc2AttributeValue( src);
+        assertEquals(src.toString(), object);
+    }    
     
     /**
      * Test method
@@ -210,20 +220,6 @@ public class SQLUtilTests {
         assertEquals(expected.getClass(), actual.getClass());
         assertEquals(expected, actual);
     }    
-    /**
-     * Test method
-     * @throws SQLException 
-     */
-    @Test
-    public void testConvertDate() {
-        java.util.Date expected = new java.util.Date(System.currentTimeMillis());
-        String src = SQLUtil.utilDate2String(expected);
-        Object actual = SQLUtil.string2UtilDate(src);
-        assertNotNull(actual);
-        assertEquals(expected.getClass(), actual.getClass());
-        assertEquals(expected.toString(), actual.toString());
-    }    
-
     
     /**
      * Test method
@@ -364,6 +360,5 @@ public class SQLUtilTests {
     	properties.put("java.naming.factory.initial",MockContextFactory.class.getName());
     	final Connection conn = SQLUtil.getDatasourceConnection("",properties);
     	assertNotNull("Connection returned from datasource is null",conn);
-    	
     }
 }
