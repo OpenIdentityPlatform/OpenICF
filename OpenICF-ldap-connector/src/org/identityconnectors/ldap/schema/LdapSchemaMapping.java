@@ -49,7 +49,6 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
-import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -179,16 +178,6 @@ public class LdapSchemaMapping {
         return ldapClass2TransSup;
     }
 
-    public static boolean isSpecialAttribute(String attrName) {
-        // XXX issue 378.
-        return AttributeUtil.isSpecial(AttributeInfoBuilder.build(attrName));
-    }
-
-    public static boolean namesEqual(String attrName1, String attrName2) {
-        // XXX issue 379.
-        return attrName1.equalsIgnoreCase(attrName2);
-    }
-
     /**
      * Returns the LDAP object class to which the given framework object
      * class is mapped.
@@ -217,15 +206,15 @@ public class LdapSchemaMapping {
 
     public String getLdapAttribute(ObjectClass oclass, String attrName, boolean transfer) {
         String result = null;
-        if (namesEqual(Uid.NAME, attrName)) {
+        if (AttributeUtil.namesEqual(Uid.NAME, attrName)) {
             result = getLdapUidAttribute(oclass);
-        } else if (namesEqual(Name.NAME, attrName)) {
+        } else if (AttributeUtil.namesEqual(Name.NAME, attrName)) {
             result = getLdapNameAttribute(oclass);
         } else {
             result = getLdapMappedAttribute(oclass, attrName);
         }
 
-        if (result == null && !isSpecialAttribute(attrName)) {
+        if (result == null && !AttributeUtil.isSpecialName(attrName)) {
             result = attrName;
         }
 
