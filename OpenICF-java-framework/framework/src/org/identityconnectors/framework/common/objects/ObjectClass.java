@@ -72,13 +72,11 @@ public final class ObjectClass {
      * Generally, an Account object records characteristics of a human user
      * (such as loginName, password, user preferences or access privileges)
      * that are relevant only to (or primarily to) a specific system or application.
-     *
-     * @see #PERSON
      */
     public static final ObjectClass ACCOUNT = new ObjectClass(ACCOUNT_NAME);
 
     /**
-     * Represents a collection that contains an object (such as a person or an account).
+     * Represents a collection that contains an object (such as an account).
      * <p>
      * When an attribute matching this constant is found within a <code>ConnectorObject</code>,
      * this indicates that the <code>ConnectorObject</code> represents a group.

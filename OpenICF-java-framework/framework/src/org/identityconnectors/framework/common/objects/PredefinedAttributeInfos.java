@@ -74,7 +74,7 @@ public class PredefinedAttributeInfos {
                 
 
     /**
-     * Groups that an account or person belong to. The Attribute values are the
+     * Groups that an account belongs to. The Attribute values are the
      * UID value of each group that an account has membership in.
      */
     public static final AttributeInfo GROUPS =
