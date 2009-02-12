@@ -60,8 +60,8 @@
     <property name="build-toolkit" location="build/${toolkit.name}"/>
     <property name="nbm-name" value="IdentityConnectors-Plugin.nbm" />
     <property name="coverage.file" location="${basedir}/cobertura.ser"/>
-    <property name="license.file" value="LICENSE.txt" />
-    <property name="thirdpartyreadme.file" value="THIRDPARTYREADME.txt" />
+    <property name="license.file" value="../legal/license.txt" />
+    <property name="thirdpartyreadme.file" value="../legal/THIRDPARTYREADME.txt" />
 
     <!--
         Determine if this a coverage build.

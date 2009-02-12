@@ -65,7 +65,8 @@
         value="${dist}/${ConnectorBundle-Name}-${ConnectorBundle-Version}.jar" />
     <property name="zip.file" 
         value="${ConnectorBundle-Name}-${ConnectorBundle-Version}.zip" />
-    <property name="license.file" value="${framework.dir}/LICENSE.txt" />    
+    <property name="license.file" value="${framework.dir}/../legal/license.txt" />
+    <property name="thirdpartyreadme.file" value="${framework.dir}/../legal/THIRDPARTYREADME.txt" />
     <!--
         Determine if this a coverage build.
     -->
@@ -213,6 +214,7 @@
             <fileset refid="dist.libs" />
             <!-- include license -->
             <fileset file="${license.file}"/>
+            <fileset file="${thirdpartyreadme.file}"/>
             <manifest>
                 <attribute name="ConnectorBundle-FrameworkVersion"
                     value="${ConnectorBundle-FrameworkVersion}" />
