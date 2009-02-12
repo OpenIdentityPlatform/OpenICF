@@ -65,8 +65,8 @@
         value="${dist}/${ConnectorBundle-Name}-${ConnectorBundle-Version}.jar" />
     <property name="zip.file" 
         value="${ConnectorBundle-Name}-${ConnectorBundle-Version}.zip" />
-    <property name="license.file" value="${framework.dir}/../legal/license.txt" />
-    <property name="thirdpartyreadme.file" value="${framework.dir}/../legal/THIRDPARTYREADME.txt" />
+    <property name="license.file" value="${framework.dir}/license.txt" />
+    <property name="thirdpartyreadme.file" value="${framework.dir}/THIRDPARTYREADME.txt" />
     <!--
         Determine if this a coverage build.
     -->
