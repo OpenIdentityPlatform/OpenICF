@@ -765,6 +765,9 @@ public final class SQLUtil {
      */
     public static Object jdbc2AttributeValue(final Object value) throws SQLException {
         Object ret = null;
+        if(value == null){
+            return null;
+        }
         if (value instanceof Blob) {
             ret = blob2ByteArray((Blob) value);
         } else if (value instanceof java.sql.Timestamp) {
