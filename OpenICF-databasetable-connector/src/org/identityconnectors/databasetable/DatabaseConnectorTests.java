@@ -1451,7 +1451,7 @@ public class DatabaseConnectorTests {
                 } else if (SALARY.equalsIgnoreCase(name)) {
                     ret.setSalary(AttributeUtil.getBigDecimalValue(attr));
                 } else if (ENROLLED.equalsIgnoreCase(name)) {
-                    ret.setEnrolled(SQLUtil.string2UtilDate(AttributeUtil.getStringValue(attr)));
+                    ret.setEnrolled(SQLUtil.string2Timestamp(AttributeUtil.getStringValue(attr)));
                 } else if (CHANGED.equalsIgnoreCase(name)) {
                     final String strValue = AttributeUtil.getStringValue(attr);
                     if(strValue !=null) {
@@ -1494,7 +1494,7 @@ public class DatabaseConnectorTests {
             ret.add(AttributeBuilder.build(ACCESSED, getAccessed()));
             ret.add(AttributeBuilder.build(SALARY, getSalary()));
             ret.add(AttributeBuilder.build(JPEGPHOTO, getJpegPhoto()));
-            ret.add(AttributeBuilder.build(ENROLLED, SQLUtil.utilDate2String(getEnrolled())));
+            ret.add(AttributeBuilder.build(ENROLLED, SQLUtil.timestamp2String(new Timestamp(getEnrolled().getTime()))));
             return ret;
         }        
 

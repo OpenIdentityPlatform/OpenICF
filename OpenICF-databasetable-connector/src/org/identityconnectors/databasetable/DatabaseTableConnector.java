@@ -506,7 +506,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             if (rset.next()) {
             	Object value = rset.getObject(1);
             	if(value != null){
-            		ret = new SyncToken(SQLUtil.jdbc2Attribute(value));
+            		ret = new SyncToken(SQLUtil.jdbc2AttributeValue(value));
             	}
             }
             conn.commit();
