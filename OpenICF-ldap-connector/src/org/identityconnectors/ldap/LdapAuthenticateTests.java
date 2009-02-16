@@ -43,7 +43,7 @@ public class LdapAuthenticateTests extends LdapConnectorTestBase {
     @Test
     public void testAuthenticate() {
         ConnectorFacade facade = newFacade();
-        ConnectorObject bugs = getObjectByName(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
+        ConnectorObject bugs = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
         Uid uid = facade.authenticate(ObjectClass.ACCOUNT, BUGS_BUNNY_DN, new GuardedString("carrot".toCharArray()), null);
         assertEquals(bugs.getUid(), uid);
     }

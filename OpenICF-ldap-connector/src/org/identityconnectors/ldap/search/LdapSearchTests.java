@@ -77,7 +77,7 @@ public class LdapSearchTests extends LdapConnectorTestBase {
     @Test
     public void testWithFilter() {
         ConnectorFacade facade = newFacade();
-        ConnectorObject bunny = getObjectByName(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
+        ConnectorObject bunny = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
         assertEquals(BUGS_BUNNY_DN, bunny.getName().getNameValue());
     }
 
@@ -87,7 +87,7 @@ public class LdapSearchTests extends LdapConnectorTestBase {
 
         OperationOptionsBuilder optionsBuilder = new OperationOptionsBuilder();
         optionsBuilder.setAttributesToGet("employeeNumber", "telephoneNumber");
-        ConnectorObject object = getObjectByName(facade, ObjectClass.ACCOUNT, new Name(USER_0_DN), optionsBuilder.build());
+        ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(USER_0_DN), optionsBuilder.build());
 
         Set<Attribute> attrs = CollectionUtil.newSet(object.getAttributes());
         assertTrue(attrs.remove(AttributeUtil.find(Uid.NAME, attrs)));
@@ -106,7 +106,7 @@ public class LdapSearchTests extends LdapConnectorTestBase {
 
         OperationOptionsBuilder optionsBuilder = new OperationOptionsBuilder();
         optionsBuilder.setAttributesToGet("employeeNumber");
-        ConnectorObject object = getObjectByName(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN), optionsBuilder.build());
+        ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN), optionsBuilder.build());
 
         assertNull(object.getAttributeByName("employeeNumber"));
     }
@@ -115,7 +115,7 @@ public class LdapSearchTests extends LdapConnectorTestBase {
     public void testScope() {
         ConnectorFacade facade = newFacade();
         // Find an organization to pass in OP_CONTAINER.
-        ConnectorObject organization = getObjectByName(facade, LdapObjectClass.ORGANIZATION, new Name(BIG_COMPANY_DN));
+        ConnectorObject organization = searchByAttribute(facade, LdapObjectClass.ORGANIZATION, new Name(BIG_COMPANY_DN));
 
         // There are no accounts directly under the organization...
         OperationOptionsBuilder optionsBuilder = new OperationOptionsBuilder();
@@ -161,7 +161,7 @@ public class LdapSearchTests extends LdapConnectorTestBase {
     public void testBaseDNsOptionConflictsWithContainerOption() {
         ConnectorFacade facade = newFacade();
         // Find an organization to pass in OP_CONTAINER.
-        ConnectorObject organization = getObjectByName(facade, LdapObjectClass.ORGANIZATION, new Name(BIG_COMPANY_DN));
+        ConnectorObject organization = searchByAttribute(facade, LdapObjectClass.ORGANIZATION, new Name(BIG_COMPANY_DN));
 
         // Specifying both OP_BASE_DNS and OP_CONTAINER is prohibited.
         OperationOptionsBuilder optionsBuilder = new OperationOptionsBuilder();

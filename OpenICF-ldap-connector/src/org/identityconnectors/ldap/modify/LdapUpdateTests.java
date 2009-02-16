@@ -58,7 +58,7 @@ public class LdapUpdateTests extends LdapConnectorTestBase {
     @Test
     public void testSimpleAddRemoveAttrs() {
         ConnectorFacade facade = newFacade();
-        ConnectorObject bugs = getObjectByName(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
+        ConnectorObject bugs = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
 
         Attribute number1 = AttributeBuilder.build("telephoneNumber", NUMBER1);
 
@@ -91,7 +91,7 @@ public class LdapUpdateTests extends LdapConnectorTestBase {
     @Test
     public void testRename() {
         ConnectorFacade facade = newFacade();
-        ConnectorObject bugs = getObjectByName(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
+        ConnectorObject bugs = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
 
         Name name = new Name("uid=daffy.duck,ou=Users,o=Acme,dc=example,dc=com");
         Attribute number = AttributeBuilder.build("telephoneNumber", NUMBER1);
@@ -108,7 +108,7 @@ public class LdapUpdateTests extends LdapConnectorTestBase {
     @Test
     public void testEmptyAttributeValueRemovesAttribute() {
         ConnectorFacade facade = newFacade();
-        ConnectorObject bugs = getObjectByName(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
+        ConnectorObject bugs = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
 
         Attribute number = AttributeBuilder.build("telephoneNumber", NUMBER1);
         Uid newUid = facade.update(ObjectClass.ACCOUNT, bugs.getUid(), CollectionUtil.newSet(number), null);
@@ -127,7 +127,7 @@ public class LdapUpdateTests extends LdapConnectorTestBase {
     @Test
     public void testUpdateBinaryAttributes() throws IOException {
         ConnectorFacade facade = newFacade();
-        ConnectorObject bugs = getObjectByName(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
+        ConnectorObject bugs = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
 
         byte[] certificate = IOUtil.getResourceAsBytes(LdapUpdateTests.class, "certificate.cert");
         Attribute certAttr = AttributeBuilder.build("userCertificate", certificate);
@@ -150,7 +150,7 @@ public class LdapUpdateTests extends LdapConnectorTestBase {
     @Test
     public void testAdminCanChangePassword() {
         ConnectorFacade facade = newFacade();
-        ConnectorObject elmer = getObjectByName(facade, ObjectClass.ACCOUNT, new Name(ELMER_FUDD_DN));
+        ConnectorObject elmer = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(ELMER_FUDD_DN));
 
         GuardedString password = new GuardedString("shotgun".toCharArray());
         Attribute pwdAttr = AttributeBuilder.build(LdapPredefinedAttributes.PASSWORD_NAME, password);
@@ -166,7 +166,7 @@ public class LdapUpdateTests extends LdapConnectorTestBase {
         config.setBindPassword(new GuardedString("carrot".toCharArray()));
         config.setPageSize(0); // Do not use paged search, since the user doesn't have the privilege.
         ConnectorFacade facade = newFacade(config);
-        ConnectorObject bugs = getObjectByName(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
+        ConnectorObject bugs = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
 
         GuardedString password = new GuardedString("cabbage".toCharArray());
         Attribute pwdAttr = AttributeBuilder.build(LdapPredefinedAttributes.PASSWORD_NAME, password);

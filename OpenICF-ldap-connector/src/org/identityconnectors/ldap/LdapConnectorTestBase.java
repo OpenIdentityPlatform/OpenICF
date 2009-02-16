@@ -31,8 +31,8 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
+import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
-import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
@@ -157,12 +157,12 @@ public abstract class LdapConnectorTestBase {
         return factory.newInstance(impl);
     }
 
-    public ConnectorObject getObjectByName(ConnectorFacade facade, ObjectClass oclass, Name name) {
-        return getObjectByName(facade, oclass, name, null);
+    public ConnectorObject searchByAttribute(ConnectorFacade facade, ObjectClass oclass, Attribute attr) {
+        return searchByAttribute(facade, oclass, attr, null);
     }
 
-    public ConnectorObject getObjectByName(ConnectorFacade facade, ObjectClass oclass, Name name, OperationOptions options) {
-        List<ConnectorObject> objects = TestHelpers.searchToList(facade, oclass, FilterBuilder.equalTo(name), options);
+    public ConnectorObject searchByAttribute(ConnectorFacade facade, ObjectClass oclass, Attribute attr, OperationOptions options) {
+        List<ConnectorObject> objects = TestHelpers.searchToList(facade, oclass, FilterBuilder.equalTo(attr), options);
         return objects.size() > 0 ? objects.get(0) : null;
     }
 

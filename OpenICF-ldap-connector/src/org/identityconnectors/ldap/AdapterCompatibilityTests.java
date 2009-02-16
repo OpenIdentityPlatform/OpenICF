@@ -99,7 +99,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
     @Test
     public void testAccountAttributes() {
         ConnectorFacade facade = newFacade();
-        ConnectorObject user0 = getObjectByName(facade, ObjectClass.ACCOUNT, new Name(USER_0_DN));
+        ConnectorObject user0 = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(USER_0_DN));
 
         assertEquals(USER_0_DN, user0.getName().getNameValue());
         assertEquals(USER_0_SN, AttributeUtil.getAsStringValue(user0.getAttributeByName(LdapPredefinedAttributes.LASTNAME_NAME)));
@@ -165,7 +165,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
     @Test
     public void testGroupAttributes() {
         ConnectorFacade facade = newFacade();
-        ConnectorObject object = getObjectByName(facade, LdapObjectClass.GROUP, new Name(LOONEY_TUNES_DN));
+        ConnectorObject object = searchByAttribute(facade, LdapObjectClass.GROUP, new Name(LOONEY_TUNES_DN));
 
         assertEquals(LOONEY_TUNES_DN, object.getName().getNameValue());
         assertEquals(LOONEY_TUNES_CN, AttributeUtil.getStringValue(object.getAttributeByName(PredefinedAttributes.SHORT_NAME)));
@@ -221,7 +221,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
     @Test
     public void testOrganizationAttributes() {
         ConnectorFacade facade = newFacade();
-        ConnectorObject object = getObjectByName(facade, LdapObjectClass.ORGANIZATION, new Name(ACME_DN), null);
+        ConnectorObject object = searchByAttribute(facade, LdapObjectClass.ORGANIZATION, new Name(ACME_DN), null);
 
         assertEquals(ACME_DN, object.getName().getNameValue());
         assertEquals(ACME_O, AttributeUtil.getStringValue(object.getAttributeByName(PredefinedAttributes.SHORT_NAME)));

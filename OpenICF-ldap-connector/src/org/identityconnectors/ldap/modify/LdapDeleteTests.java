@@ -43,7 +43,7 @@ public class LdapDeleteTests extends LdapConnectorTestBase{
     @Test(expected = ConnectorException.class)
     public void testCannotDeleteExistingUidButWrongObjectClass() {
         ConnectorFacade facade = newFacade();
-        ConnectorObject organization = getObjectByName(facade, LdapObjectClass.ORGANIZATION, new Name(BIG_COMPANY_DN));
+        ConnectorObject organization = searchByAttribute(facade, LdapObjectClass.ORGANIZATION, new Name(BIG_COMPANY_DN));
         // Should fail because the object class passed to delete() is not ORGANIZATION.
         facade.delete(ObjectClass.ACCOUNT, organization.getUid(), null);
     }
@@ -53,17 +53,17 @@ public class LdapDeleteTests extends LdapConnectorTestBase{
         // TODO: not sure this is the right behavior. Perhaps should instead
         // recursively delete everything under the deleted entry.
         ConnectorFacade facade = newFacade();
-        ConnectorObject organization = getObjectByName(facade, LdapObjectClass.ORGANIZATION, new Name(ACME_DN));
+        ConnectorObject organization = searchByAttribute(facade, LdapObjectClass.ORGANIZATION, new Name(ACME_DN));
         facade.delete(LdapObjectClass.ORGANIZATION, organization.getUid(), null);
     }
 
     @Test()
     public void testDelete() {
         ConnectorFacade facade = newFacade();
-        ConnectorObject account = getObjectByName(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
+        ConnectorObject account = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
         facade.delete(ObjectClass.ACCOUNT, account.getUid(), null);
 
-        account = getObjectByName(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
+        account = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
         assertNull(account);
     }
 }
