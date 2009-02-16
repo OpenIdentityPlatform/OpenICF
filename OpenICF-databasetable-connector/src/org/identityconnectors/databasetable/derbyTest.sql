@@ -3,8 +3,8 @@ create table Accounts (
   password    VARCHAR(50),
   manager     VARCHAR(50),
   middlename  VARCHAR(50),
-  firstname   VARCHAR(50),
-  lastname    VARCHAR(50),
+  firstname   VARCHAR(50) NOT NULL,
+  lastname    VARCHAR(50) NOT NULL,
   email       VARCHAR(250),
   department  VARCHAR(250),
   title       VARCHAR(250),
@@ -12,6 +12,8 @@ create table Accounts (
   accessed    BIGINT,
   salary      DECIMAL(7,2),
   jpegphoto   BLOB,
+  activate    DATE,  
   enrolled    TIMESTAMP,      
-  changed     TIMESTAMP      
+  changed     TIMESTAMP NOT NULL,
+  changelog   BIGINT
 )
