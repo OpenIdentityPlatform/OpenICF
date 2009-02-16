@@ -331,17 +331,18 @@ public final class SQLUtil {
      */
     public static java.sql.Time string2Time(String param) {      
         final DateFormat dfmt = DateFormat.getTimeInstance();
-        java.util.Date parsedDate;
+        java.sql.Time parsedTime;
         try {
-            parsedDate = java.sql.Time.valueOf(param);
+            parsedTime = java.sql.Time.valueOf(param);
         } catch (IllegalArgumentException e) {
+            // Locale parsed time, possible lost of precision
             try {
-                parsedDate = dfmt.parse(param);
+                parsedTime = new java.sql.Time(dfmt.parse(param).getTime());
             } catch (ParseException e1) {
                 throw new IllegalArgumentException(e1);
             }
         }
-        return new java.sql.Time(parsedDate.getTime());
+        return new java.sql.Time(parsedTime.getTime());
     }
 
     /**
@@ -351,21 +352,23 @@ public final class SQLUtil {
      */
     public static java.sql.Date string2Date(String param) {
         final DateFormat dfmt = DateFormat.getDateInstance();
-        java.util.Date parsedDate;
+        java.sql.Date parsedDate;
         try {
             parsedDate = java.sql.Date.valueOf(param);
         } catch (IllegalArgumentException e) {
+            // Wrong string, cloud be a string number
             try {
                 parsedDate = new java.sql.Date(new Long(param));
             } catch (NumberFormatException expected) {
+                // Locale parsed date, possible lost of precision
                 try {
-                    parsedDate = dfmt.parse(param);
+                    parsedDate = new java.sql.Date(dfmt.parse(param).getTime());
                 } catch (ParseException e1) {
                     throw new IllegalArgumentException(e1);
                 }
             }            
         }
-        return new java.sql.Date(parsedDate.getTime());
+        return parsedDate;
     }
 
     /**
@@ -375,21 +378,23 @@ public final class SQLUtil {
      */
     public static java.sql.Timestamp string2Timestamp(String param) {
         final DateFormat dfmt = DateFormat.getDateTimeInstance();
-        java.util.Date parsedDate;
+        java.sql.Timestamp parsedTms;
         try {
-            parsedDate = java.sql.Timestamp.valueOf(param);
+            parsedTms = java.sql.Timestamp.valueOf(param);
         } catch (IllegalArgumentException e) {
+            // Wrong string, cloud be a number
             try {
-                parsedDate = new java.sql.Timestamp(new Long(param));
+                parsedTms = new java.sql.Timestamp(new Long(param));
             } catch (NumberFormatException expected) {
+                // Locale parsed date, possible lost of precision
                 try {                    
-                    parsedDate = dfmt.parse(param);
+                    parsedTms = new java.sql.Timestamp(dfmt.parse(param).getTime());
                 } catch (ParseException e1) {                                      
                     throw new IllegalArgumentException(e1);
                 }
             }
         }
-        return new java.sql.Timestamp(parsedDate.getTime());
+        return parsedTms;
     }
 
 
@@ -481,7 +486,9 @@ public final class SQLUtil {
         for (int i = 0; i < params.size(); i++) {
             final int idx = i + 1;
             final SQLParam parm = params.get(i);
-            setParam(statement, idx, parm);
+            final int sqlType = parm.getSqlType();
+            final SQLParam val =  new SQLParam(attribute2jdbcValue(parm.getValue(), sqlType),sqlType);
+            setParam(statement, idx, val);
         }
     }
 
@@ -533,7 +540,8 @@ public final class SQLUtil {
             final String name = meta.getColumnName(i);
             final int sqlType = meta.getColumnType(i);
             final SQLParam param = getSQLParam(resultSet, i, sqlType);
-            final Attribute attr = AttributeBuilder.build(name, param.getValue());
+            final Object value = jdbc2AttributeValue(param.getValue());
+            final Attribute attr = AttributeBuilder.build(name, value);
             ret.add(attr);
         }
         return ret;
@@ -548,6 +556,7 @@ public final class SQLUtil {
      * @throws SQLException any SQL error
      */
     public static SQLParam getSQLParam(ResultSet resultSet, int i, final int sqlType) throws SQLException {
+        Assertions.nullCheck(resultSet, "resultSet");
         Object object;
         switch (sqlType) {
         //Known conversions
@@ -556,22 +565,18 @@ public final class SQLUtil {
             break;        
         case Types.DECIMAL:
         case Types.NUMERIC:
-                object = resultSet.getBigDecimal(i);
-                break;
-        case Types.DOUBLE:
-//            object = resultSet.getDouble(i); double does not support update to null
-            object = resultSet.getObject(i);
+            object = resultSet.getBigDecimal(i);
             break;
+        case Types.DOUBLE:
         case Types.FLOAT:
         case Types.REAL:
-//            object = resultSet.getFloat(i); float does not support update to null
-            object = resultSet.getObject(i);
-            break;
         case Types.INTEGER:
         case Types.BIGINT:
-//            object = resultSet.getInt(i); int does not support update to null
+//          object = resultSet.getDouble(i); double does not support update to null
+//          object = resultSet.getFloat(i); float does not support update to null
+//          object = resultSet.getInt(i); int does not support update to null
             object = resultSet.getObject(i);
-           break;
+            break;
         case Types.TINYINT:
             object = resultSet.getByte(i);
             break;
@@ -585,10 +590,10 @@ public final class SQLUtil {
             object = resultSet.getTimestamp(i);
             break;
         case Types.DATE:
-            object = resultSet.getDate(i);
+             object = resultSet.getDate(i);
             break;
         case Types.TIME:
-            object = resultSet.getTime(i);
+             object = resultSet.getTime(i);
             break;
         case Types.BIT:
         case Types.BOOLEAN:
@@ -597,177 +602,135 @@ public final class SQLUtil {
         default:   
             object = resultSet.getString(i);
         }
-        final Object value = jdbc2AttributeValue(object);
-        return new SQLParam(value, sqlType);
+        log.ok("getSQLParam to value {0}, as a sql type {1}", object, sqlType);        
+        return new SQLParam(object, sqlType);
     }
     
     /**
      * Convert database type to connector supported set of attribute types
-     * @param sqlType #{@link Types}
+     * Can be redefined for different databases
+     * @param sqlType
+     *            #{@link Types}
      * @return a connector supported class
      */
     public static Class<?> getSQLAttributeType(int sqlType) {
+        Class<?> ret;
         switch (sqlType) {
         //Known conversions
         case Types.DECIMAL:
         case Types.NUMERIC:
-            return BigDecimal.class;
+            ret = BigDecimal.class;
+            break;
         case Types.DOUBLE:
-            return Double.class;
+            ret = Double.class;
+            break;
         case Types.FLOAT:
         case Types.REAL:
-            return Float.class;
+            ret = Float.class;
+            break;
         case Types.INTEGER:
-            return Integer.class;
+            ret = Integer.class;
+            break;
         case Types.BIGINT:
-            return Long.class;
+            ret = Long.class;
+            break;
         case Types.TINYINT:
-            return Byte.class;
+            ret = Byte.class;
+            break;
         case Types.BLOB:
         case Types.BINARY:
         case Types.VARBINARY:
         case Types.LONGVARBINARY:
-            return byte[].class;
-        case Types.TIMESTAMP:
-        case Types.DATE:
-        case Types.TIME:
-            return String.class;
+            ret = byte[].class;
+            break;
         case Types.BIT:
         case Types.BOOLEAN:
-            return Boolean.class;
+            ret = Boolean.class;
+            break;
+        default:
+            ret = String.class;
         }
-        return String.class;
+        return ret;
     }
     
     /**
-     * Convert database type to connector supported set of attribute types
-     * @param stmt 
-     * @param idx 
-     * @param parm 
-     * @throws SQLException 
+     * Set a parameter to statement. The conversion to required database type is expected to be done
+     * @param stmt the statement to set
+     * @param idx index of the parameter 
+     * @param parm the <CODE>SQLParam</CODE> value
+     * @throws SQLException something wrong
      */
     public static void setSQLParam(final PreparedStatement stmt, final int idx, SQLParam parm) throws SQLException {
-        log.info("setStmtParam {0} to value {1} for sqlType {2}", parm.getValue(), parm.getSqlType());
+        Assertions.nullCheck(stmt, "statement");
+        Assertions.nullCheck(parm, "statement");
+        log.ok("setSQLParam to value {0} as a sql type {1}", parm.getValue(), parm.getSqlType());
         // Handle the null value
         
-        final Object val =  sqlParam2JdbcValue(parm);
-        final int sqlType = parm.getSqlType();
+        final int sqlType = parm.getSqlType();        
+        final Object val = parm.getValue();        
+        
+        //Set the null value
         if( val == null ) {
             stmt.setNull(idx, sqlType);
             return;
         }
-        switch (sqlType) {
-        //Known conversions
-        case Types.NULL:
+        
+        //Set the generics 
+        if ( sqlType == Types.NULL) {
+            stmt.setObject(idx, val);  
+            return;
+        }
+        
+        //Set specific object
+        if (val instanceof BigDecimal) {
+            stmt.setBigDecimal(idx, (BigDecimal) val);
+        } else if (val instanceof Double) {
+            stmt.setDouble(idx, (Double) val);
+        } else if (val instanceof Float) {
+            stmt.setFloat(idx, (Float) val);
+        } else if (val instanceof Integer) {
+            stmt.setInt(idx, (Integer) val);
+        } else if (val instanceof Long) {
+            stmt.setLong(idx, (Long) val);
+        } else if (val instanceof BigInteger) {
+            stmt.setLong(idx, ((BigInteger) val).longValue());
+        } else if (val instanceof Byte) {
+            stmt.setByte(idx, (Byte) val);
+        } else if (val instanceof Integer) {
+            stmt.setInt(idx, (Integer) val);
+        } else if (val instanceof InputStream) {
+            stmt.setBinaryStream(idx, (InputStream) val, 10000);
+        } else if (val instanceof Blob) {
+            stmt.setBlob(idx, (Blob) val);
+        } else if (val instanceof byte[]) {
+            stmt.setBytes(idx, (byte[]) val);
+        } else if (val instanceof Timestamp) {
+            stmt.setTimestamp(idx, (Timestamp) val);
+        } else if (val instanceof java.sql.Date) {
+            stmt.setDate(idx, (java.sql.Date) val);
+        } else if (val instanceof java.sql.Time) {
+            stmt.setTime(idx, (java.sql.Time) val);
+        } else if (val instanceof Boolean) {
+            stmt.setBoolean(idx, (Boolean) val);
+        } else if (val instanceof String) {
+            stmt.setString(idx, (String) val);
+        } else {
             stmt.setObject(idx, val);
-            break;
-        case Types.DECIMAL:
-        case Types.NUMERIC:
-        case Types.DOUBLE:
-        case Types.FLOAT:
-        case Types.REAL:
-        case Types.INTEGER:
-        case Types.BIGINT:
-            if(val instanceof BigDecimal) {
-                stmt.setBigDecimal(idx, (BigDecimal) val);
-            } else if (val instanceof Double) {
-                stmt.setDouble(idx, (Double) val);
-            } else if (val instanceof Float) {
-                stmt.setFloat(idx, (Float) val);
-            } else if (val instanceof Integer) {
-                stmt.setInt(idx, (Integer) val);
-            } else if (val instanceof Long) {
-                stmt.setLong(idx, (Long) val);
-            } else if (val instanceof BigInteger) {
-                stmt.setLong(idx, ((BigInteger) val).longValue());
-            } else {
-                stmt.setObject(idx, val);
-            }
-            break;
-        case Types.TINYINT:
-            if(val instanceof Byte) {
-                stmt.setByte(idx, (Byte) val);
-            } else if(val instanceof Integer) {
-                stmt.setInt(idx, (Integer) val);
-            } else if (val instanceof Long) {
-                stmt.setLong(idx, (Long) val);
-            } else {
-                stmt.setObject(idx, val);
-            }
-            break;
-        case Types.BLOB:
-        case Types.BINARY:
-        case Types.VARBINARY:
-        case Types.LONGVARBINARY:
-            if(val instanceof InputStream) {
-                stmt.setBinaryStream(idx, (InputStream) val, 10000);
-            } else if(val instanceof Blob) {
-                stmt.setBlob(idx, (Blob) val);
-            } else if(val instanceof byte[]) {
-                stmt.setBytes(idx, (byte[]) val);
-            } else {
-                stmt.setObject(idx, val);
-            }
-            break;
-        case Types.TIMESTAMP:
-            if( val instanceof String) {
-                stmt.setString(idx, (String) val);
-            } else if (val instanceof Timestamp) {
-                stmt.setTimestamp(idx, (Timestamp) val);
-            } else {
-                stmt.setObject(idx, val);
-            }
-            break;
-        case Types.DATE:
-            if( val instanceof String) {
-                stmt.setString(idx, (String) val);
-            } else if (val instanceof java.sql.Date) {
-                stmt.setDate(idx, (java.sql.Date) val);
-            } else {
-                stmt.setObject(idx, val);
-            }
-            break;
-        case Types.TIME:
-            if( val instanceof String) {
-                stmt.setString(idx, (String) val);
-            } else if (val instanceof java.sql.Time) {
-                stmt.setTime(idx, (java.sql.Time) val);
-            } else {
-                stmt.setObject(idx, val);
-            }
-            break;
-        case Types.BIT:
-        case Types.BOOLEAN:
-            if( val instanceof String) {
-                stmt.setString(idx, (String) val);
-            } else if (val instanceof Boolean) {
-                stmt.setBoolean(idx, (Boolean) val);
-            } else {
-                stmt.setObject(idx, val);
-            }
-            break;
-        default:    
-            if( val instanceof String) {
-                stmt.setString(idx, (String) val);
-            } else {
-                stmt.setObject(idx, val);
-            }
-            break;
         }
     }
 
     /**
-     * Convert a columns database type to attribute value
-     * @param value a value of a attribute
-     * @param sqlType 
-     * @throws SQLException
+     * The conversion to required attribute type
+     * @param value to be converted to an attribute 
+     * @throws SQLException something is not ok
      * @return a attribute's supported object
      */
     public static Object jdbc2AttributeValue(final Object value) throws SQLException {
         Object ret = null;
-        if(value == null){
-            return null;
+        if (value == null) {
+            return ret;
         }
+        
         if (value instanceof Blob) {
             ret = blob2ByteArray((Blob) value);
         } else if (value instanceof java.sql.Timestamp) {
@@ -777,8 +740,8 @@ public final class SQLUtil {
         } else if (value instanceof java.sql.Date) {
             ret = date2String((java.sql.Date) value);
         } else if (value instanceof java.util.Date) {
-            //convert through Timestamps
-            ret = timestamp2String( new java.sql.Timestamp(((java.util.Date) value).getTime()));
+            //convert date through Timestamps. Possible lost of precision on .getTime()
+            ret = ((java.util.Date) value).toString();
         } else if (value instanceof Long) {
             ret = value;
         } else if (value instanceof Character) {
@@ -805,45 +768,89 @@ public final class SQLUtil {
     }   
     
     /**
-     * Convert the attribute to native jdbc using java conversion utility 
-     * @param param
-     * @return the param value
+     * Convert the attribute to expected jdbc type using java conversions 
+     * Some database strategy sets all attributes as string, other convert them first and than set as native
+     * @param value the value to be converted 
+     * @param sqlType the target sql type
+     * @return the converted object value
      * @throws SQLException
      */
-    public static Object sqlParam2JdbcValue(final SQLParam param) throws SQLException {
-        final Object paramValue = param.getValue();
-        switch (param.getSqlType()) {
+    public static Object attribute2jdbcValue(final Object value, int sqlType) throws SQLException {
+        if (value == null ) {
+            return null;
+        }        
+        switch (sqlType) {
         //Known conversions
-        //TODO Wee need to convert back the Integer, Long, ... if changed to String 
+        case Types.DECIMAL:
+        case Types.NUMERIC:
+        case Types.DOUBLE:
+            if( value instanceof BigDecimal) {
+                return value;
+            } else if( value instanceof Double) {
+                return value;
+            } else if( value instanceof Float) {
+                return value;
+            } else if( value instanceof String) {
+                return Double.valueOf((String) value);
+            } else {
+                return Double.valueOf(value.toString());
+            }  
+        case Types.FLOAT:
+        case Types.REAL:
+            if( value instanceof BigDecimal) {
+                return value;
+            } else if( value instanceof Float) {
+                return value;
+            } else if( value instanceof Double) {
+                return value;
+            } else if( value instanceof String) {
+                return Float.valueOf((String) value);
+            } else {
+                return Float.valueOf(value.toString());
+            }  
+        case Types.INTEGER:
+        case Types.BIGINT:
+            if( value instanceof BigInteger) {
+                return value; 
+            } else if( value instanceof Long) {
+                return value;
+            } else if( value instanceof Integer) {
+                return value;
+            } else if( value instanceof String) {
+                return Long.valueOf((String) value);
+            } else {
+                return Long.valueOf(value.toString());
+            } 
         case Types.TIMESTAMP:
-            if( paramValue instanceof String) {
-                return string2Timestamp((String) paramValue);
+            if( value instanceof String) {
+                return string2Timestamp((String) value);
             } 
             break;
         case Types.DATE:
-            if( paramValue instanceof String) {
-                return string2Date((String) paramValue);
+            if( value instanceof String) {
+                return string2Date((String) value);
             } 
             break;
         case Types.TIME:
-            if( paramValue instanceof String) {
-                return string2Time((String) paramValue);
+            if( value instanceof String) {
+                return string2Time((String) value);
             }
             break;
         case Types.BIT:
         case Types.BOOLEAN:
-            if( paramValue instanceof String) {
-                return string2Boolean((String) paramValue);
+            if( value instanceof String) {
+                return string2Boolean((String) value);
             } 
             break;
         case Types.LONGVARCHAR:
         case Types.VARCHAR:
-            if( paramValue instanceof String) {
-                return paramValue;
+        case Types.CHAR:
+            if( value instanceof String) {
+                return value;
             } 
-            return paramValue.toString();
+            return value.toString();
         }        
-        return paramValue;
+        return value;
     }      
     
     /**
@@ -931,7 +938,9 @@ public final class SQLUtil {
             while(rs.next()){
                 Object[] row = new Object[metaData.getColumnCount()];
                 for(int i = 0; i < row.length;i++){
-                    row[i] = getSQLParam(rs, i + 1, metaData.getColumnType(i + 1)).getValue();
+                    final SQLParam param = getSQLParam(rs, i + 1, metaData.getColumnType(i + 1));
+                    row[i] = jdbc2AttributeValue(param.getValue());
+
                 }
                 rows.add(row);
             }

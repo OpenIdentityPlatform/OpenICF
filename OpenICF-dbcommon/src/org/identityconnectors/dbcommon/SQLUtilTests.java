@@ -31,10 +31,13 @@ import static org.junit.Assert.fail;
 import java.io.ByteArrayInputStream;
 import java.sql.Blob;
 import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
@@ -196,6 +199,40 @@ public class SQLUtilTests {
         assertEquals(src.toString(), object);
     }    
 
+    
+    /**
+     * Test method
+     * @throws SQLException 
+     */
+    @Test
+    public void testString2Timestamp() throws SQLException {
+        final String src = "2008-12-31 23:59:59.999999999";
+        final Timestamp timestamp = SQLUtil.string2Timestamp(src);
+        assertEquals(src, SQLUtil.timestamp2String(timestamp));
+    }    
+    
+    /**
+     * Test method
+     * @throws SQLException 
+     */
+    @Test
+    public void testString2Date() throws SQLException {
+        final String src = "2008-12-31";
+        final Date date = SQLUtil.string2Date(src);
+        assertEquals(src, SQLUtil.date2String(date));
+    }      
+    
+    /**
+     * Test method
+     * @throws SQLException 
+     */
+    @Test
+    public void testString2Time() throws SQLException {
+        final String src = "23:59:59";
+        final Time time = SQLUtil.string2Time(src);
+        assertEquals(src, SQLUtil.time2String(time));
+    }         
+    
     /**
      * Test method
      * @throws SQLException 
@@ -334,6 +371,186 @@ public class SQLUtilTests {
         assertEquals(TEST_VAL1,AttributeUtil.find(TEST1, actual).getValue().get(0));
         assertEquals(TEST_VAL2,AttributeUtil.find(TEST2, actual).getValue().get(0));
      }
+    
+    /**
+     * GetAttributeSet test method
+     * @throws SQLException 
+     */
+    @Test
+    public void testGetSQLParam() throws SQLException {
+        final String TEST_STR = "testValue1";
+        final Timestamp TEST_TMS = new Timestamp(System.currentTimeMillis());
+        final Date TEST_DATE = new Date(System.currentTimeMillis());
+        final Time TEST_TIME = new Time(System.currentTimeMillis());
+
+        //Resultset
+        final ExpectProxy<ResultSet> trs = new ExpectProxy<ResultSet>();
+        ResultSet resultSetProxy = trs.getProxy(ResultSet.class);
+        
+        trs.expectAndReturn("getObject", TEST_STR);        
+        SQLParam actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.NULL);
+        assertTrue(trs.isDone());
+        assertNotNull(actual);
+        assertEquals(TEST_STR, actual.getValue());
+        
+        trs.expectAndReturn("getString", TEST_STR);
+        actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.VARCHAR);
+        assertTrue(trs.isDone());
+        assertNotNull(actual);
+        assertEquals(TEST_STR, actual.getValue());
+        
+        trs.expectAndReturn("getObject", TEST_STR);
+        actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.DOUBLE);
+        assertTrue(trs.isDone());
+        assertNotNull(actual);
+        assertEquals(TEST_STR, actual.getValue());
+        
+        trs.expectAndReturn("getObject", TEST_STR);
+        actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.BLOB);
+        assertTrue(trs.isDone());
+        assertNotNull(actual);
+        assertEquals(TEST_STR, actual.getValue());        
+        
+        trs.expectAndReturn("getTimestamp", TEST_TMS);
+        actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.TIMESTAMP);
+        assertTrue(trs.isDone());
+        assertNotNull(actual);
+        assertEquals(TEST_TMS, actual.getValue());     
+        
+        trs.expectAndReturn("getDate", TEST_DATE);
+        actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.DATE);
+        assertTrue(trs.isDone());
+        assertNotNull(actual);
+        assertEquals(TEST_DATE, actual.getValue()); 
+        
+        trs.expectAndReturn("getTime", TEST_TIME);
+        actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.TIME);
+        assertTrue(trs.isDone());
+        assertNotNull(actual);
+        assertEquals(TEST_TIME, actual.getValue()); 
+        
+        trs.expectAndReturn("getBoolean", Boolean.TRUE);
+        actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.BOOLEAN);
+        assertTrue(trs.isDone());
+        assertNotNull(actual);
+        assertEquals(Boolean.TRUE, actual.getValue());         
+     }    
+    
+    
+    /**
+     * GetAttributeSet test method
+     * @throws SQLException 
+     */
+    @Test
+    public void testSetSQLParam() throws SQLException {
+        final String TEST_STR = "testValue1";
+        final Timestamp TEST_TMS = new Timestamp(System.currentTimeMillis());
+        final Date TEST_DATE = new Date(System.currentTimeMillis());
+        final Time TEST_TIME = new Time(System.currentTimeMillis());
+
+        //Resultset
+        final ExpectProxy<PreparedStatement> trs = new ExpectProxy<PreparedStatement>();
+        PreparedStatement resultSetProxy = trs.getProxy(PreparedStatement.class);
+        
+        trs.expect("setNull");        
+        SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(null, Types.CHAR));
+        assertTrue(trs.isDone());
+        
+        trs.expect("setObject");        
+        SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_STR, Types.NULL));
+        assertTrue(trs.isDone());
+        
+        trs.expect("setString");        
+        SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_STR, Types.CHAR));
+        assertTrue(trs.isDone());
+        
+        trs.expect("setBoolean");        
+        SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(Boolean.TRUE, Types.BOOLEAN));
+        assertTrue(trs.isDone());
+        
+        trs.expect("setTimestamp");        
+        SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_TMS, Types.TIMESTAMP));
+        assertTrue(trs.isDone());
+        
+        trs.expect("setTime");        
+        SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_TIME, Types.TIME));
+        assertTrue(trs.isDone());
+        
+        trs.expect("setDate");        
+        SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_DATE, Types.DATE));
+        assertTrue(trs.isDone());        
+     }        
+    
+    
+    /**
+     * GetAttributeSet test method
+     * @throws SQLException 
+     */
+    @Test
+    public void testJdbc2Attribute() throws SQLException {
+        final String TEST_STR = "testValue1";
+        final Timestamp TEST_TMS = new Timestamp(System.currentTimeMillis());
+        final Date TEST_DATE = new Date(System.currentTimeMillis());
+        final Time TEST_TIME = new Time(System.currentTimeMillis());
+        Object actual = SQLUtil.jdbc2AttributeValue(TEST_STR);
+        assertEquals(TEST_STR, actual);
+
+        actual = SQLUtil.jdbc2AttributeValue(TEST_TMS);
+        assertEquals(TEST_TMS.toString(), actual);
+
+        actual = SQLUtil.jdbc2AttributeValue(TEST_DATE);
+        assertEquals(TEST_DATE.toString(), actual);
+
+        actual = SQLUtil.jdbc2AttributeValue(TEST_TIME);
+        assertEquals(TEST_TIME.toString(), actual);
+        
+        actual = SQLUtil.jdbc2AttributeValue(1);
+        assertEquals(1, actual);
+
+        actual = SQLUtil.jdbc2AttributeValue(1L);
+        assertEquals(1L, actual);
+
+        actual = SQLUtil.jdbc2AttributeValue(1d);
+        assertEquals(1d, actual);
+        
+        actual = SQLUtil.jdbc2AttributeValue(1f);
+        assertEquals(1f, actual);
+        
+        actual = SQLUtil.jdbc2AttributeValue(true);
+        assertEquals(true, actual);        
+    }
+        
+    
+    /**
+     * GetAttributeSet test method
+     * @throws SQLException 
+     */
+    @Test
+    public void testAttribute2JdbcValue() throws SQLException {
+        final String TEST_STR = "testValue1";
+        final Timestamp TEST_TMS = new Timestamp(System.currentTimeMillis());
+        final Date TEST_DATE = new Date(System.currentTimeMillis());
+        final Time TEST_TIME = new Time(System.currentTimeMillis());
+        
+        Object actual = SQLUtil.attribute2jdbcValue(TEST_STR, Types.CHAR);
+        assertEquals(TEST_STR, actual);
+        
+        actual = SQLUtil.attribute2jdbcValue(TEST_TMS.toString(), Types.TIMESTAMP);
+        assertEquals(TEST_TMS, actual);
+        
+        actual = SQLUtil.attribute2jdbcValue(TEST_TIME.toString(), Types.TIME);
+        assertEquals(TEST_TIME.toString(), actual.toString());        
+
+        actual = SQLUtil.attribute2jdbcValue(TEST_DATE.toString(), Types.DATE);
+        assertEquals(TEST_DATE.toString(), actual.toString());        
+
+        actual = SQLUtil.attribute2jdbcValue("55.55", Types.DOUBLE);
+        assertEquals(55.55d, actual);       
+        
+
+        actual = SQLUtil.attribute2jdbcValue("true", Types.BIT);
+        assertEquals(true, actual);     
+    }
     
 	/**
 	 * We need this helper class as InitialContextFactory class name value to Hashtable into InitialContext.
