@@ -102,19 +102,19 @@ public abstract class DatabaseTableConnectorTestBase {
      * Create the test configuration
      * @return the initialized configuration 
      */
-    protected abstract DatabaseTableConfiguration getConfiguration();
+    protected abstract DatabaseTableConfiguration getConfiguration() throws Exception;
  
     /**
      * Create the test attribute sets
      * @return the initialized attribute set
      */
-    protected abstract Set<Attribute>  getCreateAttributeSet(DatabaseTableConfiguration cfg);
+    protected abstract Set<Attribute>  getCreateAttributeSet(DatabaseTableConfiguration cfg) throws Exception;
 
     /**
      * Create the test modify attribute set
      * @return the initialized attribute set
      */
-    protected abstract  Set<Attribute>  getModifyAttributeSet(DatabaseTableConfiguration cfg);
+    protected abstract  Set<Attribute>  getModifyAttributeSet(DatabaseTableConfiguration cfg) throws Exception;
    
     /**
      * The class load method

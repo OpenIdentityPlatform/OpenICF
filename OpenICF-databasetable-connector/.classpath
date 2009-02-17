@@ -5,11 +5,12 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/ConnectorDatabaseCommon"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="lib" path="lib/test/derby.jar"/>
 	<classpathentry kind="lib" path="lib/test/derbyclient.jar"/>
 	<classpathentry kind="lib" path="lib/test/derbynet.jar"/>
 	<classpathentry kind="lib" path="lib/test/derbyrun.jar"/>
 	<classpathentry kind="lib" path="lib/test/derbytools.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/ConnectorContractTests"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>

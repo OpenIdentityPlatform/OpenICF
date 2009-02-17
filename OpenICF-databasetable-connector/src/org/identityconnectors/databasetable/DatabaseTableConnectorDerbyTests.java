@@ -147,7 +147,7 @@ public class DatabaseTableConnectorDerbyTests extends DatabaseTableConnectorTest
      * @return the initialized configuration
      */
      @Override
-    protected DatabaseTableConfiguration getConfiguration() {
+    protected DatabaseTableConfiguration getConfiguration() throws Exception {
         DatabaseTableConfiguration config = new DatabaseTableConfiguration();
         config.setJdbcDriver(DRIVER);
         config.setUser("");
@@ -166,7 +166,7 @@ public class DatabaseTableConnectorDerbyTests extends DatabaseTableConnectorTest
       * @see org.identityconnectors.databasetable.DatabaseTableConnectorTestBase#getCreateAttributeSet()
       */
      @Override
-     protected Set<Attribute> getCreateAttributeSet(DatabaseTableConfiguration cfg) {
+     protected Set<Attribute> getCreateAttributeSet(DatabaseTableConfiguration cfg) throws Exception {
          Set<Attribute> ret = new HashSet<Attribute>();        
          ret.add(AttributeBuilder.build(Name.NAME, randomString(r, 50)));
          if (StringUtil.isNotBlank(cfg.getPasswordColumn())) {
@@ -203,7 +203,7 @@ public class DatabaseTableConnectorDerbyTests extends DatabaseTableConnectorTest
       * @see org.identityconnectors.databasetable.DatabaseTableConnectorTestBase#getModifyAttributeSet()
       */
      @Override
-     protected Set<Attribute> getModifyAttributeSet(DatabaseTableConfiguration cfg) {         
+     protected Set<Attribute> getModifyAttributeSet(DatabaseTableConfiguration cfg) throws Exception {         
          return getCreateAttributeSet(cfg);
      }     
 

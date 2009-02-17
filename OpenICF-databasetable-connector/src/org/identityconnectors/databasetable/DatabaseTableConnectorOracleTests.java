@@ -30,6 +30,8 @@ import java.util.Set;
 
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.contract.data.DataProvider;
+import org.identityconnectors.contract.data.GroovyDataProvider;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.Name;
@@ -42,37 +44,22 @@ import org.junit.Test;
 public class DatabaseTableConnectorOracleTests extends DatabaseTableConnectorTestBase{
 
     static final String ORACLE_CONFIGURATINON = "configurations.oracle";
-    static final String ORA_USER_KEY = ORACLE_CONFIGURATINON+".user";
-    static final String ORA_PASSWORD_KEY = ORACLE_CONFIGURATINON+".password";
-    static final String ORA_TABLE = "ACCOUNTS";
-    static final String ORA_HOST_KEY = ORACLE_CONFIGURATINON+".host";
-    static final String ORA_PORT = "1521";
-    static final String ORA_DATABASE = "XE";
-    static final String ORA_USER = "TEST";
-    static final String ORA_HOST = "prgvm8098.czech.sun.com";
-    static final String ORA_PASSWORD = "ks";       
-
+    static final DataProvider dp = new GroovyDataProvider();   
+    
+    
     @Override
-    protected DatabaseTableConfiguration getConfiguration()  {
-        DatabaseTableConfiguration config = new DatabaseTableConfiguration();
-        config.setUser(ORA_USER);
-        config.setPassword(new GuardedString( ORA_PASSWORD.toCharArray()));
-        config.setHost(ORA_HOST);
-        config.setTable(ORA_TABLE);
-        config.setPort(ORA_PORT);
-        config.setDatabase(ORA_DATABASE);
-        config.setKeyColumn(ACCOUNTID);
-        config.setPasswordColumn(PASSWORD);
-        config.setNativeTimestamps(true);
-        config.setConnectorMessages(TestHelpers.createDummyMessages());
-        return config;
+    protected DatabaseTableConfiguration getConfiguration() throws Exception {
+        DatabaseTableConfiguration cfg = new DatabaseTableConfiguration();
+        dp.loadConfiguration(ORACLE_CONFIGURATINON, cfg);
+        cfg.setConnectorMessages(TestHelpers.createDummyMessages());
+        return cfg;
     }    
     
     /* (non-Javadoc)
      * @see org.identityconnectors.databasetable.DatabaseTableConnectorTestBase#getCreateAttributeSet()
      */
     @Override
-    protected Set<Attribute> getCreateAttributeSet(DatabaseTableConfiguration cfg) {
+    protected Set<Attribute> getCreateAttributeSet(DatabaseTableConfiguration cfg) throws Exception {
         Set<Attribute> ret = new HashSet<Attribute>();        
         ret.add(AttributeBuilder.build(Name.NAME, "Test Name"+r.nextInt()));
         if (StringUtil.isNotBlank(cfg.getPasswordColumn())) {
@@ -98,7 +85,7 @@ public class DatabaseTableConnectorOracleTests extends DatabaseTableConnectorTes
      * @see org.identityconnectors.databasetable.DatabaseTableConnectorTestBase#getModifyAttributeSet()
      */
     @Override
-    protected Set<Attribute> getModifyAttributeSet(DatabaseTableConfiguration cfg) {         
+    protected Set<Attribute> getModifyAttributeSet(DatabaseTableConfiguration cfg) throws Exception {         
         return getCreateAttributeSet(cfg);
     }         
     /* (non-Javadoc)
