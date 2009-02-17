@@ -602,7 +602,7 @@ public final class SQLUtil {
         default:   
             object = resultSet.getString(i);
         }
-        log.ok("getSQLParam to value {0}, as a sql type {1}", object, sqlType);        
+        log.ok("getSQLParam to value {0}, class: {1},  sql type: {2}", object, object == null ? null : object.getClass().getSimpleName(), sqlType);
         return new SQLParam(object, sqlType);
     }
     
@@ -662,8 +662,8 @@ public final class SQLUtil {
      */
     public static void setSQLParam(final PreparedStatement stmt, final int idx, SQLParam parm) throws SQLException {
         Assertions.nullCheck(stmt, "statement");
-        Assertions.nullCheck(parm, "statement");
-        log.ok("setSQLParam to value {0} as a sql type {1}", parm.getValue(), parm.getSqlType());
+        Assertions.nullCheck(parm, "parm");
+        log.ok("setSQLParam to value {0}, class: {1},  sql type: {2}", parm.getValue(), parm.getValue() == null ? null : parm.getValue().getClass().getSimpleName(), parm.getSqlType());
         // Handle the null value
         
         final int sqlType = parm.getSqlType();        
@@ -740,7 +740,7 @@ public final class SQLUtil {
         } else if (value instanceof java.sql.Date) {
             ret = date2String((java.sql.Date) value);
         } else if (value instanceof java.util.Date) {
-            //convert date through Timestamps. Possible lost of precision on .getTime()
+            //convert date to String
             ret = ((java.util.Date) value).toString();
         } else if (value instanceof Long) {
             ret = value;
@@ -762,7 +762,7 @@ public final class SQLUtil {
             ret = value;
         } else {
             //All other needs to be converted to string
-            ret = value.toString();
+            ret = value;
         }
         return ret;
     }   
