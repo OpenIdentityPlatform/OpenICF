@@ -742,7 +742,7 @@ public final class SQLUtil {
         } else if (value instanceof java.util.Date) {
             //convert date to String
             ret = ((java.util.Date) value).toString();
-        } else if (value instanceof Long) {
+        /*} else if (value instanceof Long) {
             ret = value;
         } else if (value instanceof Character) {
             ret = value;
@@ -759,9 +759,10 @@ public final class SQLUtil {
         } else if (value instanceof BigDecimal) {
             ret = value;
         } else if (value instanceof BigInteger) {
-            ret = value;
+            ret = value;*/
         } else {
-            //All other needs to be converted to string
+            // converted to string leads to error in contract tests
+            // TODO figure out, which type fail. It could be Character[] 
             ret = value;
         }
         return ret;
