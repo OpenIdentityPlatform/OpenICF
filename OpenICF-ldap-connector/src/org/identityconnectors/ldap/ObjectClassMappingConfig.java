@@ -23,11 +23,15 @@
 package org.identityconnectors.ldap;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 
 /**
@@ -43,11 +47,13 @@ public class ObjectClassMappingConfig {
     private String uidAttribute; // Maps to UID.
     private String nameAttribute; // Maps to Name.
 
-    private Map<String, AttributeMappingConfig> attrName2Mapping = new HashMap<String, AttributeMappingConfig>();
-    private List<AttributeMappingConfig> attributeMappings = new ArrayList<AttributeMappingConfig>();
+    private final Map<String, AttributeMappingConfig> attrName2Mapping = new HashMap<String, AttributeMappingConfig>();
+    private final List<AttributeMappingConfig> attributeMappings = new ArrayList<AttributeMappingConfig>();
 
-    private Map<String, AttributeMappingConfig> attrName2DNMapping = new HashMap<String, AttributeMappingConfig>();
-    private List<AttributeMappingConfig> dnMappings = new ArrayList<AttributeMappingConfig>();
+    private final Map<String, AttributeMappingConfig> attrName2DNMapping = new HashMap<String, AttributeMappingConfig>();
+    private final List<AttributeMappingConfig> dnMappings = new ArrayList<AttributeMappingConfig>();
+
+    private final Set<AttributeInfo> operationalAttributes = new HashSet<AttributeInfo>();
 
     public ObjectClassMappingConfig(ObjectClass objectClass, String ldapClass) {
         assert objectClass != null;
@@ -124,6 +130,14 @@ public class ObjectClassMappingConfig {
         AttributeMappingConfig mapping = new AttributeMappingConfig(dnValuedAttr, mapToAttr);
         attrName2DNMapping.put(dnValuedAttr, mapping);
         dnMappings.add(mapping);
+    }
+
+    public void addOperationalAttributes(AttributeInfo... attributeInfos) {
+        operationalAttributes.addAll(Arrays.asList(attributeInfos));
+    }
+
+    public Set<AttributeInfo> getOperationalAttributes() {
+        return CollectionUtil.newReadOnlySet(operationalAttributes);
     }
 
     public int hashCode() {

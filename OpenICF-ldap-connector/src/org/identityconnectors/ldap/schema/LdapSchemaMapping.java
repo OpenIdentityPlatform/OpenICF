@@ -53,12 +53,12 @@ import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
+import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.AttributeMappingConfig;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapEntry;
-import org.identityconnectors.ldap.LdapPredefinedAttributes;
 import org.identityconnectors.ldap.ObjectClassMappingConfig;
 import org.identityconnectors.ldap.search.LdapSearches;
 
@@ -108,6 +108,8 @@ public class LdapSchemaMapping {
      * The LDAP attribute to map to {@link Name} by default.
      */
     static final String DEFAULT_LDAP_NAME_ATTR = "entryDN";
+
+    static final String LDAP_PASSWORD_ATTR = "userPassword";
 
     static {
         // Cf. http://java.sun.com/products/jndi/tutorial/ldap/misc/attrs.html.
@@ -423,7 +425,7 @@ public class LdapSchemaMapping {
     }
 
     public javax.naming.directory.Attribute encodeAttribute(ObjectClass oclass, Attribute attr) {
-        if (attr.is(LdapPredefinedAttributes.PASSWORD_NAME)) {
+        if (attr.is(OperationalAttributes.PASSWORD_NAME)) {
             throw new IllegalArgumentException("This method should not be used for password attributes");
         }
 
@@ -443,22 +445,16 @@ public class LdapSchemaMapping {
     }
 
     public GuardedPasswordAttribute encodePassword(ObjectClass oclass, Attribute attr) {
-        if (!attr.is(LdapPredefinedAttributes.PASSWORD_NAME)) {
-            throw new IllegalArgumentException("This method should be used for password attributes");
-        }
-        String ldapAttrName = getLdapAttribute(oclass, attr.getName(), true);
-        if (ldapAttrName == null) {
-            return null;
-        }
+        assert !attr.is(OperationalAttributes.PASSWORD_NAME);
 
         List<Object> value = attr.getValue();
         if (value != null) {
             for (Object each : value) {
                 GuardedString password = (GuardedString) each;
-                return GuardedPasswordAttribute.create(ldapAttrName, password);
+                return GuardedPasswordAttribute.create(LDAP_PASSWORD_ATTR, password);
             }
         }
-        return GuardedPasswordAttribute.create(ldapAttrName);
+        return GuardedPasswordAttribute.create(LDAP_PASSWORD_ATTR);
     }
 
     public void rename(ObjectClass oclass, String entryDN, Name newName) {

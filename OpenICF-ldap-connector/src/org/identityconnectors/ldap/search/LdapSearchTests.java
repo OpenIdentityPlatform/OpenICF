@@ -50,7 +50,6 @@ import org.identityconnectors.framework.test.TestHelpers;
 import org.identityconnectors.ldap.LdapConfiguration;
 import org.identityconnectors.ldap.LdapConnector;
 import org.identityconnectors.ldap.LdapConnectorTestBase;
-import org.identityconnectors.ldap.LdapObjectClass;
 import org.junit.Test;
 
 public class LdapSearchTests extends LdapConnectorTestBase {
@@ -115,12 +114,13 @@ public class LdapSearchTests extends LdapConnectorTestBase {
     public void testScope() {
         ConnectorFacade facade = newFacade();
         // Find an organization to pass in OP_CONTAINER.
-        ConnectorObject organization = searchByAttribute(facade, LdapObjectClass.ORGANIZATION, new Name(BIG_COMPANY_DN));
+        ObjectClass oclass = new ObjectClass("organization");
+        ConnectorObject organization = searchByAttribute(facade, oclass, new Name(BIG_COMPANY_DN));
 
         // There are no accounts directly under the organization...
         OperationOptionsBuilder optionsBuilder = new OperationOptionsBuilder();
         optionsBuilder.setScope(OperationOptions.SCOPE_ONE_LEVEL);
-        optionsBuilder.setContainer(new QualifiedUid(LdapObjectClass.ORGANIZATION, organization.getUid()));
+        optionsBuilder.setContainer(new QualifiedUid(oclass, organization.getUid()));
         List<ConnectorObject> objects = TestHelpers.searchToList(facade, ObjectClass.ACCOUNT, null, optionsBuilder.build());
         assertTrue(objects.isEmpty());
 
@@ -161,12 +161,13 @@ public class LdapSearchTests extends LdapConnectorTestBase {
     public void testBaseDNsOptionConflictsWithContainerOption() {
         ConnectorFacade facade = newFacade();
         // Find an organization to pass in OP_CONTAINER.
-        ConnectorObject organization = searchByAttribute(facade, LdapObjectClass.ORGANIZATION, new Name(BIG_COMPANY_DN));
+        ObjectClass oclass = new ObjectClass("organization");
+        ConnectorObject organization = searchByAttribute(facade, oclass, new Name(BIG_COMPANY_DN));
 
         // Specifying both OP_BASE_DNS and OP_CONTAINER is prohibited.
         OperationOptionsBuilder optionsBuilder = new OperationOptionsBuilder();
         optionsBuilder.setOption(LdapConnector.OP_BASE_DNS, new String[] { ACME_DN });
-        optionsBuilder.setContainer(new QualifiedUid(LdapObjectClass.ORGANIZATION, organization.getUid()));
+        optionsBuilder.setContainer(new QualifiedUid(oclass, organization.getUid()));
         TestHelpers.searchToList(facade, ObjectClass.ACCOUNT, null, optionsBuilder.build());
     }
 

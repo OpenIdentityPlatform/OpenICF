@@ -42,7 +42,6 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
-import org.identityconnectors.framework.common.objects.PredefinedAttributes;
 import org.identityconnectors.framework.spi.AbstractConfiguration;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
 
@@ -145,44 +144,24 @@ public class LdapConfiguration extends AbstractConfiguration {
     // Exposed configuration properties end here.
 
     private final ObjectClassMappingConfig accountConfig = new ObjectClassMappingConfig(ObjectClass.ACCOUNT, "inetOrgPerson");
-    private final ObjectClassMappingConfig organizationConfig = new ObjectClassMappingConfig(LdapObjectClass.ORGANIZATION, "organization");
-    private final ObjectClassMappingConfig groupConfig = new ObjectClassMappingConfig(LdapObjectClass.GROUP, "groupOfUniqueNames");
+    private final ObjectClassMappingConfig groupConfig = new ObjectClassMappingConfig(ObjectClass.GROUP, "groupOfUniqueNames");
 
     private List<LdapName> baseDNsAsLdapNames;
 
     public LdapConfiguration() {
         // Note: order is important!
 
-        accountConfig.setContainer(false);
         accountConfig.setUidAttribute("entryUUID");
         accountConfig.setNameAttribute("entryDN");
-        // XXX perhaps SHORT_NAME needs to be configured too?
-        accountConfig.addAttributeMapping(LdapPredefinedAttributes.PASSWORD_NAME, "userPassword");
-        accountConfig.addAttributeMapping(LdapPredefinedAttributes.FIRSTNAME_NAME, "givenName");
-        accountConfig.addAttributeMapping(LdapPredefinedAttributes.LASTNAME_NAME, "sn");
+        accountConfig.addAttributeMapping("uid", "uid");
+        accountConfig.addAttributeMapping("cn", "cn");
+        accountConfig.addAttributeMapping("givenName", "givenName");
+        accountConfig.addAttributeMapping("sn", "sn");
         accountConfig.addAttributeMapping("modifyTimeStamp", "modifyTimeStamp");
 
-        groupConfig.setContainer(false);
         groupConfig.setUidAttribute("entryUUID");
         groupConfig.setNameAttribute("entryDN");
-        groupConfig.addAttributeMapping("dn", "entryDN");
-        groupConfig.addAttributeMapping("objectClass", "objectClass");
         groupConfig.addAttributeMapping("cn", "cn");
-        groupConfig.addAttributeMapping("description", "description");
-        groupConfig.addAttributeMapping("owner", "owner");
-        groupConfig.addAttributeMapping("uniqueMember", "uniqueMember");
-        groupConfig.addAttributeMapping(PredefinedAttributes.SHORT_NAME, "cn");
-        groupConfig.addAttributeMapping(PredefinedAttributes.DESCRIPTION, "description");
-        groupConfig.addDNMapping("owner", "cn");
-        groupConfig.addDNMapping("uniqueMember", "cn");
-
-        organizationConfig.setContainer(true);
-        organizationConfig.setUidAttribute("entryUUID");
-        organizationConfig.setNameAttribute("entryDN");
-        organizationConfig.addAttributeMapping("o", "o");
-        organizationConfig.addAttributeMapping("dn", "entryDN");
-        organizationConfig.addAttributeMapping("objectClass", "objectClass");
-        organizationConfig.addAttributeMapping(PredefinedAttributes.SHORT_NAME, "o");
     }
 
     /**
@@ -440,7 +419,6 @@ public class LdapConfiguration extends AbstractConfiguration {
     public Map<ObjectClass, ObjectClassMappingConfig> getObjectClassMappingConfigs() {
         HashMap<ObjectClass, ObjectClassMappingConfig> result = new HashMap<ObjectClass, ObjectClassMappingConfig>();
         result.put(accountConfig.getObjectClass(), accountConfig);
-        result.put(organizationConfig.getObjectClass(), organizationConfig);
         result.put(groupConfig.getObjectClass(), groupConfig);
 
         for (int i = 0; i < extendedObjectClasses.length; i++) {
@@ -484,7 +462,6 @@ public class LdapConfiguration extends AbstractConfiguration {
         builder.append(authentication);
         builder.append(accountConfig);
         builder.append(groupConfig);
-        builder.append(organizationConfig);
         for (String extendedObjectClass : extendedObjectClasses) {
             builder.append(extendedObjectClass);
         }

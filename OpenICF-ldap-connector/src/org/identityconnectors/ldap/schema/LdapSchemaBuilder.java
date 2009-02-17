@@ -111,29 +111,14 @@ class LdapSchemaBuilder {
             objClassBld.setType(oclass.getObjectClassValue());
             objClassBld.setContainer(oclassConfig.isContainer());
             objClassBld.addAllAttributeInfo(createAttributeInfos(oclassConfig));
+            objClassBld.addAllAttributeInfo(oclassConfig.getOperationalAttributes());
 
-            // XXX move this somewhere else, perhaps to ObjectClassMappingConfig.
-            if (ObjectClass.ACCOUNT.equals(oclass)) {
-                objClassBld.addAllAttributeInfo(createAccountSpecialAttributeInfos());
-            }
             schemaBld.defineObjectClass(objClassBld.build());
             ldapClass2SupTransTemp.put(ldapClass, Collections.unmodifiableSet(getLdapClassSuperiorsTransitively(ldapClass)));
         }
 
         schema = schemaBld.build();
         ldapClass2TransSup = Collections.unmodifiableMap(ldapClass2SupTransTemp);
-    }
-
-    private Set<AttributeInfo> createAccountSpecialAttributeInfos() {
-        Set<AttributeInfo> result = new HashSet<AttributeInfo>();
-//        result.add(OperationalAttributeInfos.PASSWORD);
-//        result.add(OperationalAttributeInfos.CURRENT_PASSWORD);
-//        // TODO: Writing LOCK and EXPIRE_PASSWORD is not supported.
-//        result.add(OperationalAttributeInfos.PASSWORD_EXPIRATION_DATE);
-//        result.add(OperationalAttributeInfos.LOCK_OUT);
-//        // TODO: Writing ENABLE attribute is only supported for OpenDS.
-//        result.add(OperationalAttributeInfos.ENABLE);
-        return result;
     }
 
     private Set<AttributeInfo> createAttributeInfos(ObjectClassMappingConfig oclassConfig) {

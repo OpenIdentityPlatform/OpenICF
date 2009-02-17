@@ -36,9 +36,9 @@ import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.LdapConnection;
-import org.identityconnectors.ldap.LdapPredefinedAttributes;
 import org.identityconnectors.ldap.schema.GuardedPasswordAttribute;
 import org.identityconnectors.ldap.schema.GuardedPasswordAttribute.Accessor;
 import org.identityconnectors.ldap.search.LdapSearches;
@@ -95,7 +95,7 @@ public class LdapUpdate {
             } else if (attr.is(Name.NAME)) {
                 // Such a change would have been handled in update() above.
                 throw new IllegalArgumentException("Unable to modify an object's name");
-            } else if (attr.is(LdapPredefinedAttributes.PASSWORD_NAME)) {
+            } else if (attr.is(OperationalAttributes.PASSWORD_NAME)) {
                 pwdAttr = conn.getSchemaMapping().encodePassword(oclass, attr);
             } else {
                 ldapAttr = conn.getSchemaMapping().encodeAttribute(oclass, attr);

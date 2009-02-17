@@ -77,6 +77,7 @@ public abstract class LdapConnectorTestBase {
     public static final String BIG_COMPANY_O = "Big Company";
     public static final String USER_0_DN = "uid=user.0,ou=People,o=Big Company,dc=example,dc=com";
     public static final String USER_0_UID = "user.0";
+    public static final String USER_0_CN = "Aaccf Amar";
     public static final String USER_0_SN = "Amar";
     public static final String USER_0_GIVEN_NAME = "Aaccf";
 

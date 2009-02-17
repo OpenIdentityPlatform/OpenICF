@@ -36,10 +36,10 @@ import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapEntry;
-import org.identityconnectors.ldap.LdapPredefinedAttributes;
 import org.identityconnectors.ldap.schema.GuardedPasswordAttribute;
 import org.identityconnectors.ldap.schema.GuardedPasswordAttribute.Accessor;
 
@@ -77,7 +77,7 @@ public class LdapCreate {
 
         for (Attribute attr : attrs) {
             javax.naming.directory.Attribute ldapAttr = null;
-            if (attr.is(LdapPredefinedAttributes.PASSWORD_NAME)) {
+            if (attr.is(OperationalAttributes.PASSWORD_NAME)) {
                 pwdAttr = conn.getSchemaMapping().encodePassword(oclass, attr);
             } else {
                 ldapAttr = conn.getSchemaMapping().encodeAttribute(oclass, attr);

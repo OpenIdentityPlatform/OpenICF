@@ -22,7 +22,9 @@
  */
 package org.identityconnectors.ldap.modify;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -42,7 +44,6 @@ import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.LdapConfiguration;
 import org.identityconnectors.ldap.LdapConnectorTestBase;
-import org.identityconnectors.ldap.LdapPredefinedAttributes;
 import org.junit.Test;
 
 public class LdapUpdateTests extends LdapConnectorTestBase {
@@ -153,7 +154,7 @@ public class LdapUpdateTests extends LdapConnectorTestBase {
         ConnectorObject elmer = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(ELMER_FUDD_DN));
 
         GuardedString password = new GuardedString("shotgun".toCharArray());
-        Attribute pwdAttr = AttributeBuilder.build(LdapPredefinedAttributes.PASSWORD_NAME, password);
+        Attribute pwdAttr = AttributeBuilder.buildPassword(password);
         facade.update(ObjectClass.ACCOUNT, elmer.getUid(), CollectionUtil.newSet(pwdAttr), null);
 
         facade.authenticate(ObjectClass.ACCOUNT, ELMER_FUDD_DN, password, null);
@@ -169,7 +170,7 @@ public class LdapUpdateTests extends LdapConnectorTestBase {
         ConnectorObject bugs = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
 
         GuardedString password = new GuardedString("cabbage".toCharArray());
-        Attribute pwdAttr = AttributeBuilder.build(LdapPredefinedAttributes.PASSWORD_NAME, password);
+        Attribute pwdAttr = AttributeBuilder.buildPassword(password);
         facade.update(ObjectClass.ACCOUNT, bugs.getUid(), CollectionUtil.newSet(pwdAttr), null);
 
         facade.authenticate(ObjectClass.ACCOUNT, BUGS_BUNNY_DN, password, null);

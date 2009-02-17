@@ -22,7 +22,8 @@
  */
 package org.identityconnectors.ldap.modify;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -41,7 +42,6 @@ import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.LdapConfiguration;
 import org.identityconnectors.ldap.LdapConnectorTestBase;
-import org.identityconnectors.ldap.LdapPredefinedAttributes;
 import org.junit.Test;
 
 public class LdapCreateTests extends LdapConnectorTestBase{
@@ -63,8 +63,10 @@ public class LdapCreateTests extends LdapConnectorTestBase{
         Set<Attribute> attributes = new HashSet<Attribute>();
         Name name = new Name("uid=another.worker," + SMALL_COMPANY_DN);
         attributes.add(name);
-        attributes.add(AttributeBuilder.build(LdapPredefinedAttributes.FIRSTNAME_NAME, "Another"));
-        attributes.add(AttributeBuilder.build(LdapPredefinedAttributes.LASTNAME_NAME, "Worker"));
+        attributes.add(AttributeBuilder.build("uid", "another.worker"));
+        attributes.add(AttributeBuilder.build("cn", "Another Worker"));
+        attributes.add(AttributeBuilder.build("givenName", "Another"));
+        attributes.add(AttributeBuilder.build("sn", "Worker"));
         Uid uid = facade.create(ObjectClass.ACCOUNT, attributes, null);
 
         ConnectorObject newAccount = facade.getObject(ObjectClass.ACCOUNT, uid, null);
@@ -77,8 +79,10 @@ public class LdapCreateTests extends LdapConnectorTestBase{
 
         Set<Attribute> attributes = new HashSet<Attribute>();
         attributes.add(new Name("uid=daffy.duck,ou=Users,o=Acme,dc=example,dc=com"));
-        attributes.add(AttributeBuilder.build(LdapPredefinedAttributes.FIRSTNAME_NAME, "Daffy"));
-        attributes.add(AttributeBuilder.build(LdapPredefinedAttributes.LASTNAME_NAME, "Duck"));
+        attributes.add(AttributeBuilder.build("uid", "daffy.duck"));
+        attributes.add(AttributeBuilder.build("cn", "Daffy Duck"));
+        attributes.add(AttributeBuilder.build("givenName", "Daffy"));
+        attributes.add(AttributeBuilder.build("sn", "Duck"));
         byte[] certificate = IOUtil.getResourceAsBytes(LdapCreateTests.class, "certificate.cert");
         attributes.add(AttributeBuilder.build("userCertificate", certificate));
         byte[] photo = IOUtil.getResourceAsBytes(LdapCreateTests.class, "photo.jpg");
@@ -102,10 +106,12 @@ public class LdapCreateTests extends LdapConnectorTestBase{
         Set<Attribute> attributes = new HashSet<Attribute>();
         String name = "uid=daffy.duck,ou=Users,o=Acme,dc=example,dc=com";
         attributes.add(new Name(name));
-        attributes.add(AttributeBuilder.build(LdapPredefinedAttributes.FIRSTNAME_NAME, "Daffy"));
-        attributes.add(AttributeBuilder.build(LdapPredefinedAttributes.LASTNAME_NAME, "Duck"));
+        attributes.add(AttributeBuilder.build("uid", "daffy.duck"));
+        attributes.add(AttributeBuilder.build("cn", "Daffy Duck"));
+        attributes.add(AttributeBuilder.build("givenName", "Daffy"));
+        attributes.add(AttributeBuilder.build("sn", "Duck"));
         GuardedString password = new GuardedString("I.hate.rabbits".toCharArray());
-        attributes.add(AttributeBuilder.build(LdapPredefinedAttributes.PASSWORD_NAME, password));
+        attributes.add(AttributeBuilder.buildPassword(password));
         facade.create(ObjectClass.ACCOUNT, attributes, null);
 
         facade.authenticate(ObjectClass.ACCOUNT, name, password, null);

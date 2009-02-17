@@ -30,7 +30,6 @@ import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.ldap.LdapConnectorTestBase;
-import org.identityconnectors.ldap.LdapObjectClass;
 import org.junit.Test;
 
 public class LdapDeleteTests extends LdapConnectorTestBase{
@@ -43,7 +42,7 @@ public class LdapDeleteTests extends LdapConnectorTestBase{
     @Test(expected = ConnectorException.class)
     public void testCannotDeleteExistingUidButWrongObjectClass() {
         ConnectorFacade facade = newFacade();
-        ConnectorObject organization = searchByAttribute(facade, LdapObjectClass.ORGANIZATION, new Name(BIG_COMPANY_DN));
+        ConnectorObject organization = searchByAttribute(facade, new ObjectClass("organization"), new Name(BIG_COMPANY_DN));
         // Should fail because the object class passed to delete() is not ORGANIZATION.
         facade.delete(ObjectClass.ACCOUNT, organization.getUid(), null);
     }
@@ -53,8 +52,9 @@ public class LdapDeleteTests extends LdapConnectorTestBase{
         // TODO: not sure this is the right behavior. Perhaps should instead
         // recursively delete everything under the deleted entry.
         ConnectorFacade facade = newFacade();
-        ConnectorObject organization = searchByAttribute(facade, LdapObjectClass.ORGANIZATION, new Name(ACME_DN));
-        facade.delete(LdapObjectClass.ORGANIZATION, organization.getUid(), null);
+        ObjectClass oclass = new ObjectClass("organization");
+        ConnectorObject organization = searchByAttribute(facade, oclass, new Name(ACME_DN));
+        facade.delete(oclass, organization.getUid(), null);
     }
 
     @Test()

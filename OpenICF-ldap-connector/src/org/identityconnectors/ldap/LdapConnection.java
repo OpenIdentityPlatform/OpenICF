@@ -107,7 +107,7 @@ public class LdapConnection {
             return new InitialLdapContext(env, null);
         } catch (AuthenticationException e) {
             if (e.getMessage().toLowerCase().contains("invalid credentials")) {
-                throw new InvalidCredentialException();
+                throw new InvalidCredentialException(e);
             } else {
                 throw new ConnectorSecurityException(e);
             }
