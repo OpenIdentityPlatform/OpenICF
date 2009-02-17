@@ -32,6 +32,7 @@ import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
@@ -158,13 +159,26 @@ public abstract class LdapConnectorTestBase {
         return factory.newInstance(impl);
     }
 
-    public ConnectorObject searchByAttribute(ConnectorFacade facade, ObjectClass oclass, Attribute attr) {
+    public static ConnectorObject searchByAttribute(ConnectorFacade facade, ObjectClass oclass, Attribute attr) {
         return searchByAttribute(facade, oclass, attr, null);
     }
 
-    public ConnectorObject searchByAttribute(ConnectorFacade facade, ObjectClass oclass, Attribute attr, OperationOptions options) {
+    public static ConnectorObject searchByAttribute(ConnectorFacade facade, ObjectClass oclass, Attribute attr, OperationOptions options) {
         List<ConnectorObject> objects = TestHelpers.searchToList(facade, oclass, FilterBuilder.equalTo(attr), options);
         return objects.size() > 0 ? objects.get(0) : null;
+    }
+
+    public static ConnectorObject findByAttribute(List<ConnectorObject> objects, String attrName, Object value) {
+        for (ConnectorObject object : objects) {
+            Attribute attr = object.getAttributeByName(attrName);
+            if (attr != null) {
+                Object attrValue = AttributeUtil.getSingleValue(attr);
+                if (value.equals(attrValue)) {
+                    return object;
+                }
+            }
+        }
+        return null;
     }
 
     protected void startServer() throws IOException {

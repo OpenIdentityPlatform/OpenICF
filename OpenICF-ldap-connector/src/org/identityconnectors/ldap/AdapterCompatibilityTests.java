@@ -32,7 +32,6 @@ import java.util.Set;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.framework.api.ConnectorFacade;
-import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
@@ -134,20 +133,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
         builder.setAttributesToGet("cn", "dn");
         List<ConnectorObject> objects = TestHelpers.searchToList(facade, new ObjectClass("inetOrgPerson"), null, builder.build());
 
-        ConnectorObject object = findObjectByAttribute(objects, "dn", BUGS_BUNNY_DN);
+        ConnectorObject object = findByAttribute(objects, "dn", BUGS_BUNNY_DN);
         assertEquals(BUGS_BUNNY_CN, AttributeUtil.getStringValue(object.getAttributeByName("cn")));
-    }
-
-    private static ConnectorObject findObjectByAttribute(List<ConnectorObject> objects, String attrName, Object value) {
-        for (ConnectorObject object : objects) {
-            Attribute attr = object.getAttributeByName(attrName);
-            if (attr != null) {
-                Object attrValue = AttributeUtil.getSingleValue(attr);
-                if (value.equals(attrValue)) {
-                    return object;
-                }
-            }
-        }
-        return null;
     }
 }

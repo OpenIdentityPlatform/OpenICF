@@ -23,6 +23,7 @@
 package org.identityconnectors.ldap.modify;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -42,6 +43,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.test.TestHelpers;
 import org.identityconnectors.ldap.LdapConfiguration;
 import org.identityconnectors.ldap.LdapConnectorTestBase;
 import org.junit.Test;
@@ -157,7 +159,14 @@ public class LdapUpdateTests extends LdapConnectorTestBase {
         Attribute pwdAttr = AttributeBuilder.buildPassword(password);
         facade.update(ObjectClass.ACCOUNT, elmer.getUid(), CollectionUtil.newSet(pwdAttr), null);
 
-        facade.authenticate(ObjectClass.ACCOUNT, ELMER_FUDD_DN, password, null);
+        // Now test that the user can login with the new password and execute an operation.
+        LdapConfiguration config = newConfiguration();
+        config.setBindDN(ELMER_FUDD_DN);
+        config.setBindPassword(password);
+        config.setPageSize(0); // Do not use paged search, since the user doesn't have the privilege.
+        facade = newFacade(config);
+        List<ConnectorObject> objects = TestHelpers.searchToList(facade, new ObjectClass("organization"), null);
+        assertNotNull(findByAttribute(objects, Name.NAME, ACME_DN));
     }
 
     @Test
@@ -173,6 +182,10 @@ public class LdapUpdateTests extends LdapConnectorTestBase {
         Attribute pwdAttr = AttributeBuilder.buildPassword(password);
         facade.update(ObjectClass.ACCOUNT, bugs.getUid(), CollectionUtil.newSet(pwdAttr), null);
 
-        facade.authenticate(ObjectClass.ACCOUNT, BUGS_BUNNY_DN, password, null);
+        // Now test that the user can login with the new password and execute an operation.
+        config.setBindPassword(password);
+        facade = newFacade(config);
+        ConnectorObject elmer = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(ELMER_FUDD_DN));
+        assertNotNull(elmer);
     }
 }
