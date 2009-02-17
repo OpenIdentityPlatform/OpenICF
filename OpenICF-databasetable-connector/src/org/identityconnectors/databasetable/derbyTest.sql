@@ -10,9 +10,10 @@ create table Accounts (
   title       VARCHAR(250),
   age         INTEGER,
   accessed    BIGINT,
-  salary      DECIMAL(7,2),
+  salary      DECIMAL(9,2),
   jpegphoto   BLOB,
   activate    DATE,  
+  opentime    TIME,      
   enrolled    TIMESTAMP,      
   changed     TIMESTAMP NOT NULL,
   changelog   BIGINT

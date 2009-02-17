@@ -38,9 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.CollectionUtil;
-import org.identityconnectors.common.GUID;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
@@ -206,26 +204,17 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         if(attrs == null || attrs.size() == 0) {
             throw new IllegalArgumentException(config.getMessage(MSG_INVALID_ATTRIBUTE_SET)); 
         }
-        final String tblname = config.getTable();
-
-        
-        // start the insert statement
-        final InsertIntoBuilder bld = new InsertIntoBuilder();     
-        String uidValue = null;
-       
         //Name must be present in attribute set or must be generated UID set on
         Name name = AttributeUtil.getNameFromAttributes(attrs);        
-        if(name != null) {
-            // Uid after creation will be name
-            uidValue = name.getNameValue();
-        } else if (name == null && config.isGenerateUid()) { // key value is not present, should be generated?
-            // create the key column attribute if missing
-            uidValue = new GUID().toString();
-            // attribute is missing in attribute set, added to SQL insert here 
-            bld.addBind(quoteName(config.getKeyColumn()), new SQLParam(uidValue, getColumnType(config.getKeyColumn())));
-        }
-        //Neither Name nor generated is a problem
-        Assertions.blankCheck(uidValue, "name");
+        if(name == null) {
+            throw new IllegalArgumentException(config.getMessage(MSG_NAME_BLANK)); 
+        } 
+        String uidValue = name.getNameValue();
+
+        final String tblname = config.getTable();
+        // start the insert statement
+        final InsertIntoBuilder bld = new InsertIntoBuilder();     
+       
         log.info("Creating user: {0}", name.getNameValue());
 
         Set<String> missingRequiredColumns = CollectionUtil.newCaseInsensitiveSet();
@@ -840,15 +829,13 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
                 // name attribute
                 attrBld.setName(Name.NAME);
                 //The generate UID make the Name attribute is nor required
-                boolean required = !config.isGenerateUid();
-                attrBld.setRequired(required);
+                attrBld.setRequired(true);
                 attrInfo.add(attrBld.build());
             } else if (name.equalsIgnoreCase(config.getPasswordColumn())) {
                 // Password attribute
                 attrInfo.add(OperationalAttributeInfos.PASSWORD);                
             } else if (name.equalsIgnoreCase(config.getChangeLogColumn())) {
-                // skip changelog column
-                // TODO decide changed column is in the schema, comment out this if statement 
+                // skip changelog column from the schema. It is not part of the contract
             } else {
                 // All other attributed taken from the table
                 final Class<?> dataType = conn.getSms().getSQLAttributeType(columnType);

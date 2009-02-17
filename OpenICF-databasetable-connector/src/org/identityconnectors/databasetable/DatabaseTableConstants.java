@@ -22,7 +22,6 @@
  */
 package org.identityconnectors.databasetable;
 
-import org.identityconnectors.framework.common.objects.ObjectClass;
 /**
  * The database table constants 
  * @author Petr Jung
@@ -45,23 +44,25 @@ public class DatabaseTableConstants {
 
     
     // Validate messages constants
-    public static final String MSG_TABLE_BLANK = "table.blank";    
-    public static final String MSG_KEY_COLUMN_BLANK="key.column.blank";
-    public static final String MSG_PWD_COLUMN_BLANK="pwd.column.blank";
-    public static final String MSG_CHANGELOG_COLUMN_BLANK="changelog.column.blank";
-    public static final String MSG_USER_BLANK = "admin.user.blank";
-    public static final String MSG_PASSWORD_BLANK = "admin.password.blank";
-    public static final String MSG_HOST_BLANK = "host.blank";
-    public static final String MSG_PORT_BLANK = "port.blank";
-    public static final String MSG_DATABASE_BLANK = "database.blank";
-    public static final String MSG_JDBC_TEMPLATE_BLANK = "jdbc.template.blank";
-    public static final String MSG_JDBC_DRIVER_BLANK = "jdbc.driver.blank";
-    public static final String MSG_JDBC_DRIVER_NOT_FOUND  = "jdbc.driver.not.found";
-    public static final String MSG_INVALID_QUOTING = "invalid.quoting";
-    public static final String MSG_ACCOUNT_OBJECT_CLASS_REQUIRED = "acount.object.class.required";
-    public static final String MSG_AUTHENTICATE_OP_NOT_SUPPORTED = "auth.op.not.supported";
-    public static final String MSG_AUTH_FAILED="auth.op.failed";
-    public static final String MSG_INVALID_ATTRIBUTE_SET="invalid.attribute.set";
-    public static final String MSG_UID_BLANK="uid.blank";
-    public static final String MSG_RESULT_HANDLER_NULL="result.handler.null";
+    static final String MSG_NAME_BLANK = "name.blank";
+    static final String MSG_PWD_BLANK = "pwd.blank";
+    static final String MSG_TABLE_BLANK = "table.blank";    
+    static final String MSG_KEY_COLUMN_BLANK="key.column.blank";
+    static final String MSG_PWD_COLUMN_BLANK="pwd.column.blank";
+    static final String MSG_CHANGELOG_COLUMN_BLANK="changelog.column.blank";
+    static final String MSG_USER_BLANK = "admin.user.blank";
+    static final String MSG_PASSWORD_BLANK = "admin.password.blank";
+    static final String MSG_HOST_BLANK = "host.blank";
+    static final String MSG_PORT_BLANK = "port.blank";
+    static final String MSG_DATABASE_BLANK = "database.blank";
+    static final String MSG_JDBC_TEMPLATE_BLANK = "jdbc.template.blank";
+    static final String MSG_JDBC_DRIVER_BLANK = "jdbc.driver.blank";
+    static final String MSG_JDBC_DRIVER_NOT_FOUND  = "jdbc.driver.not.found";
+    static final String MSG_INVALID_QUOTING = "invalid.quoting";
+    static final String MSG_ACCOUNT_OBJECT_CLASS_REQUIRED = "acount.object.class.required";
+    static final String MSG_AUTHENTICATE_OP_NOT_SUPPORTED = "auth.op.not.supported";
+    static final String MSG_AUTH_FAILED="auth.op.failed";
+    static final String MSG_INVALID_ATTRIBUTE_SET="invalid.attribute.set";
+    static final String MSG_UID_BLANK="uid.blank";
+    static final String MSG_RESULT_HANDLER_NULL="result.handler.null";
 }

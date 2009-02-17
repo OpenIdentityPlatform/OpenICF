@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.identityconnectors.common.Pair;
-import org.identityconnectors.databasetable.mapping.DefaulStrategy;
+import org.identityconnectors.databasetable.mapping.DefaultStrategy;
 import org.identityconnectors.dbcommon.ExpectProxy;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
@@ -78,7 +78,7 @@ public class DatabaseTableConnectorSQLUtilTests {
         trsmd.expectAndReturn("getColumnType", Types.VARCHAR);
         trs.expectAndReturn("getString", TEST_VAL2);
         
-        final DefaulStrategy derbyDbStrategy = new DefaulStrategy();
+        final DefaultStrategy derbyDbStrategy = new DefaultStrategy();
         final Set<Attribute> actual = DatabaseTableConnectorSQLUtil.getAttributeSet(derbyDbStrategy, resultSetProxy);
         assertTrue(trs.isDone());
         assertTrue(trsmd.isDone());

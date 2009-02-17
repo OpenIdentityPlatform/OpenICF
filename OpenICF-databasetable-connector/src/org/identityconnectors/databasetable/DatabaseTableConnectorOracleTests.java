@@ -63,7 +63,6 @@ public class DatabaseTableConnectorOracleTests extends DatabaseTableConnectorTes
         config.setDatabase(ORA_DATABASE);
         config.setKeyColumn(ACCOUNTID);
         config.setPasswordColumn(PASSWORD);
-        config.setGenerateUid(false);
         config.setNativeTimestamps(true);
         config.setConnectorMessages(TestHelpers.createDummyMessages());
         return config;
@@ -88,20 +87,20 @@ public class DatabaseTableConnectorOracleTests extends DatabaseTableConnectorTes
         ret.add(AttributeBuilder.build(EMAIL, "thelongtestemail@somelongorganization.com"));
         ret.add(AttributeBuilder.build(DEPARTMENT, DEPARTMENT));
         ret.add(AttributeBuilder.build(TITLE, TITLE));
-        ret.add(AttributeBuilder.build(AGE, 99999L));
-        ret.add(AttributeBuilder.build(SALARY, new BigDecimal(999999.50)));
+        ret.add(AttributeBuilder.build(AGE, new BigDecimal("99999")));
+        ret.add(AttributeBuilder.build(SALARY, new BigDecimal("999999.55")));
         ret.add(AttributeBuilder.build(JPEGPHOTO, randomBytes(r, 2000)));
         return ret;
     }
 
+    /* ------------ Skiped tests -------------------- */
     /* (non-Javadoc)
      * @see org.identityconnectors.databasetable.DatabaseTableConnectorTestBase#getModifyAttributeSet()
      */
     @Override
     protected Set<Attribute> getModifyAttributeSet(DatabaseTableConfiguration cfg) {         
         return getCreateAttributeSet(cfg);
-    }     
-    
+    }         
     /* (non-Javadoc)
      * @see org.identityconnectors.databasetable.DatabaseTableConnectorTestBase#getModifyAttributeSet()
      */
@@ -109,6 +108,32 @@ public class DatabaseTableConnectorOracleTests extends DatabaseTableConnectorTes
     @Test
     public void testCreateCallNotNullEnableEmptyString() throws Exception {
         //skeep this tests, oracle does not support empty string. They are considered as a null
+    }
+    /* (non-Javadoc)
+     * @see org.identityconnectors.databasetable.DatabaseTableConnectorTestBase#getModifyAttributeSet()
+     */
+    @Override       
+    @Test
+    public void testSyncUsingLongColumn() throws Exception {  
+      //The column is not defined in oracle
+    }
+    
+    /* (non-Javadoc)
+     * @see org.identityconnectors.databasetable.DatabaseTableConnectorTestBase#getModifyAttributeSet()
+     */
+    @Override       
+    @Test
+    public void testSyncFull() throws Exception {
+        //The column is not defined in oracle
+    }
+    
+    /* (non-Javadoc)
+     * @see org.identityconnectors.databasetable.DatabaseTableConnectorTestBase#getModifyAttributeSet()
+     */
+    @Override  
+    @Test
+    public void testSyncIncemental() throws Exception {
+        //The column is not defined in oracle
     }
 
     /**

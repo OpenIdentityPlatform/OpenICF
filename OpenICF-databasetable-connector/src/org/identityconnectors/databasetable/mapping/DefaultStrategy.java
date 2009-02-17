@@ -35,11 +35,11 @@ import org.identityconnectors.dbcommon.SQLUtil;
  * @version $Revision 1.0$
  * @since 1.0
  */
-public class DefaulStrategy implements MappingStrategy {    
+public class DefaultStrategy implements MappingStrategy {    
     /**
      * Final sql mapping
      */
-    public DefaulStrategy() {
+    public DefaultStrategy() {
         //
     }
     

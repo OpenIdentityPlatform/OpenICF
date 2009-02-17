@@ -445,31 +445,6 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
         this.validConnectionQuery = value;
     }
 
-     /**
-     * Generate UID. if true, new Uid (Name) will be generated and Name is not required attribute
-     * if false, The uid after create will be name and name is required attribute   
-     */
-    private boolean generateUid = false;
-
-    /**
-     * Generate UID getter method
-     * @return true/false 
-     */
-    @ConfigurationProperty(order = 18,
-            displayMessageKey = "generateUid.display", 
-            helpMessageKey = "generateUid.help")
-    public boolean isGenerateUid() {
-        return this.generateUid;
-    }
-
-    /**
-     * Generate UID setter method
-     * @param value
-     */
-    public void setGenerateUid(boolean value) {
-        this.generateUid = value;
-    }
-
     /**
      * Change Log Column (should automatically add ORDER BY)
      * If the value is non empty, the SyncOp should be supported

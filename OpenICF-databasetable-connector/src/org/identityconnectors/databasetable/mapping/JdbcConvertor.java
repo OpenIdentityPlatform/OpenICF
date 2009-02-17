@@ -25,7 +25,6 @@ package org.identityconnectors.databasetable.mapping;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.dbcommon.SQLParam;
@@ -33,11 +32,11 @@ import org.identityconnectors.dbcommon.SQLUtil;
 
 
 /**
- * The SQL get/set strategy class implementation read as a string all types mapped as a String.
+ * The SQL get/set strategy class implementation convert attributes back to database types
  * @version $Revision 1.0$
  * @since 1.0
  */
-public class ReadStringStrategy implements MappingStrategy {
+public class JdbcConvertor implements MappingStrategy {
 
     MappingStrategy delegate;
     
@@ -45,7 +44,7 @@ public class ReadStringStrategy implements MappingStrategy {
      * Final sql mapping
      * @param delegate
      */
-    public ReadStringStrategy(MappingStrategy delegate) {
+    public JdbcConvertor(MappingStrategy delegate) {
         Assertions.nullCheck(delegate, "MappingStrategy delegate");
         this.delegate = delegate;
     }
@@ -54,10 +53,6 @@ public class ReadStringStrategy implements MappingStrategy {
      * @see org.identityconnectors.databasetable.MappingStrategy#getSQLParam(java.sql.ResultSet, int, int)
      */
     public SQLParam getSQLParam(ResultSet resultSet, int i, final int sqlType) throws SQLException {
-        //Is it expected to be string, read as a string.
-        if( delegate.getSQLAttributeType(sqlType).isAssignableFrom(String.class)) {
-            return SQLUtil.getSQLParam(resultSet, i, Types.VARCHAR);
-        }
         //Default processing otherwise
         return delegate.getSQLParam(resultSet, i, sqlType);
     } 
@@ -73,7 +68,8 @@ public class ReadStringStrategy implements MappingStrategy {
      * @see org.identityconnectors.databasetable.MappingStrategy#setSQLParam(java.sql.PreparedStatement, int, org.identityconnectors.dbcommon.SQLParam)
      */
     public void setSQLParam(final PreparedStatement stmt, final int idx, SQLParam parm) throws SQLException {
-        delegate.setSQLParam(stmt, idx, parm);
+        final Object val = SQLUtil.attribute2jdbcValue(parm.getValue(), parm.getSqlType());
+        delegate.setSQLParam(stmt, idx, new SQLParam(val, parm.getSqlType()));
     }    
 }
 

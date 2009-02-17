@@ -22,7 +22,6 @@
  */
 package org.identityconnectors.databasetable;
 
-import java.io.IOException;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -35,14 +34,12 @@ import java.util.Set;
 
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.databasetable.mapping.DefaulStrategy;
+import org.identityconnectors.databasetable.mapping.AttributeConvertor;
+import org.identityconnectors.databasetable.mapping.DefaultStrategy;
+import org.identityconnectors.databasetable.mapping.JdbcConvertor;
 import org.identityconnectors.databasetable.mapping.MappingStrategy;
 import org.identityconnectors.databasetable.mapping.NativeTimestampsStrategy;
-import org.identityconnectors.databasetable.mapping.OracleStrategy;
-import org.identityconnectors.databasetable.mapping.ReadStringStrategy;
-import org.identityconnectors.databasetable.mapping.ToAttributeStrategy;
-import org.identityconnectors.databasetable.mapping.ToJdbcStrategy;
-import org.identityconnectors.databasetable.mapping.WriteStringStrategy;
+import org.identityconnectors.databasetable.mapping.StringStrategy;
 import org.identityconnectors.dbcommon.DatabaseConnection;
 import org.identityconnectors.dbcommon.JNDIUtil;
 import org.identityconnectors.dbcommon.SQLParam;
@@ -59,28 +56,15 @@ import org.identityconnectors.framework.spi.Configuration;
 public class DatabaseTableConnection extends DatabaseConnection {
 
     /**
-     * Oracle class indicator
-     */
-    private static final CharSequence ORACLE = "oracle";
-
-
-    /**
      * Information from the {@link Configuration} can help determine how to test
      * the viability of the {@link Connection}.
      */
     final DatabaseTableConfiguration config;
     
-
     /**
-     * DefaulStrategy is a default jdbc attribute mapping strategy
+     * DefaultStrategy is a default jdbc attribute mapping strategy
      */
-    private MappingStrategy sms = new ReadStringStrategy(new DefaulStrategy());
-
-
-    /**
-     * Is the connection from oracle database
-     */
-    private boolean oracleJDBC = false;    
+    private MappingStrategy sms = null;
 
     /**
      * Use the {@link Configuration} passed in to immediately connect to a
@@ -97,7 +81,6 @@ public class DatabaseTableConnection extends DatabaseConnection {
         super(conn);
         this.config = config;
         createMappingStrategy(conn, config);
-        this.oracleJDBC = isUsingOracleJDBC(conn);
     }
 
     /**
@@ -202,52 +185,6 @@ public class DatabaseTableConnection extends DatabaseConnection {
     public Set<Attribute> getAttributeSet(ResultSet result) throws SQLException {
        return DatabaseTableConnectorSQLUtil.getAttributeSet(sms, result);
     }
-    
-    
-    /**
-     * Test for oracle connection 
-     * @param conn a non-null JDBC connection object
-     * @return true if the connection is via an Oracle driver which supports getCLOB()
-     * on its ResultSet
-     * @throws IOException
-     */
-    public boolean isUsingOracleJDBC(Connection conn){
-        
-        // This implementation class needs to be from oracle
-        if (!conn.getClass().getName().contains(ORACLE)) {
-            return false;
-        }
-        
-        final String SELECT_FROM_DUAL = "select 1 from dual";
-        boolean ret = false;
-        Statement stmt = null;
-        ResultSet rs = null;
-        try {
-            stmt = conn.createStatement();
-            rs = stmt.executeQuery(SELECT_FROM_DUAL);
-            if (rs.next()) {
-                ret = true;
-            }
-        } catch (Throwable expected) {
-            //expected
-        } finally {
-            SQLUtil.closeQuietly(rs);
-            rs = null;
-            SQLUtil.closeQuietly(stmt);
-            stmt = null;
-        }
-        return ret;
-    }    
-    
-
-    /**
-     * Accessor for the oracleJDBC property
-     * @return the oracleJDBC
-     */
-    public boolean isOracleJDBC() {
-        return oracleJDBC;
-    }
-    
 
     /**
      * Accessor for the sms property
@@ -265,23 +202,16 @@ public class DatabaseTableConnection extends DatabaseConnection {
     public void createMappingStrategy(Connection conn, DatabaseTableConfiguration config) {
         
         // tail is always convert to jdbc and do the default statement
-        MappingStrategy tail = new ToJdbcStrategy(new DefaulStrategy());
+        MappingStrategy tail = new JdbcConvertor(new DefaultStrategy());
         if(!config.isAllNative()) {
             // Backward compatibility is to read and write as string all attributes which make sance to read 
-            tail = new ReadStringStrategy(new WriteStringStrategy(tail));
-            
-            if(oracleJDBC) {
-                tail = new OracleStrategy(tail);
-            }
-            
+            tail = new StringStrategy(tail);            
             // Native timestamps will read as timestamp and convert to String
             if(config.isNativeTimestamps()) {
                 tail = new NativeTimestampsStrategy(tail);
-            }
-            
-            
+            }                       
         }
         // head is convert all attributes to acceptable type, if they are not already
-        this.sms = new ToAttributeStrategy(tail);
+        this.sms = new AttributeConvertor(tail);
     }    
 }

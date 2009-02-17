@@ -38,7 +38,7 @@ import org.identityconnectors.dbcommon.SQLUtil;
  * @version $Revision 1.0$
  * @since 1.0
  */
-public class WriteStringStrategy implements MappingStrategy {
+public class StringStrategy implements MappingStrategy {
 
     MappingStrategy delegate;
     
@@ -47,15 +47,20 @@ public class WriteStringStrategy implements MappingStrategy {
      * Final sql mapping
      * @param delegate
      */
-    public WriteStringStrategy(MappingStrategy delegate) {
+    public StringStrategy(MappingStrategy delegate) {
         Assertions.nullCheck(delegate, "MappingStrategy delegate");
         this.delegate = delegate;
     }
+    
     
     /* (non-Javadoc)
      * @see org.identityconnectors.databasetable.MappingStrategy#getSQLParam(java.sql.ResultSet, int, int)
      */
     public SQLParam getSQLParam(ResultSet resultSet, int i, final int sqlType) throws SQLException {
+        //Is it expected to be string, read as a string.
+        if( delegate.getSQLAttributeType(sqlType).isAssignableFrom(String.class)) {
+            return SQLUtil.getSQLParam(resultSet, i, Types.VARCHAR);
+        }
         //Default processing otherwise
         return delegate.getSQLParam(resultSet, i, sqlType);
     } 

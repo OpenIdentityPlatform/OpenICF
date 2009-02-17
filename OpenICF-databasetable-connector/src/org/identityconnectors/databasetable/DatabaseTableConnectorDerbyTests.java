@@ -24,7 +24,9 @@ package org.identityconnectors.databasetable;
 
 import static org.identityconnectors.common.ByteUtil.randomBytes;
 import static org.identityconnectors.common.StringUtil.randomString;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -48,19 +50,16 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.dbcommon.SQLParam;
 import org.identityconnectors.dbcommon.SQLUtil;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
-import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
-import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.framework.test.TestHelpers;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -154,11 +153,10 @@ public class DatabaseTableConnectorDerbyTests extends DatabaseTableConnectorTest
         config.setUser("");
         config.setPassword(new GuardedString("".toCharArray()));
         config.setTable(DB_TABLE);
-        config.setKeyColumn(DatabaseTableConnectorTestBase.ACCOUNTID);
+        config.setKeyColumn(ACCOUNTID);
         config.setPasswordColumn(PASSWORD);
         config.setDatabase(getDBDirectory().toString());
         config.setJdbcUrlTemplate(URL_TEMPLATE);
-        config.setGenerateUid(true);
         config.setChangeLogColumn(CHANGELOG);
         config.setConnectorMessages(TestHelpers.createDummyMessages());
         return config;
@@ -189,8 +187,9 @@ public class DatabaseTableConnectorDerbyTests extends DatabaseTableConnectorTest
          if(!cfg.getChangeLogColumn().equalsIgnoreCase(ACCESSED)){
              ret.add(AttributeBuilder.build(ACCESSED, r.nextLong()));
          }
-         ret.add(AttributeBuilder.build(SALARY, new BigDecimal(r.nextDouble())));
+         ret.add(AttributeBuilder.build(SALARY, new BigDecimal("360536.75")));
          ret.add(AttributeBuilder.build(JPEGPHOTO, randomBytes(r, 2000)));
+         ret.add(AttributeBuilder.build(OPENTIME, new java.sql.Time(System.currentTimeMillis()).toString()));
          ret.add(AttributeBuilder.build(ACTIVATE, new java.sql.Date(System.currentTimeMillis()).toString()));
          ret.add(AttributeBuilder.build(ENROLLED, new Timestamp(System.currentTimeMillis()).toString()));
          ret.add(AttributeBuilder.build(CHANGED, new Timestamp(System.currentTimeMillis()).toString()));
@@ -250,7 +249,6 @@ public class DatabaseTableConnectorDerbyTests extends DatabaseTableConnectorTest
             cn.init(cfg);
             // check if this works..
             Schema schema = cn.schema();
-            System.out.println(schema.toString());
             checkSchema(schema);
         } catch (RuntimeException e) {
             e.printStackTrace();
@@ -306,205 +304,6 @@ public class DatabaseTableConnectorDerbyTests extends DatabaseTableConnectorTest
             assertEquals("There are missing attributes which were not included in the schema:"+keys, 0, keys.size());
         }
     }    
-    
-    // TEest SYNCmethod    
-    
-    /**
-     * Test creating of the connector object, searching using UID and delete
-     * @throws Exception 
-     */
-    @Test
-    public void testSyncFull() throws Exception {
-        final String ERR1 = "Could not find new object.";
-
-        // create connector
-        final DatabaseTableConfiguration cfg = getConfiguration();        
-        final DatabaseTableConnector con = getConnector(cfg);
-        final Set<Attribute> expected = getCreateAttributeSet(cfg);
-
-        // create the object
-        final Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
-        assertNotNull(uid);
-        try {
-            System.out.println("Uid: " + uid);
-            FindUidSyncHandler handler = new FindUidSyncHandler(uid);
-            // attempt to find the newly created object..
-            con.sync(ObjectClass.ACCOUNT, null , handler, null);
-            assertTrue(ERR1, handler.found);
-            assertEquals(0L, handler.token.getValue());
-            // assertEquals(expected, handler.deltaType); // not definned till now 
-
-            //Test the created attributes are equal the searched
-            assertNotNull(handler.attributes);
-            attributeSetsEquals(con.schema(), expected, handler.attributes);
-        } finally {
-            // attempt to delete the object..
-            con.delete(ObjectClass.ACCOUNT, uid, null);
-            // attempt to find it again to make sure
-
-            // attempt to find the newly created object..
-            List<ConnectorObject> results = TestHelpers.searchToList(con, ObjectClass.ACCOUNT, FilterBuilder
-                    .equalTo(uid));
-            assertFalse("expect 1 connector object", results.size() == 1);
-            try {
-                // now attempt to delete an object that is not there..
-                con.delete(ObjectClass.ACCOUNT, uid, null);
-                fail("Should have thrown an execption.");
-            } catch (UnknownUidException exp) {
-                // should get here..
-            }
-        }
-    }    
-    
-    /**
-     * Test creating of the connector object, searching using UID and delete
-     * @throws Exception 
-     * @throws SQLException 
-     */
-    @Test
-    public void testSyncIncemental() throws Exception {
-        final String ERR1 = "Could not find new object.";
-        final String SQL_TEMPLATE = "UPDATE Accounts SET changelog = ? WHERE accountId = ?";
-        // create connector
-        final DatabaseTableConfiguration cfg = getConfiguration();        
-        final DatabaseTableConnector con = getConnector(cfg);
-        final Set<Attribute> expected = getCreateAttributeSet(cfg);
-
-        // create the object
-        final Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
-        assertNotNull(uid);
-        final Long changelog = 10L;
-
-        // update the last change
-        PreparedStatement ps = null;
-        DatabaseTableConnection conn = null;
-        try {
-            conn = DatabaseTableConnection.getConnection(getConfiguration());
-
-            List<SQLParam> values = new ArrayList<SQLParam>();
-            values.add(new SQLParam(changelog, Types.INTEGER));
-            values.add(new SQLParam(uid.getUidValue(), Types.VARCHAR));
-            ps = conn.prepareStatement(SQL_TEMPLATE, values);
-            ps.execute();
-            conn.commit();
-        } finally {
-            SQLUtil.closeQuietly(ps);
-            SQLUtil.closeQuietly(conn);
-        }
-        System.out.println("Uid: " + uid);
-        FindUidSyncHandler ok = new FindUidSyncHandler(uid);
-        // attempt to find the newly created object..
-        con.sync(ObjectClass.ACCOUNT, new SyncToken(changelog - 1), ok, null);
-        assertTrue(ERR1, ok.found);
-        // Test the created attributes are equal the searched
-        assertNotNull(ok.attributes);
-        attributeSetsEquals(con.schema(), expected, ok.attributes);  
-        
-        //Not in the next result
-        FindUidSyncHandler empt = new FindUidSyncHandler(uid);
-        // attempt to find the newly created object..
-        con.sync(ObjectClass.ACCOUNT, ok.token, empt, null);
-        assertFalse(ERR1, empt.found);        
-    }      
-    
-    
-    /**
-     * Test creating of the connector object, searching using UID and delete
-     * @throws Exception 
-     * @throws SQLException 
-     */
-    @Test
-    public void testSyncUsingIntegerColumn() throws Exception {
-        final String ERR1 = "Could not find new object.";
-        final String SQL_TEMPLATE = "UPDATE Accounts SET age = ? WHERE accountId = ?";
-        final DatabaseTableConfiguration cfg = getConfiguration();
-        cfg.setChangeLogColumn(AGE);
-        final DatabaseTableConnector con = getConnector(cfg); 
-        final Set<Attribute> expected = getCreateAttributeSet(cfg);
-        final Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
-
-        // update the last change
-        PreparedStatement ps = null;
-        DatabaseTableConnection conn = null;
-        Integer changed = new Long(System.currentTimeMillis()).intValue();
-        try {
-            conn = DatabaseTableConnection.getConnection(cfg);
-
-            List<SQLParam> values = new ArrayList<SQLParam>();
-            values.add(new SQLParam(changed, Types.INTEGER));
-            values.add(new SQLParam(uid.getUidValue(), Types.VARCHAR));
-            ps = conn.prepareStatement(SQL_TEMPLATE, values);
-            ps.execute();
-            conn.commit();
-        } finally {
-            SQLUtil.closeQuietly(ps);
-            SQLUtil.closeQuietly(conn);
-        }
-        System.out.println("Uid: " + uid);
-        FindUidSyncHandler ok = new FindUidSyncHandler(uid);
-        // attempt to find the newly created object..
-        con.sync(ObjectClass.ACCOUNT, new SyncToken(changed - 1000), ok, null);
-        assertTrue(ERR1, ok.found);
-        // Test the created attributes are equal the searched
-        assertNotNull(ok.attributes);
-        attributeSetsEquals(con.schema(), expected, ok.attributes, AGE);     
-        
-        System.out.println("Uid: " + uid);
-        FindUidSyncHandler empt = new FindUidSyncHandler(uid);
-        // attempt to find the newly created object..
-        con.sync(ObjectClass.ACCOUNT, ok.token, empt, null);
-        assertFalse(ERR1, empt.found);           
-    }   
-   
-    
-    /**
-     * Test creating of the connector object, searching using UID and delete
-     * @throws Exception 
-     * @throws SQLException 
-     */
-    @Test
-    public void testSyncUsingLongColumn() throws Exception {
-        final String ERR1 = "Could not find new object.";
-        final String SQL_TEMPLATE = "UPDATE Accounts SET accessed = ? WHERE accountId = ?";
-        
-        final DatabaseTableConfiguration cfg = getConfiguration();
-        cfg.setChangeLogColumn(ACCESSED);
-        final DatabaseTableConnector con = getConnector(cfg); 
-        final Set<Attribute> expected = getCreateAttributeSet(cfg);
-        final Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
-
-        // update the last change
-        PreparedStatement ps = null;
-        DatabaseTableConnection conn = null;
-        Integer changed = new Long(System.currentTimeMillis()).intValue();
-        try {
-            conn = DatabaseTableConnection.getConnection(cfg);
-
-            List<SQLParam> values = new ArrayList<SQLParam>();
-            values.add(new SQLParam(changed, Types.INTEGER));
-            values.add(new SQLParam(uid.getUidValue(), Types.VARCHAR));
-            ps = conn.prepareStatement(SQL_TEMPLATE, values );
-            ps.execute();
-            conn.commit();
-        } finally {
-            SQLUtil.closeQuietly(ps);
-            SQLUtil.closeQuietly(conn);
-        }
-        System.out.println("Uid: " + uid);
-        FindUidSyncHandler ok = new FindUidSyncHandler(uid);
-        // attempt to find the newly created object..
-        con.sync(ObjectClass.ACCOUNT, new SyncToken(changed - 1000), ok, null);
-        assertTrue(ERR1, ok.found);
-        // Test the created attributes are equal the searched
-        assertNotNull(ok.attributes);
-        attributeSetsEquals(con.schema(), expected, ok.attributes, ACCESSED);     
-        
-        System.out.println("Uid: " + uid);
-        FindUidSyncHandler empt = new FindUidSyncHandler(uid);
-        // attempt to find the newly created object..
-        con.sync(ObjectClass.ACCOUNT, ok.token, empt, null);
-        assertFalse(ERR1, empt.found);           
-    }       
     
 
     /**

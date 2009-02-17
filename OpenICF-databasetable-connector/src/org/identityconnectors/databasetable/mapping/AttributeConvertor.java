@@ -32,11 +32,11 @@ import org.identityconnectors.dbcommon.SQLUtil;
 
 
 /**
- * The SQL get/set strategy class implementation convert attributes back to database types
+ * The SQL get/set strategy class implementation convert all jdbc types to attribute supported types. 
  * @version $Revision 1.0$
  * @since 1.0
  */
-public class ToJdbcStrategy implements MappingStrategy {
+public class AttributeConvertor implements MappingStrategy {
 
     MappingStrategy delegate;
     
@@ -44,7 +44,7 @@ public class ToJdbcStrategy implements MappingStrategy {
      * Final sql mapping
      * @param delegate
      */
-    public ToJdbcStrategy(MappingStrategy delegate) {
+    public AttributeConvertor(MappingStrategy delegate) {
         Assertions.nullCheck(delegate, "MappingStrategy delegate");
         this.delegate = delegate;
     }
@@ -53,8 +53,9 @@ public class ToJdbcStrategy implements MappingStrategy {
      * @see org.identityconnectors.databasetable.MappingStrategy#getSQLParam(java.sql.ResultSet, int, int)
      */
     public SQLParam getSQLParam(ResultSet resultSet, int i, final int sqlType) throws SQLException {
-        //Default processing otherwise
-        return delegate.getSQLParam(resultSet, i, sqlType);
+        // Convert all types to attribute supported types
+        final SQLParam param = delegate.getSQLParam(resultSet, i, sqlType);
+        return new SQLParam(SQLUtil.jdbc2AttributeValue(param.getValue()), sqlType); 
     } 
     
     /* (non-Javadoc)
@@ -68,8 +69,7 @@ public class ToJdbcStrategy implements MappingStrategy {
      * @see org.identityconnectors.databasetable.MappingStrategy#setSQLParam(java.sql.PreparedStatement, int, org.identityconnectors.dbcommon.SQLParam)
      */
     public void setSQLParam(final PreparedStatement stmt, final int idx, SQLParam parm) throws SQLException {
-        final Object val = SQLUtil.attribute2jdbcValue(parm.getValue(), parm.getSqlType());
-        delegate.setSQLParam(stmt, idx, new SQLParam(val, parm.getSqlType()));
+        delegate.setSQLParam(stmt, idx, parm);
     }    
 }
 
