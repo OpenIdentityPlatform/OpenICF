@@ -407,13 +407,6 @@ public class LdapSchemaMapping {
         }
         ldapAttrs.put(objectClass);
 
-        // XXX this is a huge hack! Rewrite!
-        javax.naming.directory.Attribute cnAttr = initialAttrs.get("cn");
-        if (cnAttr == null) {
-            cnAttr = new BasicAttribute("cn", rdn.getValue().toString());
-            ldapAttrs.put(cnAttr);
-        }
-
         log.ok("Creating LDAP subcontext {0} in {1} with attributes {2}", rdn, containerDN, ldapAttrs);
         try {
             LdapContext parentCtx = (LdapContext) conn.getInitialContext().lookup(containerDN);
