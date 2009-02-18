@@ -90,15 +90,20 @@ public class ExpectProxy<T> implements InvocationHandler {
      * The InvocationHandler method
      */
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-
-        if (methodNames.size() > count && this.methodNames.get(count).equals(method.getName())) {
-            final Object ret = retVals.get(count++);
-            if(ret instanceof Throwable) {
-                throw (Throwable) ret;
+        String ext = "";
+        if (methodNames.size() > count) {
+            final String mname = this.methodNames.get(count);
+            ext = " The expected call no: " + (count + 1) + " was " + mname + ".";
+            if (method.getName().equals(mname)) {
+                final Object ret = retVals.get(count++);
+                if (ret instanceof Throwable) {
+                    throw (Throwable) ret;
+                }
+                return ret;
             }
-            return ret;
         }
-        throw new AssertionError("The call of method :" + method+ " was not ecpected. To do so, please call expectAndReturn(methodName,retVal)");
+        throw new AssertionError("The call of method :" + method + " was not expected." + ext
+                + " Please call expectAndReturn(methodName,retVal) to fix it");
     }
 
     /**
