@@ -327,10 +327,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             }
         } catch (SQLException e) {
             log.error(e, "Delete user {0} error", uid.getUidValue());
-            if (throwIt(e.getErrorCode()) ) {            
-                SQLUtil.rollbackQuietly(conn);
-                throw ConnectorException.wrap(e);
-            }        
+            SQLUtil.rollbackQuietly(conn);
+            throw ConnectorException.wrap(e);
         } finally {
             // clean up..
             SQLUtil.closeQuietly(stmt);

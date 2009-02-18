@@ -252,14 +252,19 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
 
         final ExpectProxy<MappingStrategy> smse = new ExpectProxy<MappingStrategy>();
         MappingStrategy sms = smse.getProxy(MappingStrategy.class);
+        //Schema
         for (int i = 0; i < 15; i++) {
             smse.expectAndReturn("getSQLAttributeType", String.class);
         }
+        //Create fail
+        smse.expectAndThrow("setSQLParam", new SQLException("test reason", "0", 0));
+        //Update fail
         smse.expectAndThrow("setSQLParam", new SQLException("test reason", "0", 0));
         con.getConnection().setSms(sms);
         try {
             Set<Attribute> expected = getCreateAttributeSet(cfg);
-            con.create(ObjectClass.ACCOUNT, expected, null);
+            Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
+            con.update(ObjectClass.ACCOUNT, uid, expected, null);
             smse.isDone();
         } finally {
             if (con != null) {
