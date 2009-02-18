@@ -47,9 +47,11 @@ import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.databasetable.mapping.MappingStrategy;
+import org.identityconnectors.dbcommon.ExpectProxy;
 import org.identityconnectors.dbcommon.SQLParam;
 import org.identityconnectors.dbcommon.SQLUtil;
-import org.identityconnectors.framework.api.ConnectorFacadeFactory;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
@@ -68,7 +70,7 @@ import org.junit.Test;
 /**
  * Attempts to test the Connector with the framework.
  */
-public class DatabaseTableConnectorDerbyTests extends DatabaseTableConnectorTestBase {
+public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
 
     /**
      * 
@@ -116,16 +118,21 @@ public class DatabaseTableConnectorDerbyTests extends DatabaseTableConnectorTest
         config.setJdbcDriver(DRIVER);
         config.setJdbcUrlTemplate(URL_TEMPLATE);
         config.setDatabase(f.toString());
-        final DatabaseTableConnection con = DatabaseTableConnection.getConnection(config);
-        final Connection conn = con.getConnection();
-        // create the database..
-        final Statement stmt = conn.createStatement();
-        final String create = getResourceAsString("derbyTest.sql");
-        assertNotNull(create);
-        stmt.execute(create);
-        SQLUtil.closeQuietly(stmt);
-        conn.commit();
-        SQLUtil.closeQuietly(conn);
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            final DatabaseTableConnection con = DatabaseTableConnection.getConnection(config);
+            conn = con.getConnection();
+            // create the database..
+            stmt = conn.createStatement();
+            final String create = getResourceAsString("derbyTest.sql");
+            assertNotNull(create);
+            stmt.execute(create);
+            conn.commit();
+        } finally {
+            SQLUtil.closeQuietly(stmt);
+            SQLUtil.closeQuietly(conn);
+        }
     }
 
     /**
@@ -133,8 +140,6 @@ public class DatabaseTableConnectorDerbyTests extends DatabaseTableConnectorTest
      */
     @AfterClass
     public static void deleteDatabase() {
-        ConnectorFacadeFactory.getInstance().dispose();
-
         try {
             DriverManager.getConnection(URL_SHUTDOWN);
         } catch (Exception ex) {
@@ -163,7 +168,7 @@ public class DatabaseTableConnectorDerbyTests extends DatabaseTableConnectorTest
     }
 
      /* (non-Javadoc)
-      * @see org.identityconnectors.databasetable.DatabaseTableConnectorTestBase#getCreateAttributeSet()
+      * @see org.identityconnectors.databasetable.DatabaseTableTestBase#getCreateAttributeSet()
       */
      @Override
      protected Set<Attribute> getCreateAttributeSet(DatabaseTableConfiguration cfg) throws Exception {
@@ -200,7 +205,7 @@ public class DatabaseTableConnectorDerbyTests extends DatabaseTableConnectorTest
      }
 
      /* (non-Javadoc)
-      * @see org.identityconnectors.databasetable.DatabaseTableConnectorTestBase#getModifyAttributeSet()
+      * @see org.identityconnectors.databasetable.DatabaseTableTestBase#getModifyAttributeSet()
       */
      @Override
      protected Set<Attribute> getModifyAttributeSet(DatabaseTableConfiguration cfg) throws Exception {         
@@ -240,24 +245,105 @@ public class DatabaseTableConnectorDerbyTests extends DatabaseTableConnectorTest
      * @throws Exception 
      */
     @Test
-    public void testSchema() throws Exception {
-        DatabaseTableConnector cn = null;
+    public void testNoZeroSQLExceptions() throws Exception {
         DatabaseTableConfiguration cfg = getConfiguration();
+        cfg.setRethrowAllSQLExceptions(false);
+        DatabaseTableConnector con = getConnector(cfg);
+
+        final ExpectProxy<MappingStrategy> smse = new ExpectProxy<MappingStrategy>();
+        MappingStrategy sms = smse.getProxy(MappingStrategy.class);
+        for (int i = 0; i < 15; i++) {
+            smse.expectAndReturn("getSQLAttributeType", String.class);
+        }
+        smse.expectAndThrow("setSQLParam", new SQLException("test reason", "0", 0));
+        con.getConnection().setSms(sms);
         try {
-            // initialize the connector..
-            cn = new DatabaseTableConnector();
-            cn.init(cfg);
-            // check if this works..
-            Schema schema = cn.schema();
-            checkSchema(schema);
-        } catch (RuntimeException e) {
-            e.printStackTrace();
+            Set<Attribute> expected = getCreateAttributeSet(cfg);
+            con.create(ObjectClass.ACCOUNT, expected, null);
+            smse.isDone();
         } finally {
-            if (cn != null) {
-                cn.dispose();
+            if (con != null) {
+                con.dispose();
             }
         }
     }
+    
+    /**
+     * For testing purposes we creating connection an not the framework.
+     * @throws Exception 
+     */
+    @Test(expected = ConnectorException.class)
+    public void testNonZeroSQLExceptions() throws Exception {
+        DatabaseTableConfiguration cfg = getConfiguration();
+        cfg.setRethrowAllSQLExceptions(false);
+        DatabaseTableConnector con = getConnector(cfg);
+
+        final ExpectProxy<MappingStrategy> smse = new ExpectProxy<MappingStrategy>();
+        MappingStrategy sms = smse.getProxy(MappingStrategy.class);
+        for (int i = 0; i < 15; i++) {
+            smse.expectAndReturn("getSQLAttributeType", String.class);
+        }
+        smse.expectAndThrow("setSQLParam", new SQLException("test reason", "411", 411));
+        con.getConnection().setSms(sms);
+        try {
+            Set<Attribute> expected = getCreateAttributeSet(cfg);
+            con.create(ObjectClass.ACCOUNT, expected, null);
+            smse.isDone();
+        } finally {
+            if (con != null) {
+                con.dispose();
+            }
+        }
+    }    
+    
+    /**
+     * For testing purposes we creating connection an not the framework.
+     * @throws Exception 
+     */
+    @Test(expected = ConnectorException.class)
+    public void testRethrowAllSQLExceptions() throws Exception {
+        DatabaseTableConfiguration cfg = getConfiguration();
+        cfg.setRethrowAllSQLExceptions(true);
+        DatabaseTableConnector con = getConnector(cfg);
+
+        final ExpectProxy<MappingStrategy> smse = new ExpectProxy<MappingStrategy>();
+        MappingStrategy sms = smse.getProxy(MappingStrategy.class);
+        for (int i = 0; i < 15; i++) {
+            smse.expectAndReturn("getSQLAttributeType", String.class);
+        }
+        smse.expectAndThrow("setSQLParam", new SQLException("test reason", "0", 0));
+        con.getConnection().setSms(sms);
+        try {
+            Set<Attribute> expected = getCreateAttributeSet(cfg);
+            con.create(ObjectClass.ACCOUNT, expected, null);
+            smse.isDone();
+        } finally {
+            if (con != null) {
+                con.dispose();
+            }
+        }
+    }    
+
+    /**
+     * For testing purposes we creating connection an not the framework.
+     * @throws Exception 
+     */
+    @Test
+    public void testSchema() throws Exception {
+        DatabaseTableConfiguration cfg = getConfiguration();
+        DatabaseTableConnector con = getConnector(cfg);
+        try {
+            // check if this works..
+            Schema schema = con.schema();
+            checkSchema(schema);
+        } finally {
+            if (con != null) {
+                con.dispose();
+            }
+        }
+    }
+    
+    
        
     /**
      * check validity of the schema
@@ -314,40 +400,46 @@ public class DatabaseTableConnectorDerbyTests extends DatabaseTableConnectorTest
     @Test
     public void testGetLatestSyncToken() throws Exception {
         final String SQL_TEMPLATE = "UPDATE Accounts SET changelog = ? WHERE accountId = ?";
-        final DatabaseTableConfiguration cfg = getConfiguration();        
+        final DatabaseTableConfiguration cfg = getConfiguration();
         final DatabaseTableConnector con = getConnector(cfg);
-        deleteAllFromAccounts(con.getConnection());
-        final Set<Attribute> expected = getCreateAttributeSet(cfg);
-        
-        final Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
-        assertNotNull(uid);
-        final Long changelog = 9999999999999L; //Some really big value
-
-        // update the last change
-        PreparedStatement ps = null;
-        DatabaseTableConnection conn = null;
         try {
-            conn = DatabaseTableConnection.getConnection(getConfiguration());
+            deleteAllFromAccounts(con.getConnection());
+            final Set<Attribute> expected = getCreateAttributeSet(cfg);
 
-            List<SQLParam> values = new ArrayList<SQLParam>();
-            values.add(new SQLParam(changelog, Types.INTEGER));
-            values.add(new SQLParam(uid.getUidValue(), Types.VARCHAR));
-            ps = conn.prepareStatement(SQL_TEMPLATE, values);
-            ps.execute();
-            conn.commit();
+            final Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
+            assertNotNull(uid);
+            final Long changelog = 9999999999999L; //Some really big value
+
+            // update the last change
+            PreparedStatement ps = null;
+            DatabaseTableConnection conn = null;
+            try {
+                conn = DatabaseTableConnection.getConnection(getConfiguration());
+
+                List<SQLParam> values = new ArrayList<SQLParam>();
+                values.add(new SQLParam(changelog, Types.INTEGER));
+                values.add(new SQLParam(uid.getUidValue(), Types.VARCHAR));
+                ps = conn.prepareStatement(SQL_TEMPLATE, values);
+                ps.execute();
+                conn.commit();
+            } finally {
+                SQLUtil.closeQuietly(ps);
+                SQLUtil.closeQuietly(conn);
+            }
+            // attempt to find the newly created object..
+            final SyncToken latestSyncToken = con.getLatestSyncToken(ObjectClass.ACCOUNT);
+            assertNotNull(latestSyncToken);
+            final Object actual = latestSyncToken.getValue();
+            assertEquals(changelog, actual);
         } finally {
-            SQLUtil.closeQuietly(ps);
-            SQLUtil.closeQuietly(conn);
+            if (con != null) {
+                con.dispose();
+            }
         }
-        // attempt to find the newly created object..
-        final SyncToken latestSyncToken = con.getLatestSyncToken(ObjectClass.ACCOUNT);
-        assertNotNull(latestSyncToken);
-        final Object actual = latestSyncToken.getValue();
-        assertEquals(changelog, actual);
     }     
     
     static String getResourceAsString(String res) {
-        return IOUtil.getResourceAsString(DatabaseTableConnectorDerbyTests.class, res);
+        return IOUtil.getResourceAsString(DatabaseTableDerbyTests.class, res);
     }    
     
     static File getDBDirectory() {

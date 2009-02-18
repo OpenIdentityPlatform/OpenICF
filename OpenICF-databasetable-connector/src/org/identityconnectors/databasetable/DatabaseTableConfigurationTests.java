@@ -32,7 +32,7 @@ import org.junit.Test;
 /**
  * Attempts to test the Connector with the framework.
  */
-public class DatabaseTableConnectorConfigurationTests {
+public class DatabaseTableConfigurationTests {
    
     /**
      * Derby's embedded driver.

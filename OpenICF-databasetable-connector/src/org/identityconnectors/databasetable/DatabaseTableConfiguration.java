@@ -588,7 +588,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
         }
         
         try {
-            DatabaseTableConnectorSQLUtil.quoteName(getQuoting(), "test");
+            DatabaseTableSQLUtil.quoteName(getQuoting(), "test");
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(getMessage(MSG_INVALID_QUOTING, getQuoting()));
         }

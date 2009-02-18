@@ -27,17 +27,24 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.identityconnectors.common.Pair;
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.databasetable.mapping.DefaultStrategy;
+import org.identityconnectors.databasetable.mapping.MappingStrategy;
 import org.identityconnectors.dbcommon.ExpectProxy;
+import org.identityconnectors.dbcommon.SQLParam;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.junit.Test;
@@ -48,7 +55,7 @@ import org.junit.Test;
  * @version $Revision 1.0$
  * @since 1.0
  */
-public class DatabaseTableConnectorSQLUtilTests {
+public class DatabaseTableSQLUtilTests {
 
     /**
      * GetAttributeSet test method
@@ -79,7 +86,7 @@ public class DatabaseTableConnectorSQLUtilTests {
         trs.expectAndReturn("getString", TEST_VAL2);
         
         final DefaultStrategy derbyDbStrategy = new DefaultStrategy();
-        final Set<Attribute> actual = DatabaseTableConnectorSQLUtil.getAttributeSet(derbyDbStrategy, resultSetProxy);
+        final Set<Attribute> actual = DatabaseTableSQLUtil.getAttributeSet(derbyDbStrategy, resultSetProxy);
         assertTrue(trs.isDone());
         assertTrue(trsmd.isDone());
         assertEquals(2, actual.size());
@@ -102,8 +109,40 @@ public class DatabaseTableConnectorSQLUtilTests {
         data.put("back", new Pair<String, String>("fadfk3", "`fadfk3`"));
         data.put("brackets", new Pair<String, String>("fadlkfj", "[fadlkfj]"));
         for (Map.Entry<String, Pair<String, String>> entry : data.entrySet()) {
-            final String actual = DatabaseTableConnectorSQLUtil.quoteName(entry.getKey(), entry.getValue().first);
+            final String actual = DatabaseTableSQLUtil.quoteName(entry.getKey(), entry.getValue().first);
             assertEquals(entry.getValue().second, actual);
         }
-    }    
+    }
+    
+    /**
+     * Test quoting method
+     * @throws Exception
+     */
+    @Test
+    public void testSetParams() throws Exception {
+        final ExpectProxy<MappingStrategy> mse = new ExpectProxy<MappingStrategy>();
+        MappingStrategy ms = mse.getProxy(MappingStrategy.class);
+        
+        final ExpectProxy<PreparedStatement> pse = new ExpectProxy<PreparedStatement>();
+        PreparedStatement ps = pse.getProxy(PreparedStatement.class);        
+        
+        final ExpectProxy<CallableStatement> cse = new ExpectProxy<CallableStatement>();
+        CallableStatement cs = cse.getProxy(CallableStatement.class);        
+        
+        List<SQLParam> params = new ArrayList<SQLParam>();
+        params.add(new SQLParam("test", Types.VARCHAR));
+        params.add(new SQLParam(new GuardedString("tst".toCharArray()), Types.VARCHAR));
+        mse.expect("setSQLParam");
+        mse.expect("setSQLParam");
+        
+        DatabaseTableSQLUtil.setParams(ms, ps, params );
+        mse.isDone();
+        pse.isDone();
+
+        mse.expect("setSQLParam");       
+        mse.expect("setSQLParam");
+        DatabaseTableSQLUtil.setParams(ms, cs, params);
+        mse.isDone();
+        cse.isDone();
+    }        
 }

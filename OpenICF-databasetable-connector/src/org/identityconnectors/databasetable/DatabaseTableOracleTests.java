@@ -41,7 +41,7 @@ import org.junit.Test;
 /**
  * Attempts to test the Connector with the framework.
  */
-public class DatabaseTableConnectorOracleTests extends DatabaseTableConnectorTestBase{
+public class DatabaseTableOracleTests extends DatabaseTableTestBase{
 
     static final String ORACLE_CONFIGURATINON = "configurations.oracle";
     static final DataProvider dp = new GroovyDataProvider();   
@@ -56,7 +56,7 @@ public class DatabaseTableConnectorOracleTests extends DatabaseTableConnectorTes
     }    
     
     /* (non-Javadoc)
-     * @see org.identityconnectors.databasetable.DatabaseTableConnectorTestBase#getCreateAttributeSet()
+     * @see org.identityconnectors.databasetable.DatabaseTableTestBase#getCreateAttributeSet()
      */
     @Override
     protected Set<Attribute> getCreateAttributeSet(DatabaseTableConfiguration cfg) throws Exception {
@@ -82,14 +82,14 @@ public class DatabaseTableConnectorOracleTests extends DatabaseTableConnectorTes
 
     /* ------------ Skiped tests -------------------- */
     /* (non-Javadoc)
-     * @see org.identityconnectors.databasetable.DatabaseTableConnectorTestBase#getModifyAttributeSet()
+     * @see org.identityconnectors.databasetable.DatabaseTableTestBase#getModifyAttributeSet()
      */
     @Override
     protected Set<Attribute> getModifyAttributeSet(DatabaseTableConfiguration cfg) throws Exception {         
         return getCreateAttributeSet(cfg);
     }         
     /* (non-Javadoc)
-     * @see org.identityconnectors.databasetable.DatabaseTableConnectorTestBase#getModifyAttributeSet()
+     * @see org.identityconnectors.databasetable.DatabaseTableTestBase#getModifyAttributeSet()
      */
     @Override   
     @Test
@@ -97,7 +97,7 @@ public class DatabaseTableConnectorOracleTests extends DatabaseTableConnectorTes
         //skeep this tests, oracle does not support empty string. They are considered as a null
     }
     /* (non-Javadoc)
-     * @see org.identityconnectors.databasetable.DatabaseTableConnectorTestBase#getModifyAttributeSet()
+     * @see org.identityconnectors.databasetable.DatabaseTableTestBase#getModifyAttributeSet()
      */
     @Override       
     @Test
@@ -106,7 +106,7 @@ public class DatabaseTableConnectorOracleTests extends DatabaseTableConnectorTes
     }
     
     /* (non-Javadoc)
-     * @see org.identityconnectors.databasetable.DatabaseTableConnectorTestBase#getModifyAttributeSet()
+     * @see org.identityconnectors.databasetable.DatabaseTableTestBase#getModifyAttributeSet()
      */
     @Override       
     @Test
@@ -115,7 +115,7 @@ public class DatabaseTableConnectorOracleTests extends DatabaseTableConnectorTes
     }
     
     /* (non-Javadoc)
-     * @see org.identityconnectors.databasetable.DatabaseTableConnectorTestBase#getModifyAttributeSet()
+     * @see org.identityconnectors.databasetable.DatabaseTableTestBase#getModifyAttributeSet()
      */
     @Override  
     @Test

@@ -676,7 +676,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      * @return the quoted column name
      */
     public String quoteName(String value) {
-        return DatabaseTableConnectorSQLUtil.quoteName(config.getQuoting(), value);
+        return DatabaseTableSQLUtil.quoteName(config.getQuoting(), value);
     }
         
     

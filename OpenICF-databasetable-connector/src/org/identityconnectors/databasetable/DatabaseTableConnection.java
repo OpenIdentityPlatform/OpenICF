@@ -80,7 +80,7 @@ public class DatabaseTableConnection extends DatabaseConnection {
     private DatabaseTableConnection(Connection conn, DatabaseTableConfiguration config) {
         super(conn);
         this.config = config;
-        createMappingStrategy(conn, config);
+        this.sms = createMappingStrategy(conn, config);
     }
 
     /**
@@ -130,7 +130,7 @@ public class DatabaseTableConnection extends DatabaseConnection {
     @Override
     public PreparedStatement prepareStatement(final String sql, final List<SQLParam> params) throws SQLException {
          final PreparedStatement prepareStatement = getConnection().prepareStatement(sql);
-        DatabaseTableConnectorSQLUtil.setParams(sms, prepareStatement, params);
+        DatabaseTableSQLUtil.setParams(sms, prepareStatement, params);
         return prepareStatement;
     }
 
@@ -144,7 +144,7 @@ public class DatabaseTableConnection extends DatabaseConnection {
     @Override
     public CallableStatement prepareCall(final String sql, final List<SQLParam> params) throws SQLException {
         final CallableStatement prepareCall = getConnection().prepareCall(sql);
-        DatabaseTableConnectorSQLUtil.setParams(sms, prepareCall, params);
+        DatabaseTableSQLUtil.setParams(sms, prepareCall, params);
         return prepareCall;
     }     
 
@@ -183,7 +183,7 @@ public class DatabaseTableConnection extends DatabaseConnection {
      * @throws SQLException 
      */
     public Set<Attribute> getAttributeSet(ResultSet result) throws SQLException {
-       return DatabaseTableConnectorSQLUtil.getAttributeSet(sms, result);
+       return DatabaseTableSQLUtil.getAttributeSet(sms, result);
     }
 
     /**
@@ -193,13 +193,22 @@ public class DatabaseTableConnection extends DatabaseConnection {
     public MappingStrategy getSms() {
         return sms;
     }
+    
+    /**
+     * Setter for the sms 
+     * @param sms the strategy
+     */
+    void setSms(MappingStrategy sms) {
+        this.sms = sms;
+    }    
 
     /**
      * The strategy utility
      * @param conn
      * @param config
+     * @return the created strategy
      */
-    public void createMappingStrategy(Connection conn, DatabaseTableConfiguration config) {
+    public MappingStrategy createMappingStrategy(Connection conn, DatabaseTableConfiguration config) {
         
         // tail is always convert to jdbc and do the default statement
         MappingStrategy tail = new JdbcConvertor(new DefaultStrategy());
@@ -212,6 +221,6 @@ public class DatabaseTableConnection extends DatabaseConnection {
             }                       
         }
         // head is convert all attributes to acceptable type, if they are not already
-        this.sms = new AttributeConvertor(tail);
+        return new AttributeConvertor(tail);
     }    
 }

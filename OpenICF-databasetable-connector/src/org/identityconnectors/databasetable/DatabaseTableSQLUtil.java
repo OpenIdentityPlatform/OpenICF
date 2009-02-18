@@ -47,17 +47,17 @@ import org.identityconnectors.framework.common.objects.AttributeBuilder;
  * @version $Revision 1.0$
  * @since 1.0
  */
-public final class DatabaseTableConnectorSQLUtil {
+public final class DatabaseTableSQLUtil {
     
     /**
      * Setup logging for the {@link DatabaseTableConnector}.
      */
-    static final Log log = Log.getLog(DatabaseTableConnectorSQLUtil.class);
+    static final Log log = Log.getLog(DatabaseTableSQLUtil.class);
    
     /**
      * Never allow this to be instantiated.
      */
-    private DatabaseTableConnectorSQLUtil() {
+    private DatabaseTableSQLUtil() {
         throw new AssertionError();
     }
  
