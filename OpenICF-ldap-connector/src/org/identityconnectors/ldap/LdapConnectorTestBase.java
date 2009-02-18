@@ -37,7 +37,7 @@ import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
-import org.identityconnectors.framework.test.TestHelpers;
+import org.identityconnectors.test.common.TestHelpers;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

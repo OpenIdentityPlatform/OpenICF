@@ -43,7 +43,7 @@ import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
-import org.identityconnectors.framework.test.TestHelpers;
+import org.identityconnectors.test.common.TestHelpers;
 import org.junit.Test;
 
 public class AdapterCompatibilityTests extends LdapConnectorTestBase {

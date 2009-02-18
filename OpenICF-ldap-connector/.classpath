@@ -7,6 +7,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="var" path="USER_HOME/.connectors/connector-ldap/lib/ldapbp.jar"/>
 	<classpathentry kind="var" path="USER_HOME/.connectors/connector-ldap/lib/OpenDS.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/ConnectorTestCommon-HEAD"/>
 	<classpathentry kind="lib" path="lib/test/aspectjrt.jar"/>
 	<classpathentry kind="lib" path="lib/test/je.jar"/>
 	<classpathentry kind="output" path="build"/>

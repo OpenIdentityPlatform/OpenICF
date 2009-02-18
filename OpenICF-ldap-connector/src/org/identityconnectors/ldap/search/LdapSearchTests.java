@@ -46,10 +46,10 @@ import org.identityconnectors.framework.common.objects.QualifiedUid;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
-import org.identityconnectors.framework.test.TestHelpers;
 import org.identityconnectors.ldap.LdapConfiguration;
 import org.identityconnectors.ldap.LdapConnector;
 import org.identityconnectors.ldap.LdapConnectorTestBase;
+import org.identityconnectors.test.common.TestHelpers;
 import org.junit.Test;
 
 public class LdapSearchTests extends LdapConnectorTestBase {

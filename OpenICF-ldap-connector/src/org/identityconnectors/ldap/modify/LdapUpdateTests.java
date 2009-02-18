@@ -43,9 +43,9 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.identityconnectors.framework.test.TestHelpers;
 import org.identityconnectors.ldap.LdapConfiguration;
 import org.identityconnectors.ldap.LdapConnectorTestBase;
+import org.identityconnectors.test.common.TestHelpers;
 import org.junit.Test;
 
 public class LdapUpdateTests extends LdapConnectorTestBase {
