@@ -39,12 +39,14 @@
     <property name="src-framework" location="framework/src" />
     <property name="src-framework-internal" location="framework-internal/src" />
     <property name="src-framework-test" location="framework-test/src" />
+    <property name="src-test-common" location="test-common/src"/>
     <property name="src-contract-test" location="test-contract/src"/>
     <property name="src-toolkit" location="toolkit"/>
     <property name="build" location="build"/>
     <property name="build-framework" location="build/framework/classes" />
     <property name="build-framework-internal" location="build/framework-internal/classes" />
     <property name="build-framework-test" location="build/framework-test/classes" />
+    <property name="build-test-common" location="build/test-common"/>
     <property name="build-contract-test" location="build/contract-tests"/>
     <property name="instrumented" value="build/instrumented" />
     <property name="dist" location="dist" />
@@ -53,6 +55,7 @@
     <property name="reports" location="reports" />
     <property name="jar.file" value="${dist}/${ant.project.name}.jar" />
     <property name="jar.file-internal" value="${dist}/${ant.project.name}-internal.jar" />
+    <property name="jar.file-test-common" value="${dist}/connector-test-common.jar" />
     <property name="jar.file-contract" value="${dist}/${ant.project.name}-contract.jar" />
     <property name="testbundles.dir" value="testbundles"/>
     <property name="toolkit.name" value="connector_toolkit-${version}" />
@@ -144,6 +147,7 @@
         <mkdir dir="${build-framework}" />
         <mkdir dir="${build-framework-internal}" />
         <mkdir dir="${build-framework-test}" />
+        <mkdir dir="${build-test-common}" />
         <mkdir dir="${build-contract-test}" />
         <!-- compile all source files -->
         <oc:javac 
@@ -152,10 +156,19 @@
             destdir="${build-framework}" />
         <oc:javac 
             classpathref="class.path"
+            srcdir="${src-test-common}"
+            destdir="${build-test-common}">
+          <oc:classpath>
+            <oc:pathelement location='${build-framework}'/>
+          </oc:classpath>
+        </oc:javac>
+        <oc:javac 
+            classpathref="class.path"
             srcdir="${src-framework-internal}"
             destdir="${build-framework-internal}">
           <oc:classpath>
             <oc:pathelement location='${build-framework}'/>
+            <oc:pathelement location='${build-test-common}'/>
           </oc:classpath>
         </oc:javac>
         <oc:javac
@@ -164,6 +177,7 @@
             destdir="${build-framework-test}">
           <oc:classpath>
             <oc:pathelement location='${build-framework}'/>
+            <oc:pathelement location='${build-test-common}'/>
             <oc:pathelement location='${build-framework-internal}'/>
           </oc:classpath>
         </oc:javac>
@@ -226,6 +240,17 @@
                 <fileset file="${thirdpartyreadme.file}" />
             </filesets>
         </jarframework>
+        <jarframework file="${jar.file-test-common}"
+            title="Connectors Framework - Common Test Utilities">
+            <filesets>
+                <fileset dir="${build-test-common}"/>
+                <fileset dir="${src-test-common}">
+                    <patternset refid="exclude.javasrc"/>
+                </fileset>
+                <fileset file="${license.file}" />
+                <fileset file="${thirdpartyreadme.file}" />
+            </filesets>
+        </jarframework>
         <jarframework file="${jar.file-contract}" 
             title="Connectors Framework - Contract">
             <filesets>
@@ -248,7 +273,16 @@
         <mkdir dir="${dist}/javadoc" />
         <oc:javadoc overview="${src-framework}/overview.html" 
             classpathref="class.path" destdir="${dist}/javadoc">
+            <!--oc:classpath>
+                <oc:path refid="class.path" />
+                <oc:pathelement location="${build-framework}" />
+            </oc:classpath-->
             <oc:fileset dir="${src-framework}">
+                <oc:patternset refid="ignore"/>
+                <oc:exclude name="**/package.html"/>
+                <oc:exclude name="**/overview.html"/>
+            </oc:fileset>
+            <oc:fileset dir="${src-test-common}">
                 <oc:patternset refid="ignore"/>
                 <oc:exclude name="**/package.html"/>
                 <oc:exclude name="**/overview.html"/>
@@ -306,11 +340,13 @@
             </auxClassPath>
             <sourcePath>
                 <pathelement location="${src-framework}"/>
+                <pathelement location="${src-test-common}"/>
                 <pathelement location="${src-framework-internal}"/>
                 <pathelement location="${src-framework-test}"/>
             </sourcePath>
             <!-- core jar files -->
             <class location="${jar.file}"/>
+            <class location="${jar.file-test-common}"/>
             <class location="${jar.file-internal}"/>
         </findbugs>
     </target>
@@ -353,9 +389,11 @@
         <path id="test-classpath">
             <path refid="class.path" />
             <pathelement location="${src-framework}" />
+            <pathelement location="${src-test-common}" />
             <pathelement location="${src-framework-internal}" />
             <pathelement location="${src-framework-test}" />
             <pathelement location="${build-framework}" />
+            <pathelement location="${build-test-common}" />
             <pathelement location="${build-framework-internal}" />
             <pathelement location="${build-framework-test}" />
         </path>
@@ -373,9 +411,11 @@
             <path refid="cobertura.classpath" />
             <pathelement location="${instrumented}" />
             <pathelement location="${src-framework}" />
+            <pathelement location="${src-test-common}" />
             <pathelement location="${src-framework-internal}" />
             <pathelement location="${src-framework-test}" />
             <pathelement location="${build-framework}" />
+            <pathelement location="${build-test-common}" />
             <pathelement location="${build-framework-internal}" />
             <pathelement location="${build-framework-test}" />
         </path>
@@ -428,6 +468,7 @@
             format="${cobertura-format}" 
             destdir="${reports}${cobertura-directory}">
             <fileset dir="${src-framework}" includes="**/*.java" />
+            <fileset dir="${src-test-common}" includes="**/*.java" />
             <fileset dir="${src-framework-internal}" includes="**/*.java" />
         </cobertura-report>
     </target>

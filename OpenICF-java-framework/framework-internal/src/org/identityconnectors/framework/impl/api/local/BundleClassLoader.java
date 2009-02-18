@@ -41,8 +41,7 @@ class BundleClassLoader extends URLClassLoader {
     {
         FRAMEWORK_PACKAGE+".api",
         FRAMEWORK_PACKAGE+".common",
-        FRAMEWORK_PACKAGE+".spi",
-        FRAMEWORK_PACKAGE+".test"
+        FRAMEWORK_PACKAGE+".spi"
     };
     
     public BundleClassLoader(URL [] urls) {

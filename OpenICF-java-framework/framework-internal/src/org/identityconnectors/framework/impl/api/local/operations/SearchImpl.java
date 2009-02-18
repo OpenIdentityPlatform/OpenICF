@@ -83,7 +83,7 @@ public class SearchImpl extends ConnectorAPIOperationRunner implements SearchApi
     }
     
     /**
-     * Public because it is used by TestHelpers. Raw,
+     * Public because it is used by TestHelpersImpl. Raw,
      * SPI-level search. 
      * @param search The underlying implementation of search
      *               (generally the connector itself)

@@ -50,7 +50,7 @@ import org.identityconnectors.framework.common.objects.ScriptContextBuilder;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
-import org.identityconnectors.framework.test.TestHelpers;
+import org.identityconnectors.test.common.TestHelpers;
 import org.identityconnectors.test.MockAllOpsConnector;
 import org.identityconnectors.test.MockConfiguration;
 import org.identityconnectors.test.MockConnector;

@@ -41,16 +41,15 @@ import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.PoolableConnector;
 import org.identityconnectors.framework.spi.operations.SearchOp;
-import org.identityconnectors.framework.test.TestHelpers;
+import org.identityconnectors.test.common.spi.TestHelpersSpi;
 
 
-public class TestHelpersImpl extends TestHelpers {
+public class TestHelpersImpl implements TestHelpersSpi {
     
     /**
      * Method for convenient testing of local connectors. 
      */
-    @Override
-    protected APIConfiguration createTestConfigurationImpl(Class<? extends Connector> clazz,
+    public APIConfiguration createTestConfiguration(Class<? extends Connector> clazz,
             Configuration config) {
         LocalConnectorInfoImpl info = new LocalConnectorInfoImpl();
         info.setConnectorConfigurationClass(config.getClass());
@@ -92,8 +91,7 @@ public class TestHelpersImpl extends TestHelpers {
      * @param options The options - may be null - will
      *  be cast to an empty OperationOptions
      */
-    @Override
-    protected void searchImpl(SearchOp<?> search,
+    public void search(SearchOp<?> search,
             final ObjectClass oclass, 
             final Filter filter, 
             ResultsHandler handler,
@@ -104,8 +102,7 @@ public class TestHelpersImpl extends TestHelpers {
         SearchImpl.rawSearch(search, oclass, filter, handler, options);
     }
     
-    @Override
-    protected ConnectorMessages createDummyMessagesImpl() {
+    public ConnectorMessages createDummyMessages() {
         return new DummyConnectorMessages();
     }
     

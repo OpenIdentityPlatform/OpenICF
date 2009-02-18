@@ -20,7 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
-package org.identityconnectors.framework.test;
+package org.identityconnectors.test.common;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,16 +28,22 @@ import java.util.List;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 
-
+/**
+ * A {@link ResultsHandler} which stores all connector objects into
+ * a list retrievable with {@link #getObjects}.
+ */
 public final class ToListResultsHandler implements ResultsHandler {
-    private List<ConnectorObject> _objects 
+
+    private final List<ConnectorObject> _objects
         = new ArrayList<ConnectorObject>();
+
     public boolean handle(ConnectorObject object) {
         _objects.add(object);
         return true;
     }
-    
+
     public List<ConnectorObject> getObjects() {
         return _objects;
     }
+
 }

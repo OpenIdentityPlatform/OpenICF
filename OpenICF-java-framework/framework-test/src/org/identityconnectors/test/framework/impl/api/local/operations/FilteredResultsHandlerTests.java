@@ -29,7 +29,7 @@ import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.impl.api.local.operations.FilteredResultsHandler;
-import org.identityconnectors.framework.test.ToListResultsHandler;
+import org.identityconnectors.test.common.ToListResultsHandler;
 import org.identityconnectors.test.framework.impl.api.Searches.ConnectorObjectSearch;
 import org.junit.Test;
 

@@ -143,13 +143,19 @@ public final class CreatorAction extends CallableSystemAction {
 
             String javadocPath = getJavadocPath(toolkitLoc);
 
-            //Head JAR
+            //Head and TestCommon JAR
             File jar = getFrameworkHeadJAR(toolkitLoc);
             eProps.setProperty("file.reference." + jar.getName(), jar.getAbsolutePath());
             eProps.setProperty("javadoc.reference." + jar.getName(), javadocPath);
+
+            File testCommonJar = getTestCommonHeadJAR(toolkitLoc);
+            eProps.setProperty("file.reference." + testCommonJar.getName(), testCommonJar.getAbsolutePath());
+            eProps.setProperty("javadoc.reference." + testCommonJar.getName(), javadocPath);
+
             //set classpath
             eProps.setProperty("javac.classpath", new String[]{"${libs.junit_4.classpath}:",
-                        "${file.reference." + jar.getName() + "}"
+                        "${file.reference." + jar.getName() + "}",
+                        "${file.reference." + testCommonJar.getName() + "}"
                     });
 
             //Internal JAR
@@ -218,6 +224,29 @@ public final class CreatorAction extends CallableSystemAction {
             throw new IllegalStateException("Found more than one Framework-Head JAR.");
         } else if (jars.length < 1) {
             throw new IllegalStateException("Could not find a suitable Framework-Head JAR.");
+        }
+        return jars[0];
+    }
+
+    private File getTestCommonHeadJAR(String toolkitLoc) {
+        File dist = new File(toolkitLoc + "/dist");
+        FilenameFilter filter = new FilenameFilter() {
+
+            public boolean accept(File dir, String name) {
+                if (!name.contains("internal") &&
+                        !name.contains("contract") &&
+                        name.contains("connector-test-common") &&
+                        name.endsWith(".jar")) {
+                    return true;
+                }
+                return false;
+            }
+        };
+        File[] jars = dist.listFiles(filter);
+        if (jars.length > 1) {
+            throw new IllegalStateException("Found more than one ConnectorTestCommon-Head JAR.");
+        } else if (jars.length < 1) {
+            throw new IllegalStateException("Could not find a suitable ConnectorTestCommon-Head JAR.");
         }
         return jars[0];
     }
