@@ -6,6 +6,7 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/ConnectorTestCommon-HEAD"/>
 	<classpathentry kind="lib" path="lib/test/derby.jar"/>
 	<classpathentry kind="lib" path="lib/test/derbyclient.jar"/>
 	<classpathentry kind="lib" path="lib/test/derbynet.jar"/>

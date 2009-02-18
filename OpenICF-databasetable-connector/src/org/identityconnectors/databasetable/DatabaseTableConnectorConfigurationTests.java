@@ -26,7 +26,7 @@ import static org.junit.Assert.assertEquals;
 import junit.framework.Assert;
 
 import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.framework.test.TestHelpers;
+import org.identityconnectors.test.common.TestHelpers;
 import org.junit.Test;
 
 /**
