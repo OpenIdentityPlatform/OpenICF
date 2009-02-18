@@ -785,7 +785,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
          */
         final String SCHEMA_QUERY = "SELECT * FROM {0} WHERE {1} IS NULL";
 
-        Set<AttributeInfo> attrInfo = new HashSet<AttributeInfo>();
+        Set<AttributeInfo> attrInfo;
         String sql = MessageFormat.format(SCHEMA_QUERY, config.getTable(), quoteName(config.getKeyColumn()));
         // check out the result etc..
         ResultSet rset = null;
