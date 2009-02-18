@@ -25,8 +25,11 @@ package org.identityconnectors.test.common;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Map.Entry;
 
 import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.StringUtil;
@@ -184,7 +187,7 @@ public final class TestHelpers {
     /**
      * Load properties in the following order to black box testing.
      */
-    private static Properties _properties;
+    private static Map<?, ?> _properties;
     public static final String GLOBAL_PROPS = "connectors.properties";
     public static final String BUNDLE_PROPS = "build.properties";
 
@@ -218,15 +221,21 @@ public final class TestHelpers {
         }
         // create a new properties object so it can't be modified.
         Properties ret = new Properties();
-        ret.putAll(_properties);
+        for (Entry<?, ?> entry : _properties.entrySet()) {
+            Object value = entry.getValue();
+            // Hashtable doesn't take null values.
+            if (value != null) {
+                ret.put(entry.getKey(), value.toString());
+            }
+        }
         return ret;
     }
 
-    private static Properties loadProjectProperties() {
+    private static Map<?, ?> loadProjectProperties() {
         final String ERR = "Unable to load optional properties file: {0}";
         final String CONNECTORS_DIR = System.getProperty("user.home") + "/.connectors/";
-        Properties props = null;
-        Properties ret = new Properties();
+        Map<?, ?> props = null;
+        Map<Object, Object> ret = new HashMap<Object, Object>();
         // load global properties (if present)
         try {
             props = IOUtil.loadPropertiesFile(CONNECTORS_DIR + GLOBAL_PROPS);
@@ -250,7 +259,7 @@ public final class TestHelpers {
             //load the private bundle properties file (if present)
             try {
                 fName = CONNECTORS_DIR + prjName + "/build.groovy";
-                props = loadGroovyConfigFile(fName);
+                props = loadGroovyConfigFile(IOUtil.makeURL(null, fName));
                 ret.putAll(props);
             } catch (IOException e) {
                 LOG.info(ERR, fName);
@@ -261,7 +270,7 @@ public final class TestHelpers {
                 //load the configuration-specific properties file (if present)
                 try {
                     fName = CONNECTORS_DIR + prjName + "/" + cfg + "/build.groovy";
-                    props = loadGroovyConfigFile(fName);
+                    props = loadGroovyConfigFile(IOUtil.makeURL(null, fName));
                     ret.putAll(props);
                 } catch (IOException e) {
                     LOG.info(ERR, fName);
@@ -273,22 +282,20 @@ public final class TestHelpers {
         return ret;
     }
 
-    private static Properties loadGroovyConfigFile(String fileName) throws IOException{
+    static Map<?, ?> loadGroovyConfigFile(URL url) {
         try {
             Class<?> slurper = Class.forName("groovy.util.ConfigSlurper");
             Class<?> configObject = Class.forName("groovy.util.ConfigObject");
             Object slurpInstance = slurper.newInstance();
             Method parse = slurper.getMethod("parse", URL.class);
-            Object config = parse.invoke(slurpInstance, IOUtil.makeURL(null, fileName));
-            Method toProps = configObject.getMethod("toProperties");
+            Object config = parse.invoke(slurpInstance, url);
+            Method toProps = configObject.getMethod("flatten");
             Object result = toProps.invoke(config);
-            return (Properties) result;
-        } catch (IOException e) { 
-            throw e;
+            return (Map<?, ?>) result;
         } catch (Exception e) {
             LOG.error(e, "Could not load Groovy objects: {0}", e.getMessage());
             return null;
-        } 
+        }
     }
 
 }
