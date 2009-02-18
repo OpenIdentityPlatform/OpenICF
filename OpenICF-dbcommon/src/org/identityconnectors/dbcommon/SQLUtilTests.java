@@ -29,6 +29,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
+import java.math.BigDecimal;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.Date;
@@ -481,6 +482,34 @@ public class SQLUtilTests {
         assertTrue(trs.isDone());        
      }        
     
+    
+    
+    
+    /**
+     * GetAttributeSet test method
+     * @throws SQLException 
+     */
+    @Test
+    public void testGetSQLAttributeType() {
+        assertEquals(BigDecimal.class, SQLUtil.getSQLAttributeType(Types.DECIMAL));
+        assertEquals(BigDecimal.class, SQLUtil.getSQLAttributeType(Types.NUMERIC));
+        assertEquals(Double.class, SQLUtil.getSQLAttributeType(Types.DOUBLE));
+        assertEquals(BigDecimal.class, SQLUtil.getSQLAttributeType(Types.NUMERIC));
+        assertEquals(Float.class, SQLUtil.getSQLAttributeType(Types.FLOAT));
+        assertEquals(Float.class, SQLUtil.getSQLAttributeType(Types.REAL));
+        assertEquals(Integer.class, SQLUtil.getSQLAttributeType(Types.INTEGER));
+        assertEquals(Long.class, SQLUtil.getSQLAttributeType(Types.BIGINT));
+        assertEquals(Byte.class, SQLUtil.getSQLAttributeType(Types.TINYINT));
+        assertEquals(byte[].class, SQLUtil.getSQLAttributeType(Types.BLOB));
+        assertEquals(byte[].class, SQLUtil.getSQLAttributeType(Types.BINARY));
+        assertEquals(byte[].class, SQLUtil.getSQLAttributeType(Types.LONGVARBINARY));
+        assertEquals(byte[].class, SQLUtil.getSQLAttributeType(Types.VARBINARY));
+        assertEquals(Boolean.class, SQLUtil.getSQLAttributeType(Types.BIT));
+        assertEquals(Boolean.class, SQLUtil.getSQLAttributeType(Types.BOOLEAN));
+        assertEquals(String.class, SQLUtil.getSQLAttributeType(Types.CHAR));
+        assertEquals(String.class, SQLUtil.getSQLAttributeType(Types.CLOB));
+        assertEquals(String.class, SQLUtil.getSQLAttributeType(Types.VARCHAR));
+    }
     
     /**
      * GetAttributeSet test method
