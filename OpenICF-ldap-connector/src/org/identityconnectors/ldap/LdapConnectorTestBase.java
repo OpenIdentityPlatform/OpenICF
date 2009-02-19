@@ -146,6 +146,9 @@ public abstract class LdapConnectorTestBase {
         config.setExtendedNamingAttributes(extendedNamingAttributes);
         // Otherwise it would try to use VLV, which we don't yet support.
         config.setSimplePagedSearchPreferred(true);
+        // IDM will not read the schema. So prefer to test with that setting, unless we are testing
+        // extended object classes, in which case we do need to read the schema.
+        config.setReadSchema(extObjectClassesAndNamingAttributes.length > 0);
         return config;
     }
 

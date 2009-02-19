@@ -45,10 +45,12 @@ public class LdapConnectionTests extends LdapConnectorTestBase {
 
     @Test(expected = RuntimeException.class)
     public void testCheckAlive() {
-        LdapConnection conn = new LdapConnection(newConfiguration());
+        LdapConfiguration config = newConfiguration();
+        config.setReadSchema(true);
+        LdapConnection conn = new LdapConnection(config);
         conn.checkAlive();
         // Ensure the connection is really connected to the server.
-        conn.getSchemaMapping().schema();
+        conn.createNativeSchema();
         conn.checkAlive();
         stopServer();
         // This should throw RuntimeException.

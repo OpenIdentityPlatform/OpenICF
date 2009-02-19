@@ -112,6 +112,15 @@ public class LdapConfigurationTests {
         config.validate();
     }
 
+    @Test(expected = ConfigurationException.class)
+    public void testReadSchemaMustBeTrueWhenUsingExtendedObjectClasses() {
+        config.setBaseDNs(DN);
+        config.setExtendedObjectClasses("dNSDomain");
+        config.setExtendedNamingAttributes("dc");
+        config.setReadSchema(false);
+        config.validate();
+    }
+
     public void testEffectiveValues() {
         assertEquals(389, config.getPort());
         config.setUseSsl(true);

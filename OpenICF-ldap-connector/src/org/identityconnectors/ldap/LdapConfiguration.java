@@ -129,6 +129,11 @@ public class LdapConfiguration extends AbstractConfiguration {
     private String groupMemberAttribute = "uniqueMember";
 
     /**
+     * Whether to read the schema from the server.
+     */
+    private boolean readSchema = true;
+
+    /**
      * The set of object classes to return in the schema
      * (apart from those returned by default).
      */
@@ -206,20 +211,21 @@ public class LdapConfiguration extends AbstractConfiguration {
             }
         }
 
-        if (extendedObjectClasses != null) {
-            Set<String> extendedObjectClassSet = CollectionUtil.newCaseInsensitiveSet();
-            extendedObjectClassSet.addAll(Arrays.asList(extendedObjectClasses));
-            if (extendedObjectClassSet.size() != extendedObjectClasses.length) {
-                throw new ConfigurationException("The list of extended object classes in the LDAP configuration contains duplicates");
-            }
-            for (String extendedObjectClass : extendedObjectClasses) {
-                if (extendedObjectClass == null) {
-                    throw new ConfigurationException("The list of extended object classes cannot contain null values");
-                }
+        Set<String> extendedObjectClassSet = CollectionUtil.newCaseInsensitiveSet();
+        extendedObjectClassSet.addAll(Arrays.asList(extendedObjectClasses));
+        if (extendedObjectClassSet.size() != extendedObjectClasses.length) {
+            throw new ConfigurationException("The list of extended object classes in the LDAP configuration contains duplicates");
+        }
+        for (String extendedObjectClass : extendedObjectClasses) {
+            if (extendedObjectClass == null) {
+                throw new ConfigurationException("The list of extended object classes cannot contain null values");
             }
         }
-        if (extendedObjectClasses != null && extendedObjectClasses.length > 0) {
-            if (extendedNamingAttributes == null || extendedNamingAttributes.length < extendedObjectClasses.length) {
+        if (extendedObjectClasses.length > 0) {
+            if (!readSchema) {
+                throw new ConfigurationException("The readSchema property must be true when using extended object classes");
+            }
+            if (extendedNamingAttributes.length < extendedObjectClasses.length) {
                 throw new ConfigurationException("No naming attributes were provided for all extended object classes in the LDAP configuration");
             }
             for (String extendedNamingAttribute : extendedNamingAttributes) {
@@ -380,6 +386,14 @@ public class LdapConfiguration extends AbstractConfiguration {
 
     public void setGroupMemberAttribute(String groupMemberAttribute) {
         this.groupMemberAttribute = groupMemberAttribute;
+    }
+
+    public boolean isReadSchema() {
+        return readSchema;
+    }
+
+    public void setReadSchema(boolean readSchema) {
+        this.readSchema = readSchema;
     }
 
     // Getters and setters for configuration properties end here.

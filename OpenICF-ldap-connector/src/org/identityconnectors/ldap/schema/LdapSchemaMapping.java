@@ -85,21 +85,6 @@ public class LdapSchemaMapping {
     // XXX need to check that (extended) naming attributes really exist.
 
     /**
-     * The LDAP attributes with a byte array syntax.
-     */
-    static final Set<String> LDAP_BINARY_SYNTAX_ATTRS;
-
-    /**
-     * The LDAP attributes which require the binary option for transfer.
-     */
-    static final Set<String> LDAP_BINARY_OPTION_ATTRS;
-
-    /**
-     * The LDAP directory attributes to which are readable as framework attributes.
-     */
-    static final Set<String> LDAP_DIRECTORY_ATTRS;
-
-    /**
      * The LDAP attribute to map to {@link Uid} by default.
      */
     static final String DEFAULT_LDAP_UID_ATTR = "entryUUID";
@@ -111,73 +96,29 @@ public class LdapSchemaMapping {
 
     static final String LDAP_PASSWORD_ATTR = "userPassword";
 
-    static {
-        // Cf. http://java.sun.com/products/jndi/tutorial/ldap/misc/attrs.html.
-        LDAP_BINARY_SYNTAX_ATTRS = CollectionUtil.newCaseInsensitiveSet();
-        LDAP_BINARY_SYNTAX_ATTRS.add("audio");
-        LDAP_BINARY_SYNTAX_ATTRS.add("jpegPhoto");
-        LDAP_BINARY_SYNTAX_ATTRS.add("photo");
-        LDAP_BINARY_SYNTAX_ATTRS.add("personalSignature");
-        LDAP_BINARY_SYNTAX_ATTRS.add("userPassword");
-        LDAP_BINARY_SYNTAX_ATTRS.add("userCertificate");
-        LDAP_BINARY_SYNTAX_ATTRS.add("caCertificate");
-        LDAP_BINARY_SYNTAX_ATTRS.add("authorityRevocationList");
-        LDAP_BINARY_SYNTAX_ATTRS.add("deltaRevocationList");
-        LDAP_BINARY_SYNTAX_ATTRS.add("certificateRevocationList");
-        LDAP_BINARY_SYNTAX_ATTRS.add("crossCertificatePair");
-        LDAP_BINARY_SYNTAX_ATTRS.add("x500UniqueIdentifier");
-        LDAP_BINARY_SYNTAX_ATTRS.add("supportedAlgorithms");
-        // Java serialized objects.
-        LDAP_BINARY_SYNTAX_ATTRS.add("javaSerializedData");
-        // These seem to only be present in Active Directory.
-        LDAP_BINARY_SYNTAX_ATTRS.add("thumbnailPhoto");
-        LDAP_BINARY_SYNTAX_ATTRS.add("thumbnailLogo");
-
-        // Cf. RFC 4522 and RFC 4523.
-        LDAP_BINARY_OPTION_ATTRS = CollectionUtil.newCaseInsensitiveSet();
-        LDAP_BINARY_OPTION_ATTRS.add("userCertificate");
-        LDAP_BINARY_OPTION_ATTRS.add("caCertificate");
-        LDAP_BINARY_OPTION_ATTRS.add("authorityRevocationList");
-        LDAP_BINARY_OPTION_ATTRS.add("deltaRevocationList");
-        LDAP_BINARY_OPTION_ATTRS.add("certificateRevocationList");
-        LDAP_BINARY_OPTION_ATTRS.add("crossCertificatePair");
-        LDAP_BINARY_OPTION_ATTRS.add("supportedAlgorithms");
-
-        LDAP_DIRECTORY_ATTRS = CollectionUtil.newCaseInsensitiveSet();
-        LDAP_DIRECTORY_ATTRS.add("createTimestamp");
-        LDAP_DIRECTORY_ATTRS.add("modifyTimestamp");
-        LDAP_DIRECTORY_ATTRS.add("creatorsName");
-        LDAP_DIRECTORY_ATTRS.add("modifiersName");
-        LDAP_DIRECTORY_ATTRS.add("entryDN");
-    }
-
     private final LdapConnection conn;
+    private final Map<String, Set<String>> ldapClass2Sup = CollectionUtil.newCaseInsensitiveMap();
 
     private Schema schema;
-    private Map<String, Set<String>> ldapClass2TransSup;
 
     public LdapSchemaMapping(LdapConnection conn) {
         this.conn = conn;
     }
 
-    private void init() {
-        LdapSchemaBuilder bld = new LdapSchemaBuilder(conn);
-        schema = bld.getSchema();
-        ldapClass2TransSup = bld.getLdapClassTransitiveSuperiors();
-    }
-
     public Schema schema() {
         if (schema == null) {
-            init();
+            schema = new LdapSchemaBuilder(conn).getSchema();
         }
         return schema;
     }
 
-    private Map<String, Set<String>> getLdapClassTransitiveSuperiors() {
-        if (ldapClass2TransSup == null) {
-            init();
+    private Set<String> getLdapClassSuperiors(String ldapClass) {
+        Set<String> result = ldapClass2Sup.get(ldapClass);
+        if (result == null) {
+            result = conn.createNativeSchema().getSuperiorObjectClasses(ldapClass);
+            ldapClass2Sup.put(ldapClass, result);
         }
-        return ldapClass2TransSup;
+        return result;
     }
 
     /**
@@ -202,7 +143,7 @@ public class LdapSchemaMapping {
         Set<String> result = CollectionUtil.newCaseInsensitiveSet();
         String ldapClass = getLdapClass(oclass);
         result.add(ldapClass);
-        result.addAll(getLdapClassTransitiveSuperiors().get(ldapClass));
+        result.addAll(getLdapClassSuperiors(ldapClass));
         return Collections.unmodifiableSet(result);
     }
 
@@ -220,7 +161,7 @@ public class LdapSchemaMapping {
             result = attrName;
         }
 
-        if (result != null && transfer && needsBinaryOption(result)) {
+        if (result != null && transfer && conn.needsBinaryOption(result)) {
             result = addBinaryOption(result);
         }
 
@@ -504,9 +445,5 @@ public class LdapSchemaMapping {
                 i.remove();
             }
         }
-    }
-
-    private static boolean needsBinaryOption(String ldapAttr) {
-        return LDAP_BINARY_OPTION_ATTRS.contains(ldapAttr);
     }
 }

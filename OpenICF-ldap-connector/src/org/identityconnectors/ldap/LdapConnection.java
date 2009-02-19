@@ -38,6 +38,7 @@ import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.LdapName;
 
+import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.common.security.GuardedString.Accessor;
@@ -51,8 +52,45 @@ public class LdapConnection {
 
     // TODO: SASL authentication, "dn:entryDN" user name.
 
-    private static final String LDAP_CTX_FACTORY = "com.sun.jndi.ldap.LdapCtxFactory";
+    // The LDAP attributes with a byte array syntax.
+    private static final Set<String> LDAP_BINARY_SYNTAX_ATTRS;
+    // The LDAP attributes which require the binary option for transfer.
+    private static final Set<String> LDAP_BINARY_OPTION_ATTRS;
 
+    static {
+        // Cf. http://java.sun.com/products/jndi/tutorial/ldap/misc/attrs.html.
+        LDAP_BINARY_SYNTAX_ATTRS = CollectionUtil.newCaseInsensitiveSet();
+        LDAP_BINARY_SYNTAX_ATTRS.add("audio");
+        LDAP_BINARY_SYNTAX_ATTRS.add("jpegPhoto");
+        LDAP_BINARY_SYNTAX_ATTRS.add("photo");
+        LDAP_BINARY_SYNTAX_ATTRS.add("personalSignature");
+        LDAP_BINARY_SYNTAX_ATTRS.add("userPassword");
+        LDAP_BINARY_SYNTAX_ATTRS.add("userCertificate");
+        LDAP_BINARY_SYNTAX_ATTRS.add("caCertificate");
+        LDAP_BINARY_SYNTAX_ATTRS.add("authorityRevocationList");
+        LDAP_BINARY_SYNTAX_ATTRS.add("deltaRevocationList");
+        LDAP_BINARY_SYNTAX_ATTRS.add("certificateRevocationList");
+        LDAP_BINARY_SYNTAX_ATTRS.add("crossCertificatePair");
+        LDAP_BINARY_SYNTAX_ATTRS.add("x500UniqueIdentifier");
+        LDAP_BINARY_SYNTAX_ATTRS.add("supportedAlgorithms");
+        // Java serialized objects.
+        LDAP_BINARY_SYNTAX_ATTRS.add("javaSerializedData");
+        // These seem to only be present in Active Directory.
+        LDAP_BINARY_SYNTAX_ATTRS.add("thumbnailPhoto");
+        LDAP_BINARY_SYNTAX_ATTRS.add("thumbnailLogo");
+
+        // Cf. RFC 4522 and RFC 4523.
+        LDAP_BINARY_OPTION_ATTRS = CollectionUtil.newCaseInsensitiveSet();
+        LDAP_BINARY_OPTION_ATTRS.add("userCertificate");
+        LDAP_BINARY_OPTION_ATTRS.add("caCertificate");
+        LDAP_BINARY_OPTION_ATTRS.add("authorityRevocationList");
+        LDAP_BINARY_OPTION_ATTRS.add("deltaRevocationList");
+        LDAP_BINARY_OPTION_ATTRS.add("certificateRevocationList");
+        LDAP_BINARY_OPTION_ATTRS.add("crossCertificatePair");
+        LDAP_BINARY_OPTION_ATTRS.add("supportedAlgorithms");
+    }
+
+    private static final String LDAP_CTX_FACTORY = "com.sun.jndi.ldap.LdapCtxFactory";
     private static final Log log = Log.getLog(LdapConnection.class);
 
     private final LdapConfiguration config;
@@ -138,6 +176,18 @@ public class LdapConnection {
         return schemaMapping;
     }
 
+    public LdapNativeSchema createNativeSchema() {
+        try {
+            if (config.isReadSchema()) {
+                return new ServerNativeSchema(this);
+            } else {
+                return new StaticNativeSchema();
+            }
+        } catch (NamingException e) {
+            throw new ConnectorException(e);
+        }
+    }
+
     public void authenticate(String username, GuardedString password) {
         LdapContext ctx = null;
         try {
@@ -219,5 +269,13 @@ public class LdapConnection {
             }
         }
         return null;
+    }
+
+    public boolean needsBinaryOption(String attrName) {
+        return LDAP_BINARY_OPTION_ATTRS.contains(attrName);
+    }
+
+    public boolean isBinarySyntax(String attrName) {
+        return LDAP_BINARY_SYNTAX_ATTRS.contains(attrName);
     }
 }

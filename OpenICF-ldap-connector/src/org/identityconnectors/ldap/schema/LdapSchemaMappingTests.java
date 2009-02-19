@@ -35,6 +35,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
+import org.identityconnectors.ldap.LdapConfiguration;
 import org.identityconnectors.ldap.LdapConnectorTestBase;
 import org.junit.Test;
 
@@ -76,7 +77,9 @@ public class LdapSchemaMappingTests extends LdapConnectorTestBase {
 
     @Test
     public void testAttributeTypes() {
-        Schema schema = newFacade().schema();
+        LdapConfiguration config = newConfiguration();
+        config.setReadSchema(true);
+        Schema schema = newFacade(config).schema();
         ObjectClassInfo accountInfo = schema.findObjectClassInfo(ObjectClass.ACCOUNT_NAME);
         Set<AttributeInfo> accountAttrInfos = accountInfo.getAttributeInfo();
 
