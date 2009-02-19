@@ -412,12 +412,17 @@
     <property name="contract.suite.classname" value="${contract-package}.test.ContractTestSuite"/>
     <property name="data.provider" value="${contract-package}.data.GroovyDataProvider"/>                
 
-    <target name="contract-init" if="contracts.run">
+    <target name="contract-check">
+        <condition property="do.contracts.run">
+            <istrue value="${contracts.run}"/>
+        </condition>
+    </target>
+    <target name="contract-init" depends="contract-check" if="do.contracts.run">
         <!-- clear out previous test results -->
         <delete dir="${reports}/contracts" />
         <mkdir dir="${reports}/contracts" />
     </target>
-    <target name="contract-dist" if="contracts.run" depends="jar"> 
+    <target name="contract-dist" if="do.contracts.run" depends="contract-check, jar"> 
         <!-- creates a temparary jar for contract testing -->
         <delete dir="${reports}/rejar"/>
         <mkdir dir="${reports}/rejar"/>
@@ -431,7 +436,7 @@
             <fileset dir="${reports}/rejar"/>
         </jar>
     </target>
-    <target name="contract-tests" if="contracts.run">        
+    <target name="contract-tests" if="do.contracts.run" depends="contract-check">        
         <property name="test.parameters.outFile" value=""/>
         <!-- run all the contract tests -->
         <junit fork="yes" printsummary="yes" forkmode="once"
