@@ -50,8 +50,10 @@ public abstract class AbstractSimpleTest {
      */
     @AfterClass
     public static void disposeOnce() {
-        _dataProvider.dispose();       
-        _dataProvider = null;        
+    	if(_dataProvider != null) {
+	        _dataProvider.dispose();       
+	        _dataProvider = null;      
+    	}
     }
     
     /**
