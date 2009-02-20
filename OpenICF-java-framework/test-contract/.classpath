@@ -5,7 +5,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/ConnectorFramework-HEAD"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/ConnectorFramework-Internal-HEAD"/>
-	<classpathentry exported="true" kind="lib" path="/ConnectorFramework-Internal-HEAD/lib/groovy-all.jar"/>
-	<classpathentry exported="true" kind="con" path="GROOVY_SUPPORT"/>
+	<classpathentry kind="lib" path="/ConnectorFramework-Internal-HEAD/lib/groovy-all.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
