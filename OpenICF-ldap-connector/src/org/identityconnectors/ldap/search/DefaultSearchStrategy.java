@@ -40,12 +40,11 @@ public class DefaultSearchStrategy extends LdapSearchStrategy {
 
     private static final Log log = Log.getLog(DefaultSearchStrategy.class);
 
-    public DefaultSearchStrategy(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls) {
-        super(initCtx, baseDNs, query, searchControls);
+    public DefaultSearchStrategy() {
     }
 
     @Override
-    public void doSearch(SearchResultsHandler handler) throws NamingException {
+    public void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler) throws NamingException {
         log.ok("Searching in {0} with filter {1} and {2}", baseDNs, query, searchControlsToString(searchControls));
 
         for (String baseDN : baseDNs) {

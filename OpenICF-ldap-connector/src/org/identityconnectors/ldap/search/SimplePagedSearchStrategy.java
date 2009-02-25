@@ -46,13 +46,12 @@ public class SimplePagedSearchStrategy extends LdapSearchStrategy {
 
     private final int pageSize;
 
-    public SimplePagedSearchStrategy(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, int pageSize) {
-        super(initCtx, baseDNs, query, searchControls);
+    public SimplePagedSearchStrategy(int pageSize) {
         this.pageSize = pageSize;
     }
 
     @Override
-    public void doSearch(SearchResultsHandler handler) throws NamingException {
+    public void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler) throws NamingException {
         log.ok("Searching in {0} with filter {1} and {2}", baseDNs, query, searchControlsToString(searchControls));
 
         LdapContext ctx = initCtx.newInstance(new Control[] { createControl(null) });

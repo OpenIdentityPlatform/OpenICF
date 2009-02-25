@@ -30,6 +30,7 @@ import java.util.Set;
 import javax.naming.NamingException;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
+import javax.naming.ldap.PagedResultsControl;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.logging.Log;
@@ -45,6 +46,8 @@ import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapEntry;
+
+import com.sun.jndi.ldap.ctl.VirtualListViewControl;
 
 /**
  * A class to perform an LDAP search against a {@link LdapConnection}.
@@ -67,7 +70,7 @@ public class LdapSearch {
         this.oclass = oclass;
         this.options = options;
         attrsToGet = getAttributesToGet();
-        search = new LdapInternalSearch(conn, restrictQueryToObjectClass(query), getBaseDNs(), getSearchControls());
+        search = new LdapInternalSearch(conn, restrictQueryToObjectClass(query), getBaseDNs(), getSearchStrategy(), getSearchControls());
     }
 
     /**
@@ -175,6 +178,29 @@ public class LdapSearch {
         }
         assert result != null;
         return result;
+    }
+
+    private LdapSearchStrategy getSearchStrategy() {
+        LdapSearchStrategy strategy;
+        if (ObjectClass.ACCOUNT.equals(oclass)) {
+            // Only consider paged strategies for accounts, just as the adapter does.
+
+            int pageSize = conn.getConfiguration().getBlockCount();
+            boolean pagedSearchEnabled = conn.getConfiguration().isPagedSearchEnabled();
+            boolean usePagedResultsControl = conn.getConfiguration().isUsePagedResultControl();
+
+            if (pagedSearchEnabled && !usePagedResultsControl && conn.supportsControl(VirtualListViewControl.OID)) {
+                // TODO: VLV index strategy.
+                strategy = new SimplePagedSearchStrategy(pageSize);
+            } else if (pagedSearchEnabled && conn.supportsControl(PagedResultsControl.OID)) {
+                strategy = new SimplePagedSearchStrategy(pageSize);
+            } else {
+                strategy = new DefaultSearchStrategy();
+            }
+        } else {
+            strategy = new DefaultSearchStrategy();
+        }
+        return strategy;
     }
 
     private Set<String> getAttributesToGet() {

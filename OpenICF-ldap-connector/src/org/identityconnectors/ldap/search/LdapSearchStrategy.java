@@ -31,19 +31,7 @@ import javax.naming.ldap.LdapContext;
 
 public abstract class LdapSearchStrategy {
 
-    protected final LdapContext initCtx;
-    protected final List<String> baseDNs;
-    protected final String query;
-    protected final SearchControls searchControls;
-
-    public LdapSearchStrategy(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls) {
-        this.initCtx = initCtx;
-        this.baseDNs = baseDNs;
-        this.query = query;
-        this.searchControls = searchControls;
-    }
-
-    public abstract void doSearch(SearchResultsHandler handler) throws NamingException;
+    public abstract void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler) throws NamingException;
 
     static String searchControlsToString(SearchControls controls) {
         StringBuilder builder = new StringBuilder();

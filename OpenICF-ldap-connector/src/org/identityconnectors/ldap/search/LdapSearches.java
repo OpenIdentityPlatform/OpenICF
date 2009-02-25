@@ -140,7 +140,10 @@ public class LdapSearches {
             return null;
         }
 
-        LdapInternalSearch search = new LdapInternalSearch(conn, null, Collections.singletonList(entryDN.toString()), SearchControls.OBJECT_SCOPE, ldapAttrsToGet);
+        SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
+        controls.setSearchScope(SearchControls.OBJECT_SCOPE);
+        controls.setReturningAttributes(ldapAttrsToGet);
+        LdapInternalSearch search = new LdapInternalSearch(conn, null, Collections.singletonList(entryDN.toString()), new DefaultSearchStrategy(), controls);
         search.execute(new SearchResultsHandler() {
             public boolean handle(String baseDN, SearchResult searchResult) {
                 result.add(LdapEntry.create(baseDN, searchResult));

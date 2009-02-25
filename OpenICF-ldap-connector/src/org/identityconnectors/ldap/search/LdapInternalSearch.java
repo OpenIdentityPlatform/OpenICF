@@ -26,12 +26,9 @@ import java.util.List;
 
 import javax.naming.NamingException;
 import javax.naming.directory.SearchControls;
-import javax.naming.ldap.PagedResultsControl;
 
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.ldap.LdapConnection;
-
-import com.sun.jndi.ldap.ctl.VirtualListViewControl;
 
 /**
  * A class to perform an LDAP search against a {@link LdapConnection}.
@@ -43,51 +40,28 @@ public class LdapInternalSearch {
     private final LdapConnection conn;
     private final String query;
     private final List<String> baseDNs;
+    private final LdapSearchStrategy strategy;
     private final SearchControls controls;
 
-    public LdapInternalSearch(LdapConnection conn, String query, List<String> baseDNs, SearchControls controls) {
+    public LdapInternalSearch(LdapConnection conn, String query, List<String> baseDNs, LdapSearchStrategy strategy, SearchControls controls) {
         this.conn = conn;
         this.query = query;
         this.baseDNs = baseDNs;
+        this.strategy = strategy;
         this.controls = controls;
     }
 
-    public LdapInternalSearch(LdapConnection conn, String query, List<String> baseDNs, int searchScope, String... attrsToGet) {
-        this(conn, query, baseDNs, createSearchControls(searchScope, attrsToGet));
-    }
-
     public void execute(SearchResultsHandler handler) {
-        String query = getQuery();
-        int pageSize = conn.getConfiguration().getBlockCount();
-        boolean pagedSearchEnabled = conn.getConfiguration().isPagedSearchEnabled();
-        boolean simplePagedSearchPreferred = conn.getConfiguration().isUsePagedResultControl();
-
-        LdapSearchStrategy strategy;
-        if (pagedSearchEnabled && !simplePagedSearchPreferred && conn.supportsControl(VirtualListViewControl.OID)) {
-            // TODO: VLV index strategy.
-            strategy = new SimplePagedSearchStrategy(conn.getInitialContext(), baseDNs, query, controls, pageSize);
-        } else if (pagedSearchEnabled && conn.supportsControl(PagedResultsControl.OID)) {
-            strategy = new SimplePagedSearchStrategy(conn.getInitialContext(), baseDNs, query, controls, pageSize);
-        } else {
-            strategy = new DefaultSearchStrategy(conn.getInitialContext(), baseDNs, query, controls);
-        }
-
+        String query = nullAsAllObjects(this.query);
         try {
-            strategy.doSearch(handler);
+            strategy.doSearch(conn.getInitialContext(), baseDNs, query, controls, handler);
         } catch (NamingException e) {
             throw new ConnectorException(e);
         }
     }
 
-    private String getQuery() {
+    private static String nullAsAllObjects(String query) {
         return query != null ? query : "(objectClass=*)";
-    }
-
-    private static SearchControls createSearchControls(int scope, String... attributesToGet) {
-        SearchControls result = createDefaultSearchControls();
-        result.setSearchScope(scope);
-        result.setReturningAttributes(attributesToGet);
-        return result;
     }
 
     public static SearchControls createDefaultSearchControls() {
