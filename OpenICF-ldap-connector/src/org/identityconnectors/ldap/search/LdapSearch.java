@@ -186,13 +186,13 @@ public class LdapSearch {
             // Only consider paged strategies for accounts, just as the adapter does.
 
             int pageSize = conn.getConfiguration().getBlockCount();
-            boolean pagedSearchEnabled = conn.getConfiguration().isPagedSearchEnabled();
+            boolean useBlocks = conn.getConfiguration().isUseBlocks();
             boolean usePagedResultsControl = conn.getConfiguration().isUsePagedResultControl();
 
-            if (pagedSearchEnabled && !usePagedResultsControl && conn.supportsControl(VirtualListViewControl.OID)) {
+            if (useBlocks && !usePagedResultsControl && conn.supportsControl(VirtualListViewControl.OID)) {
                 // TODO: VLV index strategy.
                 strategy = new SimplePagedSearchStrategy(pageSize);
-            } else if (pagedSearchEnabled && conn.supportsControl(PagedResultsControl.OID)) {
+            } else if (useBlocks && conn.supportsControl(PagedResultsControl.OID)) {
                 strategy = new SimplePagedSearchStrategy(pageSize);
             } else {
                 strategy = new DefaultSearchStrategy();

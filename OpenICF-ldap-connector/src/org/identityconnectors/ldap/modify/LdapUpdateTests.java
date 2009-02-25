@@ -174,7 +174,7 @@ public class LdapUpdateTests extends LdapConnectorTestBase {
         LdapConfiguration config = newConfiguration();
         config.setPrincipal(BUGS_BUNNY_DN);
         config.setCredentials(new GuardedString("carrot".toCharArray()));
-        config.setBlockCount(0); // Do not use paged search, since the user doesn't have the privilege.
+        config.setUseBlocks(false); // Do not use paged search, since the user doesn't have the privilege.
         ConnectorFacade facade = newFacade(config);
         ConnectorObject bugs = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
 

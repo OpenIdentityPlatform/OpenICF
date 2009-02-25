@@ -64,13 +64,26 @@ public class LdapSearchTests extends LdapConnectorTestBase {
 
     @Test
     public void testSimplePagedSearch() {
-        ConnectorFacade facade = newFacade();
+        LdapConfiguration config = newConfiguration();
+        assertTrue(config.isUseBlocks());
+        assertTrue(config.isUsePagedResultControl());
+        ConnectorFacade facade = newFacade(config);
 
         List<ConnectorObject> objects = TestHelpers.searchToList(facade, ObjectClass.ACCOUNT, null);
         assertNotNull(getObjectByName(objects, BUGS_BUNNY_DN));
         assertNotNull(getObjectByName(objects, ELMER_FUDD_DN));
         // 1000 is the default search size limit for OpenDS.
         assertTrue(objects.size() > 1000);
+    }
+
+    @Test(expected = ConnectorException.class)
+    public void testNoUseBlocks() {
+        LdapConfiguration config = newConfiguration();
+        config.setUseBlocks(false);
+        ConnectorFacade facade = newFacade(config);
+        // This should fail, since the search will exceed the maximum number of
+        // entries to return when to block-based control (simple paged, etc.)is in effect.
+        TestHelpers.searchToList(facade, ObjectClass.ACCOUNT, null);
     }
 
     @Test

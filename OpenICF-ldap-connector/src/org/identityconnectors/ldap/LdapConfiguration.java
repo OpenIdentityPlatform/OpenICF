@@ -113,6 +113,11 @@ public class LdapConfiguration extends AbstractConfiguration {
     private String groupMemberAttr = "uniqueMember";
 
     /**
+     * Whether to use block-based LDAP controls like simple paged results or VLV control.
+     */
+    private boolean useBlocks = true;
+
+    /**
      * The block size (not count, but that's what IDM calls it) for paged and VLV index searches.
      */
     private int blockCount = DEFAULT_BLOCK_COUNT;
@@ -121,7 +126,7 @@ public class LdapConfiguration extends AbstractConfiguration {
      * If true, simple paged search will be preferred over VLV index search
      * when both are available.
      */
-    private boolean usePagedResultControl = false;
+    private boolean usePagedResultControl;
 
     /**
      * Whether to read the schema from the server.
@@ -332,6 +337,14 @@ public class LdapConfiguration extends AbstractConfiguration {
         this.groupMemberAttr = groupMemberAttr;
     }
 
+    public boolean isUseBlocks() {
+        return useBlocks;
+    }
+
+    public void setUseBlocks(boolean useBlocks) {
+        this.useBlocks = useBlocks;
+    }
+
     public int getBlockCount() {
         return blockCount;
     }
@@ -438,10 +451,6 @@ public class LdapConfiguration extends AbstractConfiguration {
         return result;
     }
 
-    public boolean isPagedSearchEnabled() {
-        return blockCount > 0;
-    }
-
     private EqualsHashCodeBuilder createHashCodeBuilder() {
         EqualsHashCodeBuilder builder = new EqualsHashCodeBuilder();
         builder.append(host);
@@ -463,6 +472,7 @@ public class LdapConfiguration extends AbstractConfiguration {
         for (String extendedNamingAttribute : extendedNamingAttributes) {
             builder.append(extendedNamingAttribute);
         }
+        builder.append(useBlocks);
         builder.append(blockCount);
         builder.append(usePagedResultControl);
         return builder;
