@@ -59,8 +59,6 @@ public class LdapConfiguration extends AbstractConfiguration {
     private static final int DEFAULT_PORT = 389;
     private static final int DEFAULT_SSL_PORT = 636;
 
-    private static final int DEFAULT_BLOCK_COUNT = 100;
-
     /**
      * The LDAP host server to connect to.
      */
@@ -79,7 +77,7 @@ public class LdapConfiguration extends AbstractConfiguration {
     /**
      * The base DNs for operations on the server.
      */
-    private String[] baseContexts = new String[0];
+    private String[] baseContexts = { "dc=MYDOMAIN,dc=com" };
 
     /**
      * The bind DN for performing operations on the server.
@@ -120,7 +118,7 @@ public class LdapConfiguration extends AbstractConfiguration {
     /**
      * The block size (not count, but that's what IDM calls it) for paged and VLV index searches.
      */
-    private int blockCount = DEFAULT_BLOCK_COUNT;
+    private int blockCount = 100;
 
     /**
      * If true, simple paged search will be preferred over VLV index search
@@ -189,20 +187,6 @@ public class LdapConfiguration extends AbstractConfiguration {
                 new LdapName(baseContext);
             } catch (InvalidNameException e) {
                 throw new ConfigurationException("The base context " + baseContext + " in the LDAP configuration cannot be parsed");
-            }
-        }
-
-        if (!isAuthenticationNone() && StringUtil.isBlank(principal)) {
-            throw new ConfigurationException("No principal was provided in the LDAP configuration");
-        }
-        if (StringUtil.isNotBlank(principal) && credentials == null) {
-            throw new ConfigurationException("No credentials were provided in the LDAP configuration");
-        }
-        if (principal != null) {
-            try {
-                new LdapName(principal);
-            } catch (InvalidNameException e) {
-                throw new ConfigurationException("The principal in the LDAP configuration cannot be parsed");
             }
         }
 
@@ -464,17 +448,20 @@ public class LdapConfiguration extends AbstractConfiguration {
 //        builder.append(uuidAttribute);
 //        builder.append(passwordAttribute);
         builder.append(authentication);
-        builder.append(accountConfig);
         builder.append(groupConfig);
+        builder.append(groupMemberAttr);
+        builder.append(useBlocks);
+        builder.append(blockCount);
+        builder.append(usePagedResultControl);
+        builder.append(readSchema);
         for (String extendedObjectClass : extendedObjectClasses) {
             builder.append(extendedObjectClass);
         }
         for (String extendedNamingAttribute : extendedNamingAttributes) {
             builder.append(extendedNamingAttribute);
         }
-        builder.append(useBlocks);
-        builder.append(blockCount);
-        builder.append(usePagedResultControl);
+        builder.append(accountConfig);
+        builder.append(groupConfig);
         return builder;
     }
 

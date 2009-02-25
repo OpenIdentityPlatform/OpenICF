@@ -22,28 +22,35 @@
  */
 package org.identityconnectors.ldap;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.junit.Before;
 import org.junit.Test;
 
-public class LdapConfigurationTests {
+public class LdapConfigurationTests extends LdapConnectorTestBase {
 
-    private static final String DN = "dc=example,dc=com";
     private static final String INVALID_DN = "dc=a,,";
-    private static final String ADMIN = "uid=admin,dc=example,dc=com";
 
     private LdapConfiguration config;
 
     @Before
-    public void before() {
+    @Override
+    public void before() throws Exception {
         config = new LdapConfiguration();
+        super.before();
+    }
+
+    @Override
+    protected boolean restartServerAfterEachTest() {
+        return false;
     }
 
     @Test(expected = ConfigurationException.class)
     public void testNoBaseDNsNull() {
+        config.setBaseContexts((String) null);
         config.validate();
     }
 
@@ -55,72 +62,27 @@ public class LdapConfigurationTests {
 
     @Test(expected = ConfigurationException.class)
     public void testBaseDNsNoDuplicates() {
-        config.setBaseContexts(DN, DN);
+        config.setBaseContexts(ACME_DN, ACME_DN);
         config.validate();
     }
 
     @Test(expected = ConfigurationException.class)
     public void testInvalidBaseDNsNotAllowed() {
-        config.setBaseContexts(DN, INVALID_DN);
-        config.validate();
-    }
-
-    @Test(expected = ConfigurationException.class)
-    public void testAuthenticationRequiresBindDN() {
-        config.setBaseContexts(DN);
-        config.setAuthentication("simple");
-        // Fails because no bind DN set.
-        config.validate();
-    }
-
-    @Test()
-    public void testNoneOrNoAuthenticationDoesNotRequireBindDN() {
-        config.setBaseContexts(DN);
-        // No need for bind DN because no authentication set.
-        config.validate();
-        config.setAuthentication("none");
-        // No need for bind DN because authentication is "none".
-        config.validate();
-    }
-
-    @Test(expected = ConfigurationException.class)
-    public void testSimpleAuthenticationRequiresBindDN() {
-        config.setBaseContexts(DN);
-        // No need for bind DN because no authentication set.
-        config.validate();
-        config.setAuthentication("simple");
-        // Fails because bind DN set.
-        config.validate();
-    }
-
-    @Test(expected = ConfigurationException.class)
-    public void testBindDNRequiresPassword() {
-        config.setBaseContexts(DN);
-        config.setAuthentication("simple");
-        config.setPrincipal(ADMIN);
-        // Fails because no password set.
-        config.validate();
-    }
-
-    @Test(expected = ConfigurationException.class)
-    public void testInvalidBindDNNotAllowed() {
-        config.setBaseContexts(DN);
-        config.setAuthentication("simple");
-        config.setPrincipal(INVALID_DN);
-        config.setCredentials(new GuardedString());
-        // Fails because of invalid bind DN.
+        config.setBaseContexts(ACME_DN, INVALID_DN);
         config.validate();
     }
 
     @Test(expected = ConfigurationException.class)
     public void testReadSchemaMustBeTrueWhenUsingExtendedObjectClasses() {
-        config.setBaseContexts(DN);
+        config.setBaseContexts(ACME_DN);
         config.setExtendedObjectClasses("dNSDomain");
         config.setExtendedNamingAttributes("dc");
         config.setReadSchema(false);
+        // Fails because readSchema is false.
         config.validate();
     }
 
+    @Test
     public void testEffectiveValues() {
         assertEquals(389, config.getPort());
         config.setSsl(true);

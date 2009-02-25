@@ -38,6 +38,7 @@ import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.LdapName;
 
+import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
@@ -123,16 +124,30 @@ public class LdapConnection {
         env.put(Context.INITIAL_CONTEXT_FACTORY, LDAP_CTX_FACTORY);
         env.put(Context.PROVIDER_URL, config.getLdapUrl());
         env.put(Context.REFERRAL, "follow");
-        env.put(Context.SECURITY_AUTHENTICATION, config.getAuthentication());
-        if (!config.isAuthenticationNone()) {
+
+        String authentication = config.getAuthentication();
+        // If there is no principal, override to anonymous bind.
+        // This is the simplest way to be compatible with the adapter (in supporting
+        // anonymous bind), while still providing a way to set the authentication method.
+        if (principal == null) {
+            log.warn("No principal specified in the configuration, falling back to anonymous bind");
+            authentication = "none";
+        }
+        env.put(Context.SECURITY_AUTHENTICATION, authentication);
+
+        if (!"none".equals(authentication)) {
             env.put(Context.SECURITY_PRINCIPAL, principal);
-            credentials.access(new Accessor() {
-                public void access(char[] clearChars) {
-                    env.put(Context.SECURITY_CREDENTIALS, clearChars);
-                    // Connect while in the accessor, otherwise clearChars will be cleared.
-                    result[0] = doCreateContext(env);
-                }
-            });
+            if (credentials != null) {
+                credentials.access(new Accessor() {
+                    public void access(char[] clearChars) {
+                        env.put(Context.SECURITY_CREDENTIALS, clearChars);
+                        // Connect while in the accessor, otherwise clearChars will be cleared.
+                        result[0] = doCreateContext(env);
+                    }
+                });
+            } else {
+                result[0] = doCreateContext(env);
+            }
         } else {
             result[0] = doCreateContext(env);
         }
@@ -189,6 +204,9 @@ public class LdapConnection {
     }
 
     public void authenticate(String username, GuardedString password) {
+        Assertions.nullCheck(username, "username");
+        Assertions.nullCheck(password, "password");
+
         LdapContext ctx = null;
         try {
             ctx = createContext(username, password);
