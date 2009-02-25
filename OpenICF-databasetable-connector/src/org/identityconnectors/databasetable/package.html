@@ -21,142 +21,159 @@
   ====================
 -->
 
-<HTML>
-<HEAD>
-    <META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
-    <TITLE>Database Table Connector</TITLE>
-</HEAD>
-<DIV id="projecthome" class="app">
-    <H3>Database Table Connector Overview</H3>
-    <P>Database table connector use a single database table to store the Account attributes.</P>
-	<p>
-		This bundle contains general utilities for provisioning to database tables and is meant to be included in other bundles as a base.
-    </p>
-    <h3>Bundle Information</h3>
-    <ul>  
-       <li><b>Latest stable release:</b> <a href="https://identityconnectors.dev.java.net/downloads.html#Bundles">1.0.3334</a></li>	       
-	   <li><b>Platform:</b> Java</li> 
-       <li><b>3rd-party libraries required:</b> The resource appropriate jdbc driver</li>  
-       <li><b>Other dependencies:</b></li> 
-       <li><b>Release notes:</b>  
-          <ul>
-           <li><b>Migration path from adapter to connector</b></li>
-               <p>The new "Database Table Conversion Utility" server task will convert adapter to connector.</p> 
-               <p>For further information please see the migration page located at the connector sources.</p>      
-           <li><b>Backward compatible with adapter</b></li>
-               <p>The connector is backward compatible with adapter. 
-               All features from the adapter have been implemented. except the "noPasswords" property. 
-               The empty password column has the same effect as the "noPasswords" property on.
-               </p>
-           <li>The new <b>changeLogColumn</b> property</li>
-               <p> This property activate activeSync support.
-               <br> The changeLogColumn will handle the synchronization marker property. 
-               </p>
-           <li>The new <b>validConnectionQuery</b> property</li>
-               <p> This property is used in databae connection live check. It can be empty. 
-               <br> Some databases needs to provide a simple select to do the connection check.
-               <br>e.g. <code>"SELECT 1 FROM dummy" </code> on Oracle is more effective then default
-               switch autocommit on/off. 
-               </p>           
-           <li>The new <b>allNative</b> property</li>
-               <p>This checkbox property force native attributes get/set from the resource.
-               <br> Some jdbc strict database as DerbyDB may require it.
-               </p>
-           <li><b>The new DataSource name and jndiProperties properties</b></li>
-	           <p>Newly supported are DataSource name and jndiProperties configuration properties. 
-               If your server environment supports datasources,
-               you can set up the datasource name, e.g: <code>java:comp/env/jdbc/mysql</code>
-               which in case of tomcat corespond to following application context descriptor.  
-               <br />
-               When new datasource is configured, the user, host, password and port could  be left empty.  
-	           </p>
-           </ul>    
-       </li>        
-    </ul>
-	<h3>Version Information</h3>
-	     <table border="1">
-	     	<tr><th>Connector Version</th><th>Framework Version</th><th>Supported Resource Version(s)</th></tr>
-	     	<tr>
-	     	    <td><a href="https://identityconnectors.dev.java.net/downloads.html#Bundles">1.0</a></td>
-	     	    <td><a href="https://identityconnectors.dev.java.net/downloads.html#Framework">1.0</a></td>
-	     	    <td>
-	     	       <ul>
-                         <li><b>Oracle</b> Oracle 10g Express</li>
-                         <li><b>Oracle</b> Oracle 10g Express</li>
-                         <li><b>MySQL</b> MySQL 5.1 - GA release</li>
-                         <li><b>MySQL</b> MySQL 5.0 - GA release</li>                  
-                         <li><b>SQL Server</b> SQL Server 2008 Express</li>                  
-                         <li><b>DB2</b> DB2 Express 9.5 installation</li>                                  
-                   </ul>
-	     	    </td>
-	     	</tr>
-	     	<!-- add later versions here -->
-	     </table>
-	    <p><b>Note:</b> The "Framework Version" listed is the <b><i>minimum</i></b> required framework version for that version of
-	    the connector. Newer framework versions are backwards compatible and will support previous connectors.</p>
-	<h3>Configuration Properties</h3>
-	<p>
-	These are the properties that can be specified on the Configuration object when setting up the Connector.
-        <ul>
-            <li>Required:
-                <ul>
-                    <li><b>quoting</b> Select the column names quoting.</li>
-                    <li><b>user</b> The user capable to do insert, update, delete operations on the table.</li>
-                    <li><b>password</b> The user password.</li>
-                    <li><b>table</b> The database table name storing the Account attributes.</li>
-                    <li><b>keyColumn</b> The column name for storing the accountId.</li>
-                    <li><b>enableEmptyString</b> Force the storing empty string to all required columns, if value is not provided.</li>
-                    <li><b>nativeTimestamps</b> Force the timestamp are read by getTimestamp from the resource.</li>
-                    <li><b>rethrowAllSQLExceptions</b> Force to throw all exceptions, otherwise the SQLError with 0 return code is silently ignored.</li>
-                    <li><b>allNative</b> The database table name storing the Account attributes.</li>
-                 </ul>
-            </li>   
-            <li>Option "jdbc driver":
-                <ul>
-                    <li><b>jdbcUrlTemplate</b> Select the jdbc connection template. 
-                    <br>The recognized place holders are %h, %p ,%d.
-                    The place holders are then replaced by host, port and database attributes</li>
-                    <li><b>jdbcDriver</b> The driver class name</li>
-                    <li><b>host</b> The database host name, replace the %h place holder in jdbcUrlTemplate</li>
-                    <li><b>port</b> The datasource port, replace the %p place holder in jdbcUrlTemplate</li>
-                    <li><b>database</b> The database name, replace the %d place holder in jdbcUrlTemplate</li>
-                </ul>
-            </li>     
-            <li>Option "datasource":
-                <ul>
-                    <li><b>datasource</b>Datasource for use in server environment</li>
-                    <li><b>jndiProperties</b>The properties in server environment</li>
-                </ul>
-            </li>     
-            <li>Optional property:
-                <ul>
-                    <li><b>passwordColumn</b> The column name for storing the passwords. If empty, the password is not required.</li>
-                    <li><b>validConnectionQuery</b> The SQL statement to validate the connection</li>
-                </ul>
-            </li>     
-        </ul>
-	</p>
-	<h3>Schema and Supported Features</h3>
-    <ul>
-        <li>Object Classes supported:
-            <ul>
-                <li><b>Account</b></li>
-            </ul>
-        </li>
-        <li>Operations supported:
-            <ul>
-                <li><b>Authenticate</b>v
-                <li><b>Create</b></li>
-                <li><b>Delete</b></li>
-                <li><b>Update</b></li>
-                <li><b>Search</b></li>
-                <li><b>Schema</b></li>
-                <li><b>Test</b></li>
-            </ul>
-        </li>   
-    </ul>
-	<h3>Documentation and Source Code</h3>
-	<p>The javadoc for this bundle is included in the zip file when you download the connector. The source code can be found under the <a href="https://identityconnectors.dev.java.net/source/browse/identityconnectors/">Subversion</a>
-	section of the IdentityConnectors website.</p>
-</DIV>
-</HTML>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Database Table Connector Package Overview</title>
+</head>
+<body>
+<h3>Database Table Connector Package Overview</h3>
+<p>Database table connector use a single database table to store the
+Account attributes.</p>
+<ul>
+	<li><b>Latest stable release:</b> <a
+		href="https://identityconnectors.dev.java.net/downloads.html#Bundles">1.0.3334</a></li>
+	<li><b>Platform:</b> Java</li>
+	<li><b>3rd-party libraries required:</b> The resource appropriate
+	jdbc driver</li>
+	<li><b>Other dependencies:</b></li>
+	<li><b>Release notes:</b>
+	<ul>
+		<li><b>Migration path from adapter to connector</b></li>
+		<p>The new "Database Table Conversion Utility" server task will
+		convert adapter to connector.</p>
+		<p>For further information please see the migration page located
+		at the connector sources.</p>
+		<li><b>Backward compatible with adapter</b></li>
+		<p>The connector is backward compatible with adapter. All features
+		from the adapter have been implemented. except the "noPasswords"
+		property. The empty password column has the same effect as the
+		"noPasswords" property on.</p>
+		<li>The new <b>changeLogColumn</b> property</li>
+		<p>This property activate activeSync support. <br>
+		The changeLogColumn will handle the synchronization marker property.</p>
+		<li>The new <b>validConnectionQuery</b> property</li>
+		<p>This property is used in databae connection live check. It can
+		be empty. <br>
+		Some databases needs to provide a simple select to do the connection
+		check. <br>
+		e.g. <code>"SELECT 1 FROM dummy" </code> on Oracle is more effective
+		then default switch autocommit on/off.</p>
+		<li>The new <b>allNative</b> property</li>
+		<p>This checkbox property force native attributes get/set from the
+		resource. <br>
+		Some jdbc strict database as DerbyDB may require it.</p>
+		<li><b>The new DataSource name and jndiProperties properties</b></li>
+		<p>Newly supported are DataSource name and jndiProperties
+		configuration properties. If your server environment supports
+		datasources, you can set up the datasource name, e.g: <code>java:comp/env/jdbc/mysql</code>
+		which in case of tomcat corespond to following application context
+		descriptor. <br />
+		When new datasource is configured, the user, host, password and port
+		could be left empty.</p>
+	</ul>
+	</li>
+</ul>
+<h3>Version Information</h3>
+<table border="1">
+	<tr>
+		<th>Connector Version</th>
+		<th>Framework Version</th>
+		<th>Supported Resource Version(s)</th>
+	</tr>
+	<tr>
+		<td><a
+			href="https://identityconnectors.dev.java.net/downloads.html#Bundles">1.0</a></td>
+		<td><a
+			href="https://identityconnectors.dev.java.net/downloads.html#Framework">1.0</a></td>
+		<td>
+		<ul>
+			<li><b>Oracle</b> Oracle 10g Express</li>
+			<li><b>Oracle</b> Oracle 10g Express</li>
+			<li><b>MySQL</b> MySQL 5.1 - GA release</li>
+			<li><b>MySQL</b> MySQL 5.0 - GA release</li>
+			<li><b>SQL Server</b> SQL Server 2008 Express</li>
+			<li><b>DB2</b> DB2 Express 9.5 installation</li>
+		</ul>
+		</td>
+	</tr>
+	<!-- add later versions here -->
+</table>
+<p><b>Note:</b> The "Framework Version" listed is the <b><i>minimum</i></b>
+required framework version for that version of the connector. Newer
+framework versions are backwards compatible and will support previous
+connectors.</p>
+<h3>Configuration Properties</h3>
+<p>These are the properties that can be specified on the
+Configuration object when setting up the Connector.
+<ul>
+	<li>Required:
+	<ul>
+		<li><b>quoting</b> Select the column names quoting.</li>
+		<li><b>user</b> The user capable to do insert, update, delete
+		operations on the table.</li>
+		<li><b>password</b> The user password.</li>
+		<li><b>table</b> The database table name storing the Account
+		attributes.</li>
+		<li><b>keyColumn</b> The column name for storing the accountId.</li>
+		<li><b>enableEmptyString</b> Force the storing empty string to
+		all required columns, if value is not provided.</li>
+		<li><b>nativeTimestamps</b> Force the timestamp are read by
+		getTimestamp from the resource.</li>
+		<li><b>rethrowAllSQLExceptions</b> Force to throw all exceptions,
+		otherwise the SQLError with 0 return code is silently ignored.</li>
+		<li><b>allNative</b> The database table name storing the Account
+		attributes.</li>
+	</ul>
+	</li>
+	<li>Option "jdbc driver":
+	<ul>
+		<li><b>jdbcUrlTemplate</b> Select the jdbc connection template. <br>
+		The recognized place holders are %h, %p ,%d. The place holders are
+		then replaced by host, port and database attributes</li>
+		<li><b>jdbcDriver</b> The driver class name</li>
+		<li><b>host</b> The database host name, replace the %h place
+		holder in jdbcUrlTemplate</li>
+		<li><b>port</b> The datasource port, replace the %p place holder
+		in jdbcUrlTemplate</li>
+		<li><b>database</b> The database name, replace the %d place
+		holder in jdbcUrlTemplate</li>
+	</ul>
+	</li>
+	<li>Option "datasource":
+	<ul>
+		<li><b>datasource</b>Datasource for use in server environment</li>
+		<li><b>jndiProperties</b>The properties in server environment</li>
+	</ul>
+	</li>
+	<li>Optional property:
+	<ul>
+		<li><b>passwordColumn</b> The column name for storing the
+		passwords. If empty, the password is not required.</li>
+		<li><b>validConnectionQuery</b> The SQL statement to validate the
+		connection</li>
+	</ul>
+	</li>
+</ul>
+</p>
+<h3>Schema and Supported Features</h3>
+<ul>
+	<li>Object Classes supported:
+	<ul>
+		<li><b>Account</b></li>
+	</ul>
+	</li>
+	<li>Operations supported:
+	<ul>
+		<li><b>Authenticate</b>v
+		<li><b>Create</b></li>
+		<li><b>Delete</b></li>
+		<li><b>Update</b></li>
+		<li><b>Search</b></li>
+		<li><b>Schema</b></li>
+		<li><b>Test</b></li>
+	</ul>
+	</li>
+</ul>
+</body>
+</html>
