@@ -161,9 +161,9 @@ public class LdapUpdateTests extends LdapConnectorTestBase {
 
         // Now test that the user can login with the new password and execute an operation.
         LdapConfiguration config = newConfiguration();
-        config.setBindDN(ELMER_FUDD_DN);
-        config.setBindPassword(password);
-        config.setPageSize(0); // Do not use paged search, since the user doesn't have the privilege.
+        config.setPrincipal(ELMER_FUDD_DN);
+        config.setCredentials(password);
+        config.setBlockCount(0); // Do not use paged search, since the user doesn't have the privilege.
         facade = newFacade(config);
         List<ConnectorObject> objects = TestHelpers.searchToList(facade, new ObjectClass("organization"), null);
         assertNotNull(findByAttribute(objects, Name.NAME, ACME_DN));
@@ -172,9 +172,9 @@ public class LdapUpdateTests extends LdapConnectorTestBase {
     @Test
     public void testUserCanChangePassword() {
         LdapConfiguration config = newConfiguration();
-        config.setBindDN(BUGS_BUNNY_DN);
-        config.setBindPassword(new GuardedString("carrot".toCharArray()));
-        config.setPageSize(0); // Do not use paged search, since the user doesn't have the privilege.
+        config.setPrincipal(BUGS_BUNNY_DN);
+        config.setCredentials(new GuardedString("carrot".toCharArray()));
+        config.setBlockCount(0); // Do not use paged search, since the user doesn't have the privilege.
         ConnectorFacade facade = newFacade(config);
         ConnectorObject bugs = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
 
@@ -183,7 +183,7 @@ public class LdapUpdateTests extends LdapConnectorTestBase {
         facade.update(ObjectClass.ACCOUNT, bugs.getUid(), CollectionUtil.newSet(pwdAttr), null);
 
         // Now test that the user can login with the new password and execute an operation.
-        config.setBindPassword(password);
+        config.setCredentials(password);
         facade = newFacade(config);
         ConnectorObject elmer = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(ELMER_FUDD_DN));
         assertNotNull(elmer);

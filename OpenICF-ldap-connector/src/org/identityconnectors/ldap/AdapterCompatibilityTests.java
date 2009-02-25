@@ -126,7 +126,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
         // The LDAP edit group form does exactly this operation.
 
         LdapConfiguration config = newConfiguration();
-        config.setBaseDNs(ACME_DN);
+        config.setBaseContexts(ACME_DN);
         ConnectorFacade facade = newFacade(config);
 
         OperationOptionsBuilder builder = new OperationOptionsBuilder();

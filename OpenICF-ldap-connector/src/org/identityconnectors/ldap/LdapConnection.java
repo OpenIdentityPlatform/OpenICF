@@ -112,11 +112,11 @@ public class LdapConnection {
         if (initCtx != null) {
             return initCtx;
         }
-        initCtx = createContext(config.getBindDN(), config.getBindPassword());
+        initCtx = createContext(config.getPrincipal(), config.getCredentials());
         return initCtx;
     }
 
-    private LdapContext createContext(String bindDN, GuardedString password) {
+    private LdapContext createContext(String principal, GuardedString credentials) {
         final LdapContext[] result = { null };
 
         final Hashtable<Object, Object> env = new Hashtable<Object, Object>();
@@ -125,8 +125,8 @@ public class LdapConnection {
         env.put(Context.REFERRAL, "follow");
         env.put(Context.SECURITY_AUTHENTICATION, config.getAuthentication());
         if (!config.isAuthenticationNone()) {
-            env.put(Context.SECURITY_PRINCIPAL, bindDN);
-            password.access(new Accessor() {
+            env.put(Context.SECURITY_PRINCIPAL, principal);
+            credentials.access(new Accessor() {
                 public void access(char[] clearChars) {
                     env.put(Context.SECURITY_CREDENTIALS, clearChars);
                     // Connect while in the accessor, otherwise clearChars will be cleared.
@@ -245,7 +245,7 @@ public class LdapConnection {
             if (illegalBaseDN != null) {
                 throw new ConnectorException("Base DN " + illegalBaseDN
                         + " passed in OP_BASE_DNS is not under one of the configured base DNs "
-                        + Arrays.asList(config.getBaseDNs()));
+                        + Arrays.asList(config.getBaseContexts()));
             }
             return result;
         }
@@ -261,7 +261,7 @@ public class LdapConnection {
         for (String entry : entries) {
             try {
                 LdapName entryName = new LdapName(entry);
-                if (!config.isContainedUnderBaseDNs(entryName)) {
+                if (!config.isContainedUnderBaseContexts(entryName)) {
                     return entry;
                 }
             } catch (InvalidNameException e) {

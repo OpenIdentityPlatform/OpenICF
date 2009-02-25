@@ -59,7 +59,7 @@ public class LdapConfiguration extends AbstractConfiguration {
     private static final int DEFAULT_PORT = 389;
     private static final int DEFAULT_SSL_PORT = 636;
 
-    private static final int DEFAULT_PAGE_SIZE = 500;
+    private static final int DEFAULT_BLOCK_COUNT = 100;
 
     /**
      * The LDAP host server to connect to.
@@ -74,27 +74,22 @@ public class LdapConfiguration extends AbstractConfiguration {
     /**
      * Whether the port is a secure SSL port.
      */
-    private boolean useSsl;
-
-    /**
-     * Whether StartTLS should be used to negotiate a secure connection.
-     */
-    private boolean startTls;
+    private boolean ssl;
 
     /**
      * The base DNs for operations on the server.
      */
-    private String[] baseDNs = new String[0];
+    private String[] baseContexts = new String[0];
 
     /**
      * The bind DN for performing operations on the server.
      */
-    private String bindDN;
+    private String principal;
 
     /**
      * The bind password associated with the bind DN.
      */
-    private GuardedString bindPassword;
+    private GuardedString credentials;
 
 //    /**
 //     * The name of an operational attribute that provides an immutable
@@ -113,20 +108,20 @@ public class LdapConfiguration extends AbstractConfiguration {
     private String authentication = "none";
 
     /**
-     * The pages size for paged and VLV index searches.
+     * The LDAP attribute holding the member for non-POSIX static groups.
      */
-    private int pageSize = DEFAULT_PAGE_SIZE;
+    private String groupMemberAttr = "uniqueMember";
+
+    /**
+     * The block size (not count, but that's what IDM calls it) for paged and VLV index searches.
+     */
+    private int blockCount = DEFAULT_BLOCK_COUNT;
 
     /**
      * If true, simple paged search will be preferred over VLV index search
      * when both are available.
      */
-    private boolean simplePagedSearchPreferred = false;
-
-    /**
-     * The LDAP attribute holding the member for non-POSIX static groups.
-     */
-    private String groupMemberAttribute = "uniqueMember";
+    private boolean usePagedResultControl = false;
 
     /**
      * Whether to read the schema from the server.
@@ -151,7 +146,7 @@ public class LdapConfiguration extends AbstractConfiguration {
     private final ObjectClassMappingConfig accountConfig = new ObjectClassMappingConfig(ObjectClass.ACCOUNT, "inetOrgPerson");
     private final ObjectClassMappingConfig groupConfig = new ObjectClassMappingConfig(ObjectClass.GROUP, "groupOfUniqueNames");
 
-    private List<LdapName> baseDNsAsLdapNames;
+    private List<LdapName> baseContextsAsLdapNames;
 
     public LdapConfiguration() {
         // Note: order is important!
@@ -173,41 +168,36 @@ public class LdapConfiguration extends AbstractConfiguration {
      * {@inheritDoc}
      */
     public void validate() {
-        if (useSsl && startTls) {
-            String msg = "Cannot use StartTLS on a secure port";
-            throw new ConfigurationException(msg);
+        if (baseContexts == null || baseContexts.length < 1) {
+            throw new ConfigurationException("No base context was provided in the LDAP configuration");
         }
-
-        if (baseDNs == null || baseDNs.length < 1) {
-            throw new ConfigurationException("No base DN was provided in the LDAP configuration");
+        Set<String> baseContextSet = CollectionUtil.newCaseInsensitiveSet();
+        baseContextSet.addAll(Arrays.asList(baseContexts));
+        if (baseContextSet.size() != baseContexts.length) {
+            throw new ConfigurationException("The list of base contexts in the LDAP configuration contains duplicates");
         }
-        Set<String> baseDNSet = CollectionUtil.newCaseInsensitiveSet();
-        baseDNSet.addAll(Arrays.asList(baseDNs));
-        if (baseDNSet.size() != baseDNs.length) {
-            throw new ConfigurationException("The list of base DNs in the LDAP configuration contains duplicates");
-        }
-        for (String baseDN : baseDNs) {
+        for (String baseContext : baseContexts) {
             try {
-                if (baseDN == null) {
-                    throw new ConfigurationException("The list of base DNs cannot contain null values");
+                if (baseContext == null) {
+                    throw new ConfigurationException("The list of base contexts cannot contain null values");
                 }
-                new LdapName(baseDN);
+                new LdapName(baseContext);
             } catch (InvalidNameException e) {
-                throw new ConfigurationException("The base DN " + baseDN + " in the LDAP configuration cannot be parsed");
+                throw new ConfigurationException("The base context " + baseContext + " in the LDAP configuration cannot be parsed");
             }
         }
 
-        if (!isAuthenticationNone() && StringUtil.isBlank(bindDN)) {
-            throw new ConfigurationException("No bind DN was provided in the LDAP configuration");
+        if (!isAuthenticationNone() && StringUtil.isBlank(principal)) {
+            throw new ConfigurationException("No principal was provided in the LDAP configuration");
         }
-        if (StringUtil.isNotBlank(bindDN) && bindPassword == null) {
-            throw new ConfigurationException("No bind password was provided in the LDAP configuration");
+        if (StringUtil.isNotBlank(principal) && credentials == null) {
+            throw new ConfigurationException("No credentials were provided in the LDAP configuration");
         }
-        if (bindDN != null) {
+        if (principal != null) {
             try {
-                new LdapName(bindDN);
+                new LdapName(principal);
             } catch (InvalidNameException e) {
-                throw new ConfigurationException("The bind DN in the LDAP configuration cannot be parsed");
+                throw new ConfigurationException("The principal in the LDAP configuration cannot be parsed");
             }
         }
 
@@ -257,7 +247,7 @@ public class LdapConfiguration extends AbstractConfiguration {
     }
 
     public int getPort() {
-        return port != -1 ? port : (useSsl ? DEFAULT_SSL_PORT : DEFAULT_PORT);
+        return port != -1 ? port : (ssl ? DEFAULT_SSL_PORT : DEFAULT_PORT);
     }
 
     public void setPort(int port) {
@@ -267,48 +257,40 @@ public class LdapConfiguration extends AbstractConfiguration {
         this.port = port;
     }
 
-    public boolean isUseSsl() {
-        return useSsl;
+    public boolean isSsl() {
+        return ssl;
     }
 
-    public void setUseSsl(boolean useSsl) {
-        this.useSsl = useSsl;
+    public void setSsl(boolean ssl) {
+        this.ssl = ssl;
     }
 
-    public boolean isStartTls() {
-        return startTls;
+    public String[] getBaseContexts() {
+        return baseContexts.clone();
     }
 
-    public void setStartTls(boolean startTls) {
-        this.startTls = startTls;
-    }
-
-    public String[] getBaseDNs() {
-        return baseDNs.clone();
-    }
-
-    public void setBaseDNs(String... baseDNs) {
-        if (baseDNs == null) {
-            throw new ConfigurationException("The base DNs parameter cannot be null");
+    public void setBaseContexts(String... baseContexts) {
+        if (baseContexts == null) {
+            throw new ConfigurationException("The baseContexts parameter cannot be null");
         }
-        this.baseDNs = baseDNs.clone();
+        this.baseContexts = baseContexts.clone();
     }
 
-    public String getBindDN() {
-        return bindDN;
+    public String getPrincipal() {
+        return principal;
     }
 
-    public void setBindDN(String bindDN) {
-        this.bindDN = bindDN;
+    public void setPrincipal(String principal) {
+        this.principal = principal;
     }
 
     @ConfigurationProperty(confidential = true)
-    public GuardedString getBindPassword() {
-        return bindPassword;
+    public GuardedString getCredentials() {
+        return credentials;
     }
 
-    public void setBindPassword(GuardedString bindPassword) {
-        this.bindPassword = bindPassword;
+    public void setCredentials(GuardedString credentials) {
+        this.credentials = credentials;
     }
 
 //    public String getUuidAttribute() {
@@ -342,6 +324,38 @@ public class LdapConfiguration extends AbstractConfiguration {
         this.authentication = authentication;
     }
 
+    public String getGroupMemberAttr() {
+        return groupMemberAttr;
+    }
+
+    public void setGroupMemberAttr(String groupMemberAttr) {
+        this.groupMemberAttr = groupMemberAttr;
+    }
+
+    public int getBlockCount() {
+        return blockCount;
+    }
+
+    public void setBlockCount(int blockCount) {
+        this.blockCount = blockCount;
+    }
+
+    public boolean isUsePagedResultControl() {
+        return usePagedResultControl;
+    }
+
+    public void setUsePagedResultControl(boolean usePagedResultControl) {
+        this.usePagedResultControl = usePagedResultControl;
+    }
+
+    public boolean isReadSchema() {
+        return readSchema;
+    }
+
+    public void setReadSchema(boolean readSchema) {
+        this.readSchema = readSchema;
+    }
+
     public String[] getExtendedObjectClasses() {
         return extendedObjectClasses.clone();
     }
@@ -364,38 +378,6 @@ public class LdapConfiguration extends AbstractConfiguration {
         this.extendedNamingAttributes = (String[]) extendedNamingAttributes.clone();
     }
 
-    public int getPageSize() {
-        return pageSize;
-    }
-
-    public void setPageSize(int pageSize) {
-        this.pageSize = pageSize;
-    }
-
-    public boolean isSimplePagedSearchPreferred() {
-        return simplePagedSearchPreferred;
-    }
-
-    public void setSimplePagedSearchPreferred(boolean simplePagedSearchPreferred) {
-        this.simplePagedSearchPreferred = simplePagedSearchPreferred;
-    }
-
-    public String getGroupMemberAttribute() {
-        return groupMemberAttribute;
-    }
-
-    public void setGroupMemberAttribute(String groupMemberAttribute) {
-        this.groupMemberAttribute = groupMemberAttribute;
-    }
-
-    public boolean isReadSchema() {
-        return readSchema;
-    }
-
-    public void setReadSchema(boolean readSchema) {
-        this.readSchema = readSchema;
-    }
-
     // Getters and setters for configuration properties end here.
 
     public String getLdapUrl() {
@@ -406,8 +388,8 @@ public class LdapConfiguration extends AbstractConfiguration {
         }
     }
 
-    public boolean isContainedUnderBaseDNs(LdapName entry) {
-        for (LdapName container : getBaseDNsAsLdapNames()) {
+    public boolean isContainedUnderBaseContexts(LdapName entry) {
+        for (LdapName container : getBaseContextsAsLdapNames()) {
             if (entry.startsWith(container)) {
                 return true;
             }
@@ -415,19 +397,19 @@ public class LdapConfiguration extends AbstractConfiguration {
         return false;
     }
 
-    private List<LdapName> getBaseDNsAsLdapNames() {
-        if (baseDNsAsLdapNames == null) {
-            List<LdapName> result = new ArrayList<LdapName>(baseDNs.length);
+    private List<LdapName> getBaseContextsAsLdapNames() {
+        if (baseContextsAsLdapNames == null) {
+            List<LdapName> result = new ArrayList<LdapName>(baseContexts.length);
             try {
-                for (String baseDN : baseDNs) {
-                    result.add(new LdapName(baseDN));
+                for (String baseContext : baseContexts) {
+                    result.add(new LdapName(baseContext));
                 }
             } catch (InvalidNameException e) {
                 throw new ConfigurationException(e);
             }
-            baseDNsAsLdapNames = result;
+            baseContextsAsLdapNames = result;
         }
-        return baseDNsAsLdapNames;
+        return baseContextsAsLdapNames;
     }
 
     public Map<ObjectClass, ObjectClassMappingConfig> getObjectClassMappingConfigs() {
@@ -457,20 +439,19 @@ public class LdapConfiguration extends AbstractConfiguration {
     }
 
     public boolean isPagedSearchEnabled() {
-        return pageSize > 0;
+        return blockCount > 0;
     }
 
     private EqualsHashCodeBuilder createHashCodeBuilder() {
         EqualsHashCodeBuilder builder = new EqualsHashCodeBuilder();
         builder.append(host);
         builder.append(port);
-        builder.append(useSsl);
-        builder.append(startTls);
-        for (String baseDN : baseDNs) {
-            builder.append(baseDN);
+        builder.append(ssl);
+        for (String baseContext : baseContexts) {
+            builder.append(baseContext);
         }
-        builder.append(bindDN);
-        builder.append(bindPassword);
+        builder.append(principal);
+        builder.append(credentials);
 //        builder.append(uuidAttribute);
 //        builder.append(passwordAttribute);
         builder.append(authentication);
@@ -482,8 +463,8 @@ public class LdapConfiguration extends AbstractConfiguration {
         for (String extendedNamingAttribute : extendedNamingAttributes) {
             builder.append(extendedNamingAttribute);
         }
-        builder.append(pageSize);
-        builder.append(simplePagedSearchPreferred);
+        builder.append(blockCount);
+        builder.append(usePagedResultControl);
         return builder;
     }
 

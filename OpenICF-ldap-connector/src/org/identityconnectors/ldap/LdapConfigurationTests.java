@@ -49,25 +49,25 @@ public class LdapConfigurationTests {
 
     @Test(expected = ConfigurationException.class)
     public void testNoBaseDNsEmpty() {
-        config.setBaseDNs();
+        config.setBaseContexts();
         config.validate();
     }
 
     @Test(expected = ConfigurationException.class)
     public void testBaseDNsNoDuplicates() {
-        config.setBaseDNs(DN, DN);
+        config.setBaseContexts(DN, DN);
         config.validate();
     }
 
     @Test(expected = ConfigurationException.class)
     public void testInvalidBaseDNsNotAllowed() {
-        config.setBaseDNs(DN, INVALID_DN);
+        config.setBaseContexts(DN, INVALID_DN);
         config.validate();
     }
 
     @Test(expected = ConfigurationException.class)
     public void testAuthenticationRequiresBindDN() {
-        config.setBaseDNs(DN);
+        config.setBaseContexts(DN);
         config.setAuthentication("simple");
         // Fails because no bind DN set.
         config.validate();
@@ -75,7 +75,7 @@ public class LdapConfigurationTests {
 
     @Test()
     public void testNoneOrNoAuthenticationDoesNotRequireBindDN() {
-        config.setBaseDNs(DN);
+        config.setBaseContexts(DN);
         // No need for bind DN because no authentication set.
         config.validate();
         config.setAuthentication("none");
@@ -85,7 +85,7 @@ public class LdapConfigurationTests {
 
     @Test(expected = ConfigurationException.class)
     public void testSimpleAuthenticationRequiresBindDN() {
-        config.setBaseDNs(DN);
+        config.setBaseContexts(DN);
         // No need for bind DN because no authentication set.
         config.validate();
         config.setAuthentication("simple");
@@ -95,26 +95,26 @@ public class LdapConfigurationTests {
 
     @Test(expected = ConfigurationException.class)
     public void testBindDNRequiresPassword() {
-        config.setBaseDNs(DN);
+        config.setBaseContexts(DN);
         config.setAuthentication("simple");
-        config.setBindDN(ADMIN);
+        config.setPrincipal(ADMIN);
         // Fails because no password set.
         config.validate();
     }
 
     @Test(expected = ConfigurationException.class)
     public void testInvalidBindDNNotAllowed() {
-        config.setBaseDNs(DN);
+        config.setBaseContexts(DN);
         config.setAuthentication("simple");
-        config.setBindDN(INVALID_DN);
-        config.setBindPassword(new GuardedString());
+        config.setPrincipal(INVALID_DN);
+        config.setCredentials(new GuardedString());
         // Fails because of invalid bind DN.
         config.validate();
     }
 
     @Test(expected = ConfigurationException.class)
     public void testReadSchemaMustBeTrueWhenUsingExtendedObjectClasses() {
-        config.setBaseDNs(DN);
+        config.setBaseContexts(DN);
         config.setExtendedObjectClasses("dNSDomain");
         config.setExtendedNamingAttributes("dc");
         config.setReadSchema(false);
@@ -123,7 +123,7 @@ public class LdapConfigurationTests {
 
     public void testEffectiveValues() {
         assertEquals(389, config.getPort());
-        config.setUseSsl(true);
+        config.setSsl(true);
         assertEquals(636, config.getPort());
         config.setPort(1234);
         assertEquals(1234, config.getPort());

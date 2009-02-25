@@ -58,9 +58,9 @@ public class LdapInternalSearch {
 
     public void execute(SearchResultsHandler handler) {
         String query = getQuery();
-        int pageSize = conn.getConfiguration().getPageSize();
+        int pageSize = conn.getConfiguration().getBlockCount();
         boolean pagedSearchEnabled = conn.getConfiguration().isPagedSearchEnabled();
-        boolean simplePagedSearchPreferred = conn.getConfiguration().isSimplePagedSearchPreferred();
+        boolean simplePagedSearchPreferred = conn.getConfiguration().isUsePagedResultControl();
 
         LdapSearchStrategy strategy;
         if (pagedSearchEnabled && !simplePagedSearchPreferred && conn.supportsControl(VirtualListViewControl.OID)) {

@@ -129,10 +129,10 @@ public abstract class LdapConnectorTestBase {
         LdapConfiguration config = new LdapConfiguration();
         // Cf. test/opends/config/config.ldif.
         config.setPort(1389);
-        config.setBaseDNs(ACME_DN, BIG_COMPANY_DN);
+        config.setBaseContexts(ACME_DN, BIG_COMPANY_DN);
         config.setAuthentication("simple");
-        config.setBindDN("uid=admin,dc=example,dc=com");
-        config.setBindPassword(new GuardedString("password".toCharArray()));
+        config.setPrincipal("uid=admin,dc=example,dc=com");
+        config.setCredentials(new GuardedString("password".toCharArray()));
         String[] extendedObjectClasses = new String[extObjectClassesAndNamingAttributes.length];
         String[] extendedNamingAttributes = new String[extObjectClassesAndNamingAttributes.length];
         for (int i = 0; i < extObjectClassesAndNamingAttributes.length; i++) {
@@ -145,7 +145,7 @@ public abstract class LdapConnectorTestBase {
         config.setExtendedObjectClasses(extendedObjectClasses);
         config.setExtendedNamingAttributes(extendedNamingAttributes);
         // Otherwise it would try to use VLV, which we don't yet support.
-        config.setSimplePagedSearchPreferred(true);
+        config.setUsePagedResultControl(true);
         // IDM will not read the schema. So prefer to test with that setting, unless we are testing
         // extended object classes, in which case we do need to read the schema.
         config.setReadSchema(extObjectClassesAndNamingAttributes.length > 0);

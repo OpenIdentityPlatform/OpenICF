@@ -143,7 +143,7 @@ public class LdapSearchTests extends LdapConnectorTestBase {
     @Test
     public void testBaseDNsOption() {
         LdapConfiguration config = newConfiguration();
-        config.setBaseDNs(ACME_DN, SMALL_COMPANY_DN, BIG_COMPANY_DN);
+        config.setBaseContexts(ACME_DN, SMALL_COMPANY_DN, BIG_COMPANY_DN);
         ConnectorFacade facade = newFacade(config);
 
         // Specifying both OP_BASE_DNS and OP_CONTAINER is prohibited.
@@ -174,7 +174,7 @@ public class LdapSearchTests extends LdapConnectorTestBase {
     @Test(expected = ConnectorException.class)
     public void testBaseDNsFromOptionOnlyAllowedFromConfigBaseDNs() {
         LdapConfiguration config = newConfiguration();
-        config.setBaseDNs(ACME_DN);
+        config.setBaseContexts(ACME_DN);
         ConnectorFacade facade = newFacade(config);
 
         OperationOptionsBuilder optionsBuilder = new OperationOptionsBuilder();

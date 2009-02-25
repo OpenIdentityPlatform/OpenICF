@@ -109,7 +109,7 @@ public class LdapSearches {
         final List<ConnectorObject> result = new ArrayList<ConnectorObject>();
 
         while (result.isEmpty() && entryDN.size() > 0) {
-            if (!conn.getConfiguration().isContainedUnderBaseDNs(entryDN)) {
+            if (!conn.getConfiguration().isContainedUnderBaseContexts(entryDN)) {
                 return null;
             }
 
@@ -136,7 +136,7 @@ public class LdapSearches {
         log.ok("Searching for entry {0}", entryDN);
 
         final List<LdapEntry> result = new ArrayList<LdapEntry>();
-        if (!conn.getConfiguration().isContainedUnderBaseDNs(entryDN)) {
+        if (!conn.getConfiguration().isContainedUnderBaseContexts(entryDN)) {
             return null;
         }
 

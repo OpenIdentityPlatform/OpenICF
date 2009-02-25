@@ -171,7 +171,7 @@ public class LdapSearch {
         } else if (opBaseDNs.length > 0) {
             result = Arrays.asList(opBaseDNs);
         } else {
-            result = Arrays.asList(conn.getConfiguration().getBaseDNs());
+            result = Arrays.asList(conn.getConfiguration().getBaseContexts());
         }
         assert result != null;
         return result;

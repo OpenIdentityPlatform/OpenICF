@@ -57,7 +57,7 @@ public class LdapCreateTests extends LdapConnectorTestBase{
     @Test
     public void testCreateAccount() {
         LdapConfiguration config = newConfiguration();
-        config.setBaseDNs(SMALL_COMPANY_DN);
+        config.setBaseContexts(SMALL_COMPANY_DN);
         ConnectorFacade facade = newFacade(config);
 
         Set<Attribute> attributes = new HashSet<Attribute>();

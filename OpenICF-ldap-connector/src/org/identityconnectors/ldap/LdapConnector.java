@@ -56,7 +56,7 @@ public class LdapConnector implements PoolableConnector, SchemaOp, SearchOp<Stri
 
     /**
      * An operation option to use with {@link SearchApiOp} that specifies the
-     * base DNs to search in. The value should be a subset of {@link LdapConfiguration#getBaseDNs()}.
+     * base DNs to search in. The value should be a subset of {@link LdapConfiguration#getBaseContexts()}.
      */
     public static final String OP_BASE_DNS = "BASE_DNS";
 
