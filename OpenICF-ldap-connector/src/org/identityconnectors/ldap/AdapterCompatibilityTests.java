@@ -25,7 +25,6 @@ package org.identityconnectors.ldap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import java.util.EnumSet;
 import java.util.HashSet;
