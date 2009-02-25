@@ -59,12 +59,15 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
 
     @Test
     public void testAnonymousBindEvenThoughAuthenticationMethodIsNotNone() {
-        LdapConfiguration config = new LdapConfiguration();
-        config.setBaseContexts(ACME_DN);
+        LdapConfiguration config = newConfiguration();
         config.setAuthentication("simple");
-        assertNull(config.getPrincipal());
+        config.setPrincipal(null);
         LdapConnection conn = new LdapConnection(config);
-        assertNotNull(conn.getInitialContext());
+        try {
+            assertNotNull(conn.getInitialContext());
+        } finally {
+            conn.close();
+        }
     }
 
     @Test
