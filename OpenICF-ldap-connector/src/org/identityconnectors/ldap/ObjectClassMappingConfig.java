@@ -147,22 +147,25 @@ public class ObjectClassMappingConfig {
     public boolean equals(Object o) {
         if (o instanceof ObjectClassMappingConfig) {
             ObjectClassMappingConfig that = (ObjectClassMappingConfig)o;
-            if (!this.objectClass.equals(that.objectClass)) {
+            if (!objectClass.equals(that.objectClass)) {
                 return false;
             }
-            if (this.ldapClass != null && !this.ldapClass.equals(that.ldapClass) || this.ldapClass != that.ldapClass) {
+            if ((ldapClass == null) ? (that.ldapClass != null) : !ldapClass.equals(that.ldapClass)) {
                 return false;
             }
-            if (this.uidAttribute != null && !this.uidAttribute.equals(that.uidAttribute) || this.uidAttribute != that.uidAttribute) {
+            if ((uidAttribute == null) ? (that.uidAttribute != null) : !uidAttribute.equals(that.uidAttribute)) {
                 return false;
             }
-            if (this.nameAttribute != null && !this.nameAttribute.equals(that.nameAttribute) || this.nameAttribute != that.nameAttribute) {
+            if ((nameAttribute == null) ? (that.nameAttribute != null) : !nameAttribute.equals(that.nameAttribute)) {
                 return false;
             }
-            if (!this.attributeMappings.equals(that.attributeMappings)) {
+            if (!attributeMappings.equals(that.attributeMappings)) {
                 return false;
             }
-            if (!this.dnMappings.equals(that.dnMappings)) {
+            if (!dnMappings.equals(that.dnMappings)) {
+                return false;
+            }
+            if (!operationalAttributes.equals(that.operationalAttributes)) {
                 return false;
             }
             return true;
