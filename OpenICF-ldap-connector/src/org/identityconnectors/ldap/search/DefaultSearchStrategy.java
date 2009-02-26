@@ -24,6 +24,8 @@ package org.identityconnectors.ldap.search;
 
 import java.util.List;
 
+import javax.naming.InvalidNameException;
+import javax.naming.NameNotFoundException;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.SearchControls;
@@ -44,11 +46,26 @@ public class DefaultSearchStrategy extends LdapSearchStrategy {
     }
 
     @Override
-    public void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler) throws NamingException {
+    public void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler, boolean ignoreNonExistingBaseDNs) throws NamingException {
         log.ok("Searching in {0} with filter {1} and {2}", baseDNs, query, searchControlsToString(searchControls));
 
         for (String baseDN : baseDNs) {
-            NamingEnumeration<SearchResult> results = initCtx.search(baseDN, query, searchControls);
+            NamingEnumeration<SearchResult> results;
+            try {
+                results = initCtx.search(baseDN, query, searchControls);
+            } catch (NameNotFoundException e) {
+                if (!ignoreNonExistingBaseDNs) {
+                    throw e;
+                }
+                log.warn(e, null);
+                continue;
+            } catch (InvalidNameException e) {
+                if (!ignoreNonExistingBaseDNs) {
+                    throw e;
+                }
+                log.warn(e, null);
+                continue;
+            }
             try {
                 boolean proceed = true;
                 while (proceed && results.hasMore()) {

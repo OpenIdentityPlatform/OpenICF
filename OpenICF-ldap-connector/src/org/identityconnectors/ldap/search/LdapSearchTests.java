@@ -47,9 +47,11 @@ import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.ldap.LdapConfiguration;
+import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapConnector;
 import org.identityconnectors.ldap.LdapConnectorTestBase;
 import org.identityconnectors.test.common.TestHelpers;
+import org.identityconnectors.test.common.ToListResultsHandler;
 import org.junit.Test;
 
 public class LdapSearchTests extends LdapConnectorTestBase {
@@ -60,6 +62,78 @@ public class LdapSearchTests extends LdapConnectorTestBase {
     @Override
     protected boolean restartServerAfterEachTest() {
         return false;
+    }
+
+    @Test
+    public void testLdapFilter() {
+        LdapConnection conn = new LdapConnection(newConfiguration());
+
+        LdapFilter filter = LdapFilter.forEntryDN(BUGS_BUNNY_DN);
+        ToListResultsHandler handler = new ToListResultsHandler();
+        new LdapSearch(conn, ObjectClass.ACCOUNT, filter, new OperationOptionsBuilder().build()).execute(handler);
+        assertEquals(1, handler.getObjects().size());
+
+        filter = filter.withNativeFilter("(foo=bar)");
+        handler = new ToListResultsHandler();
+        new LdapSearch(conn, ObjectClass.ACCOUNT, filter, new OperationOptionsBuilder().build()).execute(handler);
+        assertTrue(handler.getObjects().isEmpty());
+    }
+
+    @Test
+    public void testLdapFilterWithNonExistingEntryDN() {
+        LdapFilter filter = LdapFilter.forEntryDN("dc=foo,dc=bar");
+
+        // VLV index.
+        LdapConfiguration config = newConfiguration();
+        config.setUseBlocks(true);
+        config.setUsePagedResultControl(false);
+        LdapConnection conn = new LdapConnection(config);
+        ToListResultsHandler handler = new ToListResultsHandler();
+        new LdapSearch(conn, ObjectClass.ACCOUNT, filter, new OperationOptionsBuilder().build()).execute(handler);
+        assertTrue(handler.getObjects().isEmpty());
+
+        // Simple paged results.
+        config.setUsePagedResultControl(true);
+        conn = new LdapConnection(config);
+        handler = new ToListResultsHandler();
+        new LdapSearch(conn, ObjectClass.ACCOUNT, filter, new OperationOptionsBuilder().build()).execute(handler);
+        assertTrue(handler.getObjects().isEmpty());
+
+        // No paging.
+        config.setUseBlocks(false);
+        conn = new LdapConnection(config);
+        handler = new ToListResultsHandler();
+        new LdapSearch(conn, ObjectClass.ACCOUNT, filter, new OperationOptionsBuilder().build()).execute(handler);
+        assertTrue(handler.getObjects().isEmpty());
+    }
+
+
+    @Test
+    public void testLdapFilterWithInvalidEntryDN() {
+        LdapFilter filter = LdapFilter.forEntryDN("dc=foo,,");
+
+        // VLV index.
+        LdapConfiguration config = newConfiguration();
+        config.setUseBlocks(true);
+        config.setUsePagedResultControl(false);
+        LdapConnection conn = new LdapConnection(config);
+        ToListResultsHandler handler = new ToListResultsHandler();
+        new LdapSearch(conn, ObjectClass.ACCOUNT, filter, new OperationOptionsBuilder().build()).execute(handler);
+        assertTrue(handler.getObjects().isEmpty());
+
+        // Simple paged results.
+        config.setUsePagedResultControl(true);
+        conn = new LdapConnection(config);
+        handler = new ToListResultsHandler();
+        new LdapSearch(conn, ObjectClass.ACCOUNT, filter, new OperationOptionsBuilder().build()).execute(handler);
+        assertTrue(handler.getObjects().isEmpty());
+
+        // No paging.
+        config.setUseBlocks(false);
+        conn = new LdapConnection(config);
+        handler = new ToListResultsHandler();
+        new LdapSearch(conn, ObjectClass.ACCOUNT, filter, new OperationOptionsBuilder().build()).execute(handler);
+        assertTrue(handler.getObjects().isEmpty());
     }
 
     @Test

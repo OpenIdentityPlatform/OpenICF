@@ -49,7 +49,7 @@ import org.opends.server.util.EmbeddedUtils;
 public abstract class LdapConnectorTestBase {
 
     // Cf. data.ldif and bigcompany.ldif.
-    
+
     public static final String ADMIN_DN = "uid=admin,dc=example,dc=com";
 
     public static final String ACME_DN = "o=Acme,dc=example,dc=com";

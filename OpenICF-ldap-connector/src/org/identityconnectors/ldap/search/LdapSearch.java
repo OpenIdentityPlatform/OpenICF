@@ -33,7 +33,6 @@ import javax.naming.directory.SearchResult;
 import javax.naming.ldap.PagedResultsControl;
 
 import org.identityconnectors.common.CollectionUtil;
-import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
@@ -56,21 +55,16 @@ import com.sun.jndi.ldap.ctl.VirtualListViewControl;
  */
 public class LdapSearch {
 
-    private static final Log log = Log.getLog(LdapSearch.class);
-
     private final LdapConnection conn;
     private final ObjectClass oclass;
+    private final LdapFilter filter;
     private final OperationOptions options;
 
-    private final Set<String> attrsToGet;
-    private final LdapInternalSearch search;
-
-    public LdapSearch(LdapConnection conn, ObjectClass oclass, String query, OperationOptions options) {
+    public LdapSearch(LdapConnection conn, ObjectClass oclass, LdapFilter filter, OperationOptions options) {
         this.conn = conn;
         this.oclass = oclass;
+        this.filter = filter;
         this.options = options;
-        attrsToGet = getAttributesToGet();
-        search = new LdapInternalSearch(conn, restrictQueryToObjectClass(query), getBaseDNs(), getSearchStrategy(), getSearchControls());
     }
 
     /**
@@ -83,9 +77,11 @@ public class LdapSearch {
      *             if a JNDI exception occurs.
      */
     public final void execute(final ResultsHandler handler) {
+        final Set<String> attrsToGet = getAttributesToGet();
+        LdapInternalSearch search = getInternalSearch(attrsToGet);
         search.execute(new SearchResultsHandler() {
             public boolean handle(String baseDN, SearchResult result) throws NamingException {
-                return handler.handle(createConnectorObject(baseDN, result));
+                return handler.handle(createConnectorObject(baseDN, result, attrsToGet));
             }
         });
     }
@@ -95,14 +91,55 @@ public class LdapSearch {
      * {@link ConnectorObject} or {@code null}.
      */
     public final ConnectorObject getSingleResult() {
+        final Set<String> attrsToGet = getAttributesToGet();
         final ConnectorObject[] results = new ConnectorObject[] { null };
+        LdapInternalSearch search = getInternalSearch(attrsToGet);
         search.execute(new SearchResultsHandler() {
             public boolean handle(String baseDN, SearchResult result) throws NamingException {
-                results[0] = createConnectorObject(baseDN, result);
+                results[0] = createConnectorObject(baseDN, result, attrsToGet);
                 return false;
             }
         });
         return results[0];
+    }
+
+    private LdapInternalSearch getInternalSearch(Set<String> attrsToGet) {
+        // This is a bit tricky. If the LdapFilter has an entry DN,
+        // we only need to look at that entry and check whether it matches
+        // the native filter. Moreover, when looking at the entry DN
+        // we must not throw exceptions if the entry DN does not exist or is
+        // not valid -- just as no exceptions are thrown when the native
+        // filter doesn't return any values.
+        //
+        // In the simple case when the LdapFilter has no entryDN, we
+        // will just search over our base DNs looking for entries
+        // matching the native filter.
+
+        List<String> baseDNs;
+        int searchScope;
+        boolean ignoreNonExistingBaseDNs;
+
+        String filterEntryDN = filter != null ? filter.getEntryDN() : null;
+        if (filterEntryDN != null) {
+            baseDNs = Collections.singletonList(filterEntryDN);
+            searchScope = SearchControls.OBJECT_SCOPE;
+            ignoreNonExistingBaseDNs = true;
+        } else {
+            baseDNs = getBaseDNs();
+            searchScope = getLdapSearchScope();
+            ignoreNonExistingBaseDNs = false;
+        }
+
+        SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
+        Set<String> ldapAttrsToGet = conn.getSchemaMapping().getLdapAttributes(oclass, attrsToGet, true);
+        // For compatibility with the adapter, we do not ask the server for DN attributes,
+        // such as entryDN; we compute them ourselves. Some servers might not support such attributes anyway.
+        ldapAttrsToGet.removeAll(LdapEntry.ENTRY_DN_ATTRS);
+        controls.setReturningAttributes(ldapAttrsToGet.toArray(new String[ldapAttrsToGet.size()]));
+        controls.setSearchScope(searchScope);
+
+        String nativeFilter = filter != null ? filter.getNativeFilter() : null;
+        return new LdapInternalSearch(conn, restrictFilterToObjectClass(nativeFilter), baseDNs, getSearchStrategy(), controls, ignoreNonExistingBaseDNs);
     }
 
     /**
@@ -111,7 +148,7 @@ public class LdapSearch {
      * baseDN} parameter is needed in order to create the whole entry DN, which
      * is used to compute the connector object's name attribute.
      */
-    private ConnectorObject createConnectorObject(String baseDN, SearchResult result) {
+    private ConnectorObject createConnectorObject(String baseDN, SearchResult result, Set<String> attrsToGet) {
         LdapEntry entry = LdapEntry.create(baseDN, result);
 
         ConnectorObjectBuilder builder = new ConnectorObjectBuilder();
@@ -133,33 +170,19 @@ public class LdapSearch {
      * Creates a query whose results will be based on the passed query, but of
      * the object class specified in the {@link #oclass} field.
      */
-    private String restrictQueryToObjectClass(String query) {
+    private String restrictFilterToObjectClass(String nativeFilter) {
         StringBuilder builder = new StringBuilder();
-        if (query != null) {
+        if (nativeFilter != null) {
             builder.append("(&");
         }
         builder.append("(objectClass=");
         builder.append(conn.getSchemaMapping().getLdapClass(oclass));
         builder.append(')');
-        if (query != null) {
-            builder.append(query);
+        if (nativeFilter != null) {
+            builder.append(nativeFilter);
             builder.append(')');
         }
         return builder.toString();
-    }
-
-    /**
-     * Processes the operation options and initializes the {@link baseDNs} and
-     * {@link controls} fields accordingly.
-     */
-    private SearchControls getSearchControls() {
-        SearchControls result = LdapInternalSearch.createDefaultSearchControls();
-
-        Set<String> ldapAttrsToGet = conn.getSchemaMapping().getLdapAttributes(oclass, attrsToGet, true);
-        result.setReturningAttributes(ldapAttrsToGet.toArray(new String[ldapAttrsToGet.size()]));
-        result.setSearchScope(getLdapSearchScope());
-
-        return result;
     }
 
     private List<String> getBaseDNs() {
@@ -229,8 +252,7 @@ public class LdapSearch {
         } else if (OperationOptions.SCOPE_SUBTREE.equals(scope) || scope == null) {
             return SearchControls.SUBTREE_SCOPE;
         } else {
-            log.warn("Unknown search scope {0}", scope);
-            return SearchControls.SUBTREE_SCOPE;
+            throw new IllegalArgumentException("Invalid search scope " + scope);
         }
     }
 }

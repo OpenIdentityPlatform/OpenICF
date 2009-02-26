@@ -67,13 +67,13 @@ public class LdapSearches {
         log.ok("Searching for object {0} of class {1}", uid.getUidValue(), oclass.getObjectClassValue());
 
         EqualsFilter filter = (EqualsFilter) FilterBuilder.equalTo(uid);
-        String query = new LdapFilterTranslator(conn.getSchemaMapping(), oclass).createEqualsExpression(filter, false);
+        LdapFilter ldapFilter = new LdapFilterTranslator(conn.getSchemaMapping(), oclass).createEqualsExpression(filter, false);
 
         OperationOptionsBuilder builder = new OperationOptionsBuilder();
         builder.setScope(OperationOptions.SCOPE_SUBTREE);
         builder.setAttributesToGet("entryDN");
 
-        LdapSearch search = new LdapSearch(conn, oclass, query, builder.build());
+        LdapSearch search = new LdapSearch(conn, oclass, ldapFilter, builder.build());
         ConnectorObject object = search.getSingleResult();
         if (object != null) {
             return AttributeUtil.getStringValue(object.getAttributeByName("entryDN"));
@@ -87,13 +87,13 @@ public class LdapSearches {
         final List<ConnectorObject> result = new ArrayList<ConnectorObject>();
 
         EqualsFilter filter = (EqualsFilter) FilterBuilder.equalTo(new Name(name));
-        String query = new LdapFilterTranslator(conn.getSchemaMapping(), oclass).createEqualsExpression(filter, false);
+        LdapFilter ldapFilter = new LdapFilterTranslator(conn.getSchemaMapping(), oclass).createEqualsExpression(filter, false);
 
         OperationOptionsBuilder builder = new OperationOptionsBuilder();
         builder.setScope(OperationOptions.SCOPE_SUBTREE);
         builder.setAttributesToGet("entryDN");
 
-        LdapSearch search = new LdapSearch(conn, oclass, query, builder.build());
+        LdapSearch search = new LdapSearch(conn, oclass, ldapFilter, builder.build());
         search.execute(new ResultsHandler() {
             public boolean handle(ConnectorObject object) {
                 result.add(object);
@@ -143,7 +143,7 @@ public class LdapSearches {
         SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
         controls.setSearchScope(SearchControls.OBJECT_SCOPE);
         controls.setReturningAttributes(ldapAttrsToGet);
-        LdapInternalSearch search = new LdapInternalSearch(conn, null, Collections.singletonList(entryDN.toString()), new DefaultSearchStrategy(), controls);
+        LdapInternalSearch search = new LdapInternalSearch(conn, null, Collections.singletonList(entryDN.toString()), new DefaultSearchStrategy(), controls, true);
         search.execute(new SearchResultsHandler() {
             public boolean handle(String baseDN, SearchResult searchResult) {
                 result.add(LdapEntry.create(baseDN, searchResult));

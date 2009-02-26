@@ -38,23 +38,25 @@ import org.identityconnectors.ldap.LdapConnection;
 public class LdapInternalSearch {
 
     private final LdapConnection conn;
-    private final String query;
+    private final String filter;
     private final List<String> baseDNs;
     private final LdapSearchStrategy strategy;
     private final SearchControls controls;
+    private final boolean ignoreNonExistingBaseDNs;
 
-    public LdapInternalSearch(LdapConnection conn, String query, List<String> baseDNs, LdapSearchStrategy strategy, SearchControls controls) {
+    public LdapInternalSearch(LdapConnection conn, String filter, List<String> baseDNs, LdapSearchStrategy strategy, SearchControls controls, boolean ignoreNonExistingBaseDNs) {
         this.conn = conn;
-        this.query = query;
+        this.filter = filter;
         this.baseDNs = baseDNs;
         this.strategy = strategy;
         this.controls = controls;
+        this.ignoreNonExistingBaseDNs = ignoreNonExistingBaseDNs;
     }
 
     public void execute(SearchResultsHandler handler) {
-        String query = nullAsAllObjects(this.query);
+        String filter = nullAsAllObjects(this.filter);
         try {
-            strategy.doSearch(conn.getInitialContext(), baseDNs, query, controls, handler);
+            strategy.doSearch(conn.getInitialContext(), baseDNs, filter, controls, handler, ignoreNonExistingBaseDNs);
         } catch (NamingException e) {
             throw new ConnectorException(e);
         }

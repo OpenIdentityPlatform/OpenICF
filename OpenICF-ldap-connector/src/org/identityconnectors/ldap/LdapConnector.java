@@ -45,11 +45,12 @@ import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
 import org.identityconnectors.ldap.modify.LdapCreate;
 import org.identityconnectors.ldap.modify.LdapDelete;
 import org.identityconnectors.ldap.modify.LdapUpdate;
+import org.identityconnectors.ldap.search.LdapFilter;
 import org.identityconnectors.ldap.search.LdapFilterTranslator;
 import org.identityconnectors.ldap.search.LdapSearch;
 
 @ConnectorClass(configurationClass = LdapConfiguration.class, displayNameKey = "LdapConnector")
-public class LdapConnector implements PoolableConnector, SchemaOp, SearchOp<String>, AuthenticateOp, CreateOp, DeleteOp,
+public class LdapConnector implements PoolableConnector, SchemaOp, SearchOp<LdapFilter>, AuthenticateOp, CreateOp, DeleteOp,
         UpdateAttributeValuesOp {
 
     // XXX groups.
@@ -98,11 +99,11 @@ public class LdapConnector implements PoolableConnector, SchemaOp, SearchOp<Stri
         return new LdapAuthenticate(conn, objectClass, username, password).execute();
     }
 
-    public FilterTranslator<String> createFilterTranslator(ObjectClass oclass, OperationOptions options) {
+    public FilterTranslator<LdapFilter> createFilterTranslator(ObjectClass oclass, OperationOptions options) {
         return new LdapFilterTranslator(conn.getSchemaMapping(), oclass);
     }
 
-    public void executeQuery(ObjectClass oclass, String query, ResultsHandler handler, OperationOptions options) {
+    public void executeQuery(ObjectClass oclass, LdapFilter query, ResultsHandler handler, OperationOptions options) {
         new LdapSearch(conn, oclass, query, options).execute(handler);
     }
 

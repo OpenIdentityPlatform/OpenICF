@@ -25,6 +25,8 @@ package org.identityconnectors.ldap.search;
 import java.io.IOException;
 import java.util.List;
 
+import javax.naming.InvalidNameException;
+import javax.naming.NameNotFoundException;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.SearchControls;
@@ -51,15 +53,31 @@ public class SimplePagedSearchStrategy extends LdapSearchStrategy {
     }
 
     @Override
-    public void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler) throws NamingException {
+    public void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler, boolean ignoreNonExistingBaseDNs) throws NamingException {
         log.ok("Searching in {0} with filter {1} and {2}", baseDNs, query, searchControlsToString(searchControls));
 
-        LdapContext ctx = initCtx.newInstance(new Control[] { createControl(null) });
+        LdapContext ctx = initCtx.newInstance(null);
         try {
-            for (String baseDN : baseDNs) {
+            main: for (String baseDN : baseDNs) {
                 byte[] cookie = null;
                 do {
-                    NamingEnumeration<SearchResult> results = ctx.search(baseDN, query, searchControls);
+                    ctx.setRequestControls(new Control[] { createControl(cookie) });
+                    NamingEnumeration<SearchResult> results;
+                    try {
+                        results = ctx.search(baseDN, query, searchControls);
+                    } catch (NameNotFoundException e) {
+                        if (!ignoreNonExistingBaseDNs) {
+                            throw e;
+                        }
+                        log.warn(e, null);
+                        continue main;
+                    } catch (InvalidNameException e) {
+                        if (!ignoreNonExistingBaseDNs) {
+                            throw e;
+                        }
+                        log.warn(e, null);
+                        continue main;
+                    }
                     try {
                         boolean proceed = true;
                         while (proceed && results.hasMore()) {
@@ -69,9 +87,6 @@ public class SimplePagedSearchStrategy extends LdapSearchStrategy {
                         results.close();
                     }
                     cookie = getResponseCookie(ctx.getResponseControls());
-                    if (cookie != null) {
-                        ctx.setRequestControls(new Control[] { createControl(cookie) });
-                    }
                 } while (cookie != null);
             }
         } finally {

@@ -22,6 +22,7 @@
  */
 package org.identityconnectors.ldap.search;
 
+import static org.identityconnectors.ldap.LdapEntry.isDNAttribute;
 import static org.identityconnectors.ldap.LdapUtil.escapeAttrValue;
 
 import java.util.List;
@@ -41,7 +42,7 @@ import org.identityconnectors.framework.common.objects.filter.SingleValueAttribu
 import org.identityconnectors.framework.common.objects.filter.StartsWithFilter;
 import org.identityconnectors.ldap.schema.LdapSchemaMapping;
 
-public class LdapFilterTranslator extends AbstractFilterTranslator<String> {
+public class LdapFilterTranslator extends AbstractFilterTranslator<LdapFilter> {
 
     // XXX all objects values converted to string, is that OK?
 
@@ -56,8 +57,8 @@ public class LdapFilterTranslator extends AbstractFilterTranslator<String> {
     // be Undefined (cf. RFC 4511, section 4.5.1.7). But (a > X) would be Undefined
     // too, and so would be (!(a > X)).
 
-    private final ObjectClass objectClass;
     private final LdapSchemaMapping mapping;
+    private final ObjectClass objectClass;
 
     public LdapFilterTranslator(LdapSchemaMapping mapping, ObjectClass objectClass) {
         this.mapping = mapping;
@@ -65,109 +66,116 @@ public class LdapFilterTranslator extends AbstractFilterTranslator<String> {
     }
 
     @Override
-    public String createAndExpression(String leftExpression, String rightExpression) {
-        StringBuilder builder = createBuilder(false);
-        builder.append('&');
-        builder.append(leftExpression);
-        builder.append(rightExpression);
-        return finishBuilder(builder).toString();
-
+    public LdapFilter createAndExpression(LdapFilter leftExpression, LdapFilter rightExpression) {
+        return leftExpression.and(rightExpression);
     }
 
     @Override
-    public String createOrExpression(String leftExpression, String rightExpression) {
-        StringBuilder builder = createBuilder(false);
-        builder.append('|');
-        builder.append(leftExpression);
-        builder.append(rightExpression);
-        return finishBuilder(builder).toString();
+    public LdapFilter createOrExpression(LdapFilter leftExpression, LdapFilter rightExpression) {
+        return leftExpression.or(rightExpression);
     }
 
     @Override
-    public String createContainsExpression(ContainsFilter filter, boolean not) {
-        StringBuilder builder = createBuilder(not);
+    public LdapFilter createContainsExpression(ContainsFilter filter, boolean not) {
         String attrName = mapping.getLdapAttribute(objectClass, filter.getAttribute());
         if (attrName == null) {
             return null;
         }
+        if (isDNAttribute(attrName)) {
+            return LdapFilter.forEntryDN(filter.getValue());
+        }
+
+        StringBuilder builder = createBuilder(not);
         builder.append(attrName);
         builder.append('=');
         builder.append('*');
         if (escapeAttrValue(filter.getValue(), builder)) {
             builder.append('*');
         }
-        return finishBuilder(builder).toString();
+        return finishBuilder(builder);
     }
 
     @Override
-    public String createEndsWithExpression(EndsWithFilter filter, boolean not) {
-        StringBuilder builder = createBuilder(not);
+    public LdapFilter createEndsWithExpression(EndsWithFilter filter, boolean not) {
         String attrName = mapping.getLdapAttribute(objectClass, filter.getAttribute());
         if (attrName == null) {
             return null;
         }
+        if (isDNAttribute(attrName)) {
+            return LdapFilter.forEntryDN(filter.getValue());
+        }
+
+        StringBuilder builder = createBuilder(not);
         builder.append(attrName);
         builder.append('=');
         builder.append('*');
         escapeAttrValue(filter.getValue(), builder);
-        return finishBuilder(builder).toString();
+        return finishBuilder(builder);
     }
 
     @Override
-    public String createEqualsExpression(EqualsFilter filter, boolean not) {
+    public LdapFilter createEqualsExpression(EqualsFilter filter, boolean not) {
         // XXX is there a way in LDAP to test that the values of an attribute
         // exactly match a given list of values?
         return createContainsAllValuesFilter(filter, not);
     }
 
     @Override
-    public String createGreaterThanExpression(GreaterThanFilter filter, boolean not) {
+    public LdapFilter createGreaterThanExpression(GreaterThanFilter filter, boolean not) {
         return createSingleValueFilter("<=", filter, !not);
     }
 
     @Override
-    public String createGreaterThanOrEqualExpression(GreaterThanOrEqualFilter filter, boolean not) {
+    public LdapFilter createGreaterThanOrEqualExpression(GreaterThanOrEqualFilter filter, boolean not) {
         return createSingleValueFilter(">=", filter, not);
     }
 
     @Override
-    public String createLessThanExpression(LessThanFilter filter, boolean not) {
+    public LdapFilter createLessThanExpression(LessThanFilter filter, boolean not) {
         return createSingleValueFilter(">=", filter, !not);
     }
 
     @Override
-    public String createLessThanOrEqualExpression(LessThanOrEqualFilter filter, boolean not) {
+    public LdapFilter createLessThanOrEqualExpression(LessThanOrEqualFilter filter, boolean not) {
         return createSingleValueFilter("<=", filter, not);
     }
 
     @Override
-    public String createStartsWithExpression(StartsWithFilter filter, boolean not) {
-        StringBuilder builder = createBuilder(not);
+    public LdapFilter createStartsWithExpression(StartsWithFilter filter, boolean not) {
         String attrName = mapping.getLdapAttribute(objectClass, filter.getAttribute());
         if (attrName == null) {
             return null;
         }
+        if (isDNAttribute(attrName)) {
+            return LdapFilter.forEntryDN(filter.getValue());
+        }
+
+        StringBuilder builder = createBuilder(not);
         builder.append(attrName);
         builder.append('=');
         escapeAttrValue(filter.getValue(), builder);
         builder.append('*');
-        return finishBuilder(builder).toString();
+        return finishBuilder(builder);
     }
 
     @Override
-    public String createContainsAllValuesExpression(ContainsAllValuesFilter filter, boolean not) {
+    public LdapFilter createContainsAllValuesExpression(ContainsAllValuesFilter filter, boolean not) {
         return createContainsAllValuesFilter(filter, not);
     }
 
-    private String createSingleValueFilter(String type, SingleValueAttributeFilter filter, boolean not) {
-        StringBuilder builder = createBuilder(not);
+    private LdapFilter createSingleValueFilter(String type, SingleValueAttributeFilter filter, boolean not) {
         String attrName = mapping.getLdapAttribute(objectClass, filter.getAttribute());
         if (attrName == null) {
             return null;
         }
+        if (isDNAttribute(attrName)) {
+            return LdapFilter.forEntryDN(filter.getValue().toString());
+        }
+
+        StringBuilder builder = createBuilder(not);
         Object value = filter.getValue();
         addSimpleFilter(builder, type, attrName, value);
-        return finishBuilder(builder).toString();
+        return finishBuilder(builder);
     }
 
     private void addSimpleFilter(StringBuilder builder, String type, String ldapAttr, Object value) {
@@ -178,8 +186,7 @@ public class LdapFilterTranslator extends AbstractFilterTranslator<String> {
         }
     }
 
-    private String createContainsAllValuesFilter(AttributeFilter filter, boolean not) {
-        StringBuilder builder = createBuilder(not);
+    private LdapFilter createContainsAllValuesFilter(AttributeFilter filter, boolean not) {
         String attrName = mapping.getLdapAttribute(objectClass, filter.getAttribute());
         if (attrName == null) {
             return null;
@@ -188,29 +195,50 @@ public class LdapFilterTranslator extends AbstractFilterTranslator<String> {
         if (values == null) {
             return null;
         }
+        StringBuilder builder;
         switch (values.size()) {
         case 0:
             return null;
         case 1:
+            Object single = values.get(0);
+            if (single == null) {
+                return null;
+            }
+            if (isDNAttribute(attrName)) {
+                return LdapFilter.forEntryDN(single.toString());
+            }
+            builder = createBuilder(not);
             addSimpleFilter(builder, "=", attrName, values.get(0));
-            break;
+            return finishBuilder(builder);
         default:
+            if (isDNAttribute(attrName)) {
+                return null; // Because the DN is single-valued.
+            }
+            builder = createBuilder(not);
+            boolean hasValue = false;
             builder.append('&');
             for (Object value : values) {
-                builder.append('(');
-                addSimpleFilter(builder, "=", attrName, value);
-                builder.append(')');
+                if (value != null) {
+                    hasValue = true;
+                    builder.append('(');
+                    addSimpleFilter(builder, "=", attrName, value);
+                    builder.append(')');
+                }
             }
+            if (!hasValue) {
+                return null;
+            }
+            return finishBuilder(builder);
         }
-        return finishBuilder(builder).toString();
     }
 
     private StringBuilder createBuilder(boolean not) {
         return new StringBuilder(not ? "(!(" : "(");
     }
 
-    private StringBuilder finishBuilder(StringBuilder builder) {
+    private LdapFilter finishBuilder(StringBuilder builder) {
         boolean not = builder.charAt(0) == '(' && builder.charAt(1) == '!';
-        return builder.append(not ? "))" : ")");
+        builder.append(not ? "))" : ")");
+        return LdapFilter.forNativeFilter(builder.toString());
     }
 }

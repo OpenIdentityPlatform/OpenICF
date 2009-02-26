@@ -24,7 +24,8 @@ package org.identityconnectors.ldap;
 
 import static org.identityconnectors.ldap.LdapUtil.quietCreateLdapName;
 
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
 import javax.naming.InvalidNameException;
@@ -34,9 +35,21 @@ import javax.naming.directory.BasicAttribute;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.LdapName;
 
+import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 public abstract class LdapEntry {
+
+    public static final Set<String> ENTRY_DN_ATTRS;
+
+    static {
+        Set<String> set = CollectionUtil.newCaseInsensitiveSet();
+        set.add("entryDN");
+        // These two are used throughout the adapter.
+        set.add("dn");
+        set.add("distinguishedName");
+        ENTRY_DN_ATTRS = Collections.unmodifiableSet(set);
+    }
 
     public static LdapEntry create(String baseDN, SearchResult result) {
         return new SearchResultBased(baseDN, result);
@@ -44,6 +57,10 @@ public abstract class LdapEntry {
 
     public static LdapEntry create(String entryDN, Attributes attributes) {
         return new Simple(entryDN, attributes);
+    }
+
+    public static boolean isDNAttribute(String attrID) {
+        return ENTRY_DN_ATTRS.contains(attrID);
     }
 
     public abstract Attributes getAttributes();
@@ -151,17 +168,11 @@ public abstract class LdapEntry {
         private static final long serialVersionUID = 1L;
 
         private final LdapEntry ldapEntry;
-        private final Set<String> attrIDsToAppend;
-
-        private Attribute dnAttribute;
-        private Attribute entryDNAttribute;
+        private final Map<String, Attribute> dnAttributes = CollectionUtil.newCaseInsensitiveMap();
 
         public DNAttributes(LdapEntry ldapEntry, Attributes delegate) {
             super(delegate);
             this.ldapEntry = ldapEntry;
-            attrIDsToAppend = new HashSet<String>();
-            attrIDsToAppend.add("entryDN");
-            attrIDsToAppend.add("dn");
         }
 
         @Override
@@ -171,23 +182,20 @@ public abstract class LdapEntry {
 
         @Override
         protected Attribute getAttributeToAppend(String attrID) {
-            if ("entryDN".equals(attrID)) {
-                if (entryDNAttribute == null) {
-                    entryDNAttribute = new BasicAttribute("entryDN", ldapEntry.getDN().toString());
+            if (ENTRY_DN_ATTRS.contains(attrID)) {
+                Attribute result = dnAttributes.get(attrID);
+                if (result == null) {
+                    result = new BasicAttribute(attrID, ldapEntry.getDN().toString());
+                    dnAttributes.put(attrID, result);
                 }
-                return entryDNAttribute;
-            } else if ("dn".equals(attrID)) {
-                if (dnAttribute == null) {
-                    dnAttribute = new BasicAttribute("dn", ldapEntry.getDN().toString());
-                }
-                return dnAttribute;
+                return result;
             }
             return null;
         }
 
         @Override
         protected Set<String> getAttributeIDsToAppend() {
-            return attrIDsToAppend;
+            return ENTRY_DN_ATTRS;
         }
     }
 }

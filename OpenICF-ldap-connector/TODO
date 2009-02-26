@@ -1,5 +1,3 @@
-* Avoid LDAP filters using the entryDN attribute.
-
 * Work out a way to let IDM specify DN mapping for groups' owner and uniqueMember attributes.
 
 * Support the groupMemberAttribute configuration property.
@@ -7,3 +5,5 @@
 * Operational attributes.
 
 * Talk to Scott Page about proxied authorization control and admin/self-password change
+
+* Which attribute does the user name passed to AuthenticateOp map to?
