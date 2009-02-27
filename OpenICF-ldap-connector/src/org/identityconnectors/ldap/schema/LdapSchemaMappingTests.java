@@ -24,10 +24,12 @@ package org.identityconnectors.ldap.schema;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.EnumSet;
 import java.util.Set;
 
+import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
@@ -58,6 +60,14 @@ public class LdapSchemaMappingTests extends LdapConnectorTestBase {
             assertFalse(attrInfo.isCreateable());
             assertFalse(attrInfo.isUpdateable());
         }
+    }
+
+    @Test
+    public void testAuthenticationOnlyForAccounts() {
+        Schema schema = newFacade(newConfiguration()).schema();
+        Set<ObjectClassInfo> ocis = schema.getSupportedObjectClassesByOperation().get(AuthenticationApiOp.class);
+        assertEquals(1, ocis.size());
+        assertTrue(ocis.iterator().next().is(ObjectClass.ACCOUNT_NAME));
     }
 
     @Test

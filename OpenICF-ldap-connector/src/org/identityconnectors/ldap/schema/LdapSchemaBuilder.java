@@ -32,10 +32,12 @@ import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.SchemaBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
+import org.identityconnectors.framework.spi.operations.AuthenticateOp;
 import org.identityconnectors.ldap.AttributeMappingConfig;
 import org.identityconnectors.ldap.LdapAttributeType;
 import org.identityconnectors.ldap.LdapConnection;
@@ -75,7 +77,11 @@ class LdapSchemaBuilder {
             objClassBld.addAllAttributeInfo(createAttributeInfos(oclassConfig));
             objClassBld.addAllAttributeInfo(oclassConfig.getOperationalAttributes());
 
-            schemaBld.defineObjectClass(objClassBld.build());
+            ObjectClassInfo oci = objClassBld.build();
+            schemaBld.defineObjectClass(oci);
+            if (!oci.is(ObjectClass.ACCOUNT_NAME)) {
+                schemaBld.removeSupportedObjectClass(AuthenticateOp.class, oci);
+            }
         }
 
         schema = schemaBld.build();
