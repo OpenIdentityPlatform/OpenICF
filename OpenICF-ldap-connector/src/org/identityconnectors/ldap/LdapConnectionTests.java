@@ -23,6 +23,7 @@
 package org.identityconnectors.ldap;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
@@ -43,10 +44,37 @@ public class LdapConnectionTests extends LdapConnectorTestBase {
         assertTrue(conn.supportsControl(VirtualListViewControl.OID));
     }
 
+    @Test
+    public void testTest() {
+        LdapConfiguration config = newConfiguration();
+        config.setPort(4242);
+        LdapConnection conn = new LdapConnection(config);
+        try {
+            conn.test();
+            fail();
+        } catch (RuntimeException e) {
+            // Expected.
+        }
+
+        config = newConfiguration();
+        config.setHost("invalid");
+        conn = new LdapConnection(config);
+        try {
+            conn.test();
+            fail();
+        } catch (RuntimeException e) {
+            // Expected.
+        }
+
+        config = newConfiguration();
+        conn = new LdapConnection(config);
+        conn.test();
+    }
+
     @Test(expected = RuntimeException.class)
     public void testCheckAlive() {
         LdapConfiguration config = newConfiguration();
-        config.setReadSchema(true);
+        config.setReadSchema(true); // Since we are calling createNativeSchema() below.
         LdapConnection conn = new LdapConnection(config);
         conn.checkAlive();
         // Ensure the connection is really connected to the server.

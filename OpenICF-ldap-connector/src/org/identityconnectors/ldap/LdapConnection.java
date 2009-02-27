@@ -215,13 +215,13 @@ public class LdapConnection {
         }
     }
 
+    public void test() {
+        checkAlive();
+    }
+
     public void checkAlive() {
-        if (initCtx == null) {
-            // Fine, not yet initialized.
-            return;
-        }
         try {
-            Attributes attrs = initCtx.getAttributes("", new String[] { "subschemaSubentry" } );
+            Attributes attrs = getInitialContext().getAttributes("", new String[] { "subschemaSubentry" } );
             attrs.get("subschemaSubentry");
         } catch (NamingException e) {
             throw new ConnectorException(e);

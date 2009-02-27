@@ -41,6 +41,7 @@ import org.identityconnectors.framework.spi.operations.CreateOp;
 import org.identityconnectors.framework.spi.operations.DeleteOp;
 import org.identityconnectors.framework.spi.operations.SchemaOp;
 import org.identityconnectors.framework.spi.operations.SearchOp;
+import org.identityconnectors.framework.spi.operations.TestOp;
 import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
 import org.identityconnectors.ldap.modify.LdapCreate;
 import org.identityconnectors.ldap.modify.LdapDelete;
@@ -50,7 +51,7 @@ import org.identityconnectors.ldap.search.LdapFilterTranslator;
 import org.identityconnectors.ldap.search.LdapSearch;
 
 @ConnectorClass(configurationClass = LdapConfiguration.class, displayNameKey = "LdapConnector")
-public class LdapConnector implements PoolableConnector, SchemaOp, SearchOp<LdapFilter>, AuthenticateOp, CreateOp, DeleteOp,
+public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, SearchOp<LdapFilter>, AuthenticateOp, CreateOp, DeleteOp,
         UpdateAttributeValuesOp {
 
     // XXX groups.
@@ -85,6 +86,10 @@ public class LdapConnector implements PoolableConnector, SchemaOp, SearchOp<Ldap
 
     public void dispose() {
         conn.close();
+    }
+
+    public void test() {
+        conn.test();
     }
 
     public void checkAlive() {
