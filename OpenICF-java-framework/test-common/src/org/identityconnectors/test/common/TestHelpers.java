@@ -22,6 +22,7 @@
  */
 package org.identityconnectors.test.common;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -31,6 +32,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Map.Entry;
 
+import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
@@ -233,47 +235,74 @@ public final class TestHelpers {
 
     private static Map<?, ?> loadProjectProperties() {
         final String ERR = "Unable to load optional properties file: {0}";
-        final String CONNECTORS_DIR = System.getProperty("user.home") + "/.connectors/";
+        final String GERR = "Unable to load configuration groovy file: {0}";
+        final String BERR = "Unable to load bundle properties file: {0}";
+        final char FS = File.separatorChar;
+        final String CONNECTORS_DIR = System.getProperty("user.home") + FS + ".connectors";
+        final String CONFIG_DIR = (new File(".")).getAbsolutePath() + FS + "config";
+        final String BUILD_GROOVY = "build.groovy";
         Map<?, ?> props = null;
         Map<Object, Object> ret = new HashMap<Object, Object>();
+        String fName = null;
+
         // load global properties (if present)
         try {
-            props = IOUtil.loadPropertiesFile(CONNECTORS_DIR + GLOBAL_PROPS);
+            fName = CONNECTORS_DIR + FS + GLOBAL_PROPS;
+            props = IOUtil.loadPropertiesFile(fName);
             ret.putAll(props);
         } catch (IOException e) {
-            LOG.info(ERR, CONNECTORS_DIR + GLOBAL_PROPS);
+            LOG.info(ERR, fName);
         }
 
-        // load the local (public) properties file
+        //load the private bundle properties file (if present)
         try {
             props = IOUtil.loadPropertiesFile(BUNDLE_PROPS);
             ret.putAll(props);
         } catch (IOException e) {
-            LOG.error("Bundle properties file could not be found: {0}",
-                    BUNDLE_PROPS);
+            LOG.error(BERR, BUNDLE_PROPS);
+        }
+
+        // load the project (public) configuration groovy file
+        try {
+            fName = CONFIG_DIR + FS + BUILD_GROOVY;
+            props = loadGroovyConfigFile(IOUtil.makeURL(null, fName));
+            ret.putAll(props);
+        } catch (IOException e) {
+            LOG.info(GERR, fName);
+        }
+        String cfg = System.getProperty("configuration", null);
+
+        // load the project (public) configuration-specific configuration groovy file
+        if (StringUtil.isNotBlank(cfg) && !"default".equals(cfg)) {
+            try {
+                fName = CONFIG_DIR + FS + cfg + FS + BUILD_GROOVY;
+                props = loadGroovyConfigFile(IOUtil.makeURL(null, fName));
+                ret.putAll(props);
+            } catch (IOException e) {
+                LOG.info(GERR, fName);
+            }
         }
 
         String prjName = System.getProperty("project.name", null);
         if (StringUtil.isNotBlank(prjName)) {
-            String fName = null;
-            //load the private bundle properties file (if present)
+            fName = null;
+            //load the private bundle configuration groovy file (if present)
             try {
-                fName = CONNECTORS_DIR + prjName + "/build.groovy";
+                fName = CONNECTORS_DIR + FS + prjName + FS + BUILD_GROOVY;
                 props = loadGroovyConfigFile(IOUtil.makeURL(null, fName));
                 ret.putAll(props);
             } catch (IOException e) {
-                LOG.info(ERR, fName);
+                LOG.info(GERR, fName);
             }
 
-            String cfg = System.getProperty("configuration", null);
             if (StringUtil.isNotBlank(cfg) && !"default".equals(cfg)) {
-                //load the configuration-specific properties file (if present)
+                //load the configuration-specific configuration groovy file (if present)
                 try {
-                    fName = CONNECTORS_DIR + prjName + "/" + cfg + "/build.groovy";
+                    fName = CONNECTORS_DIR + FS + prjName + FS + cfg + FS + BUILD_GROOVY;
                     props = loadGroovyConfigFile(IOUtil.makeURL(null, fName));
                     ret.putAll(props);
                 } catch (IOException e) {
-                    LOG.info(ERR, fName);
+                    LOG.info(GERR, fName);
                 }
             }
         }
