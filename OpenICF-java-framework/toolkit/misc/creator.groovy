@@ -77,6 +77,7 @@ srcPath = BUNDLE_DIR + "/src/" + PACKAGE_NAME.replaceAll("\\.", "/") + "/"
 
 //create directories
 ant.mkdir(dir:srcPath)
+ant.mkdir(dir:BUNDLE_DIR + "/config")
 ant.mkdir(dir:BUNDLE_DIR + "/lib/build")
 ant.mkdir(dir:BUNDLE_DIR + "/lib/test")
 
@@ -89,6 +90,8 @@ templates.each {
         f = new File(srcPath, RESOURCE_NAME + fName)
     }else if(fName.startsWith("Messages")) {
         f = new File(srcPath, fName)
+    }else if(fName.startsWith("build.groovy")) {
+        f = new File(BUNDLE_DIR + "/config", fName)
     }else {
         f = new File(BUNDLE_DIR, fName)
     }    
