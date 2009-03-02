@@ -516,7 +516,6 @@ public class GroovyDataProviderTest {
         for (String currentLine : lines) {
             // divide the line based on "=" delimiter
             if (currentLine.contains(gdp.ASSIGNMENT_MARK)) {
-                ;
                 String[] arr = currentLine.split(gdp.ASSIGNMENT_MARK);
                 if (arr.length == 2) {
                     String leftPart = arr[0];

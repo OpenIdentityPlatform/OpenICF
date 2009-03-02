@@ -61,7 +61,6 @@ import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.Configuration;
 import org.junit.Assert;
-
 /**
  * <p>
  * Default implementation of {@link DataProvider}. It uses ConfigSlurper from
@@ -71,8 +70,11 @@ import org.junit.Assert;
  * Order of lookup for the property files follows (latter overrides previous):
  * </p>
  * <ul>
- * <li>1) user-home/.connectors/bundle-name/build.groovy
- * <li>2)user-home/.connectors/bundle-name/${configuration}/build.groovy<br />
+ * <li>1) project-home/config/build.groovy
+ * <li>2) project-home/config/${configuration}/build.groovy<br />
+ * in case ${configuration} is specified
+ * <li>3) user-home/.connectors/bundle-name/build.groovy
+ * <li>4) user-home/.connectors/bundle-name/${configuration}/build.groovy<br />
  * in case ${configuration} is specified
  * </ul>
  * <p>
@@ -133,12 +135,13 @@ public class GroovyDataProvider implements DataProvider {
     private static final int SINGLE_VALUE_MARKER = -1;
     private static final String ARRAY_MARKER = "array";
     static final String PROPERTY_SEPARATOR = ".";
-    private static final String CONTRACT_TESTS_FILE_NAME = "build.groovy";
+    private static final String BUILD_GROOVY = "build.groovy";
+    private static final String CONFIG = "config";
     
     /** boostrap.groovy contains default values that are returned when the property is not found */
     private static final String BOOTSTRAP_FILE_NAME = "bootstrap.groovy";
     private static final String CONNECTORS_DIR = ".connectors";
-    
+     
     /** prefix of default values that are multi */
     public static final String MULTI_VALUE_TYPE_PREFIX = "multi";
     
@@ -169,6 +172,7 @@ public class GroovyDataProvider implements DataProvider {
     /** output file for queried properties dump */
     private File _queriedPropsOutFile = null;
     static final String ASSIGNMENT_MARK = "=";
+
     private final String FOUND_MSG = "found";
     /** Turn on debugging prefixes in parsing. Output: System.out */
     private final boolean DEBUG_ON = false;
@@ -264,8 +268,11 @@ public class GroovyDataProvider implements DataProvider {
     /**
      * load properties in the following order (latter overrides previous):
      * <ul>
-     * <li>1) user-home/.connectors/bundle-name/build.groovy
-     * <li>2)user-home/.connectors/bundle-name/${configuration}/build.groovy<br />
+     * <li>1) project-home/build.groovy
+     * <li>2) project-home/${configuration}/build.groovy<br />
+     * in case ${configuration} is specified
+     * <li>3) user-home/.connectors/bundle-name/build.groovy
+     * <li>4)user-home/.connectors/bundle-name/${configuration}/build.groovy<br />
      * in case ${configuration} is specified
      * </ul>
      * 
@@ -274,42 +281,53 @@ public class GroovyDataProvider implements DataProvider {
         /*
          * main config object, that will contain the merged result form 2
          * configuration files.
-         */
+         */        
+        final char FS = File.separatorChar;
         ConfigObject co = null;
 
         String prjName = System.getProperty("project.name");
+        File projectPath = new File(".");
         File userHome = new File(System.getProperty("user.home"));
+        // list of filePaths to configuration files
+        List<String> configurations = new LinkedList<String>();
+        
+        // #1: project-home/build.groovy
+        configurations.add(projectPath.getAbsolutePath() + FS + CONFIG + FS + BUILD_GROOVY);
 
+        // determine the configuration property
+        String cfg = System.getProperty("configuration", null);        
+        
+        if (StringUtil.isNotBlank(cfg)) {
+            // #2: project-home/${configuration}/build.groovy
+            configurations.add(projectPath.getAbsolutePath() + FS + CONFIG + FS + cfg + FS + BUILD_GROOVY);
+        }        
+        
         if (StringUtil.isNotBlank(prjName)) {
-            // list of filePaths to configuration files
-            List<String> configurations = null;
-            configurations = new LinkedList<String>();
             
-            // #1: user-home/.connectors/connector-name/build.groovy
-            String directoryPath = userHome.getAbsolutePath() + File.separatorChar + CONNECTORS_DIR + File.separatorChar + prjName;
-            configurations.add(directoryPath + File.separatorChar + CONTRACT_TESTS_FILE_NAME);
+            // #3: user-home/.connectors/connector-name/build.groovy
+            String directoryPath = userHome.getAbsolutePath() + FS + CONNECTORS_DIR + FS + prjName;
+            configurations.add(directoryPath + FS + BUILD_GROOVY);
             
-            // determine the configuration property
-            String cfg = System.getProperty("configuration", null);
-            if (StringUtil.isNotBlank(cfg)) {
-                // #2: user-home/.connectors/connector-name/${configuration}/build.groovy
-                configurations.add(directoryPath + File.separatorChar + cfg + File.separatorChar + CONTRACT_TESTS_FILE_NAME);
-            }
 
-            for (String configFile : configurations) {
-                // read the config file's contents and merge it:
-                File cnfg = new File(configFile);
-                if (cnfg.exists()) {
-                    ConfigObject lowPriorityCObj = parseConfigFile(cnfg);
-                    if (co != null) {
-                        co = mergeConfigObjects(co, lowPriorityCObj);
-                    } else {
-                        co = lowPriorityCObj;
-                    }
+            if (StringUtil.isNotBlank(cfg)) {
+                // #4: user-home/.connectors/connector-name/${configuration}/build.groovy
+                configurations.add(directoryPath + FS + cfg + FS + BUILD_GROOVY);
+            }
+        }
+
+        for (String configFile : configurations) {
+            // read the config file's contents and merge it:
+            File cnfg = new File(configFile);
+            if (cnfg.exists()) {
+                ConfigObject lowPriorityCObj = parseConfigFile(cnfg);
+                if (co != null) {
+                    co = mergeConfigObjects(co, lowPriorityCObj);
+                } else {
+                    co = lowPriorityCObj;
                 }
             }
-
         }
+
 
         return co;
     }
