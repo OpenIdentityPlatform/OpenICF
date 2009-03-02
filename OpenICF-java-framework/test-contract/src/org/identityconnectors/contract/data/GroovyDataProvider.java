@@ -72,8 +72,8 @@ import org.junit.Assert;
  * <ul>
  * <li> PUBLIC</li>
  *   <ul>
- *     <li>1) project-home/config/build.groovy
- *     <li>2) project-home/config/${configuration}/build.groovy<br />
+ *      <li>1) ${bundle.dir}/config/build.groovy
+ *      <li>2) ${bundle.dir}/config/${configuration}/build.groovy<br />
  * in case ${configuration} is specified
  *   </ul>
  * <li> PRIVATE</li>
@@ -274,8 +274,8 @@ public class GroovyDataProvider implements DataProvider {
     /**
      * load properties in the following order (latter overrides previous):
      * <ul>
-     * <li>1) project-home/build.groovy
-     * <li>2) project-home/${configuration}/build.groovy<br />
+     * <li>1) ${bundle.dir}/build.groovy
+     * <li>2) ${bundle.dir}/${configuration}/build.groovy<br />
      * in case ${configuration} is specified
      * <li>3) user-home/.connectors/bundle-name/build.groovy
      * <li>4)user-home/.connectors/bundle-name/${configuration}/build.groovy<br />
@@ -297,14 +297,14 @@ public class GroovyDataProvider implements DataProvider {
         // list of filePaths to configuration files
         List<String> configurations = new LinkedList<String>();
         
-        // #1: project-home/build.groovy
+        // #1: ${bundle.dir}/build.groovy
         configurations.add(projectPath.getAbsolutePath() + FS + CONFIG + FS + BUILD_GROOVY);
 
         // determine the configuration property
         String cfg = System.getProperty("configuration", null);        
         
         if (StringUtil.isNotBlank(cfg)) {
-            // #2: project-home/${configuration}/build.groovy
+            // #2: ${bundle.dir}/${configuration}/build.groovy
             configurations.add(projectPath.getAbsolutePath() + FS + CONFIG + FS + cfg + FS + BUILD_GROOVY);
         }        
         
