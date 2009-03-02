@@ -70,12 +70,18 @@ import org.junit.Assert;
  * Order of lookup for the property files follows (latter overrides previous):
  * </p>
  * <ul>
- * <li>1) project-home/config/build.groovy
- * <li>2) project-home/config/${configuration}/build.groovy<br />
+ * <li> PUBLIC</li>
+ *   <ul>
+ *     <li>1) project-home/config/build.groovy
+ *     <li>2) project-home/config/${configuration}/build.groovy<br />
  * in case ${configuration} is specified
- * <li>3) user-home/.connectors/bundle-name/build.groovy
- * <li>4) user-home/.connectors/bundle-name/${configuration}/build.groovy<br />
+ *   </ul>
+ * <li> PRIVATE</li>
+ *   <ul>
+ *     <li>3) user-home/.connectors/bundle-name/build.groovy
+ *     <li>4) user-home/.connectors/bundle-name/${configuration}/build.groovy<br />
  * in case ${configuration} is specified
+ *   </ul>
  * </ul>
  * <p>
  * Note: If two property files contain the same property name, the value from
