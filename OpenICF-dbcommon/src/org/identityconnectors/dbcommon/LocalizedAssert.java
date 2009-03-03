@@ -81,7 +81,7 @@ public class LocalizedAssert {
      * @param argument
      * @return same string
      */
-    public String asserBlank(String s,String argument){
+    public String assertBlank(String s,String argument){
         if(s != null && s.length() > 0){
             throwException(DBMessages.ASSERT_BLANK,argument);
         }
