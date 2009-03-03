@@ -23,18 +23,28 @@
 package org.identityconnectors.databasetable;
 
 import static org.identityconnectors.common.ByteUtil.randomBytes;
+import static org.junit.Assert.*;
+
 
 import java.math.BigDecimal;
+import java.sql.PreparedStatement;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.contract.data.DataProvider;
 import org.identityconnectors.contract.data.GroovyDataProvider;
+import org.identityconnectors.dbcommon.SQLUtil;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.AttributeUtil;
+import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
+import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.test.common.TestHelpers;
 import org.junit.Test;
 
@@ -44,7 +54,8 @@ import org.junit.Test;
 public class DatabaseTableOracleTests extends DatabaseTableTestBase{
 
     static final String ORACLE_CONFIGURATINON = "configurations.oracle";
-    static final DataProvider dp = new GroovyDataProvider();   
+    static final DataProvider dp = new GroovyDataProvider();
+    private static final String TMS = "TMS";   
     
     
     @Override
@@ -124,40 +135,108 @@ public class DatabaseTableOracleTests extends DatabaseTableTestBase{
     }
 
     /**
-     * doTestTimestampColumn1 , doTestTimestampColumn2, doTestTsColAcctIter1 and 
-     * doTestTsColAcctIter2 operates on the table 'bug17551table', which was created 
-     * using the following SQL automatically.
-     *
-     * CREATE TABLE bug17551table (
-     *              Login_Id VARCHAR(50) NOT NULL, Password VARCHAR(50),
-     *              Email VARCHAR(50), time_stamp TIMESTAMP 
-     * )
+     * testTimestampColumn operates on the table 'bug17551table'
      * @throws Exception 
      */
-    public void setupBug17551Table() throws Exception {
-        String dropTableSql = "DROP TABLE bug17551table";
-        String createTableSql = "CREATE TABLE bug17551table (Login_Id VARCHAR(50) NOT NULL, Password VARCHAR(50), Email VARCHAR(50), time_stamp TIMESTAMP)";
-
-        java.sql.Connection con = null;
-        java.sql.Statement stmt = null;
-
+    @Test    
+    public void testTimestampColumnNative() throws Exception {
+        log.ok("testCreateCall");
+        DatabaseTableConfiguration cfg = getConfiguration();
+        cfg.setTable("BUG17551");
+        cfg.setNativeTimestamps(true);
+        DatabaseTableConnector con = getConnector(cfg);
         try {
-            con = DatabaseTableConnection.getConnection(getConfiguration()).getConnection();
-            stmt = con.createStatement();
-            try {
-                stmt.execute(dropTableSql);
+            deleteAllFromBug(con.getConnection());
+            Set<Attribute> expected = getTimestampColumnAttributeSet();
+            Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
+            // attempt to get the record back..
+            List<ConnectorObject> results = TestHelpers.searchToList(con, ObjectClass.ACCOUNT, FilterBuilder
+                    .equalTo(uid));
+            assertTrue("expect 1 connector object", results.size() == 1);
+            final ConnectorObject co = results.get(0);
+            assertNotNull(co);
+            final Set<Attribute> actual = co.getAttributes();
+            assertNotNull(actual);
+            Attribute tmsAtr = AttributeUtil.find(TMS, actual);
+            String timestampTest = AttributeUtil.getStringValue(tmsAtr);
+            if (timestampTest == null || timestampTest.indexOf("00005") == -1) {
+                fail("    testTimestampColumn1 testcase for bug#17551 failed, expected 00005 in the milli-seconds part, but got timestamp " + timestampTest);
             }
-            catch (java.sql.SQLException sex) {
-                //expected
+        } finally {
+            if (con != null) {
+                con.dispose();
             }
-            stmt.execute(createTableSql);
-        }
-        finally {
-            stmt.close();
-            stmt = null;
-            con.close();
-            con = null;
-        }
+        }               
     }
+    
+    /**
+     * testTimestampColumn operates on the table 'bug17551table'
+     * @throws Exception 
+     */
+    @Test    
+    public void testTimestampColumnNotNative() throws Exception {
+        log.ok("testCreateCall");
+        DatabaseTableConfiguration cfg = getConfiguration();
+        cfg.setTable("BUG17551");
+        cfg.setNativeTimestamps(false);
+        DatabaseTableConnector con = getConnector(cfg);
+        try {
+            deleteAllFromBug(con.getConnection());
+            Set<Attribute> expected = getTimestampColumnAttributeSet();
+            Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
+            // attempt to get the record back..
+            List<ConnectorObject> results = TestHelpers.searchToList(con, ObjectClass.ACCOUNT, FilterBuilder
+                    .equalTo(uid));
+            assertTrue("expect 1 connector object", results.size() == 1);
+            final ConnectorObject co = results.get(0);
+            assertNotNull(co);
+            final Set<Attribute> actual = co.getAttributes();
+            assertNotNull(actual);
+            Attribute tmsAtr = AttributeUtil.find(TMS, actual);
+            String timestampTest = AttributeUtil.getStringValue(tmsAtr);
+            if (timestampTest != null && timestampTest.indexOf(". 50000") == -1) {
+                fail("    expected JDBC driver problem, fixed through bug# 17551");                
+            }
+        } finally {
+            if (con != null) {
+                con.dispose();
+            }
+        }               
+    }
+    
+    /**
+     *    "Login_Id" VARCHAR2(50) NOT NULL, 
+     *    "Password" VARCHAR2(50),
+     *    "Email" VARCHAR2(50),
+     *    "tms" TIMESTAMP
+     */    
+    private Set<Attribute> getTimestampColumnAttributeSet() throws Exception {
+        Set<Attribute> ret = new HashSet<Attribute>();        
+        ret.add(AttributeBuilder.build(Name.NAME, "Test Name"+r.nextInt()));
+        ret.add(AttributeBuilder.buildPassword(new GuardedString("Test Pasword".toCharArray())));
+        ret.add(AttributeBuilder.build(EMAIL, "thelongtestemail@somelongorganization.com"));
+        ret.add(AttributeBuilder.build(TMS, "05-DEC-07 10.29.01.000050 PM"));
+        return ret;
+    }    
 
+    
+    /**
+     * The class load method
+     * @param conn 
+     * @throws Exception 
+     */
+    public void deleteAllFromBug(DatabaseTableConnection conn) throws Exception { 
+        // update the last change
+        final String SQL_TEMPLATE = "DELETE FROM BUG17551";
+        log.ok(SQL_TEMPLATE);
+        PreparedStatement ps = null;
+        try {
+            ps = conn.getConnection().prepareStatement(SQL_TEMPLATE);
+            ps.execute();
+        } finally {
+            SQLUtil.closeQuietly(ps);
+        }
+        conn.commit();
+    }
+    
 }
