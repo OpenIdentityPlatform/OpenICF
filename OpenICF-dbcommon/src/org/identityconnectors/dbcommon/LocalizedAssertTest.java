@@ -123,5 +123,16 @@ public class LocalizedAssertTest {
         }
     }
     
+    /** Test of {@link LocalizedAssert#LocalizedAssert(ConnectorMessages)} */
+    @Test
+    public void testCreate(){
+        new LocalizedAssert(new TestConnectorMessages());
+        try{
+            new LocalizedAssert(null);
+            fail("Must fail for null ConnectorMessages");
+        }
+        catch(RuntimeException e){}
+    }
+    
 
 }
