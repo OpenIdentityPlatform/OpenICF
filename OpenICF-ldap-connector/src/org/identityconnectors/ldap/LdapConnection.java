@@ -40,6 +40,7 @@ import javax.naming.ldap.LdapName;
 
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.common.security.GuardedString.Accessor;
@@ -126,12 +127,8 @@ public class LdapConnection {
         env.put(Context.REFERRAL, "follow");
 
         String authentication = config.getAuthentication();
-        // If there is no principal, override to anonymous bind.
-        // This is the simplest way to be compatible with the adapter (in supporting
-        // anonymous bind), while still providing a way to set the authentication method.
-        if (principal == null) {
-            log.warn("No principal specified in the configuration, falling back to anonymous bind");
-            authentication = "none";
+        if (StringUtil.isBlank(authentication)) {
+            authentication = principal != null ? "simple" : "none";
         }
         env.put(Context.SECURITY_AUTHENTICATION, authentication);
 

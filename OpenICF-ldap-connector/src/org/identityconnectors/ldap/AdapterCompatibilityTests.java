@@ -23,7 +23,6 @@
 package org.identityconnectors.ldap;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -45,19 +44,6 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
     @Override
     protected boolean restartServerAfterEachTest() {
         return false;
-    }
-
-    @Test
-    public void testAnonymousBindEvenThoughAuthenticationMethodIsNotNone() {
-        LdapConfiguration config = newConfiguration();
-        config.setAuthentication("simple");
-        config.setPrincipal(null);
-        LdapConnection conn = new LdapConnection(config);
-        try {
-            assertNotNull(conn.getInitialContext());
-        } finally {
-            conn.close();
-        }
     }
 
     @Test

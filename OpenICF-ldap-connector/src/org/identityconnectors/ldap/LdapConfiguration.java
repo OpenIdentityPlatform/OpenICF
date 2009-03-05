@@ -100,7 +100,7 @@ public class LdapConfiguration extends AbstractConfiguration {
     /**
      * The authentication mechanism to use against the LDAP server.
      */
-    private String authentication = "none";
+    private String authentication = null;
 
     /**
      * The base DNs for operations on the server.
@@ -311,9 +311,6 @@ public class LdapConfiguration extends AbstractConfiguration {
     }
 
     public void setAuthentication(String authentication) {
-        if (StringUtil.isBlank(authentication)) {
-            throw new ConfigurationException("The authentication type should not be null or whitespace");
-        }
         this.authentication = authentication;
     }
 

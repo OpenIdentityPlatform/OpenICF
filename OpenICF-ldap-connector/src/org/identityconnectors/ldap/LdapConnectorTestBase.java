@@ -51,6 +51,7 @@ public abstract class LdapConnectorTestBase {
     // Cf. data.ldif and bigcompany.ldif.
 
     public static final String ADMIN_DN = "uid=admin,dc=example,dc=com";
+    public static final GuardedString ADMIN_PASSWORD = new GuardedString("password".toCharArray());
 
     public static final String ACME_DN = "o=Acme,dc=example,dc=com";
     public static final String ACME_O = "Acme";
@@ -132,9 +133,8 @@ public abstract class LdapConnectorTestBase {
         // Cf. test/opends/config/config.ldif.
         config.setPort(1389);
         config.setBaseContexts(ACME_DN, BIG_COMPANY_DN);
-        config.setAuthentication("simple");
         config.setPrincipal(ADMIN_DN);
-        config.setCredentials(new GuardedString("password".toCharArray()));
+        config.setCredentials(ADMIN_PASSWORD);
         String[] extendedObjectClasses = new String[extObjectClassesAndNamingAttributes.length];
         String[] extendedNamingAttributes = new String[extObjectClassesAndNamingAttributes.length];
         for (int i = 0; i < extObjectClassesAndNamingAttributes.length; i++) {

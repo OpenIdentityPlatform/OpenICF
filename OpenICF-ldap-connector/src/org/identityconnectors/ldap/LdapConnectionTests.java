@@ -22,9 +22,14 @@
  */
 package org.identityconnectors.ldap;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import javax.naming.Context;
+import javax.naming.NamingException;
+
+import org.identityconnectors.common.security.GuardedString;
 import org.junit.Test;
 
 import com.sun.jndi.ldap.ctl.PagedResultsControl;
@@ -45,6 +50,22 @@ public class LdapConnectionTests extends LdapConnectorTestBase {
     }
 
     @Test
+    public void testDefaultAuthenticationMethodIsInferred() throws NamingException {
+        LdapConfiguration config = newConfiguration();
+        config.setAuthentication(null);
+        config.setPrincipal(null);
+        LdapConnection conn = new LdapConnection(config);
+        assertEquals("none", conn.getInitialContext().getEnvironment().get(Context.SECURITY_AUTHENTICATION));
+
+        config = newConfiguration();
+        config.setAuthentication(null);
+        config.setPrincipal(ADMIN_DN);
+        config.setCredentials(ADMIN_PASSWORD);
+        conn = new LdapConnection(config);
+        assertEquals("simple", conn.getInitialContext().getEnvironment().get(Context.SECURITY_AUTHENTICATION));
+    }
+
+    @Test
     public void testTest() {
         LdapConfiguration config = newConfiguration();
         config.setPort(4242);
@@ -58,6 +79,26 @@ public class LdapConnectionTests extends LdapConnectorTestBase {
 
         config = newConfiguration();
         config.setHost("invalid");
+        conn = new LdapConnection(config);
+        try {
+            conn.test();
+            fail();
+        } catch (RuntimeException e) {
+            // Expected.
+        }
+
+        config = newConfiguration();
+        config.setPrincipal("uid=nobody");
+        conn = new LdapConnection(config);
+        try {
+            conn.test();
+            fail();
+        } catch (RuntimeException e) {
+            // Expected.
+        }
+
+        config = newConfiguration();
+        config.setCredentials(new GuardedString("bogus".toCharArray()));
         conn = new LdapConnection(config);
         try {
             conn.test();
