@@ -23,6 +23,7 @@
 package org.identityconnectors.ldap.search;
 
 import org.identityconnectors.framework.common.objects.Name;
+import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
 
 /**
  * Encapsulates an LDAP filter. An instance of this class is consists of
