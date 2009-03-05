@@ -29,7 +29,6 @@ import groovy.util.ConfigSlurper;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -42,7 +41,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.Set;
 import java.util.Map.Entry;
 
@@ -197,6 +195,45 @@ public class GroovyDataProvider implements DataProvider {
         configObject = doBootstrap();
         ConfigObject projectConfig = loadProjectConfigurations();
         configObject = mergeConfigObjects(configObject, projectConfig);
+        
+        checkJarDependencies(this, this.getClass().getClassLoader());
+    }
+
+    /**
+     * check the presence of expected JAR's on the classpath
+     * <p>
+     * The test configuration file should contain a definition of required JARs.
+     * The key of the map is the classname that's needed, the value is
+     * information included in the error message (supposed to be the jar's
+     * name).
+     * <p>
+     * It could be example:
+     * <p>
+     * <code>testsuite.requiredClasses = [ 'com.mysql.jdbc.Driver' : 'Connector/J
+     * 5.0.8 (mysql-connector-java-5.0.8-bin.jar)' ]</code>
+     * <p>
+     * where 'com.mysql.jdbc.Driver' is the awaited class, and 'Connector/J...'
+     * is the information message describing the JAR, where the class resides.
+     */
+    private static void checkJarDependencies(DataProvider dp, ClassLoader classLoader) {
+        final String PROP_REQUIRED_CLASSES = "requiredClasses";
+        Object o = null;
+        try {
+            o = dp.getTestSuiteAttribute(PROP_REQUIRED_CLASSES);
+        } catch (ObjectNotFoundException ex) {
+            // if property testsuite.requiredClasses is undefined skip checking JARs.
+            return;
+        }
+        if (o instanceof Map) {
+            Map<String, String> map = (Map<String , String>) o;
+            for (Map.Entry<String , String> entry : map.entrySet()) {
+                try {
+                    Class.forName(entry.getKey(), false, classLoader);
+                } catch (ClassNotFoundException e) {
+                    Assert.fail(String.format("Missing library from classpath: '%s'", entry.getValue()));
+                }
+            }
+        }
     }
 
     private void initQueriedPropsDump() {
