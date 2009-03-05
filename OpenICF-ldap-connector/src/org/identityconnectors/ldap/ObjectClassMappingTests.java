@@ -48,23 +48,5 @@ public class ObjectClassMappingTests extends LdapConnectorTestBase {
         return false;
     }
 
-    @Test
-    public void testGroupSchema() {
-        Schema schema = newFacade().schema();
-        ObjectClassInfo oci = schema.findObjectClassInfo(ObjectClass.GROUP_NAME);
-        assertFalse(oci.isContainer());
 
-        Set<AttributeInfo> attrInfos = oci.getAttributeInfo();
-
-        AttributeInfo info = AttributeInfoUtil.find("cn", attrInfos);
-        assertEquals(AttributeInfoBuilder.build("cn", String.class, EnumSet.of(Flags.REQUIRED, Flags.MULTIVALUED)), info);
-    }
-
-    @Test
-    public void testGroupAttributes() {
-        ConnectorFacade facade = newFacade();
-        ConnectorObject object = searchByAttribute(facade, ObjectClass.GROUP, new Name(LOONEY_TUNES_DN));
-
-        assertEquals(LOONEY_TUNES_CN, AttributeUtil.getAsStringValue(object.getAttributeByName("cn")));
-    }
 }

@@ -122,16 +122,16 @@ public class LdapSchemaMapping {
     }
 
     /**
-     * Returns the LDAP object class to which the given framework object
+     * Returns the LDAP object classes to which the given framework object
      * class is mapped.
      */
-    public String getLdapClass(ObjectClass oclass) {
+    public Set<String> getLdapClasses(ObjectClass oclass) {
         ObjectClassMappingConfig oclassConfig = conn.getConfiguration().getObjectClassMappingConfigs().get(oclass);
         if (oclassConfig != null) {
-            return oclassConfig.getLdapClass();
+            return oclassConfig.getLdapClasses();
         }
         // XXX will need a check here if object class names are made special.
-        return oclass.getObjectClassValue();
+        return Collections.singleton(oclass.getObjectClassValue());
     }
 
     /**
@@ -141,9 +141,10 @@ public class LdapSchemaMapping {
      */
     public Set<String> getLdapClassesTransitively(ObjectClass oclass) {
         Set<String> result = CollectionUtil.newCaseInsensitiveSet();
-        String ldapClass = getLdapClass(oclass);
-        result.add(ldapClass);
-        result.addAll(getLdapClassSuperiors(ldapClass));
+        for (String ldapClass : getLdapClasses(oclass)) {
+            result.add(ldapClass);
+            result.addAll(getLdapClassSuperiors(ldapClass));
+        }
         return Collections.unmodifiableSet(result);
     }
 

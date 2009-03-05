@@ -90,10 +90,10 @@ class LdapSchemaBuilder {
     private Set<AttributeInfo> createAttributeInfos(ObjectClassMappingConfig oclassConfig) {
         Set<AttributeInfo> result = new HashSet<AttributeInfo>();
 
-        String ldapClass = oclassConfig.getLdapClass();
+        Set<String> ldapClasses = oclassConfig.getLdapClasses();
 
-        Set<String> requiredAttrs = nativeSchema.getRequiredAttributes(ldapClass);
-        Set<String> optionalAttrs = nativeSchema.getOptionalAttributes(ldapClass);
+        Set<String> requiredAttrs = getRequiredAttributes(ldapClasses);
+        Set<String> optionalAttrs = getOptionalAttributes(ldapClasses);
         // OpenLDAP's ipProtocol has MUST ( ... $ description ) MAY ( description )
         optionalAttrs.removeAll(requiredAttrs);
 
@@ -123,7 +123,7 @@ class LdapSchemaBuilder {
             }
             mappedLdapAttributes.add(ldapAttrName);
             // Explicitly mapped attributes are always returned by default.
-            addAttributeInfo(ldapClass, ldapAttrName, attrName, required ? EnumSet.of(Flags.REQUIRED) : null, EnumSet.of(Flags.NOT_RETURNED_BY_DEFAULT), result);
+            addAttributeInfo(ldapClasses, ldapAttrName, attrName, required ? EnumSet.of(Flags.REQUIRED) : null, EnumSet.of(Flags.NOT_RETURNED_BY_DEFAULT), result);
         }
 
         // Now add the attributes which were not mapped explicitly.
@@ -133,29 +133,45 @@ class LdapSchemaBuilder {
 
         if (attrMappings.isEmpty()) {
             // If no attributes were mapped explicitly, add all attributes.
-            addAttributeInfos(ldapClass, requiredAttrs, EnumSet.of(Flags.REQUIRED), null, result);
-            addAttributeInfos(ldapClass, optionalAttrs, null, null, result);
+            addAttributeInfos(ldapClasses, requiredAttrs, EnumSet.of(Flags.REQUIRED), null, result);
+            addAttributeInfos(ldapClasses, optionalAttrs, null, null, result);
         } else {
             // Otherwise add the non-mapped attributes, but do not return them by default.
-            addAttributeInfos(ldapClass, requiredAttrs, EnumSet.of(Flags.REQUIRED, Flags.NOT_RETURNED_BY_DEFAULT), null, result);
-            addAttributeInfos(ldapClass, optionalAttrs, EnumSet.of(Flags.NOT_RETURNED_BY_DEFAULT), null, result);
+            addAttributeInfos(ldapClasses, requiredAttrs, EnumSet.of(Flags.REQUIRED, Flags.NOT_RETURNED_BY_DEFAULT), null, result);
+            addAttributeInfos(ldapClasses, optionalAttrs, EnumSet.of(Flags.NOT_RETURNED_BY_DEFAULT), null, result);
         }
 
         return result;
     }
 
-    private void addAttributeInfos(String ldapClass, Set<String> attrs, Set<Flags> add, Set<Flags> remove, Set<AttributeInfo> toSet) {
+    private Set<String> getRequiredAttributes(Set<String> ldapClasses) {
+        Set<String> result = new HashSet<String>();
+        for (String ldapClass : ldapClasses) {
+            result.addAll(nativeSchema.getRequiredAttributes(ldapClass));
+        }
+        return result;
+    }
+
+    private Set<String> getOptionalAttributes(Set<String> ldapClasses) {
+        Set<String> result = new HashSet<String>();
+        for (String ldapClass : ldapClasses) {
+            result.addAll(nativeSchema.getOptionalAttributes(ldapClass));
+        }
+        return result;
+    }
+
+    private void addAttributeInfos(Set<String> ldapClasses, Set<String> attrs, Set<Flags> add, Set<Flags> remove, Set<AttributeInfo> toSet) {
         for (String attr : attrs) {
-            addAttributeInfo(ldapClass, attr, attr, add, remove, toSet);
+            addAttributeInfo(ldapClasses, attr, attr, add, remove, toSet);
         }
     }
 
-    private void addAttributeInfo(String ldapClass, String ldapAttrName, String realName, Set<Flags> add, Set<Flags> remove, Set<AttributeInfo> toSet) {
+    private void addAttributeInfo(Set<String> ldapClasses, String ldapAttrName, String realName, Set<Flags> add, Set<Flags> remove, Set<AttributeInfo> toSet) {
         LdapAttributeType attrDesc = nativeSchema.getAttributeDescription(ldapAttrName);
         if (attrDesc != null) {
             toSet.add(attrDesc.createAttributeInfo(realName, add, remove));
         } else {
-            log.warn("Could not find attribute {0} of object class {1}", ldapAttrName, ldapClass);
+            log.warn("Could not find attribute {0} in object classes {1}", ldapAttrName, ldapClasses);
         }
     }
 }

@@ -24,6 +24,7 @@ package org.identityconnectors.ldap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -40,7 +41,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 public class ObjectClassMappingConfig {
 
     private final ObjectClass objectClass;
-    private final String ldapClass;
+    private Set<String> ldapClasses;
 
     private boolean container;
 
@@ -55,19 +56,27 @@ public class ObjectClassMappingConfig {
 
     private final Set<AttributeInfo> operationalAttributes = new HashSet<AttributeInfo>();
 
-    public ObjectClassMappingConfig(ObjectClass objectClass, String ldapClass) {
+    public ObjectClassMappingConfig(ObjectClass objectClass, Set<String> ldapClasses) {
         assert objectClass != null;
-        assert ldapClass != null;
+        assert ldapClasses != null;
+        assert !ldapClasses.isEmpty();
         this.objectClass = objectClass;
-        this.ldapClass = ldapClass;
+        this.ldapClasses = ldapClasses;
     }
 
     public ObjectClass getObjectClass() {
         return objectClass;
     }
 
-    public String getLdapClass() {
-        return ldapClass;
+    public Set<String> getLdapClasses() {
+        return ldapClasses;
+    }
+
+    public void setLdapClasses(Set<String> ldapClasses) {
+        assert !ldapClasses.isEmpty();
+        Set<String> newSet = CollectionUtil.newCaseInsensitiveSet();
+        newSet.addAll(ldapClasses);
+        this.ldapClasses = Collections.unmodifiableSet(ldapClasses);
     }
 
     public boolean isContainer() {
@@ -150,7 +159,7 @@ public class ObjectClassMappingConfig {
             if (!objectClass.equals(that.objectClass)) {
                 return false;
             }
-            if ((ldapClass == null) ? (that.ldapClass != null) : !ldapClass.equals(that.ldapClass)) {
+            if ((ldapClasses == null) ? (that.ldapClasses != null) : !ldapClasses.equals(that.ldapClasses)) {
                 return false;
             }
             if ((uidAttribute == null) ? (that.uidAttribute != null) : !uidAttribute.equals(that.uidAttribute)) {

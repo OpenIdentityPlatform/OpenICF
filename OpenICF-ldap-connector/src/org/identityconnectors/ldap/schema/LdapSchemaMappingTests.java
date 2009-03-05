@@ -53,7 +53,9 @@ public class LdapSchemaMappingTests extends LdapConnectorTestBase {
 
     @Test
     public void testObjectClassAttrIsReadOnly() {
-        Schema schema = newFacade(newConfiguration()).schema();
+        LdapConfiguration config = newConfiguration();
+        config.setReadSchema(true);
+        Schema schema = newFacade(config).schema();
         for (ObjectClassInfo oci : schema.getObjectClassInfo()) {
             AttributeInfo attrInfo = AttributeInfoUtil.find("objectClass", oci.getAttributeInfo());
             assertFalse(attrInfo.isRequired());
@@ -63,8 +65,49 @@ public class LdapSchemaMappingTests extends LdapConnectorTestBase {
     }
 
     @Test
+    public void testAccountSchema() {
+        LdapConfiguration config = newConfiguration();
+        config.setReadSchema(true);
+        Schema schema = newFacade(config).schema();
+
+        ObjectClassInfo oci = schema.findObjectClassInfo(ObjectClass.ACCOUNT_NAME);
+        assertFalse(oci.isContainer());
+
+        Set<AttributeInfo> attrInfos = oci.getAttributeInfo();
+
+        AttributeInfo info = AttributeInfoUtil.find("cn", attrInfos);
+        assertEquals(AttributeInfoBuilder.build("cn", String.class, EnumSet.of(Flags.REQUIRED, Flags.MULTIVALUED)), info);
+
+        info = AttributeInfoUtil.find("uid", attrInfos);
+        assertEquals(AttributeInfoBuilder.build("uid", String.class, EnumSet.of(Flags.MULTIVALUED)), info);
+
+        info = AttributeInfoUtil.find("givenName", attrInfos);
+        assertEquals(AttributeInfoBuilder.build("givenName", String.class, EnumSet.of(Flags.MULTIVALUED)), info);
+
+        info = AttributeInfoUtil.find("sn", attrInfos);
+        assertEquals(AttributeInfoBuilder.build("sn", String.class, EnumSet.of(Flags.REQUIRED, Flags.MULTIVALUED)), info);
+    }
+
+    @Test
+    public void testGroupSchema() {
+        LdapConfiguration config = newConfiguration();
+        config.setReadSchema(true);
+        Schema schema = newFacade(config).schema();
+
+        ObjectClassInfo oci = schema.findObjectClassInfo(ObjectClass.GROUP_NAME);
+        assertFalse(oci.isContainer());
+
+        Set<AttributeInfo> attrInfos = oci.getAttributeInfo();
+
+        AttributeInfo info = AttributeInfoUtil.find("cn", attrInfos);
+        assertEquals(AttributeInfoBuilder.build("cn", String.class, EnumSet.of(Flags.REQUIRED, Flags.MULTIVALUED)), info);
+    }
+
+    @Test
     public void testAuthenticationOnlyForAccounts() {
-        Schema schema = newFacade(newConfiguration()).schema();
+        LdapConfiguration config = newConfiguration();
+        config.setReadSchema(true);
+        Schema schema = newFacade(config).schema();
         Set<ObjectClassInfo> ocis = schema.getSupportedObjectClassesByOperation().get(AuthenticationApiOp.class);
         assertEquals(1, ocis.size());
         assertTrue(ocis.iterator().next().is(ObjectClass.ACCOUNT_NAME));

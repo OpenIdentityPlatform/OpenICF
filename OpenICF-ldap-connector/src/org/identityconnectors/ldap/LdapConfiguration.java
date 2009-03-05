@@ -26,6 +26,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +54,7 @@ import org.identityconnectors.framework.spi.ConfigurationProperty;
 public class LdapConfiguration extends AbstractConfiguration {
 
     // XXX should try to connect to the resource.
+    // XXX add @ConfigurationProperty.
 
     private static final Log log = Log.getLog(LdapConfiguration.class);
 
@@ -73,11 +75,6 @@ public class LdapConfiguration extends AbstractConfiguration {
      * Whether the port is a secure SSL port.
      */
     private boolean ssl;
-
-    /**
-     * The base DNs for operations on the server.
-     */
-    private String[] baseContexts = { "dc=MYDOMAIN,dc=com" };
 
     /**
      * The bind DN for performing operations on the server.
@@ -104,6 +101,11 @@ public class LdapConfiguration extends AbstractConfiguration {
      * The authentication mechanism to use against the LDAP server.
      */
     private String authentication = "none";
+
+    /**
+     * The base DNs for operations on the server.
+     */
+    private String[] baseContexts = { "dc=MYDOMAIN,dc=com" };
 
     /**
      * The LDAP attribute holding the member for non-POSIX static groups.
@@ -146,8 +148,11 @@ public class LdapConfiguration extends AbstractConfiguration {
 
     // Exposed configuration properties end here.
 
-    private final ObjectClassMappingConfig accountConfig = new ObjectClassMappingConfig(ObjectClass.ACCOUNT, "inetOrgPerson");
-    private final ObjectClassMappingConfig groupConfig = new ObjectClassMappingConfig(ObjectClass.GROUP, "groupOfUniqueNames");
+    private final ObjectClassMappingConfig accountConfig = new ObjectClassMappingConfig(ObjectClass.ACCOUNT,
+            CollectionUtil.newSet("top", "person", "organizationalPerson", "inetOrgPerson"));
+
+    private final ObjectClassMappingConfig groupConfig = new ObjectClassMappingConfig(ObjectClass.GROUP,
+            CollectionUtil.newSet("top", "groupOfUniqueNames"));
 
     private List<LdapName> baseContextsAsLdapNames;
 
@@ -254,17 +259,6 @@ public class LdapConfiguration extends AbstractConfiguration {
         this.ssl = ssl;
     }
 
-    public String[] getBaseContexts() {
-        return baseContexts.clone();
-    }
-
-    public void setBaseContexts(String... baseContexts) {
-        if (baseContexts == null) {
-            throw new ConfigurationException("The baseContexts parameter cannot be null");
-        }
-        this.baseContexts = baseContexts.clone();
-    }
-
     public String getPrincipal() {
         return principal;
     }
@@ -302,15 +296,31 @@ public class LdapConfiguration extends AbstractConfiguration {
         return authentication;
     }
 
-    public boolean isAuthenticationNone() {
-        return "none".equals(authentication);
-    }
-
     public void setAuthentication(String authentication) {
         if (StringUtil.isBlank(authentication)) {
             throw new ConfigurationException("The authentication type should not be null or whitespace");
         }
         this.authentication = authentication;
+    }
+
+    public String[] getBaseContexts() {
+        return baseContexts.clone();
+    }
+
+    public void setBaseContexts(String... baseContexts) {
+        if (baseContexts == null) {
+            throw new ConfigurationException("The baseContexts parameter cannot be null");
+        }
+        this.baseContexts = baseContexts.clone();
+    }
+
+    public String[] getAccountObjectClasses() {
+        Set<String> ldapClasses = accountConfig.getLdapClasses();
+        return ldapClasses.toArray(new String[ldapClasses.size()]);
+    }
+
+    public void setAccountObjectClasses(String... ldapClasses) {
+        accountConfig.setLdapClasses(CollectionUtil.newSet(Arrays.asList(ldapClasses)));
     }
 
     public String getGroupMemberAttr() {
@@ -416,7 +426,8 @@ public class LdapConfiguration extends AbstractConfiguration {
 
         for (int i = 0; i < extendedObjectClasses.length; i++) {
             String extendedObjectClass = extendedObjectClasses[i];
-            ObjectClassMappingConfig config = new ObjectClassMappingConfig(new ObjectClass(extendedObjectClass), extendedObjectClass);
+            ObjectClassMappingConfig config = new ObjectClassMappingConfig(new ObjectClass(extendedObjectClass),
+                    Collections.singleton(extendedObjectClass));
             if (i < extendedNamingAttributes.length) {
                 config.setNameAttribute(extendedNamingAttributes[i]);
             } else {

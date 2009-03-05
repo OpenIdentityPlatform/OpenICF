@@ -55,11 +55,26 @@ public class LdapCreateTests extends LdapConnectorTestBase{
     }
 
     @Test
-    public void testCreateAccount() {
+    public void testCreateAccountWhenNotReadingSchema() {
         LdapConfiguration config = newConfiguration();
         config.setBaseContexts(SMALL_COMPANY_DN);
         ConnectorFacade facade = newFacade(config);
 
+        doCreateAccount(facade);
+    }
+
+    @Test
+    public void testCreateAccountWhenReadingSchema() {
+        LdapConfiguration config = newConfiguration();
+        config.setReadSchema(true);
+        config.setBaseContexts(SMALL_COMPANY_DN);
+        config.setAccountObjectClasses("inetOrgPerson");
+        ConnectorFacade facade = newFacade(config);
+
+        doCreateAccount(facade);
+    }
+
+    private void doCreateAccount(ConnectorFacade facade) {
         Set<Attribute> attributes = new HashSet<Attribute>();
         Name name = new Name("uid=another.worker," + SMALL_COMPANY_DN);
         attributes.add(name);
@@ -71,6 +86,37 @@ public class LdapCreateTests extends LdapConnectorTestBase{
 
         ConnectorObject newAccount = facade.getObject(ObjectClass.ACCOUNT, uid, null);
         assertEquals(name, newAccount.getName());
+    }
+
+    @Test
+    public void testCreateGroupWhenNotReadingSchema() {
+        LdapConfiguration config = newConfiguration();
+        config.setBaseContexts(SMALL_COMPANY_DN);
+        ConnectorFacade facade = newFacade(config);
+
+        doCreateGroup(facade);
+    }
+
+    @Test
+    public void testCreateGroupWhenReadingSchema() {
+        LdapConfiguration config = newConfiguration();
+        config.setReadSchema(true);
+        config.setBaseContexts(SMALL_COMPANY_DN);
+        config.setAccountObjectClasses("inetOrgPerson");
+        ConnectorFacade facade = newFacade(config);
+
+        doCreateGroup(facade);
+    }
+
+    private void doCreateGroup(ConnectorFacade facade) {
+        Set<Attribute> attributes = new HashSet<Attribute>();
+        Name name = new Name("cn=Another Group," + SMALL_COMPANY_DN);
+        attributes.add(name);
+        attributes.add(AttributeBuilder.build("cn", "Another Group"));
+        Uid uid = facade.create(ObjectClass.GROUP, attributes, null);
+
+        ConnectorObject newGroup = facade.getObject(ObjectClass.GROUP, uid, null);
+        assertEquals(name, newGroup.getName());
     }
 
     @Test

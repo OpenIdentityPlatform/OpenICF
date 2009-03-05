@@ -172,14 +172,19 @@ public class LdapSearch {
      */
     private String restrictFilterToObjectClass(String nativeFilter) {
         StringBuilder builder = new StringBuilder();
-        if (nativeFilter != null) {
+        Set<String> ldapClasses = conn.getSchemaMapping().getLdapClasses(oclass);
+        if (nativeFilter != null || ldapClasses.size() > 1) {
             builder.append("(&");
         }
-        builder.append("(objectClass=");
-        builder.append(conn.getSchemaMapping().getLdapClass(oclass));
-        builder.append(')');
+        for (String ldapClass : ldapClasses) {
+            builder.append("(objectClass=");
+            builder.append(ldapClass);
+            builder.append(')');
+        }
         if (nativeFilter != null) {
             builder.append(nativeFilter);
+        }
+        if (nativeFilter != null || ldapClasses.size() > 1) {
             builder.append(')');
         }
         return builder.toString();

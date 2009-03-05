@@ -66,7 +66,7 @@ public abstract class LdapConnectorTestBase {
     public static final String LOONEY_TUNES_DN = "cn=Looney Tunes,o=Acme,dc=example,dc=com";
     public static final String LOONEY_TUNES_CN = "Looney Tunes";
     public static final String LOONEY_TUNES_DESCRIPTION = "Characters from Looney Tunes";
-    public static final String BUGS_AND_FRIENDS_CN = "Bugs and Friends";
+    public static final String BUGS_AND_FRIENDS_DN = "cn=Bugs and Friends,o=Acme,dc=example,dc=com";
 
     public static final String CZECH_REPUBLIC_DN = "c=Czech Republic,o=Acme,dc=example,dc=com";
     public static final String CZECH_REPUBLIC_C = "Czech Republic";

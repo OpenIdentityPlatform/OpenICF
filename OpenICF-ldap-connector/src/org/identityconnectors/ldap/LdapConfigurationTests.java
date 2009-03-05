@@ -94,10 +94,6 @@ public class LdapConfigurationTests extends LdapConnectorTestBase {
         config.setHost("example.com");
         assertEquals("example.com", config.getHost());
 
-        assertTrue(config.isAuthenticationNone());
-        config.setAuthentication("simple");
-        assertFalse(config.isAuthenticationNone());
-
         assertEquals(0, config.getExtendedObjectClasses().length);
     }
 }

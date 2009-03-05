@@ -23,27 +23,18 @@
 package org.identityconnectors.ldap;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.framework.api.ConnectorFacade;
-import org.identityconnectors.framework.common.objects.AttributeInfo;
-import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
-import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
+import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
-import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
-import org.identityconnectors.framework.common.objects.Schema;
-import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 import org.identityconnectors.test.common.TestHelpers;
 import org.junit.Test;
 
@@ -70,56 +61,29 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
     }
 
     @Test
-    public void testAccountSchema() {
-        Schema schema = newFacade().schema();
-
-        ObjectClassInfo oci = schema.findObjectClassInfo(ObjectClass.ACCOUNT_NAME);
-        assertFalse(oci.isContainer());
-
-        Set<AttributeInfo> attrInfos = oci.getAttributeInfo();
-
-        AttributeInfo info = AttributeInfoUtil.find("cn", attrInfos);
-        assertEquals(AttributeInfoBuilder.build("cn", String.class, EnumSet.of(Flags.REQUIRED, Flags.MULTIVALUED)), info);
-
-        info = AttributeInfoUtil.find("uid", attrInfos);
-        assertEquals(AttributeInfoBuilder.build("uid", String.class, EnumSet.of(Flags.MULTIVALUED)), info);
-
-        info = AttributeInfoUtil.find("givenName", attrInfos);
-        assertEquals(AttributeInfoBuilder.build("givenName", String.class, EnumSet.of(Flags.MULTIVALUED)), info);
-
-        info = AttributeInfoUtil.find("sn", attrInfos);
-        assertEquals(AttributeInfoBuilder.build("sn", String.class, EnumSet.of(Flags.REQUIRED, Flags.MULTIVALUED)), info);
-
-        info = AttributeInfoUtil.find("modifyTimeStamp", attrInfos);
-        assertEquals(AttributeInfoBuilder.build("modifyTimeStamp", String.class, EnumSet.of(Flags.NOT_CREATABLE, Flags.NOT_UPDATEABLE)), info);
-
-        final Set<String> RET_BY_DEF_ATTRS = CollectionUtil.newSet(
-                Name.NAME,
-                "uid",
-                "cn",
-                "givenName",
-                "sn",
-                "modifyTimeStamp"
-        );
-        Set<String> retByDefAttrs = new HashSet<String>();
-        for (AttributeInfo attrInfo : attrInfos) {
-            if (attrInfo.isReturnedByDefault()) {
-                retByDefAttrs.add(attrInfo.getName());
-            }
-        }
-        assertEquals(RET_BY_DEF_ATTRS, retByDefAttrs);
-    }
-
-    @Test
     public void testAccountAttributes() {
         ConnectorFacade facade = newFacade();
-        ConnectorObject user0 = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(USER_0_DN));
+        OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        builder.setAttributesToGet("uid", "cn", "givenName", "sn");
+        ConnectorObject user0 = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(USER_0_DN), builder.build());
 
         assertEquals(USER_0_DN, user0.getName().getNameValue());
         assertEquals(USER_0_UID, AttributeUtil.getAsStringValue(user0.getAttributeByName("uid")));
         assertEquals(USER_0_CN, AttributeUtil.getAsStringValue(user0.getAttributeByName("cn")));
         assertEquals(USER_0_GIVEN_NAME, AttributeUtil.getAsStringValue(user0.getAttributeByName("givenName")));
         assertEquals(USER_0_SN, AttributeUtil.getAsStringValue(user0.getAttributeByName("sn")));
+    }
+
+    @Test
+    public void testGroupAttributes() {
+        ConnectorFacade facade = newFacade();
+        OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        builder.setAttributesToGet("cn", "uniqueMember");
+        ConnectorObject object = searchByAttribute(facade, ObjectClass.GROUP, new Name(LOONEY_TUNES_DN), builder.build());
+
+        assertEquals(LOONEY_TUNES_CN, AttributeUtil.getAsStringValue(object.getAttributeByName("cn")));
+        Attribute uniqueMember = object.getAttributeByName("uniqueMember");
+        assertTrue(uniqueMember.getValue().contains(BUGS_AND_FRIENDS_DN));
     }
 
     @Test
