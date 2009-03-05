@@ -229,8 +229,9 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                             if (ConnectorHelper.isReadable(getObjectClassInfo(), attr)) {
                                 // null in case attribute is not present
                                 Attribute checkedAttribute = obj.getAttributeByName(attInfo.getName());
-                                final String MSG = "Attribute '%s' was neither removed nor its value set to null.";
-                                assertTrue(String.format(MSG, attInfo.getName()), checkedAttribute == null || checkedAttribute.equals(attr));
+                                final String MSG = "Attribute '%s' was neither removed nor its value set to null or empty list.";
+                                assertTrue(String.format(MSG, attInfo.getName()), checkedAttribute == null || checkedAttribute.equals(attr)
+                                                                                    || checkedAttribute.getValue().isEmpty());
                             }
                         }
                         catch (RuntimeException ex) {
