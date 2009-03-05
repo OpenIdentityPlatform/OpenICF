@@ -106,7 +106,8 @@
             <arg value="-h"/>
             <arg value="localhost"/>
             <arg value="-p"/>
-            <arg value="1389"/>
+            <!-- Cf. opends/config.xml. -->
+            <arg value="2389"/>
             <arg value="-D"/>
             <arg value="cn=Directory Manager"/>
             <arg value="-w"/>

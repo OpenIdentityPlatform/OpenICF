@@ -130,8 +130,8 @@ public abstract class LdapConnectorTestBase {
 
     public static LdapConfiguration newConfiguration(String... extObjectClassesAndNamingAttributes) {
         LdapConfiguration config = new LdapConfiguration();
-        // Cf. test/opends/config/config.ldif.
-        config.setPort(1389);
+        // Cf. opends/config.ldif.
+        config.setPort(2389);
         config.setBaseContexts(ACME_DN, BIG_COMPANY_DN);
         config.setPrincipal(ADMIN_DN);
         config.setCredentials(ADMIN_PASSWORD);

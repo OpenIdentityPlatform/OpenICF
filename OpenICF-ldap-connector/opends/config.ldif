@@ -328,7 +328,7 @@ cn: LDAP Connection Handler
 ds-cfg-java-class: org.opends.server.protocols.ldap.LDAPConnectionHandler
 ds-cfg-enabled: true
 ds-cfg-listen-address: 0.0.0.0
-ds-cfg-listen-port: 1389
+ds-cfg-listen-port: 2389
 ds-cfg-accept-backlog: 128
 ds-cfg-allow-ldap-v2: true
 ds-cfg-keep-stats: true
