@@ -24,7 +24,6 @@ package org.identityconnectors.ldap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -41,7 +40,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 public class ObjectClassMappingConfig {
 
     private final ObjectClass objectClass;
-    private Set<String> ldapClasses;
+    private List<String> ldapClasses;
 
     private boolean container;
 
@@ -56,10 +55,9 @@ public class ObjectClassMappingConfig {
 
     private final Set<AttributeInfo> operationalAttributes = new HashSet<AttributeInfo>();
 
-    public ObjectClassMappingConfig(ObjectClass objectClass, Set<String> ldapClasses) {
+    public ObjectClassMappingConfig(ObjectClass objectClass, List<String> ldapClasses) {
         assert objectClass != null;
         assert ldapClasses != null;
-        assert !ldapClasses.isEmpty();
         this.objectClass = objectClass;
         this.ldapClasses = ldapClasses;
     }
@@ -68,15 +66,18 @@ public class ObjectClassMappingConfig {
         return objectClass;
     }
 
-    public Set<String> getLdapClasses() {
+    public List<String> getLdapClasses() {
         return ldapClasses;
     }
 
-    public void setLdapClasses(Set<String> ldapClasses) {
-        assert !ldapClasses.isEmpty();
-        Set<String> newSet = CollectionUtil.newCaseInsensitiveSet();
-        newSet.addAll(ldapClasses);
-        this.ldapClasses = Collections.unmodifiableSet(ldapClasses);
+    public Set<String> getLdapClassesAsSet() {
+        Set<String> result = CollectionUtil.newCaseInsensitiveSet();
+        result.addAll(ldapClasses);
+        return result;
+    }
+
+    public void setLdapClasses(List<String> ldapClasses) {
+        this.ldapClasses = CollectionUtil.newReadOnlyList(ldapClasses);
     }
 
     public boolean isContainer() {

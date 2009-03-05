@@ -90,7 +90,7 @@ class LdapSchemaBuilder {
     private Set<AttributeInfo> createAttributeInfos(ObjectClassMappingConfig oclassConfig) {
         Set<AttributeInfo> result = new HashSet<AttributeInfo>();
 
-        Set<String> ldapClasses = oclassConfig.getLdapClasses();
+        Set<String> ldapClasses = oclassConfig.getLdapClassesAsSet();
 
         Set<String> requiredAttrs = getRequiredAttributes(ldapClasses);
         Set<String> optionalAttrs = getOptionalAttributes(ldapClasses);

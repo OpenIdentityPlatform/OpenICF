@@ -149,10 +149,10 @@ public class LdapConfiguration extends AbstractConfiguration {
     // Exposed configuration properties end here.
 
     private final ObjectClassMappingConfig accountConfig = new ObjectClassMappingConfig(ObjectClass.ACCOUNT,
-            CollectionUtil.newSet("top", "person", "organizationalPerson", "inetOrgPerson"));
+            CollectionUtil.newList("top", "person", "organizationalPerson", "inetOrgPerson"));
 
     private final ObjectClassMappingConfig groupConfig = new ObjectClassMappingConfig(ObjectClass.GROUP,
-            CollectionUtil.newSet("top", "groupOfUniqueNames"));
+            CollectionUtil.newList("top", "groupOfUniqueNames"));
 
     private List<LdapName> baseContextsAsLdapNames;
 
@@ -192,6 +192,20 @@ public class LdapConfiguration extends AbstractConfiguration {
                 new LdapName(baseContext);
             } catch (InvalidNameException e) {
                 throw new ConfigurationException("The base context " + baseContext + " in the LDAP configuration cannot be parsed");
+            }
+        }
+
+        if (accountConfig.getLdapClasses().size() < 1) {
+            throw new ConfigurationException("No base context was provided in the LDAP configuration");
+        }
+        Set<String> accountObjectClassSet = CollectionUtil.newCaseInsensitiveSet();
+        accountObjectClassSet.addAll(accountConfig.getLdapClasses());
+        if (accountObjectClassSet.size() != accountConfig.getLdapClasses().size()) {
+            throw new ConfigurationException("The list of account object clases in the LDAP configuration contains duplicates");
+        }
+        for (String accountObjectClass : accountConfig.getLdapClasses()) {
+            if (accountObjectClass == null) {
+                throw new ConfigurationException("The list of account object classes cannot contain null values");
             }
         }
 
@@ -315,12 +329,12 @@ public class LdapConfiguration extends AbstractConfiguration {
     }
 
     public String[] getAccountObjectClasses() {
-        Set<String> ldapClasses = accountConfig.getLdapClasses();
+        List<String> ldapClasses = accountConfig.getLdapClasses();
         return ldapClasses.toArray(new String[ldapClasses.size()]);
     }
 
-    public void setAccountObjectClasses(String... ldapClasses) {
-        accountConfig.setLdapClasses(CollectionUtil.newSet(Arrays.asList(ldapClasses)));
+    public void setAccountObjectClasses(String... accountObjectClasses) {
+        accountConfig.setLdapClasses(Arrays.asList(accountObjectClasses));
     }
 
     public String getGroupMemberAttr() {
@@ -427,7 +441,7 @@ public class LdapConfiguration extends AbstractConfiguration {
         for (int i = 0; i < extendedObjectClasses.length; i++) {
             String extendedObjectClass = extendedObjectClasses[i];
             ObjectClassMappingConfig config = new ObjectClassMappingConfig(new ObjectClass(extendedObjectClass),
-                    Collections.singleton(extendedObjectClass));
+                    Collections.singletonList(extendedObjectClass));
             if (i < extendedNamingAttributes.length) {
                 config.setNameAttribute(extendedNamingAttributes[i]);
             } else {
@@ -451,15 +465,14 @@ public class LdapConfiguration extends AbstractConfiguration {
         builder.append(host);
         builder.append(port);
         builder.append(ssl);
+        builder.append(principal);
+        builder.append(credentials);
+        builder.append(authentication);
         for (String baseContext : baseContexts) {
             builder.append(baseContext);
         }
-        builder.append(principal);
-        builder.append(credentials);
 //        builder.append(uuidAttribute);
 //        builder.append(passwordAttribute);
-        builder.append(authentication);
-        builder.append(groupConfig);
         builder.append(groupMemberAttr);
         builder.append(useBlocks);
         builder.append(blockCount);

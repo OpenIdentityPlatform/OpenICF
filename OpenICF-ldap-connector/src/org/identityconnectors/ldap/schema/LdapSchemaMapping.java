@@ -128,7 +128,7 @@ public class LdapSchemaMapping {
     public Set<String> getLdapClasses(ObjectClass oclass) {
         ObjectClassMappingConfig oclassConfig = conn.getConfiguration().getObjectClassMappingConfigs().get(oclass);
         if (oclassConfig != null) {
-            return oclassConfig.getLdapClasses();
+            return oclassConfig.getLdapClassesAsSet();
         }
         // XXX will need a check here if object class names are made special.
         return Collections.singleton(oclass.getObjectClassValue());
