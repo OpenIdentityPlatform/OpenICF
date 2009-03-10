@@ -32,11 +32,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import junit.framework.Assert;
 
-import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
@@ -198,6 +198,62 @@ public class ConnectorHelper {
     }
     
     /**
+     * Creates connector facade with wrong configuration.
+     * @param wrongPropertyMap wrong configuration
+     */
+    public static ConnectorFacade createConnectorFacadeWithWrongConfiguration(DataProvider dataProvider, final Map<?,?> wrongPropertyMap) {
+        ConnectorInfoManager manager = getInfoManager(dataProvider);
+        Assert.assertNotNull("Manager can't be null, check configuration properties !", manager);
+
+        APIConfiguration apiConfig = getDefaultConfigurationProperties(
+                dataProvider, manager);
+        
+        ConfigurationProperties properties = apiConfig.getConfigurationProperties();
+        
+        List<String> propertyNames = properties.getPropertyNames();
+        for (String propName : propertyNames) {
+            ConfigurationProperty prop = properties.getProperty(propName);
+            LOG.info("OldValue = " + propName + " = \'" + prop.getValue()
+                    + "\' type = \'" + prop.getType() + "\'");
+
+            final Object wrongProp = wrongPropertyMap.get(propName);
+
+            // choose the wrong or default property value depending on what is
+            // available.
+            try {
+                Object setProperty = (!wrongPropertyMap.containsKey(propName)) ? dataProvider
+                        .getConnectorAttribute(propName) : wrongProp;
+
+                if (prop.getType().equals(GuardedString.class)
+                        && !(setProperty instanceof GuardedString) && (setProperty!=null)) {
+                    setProperty = new GuardedString(setProperty.toString()
+                            .toCharArray());
+                }
+
+                LOG.info("Setting property ''{0}'' to value ''{1}''", propName,
+                        ((setProperty == null)? "null" : setProperty.toString()));
+
+                properties.setPropertyValue(propName, setProperty);
+
+            } catch (ObjectNotFoundException ex) {
+                // expected
+            }
+        }
+
+        LOG.info("--------------- NEW PROPERTIES -------------------");
+        for (String propName : propertyNames) {
+            ConfigurationProperty prop = properties.getProperty(propName);
+            LOG.info(propName + " = \'" + prop.getValue() + "\' type = \'"
+                    + prop.getType() + "\'");
+        }
+
+        ConnectorFacade connector = ConnectorFacadeFactory.getInstance().newInstance(apiConfig);
+        Assert.assertNotNull("Unable to create connector", connector);
+
+        return connector;
+    }
+    
+    /**
      * Creates connector facade, initializes connector configuration from
      * dataProvider and validates configuration and/or tests connection.
      */
@@ -214,14 +270,6 @@ public class ConnectorHelper {
         }
         
         return connector;
-    }
-    
-    /**
-     * Creates connector facade with wrong configuration.
-     */
-    public static ConnectorFacade createConnectorFacadeWithWrongConfiguration(DataProvider dataProvider, int iteration) {
-        LOG.info("Creating connector facade with wrong configuration.");
-        return createConnectorFacade(dataProvider,iteration + "." + WRONG_CONFIGURATION_PREFIX);
     }
     
     /**

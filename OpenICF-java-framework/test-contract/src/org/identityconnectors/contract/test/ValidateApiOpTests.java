@@ -25,55 +25,72 @@ package org.identityconnectors.contract.test;
 
 import static org.junit.Assert.fail;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
+import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.ValidateApiOp;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 
 /**
  * Contract test of {@link ValidateApiOp} operation.
- * Positive test for validate() is performed everytime connector facade is created.
+ * Positive test for validate() is performed every time connector facade is created.
  */
-@RunWith(Parameterized.class)
 public class ValidateApiOpTests extends AbstractSimpleTest {
     
+    private static final String PROPERTY_NAME_INVALID_CONFIG = "invalidConfig";
     /**
      * Logging..
      */
     private static final Log LOG = Log.getLog(TestApiOpTests.class);
-    
-    private int _iterationNumber;
-    
-    public ValidateApiOpTests(final int iterationNumber) {
-        super();
-
-        _iterationNumber = iterationNumber;
-    }
+    private static final String TEST_NAME = "Validate";
     
     /**
      * Tests validate() with configuration that should NOT be correct.
      */
     @Test
     public void testValidateFail() {
+        final String testPropertyName = "testsuite." + TEST_NAME + "."
+                + PROPERTY_NAME_INVALID_CONFIG;
+       
         // run test only in case operation is supported
         if (ConnectorHelper.operationsSupported(getConnectorFacade(), getAPIOperations())) {
-            // create connector with invalid configuration            
-            _connFacade = ConnectorHelper.createConnectorFacadeWithWrongConfiguration(getDataProvider(), getIterationNumber());
+            // READ THE TEST PROPERTY WITH WRONG CONFIGURATIONS THAT OVERRIDE THE DEFAULT CONFIGURATION
+            Object o = null;
             try {
-                // should throw RuntimeException
-                getConnectorFacade().validate();
-                fail("Validate should throw RuntimeException because configuration should be invalid.");
+                 o = getDataProvider().getTestSuiteAttribute(PROPERTY_NAME_INVALID_CONFIG, TEST_NAME);
+            } catch (ObjectNotFoundException ex) {
+                fail(String.format("Missing test property: '%s'", testPropertyName));
             }
-            catch (RuntimeException ex) {
-                // expected
+            
+            if (!(o instanceof List)) {
+                fail(String.format("Test property '%s' should be of type List", testPropertyName));
+            }
+            
+            final List<?> wrongConfigList = (List<?>) o;
+            
+            for (Object currentWrongConfigMap : wrongConfigList) {
+                if (!(currentWrongConfigMap instanceof Map<?,?>)) {
+                    fail(String.format("Test property '%s' contains other than Map properties.", testPropertyName));
+                }
+                Map<?,?> currentWrongMapConfig = (Map<?,?>) currentWrongConfigMap;
+                
+                _connFacade = ConnectorHelper
+                        .createConnectorFacadeWithWrongConfiguration(
+                                getDataProvider(), currentWrongMapConfig);
+                try {
+                    // should throw RuntimeException
+                    getConnectorFacade().validate();
+                    String msg = String.format("Validate should throw RuntimeException because configuration should be invalid. Wrong properties used: \n%s", currentWrongMapConfig.toString());
+                    fail(msg);
+                } catch (RuntimeException ex) {
+                    // expected
+                }
             }
         }
         else {
@@ -82,7 +99,7 @@ public class ValidateApiOpTests extends AbstractSimpleTest {
             LOG.info("--------------------------------");
         }
     }
-    
+
     /**
      * {@inheritDoc}     
      */
@@ -93,30 +110,4 @@ public class ValidateApiOpTests extends AbstractSimpleTest {
         s.add(ValidateApiOp.class);
         return s;
     }
-    
-    /**
-     * Returns this iteration number.
-     * @return Iteration number.
-     */
-    public int getIterationNumber() {
-        return _iterationNumber;
-    }
-
-    /**
-     * Parameters to be passed to junit test - iteration number.
-     * @return List of arrays of parameters for this test.
-     */
-    @Parameters
-    public static List<Object[]> data() {
-        Integer i = Integer.parseInt((String)getDataProvider().getTestSuiteAttribute("iterations", "Validate"));
-        List<Object[]> list = new ArrayList<Object[]>();
-        for (Integer j=1; j<=i; j++) {
-            list.add(new Object[] {j});
-        }
-        
-        return list;
-    }
-
-
-
 }
