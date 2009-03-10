@@ -28,9 +28,11 @@ import static org.junit.Assert.fail;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.TestApiOp;
 import org.junit.Test;
@@ -46,38 +48,56 @@ import org.junit.runners.Parameterized.Parameters;
  * 
  * Currently there is not ability in API to test contract in case connection is lost.
  */
-@RunWith(Parameterized.class)
 public class TestApiOpTests extends AbstractSimpleTest {
     
     /**
      * Logging..
      */
     private static final Log LOG = Log.getLog(TestApiOpTests.class);
-    
-    private int _iterationNumber;
-    
-    public TestApiOpTests(final int iterationNumber) {
-        super();
-
-        _iterationNumber = iterationNumber;
-    }
+    private static final String TEST_NAME = "Test";
+    private static final String PROPERTY_NAME_INVALID_CONFIG = "invalidConfig";
     
     /**
      * Tests test() with configuration that should NOT be correct.
      */
     @Test
     public void testTestFail() {
+        final String testPropertyName = "testsuite." + TEST_NAME + "."
+        + PROPERTY_NAME_INVALID_CONFIG;
+        
         // run test only in case operation is supported
         if (ConnectorHelper.operationsSupported(getConnectorFacade(), getAPIOperations())) {
-            // create connector with invalid configuration            
-            _connFacade = ConnectorHelper.createConnectorFacadeWithWrongConfiguration(getDataProvider(), getIterationNumber());
+            // READ THE TEST PROPERTY WITH WRONG CONFIGURATIONS THAT OVERRIDE THE DEFAULT CONFIGURATION
+            Object o = null;
             try {
-                // should throw RuntimeException
-                getConnectorFacade().test();
-                fail("test() should throw RuntimeException because configuration should be invalid.");
+                 o = getDataProvider().getTestSuiteAttribute(PROPERTY_NAME_INVALID_CONFIG, TEST_NAME);
+            } catch (ObjectNotFoundException ex) {
+                fail(String.format("Missing test property: '%s'", testPropertyName));
             }
-            catch (RuntimeException ex) {
-                // expected
+            
+            if (!(o instanceof List)) {
+                fail(String.format("Test property '%s' should be of type List", testPropertyName));
+            }
+            
+            final List<?> wrongConfigList = (List<?>) o;
+            
+            for (Object currentWrongConfigMap : wrongConfigList) {
+                if (!(currentWrongConfigMap instanceof Map<?,?>)) {
+                    fail(String.format("Test property '%s' contains other than Map properties.", testPropertyName));
+                }
+                Map<?,?> currentWrongMapConfig = (Map<?,?>) currentWrongConfigMap;
+                
+                _connFacade = ConnectorHelper
+                        .createConnectorFacadeWithWrongConfiguration(
+                                getDataProvider(), currentWrongMapConfig);
+                try {
+                    // should throw RuntimeException
+                    getConnectorFacade().test();
+                    String msg = String.format("test() should throw RuntimeException because configuration should be invalid. Wrong properties used: \n%s", currentWrongMapConfig.toString());
+                    fail(msg);
+                } catch (RuntimeException ex) {
+                    // expected
+                }
             }
         }
         else {
@@ -97,29 +117,4 @@ public class TestApiOpTests extends AbstractSimpleTest {
         s.add(TestApiOp.class);
         return s;
     }
-
-    /**
-     * Returns this iteration number.
-     * @return Iteration number.
-     */
-    public int getIterationNumber() {
-        return _iterationNumber;
-    }
-
-    /**
-     * Parameters to be passed to junit test - iteration number.
-     * @return List of arrays of parameters for this test.
-     */
-    @Parameters
-    public static List<Object[]> data() {
-        Integer i = Integer.parseInt((String)getDataProvider().getTestSuiteAttribute("iterations", "Validate"));
-
-        List<Object[]> list = new ArrayList<Object[]>();
-        for (Integer j=1; j<=i; j++) {
-            list.add(new Object[] {j});
-        }
-        
-        return list;
-    }
-
 }
