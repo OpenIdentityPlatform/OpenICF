@@ -66,9 +66,16 @@ configurations {
 
 
 // Connector WRONG configuration for ValidateApiOpTests
-connector.i1.wrong.host=""
-connector.i2.wrong.login=""
-connector.i3.wrong.password=""
+testsuite.Validate.invalidConfig = [
+  [ host : "" ],
+  [ login : "" ],
+  [ password : "" ]
+]
+
+// Connector WRONG configuration for TestApiOpTests
+testsuite.Test.invalidConfig = [
+  [ password : "NonExistingPassword_foo_bar_boo" ]
+]
 
 testsuite {
     // path to bundle jar - property is set by ant - leave it as it is
@@ -78,9 +85,6 @@ testsuite {
     connectorName="org.identityconnectors.databasetable.DatabaseTableConnector"    
 
     Search.disable.caseinsensitive=true // skip insensitive test
-
-    // ValidateApiOpTests:
-    Validate.iterations="3"
 
     // AuthenticationApiOpTests:
     Authentication.__ACCOUNT__.username=Lazy.get("i0.Authentication.__ACCOUNT__.__NAME__")
