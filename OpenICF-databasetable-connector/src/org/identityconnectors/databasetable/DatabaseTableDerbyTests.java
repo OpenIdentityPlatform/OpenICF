@@ -248,7 +248,7 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
     public void testNoZeroSQLExceptions() throws Exception {
         DatabaseTableConfiguration cfg = getConfiguration();
         cfg.setRethrowAllSQLExceptions(false);
-        DatabaseTableConnector con = getConnector(cfg);
+        con = getConnector(cfg);
 
         final ExpectProxy<MappingStrategy> smse = new ExpectProxy<MappingStrategy>();
         MappingStrategy sms = smse.getProxy(MappingStrategy.class);
@@ -261,16 +261,10 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
         //Update fail
         smse.expectAndThrow("setSQLParam", new SQLException("test reason", "0", 0));
         con.getConnection().setSms(sms);
-        try {
-            Set<Attribute> expected = getCreateAttributeSet(cfg);
-            Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
-            con.update(ObjectClass.ACCOUNT, uid, expected, null);
-            smse.isDone();
-        } finally {
-            if (con != null) {
-                con.dispose();
-            }
-        }
+        Set<Attribute> expected = getCreateAttributeSet(cfg);
+        Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
+        con.update(ObjectClass.ACCOUNT, uid, expected, null);
+        smse.isDone();
     }
     
     /**
@@ -281,7 +275,7 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
     public void testNonZeroSQLExceptions() throws Exception {
         DatabaseTableConfiguration cfg = getConfiguration();
         cfg.setRethrowAllSQLExceptions(false);
-        DatabaseTableConnector con = getConnector(cfg);
+        con = getConnector(cfg);
 
         final ExpectProxy<MappingStrategy> smse = new ExpectProxy<MappingStrategy>();
         MappingStrategy sms = smse.getProxy(MappingStrategy.class);
@@ -290,15 +284,9 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
         }
         smse.expectAndThrow("setSQLParam", new SQLException("test reason", "411", 411));
         con.getConnection().setSms(sms);
-        try {
-            Set<Attribute> expected = getCreateAttributeSet(cfg);
-            con.create(ObjectClass.ACCOUNT, expected, null);
-            smse.isDone();
-        } finally {
-            if (con != null) {
-                con.dispose();
-            }
-        }
+        Set<Attribute> expected = getCreateAttributeSet(cfg);
+        con.create(ObjectClass.ACCOUNT, expected, null);
+        smse.isDone();
     }    
     
     /**
@@ -309,7 +297,7 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
     public void testRethrowAllSQLExceptions() throws Exception {
         DatabaseTableConfiguration cfg = getConfiguration();
         cfg.setRethrowAllSQLExceptions(true);
-        DatabaseTableConnector con = getConnector(cfg);
+        con = getConnector(cfg);
 
         final ExpectProxy<MappingStrategy> smse = new ExpectProxy<MappingStrategy>();
         MappingStrategy sms = smse.getProxy(MappingStrategy.class);
@@ -318,15 +306,9 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
         }
         smse.expectAndThrow("setSQLParam", new SQLException("test reason", "0", 0));
         con.getConnection().setSms(sms);
-        try {
-            Set<Attribute> expected = getCreateAttributeSet(cfg);
-            con.create(ObjectClass.ACCOUNT, expected, null);
-            smse.isDone();
-        } finally {
-            if (con != null) {
-                con.dispose();
-            }
-        }
+        Set<Attribute> expected = getCreateAttributeSet(cfg);
+        con.create(ObjectClass.ACCOUNT, expected, null);
+        smse.isDone();
     }    
 
     /**
@@ -336,16 +318,10 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
     @Test
     public void testSchema() throws Exception {
         DatabaseTableConfiguration cfg = getConfiguration();
-        DatabaseTableConnector con = getConnector(cfg);
-        try {
-            // check if this works..
-            Schema schema = con.schema();
-            checkSchema(schema);
-        } finally {
-            if (con != null) {
-                con.dispose();
-            }
-        }
+        con = getConnector(cfg);
+        // check if this works..
+        Schema schema = con.schema();
+        checkSchema(schema);
     }
     
     
@@ -406,41 +382,35 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
     public void testGetLatestSyncToken() throws Exception {
         final String SQL_TEMPLATE = "UPDATE Accounts SET changelog = ? WHERE accountId = ?";
         final DatabaseTableConfiguration cfg = getConfiguration();
-        final DatabaseTableConnector con = getConnector(cfg);
+        con = getConnector(cfg);
+        deleteAllFromAccounts(con.getConnection());
+        final Set<Attribute> expected = getCreateAttributeSet(cfg);
+
+        final Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
+        assertNotNull(uid);
+        final Long changelog = 9999999999999L; //Some really big value
+
+        // update the last change
+        PreparedStatement ps = null;
+        DatabaseTableConnection conn = null;
         try {
-            deleteAllFromAccounts(con.getConnection());
-            final Set<Attribute> expected = getCreateAttributeSet(cfg);
+            conn = DatabaseTableConnection.getConnection(getConfiguration());
 
-            final Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
-            assertNotNull(uid);
-            final Long changelog = 9999999999999L; //Some really big value
-
-            // update the last change
-            PreparedStatement ps = null;
-            DatabaseTableConnection conn = null;
-            try {
-                conn = DatabaseTableConnection.getConnection(getConfiguration());
-
-                List<SQLParam> values = new ArrayList<SQLParam>();
-                values.add(new SQLParam(changelog, Types.INTEGER));
-                values.add(new SQLParam(uid.getUidValue(), Types.VARCHAR));
-                ps = conn.prepareStatement(SQL_TEMPLATE, values);
-                ps.execute();
-                conn.commit();
-            } finally {
-                SQLUtil.closeQuietly(ps);
-                SQLUtil.closeQuietly(conn);
-            }
-            // attempt to find the newly created object..
-            final SyncToken latestSyncToken = con.getLatestSyncToken(ObjectClass.ACCOUNT);
-            assertNotNull(latestSyncToken);
-            final Object actual = latestSyncToken.getValue();
-            assertEquals(changelog, actual);
+            List<SQLParam> values = new ArrayList<SQLParam>();
+            values.add(new SQLParam(changelog, Types.INTEGER));
+            values.add(new SQLParam(uid.getUidValue(), Types.VARCHAR));
+            ps = conn.prepareStatement(SQL_TEMPLATE, values);
+            ps.execute();
+            conn.commit();
         } finally {
-            if (con != null) {
-                con.dispose();
-            }
+            SQLUtil.closeQuietly(ps);
+            SQLUtil.closeQuietly(conn);
         }
+        // attempt to find the newly created object..
+        final SyncToken latestSyncToken = con.getLatestSyncToken(ObjectClass.ACCOUNT);
+        assertNotNull(latestSyncToken);
+        final Object actual = latestSyncToken.getValue();
+        assertEquals(changelog, actual);
     }     
     
     static String getResourceAsString(String res) {

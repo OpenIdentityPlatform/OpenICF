@@ -86,8 +86,8 @@ testsuite {
     // Connector WRONG configuration for TestApiOpTests    
     Validate.invalidConfig = [
         [ host : "" ],
-        [ login : "" ],
-        [ password : "" ]
+        [ user : "" ],
+        [ password : null ]
     ]
 
     // SyncApiOpTests:

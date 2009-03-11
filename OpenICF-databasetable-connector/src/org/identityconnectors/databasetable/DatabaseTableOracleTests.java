@@ -138,35 +138,29 @@ public class DatabaseTableOracleTests extends DatabaseTableTestBase{
      * testTimestampColumn operates on the table 'bug17551table'
      * @throws Exception 
      */
-    @Test    
+    @Test
     public void testTimestampColumnNative() throws Exception {
         log.ok("testCreateCall");
         DatabaseTableConfiguration cfg = getConfiguration();
         cfg.setTable("BUG17551");
         cfg.setNativeTimestamps(true);
-        DatabaseTableConnector con = getConnector(cfg);
-        try {
-            deleteAllFromBug(con.getConnection());
-            Set<Attribute> expected = getTimestampColumnAttributeSet();
-            Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
-            // attempt to get the record back..
-            List<ConnectorObject> results = TestHelpers.searchToList(con, ObjectClass.ACCOUNT, FilterBuilder
-                    .equalTo(uid));
-            assertTrue("expect 1 connector object", results.size() == 1);
-            final ConnectorObject co = results.get(0);
-            assertNotNull(co);
-            final Set<Attribute> actual = co.getAttributes();
-            assertNotNull(actual);
-            Attribute tmsAtr = AttributeUtil.find(TMS, actual);
-            String timestampTest = AttributeUtil.getStringValue(tmsAtr);
-            if (timestampTest == null || timestampTest.indexOf("00005") == -1) {
-                fail("    testTimestampColumn1 testcase for bug#17551 failed, expected 00005 in the milli-seconds part, but got timestamp " + timestampTest);
-            }
-        } finally {
-            if (con != null) {
-                con.dispose();
-            }
-        }               
+        con = getConnector(cfg);
+        deleteAllFromBug(con.getConnection());
+        Set<Attribute> expected = getTimestampColumnAttributeSet();
+        Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
+        // attempt to get the record back..
+        List<ConnectorObject> results = TestHelpers.searchToList(con, ObjectClass.ACCOUNT, FilterBuilder.equalTo(uid));
+        assertTrue("expect 1 connector object", results.size() == 1);
+        final ConnectorObject co = results.get(0);
+        assertNotNull(co);
+        final Set<Attribute> actual = co.getAttributes();
+        assertNotNull(actual);
+        Attribute tmsAtr = AttributeUtil.find(TMS, actual);
+        String timestampTest = AttributeUtil.getStringValue(tmsAtr);
+        if (timestampTest == null || timestampTest.indexOf("00005") == -1) {
+            fail("    testTimestampColumn1 testcase for bug#17551 failed, expected 00005 in the milli-seconds part, but got timestamp "
+                    + timestampTest);
+        }
     }
     
     /**
@@ -179,29 +173,22 @@ public class DatabaseTableOracleTests extends DatabaseTableTestBase{
         DatabaseTableConfiguration cfg = getConfiguration();
         cfg.setTable("BUG17551");
         cfg.setNativeTimestamps(false);
-        DatabaseTableConnector con = getConnector(cfg);
-        try {
-            deleteAllFromBug(con.getConnection());
-            Set<Attribute> expected = getTimestampColumnAttributeSet();
-            Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
-            // attempt to get the record back..
-            List<ConnectorObject> results = TestHelpers.searchToList(con, ObjectClass.ACCOUNT, FilterBuilder
-                    .equalTo(uid));
-            assertTrue("expect 1 connector object", results.size() == 1);
-            final ConnectorObject co = results.get(0);
-            assertNotNull(co);
-            final Set<Attribute> actual = co.getAttributes();
-            assertNotNull(actual);
-            Attribute tmsAtr = AttributeUtil.find(TMS, actual);
-            String timestampTest = AttributeUtil.getStringValue(tmsAtr);
-            if (timestampTest != null && timestampTest.indexOf(". 50000") == -1) {
-                fail("    expected JDBC driver problem, fixed through bug# 17551");                
-            }
-        } finally {
-            if (con != null) {
-                con.dispose();
-            }
-        }               
+        con = getConnector(cfg);
+        deleteAllFromBug(con.getConnection());
+        Set<Attribute> expected = getTimestampColumnAttributeSet();
+        Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
+        // attempt to get the record back..
+        List<ConnectorObject> results = TestHelpers.searchToList(con, ObjectClass.ACCOUNT, FilterBuilder.equalTo(uid));
+        assertTrue("expect 1 connector object", results.size() == 1);
+        final ConnectorObject co = results.get(0);
+        assertNotNull(co);
+        final Set<Attribute> actual = co.getAttributes();
+        assertNotNull(actual);
+        Attribute tmsAtr = AttributeUtil.find(TMS, actual);
+        String timestampTest = AttributeUtil.getStringValue(tmsAtr);
+        if (timestampTest != null && timestampTest.indexOf(". 50000") == -1) {
+            fail("    expected JDBC driver problem, fixed through bug# 17551");
+        }
     }
     
     /**
