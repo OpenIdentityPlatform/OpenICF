@@ -86,7 +86,7 @@ testsuite {
     // Connector WRONG configuration for TestApiOpTests    
     Validate.invalidConfig = [
         [ host : "" ],
-        [ user : "" ],
+        [ user : null ],
         [ password : null ]
     ]
 
@@ -223,18 +223,18 @@ testsuite {
 
     // object classes supported by operations                                                                                                              
     Schema.operations=[
-                                    GetApiOp: ['__ACCOUNT__'],
-                                    SchemaApiOp: ['__ACCOUNT__'],
-                                    ValidateApiOp: ['__ACCOUNT__'],
-                                    CreateApiOp: ['__ACCOUNT__'],
-                                    SearchApiOp: ['__ACCOUNT__'],
-                                    DeleteApiOp: ['__ACCOUNT__'],
-                                    ScriptOnConnectorApiOp: ['__ACCOUNT__'],
-                                    UpdateApiOp: ['__ACCOUNT__'],
-                                    AuthenticationApiOp: ['__ACCOUNT__'],
-                                    TestApiOp: ['__ACCOUNT__'],
-                                    SyncApiOp: [] // sync column is missing in the tables.
-                ]
+        GetApiOp: ['__ACCOUNT__'],
+        SchemaApiOp: ['__ACCOUNT__'],
+        ValidateApiOp: ['__ACCOUNT__'],
+        CreateApiOp: ['__ACCOUNT__'],
+        SearchApiOp: ['__ACCOUNT__'],
+        DeleteApiOp: ['__ACCOUNT__'],
+        ScriptOnConnectorApiOp: ['__ACCOUNT__'],
+        UpdateApiOp: ['__ACCOUNT__'],
+        AuthenticationApiOp: ['__ACCOUNT__'],
+        TestApiOp: ['__ACCOUNT__'],
+        SyncApiOp: [] // sync column is missing in the tables.
+   ]
   
 } // testsuite
 
