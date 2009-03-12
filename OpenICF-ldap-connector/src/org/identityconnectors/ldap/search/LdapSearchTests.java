@@ -28,6 +28,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -43,6 +44,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.QualifiedUid;
+import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
@@ -87,24 +89,18 @@ public class LdapSearchTests extends LdapConnectorTestBase {
         LdapConfiguration config = newConfiguration();
         config.setUseBlocks(true);
         config.setUsePagedResultControl(false);
-        LdapConnection conn = new LdapConnection(config);
-        ToListResultsHandler handler = new ToListResultsHandler();
-        new LdapSearch(conn, ObjectClass.ACCOUNT, filter, new OperationOptionsBuilder().build()).execute(handler);
-        assertTrue(handler.getObjects().isEmpty());
+        searchExpectingNoResult(config, filter);
 
         // Simple paged results.
+        config = newConfiguration();
+        config.setUseBlocks(true);
         config.setUsePagedResultControl(true);
-        conn = new LdapConnection(config);
-        handler = new ToListResultsHandler();
-        new LdapSearch(conn, ObjectClass.ACCOUNT, filter, new OperationOptionsBuilder().build()).execute(handler);
-        assertTrue(handler.getObjects().isEmpty());
+        searchExpectingNoResult(config, filter);
 
         // No paging.
+        config = newConfiguration();
         config.setUseBlocks(false);
-        conn = new LdapConnection(config);
-        handler = new ToListResultsHandler();
-        new LdapSearch(conn, ObjectClass.ACCOUNT, filter, new OperationOptionsBuilder().build()).execute(handler);
-        assertTrue(handler.getObjects().isEmpty());
+        searchExpectingNoResult(config, filter);
     }
 
 
@@ -116,24 +112,56 @@ public class LdapSearchTests extends LdapConnectorTestBase {
         LdapConfiguration config = newConfiguration();
         config.setUseBlocks(true);
         config.setUsePagedResultControl(false);
-        LdapConnection conn = new LdapConnection(config);
-        ToListResultsHandler handler = new ToListResultsHandler();
-        new LdapSearch(conn, ObjectClass.ACCOUNT, filter, new OperationOptionsBuilder().build()).execute(handler);
-        assertTrue(handler.getObjects().isEmpty());
+        searchExpectingNoResult(config, filter);
 
         // Simple paged results.
+        config = newConfiguration();
+        config.setUseBlocks(true);
         config.setUsePagedResultControl(true);
-        conn = new LdapConnection(config);
-        handler = new ToListResultsHandler();
-        new LdapSearch(conn, ObjectClass.ACCOUNT, filter, new OperationOptionsBuilder().build()).execute(handler);
-        assertTrue(handler.getObjects().isEmpty());
+        searchExpectingNoResult(config, filter);
 
         // No paging.
+        config = newConfiguration();
         config.setUseBlocks(false);
-        conn = new LdapConnection(config);
-        handler = new ToListResultsHandler();
+        searchExpectingNoResult(config, filter);
+    }
+
+    private void searchExpectingNoResult(LdapConfiguration config, LdapFilter filter) {
+        LdapConnection conn = new LdapConnection(config);
+        ToListResultsHandler handler = new ToListResultsHandler();
+        // Should not fail with NameNotFoundException or InvalidNameException.
         new LdapSearch(conn, ObjectClass.ACCOUNT, filter, new OperationOptionsBuilder().build()).execute(handler);
         assertTrue(handler.getObjects().isEmpty());
+    }
+
+    @Test
+    public void testCanCancelSearch() {
+        // VLV Index.
+        LdapConfiguration config = newConfiguration();
+        config.setBaseContexts(ACME_DN, BIG_COMPANY_DN);
+        config.setUseBlocks(true);
+        config.setUsePagedResultControl(false);
+        searchExpectingSingleResult(config);
+
+        // Simple paged results.
+        config = newConfiguration();
+        config.setBaseContexts(ACME_DN, BIG_COMPANY_DN);
+        config.setUseBlocks(true);
+        config.setUsePagedResultControl(true);
+        searchExpectingSingleResult(config);
+
+        // No paging.
+        config = newConfiguration();
+        config.setBaseContexts(ACME_DN, BIG_COMPANY_DN);
+        config.setUseBlocks(false);
+        searchExpectingSingleResult(config);
+    }
+
+    private void searchExpectingSingleResult(LdapConfiguration config) {
+        LdapConnection conn = new LdapConnection(config);
+        FirstOnlyResultsHandler handler = new FirstOnlyResultsHandler();
+        new LdapSearch(conn, ObjectClass.ACCOUNT, null, new OperationOptionsBuilder().build()).execute(handler);
+        handler.assertSingleResult();
     }
 
     @Test
@@ -317,5 +345,19 @@ public class LdapSearchTests extends LdapConnectorTestBase {
             }
         }
         return null;
+    }
+
+    private static final class FirstOnlyResultsHandler implements ResultsHandler {
+
+        private final List<ConnectorObject> objects = new ArrayList<ConnectorObject>();
+
+        public boolean handle(ConnectorObject obj) {
+            objects.add(obj);
+            return false; // We only want the first one.
+        }
+
+        public void assertSingleResult() {
+            assertEquals(1, objects.size());
+        }
     }
 }

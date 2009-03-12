@@ -23,6 +23,7 @@
 package org.identityconnectors.ldap.search;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.naming.InvalidNameException;
@@ -58,8 +59,13 @@ public class SimplePagedSearchStrategy extends LdapSearchStrategy {
 
         LdapContext ctx = initCtx.newInstance(null);
         try {
-            main: for (String baseDN : baseDNs) {
+            Iterator<String> baseDNIter = baseDNs.iterator();
+            boolean proceed = true;
+
+            main: while (baseDNIter.hasNext() && proceed) {
+                String baseDN = baseDNIter.next();
                 byte[] cookie = null;
+
                 do {
                     ctx.setRequestControls(new Control[] { createControl(cookie) });
                     NamingEnumeration<SearchResult> results;
@@ -79,7 +85,6 @@ public class SimplePagedSearchStrategy extends LdapSearchStrategy {
                         continue main;
                     }
                     try {
-                        boolean proceed = true;
                         while (proceed && results.hasMore()) {
                             proceed = handler.handle(baseDN, results.next());
                         }
