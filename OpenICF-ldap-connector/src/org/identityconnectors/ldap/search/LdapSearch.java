@@ -195,10 +195,10 @@ public class LdapSearch {
         QualifiedUid container = options.getContainer();
         String[] opBaseDNs = conn.getOptionsBaseDNs(options);
         if (container != null) {
-            result = Collections.singletonList(LdapSearches.findDN(conn, container.getObjectClass(), container.getUid()));
             if (opBaseDNs.length > 0) {
                 throw new ConnectorException("Should only specify one of OP_CONTAINER and OP_BASE_DNS");
             }
+            result = Collections.singletonList(LdapSearches.findDN(conn, container));
         } else if (opBaseDNs.length > 0) {
             result = Arrays.asList(opBaseDNs);
         } else {
