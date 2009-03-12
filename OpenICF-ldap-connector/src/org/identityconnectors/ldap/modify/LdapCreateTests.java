@@ -23,6 +23,7 @@
 package org.identityconnectors.ldap.modify;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -55,7 +56,7 @@ public class LdapCreateTests extends LdapConnectorTestBase{
     }
 
     @Test
-    public void testCreateAccountWhenNotReadingSchema() {
+    public void testCreateAccount() {
         LdapConfiguration config = newConfiguration();
         config.setBaseContexts(SMALL_COMPANY_DN);
         ConnectorFacade facade = newFacade(config);
@@ -66,9 +67,21 @@ public class LdapCreateTests extends LdapConnectorTestBase{
     @Test
     public void testCreateAccountWhenReadingSchema() {
         LdapConfiguration config = newConfiguration();
+        assertFalse(config.isReadSchema());
         config.setReadSchema(true);
         config.setBaseContexts(SMALL_COMPANY_DN);
         config.setAccountObjectClasses("inetOrgPerson");
+        ConnectorFacade facade = newFacade(config);
+
+        doCreateAccount(facade);
+    }
+
+    @Test
+    public void testCreateAccountWhenUidNotDefault() {
+        LdapConfiguration config = newConfiguration();
+        assertFalse(config.getUidAttribute().equalsIgnoreCase("entryDN"));
+        config.setUidAttribute("entryDN");
+        config.setBaseContexts(SMALL_COMPANY_DN);
         ConnectorFacade facade = newFacade(config);
 
         doCreateAccount(facade);
@@ -89,7 +102,7 @@ public class LdapCreateTests extends LdapConnectorTestBase{
     }
 
     @Test
-    public void testCreateGroupWhenNotReadingSchema() {
+    public void testCreateGroup() {
         LdapConfiguration config = newConfiguration();
         config.setBaseContexts(SMALL_COMPANY_DN);
         ConnectorFacade facade = newFacade(config);
@@ -100,9 +113,21 @@ public class LdapCreateTests extends LdapConnectorTestBase{
     @Test
     public void testCreateGroupWhenReadingSchema() {
         LdapConfiguration config = newConfiguration();
+        assertFalse(config.isReadSchema());
         config.setReadSchema(true);
         config.setBaseContexts(SMALL_COMPANY_DN);
         config.setAccountObjectClasses("inetOrgPerson");
+        ConnectorFacade facade = newFacade(config);
+
+        doCreateGroup(facade);
+    }
+
+    @Test
+    public void testCreateGroupWhenUidNotDefault() {
+        LdapConfiguration config = newConfiguration();
+        assertFalse(config.getUidAttribute().equalsIgnoreCase("entryDN"));
+        config.setUidAttribute("entryDN");
+        config.setBaseContexts(SMALL_COMPANY_DN);
         ConnectorFacade facade = newFacade(config);
 
         doCreateGroup(facade);

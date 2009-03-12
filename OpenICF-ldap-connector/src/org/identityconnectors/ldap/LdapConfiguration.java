@@ -87,12 +87,6 @@ public class LdapConfiguration extends AbstractConfiguration {
     private GuardedString credentials;
 
 //    /**
-//     * The name of an operational attribute that provides an immutable
-//     * unique identifier of an LDAP entry. See RFC 4530.
-//     */
-//    private String uuidAttribute = null;
-//
-//    /**
 //     * The name of the password attribute.
 //     */
 //    private String passwordAttribute = null;
@@ -129,6 +123,11 @@ public class LdapConfiguration extends AbstractConfiguration {
     private boolean usePagedResultControl;
 
     /**
+     * The LDAP attribute to map Uid to.
+     */
+    private String uidAttribute = "entryUUID";
+
+    /**
      * Whether to read the schema from the server.
      */
     private boolean readSchema = true;
@@ -159,7 +158,6 @@ public class LdapConfiguration extends AbstractConfiguration {
     public LdapConfiguration() {
         // Note: order is important!
 
-        accountConfig.setUidAttribute("entryUUID");
         accountConfig.setNameAttribute("entryDN");
         accountConfig.addAttributeMapping("uid", "uid");
         accountConfig.addAttributeMapping("cn", "cn");
@@ -167,7 +165,6 @@ public class LdapConfiguration extends AbstractConfiguration {
         accountConfig.addAttributeMapping("sn", "sn");
         accountConfig.addAttributeMapping("modifyTimeStamp", "modifyTimeStamp");
 
-        groupConfig.setUidAttribute("entryUUID");
         groupConfig.setNameAttribute("entryDN");
         groupConfig.addAttributeMapping("cn", "cn");
     }
@@ -209,6 +206,10 @@ public class LdapConfiguration extends AbstractConfiguration {
             }
         }
 
+        if (StringUtil.isBlank(uidAttribute)) {
+            throw new ConfigurationException("The LDAP attribute to map to Uid cannot be blank");
+        }
+
         Set<String> extendedObjectClassSet = CollectionUtil.newCaseInsensitiveSet();
         extendedObjectClassSet.addAll(Arrays.asList(extendedObjectClasses));
         if (extendedObjectClassSet.size() != extendedObjectClasses.length) {
@@ -233,10 +234,6 @@ public class LdapConfiguration extends AbstractConfiguration {
             }
         }
 
-//        if (uuidAttribute == null) {
-//            String msg = "The name of a UUID attribute was not provided in the LDAP configuration";
-//            throw new ConfigurationException(msg);
-//        }
 //        if (passwordAttribute == null) {
 //            String msg = "The name of a password attribute was not provided in the LDAP configuration";
 //            throw new ConfigurationException(msg);
@@ -290,14 +287,6 @@ public class LdapConfiguration extends AbstractConfiguration {
         this.credentials = credentials;
     }
 
-//    public String getUuidAttribute() {
-//        return uuidAttribute;
-//    }
-//
-//    public void setUuidAttribute(String uuidAttribute) {
-//        this.uuidAttribute = uuidAttribute;
-//    }
-//
 //    public String getPasswordAttribute() {
 //        return passwordAttribute;
 //    }
@@ -364,6 +353,14 @@ public class LdapConfiguration extends AbstractConfiguration {
 
     public void setUsePagedResultControl(boolean usePagedResultControl) {
         this.usePagedResultControl = usePagedResultControl;
+    }
+
+    public String getUidAttribute() {
+        return uidAttribute;
+    }
+
+    public void setUidAttribute(String uidAttribute) {
+        this.uidAttribute = uidAttribute;
     }
 
     public boolean isReadSchema() {
@@ -446,7 +443,7 @@ public class LdapConfiguration extends AbstractConfiguration {
                 // extendedObjectClasses, we need to set a default naming attribute -- one
                 // that always exists.
                 // XXX or perhaps just throw an exception.
-                config.setNameAttribute("entryUUID");
+                config.setNameAttribute("entryDN");
             }
             if (!result.containsKey(config.getObjectClass())) {
                 result.put(config.getObjectClass(), config);
@@ -468,12 +465,12 @@ public class LdapConfiguration extends AbstractConfiguration {
         for (String baseContext : baseContexts) {
             builder.append(baseContext);
         }
-//        builder.append(uuidAttribute);
 //        builder.append(passwordAttribute);
         builder.append(groupMemberAttr);
         builder.append(useBlocks);
         builder.append(blockCount);
         builder.append(usePagedResultControl);
+        builder.append(uidAttribute);
         builder.append(readSchema);
         for (String extendedObjectClass : extendedObjectClasses) {
             builder.append(extendedObjectClass);

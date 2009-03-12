@@ -25,9 +25,7 @@ package org.identityconnectors.ldap.modify;
 import java.util.Set;
 
 import javax.naming.NamingException;
-import javax.naming.directory.Attributes;
 import javax.naming.directory.BasicAttributes;
-import javax.naming.ldap.LdapContext;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -39,7 +37,6 @@ import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.LdapConnection;
-import org.identityconnectors.ldap.LdapEntry;
 import org.identityconnectors.ldap.schema.GuardedPasswordAttribute;
 import org.identityconnectors.ldap.schema.GuardedPasswordAttribute.Accessor;
 
@@ -87,21 +84,18 @@ public class LdapCreate {
             }
         }
 
-        final LdapContext[] ctx = { null };
+        final Uid[] uid = { null };
         if (pwdAttr != null) {
             pwdAttr.access(new Accessor() {
                 public void access(javax.naming.directory.Attribute passwordAttr) {
                     ldapAttrs.put(passwordAttr);
-                    ctx[0] = conn.getSchemaMapping().create(oclass, nameAttr, ldapAttrs);
+                    uid[0] = conn.getSchemaMapping().create(oclass, nameAttr, ldapAttrs);
                 }
             });
         } else {
-            ctx[0] = conn.getSchemaMapping().create(oclass, nameAttr, ldapAttrs);
+            uid[0] = conn.getSchemaMapping().create(oclass, nameAttr, ldapAttrs);
         }
 
-        String newDN = ctx[0].getNameInNamespace();
-        String ldapUidAttr = conn.getSchemaMapping().getLdapUidAttribute(oclass);
-        Attributes newAttrs = ctx[0].getAttributes("", new String[] { ldapUidAttr });
-        return conn.getSchemaMapping().createUid(oclass, LdapEntry.create(newDN, newAttrs));
+        return uid[0];
     }
 }

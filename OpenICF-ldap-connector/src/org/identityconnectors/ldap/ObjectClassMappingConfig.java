@@ -44,7 +44,6 @@ public class ObjectClassMappingConfig {
 
     private boolean container;
 
-    private String uidAttribute; // Maps to UID.
     private String nameAttribute; // Maps to Name.
 
     private final Map<String, AttributeMappingConfig> attrName2Mapping = new HashMap<String, AttributeMappingConfig>();
@@ -86,14 +85,6 @@ public class ObjectClassMappingConfig {
 
     public void setContainer(boolean container) {
         this.container = container;
-    }
-
-    public String getUidAttribute() {
-        return uidAttribute;
-    }
-
-    public void setUidAttribute(String uidAttribute) {
-        this.uidAttribute = uidAttribute;
     }
 
     public String getNameAttribute() {
@@ -161,9 +152,6 @@ public class ObjectClassMappingConfig {
                 return false;
             }
             if ((ldapClasses == null) ? (that.ldapClasses != null) : !ldapClasses.equals(that.ldapClasses)) {
-                return false;
-            }
-            if ((uidAttribute == null) ? (that.uidAttribute != null) : !uidAttribute.equals(that.uidAttribute)) {
                 return false;
             }
             if ((nameAttribute == null) ? (that.nameAttribute != null) : !nameAttribute.equals(that.nameAttribute)) {

@@ -22,6 +22,7 @@
  */
 package org.identityconnectors.ldap.schema;
 
+import static org.identityconnectors.ldap.LdapEntry.isDNAttribute;
 import static org.identityconnectors.ldap.LdapUtil.addBinaryOption;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValue;
 import static org.identityconnectors.ldap.LdapUtil.hasBinaryOption;
@@ -36,6 +37,7 @@ import java.util.Set;
 
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
+import javax.naming.directory.Attributes;
 import javax.naming.directory.BasicAttribute;
 import javax.naming.directory.BasicAttributes;
 import javax.naming.ldap.LdapContext;
@@ -83,11 +85,6 @@ public class LdapSchemaMapping {
 
     // XXX need a method like getAttributesToReturn(String[] wanted);
     // XXX need to check that (extended) naming attributes really exist.
-
-    /**
-     * The LDAP attribute to map to {@link Uid} by default.
-     */
-    static final String DEFAULT_LDAP_UID_ATTR = "entryUUID";
 
     /**
      * The LDAP attribute to map to {@link Name} by default.
@@ -202,15 +199,7 @@ public class LdapSchemaMapping {
      * never return null.
      */
     public String getLdapUidAttribute(ObjectClass oclass) {
-        String result = null;
-        ObjectClassMappingConfig oclassConfig = conn.getConfiguration().getObjectClassMappingConfigs().get(oclass);
-        if (oclassConfig != null) {
-            result = oclassConfig.getUidAttribute();
-        }
-        if (result == null) {
-            result = DEFAULT_LDAP_UID_ATTR;
-        }
-        return result;
+        return conn.getConfiguration().getUidAttribute();
     }
 
     /**
@@ -243,20 +232,35 @@ public class LdapSchemaMapping {
     }
 
     /**
-     * Creates a {@link Uid} from the given attribute set.
+     * Creates a {@link Uid} for the given entry. It is assumed that the entry
+     * contains the attribute returned by {@link #getLdapUidAttribute}.
      */
     public Uid createUid(ObjectClass oclass, LdapEntry entry) {
+        return createUid(getLdapUidAttribute(oclass), entry.getAttributes());
+    }
+
+    private Uid createUid(ObjectClass oclass, String entryDN) throws NamingException {
         String ldapUidAttr = getLdapUidAttribute(oclass);
-        String value = getStringAttrValue(entry.getAttributes(), ldapUidAttr);
-        if (value == null) {
-            // We don't want to return a null Uid.
-            throw new ConnectorException("No attribute named " + ldapUidAttr + " found in the search result");
+        if (isDNAttribute(ldapUidAttr)) {
+            // Short path for the simple case; avoids another trip to the server.
+            return new Uid(entryDN);
+        } else {
+            Attributes attributes = conn.getInitialContext().getAttributes(entryDN, new String[] { ldapUidAttr });
+            return createUid(ldapUidAttr, attributes);
         }
-        return new Uid((String) value);
+    }
+
+    private Uid createUid(String ldapUidAttr, Attributes attributes) {
+        String value = getStringAttrValue(attributes, ldapUidAttr);
+        if (value != null) {
+            return new Uid(value);
+        }
+        throw new ConnectorException("No attribute named " + ldapUidAttr + " found in the search result");
     }
 
     /**
-     * Creates a {@link Name} for the given search result.
+     * Creates a {@link Name} for the given entry. It is assumed that the entry
+     * contains the attribute returned by {@link #getLdapNameAttribute}.
      */
     public Name createName(ObjectClass oclass, LdapEntry entry) {
         // First try the short way: assume the naming attribute is in the search result.
@@ -327,7 +331,7 @@ public class LdapSchemaMapping {
         return builder.build();
     }
     
-    public LdapContext create(ObjectClass oclass, Name name, javax.naming.directory.Attributes initialAttrs) {
+    public Uid create(ObjectClass oclass, Name name, javax.naming.directory.Attributes initialAttrs) {
         String ldapNameAttr = getLdapNameAttribute(oclass);
         if (!"entryDN".equals(ldapNameAttr)) {
             // Not yet implemented.
@@ -352,11 +356,11 @@ public class LdapSchemaMapping {
         log.ok("Creating LDAP subcontext {0} in {1} with attributes {2}", rdn, containerDN, ldapAttrs);
         try {
             LdapContext parentCtx = (LdapContext) conn.getInitialContext().lookup(containerDN);
-            return (LdapContext) parentCtx.createSubcontext(rdn.toString(), ldapAttrs);
+            LdapContext newCtx = (LdapContext) parentCtx.createSubcontext(rdn.toString(), ldapAttrs);
+            return createUid(oclass, newCtx.getNameInNamespace());
         } catch (NamingException e) {
             throw new ConnectorException(e);
         }
-
     }
 
     public javax.naming.directory.Attribute encodeAttribute(ObjectClass oclass, Attribute attr) {
@@ -392,7 +396,7 @@ public class LdapSchemaMapping {
         return GuardedPasswordAttribute.create(LDAP_PASSWORD_ATTR);
     }
 
-    public void rename(ObjectClass oclass, String entryDN, Name newName) {
+    public Uid rename(ObjectClass oclass, String entryDN, Name newName) {
         String ldapNameAttr = getLdapNameAttribute(oclass);
         if (!"entryDN".equals(ldapNameAttr)) {
             // Not yet implemented.
@@ -402,6 +406,7 @@ public class LdapSchemaMapping {
         String newEntryDN = newName.getNameValue();
         try {
             conn.getInitialContext().rename(entryDN, newEntryDN);
+            return createUid(oclass, newEntryDN);
         } catch (NamingException e) {
             throw new ConnectorException(e);
         }

@@ -271,6 +271,28 @@ public class LdapSearchTests extends LdapConnectorTestBase {
     }
 
     @Test
+    public void testUidAttributeCn() {
+        LdapConfiguration config = newConfiguration();
+        assertFalse(config.getUidAttribute().equalsIgnoreCase("cn"));
+        config.setUidAttribute("cn");
+        ConnectorFacade facade = newFacade(config);
+
+        ConnectorObject bunny = searchByAttribute(facade, ObjectClass.ACCOUNT, new Uid(BUGS_BUNNY_CN));
+        assertEquals(BUGS_BUNNY_DN, bunny.getName().getNameValue());
+    }
+
+    @Test
+    public void testUidAttributeEntryDN() {
+        LdapConfiguration config = newConfiguration();
+        assertFalse(config.getUidAttribute().equalsIgnoreCase("entryDN"));
+        config.setUidAttribute("entryDN");
+        ConnectorFacade facade = newFacade(config);
+
+        ConnectorObject bunny = searchByAttribute(facade, ObjectClass.ACCOUNT, new Uid(BUGS_BUNNY_DN));
+        assertEquals(BUGS_BUNNY_DN, bunny.getName().getNameValue());
+    }
+
+    @Test
     public void testSearchObjectClassNotInSchema() {
         ConnectorFacade facade = newFacade();
 

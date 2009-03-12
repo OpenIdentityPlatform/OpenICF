@@ -45,12 +45,9 @@ import org.identityconnectors.ldap.search.LdapSearches;
 
 public class LdapUpdate {
 
-    // XXX "return uid" in methods below is wrong, should re-read the attribute
-    // (in case it isn't entryUUID).
-
     private final LdapConnection conn;
     private final ObjectClass oclass;
-    private final Uid uid;
+    private Uid uid;
 
     public LdapUpdate(LdapConnection conn, ObjectClass oclass, Uid uid) {
         this.conn = conn;
@@ -64,7 +61,7 @@ public class LdapUpdate {
         Name newName = (Name) AttributeUtil.find(Name.NAME, attrs);
         if (newName != null) {
             String entryDN = LdapSearches.findDN(conn, oclass, uid);
-            conn.getSchemaMapping().rename(oclass, entryDN, newName);
+            uid = conn.getSchemaMapping().rename(oclass, entryDN, newName);
             modifyAttrs = CollectionUtil.newSet(attrs);
             modifyAttrs.remove(newName);
         }

@@ -23,12 +23,14 @@
 package org.identityconnectors.ldap.modify;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.identityconnectors.common.CollectionUtil;
@@ -49,6 +51,9 @@ import org.identityconnectors.test.common.TestHelpers;
 import org.junit.Test;
 
 public class LdapUpdateTests extends LdapConnectorTestBase {
+
+    // XXX need tests for the case when the one of the modified (or removed)
+    // attribute is the Name or especially Uid.
 
     private static final String NUMBER1 = "+1 800 123 4567";
     private static final String NUMBER2 = "+1 800 765 4321";
@@ -106,6 +111,22 @@ public class LdapUpdateTests extends LdapConnectorTestBase {
         ConnectorObject daffy = facade.getObject(ObjectClass.ACCOUNT, newUid, builder.build());
         assertEquals(name, daffy.getName());
         assertEquals(NUMBER1, daffy.getAttributeByName("telephoneNumber").getValue().get(0));
+    }
+
+    @Test
+    public void testRenameWhenUidNotDefault() {
+        LdapConfiguration config = newConfiguration();
+        assertFalse(config.getUidAttribute().equalsIgnoreCase("entryDN"));
+        config.setUidAttribute("entryDN");
+        ConnectorFacade facade = newFacade(config);
+        ConnectorObject bugs = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
+
+        Name name = new Name("uid=daffy.duck,ou=Users,o=Acme,dc=example,dc=com");
+        Uid newUid = facade.update(ObjectClass.ACCOUNT, bugs.getUid(), Collections.<Attribute>singleton(name), null);
+
+        assertEquals(name.getNameValue(), newUid.getUidValue()); // Since they are both the entry DN.
+        ConnectorObject daffy = facade.getObject(ObjectClass.ACCOUNT, newUid, null);
+        assertEquals(name, daffy.getName());
     }
 
     @Test

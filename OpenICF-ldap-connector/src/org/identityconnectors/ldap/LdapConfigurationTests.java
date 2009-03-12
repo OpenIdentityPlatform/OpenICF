@@ -23,27 +23,22 @@
 package org.identityconnectors.ldap;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.junit.Before;
 import org.junit.Test;
 
-public class LdapConfigurationTests extends LdapConnectorTestBase {
+public class LdapConfigurationTests /* extends LdapConnectorTestBase*/ {
 
     private static final String INVALID_DN = "dc=a,,";
 
     private LdapConfiguration config;
 
     @Before
-    @Override
     public void before() throws Exception {
         config = new LdapConfiguration();
-        super.before();
-    }
-
-    @Override
-    protected boolean restartServerAfterEachTest() {
-        return false;
+        assertCanValidate(config);
     }
 
     @Test(expected = ConfigurationException.class)
@@ -60,19 +55,32 @@ public class LdapConfigurationTests extends LdapConnectorTestBase {
 
     @Test(expected = ConfigurationException.class)
     public void testBaseDNsNoDuplicates() {
-        config.setBaseContexts(ACME_DN, ACME_DN);
+        config.setBaseContexts(LdapConnectorTestBase.ACME_DN, LdapConnectorTestBase.ACME_DN);
         config.validate();
     }
 
     @Test(expected = ConfigurationException.class)
     public void testInvalidBaseDNsNotAllowed() {
-        config.setBaseContexts(ACME_DN, INVALID_DN);
+        config.setBaseContexts(LdapConnectorTestBase.ACME_DN, INVALID_DN);
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testUidAttributeCannotBeNull() {
+        assertCanValidate(config);
+        config.setUidAttribute(null);
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testUidAttributeCannotBeBlank() {
+        config.setUidAttribute("");
         config.validate();
     }
 
     @Test(expected = ConfigurationException.class)
     public void testReadSchemaMustBeTrueWhenUsingExtendedObjectClasses() {
-        config.setBaseContexts(ACME_DN);
+        config.setBaseContexts(LdapConnectorTestBase.ACME_DN);
         config.setExtendedObjectClasses("dNSDomain");
         config.setExtendedNamingAttributes("dc");
         config.setReadSchema(false);
@@ -93,5 +101,13 @@ public class LdapConfigurationTests extends LdapConnectorTestBase {
         assertEquals("example.com", config.getHost());
 
         assertEquals(0, config.getExtendedObjectClasses().length);
+    }
+
+    private static void assertCanValidate(LdapConfiguration config) {
+        try {
+            config.validate();
+        } catch (Exception e) {
+            fail();
+        }
     }
 }
