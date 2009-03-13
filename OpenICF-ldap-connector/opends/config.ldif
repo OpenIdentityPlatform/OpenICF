@@ -350,9 +350,9 @@ objectClass: ds-cfg-connection-handler
 objectClass: ds-cfg-ldap-connection-handler
 cn: LDAPS Connection Handler
 ds-cfg-java-class: org.opends.server.protocols.ldap.LDAPConnectionHandler
-ds-cfg-enabled: false
+ds-cfg-enabled: true
 ds-cfg-listen-address: 0.0.0.0
-ds-cfg-listen-port: 1636
+ds-cfg-listen-port: 2636
 ds-cfg-accept-backlog: 128
 ds-cfg-allow-ldap-v2: true
 ds-cfg-keep-stats: true
@@ -368,7 +368,7 @@ ds-cfg-use-ssl: true
 ds-cfg-ssl-client-auth-policy: optional
 ds-cfg-ssl-cert-nickname: server-cert
 ds-cfg-key-manager-provider: cn=JKS,cn=Key Manager Providers,cn=config
-ds-cfg-trust-manager-provider: cn=JKS,cn=Trust Manager Providers,cn=config
+ds-cfg-trust-manager-provider: cn=Blind Trust,cn=Trust Manager Providers,cn=config
 
 dn: cn=Entry Caches,cn=config
 objectClass: top
@@ -529,7 +529,7 @@ objectClass: ds-cfg-key-manager-provider
 objectClass: ds-cfg-file-based-key-manager-provider
 cn: JKS
 ds-cfg-java-class: org.opends.server.extensions.FileBasedKeyManagerProvider
-ds-cfg-enabled: false
+ds-cfg-enabled: true
 ds-cfg-key-store-type: JKS
 ds-cfg-key-store-file: config/keystore
 ds-cfg-key-store-pin-file: config/keystore.pin
@@ -1823,7 +1823,7 @@ objectClass: ds-cfg-trust-manager-provider
 objectClass: ds-cfg-blind-trust-manager-provider
 cn: Blind Trust
 ds-cfg-java-class: org.opends.server.extensions.BlindTrustManagerProvider
-ds-cfg-enabled: false
+ds-cfg-enabled: true
 
 dn: cn=JKS,cn=Trust Manager Providers,cn=config
 objectClass: top

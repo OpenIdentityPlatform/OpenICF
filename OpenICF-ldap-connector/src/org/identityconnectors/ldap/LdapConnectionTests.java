@@ -22,12 +22,14 @@
  */
 package org.identityconnectors.ldap;
 
+import static org.identityconnectors.ldap.LdapUtil.getStringAttrValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import javax.naming.Context;
 import javax.naming.NamingException;
+import javax.naming.directory.Attributes;
 
 import org.identityconnectors.common.security.GuardedString;
 import org.junit.Test;
@@ -41,12 +43,16 @@ public class LdapConnectionTests extends LdapConnectorTestBase {
     protected boolean restartServerAfterEachTest() {
         return false;
     }
-
+    
     @Test
-    public void testSupportedControls() {
-        LdapConnection conn = new LdapConnection(newConfiguration());
-        assertTrue(conn.supportsControl(PagedResultsControl.OID));
-        assertTrue(conn.supportsControl(VirtualListViewControl.OID));
+    public void testSSL() throws NamingException {
+        BlindTrustProvider.register();
+        LdapConfiguration config = newConfiguration();
+        config.setSsl(true);
+        config.setPort(SSL_PORT);
+        LdapConnection conn = new LdapConnection(config);
+        Attributes attrs = conn.getInitialContext().getAttributes(BUGS_BUNNY_DN);
+        assertEquals(BUGS_BUNNY_CN, getStringAttrValue(attrs, "cn"));
     }
 
     @Test
@@ -124,5 +130,12 @@ public class LdapConnectionTests extends LdapConnectorTestBase {
         stopServer();
         // This should throw RuntimeException.
         conn.checkAlive();
+    }
+
+    @Test
+    public void testSupportedControls() {
+        LdapConnection conn = new LdapConnection(newConfiguration());
+        assertTrue(conn.supportsControl(PagedResultsControl.OID));
+        assertTrue(conn.supportsControl(VirtualListViewControl.OID));
     }
 }

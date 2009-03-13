@@ -50,6 +50,8 @@ public abstract class LdapConnectorTestBase {
 
     // Cf. data.ldif and bigcompany.ldif.
 
+    public static final int SSL_PORT = 2636;
+
     public static final String ADMIN_DN = "uid=admin,dc=example,dc=com";
     public static final GuardedString ADMIN_PASSWORD = new GuardedString("password".toCharArray());
 
@@ -90,6 +92,8 @@ public abstract class LdapConnectorTestBase {
     private static final String[] FILES = {
         "config/config.ldif",
         "config/admin-backend.ldif",
+        "config/keystore",
+        "config/keystore.pin",
         "config/schema/00-core.ldif",
         "config/schema/01-pwpolicy.ldif",
         "config/schema/02-config.ldif",

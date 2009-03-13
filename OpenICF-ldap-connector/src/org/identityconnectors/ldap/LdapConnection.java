@@ -126,6 +126,10 @@ public class LdapConnection {
         env.put(Context.PROVIDER_URL, config.getLdapUrl());
         env.put(Context.REFERRAL, "follow");
 
+        if (config.isSsl()) {
+            env.put(Context.SECURITY_PROTOCOL, "ssl");
+        }
+
         String authentication = config.getAuthentication();
         if (StringUtil.isBlank(authentication)) {
             authentication = principal != null ? "simple" : "none";

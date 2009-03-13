@@ -79,7 +79,18 @@
             </fileset>
         </chmod>
     	<copy tofile="${opends.setup.dir}/config/config.ldif" file="${opends.ldif}/config.ldif"/>
+    	<copy tofile="${opends.setup.dir}/config/keystore.pin" file="${opends.ldif}/keystore.pin"/>
 
+        <!-- Generate a self-signed certificate. The password is the one in opends/password.pin. -->
+        <genkey alias="server-cert" keyalg="rsa" keystore="${opends.setup.dir}/config/keystore" storetype="JKS" storepass="password" validity="365">
+            <dname>
+                <param name="CN" value="opends.example.com"/>
+                <param name="O" value="Example Organization"/>
+                <param name="C" value="US"/>
+            </dname>
+        </genkey>
+
+        <!-- Generate and import data. -->
         <exec executable="${opends.setup.dir}/bin/make-ldif" dir="${opends.setup.dir}">
             <arg value="-t"/>
             <arg value="${opends.ldif}/bigcompany.template"/>
@@ -101,6 +112,7 @@
             <arg value="userRoot"/>
         </exec>
 
+        <!-- Set up an admin user. -->
         <exec executable="${opends.setup.dir}/bin/start-ds" dir="${opends.setup.dir}"/>
         <exec executable="${opends.setup.dir}/bin/ldapmodify" dir="${opends.setup.dir}">
             <arg value="-h"/>
@@ -130,6 +142,8 @@
                 <include name="config/schema/*.ldif"/>
                 <include name="config/admin-backend.ldif"/>
                 <include name="config/config.ldif"/>
+                <include name="config/keystore"/>
+                <include name="config/keystore.pin"/>
                 <include name="db/userRoot/00000000.jdb"/>
             </fileset>
         </copy>
