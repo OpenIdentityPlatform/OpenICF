@@ -160,6 +160,7 @@ public class LdapConnection {
         try {
             return new InitialLdapContext(env, null);
         } catch (AuthenticationException e) {
+            // TODO: consider processing the "password expired" control.
             if (e.getMessage().toLowerCase().contains("invalid credentials")) {
                 throw new InvalidCredentialException(e);
             } else {
