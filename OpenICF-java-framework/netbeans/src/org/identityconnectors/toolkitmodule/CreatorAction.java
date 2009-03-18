@@ -154,7 +154,7 @@ public final class CreatorAction extends CallableSystemAction {
 
             //set classpath
             eProps.setProperty("javac.classpath", new String[]{"${libs.junit_4.classpath}:",
-                        "${file.reference." + jar.getName() + "}",
+                        "${file.reference." + jar.getName() + "}:",
                         "${file.reference." + testCommonJar.getName() + "}"
                     });
 
