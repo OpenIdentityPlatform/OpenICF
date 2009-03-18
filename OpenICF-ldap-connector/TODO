@@ -10,4 +10,6 @@
 
 * handle Password Expired Control (see LDAPRAB.authenticate_core())
 
+* Add configuration property for password attribute.
+
 * src/overview.html
