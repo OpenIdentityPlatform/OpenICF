@@ -8,4 +8,6 @@
 
 * Which attribute does the user name passed to AuthenticateOp map to?
 
+* handle Password Expired Control (see LDAPRAB.authenticate_core())
+
 * src/overview.html
