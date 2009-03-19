@@ -36,6 +36,8 @@
 
     <target name="-pre-test-extra" depends="opends-setup"/>
 
+    <target name="opends-setup" depends="opends-do-setup,opends-setup-clean"/>
+
     <target name="opends-init">
         <property name="opends.zip.default.dir" value="${user.home}/.connectors/connector-ldap"/>
         <property name="opends.zip.default" value="${opends.zip.default.dir}/OpenDS-1.0.0.zip"/>
@@ -51,15 +53,22 @@
         <condition property="opends.zip" value="${opends.zip.default}">
             <available file="${opends.zip.default}"/>
         </condition>
+        <condition property="opends.download.skip">
+            <or>
+                <isset property="opends.setup.skip"/>
+                <isset property="opends.zip"/>
+            </or>
+        </condition>
+        <property name="opends.clean.skip" value="opends.setup.skip"/>
     </target>
 
-    <target name="opends-download" depends="opends-init" unless="opends.zip">
+    <target name="opends-download" depends="opends-init" unless="opends.download.skip">
         <mkdir dir="${opends.zip.default.dir}"/>
         <property name="opends.zip" value="${opends.zip.default}"/>
         <get src="http://www.opends.org/promoted-builds/1.0.0/OpenDS-1.0.0.zip" dest="${opends.zip}"/>
     </target>
 
-    <target name="opends-setup" depends="opends-init,opends-download" unless="opends.setup.skip">
+    <target name="opends-do-setup" depends="opends-init,opends-download" unless="opends.setup.skip">
     	<delete dir="${opends.setup.dir}"/>
 
     	<unzip dest="${opends.setup.dir}" src="${opends.zip}">
@@ -147,7 +156,9 @@
                 <include name="db/userRoot/00000000.jdb"/>
             </fileset>
         </copy>
+    </target>
 
+    <target name="opends-setup-clean" unless="opends.clean.skip">
     	<delete dir="${opends.setup.dir}"/>
     </target>
 
