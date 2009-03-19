@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
@@ -38,9 +39,11 @@ import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.omg.PortableInterceptor.NON_EXISTENT;
 
 /**
  * Contract test of {@link CreateApiOp} operation.
@@ -52,6 +55,7 @@ public class CreateApiOpTests extends ObjectClassRunner {
      */
     private static final Log LOG = Log.getLog(CreateApiOpTests.class);
     private static final String TEST_NAME = "Create";
+    private static final String NON_EXISTING_PROP_NAME = "unsupportedAttributeName";
 
     public CreateApiOpTests(ObjectClass oclass) {
         super(oclass);
@@ -104,6 +108,9 @@ public class CreateApiOpTests extends ObjectClassRunner {
     
     /**
      * Tests create method with invalid Attribute, RuntimeException is expected
+     * 
+     * connector developers can set the value of unsupported attribute
+     * using test property: <code>testsuite.Create.unsupportedAttributeName</code>
      */
     @Test
     public void testCreateFailUnsupportedAttribute() {
@@ -112,12 +119,21 @@ public class CreateApiOpTests extends ObjectClassRunner {
                 getAPIOperations())) {
             // create not supported Attribute Set
             Set<Attribute> attrs = new HashSet<Attribute>();
-            attrs.add(AttributeBuilder.build("NONEXISTINGATTRIBUTE"));
+            
+            String unsupportedAttribute = null;
+            try{
+                unsupportedAttribute = (String) getDataProvider().getTestSuiteAttribute(NON_EXISTING_PROP_NAME, TEST_NAME);
+            } catch (ObjectNotFoundException ex) {
+                unsupportedAttribute = "NONEXISTINGATTRIBUTE##__&&_$$";
+            }
+            
+            attrs.add(AttributeBuilder.build(unsupportedAttribute));
 
             try {
                 // do the create call
                 // note - the ObjectClassInfo is always supported
                 getConnectorFacade().create(getObjectClass(), attrs, null);
+                Assert.fail("'testCreateFailUnsupportedAttribute': NONEXISTING attribute accepted without throwing a RuntimeException.");
             }
             catch (RuntimeException ex) {
                 // ok
