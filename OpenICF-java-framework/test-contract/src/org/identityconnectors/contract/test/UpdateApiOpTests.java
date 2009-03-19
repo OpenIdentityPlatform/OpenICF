@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
@@ -44,6 +45,7 @@ import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -62,6 +64,8 @@ public class UpdateApiOpTests extends ObjectClassRunner {
     protected static final String MODIFIED = "modified";
     private static final String ADDED = "added";
     private static final String TEST_NAME = "Update";
+
+    private static final String NON_EXISTING_PROP_NAME = "unsupportedAttributeName";
 
     public UpdateApiOpTests(ObjectClass objectClass) {
         super(objectClass);
@@ -343,6 +347,71 @@ public class UpdateApiOpTests extends ObjectClassRunner {
     @Override
     public String getTestName() {
         return TEST_NAME;
+    }
+    
+    /**
+     * Tests update method with invalid Attribute, RuntimeException is expected
+     * 
+     * connector developers can set the value of unsupported attribute
+     * using test property: <code>testsuite.Create.unsupportedAttributeName</code>
+     */
+    @Test
+    public void testUpdateFailUnsupportedAttribute() {
+        // run the contract test only if update is supported by tested object class
+        if (ConnectorHelper.operationsSupported(getConnectorFacade(),
+                getObjectClass(), getAPIOperations())) {
+
+            // create an object to update
+            Uid uid = ConnectorHelper.createObject(getConnectorFacade(),
+                    getDataProvider(), getObjectClassInfo(), getTestName(), 0,
+                    getOperationOptionsByOp(CreateApiOp.class));
+            assertNotNull("Create returned null Uid.", uid);
+
+            // get by uid
+            ConnectorObject obj = getConnectorFacade().getObject(
+                    getSupportedObjectClass(), uid,
+                    getOperationOptionsByOp(GetApiOp.class));
+            assertNotNull("Cannot retrieve created object.", obj);
+
+            Set<Attribute> replaceAttributes = ConnectorHelper
+                    .getUpdateableAttributes(getDataProvider(),
+                            getObjectClassInfo(), getTestName(), MODIFIED, 0,
+                            false, false);
+
+            if (replaceAttributes.size() > 0 || !isObjectClassSupported()) {
+                // update only in case there is something to update or when
+                // object class is not supported
+                replaceAttributes.add(uid);
+
+                String unsupportedAttribute = null;
+                try{
+                    unsupportedAttribute = (String) getDataProvider().getTestSuiteAttribute(NON_EXISTING_PROP_NAME, TEST_NAME);
+                } catch (ObjectNotFoundException ex) {
+                    unsupportedAttribute = "NONEXISTINGATTRIBUTE##__&&_$$";
+                }
+                // + add one non-existing attribute
+                replaceAttributes.add(AttributeBuilder.build(unsupportedAttribute));
+
+                assertTrue("no update attributes were found",
+                        (replaceAttributes.size() > 0));
+                try {
+                    getConnectorFacade().update(getObjectClass(),
+                            uid, AttributeUtil.filterUid(replaceAttributes), null);
+                    Assert.fail("'testUpdateFailUnsupportedAttribute': NONEXISTING attribute accepted without throwing a RuntimeException.");
+                } catch (RuntimeException ex) {
+                    // ok
+                }
+            }
+        } else {
+            LOG
+                    .info("----------------------------------------------------------------------------------------");
+            LOG
+                    .info(
+                            "Skipping test ''testCreateFailUnsupportedAttribute'' for object class ''{0}''.",
+                            getObjectClass());
+            LOG
+                    .info("----------------------------------------------------------------------------------------");
+        }
     }
     
     /**
