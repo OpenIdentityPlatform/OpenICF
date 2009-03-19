@@ -79,6 +79,17 @@ uid: sylvester
 cn: Sylvester
 sn: Sylvester
 
+dn: uid=expired,ou=Users,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+uid: expired
+cn: Expired Password
+sn: Expired Password
+userPassword: password
+ds-pwp-password-policy-dn: cn=Quickly Expiring Password Policy,cn=Password Policies,cn=config
+
 # dn: cn=Bugs and Friends,o=Acme,dc=example,dc=com
 # objectClass: top
 # objectClass: groupOfNames

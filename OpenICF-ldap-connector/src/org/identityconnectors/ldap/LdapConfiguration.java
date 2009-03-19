@@ -107,6 +107,12 @@ public class LdapConfiguration extends AbstractConfiguration {
     private String groupMemberAttr = "uniqueMember";
 
     /**
+     * If true, when binding check for the Password Expired control (and also Password Policy control)
+     * and throw exceptions (PasswordExpiredException, etc.) appropriately.
+     */
+    private boolean respectResourcePasswordPolicyChangeAfterReset;
+
+    /**
      * Whether to use block-based LDAP controls like simple paged results or VLV control.
      */
     private boolean useBlocks = true;
@@ -331,6 +337,14 @@ public class LdapConfiguration extends AbstractConfiguration {
         this.groupMemberAttr = groupMemberAttr;
     }
 
+    public boolean isRespectResourcePasswordPolicyChangeAfterReset() {
+        return respectResourcePasswordPolicyChangeAfterReset;
+    }
+
+    public void setRespectResourcePasswordPolicyChangeAfterReset(boolean respectResourcePasswordPolicyChangeAfterReset) {
+        this.respectResourcePasswordPolicyChangeAfterReset = respectResourcePasswordPolicyChangeAfterReset;
+    }
+
     public boolean isUseBlocks() {
         return useBlocks;
     }
@@ -467,6 +481,7 @@ public class LdapConfiguration extends AbstractConfiguration {
         }
 //        builder.append(passwordAttribute);
         builder.append(groupMemberAttr);
+        builder.append(respectResourcePasswordPolicyChangeAfterReset);
         builder.append(useBlocks);
         builder.append(blockCount);
         builder.append(usePagedResultControl);

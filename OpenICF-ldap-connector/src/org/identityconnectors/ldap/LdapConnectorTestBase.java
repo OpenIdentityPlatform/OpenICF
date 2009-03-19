@@ -65,6 +65,7 @@ public abstract class LdapConnectorTestBase {
     public static final String ELMER_FUDD_DN = "uid=elmer.fudd,ou=Users,o=Acme,dc=example,dc=com";
     public static final String ELMER_FUDD_UID = "elmer.fudd";
     public static final String SYLVESTER_CN = "Sylvester";
+    public static final String EXPIRED_DN = "uid=expired,ou=Users,o=Acme,dc=example,dc=com";
 
     public static final String LOONEY_TUNES_DN = "cn=Looney Tunes,o=Acme,dc=example,dc=com";
     public static final String LOONEY_TUNES_CN = "Looney Tunes";

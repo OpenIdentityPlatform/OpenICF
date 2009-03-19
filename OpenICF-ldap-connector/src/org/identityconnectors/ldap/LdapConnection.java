@@ -34,6 +34,7 @@ import javax.naming.Context;
 import javax.naming.InvalidNameException;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
+import javax.naming.ldap.Control;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.LdapName;
@@ -47,8 +48,11 @@ import org.identityconnectors.common.security.GuardedString.Accessor;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.ConnectorSecurityException;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
+import org.identityconnectors.framework.common.exceptions.PasswordExpiredException;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.ldap.schema.LdapSchemaMapping;
+
+import com.sun.jndi.ldap.ctl.PasswordExpiredResponseControl;
 
 public class LdapConnection {
 
@@ -158,17 +162,36 @@ public class LdapConnection {
 
     private LdapContext doCreateContext(Hashtable<?, ?> env) {
         try {
-            return new InitialLdapContext(env, null);
+            InitialLdapContext context = new InitialLdapContext(env, null);
+            if (config.isRespectResourcePasswordPolicyChangeAfterReset()) {
+                if (hasPasswordExpiredControl(context.getResponseControls())) {
+                    throw new PasswordExpiredException();
+                }
+            }
+            // TODO: process Password Policy control.
+            return context;
         } catch (AuthenticationException e) {
-            // TODO: consider processing the "password expired" control.
             if (e.getMessage().toLowerCase().contains("invalid credentials")) {
                 throw new InvalidCredentialException(e);
+            } if (e.getMessage().toLowerCase().contains("password expired")) {
+                throw new PasswordExpiredException(e);
             } else {
                 throw new ConnectorSecurityException(e);
             }
         } catch (NamingException e) {
             throw new ConnectorException(e);
         }
+    }
+
+    private static boolean hasPasswordExpiredControl(Control[] controls) {
+        if (controls != null) {
+            for (Control control : controls) {
+                if (control instanceof PasswordExpiredResponseControl) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public void close() {
