@@ -394,13 +394,27 @@ public class UpdateApiOpTests extends ObjectClassRunner {
 
                 assertTrue("no update attributes were found",
                         (replaceAttributes.size() > 0));
+                
+                Uid uidNew = null;
                 try {
-                    getConnectorFacade().update(getObjectClass(),
+                    uidNew = getConnectorFacade().update(getObjectClass(),
                             uid, AttributeUtil.filterUid(replaceAttributes), null);
                     Assert.fail("'testUpdateFailUnsupportedAttribute': NONEXISTING attribute accepted without throwing a RuntimeException.");
                 } catch (RuntimeException ex) {
                     // ok
+                } finally {
+                    if (uidNew != null) {
+                        // delete the created the object
+                        ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uidNew,
+                                false, getOperationOptionsByOp(DeleteApiOp.class));
+                    }
                 }
+            }
+            
+            if (uid != null) {
+                // delete the created the object
+                ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid,
+                        false, getOperationOptionsByOp(DeleteApiOp.class));
             }
         } else {
             LOG

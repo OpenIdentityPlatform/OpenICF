@@ -129,14 +129,22 @@ public class CreateApiOpTests extends ObjectClassRunner {
             
             attrs.add(AttributeBuilder.build(unsupportedAttribute));
 
+            Uid uid = null;
             try {
                 // do the create call
                 // note - the ObjectClassInfo is always supported
-                getConnectorFacade().create(getObjectClass(), attrs, null);
+                uid = getConnectorFacade().create(getObjectClass(), attrs, null);
                 Assert.fail("'testCreateFailUnsupportedAttribute': NONEXISTING attribute accepted without throwing a RuntimeException.");
             }
             catch (RuntimeException ex) {
                 // ok
+            } 
+            finally {
+                if (uid != null) {
+                    // delete the object
+                    getConnectorFacade().delete(getSupportedObjectClass(), uid,
+                            getOperationOptionsByOp(DeleteApiOp.class));
+                }
             }
         }
         else {
