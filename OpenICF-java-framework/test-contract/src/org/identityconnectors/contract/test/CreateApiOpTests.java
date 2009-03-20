@@ -141,9 +141,9 @@ public class CreateApiOpTests extends ObjectClassRunner {
             } 
             finally {
                 if (uid != null) {
-                    // delete the object
-                    getConnectorFacade().delete(getSupportedObjectClass(), uid,
-                            getOperationOptionsByOp(DeleteApiOp.class));
+                    // delete the created the object
+                    ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid,
+                            false, getOperationOptionsByOp(DeleteApiOp.class));
                 }
             }
         }

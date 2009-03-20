@@ -361,60 +361,71 @@ public class UpdateApiOpTests extends ObjectClassRunner {
         if (ConnectorHelper.operationsSupported(getConnectorFacade(),
                 getObjectClass(), getAPIOperations())) {
 
-            // create an object to update
-            Uid uid = ConnectorHelper.createObject(getConnectorFacade(),
-                    getDataProvider(), getObjectClassInfo(), getTestName(), 0,
-                    getOperationOptionsByOp(CreateApiOp.class));
-            assertNotNull("Create returned null Uid.", uid);
+            Uid uid = null;
+            try {
+                // create an object to update
+                uid = ConnectorHelper.createObject(getConnectorFacade(),
+                        getDataProvider(), getObjectClassInfo(), getTestName(),
+                        0, getOperationOptionsByOp(CreateApiOp.class));
+                assertNotNull("Create returned null Uid.", uid);
 
-            // get by uid
-            ConnectorObject obj = getConnectorFacade().getObject(
-                    getSupportedObjectClass(), uid,
-                    getOperationOptionsByOp(GetApiOp.class));
-            assertNotNull("Cannot retrieve created object.", obj);
+                // get by uid
+                ConnectorObject obj = getConnectorFacade().getObject(
+                        getSupportedObjectClass(), uid,
+                        getOperationOptionsByOp(GetApiOp.class));
+                assertNotNull("Cannot retrieve created object.", obj);
 
-            Set<Attribute> replaceAttributes = ConnectorHelper
-                    .getUpdateableAttributes(getDataProvider(),
-                            getObjectClassInfo(), getTestName(), MODIFIED, 0,
-                            false, false);
+                Set<Attribute> replaceAttributes = ConnectorHelper
+                        .getUpdateableAttributes(getDataProvider(),
+                                getObjectClassInfo(), getTestName(), MODIFIED,
+                                0, false, false);
 
-            if (replaceAttributes.size() > 0 || !isObjectClassSupported()) {
-                // update only in case there is something to update or when
-                // object class is not supported
-                replaceAttributes.add(uid);
+                if (replaceAttributes.size() > 0 || !isObjectClassSupported()) {
+                    // update only in case there is something to update or when
+                    // object class is not supported
+                    replaceAttributes.add(uid);
 
-                String unsupportedAttribute = null;
-                try{
-                    unsupportedAttribute = (String) getDataProvider().getTestSuiteAttribute(NON_EXISTING_PROP_NAME, TEST_NAME);
-                } catch (ObjectNotFoundException ex) {
-                    unsupportedAttribute = "NONEXISTINGATTRIBUTE##__&&_$$";
-                }
-                // + add one non-existing attribute
-                replaceAttributes.add(AttributeBuilder.build(unsupportedAttribute));
+                    String unsupportedAttribute = null;
+                    try {
+                        unsupportedAttribute = (String) getDataProvider()
+                                .getTestSuiteAttribute(NON_EXISTING_PROP_NAME,
+                                        TEST_NAME);
+                    } catch (ObjectNotFoundException ex) {
+                        unsupportedAttribute = "NONEXISTINGATTRIBUTE##__&&_$$";
+                    }
+                    // + add one non-existing attribute
+                    replaceAttributes.add(AttributeBuilder
+                            .build(unsupportedAttribute));
 
-                assertTrue("no update attributes were found",
-                        (replaceAttributes.size() > 0));
-                
-                Uid uidNew = null;
-                try {
-                    uidNew = getConnectorFacade().update(getObjectClass(),
-                            uid, AttributeUtil.filterUid(replaceAttributes), null);
-                    Assert.fail("'testUpdateFailUnsupportedAttribute': NONEXISTING attribute accepted without throwing a RuntimeException.");
-                } catch (RuntimeException ex) {
-                    // ok
-                } finally {
-                    if (uidNew != null) {
-                        // delete the created the object
-                        ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uidNew,
-                                false, getOperationOptionsByOp(DeleteApiOp.class));
+                    assertTrue("no update attributes were found",
+                            (replaceAttributes.size() > 0));
+
+                    Uid uidNew = null;
+                    try {
+                        uidNew = getConnectorFacade().update(getObjectClass(),
+                                uid,
+                                AttributeUtil.filterUid(replaceAttributes),
+                                null);
+                        Assert
+                                .fail("'testUpdateFailUnsupportedAttribute': NONEXISTING attribute accepted without throwing a RuntimeException.");
+                    } catch (RuntimeException ex) {
+                        // ok
+                    } finally {
+                        if (uidNew != null) {
+                            // delete the created the object
+                            ConnectorHelper.deleteObject(getConnectorFacade(),
+                                    getSupportedObjectClass(), uidNew, false,
+                                    getOperationOptionsByOp(DeleteApiOp.class));
+                        }
                     }
                 }
-            }
-            
-            if (uid != null) {
-                // delete the created the object
-                ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid,
-                        false, getOperationOptionsByOp(DeleteApiOp.class));
+            } finally {
+                if (uid != null) {
+                    // delete the created the object
+                    ConnectorHelper.deleteObject(getConnectorFacade(),
+                            getSupportedObjectClass(), uid, false,
+                            getOperationOptionsByOp(DeleteApiOp.class));
+                }
             }
         } else {
             LOG
