@@ -22,8 +22,6 @@
  */
 package org.identityconnectors.ldap;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,7 +39,6 @@ import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.spi.AbstractConfiguration;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
@@ -75,6 +72,12 @@ public class LdapConfiguration extends AbstractConfiguration {
      * Whether the port is a secure SSL port.
      */
     private boolean ssl;
+
+    /**
+     * LDAP URL's to connect to if the main server specified through the host and port
+     * properties is not available.
+     */
+    private String[] failover = { };
 
     /**
      * The bind DN for performing operations on the server.
@@ -194,8 +197,8 @@ public class LdapConfiguration extends AbstractConfiguration {
         }
         for (String baseContext : baseContexts) {
             try {
-                if (baseContext == null) {
-                    throw new ConfigurationException("The list of base contexts cannot contain null values");
+                if (StringUtil.isBlank(baseContext)) {
+                    throw new ConfigurationException("The list of base contexts cannot contain blank values");
                 }
                 new LdapName(baseContext);
             } catch (InvalidNameException e) {
@@ -212,8 +215,8 @@ public class LdapConfiguration extends AbstractConfiguration {
             throw new ConfigurationException("The list of account object clases in the LDAP configuration contains duplicates");
         }
         for (String accountObjectClass : accountConfig.getLdapClasses()) {
-            if (accountObjectClass == null) {
-                throw new ConfigurationException("The list of account object classes cannot contain null values");
+            if (StringUtil.isBlank(accountObjectClass)) {
+                throw new ConfigurationException("The list of account object classes cannot contain blank values");
             }
         }
 
@@ -227,8 +230,8 @@ public class LdapConfiguration extends AbstractConfiguration {
             throw new ConfigurationException("The list of extended object classes in the LDAP configuration contains duplicates");
         }
         for (String extendedObjectClass : extendedObjectClasses) {
-            if (extendedObjectClass == null) {
-                throw new ConfigurationException("The list of extended object classes cannot contain null values");
+            if (StringUtil.isBlank(extendedObjectClass)) {
+                throw new ConfigurationException("The list of extended object classes cannot contain blank values");
             }
         }
         if (extendedObjectClasses.length > 0) {
@@ -239,8 +242,8 @@ public class LdapConfiguration extends AbstractConfiguration {
                 throw new ConfigurationException("No naming attributes were provided for all extended object classes in the LDAP configuration");
             }
             for (String extendedNamingAttribute : extendedNamingAttributes) {
-                if (extendedNamingAttribute == null) {
-                    throw new ConfigurationException("The list of extended naming attributes cannot contain null values");
+                if (StringUtil.isBlank(extendedNamingAttribute)) {
+                    throw new ConfigurationException("The list of extended naming attributes cannot contain blank values");
                 }
             }
         }
@@ -279,6 +282,17 @@ public class LdapConfiguration extends AbstractConfiguration {
 
     public void setSsl(boolean ssl) {
         this.ssl = ssl;
+    }
+
+    public String[] getFailover() {
+        return failover;
+    }
+
+    public void setFailover(String... failover) {
+        if (failover == null) {
+            throw new ConfigurationException("The failover parameter cannot be null");
+        }
+        this.failover = failover;
     }
 
     public String getPrincipal() {
@@ -422,14 +436,6 @@ public class LdapConfiguration extends AbstractConfiguration {
 
     // Getters and setters for configuration properties end here.
 
-    public String getLdapUrl() {
-        try {
-            return new URI("ldap", null, getHost(), getPort(),  null, null, null).toString();
-        } catch (URISyntaxException e) {
-            throw new ConnectorException(e);
-        }
-    }
-
     public boolean isContainedUnderBaseContexts(LdapName entry) {
         for (LdapName container : getBaseContextsAsLdapNames()) {
             if (entry.startsWith(container)) {
@@ -486,6 +492,7 @@ public class LdapConfiguration extends AbstractConfiguration {
         builder.append(host);
         builder.append(port);
         builder.append(ssl);
+        builder.append(failover);
         builder.append(principal);
         builder.append(credentials);
         builder.append(authentication);

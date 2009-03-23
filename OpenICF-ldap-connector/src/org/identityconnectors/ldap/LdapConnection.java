@@ -127,7 +127,7 @@ public class LdapConnection {
 
         final Hashtable<Object, Object> env = new Hashtable<Object, Object>();
         env.put(Context.INITIAL_CONTEXT_FACTORY, LDAP_CTX_FACTORY);
-        env.put(Context.PROVIDER_URL, config.getLdapUrl());
+        env.put(Context.PROVIDER_URL, getLdapUrls());
         env.put(Context.REFERRAL, "follow");
 
         if (config.isSsl()) {
@@ -192,6 +192,19 @@ public class LdapConnection {
             }
         }
         return false;
+    }
+
+    private String getLdapUrls() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("ldap://");
+        builder.append(config.getHost());
+        builder.append(':');
+        builder.append(config.getPort());
+        for (String failover : config.getFailover()) {
+            builder.append(' ');
+            builder.append(failover);
+        }
+        return builder.toString();
     }
 
     public void close() {

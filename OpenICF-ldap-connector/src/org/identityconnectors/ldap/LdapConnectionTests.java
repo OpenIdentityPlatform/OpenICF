@@ -32,6 +32,7 @@ import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.junit.Test;
 
 import com.sun.jndi.ldap.ctl.PagedResultsControl;
@@ -43,13 +44,38 @@ public class LdapConnectionTests extends LdapConnectorTestBase {
     protected boolean restartServerAfterEachTest() {
         return false;
     }
-    
+
     @Test
     public void testSSL() throws NamingException {
         BlindTrustProvider.register();
         LdapConfiguration config = newConfiguration();
         config.setSsl(true);
         config.setPort(SSL_PORT);
+        testConnection(config);
+    }
+
+    @Test
+    public void testFailover() throws NamingException {
+        LdapConfiguration config = newConfiguration();
+        config.setHost("foobarbaz");
+        config.setPort(65535);
+        try {
+            testConnection(config);
+        } catch (ConnectorException e) {
+            // OK.
+        } catch (NamingException e) {
+            // Should not normally occur.
+            throw e;
+        }
+
+        config = newConfiguration();
+        config.setHost("foobarbaz");
+        config.setPort(65535);
+        config.setFailover("ldap://localhost:" + PORT);
+        testConnection(config);
+    }
+
+    private void testConnection(LdapConfiguration config) throws NamingException {
         LdapConnection conn = new LdapConnection(config);
         Attributes attrs = conn.getInitialContext().getAttributes(BUGS_BUNNY_DN);
         assertEquals(BUGS_BUNNY_CN, getStringAttrValue(attrs, "cn"));

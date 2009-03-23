@@ -50,6 +50,7 @@ public abstract class LdapConnectorTestBase {
 
     // Cf. data.ldif and bigcompany.ldif.
 
+    public static final int PORT = 2389;
     public static final int SSL_PORT = 2636;
 
     public static final String ADMIN_DN = "uid=admin,dc=example,dc=com";
@@ -136,7 +137,7 @@ public abstract class LdapConnectorTestBase {
     public static LdapConfiguration newConfiguration(String... extObjectClassesAndNamingAttributes) {
         LdapConfiguration config = new LdapConfiguration();
         // Cf. opends/config.ldif.
-        config.setPort(2389);
+        config.setPort(PORT);
         config.setBaseContexts(ACME_DN, BIG_COMPANY_DN);
         config.setPrincipal(ADMIN_DN);
         config.setCredentials(ADMIN_PASSWORD);
