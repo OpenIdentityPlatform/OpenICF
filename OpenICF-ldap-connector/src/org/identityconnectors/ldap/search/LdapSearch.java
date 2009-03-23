@@ -139,7 +139,11 @@ public class LdapSearch {
         controls.setSearchScope(searchScope);
 
         String nativeFilter = filter != null ? filter.getNativeFilter() : null;
-        return new LdapInternalSearch(conn, restrictFilterToObjectClass(nativeFilter), baseDNs, getSearchStrategy(), controls, ignoreNonExistingBaseDNs);
+        String userFilter = null;
+        if (oclass.equals(ObjectClass.ACCOUNT)) {
+            userFilter = conn.getConfiguration().getAccountSearchFilter();
+        }
+        return new LdapInternalSearch(conn, getSearchFilter(nativeFilter, userFilter), baseDNs, getSearchStrategy(), controls, ignoreNonExistingBaseDNs);
     }
 
     /**
@@ -167,14 +171,25 @@ public class LdapSearch {
     }
 
     /**
-     * Creates a query whose results will be based on the passed query, but of
-     * the object class specified in the {@link #oclass} field.
+     * Creates the final search filter. It will be composed of an optional native filter, an optional
+     * user filter, and the filters for all LDAP object classes for the searched ObjectClass.
      */
-    private String restrictFilterToObjectClass(String nativeFilter) {
+    private String getSearchFilter(String nativeFilter, String userFilter) {
         StringBuilder builder = new StringBuilder();
         Set<String> ldapClasses = conn.getSchemaMapping().getLdapClasses(oclass);
-        if (nativeFilter != null || ldapClasses.size() > 1) {
+        boolean and = userFilter != null || ldapClasses.size() > 1 || nativeFilter != null;
+        if (and) {
             builder.append("(&");
+        }
+        if (userFilter != null) {
+            boolean enclose = userFilter.length() > 0 && userFilter.charAt(0) != '(';
+            if (enclose) {
+                builder.append('(');
+            }
+            builder.append(userFilter);
+            if (enclose) {
+                builder.append(')');
+            }
         }
         for (String ldapClass : ldapClasses) {
             builder.append("(objectClass=");
@@ -184,7 +199,7 @@ public class LdapSearch {
         if (nativeFilter != null) {
             builder.append(nativeFilter);
         }
-        if (nativeFilter != null || ldapClasses.size() > 1) {
+        if (and) {
             builder.append(')');
         }
         return builder.toString();

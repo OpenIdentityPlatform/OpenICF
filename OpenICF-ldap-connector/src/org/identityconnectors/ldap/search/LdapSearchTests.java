@@ -246,6 +246,49 @@ public class LdapSearchTests extends LdapConnectorTestBase {
     }
 
     @Test
+    public void testAccountSearchFilter() {
+        ConnectorFacade facade = newFacade();
+        // Find an organization to pass in OP_CONTAINER.
+        ObjectClass oclass = new ObjectClass("organization");
+        ConnectorObject organization = searchByAttribute(facade, oclass, new Name(ACME_DN));
+
+        // First just check that there really are some users.
+        OperationOptionsBuilder optionsBuilder = new OperationOptionsBuilder();
+        optionsBuilder.setScope(OperationOptions.SCOPE_SUBTREE);
+        optionsBuilder.setContainer(new QualifiedUid(oclass, organization.getUid()));
+        List<ConnectorObject> objects = TestHelpers.searchToList(facade, ObjectClass.ACCOUNT, null, optionsBuilder.build());
+        assertNotNull(getObjectByName(objects, BUGS_BUNNY_DN));
+        assertNotNull(getObjectByName(objects, ELMER_FUDD_DN));
+
+        LdapConfiguration config = newConfiguration();
+        config.setAccountSearchFilter("(uid=" + BUGS_BUNNY_UID + ")");
+        facade = newFacade(config);
+        objects = TestHelpers.searchToList(facade, ObjectClass.ACCOUNT, null, optionsBuilder.build());
+        assertEquals(1, objects.size());
+        assertNotNull(getObjectByName(objects, BUGS_BUNNY_DN));
+    }
+
+    @Test
+    public void testAccountSearchFilterOnlyAppliesToAccounts() {
+        LdapConfiguration config = newConfiguration();
+        config.setAccountSearchFilter("(cn=foobarbaz)");
+        ConnectorFacade facade = newFacade(config);
+
+        // If the (cn=foobarbaz) filter above applied, the search would return nothing.
+        assertNotNull(searchByAttribute(facade, new ObjectClass("organization"), new Name(ACME_DN)));
+    }
+
+    @Test
+    public void testMissingParenthesesAddedToAccountSearchFilter() {
+        LdapConfiguration config = newConfiguration();
+        config.setAccountSearchFilter("uid=" + BUGS_BUNNY_UID); // No parentheses enclosing the filter.
+        ConnectorFacade facade = newFacade(config);
+
+        // If parentheses were not added, the search would fail.
+        assertNotNull(searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN)));
+    }
+
+    @Test
     public void testMultipleBaseDNs() {
         ConnectorFacade facade = newFacade();
 

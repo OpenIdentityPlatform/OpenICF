@@ -102,6 +102,11 @@ public class LdapConfiguration extends AbstractConfiguration {
     private String[] baseContexts = { "dc=MYDOMAIN,dc=com" };
 
     /**
+     * A search filter that any account needs to match in order to be returned.
+     */
+    private String accountSearchFilter = null;
+
+    /**
      * The LDAP attribute holding the member for non-POSIX static groups.
      */
     private String groupMemberAttr = "uniqueMember";
@@ -320,6 +325,14 @@ public class LdapConfiguration extends AbstractConfiguration {
         this.baseContexts = baseContexts.clone();
     }
 
+    public String getAccountSearchFilter() {
+        return accountSearchFilter;
+    }
+
+    public void setAccountSearchFilter(String accountSearchFilter) {
+        this.accountSearchFilter = accountSearchFilter;
+    }
+
     public String[] getAccountObjectClasses() {
         List<String> ldapClasses = accountConfig.getLdapClasses();
         return ldapClasses.toArray(new String[ldapClasses.size()]);
@@ -479,6 +492,7 @@ public class LdapConfiguration extends AbstractConfiguration {
         for (String baseContext : baseContexts) {
             builder.append(baseContext);
         }
+        builder.append(accountSearchFilter);
 //        builder.append(passwordAttribute);
         builder.append(groupMemberAttr);
         builder.append(respectResourcePasswordPolicyChangeAfterReset);
