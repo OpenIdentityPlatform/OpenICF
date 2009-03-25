@@ -137,6 +137,7 @@ public final class CreatorAction extends CallableSystemAction {
             EditableProperties eProps = new EditableProperties();
             eProps.load(propFile.getInputStream());
             String resourceName = properties.getProperty("resource.name");
+            eProps.setProperty("build.classes.dir", "build");
             eProps.setProperty("application.title", "Connector-" + resourceName);
             eProps.setProperty("application.vendor", System.getProperty("user.name"));
             eProps.setProperty("dist.jar", "${dist.dir}/Connector-" + resourceName + "-1.0.0.jar");

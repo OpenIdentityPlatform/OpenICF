@@ -100,27 +100,7 @@ public class <%= resourceName %>Connector implements PoolableConnector, <%= inte
      * 
      * Implement the following operations using the contract and
      * description found in the Javadoc for these methods.
-     ******************/  
-    <% if(interfaces.contains("UpdateAttributeValuesOp")) { %>
-    /**
-     * {@inheritDoc}
-     */
-    public Uid addAttributeValues(ObjectClass objclass,
-            Uid uid,
-            Set<Attribute> valuesToAdd,
-            OperationOptions options) {
-        throw new UnsupportedOperationException();
-    }
-    /**
-     * {@inheritDoc}
-     */
-    public Uid removeAttributeValues(ObjectClass objclass,
-            Uid uid,
-            Set<Attribute> valuesToRemove,
-            OperationOptions options) {
-        throw new UnsupportedOperationException();
-    } <% } %>
-    
+     ******************/     
     <% if(interfaces.contains("AuthenticateOp")) { %>       
     /**
      * {@inheritDoc}
@@ -216,5 +196,25 @@ public class <%= resourceName %>Connector implements PoolableConnector, <%= inte
             Set<Attribute> replaceAttributes,
             OperationOptions options) {
         throw new UnsupportedOperationException();
-    } <% } %>     
+    } <% } %> 
+    
+    <% if(interfaces.contains("UpdateAttributeValuesOp")) { %>
+    /**
+     * {@inheritDoc}
+     */
+    public Uid addAttributeValues(ObjectClass objclass,
+            Uid uid,
+            Set<Attribute> valuesToAdd,
+            OperationOptions options) {
+        throw new UnsupportedOperationException();
+    }
+    /**
+     * {@inheritDoc}
+     */
+    public Uid removeAttributeValues(ObjectClass objclass,
+            Uid uid,
+            Set<Attribute> valuesToRemove,
+            OperationOptions options) {
+        throw new UnsupportedOperationException();
+    } <% } %>
 }
