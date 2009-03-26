@@ -173,6 +173,14 @@ public class DatabaseTableConnection extends DatabaseConnection {
             final String connectionUrl = config.formatUrlTemplate();
             connection = SQLUtil.getDriverMangerConnection(driver, connectionUrl, login, password);
         }
+        
+        //Disable auto-commit mode
+        try {
+          connection.setAutoCommit(false);   
+        } catch (SQLException expected) {
+            //expected
+        }
+        
         return new DatabaseTableConnection(connection, config);
     }
 
@@ -219,7 +227,7 @@ public class DatabaseTableConnection extends DatabaseConnection {
             if(config.isNativeTimestamps()) {
                 tail = new NativeTimestampsStrategy(tail);
             }                       
-        }
+        }        
         // head is convert all attributes to acceptable type, if they are not already
         return new AttributeConvertor(tail);
     }    
