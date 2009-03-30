@@ -60,6 +60,7 @@ import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -448,9 +449,16 @@ public class MultiOpTests extends ObjectClassRunner {
         if (isObjectClassSupported()
                 && ConnectorHelper.isCRU(getObjectClassInfo(), OperationalAttributes.DISABLE_DATE_NAME)) {
 
-            // check DISABLE_DATE for "now" and "1.1.1970"
-            checkOpAttribute(OperationalAttributes.DISABLE_DATE_NAME, (new Date()).getTime(),
-                    (new Date(0)).getTime(), Long.class);
+        	
+        	// try to retrieve the optional contract tests property for setting the dates, otherwise use the default values
+        	//"now"
+            final long createValue = getDateProperty(OperationalAttributes.DISABLE_DATE_NAME, (new Date()).getTime(), false);
+            //"1.1.1970"
+            final long updateValue = getDateProperty(OperationalAttributes.DISABLE_DATE_NAME, (new Date(0)).getTime(), true);
+            
+			// check DISABLE_DATE for "now" and "1.1.1970"
+            checkOpAttribute(OperationalAttributes.DISABLE_DATE_NAME, createValue ,
+                    updateValue, Long.class);
         }
         else {
             LOG.info("----------------------------------------------------------------------------------------");
@@ -460,6 +468,34 @@ public class MultiOpTests extends ObjectClassRunner {
     }
     
     /**
+	 * helper method for {@link MultiOpTests#testDisableDateOpAttribute()}
+	 * 
+	 * @param defaultValue
+	 *            in case property is not found, this value is used
+	 * @param isModified
+	 *            if the modified keyword is used
+	 */
+	private long getDateProperty(String propName, long defaultValue, boolean isModified) {
+		try {
+			if (isModified) {
+				propName = String.format("%s.%s", MODIFIED, propName);
+			}
+			
+			Object obj = getDataProvider().getTestSuiteAttribute(propName, getTestName());
+			if (obj instanceof Long) {
+				return (Long) obj;
+			} else {
+				Assert.fail(String.format("Property 'testsuite.%s.%s' should be of type *long*", getTestName(), propName));
+			}
+		} catch (ObjectNotFoundException onfe) {
+			// use the default value, OK
+		}
+		return defaultValue;
+	}
+
+
+
+	/**
      * Tests LOCK_OUT attribute contract 
      */
     @Test
