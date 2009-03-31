@@ -134,5 +134,18 @@ public class LocalizedAssertTest {
         catch(RuntimeException e){}
     }
     
+    @Test
+    public void testLocalizeArgumentNames(){
+    	LocalizedAssert la = new LocalizedAssert(new TestConnectorMessages(),true);
+    	try{
+    		//Small hack, we do not create new TestMessages with dummy argument name, use assert.blank as argument name
+    		la.assertNotBlank("", "assert.blank");
+    		fail("Must fail for blank String");
+    	}
+    	catch(RuntimeException e){
+    		assertEquals("Argument [Argument [{0}] must be blank] cannot be blank",e.getMessage());
+    	}
+    	
+    }
 
 }

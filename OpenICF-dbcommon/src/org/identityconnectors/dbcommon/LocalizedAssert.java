@@ -4,7 +4,8 @@ import org.identityconnectors.framework.common.objects.ConnectorMessages;
 
 /**
  * Localized asserts is a set of localized asserts utility method that throws localized
- * exception when assert is not true
+ * exception when assert is not true.
+ * Argument names passed into assert methods can also be localized 
  * 
  * @author kitko
  *
@@ -12,6 +13,7 @@ import org.identityconnectors.framework.common.objects.ConnectorMessages;
 public class LocalizedAssert {
 
     private ConnectorMessages cm;
+    private boolean localizeAruments;
 
     /**
      * Creates asserts with messages
@@ -25,7 +27,25 @@ public class LocalizedAssert {
         this.cm = cm;
     }
     
+    /**
+     * Creates asserts with messages with flag whether to localize argument names
+     * @param cm
+     * @param localizeAruments
+     * @throws IllegalArgumentException if cm param is null
+     */
+    public LocalizedAssert(ConnectorMessages cm, boolean localizeAruments){
+        if(cm == null){
+            throw new IllegalArgumentException("ConnectorMessages argument is null");
+        }
+        this.cm = cm;
+        this.localizeAruments = localizeAruments;
+    }
+    
+    
     private void throwException(String locKey,String argument){
+    	if(localizeAruments){
+    		argument = cm.format(argument, argument);
+    	}
         String msg = cm.format(locKey, null, argument);
         throw new IllegalArgumentException(msg);
     }
