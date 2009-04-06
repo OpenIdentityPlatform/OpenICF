@@ -76,9 +76,6 @@ byteArray.test = Lazy.random('AAAAA', byte[].class)
 charTest = Lazy.random('AAA', Character.class)
 
 //LIST:
-// test list of strings (random)
-multi.Tstring=[Lazy.random("AAAAA##") , Lazy.random("AAAAA##")]
-//recursive version (lists)
 multi.recursive.Tstring=[Lazy.random("AAAAA##") , [Lazy.random("AAA##") , [Lazy.random("AAA##") , Lazy.random('AAAAA\\_##')]]]
 
 abar="foo"
@@ -116,3 +113,12 @@ abcAccount{
     all."__NAME__"="CONUSR-" + Lazy.random("AAAAA")
     all."__PASSWORD__"="tstpwd"
 }
+
+// overriding defaults single value
+defaults.single = [
+    (String.class) : (Lazy.random("\\#\\##AAAA"))
+]
+
+defaults.multi = [
+    (Integer.class) : [123, 456]
+]

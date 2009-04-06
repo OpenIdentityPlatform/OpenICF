@@ -37,10 +37,9 @@ import java.util.Set;
 
 import junit.framework.Assert;
 
-import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -56,13 +55,13 @@ public class GroovyDataProviderTest {
     private static GroovyDataProvider gdp;
     public static final String CONFIG_FILE_PATH = "configfileTest.groovy";
 
-    @BeforeClass
-    public static void setUp() {
+    @Before
+    public void setUp() {
         gdp = new GroovyDataProvider(CONFIG_FILE_PATH, null, null);
     }
 
-    @AfterClass
-    public static void tearDown() {
+    @After
+    public void tearDown() {
         gdp = null;
     }
 
@@ -73,19 +72,113 @@ public class GroovyDataProviderTest {
         Assert
                 .assertEquals(
                         "If you think you can do a thing or think you can't do a thing, you're right. (H. Ford)",
-                        gdp.get("aSimpleString", "string", true));
+                        gdp.get("aSimpleString", String.class, true, false));
     }
 
+    /**
+     * acquire a nonexisting property without defaulting.
+     * ObjectNotFoundException should be thrown.
+     */
     @Test(expected = ObjectNotFoundException.class)
     public void testNonExistingProperty() throws Exception {
         Assert.assertTrue(new File(CONFIG_FILE_PATH)
                 .exists());
-        Object o = getProperty(gdp, NON_EXISTING_PROPERTY);
+        Object o = gdp.get(NON_EXISTING_PROPERTY);
+    }
+
+    /** test acceptable behavior of defaulting for single values.
+     * We query a non-existing attribute and expect a proper default
+     * value defined in bootstrap.groovy.
+     */
+    @Test
+    public void testProperDefaulting() {
+        Object o = get("nonexistingAttribute");
         Assert.assertNotNull(o);
-        Assert.assertTrue(o instanceof ConfigObject);
-        if (o instanceof ConfigObject) {
-            ConfigObject co = (ConfigObject) o;
-            Assert.assertEquals(0, co.size());
+        Assert.assertTrue(o instanceof String);
+        String nonExistingAttribute = (String) o;
+        
+        Object o2 = get("nonexistingAttribute");
+        Assert.assertNotNull(o2);
+        Assert.assertTrue(o2 instanceof String);
+        String nonExistingAttribute2 = (String) o2;
+        
+        final String message = "if we query the same attribute twice, it should return the same default value";
+        Assert.assertTrue(message, nonExistingAttribute.equals(nonExistingAttribute2));
+        
+        Object o3 = get("anotherNonExistingAttribute");
+        Assert.assertNotNull(o3);
+        Assert.assertTrue(o3 instanceof String);
+        String anotherNonExistingAttribute = (String) o3;
+        
+        Assert.assertTrue("different properties should return default default values!", !anotherNonExistingAttribute.equals(nonExistingAttribute));
+        
+        Object o4 = get("anotherNonExistingAttribute");
+        Assert.assertNotNull(o4);
+        Assert.assertTrue(o4 instanceof String);
+        String anotherNonExistingAttribute2 = (String) o4;
+        
+        Assert.assertTrue(message, anotherNonExistingAttribute.equals(anotherNonExistingAttribute2));
+    }
+
+    private Object get(String string) {
+        return gdp.get(String.class, string, "foocomponent");
+    }
+    
+    /** test proper defaulting for multiValue attributes. 
+     * We acquire a non-existing multivalue attribute and test if the right 
+     * default value from bootstrap.groovy is returned.
+     */
+    @Test
+    public void testMultiProperDefaulting() {
+        Object o = gdp.get("NonExisting_#Attribute", String.class, true, true);
+        Assert.assertTrue(o instanceof List);
+        List list = (List) o;
+        for (Object object : list) {
+            Assert.assertTrue(object instanceof String);
+        }
+        
+        Object o2 = gdp.get("NonExisting_#Attribute", String.class, true, true);
+        Assert.assertTrue(o2 instanceof List);
+        List list2 = (List) o2;
+        Assert.assertTrue(list.size() == list2.size());
+        Assert.assertTrue(list.equals(list2));
+        
+        Object o3 = gdp.get("NonExisting_#SOME_other_Attribute", String.class, true, true);
+        Assert.assertTrue(o3 instanceof List);
+        List list3 = (List) o3;
+        Assert.assertTrue(list.size() == list3.size());
+        String msg = String.format("the two lists should not be equal: \n list = %s \n list3 = %s", list, list3);
+        Assert.assertTrue(msg, !(list.equals(list3)));
+    }
+    
+    /** try to override a default single value and test if overriding works */
+    @Test
+    public void testOverrideDefaultSingleValue() {
+        Object o = get("nonexistingAttribute");
+        Assert.assertNotNull(o);
+        Assert.assertTrue(o instanceof String);
+        String nonExistingAttribute = (String) o;
+        
+        final String DEFAULT_MAKER = "##";
+        
+        String msg = String.format("%s is missing in front of default generated single value for String.class. Chech if '%s' contains the overriding definition of string defaulting.", DEFAULT_MAKER, CONFIG_FILE_PATH);
+        Assert.assertTrue(msg, nonExistingAttribute.startsWith(DEFAULT_MAKER));
+    }
+    
+    /** try to override a default multi value and test if overriding works */
+    @Test
+    public void testOverrideDefaultMultiValue() {
+        Object o = gdp.get("NonExisting_#Attribute", Integer.class, true, true);
+        Assert.assertNotNull(o);
+        Assert.assertTrue(o instanceof List);
+        final Integer expect1 = 123;
+        final Integer expect2 = 456;
+        List nonExistingAttribute = (List) o;
+        String msg = String.format("Overriding of string property in file %s failed. Expecting that overriden integer on the multivalue list would have values %s or %s", CONFIG_FILE_PATH, expect1, expect2);
+        for (Object object : nonExistingAttribute) {
+            Assert.assertTrue(object instanceof Integer);
+            Integer i = (Integer) object;
+            Assert.assertTrue(msg, i.equals(expect1) || i.equals(expect2));
         }
     }
 
@@ -153,6 +246,7 @@ public class GroovyDataProviderTest {
         Assert.assertEquals(o, o2);
     }
 
+    /** test correct merging of ConfigObjects */
     @Test
     public void configFileMerger() {
         ConfigSlurper cs = new ConfigSlurper();
@@ -167,6 +261,7 @@ public class GroovyDataProviderTest {
         assert "3" == f.getProperty("c");
     }
 
+    /** test correct merging of ConfigObjects */
     @Test
     public void configFileMergerAdvanced() {
         ConfigSlurper cs = new ConfigSlurper();
@@ -238,6 +333,7 @@ public class GroovyDataProviderTest {
 
     }
 
+    /** tests defaulting for when a non-existing float type variable is queried. */
     @Test
     public void literalsMacroReplacementTest() throws Exception {
         {
@@ -248,20 +344,7 @@ public class GroovyDataProviderTest {
         }
     }
 
-    @Test
-    public void multiStringListTest() throws Exception {
-
-        // multi.Tstring=[Lazy.random("AAAAA##") , Lazy.random("AAAAA##")]
-        Object o = getProperty(gdp, "multi.Tstring");
-        Assert.assertNotNull(o);
-        Assert.assertTrue(o instanceof List);
-        if (o instanceof List) {
-            List l = (List) o;
-            printList(l);
-            System.out.println();
-        }
-    }
-
+    /** Test of a recursive list of Lazy generated strings */
     @Test
     public void multiStringRecursiveTest() throws Exception {
 
@@ -293,6 +376,7 @@ public class GroovyDataProviderTest {
         }
     }
 
+    /** acquire a property of type byte[] */
     @Test
     public void testByteArray() throws Exception {
         Object o = getProperty(gdp, "byteArray.test");
@@ -308,17 +392,12 @@ public class GroovyDataProviderTest {
         }
     }
 
+    /** acquire a property of character type. */
     @Test
     public void characterTest() throws Exception {
         Object o = getProperty(gdp, "charTest");
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof Character);
-    }
-
-    @Test(expected = ObjectNotFoundException.class)
-    public void testNonExistingDefault() throws Exception {
-        // should not return default vale
-        Object o = getProperty(gdp, "connector.login");
     }
 
     @Test
@@ -334,17 +413,6 @@ public class GroovyDataProviderTest {
         Object o = getProperty(gdp, "Schema.__NAME__.attribute.account");
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof String && o.toString() == "Ahoj ship!");
-    }
-    
-    /**
-     * tests {@link GroovyDataProvider#getShortTypeName(Class)} method.
-     */
-    @Test
-    public void testGetShortTypeName() {
-        Assert.assertTrue(GroovyDataProvider.getShortTypeName(String.class).equals("Tstring"));
-        byte[] barr = new byte[0];
-        Assert.assertTrue(GroovyDataProvider.getShortTypeName(barr.getClass()).equals("Tbytearray"));
-        Assert.assertTrue(GroovyDataProvider.getShortTypeName(GuardedString.class).equals("Tstring"));
     }
     
     @Test
@@ -458,7 +526,7 @@ public class GroovyDataProviderTest {
     private Object getProperty(GroovyDataProvider gdp2, String propertyName,
             boolean printOut) throws Exception {
         // doing the acquire of property!
-        Object o = gdp2.get(propertyName, "string", true);
+        Object o = gdp2.get(propertyName, String.class, true, false);
 
         // just informational output
         if (o instanceof Map) {
@@ -482,10 +550,10 @@ public class GroovyDataProviderTest {
     /** Test of Lazy.get() and Lazy.random()*/
     @Test
     public void getPropertyTest() {
-        Assert.assertTrue(gdp.get("rumulus", null, false).equals(
-                gdp.get("rumulus", null, false)));
-        Assert.assertTrue(gdp.get("remus", null, false).equals(
-                gdp.get("rumulus", null, false)));
+        Assert.assertTrue(gdp.get("rumulus", null, false, false).equals(
+                gdp.get("rumulus", null, false, false)));
+        Assert.assertTrue(gdp.get("remus", null, false, false).equals(
+                gdp.get("rumulus", null, false, false)));
     }
 
     /** Test of left sides for the snapshot output */

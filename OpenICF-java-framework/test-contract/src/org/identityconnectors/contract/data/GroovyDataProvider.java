@@ -33,6 +33,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -44,6 +45,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
@@ -145,9 +147,6 @@ public class GroovyDataProvider implements DataProvider {
     /** boostrap.groovy contains default values that are returned when the property is not found */
     private static final String BOOTSTRAP_FILE_NAME = "bootstrap.groovy";
     private static final String CONNECTORS_DIR = ".connectors";
-     
-    /** prefix of default values that are multi */
-    public static final String MULTI_VALUE_TYPE_PREFIX = "multi";
     
     /** holds the parsed config file */
     private ConfigObject configObject;
@@ -176,6 +175,11 @@ public class GroovyDataProvider implements DataProvider {
     /** output file for queried properties dump */
     private File _queriedPropsOutFile = null;
     static final String ASSIGNMENT_MARK = "=";
+    /** default value marker in bootstrap.groovy */
+    private static final String DEFAULTS_PROP_NAME = "defaults";
+    /** prefixes of default values */
+    private static final Object SINGLE_VALUE_TYPE_SUFFIX = "single";
+    public static final String MULTI_VALUE_TYPE_SUFFIX = "multi";
 
     private final String FOUND_MSG = "found";
     /** Turn on debugging prefixes in parsing. Output: System.out */
@@ -287,13 +291,14 @@ public class GroovyDataProvider implements DataProvider {
      */
     public GroovyDataProvider(String configFilePath, String nullStr2, String null3) {
 
-        doBootstrap();
+        configObject = doBootstrap();
 
         File f = new File(configFilePath);
 
         try {
             // parse the configuration file once
-            configObject = cs.parse(f.toURL());
+            ConfigObject highPriorityCO = cs.parse(f.toURL());
+            configObject = mergeConfigObjects(configObject, highPriorityCO);
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
@@ -411,7 +416,7 @@ public class GroovyDataProvider implements DataProvider {
      * Main get method. Property lookup starts here.
      * 
      */
-    public Object get(String name, String type, boolean useDefault)
+    public Object get(String name, Class type, boolean useDefault, boolean isMultiValue)
             throws ObjectNotFoundException {
         Object o = null;
         /** indicates if default value used */
@@ -420,13 +425,29 @@ public class GroovyDataProvider implements DataProvider {
         boolean isFound = true;
 
         try {
-            o = propertyRecursiveGet(name);
+            o = propertyRecursiveGet(name, true);
         } catch (ObjectNotFoundException onfe) {
             // What to do in case of missing property value:
             if (useDefault) {
                 isDefaultValue = true;
-                // generate a default value
-                o = propertyRecursiveGet(type);
+                
+                Map<?,?> m = (Map<?,?>) propertyRecursiveGet(DEFAULTS_PROP_NAME, false);
+                
+                if (isMultiValue) {
+                    m = (Map<?, ?>) m.get(MULTI_VALUE_TYPE_SUFFIX);
+                } else {
+                    m = (Map<?, ?>) m.get(SINGLE_VALUE_TYPE_SUFFIX);
+                }
+
+                o = m.get(type);
+                if (isMultiValue) {
+                    String msg = String.format("%s.%s should contian List of default values. Value type: %s is not allowed", DEFAULTS_PROP_NAME, MULTI_VALUE_TYPE_SUFFIX, o.getClass().getName());
+                    Assert.assertTrue(msg, o instanceof List);
+                    List l = (List) o;
+                    o = resolveMultiList(l);
+                } else {
+                    o = resolvePropObject(o);
+                }
             } else {
                 isFound = false;
                 if (useDefault) {
@@ -438,7 +459,7 @@ public class GroovyDataProvider implements DataProvider {
             }
         } finally {
             if (_queriedPropsOutFile != null) {
-                logQueriedProperties(o, name, type, isDefaultValue, isFound);
+                logQueriedProperties(o, name, type.getName(), isDefaultValue, isFound);
             }
         }
 
@@ -450,6 +471,18 @@ public class GroovyDataProvider implements DataProvider {
         // cache resolved value
         cache.put(name, o);
         return o;
+    }
+
+    /** creates a Deep copy of the List of objects
+     * @param o list of objects
+     * @param type 
+     */
+    private Object resolveMultiList(Collection list) {
+        List result = new ArrayList();
+        for (Object t : list) {
+            result.add(resolvePropObject(t));
+        }
+        return result;
     }
 
     /**
@@ -479,9 +512,11 @@ public class GroovyDataProvider implements DataProvider {
      * try to resolve the property's value
      * 
      * @param name
+     * @param isResolved
+     *            controls if returned value is resolved for Lazy objects.
      * @return
      */
-    private Object propertyRecursiveGet(String name) throws ObjectNotFoundException {
+    private Object propertyRecursiveGet(String name, boolean isResolved) throws ObjectNotFoundException {
         Object response = null;
         
         if (!cache.containsKey(name)) {
@@ -490,7 +525,7 @@ public class GroovyDataProvider implements DataProvider {
                 // get the property for given name
                 // (in case property is not found, ObjectNotFoundException will be
                 // thrown.)
-                response = configObjectRecursiveGet(name, this.configObject);
+                response = configObjectRecursiveGet(name, this.configObject, isResolved);
     
             } catch (ObjectNotFoundException onfe) {
                 // we did not found the property for given name, try to search it
@@ -501,7 +536,7 @@ public class GroovyDataProvider implements DataProvider {
                 if (separatorIndex != SINGLE_VALUE_MARKER) {
                     separatorIndex++;
                     if (separatorIndex < name.length()) {
-                        return propertyRecursiveGet(name.substring(separatorIndex));
+                        return propertyRecursiveGet(name.substring(separatorIndex), isResolved);
                     }
                 } else {
                     throw new ObjectNotFoundException(
@@ -525,10 +560,12 @@ public class GroovyDataProvider implements DataProvider {
      * @param co
      *            configuration model, that contains all the property key/value
      *            pairs
-     * @return
+     * @param isResolved
+     *            controls if the found value should be resolved (Lazy objects)
+     * @return the resolved object
      * @throws ObjectNotFoundException
      */
-    private Object configObjectRecursiveGet(String name, ConfigObject co)
+    private Object configObjectRecursiveGet(String name, ConfigObject co, boolean isResolved)
             throws ObjectNotFoundException {
         int dotIndex = name.indexOf(PROPERTY_SEPARATOR);
         if (dotIndex >= 0) {
@@ -537,12 +574,14 @@ public class GroovyDataProvider implements DataProvider {
             /*
              * request the property name from parsed config file
              */
-            Object o = configObjectGet(co, currentNamePart);
+            Object o = configObjectGet(co, currentNamePart, isResolved);
 
             if (o instanceof ConfigObject) {
                 // recursively resolve the hierarchical names (containing
                 // multiple dots.
-                return configObjectRecursiveGet(name.substring(dotIndex + 1), (ConfigObject) o);
+                return configObjectRecursiveGet(name.substring(dotIndex + 1), (ConfigObject) o, isResolved);
+            } else if (o instanceof Map) {
+                return o;
             } else {
                 final String MSG = "Unexpected object instance. Searching property: '%s', found value: '%s', expected value is ConfigObject. Please check that property '%s' is defined - it can collide with attribute value definition.";
                 Assert.fail(String.format(MSG, name, o.toString(), name));
@@ -553,7 +592,7 @@ public class GroovyDataProvider implements DataProvider {
             /*
              * request the property name from parsed config file
              */
-            return configObjectGet(co, name);
+            return configObjectGet(co, name, isResolved);
         }
     }
 
@@ -563,10 +602,12 @@ public class GroovyDataProvider implements DataProvider {
      *            current config object which is queried
      * @param currentNamePart
      *            the queried property name
+     * @param isResolved
+     *            if the found property should be resolved.
      * @return the value for given property name
      * @throws ObjectNotFoundException
      */
-    private Object configObjectGet(ConfigObject co, String currentNamePart)
+    private Object configObjectGet(ConfigObject co, String currentNamePart, boolean isResolved)
             throws ObjectNotFoundException {
 
         /*
@@ -581,7 +622,9 @@ public class GroovyDataProvider implements DataProvider {
                 throw new ObjectNotFoundException();
             }
         } else {
-            result = resolvePropObject(result);
+            if (isResolved) {
+                result = resolvePropObject(result);
+            }
         }// fi
         return result;
     }
@@ -598,6 +641,8 @@ public class GroovyDataProvider implements DataProvider {
      * @return the resolved property object
      */
     private Object resolvePropObject(Object o) {
+        if (o == null) return null;
+        
         Object resolved = o;
 
         if (o instanceof Lazy) {
@@ -680,7 +725,7 @@ public class GroovyDataProvider implements DataProvider {
             }
             if (lazy instanceof Get) {
                 Assert.assertTrue(value instanceof String);
-                resolvedValue = get((String)value, null, false);
+                resolvedValue = get((String)value, null, false, false);
             } else if (lazy instanceof Random) {
                 Assert.assertTrue(value instanceof String);
                 Random rnd = (Random) lazy;
@@ -705,6 +750,7 @@ public class GroovyDataProvider implements DataProvider {
                 sb.append((String) o);
             } else if (o instanceof Lazy) {
                 Object resolved = resolveLazy((Lazy) o);
+                
                 sb.append(resolved.toString());
             }
         }
@@ -721,13 +767,6 @@ public class GroovyDataProvider implements DataProvider {
             int sequenceNumber, boolean isMultivalue) throws ObjectNotFoundException {
         // put the parameters in the Map ... this will fail if called
         // recursively
-
-        String shortTypeName = getShortTypeName(dataTypeName);
-        // for multi values add the multi prefix when searching for default value.
-        if (isMultivalue) {
-            String tmp = String.format("multi%s%s", PROPERTY_SEPARATOR, shortTypeName);
-            shortTypeName = tmp;
-        }
         
         Assert.assertFalse(cache.keySet().contains("param.sequenceNumber"));
         Assert.assertFalse(cache.keySet().contains("param.componentName"));
@@ -750,12 +789,12 @@ public class GroovyDataProvider implements DataProvider {
         
         cache.put("param.componentName", componentName);
         cache.put("param.name", name);
-        cache.put("param.dataTypeName", shortTypeName);
+        cache.put("param.dataTypeName", dataTypeName.getName());
 
         try {
 
             // call get to resolve the property value
-            Object obj = get(sbPath.toString(), shortTypeName, true);
+            Object obj = get(sbPath.toString(), dataTypeName, true, isMultivalue);
 
             LOG.info("Fully resolved ''{0}'' to value ''{1}''", sbPath
                     .toString(), obj);
@@ -814,14 +853,14 @@ public class GroovyDataProvider implements DataProvider {
     public Object getTestSuiteAttribute(String propName)
             throws ObjectNotFoundException {
 
-        return get("testsuite." + propName, null, false);
+        return get("testsuite." + propName, null, false, false);
     }
 
     /**
      * {@inheritDoc}
      */
     public Object getTestSuiteAttribute(String propName, String testName) throws ObjectNotFoundException {
-        return get("testsuite." + testName + "." + propName, null, false);
+        return get("testsuite." + testName + "." + propName, null, false, false);
     }
 
     /**
@@ -830,14 +869,14 @@ public class GroovyDataProvider implements DataProvider {
     public Object getConnectorAttribute(String propName)
             throws ObjectNotFoundException {
 
-        return get("connector." + propName, null, false);
+        return get("connector." + propName, null, false, false);
     }
     
     /**
      * {@inheritDoc}
      */
     public Object get(String name) {
-        Object result = get(name, null, false);
+        Object result = get(name, null, false, false);
         if (result instanceof Map) {
             Map map = (Map) result;
             result = resolveMap(map);
@@ -948,37 +987,7 @@ public class GroovyDataProvider implements DataProvider {
             }
         }
     }
-    /* ************** AUXILIARY METHODS *********************** */
-    /**
-     * gets short name for the type, eg. java.lang.String returns string
-     * 
-     * @param Type
-     *            Name
-     * @return Short Name
-     */
-    static String getShortTypeName(Class dataType) {
-        /*
-         * in case of arrays "datatype[]" is returned
-         */
-        String shortName = dataType.getSimpleName();
-        final boolean isArray = dataType.isArray();
-        
-        if (dataType.equals(GuardedString.class)) {
-            shortName = String.class.getSimpleName();
-        }
-        
-        if (isArray) {
-            if (shortName.length() > 2) {
-                String tmp = shortName.replace("[]", ARRAY_MARKER);
-                shortName = tmp;
-            } else {
-                LOG.warn("Can't get short type for ''{0}'' (missing array type)", dataType.getName());
-            }
-        }
-
-        return String.format("T%s", shortName.toLowerCase());
-    }
-
+    
     /* **************** SNAPSHOT GENERATOR METHODS **************** */
     /**
      * writes key, value to _propertyOutFile

@@ -65,36 +65,35 @@ String.metaClass.plus = {Get get->
     return newGet;
 }
 
-
-
-
 /* 
  * Default data for common types
  */
-Tstring = Lazy.random("AAAAA##")
-Tinteger= Lazy.random("##", Integer.class)
-Tint= Lazy.random("##", Integer.class)
-Tlong= Lazy.random("#####", Long.class)
-Tbiginteger=Lazy.random("#####", java.math.BigInteger.class)
-Tfloat=Lazy.random("#####\\.##", Float.class)
-Tdouble=Lazy.random("#####\\.##", Double.class)
-Tbigdecimal=Lazy.random("#####\\.##", java.math.BigDecimal.class)
-Tboolean=false
-Tbytearray=Lazy.random(".............", byte[].class)
-Tcharacter=Lazy.random(".", Character.class)
-Tchar=Lazy.random(".", Character.class)
-
-
+defaults.single = [
+    (String.class) : (Lazy.random("AAAAA##")),
+    (Integer.class) : Lazy.random("##", Integer.class),
+    (int.class) : Lazy.random("##", Integer.class),
+    (long.class) : Lazy.random("#####", Long.class),
+    (java.math.BigInteger.class) : Lazy.random("#####", java.math.BigInteger.class),
+    (float.class) : Lazy.random("#####\\.##", Float.class),
+    (double.class) : Lazy.random("#####\\.##", Double.class),
+    (java.math.BigDecimal.class) : Lazy.random("#####\\.##", java.math.BigDecimal.class),
+    (boolean.class) : false,
+    (byte[].class) : Lazy.random(".............", byte[].class),
+    (Character.class) : Lazy.random(".", Character.class),
+    (char.class) : Lazy.random(".", Character.class)    \
+]
 
 // Default data for multivalue attributes of common types
-multi.Tstring=[Lazy.random("AAAAA##") , Lazy.random("AAAAA##")]
-multi.Tinteger=[Lazy.random("##", Integer.class), Lazy.random("##", Integer.class)]
-multi.Tlong=[Lazy.random("#####", Long.class), Lazy.random("#####", Long.class)]
-multi.Tbiginteger=[Lazy.random("#####", java.math.BigInteger.class), Lazy.random("#####", java.math.BigInteger.class)]
-multi.Tfloat=[Lazy.random("#####\\.##", Float.class), Lazy.random("#####\\.##", Float.class)]
-multi.Tdouble=[Lazy.random("#####\\.##", Double.class), Lazy.random("#####\\.##", Double.class)]
-multi.Tbigdecimal=[Lazy.random("#####\\.##", java.math.BigDecimal.class), Lazy.random("#####\\.##", java.math.BigDecimal.class)]
-multi.Tboolean=[false, false]
-multi.Tbytearray=
-	[Lazy.random(".............", byte[].class), Lazy.random(".............", byte[].class)]
-multi.Tcharacter = [Lazy.random(".", Character.class), Lazy.random(".", Character.class)]
+defaults.multi = [
+    (String.class) : [Lazy.random("AAAAA##") , Lazy.random("AAAAA##")],
+    (Integer.class) : [Lazy.random("##", Integer.class), Lazy.random("##", Integer.class)],
+    (long.class) : [Lazy.random("#####", Long.class), Lazy.random("#####", Long.class)],
+    (java.math.BigInteger.class) : [Lazy.random("#####", java.math.BigInteger.class), Lazy.random("#####", java.math.BigInteger.class)],
+    (float.class) : [Lazy.random("#####\\.##", Float.class), Lazy.random("#####\\.##", Float.class)], 
+    (double.class) : [Lazy.random("#####\\.##", Double.class), Lazy.random("#####\\.##", Double.class)], 
+    (java.math.BigDecimal.class) : [Lazy.random("#####\\.##", java.math.BigDecimal.class), Lazy.random("#####\\.##", java.math.BigDecimal.class)],
+    (boolean.class) : [false, false],
+    (byte[].class) : 
+	[Lazy.random(".............", byte[].class), Lazy.random(".............", byte[].class)],
+    (Character.class) : [Lazy.random(".", Character.class), Lazy.random(".", Character.class)]
+]
