@@ -445,10 +445,15 @@ public class GroovyDataProvider implements DataProvider {
                 o = m.get(type);
                 
                 if (isMultiValue) {
-                    String msg = String.format("%s.%s should contian List of default values. Value type: %s is not allowed", DEFAULTS_PROP_NAME, MULTI_VALUE_TYPE_SUFFIX, o.getClass().getName());
-                    Assert.assertTrue(msg, o instanceof List);
-                    List l = (List) o;
-                    o = resolveMultiList(l);
+                    if (o instanceof List) {
+                        List l = (List) o;
+                        o = resolveMultiList(l);
+                    } else if (o instanceof ObjectNotFoundException) {
+                        // do nothing
+                    } else {
+                        String msg = String.format("%s.%s should contian List of default values or ObjectNotFoundException. Value type: %s is not allowed", DEFAULTS_PROP_NAME, MULTI_VALUE_TYPE_SUFFIX, o.getClass().getName());
+                        Assert.fail(msg);
+                    }
                 } else {
                     o = resolvePropObject(o);
                 }
