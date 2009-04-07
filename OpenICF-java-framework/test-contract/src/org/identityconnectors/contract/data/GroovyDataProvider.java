@@ -439,7 +439,11 @@ public class GroovyDataProvider implements DataProvider {
                     m = (Map<?, ?>) m.get(SINGLE_VALUE_TYPE_SUFFIX);
                 }
 
+                if (type.equals(GuardedString.class)) {
+                    type = String.class;
+                }
                 o = m.get(type);
+                
                 if (isMultiValue) {
                     String msg = String.format("%s.%s should contian List of default values. Value type: %s is not allowed", DEFAULTS_PROP_NAME, MULTI_VALUE_TYPE_SUFFIX, o.getClass().getName());
                     Assert.assertTrue(msg, o instanceof List);
