@@ -22,6 +22,10 @@
  */
 package org.identityconnectors.ldap;
 
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Set;
 
@@ -160,6 +164,234 @@ public class LdapUtil {
             return new LdapName(ldapName);
         } catch (InvalidNameException e) {
             throw new ConnectorException(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> List<T> checkedListByFilter(List list, Class<T> clazz) {
+        return new CheckedListByFilter<T>(list, clazz);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static final class CheckedListByFilter<E> implements List<E> {
+
+        private final List list;
+        private final Class<E> clazz;
+
+        public CheckedListByFilter(List list, Class<E> clazz) {
+            this.clazz = clazz;
+            this.list = list;
+        }
+
+        private E cast(Object o) {
+            return clazz.cast(o);
+        }
+
+        public boolean add(E o) {
+            return list.add(o);
+        }
+
+        public void add(int index, E element) {
+            list.add(index, element);
+        }
+
+        public boolean addAll(Collection<? extends E> c) {
+            return list.addAll(c);
+        }
+
+        public boolean addAll(int index, Collection<? extends E> c) {
+            return list.addAll(index, c);
+        }
+
+        public void clear() {
+            list.clear();
+        }
+
+        public boolean contains(Object o) {
+            return list.contains(o);
+        }
+
+        public boolean containsAll(Collection<?> c) {
+            return list.containsAll(c);
+        }
+
+        public E get(int index) {
+            return cast(list.get(index));
+        }
+
+        public int indexOf(Object o) {
+            return list.indexOf(o);
+        }
+
+        public boolean isEmpty() {
+            return list.isEmpty();
+        }
+
+        public Iterator<E> iterator() {
+            return new Itr(list.iterator());
+        }
+
+        public int lastIndexOf(Object o) {
+            return list.lastIndexOf(o);
+        }
+
+        public ListIterator<E> listIterator() {
+            return new ListItr(list.listIterator());
+        }
+
+        public ListIterator<E> listIterator(int index) {
+            return new ListItr(list.listIterator(index));
+        }
+
+        public boolean remove(Object o) {
+            return list.remove(o);
+        }
+
+        public E remove(int index) {
+            return cast(list.remove(index));
+        }
+
+        public boolean removeAll(Collection<?> c) {
+            return list.removeAll(c);
+        }
+
+        public boolean retainAll(Collection<?> c) {
+            return list.retainAll(c);
+        }
+
+        public E set(int index, E element) {
+            return cast(list.set(index, element));
+        }
+
+        public int size() {
+            return list.size();
+        }
+
+        public List<E> subList(int fromIndex, int toIndex) {
+            return list.subList(fromIndex, toIndex);
+        }
+
+        public Object[] toArray() {
+            return list.toArray();
+        }
+
+        public <T> T[] toArray(T[] a) {
+            Object[] result = list.toArray(a);
+            for (Object o : result) {
+                cast(o);
+            }
+            return (T[]) result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return list.equals(obj);
+        }
+
+        @Override
+        public int hashCode() {
+            return list.hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return list.toString();
+        }
+
+        private final class Itr implements Iterator<E> {
+
+            private final Iterator iter;
+
+            public Itr(Iterator iter) {
+                this.iter = iter;
+            }
+
+            public boolean hasNext() {
+                return iter.hasNext();
+            }
+
+            public E next() {
+                return cast(iter.next());
+            }
+
+            public void remove() {
+                iter.remove();
+            }
+
+            @Override
+            public boolean equals(Object obj) {
+                return iter.equals(obj);
+            }
+
+            @Override
+            public int hashCode() {
+                return iter.hashCode();
+            }
+
+            @Override
+            public String toString() {
+                return iter.toString();
+            }
+        }
+
+        private final class ListItr implements ListIterator<E> {
+
+            private final ListIterator iter;
+
+            public ListItr(ListIterator iter) {
+                this.iter = iter;
+            }
+
+            public void add(E o) {
+                iter.add(o);
+            }
+
+            public boolean hasNext() {
+                return iter.hasNext();
+            }
+
+            public boolean hasPrevious() {
+                return iter.hasPrevious();
+            }
+
+            public E next() {
+                return cast(iter.next());
+            }
+
+            public int nextIndex() {
+                return iter.nextIndex();
+            }
+
+            public E previous() {
+                return cast(iter.previous());
+            }
+
+            public int previousIndex() {
+                return iter.previousIndex();
+            }
+
+            public void remove() {
+                iter.remove();
+            }
+
+            public void set(E o) {
+                iter.set(o);
+            }
+
+            @Override
+            public boolean equals(Object obj) {
+                return iter.equals(obj);
+            }
+
+            @Override
+            public int hashCode() {
+                return iter.hashCode();
+            }
+
+            @Override
+            public String toString() {
+                return iter.toString();
+            }
         }
     }
 }

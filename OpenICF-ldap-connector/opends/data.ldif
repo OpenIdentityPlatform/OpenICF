@@ -42,21 +42,13 @@ objectClass: top
 objectClass: organizationalUnit
 ou: Users
 
-dn: uid=walt.disney,ou=Users,o=Acme,dc=example,dc=com
-objectClass: top
-objectClass: person
-objectClass: organizationalPerson
-objectClass: inetOrgPerson
-uid: walt.disney
-cn: Walt Disney
-sn: Disney
-
 dn: uid=bugs.bunny,ou=Users,o=Acme,dc=example,dc=com
 objectClass: top
 objectClass: person
 objectClass: organizationalPerson
 objectClass: inetOrgPerson
 uid: bugs.bunny
+uid: bbunny
 cn: Bugs Bunny
 sn: Bunny
 userPassword: carrot
@@ -90,44 +82,81 @@ sn: Expired Password
 userPassword: password
 ds-pwp-password-policy-dn: cn=Quickly Expiring Password Policy,cn=Password Policies,cn=config
 
-# dn: cn=Bugs and Friends,o=Acme,dc=example,dc=com
-# objectClass: top
-# objectClass: groupOfNames
-# cn: Bugs and Friends
-# description: Bugs Bunny and friends.
-# owner: uid=walt.disney,ou=Users,o=Acme,dc=example,dc=com
-# member: uid=bugs.bunny,ou=Users,o=Acme,dc=example,dc=com
-# member: uid=elmer.fudd,ou=Users,o=Acme,dc=example,dc=com
-
-# dn: cn=Looney Tunes,o=Acme,dc=example,dc=com
-# objectClass: top
-# objectClass: groupOfNames
-# cn: Looney Tunes
-# member: cn=Bugs and Friends,o=Acme,dc=example,dc=com
-# member: uid=sylvester,ou=Users,o=Acme,dc=example,dc=com
+# Non-unique groups.
 
 dn: cn=Bugs and Friends,o=Acme,dc=example,dc=com
 objectClass: top
-objectClass: groupOfUniqueNames
+objectClass: groupOfNames
 cn: Bugs and Friends
-uniqueMember: uid=bugs.bunny,ou=Users,o=Acme,dc=example,dc=com
-uniqueMember: uid=elmer.fudd,ou=Users,o=Acme,dc=example,dc=com
-
-dn: cn=Looney Tunes,o=Acme,dc=example,dc=com
-objectClass: top
-objectClass: groupOfUniqueNames
-cn: Looney Tunes
-description: Characters from Looney Tunes
-owner: uid=walt.disney,ou=Users,o=Acme,dc=example,dc=com
-uniqueMember: cn=Bugs and Friends,o=Acme,dc=example,dc=com
-uniqueMember: uid=sylvester,ou=Users,o=Acme,dc=example,dc=com
+member: uid=bugs.bunny,ou=Users,o=Acme,dc=example,dc=com
+member: uid=elmer.fudd,ou=Users,o=Acme,dc=example,dc=com
+member: uid=sylvester,ou=Users,o=Acme,dc=example,dc=com
 
 dn: cn=External Peers,o=Acme,dc=example,dc=com
 objectClass: top
-objectClass: groupOfUniqueNames
+objectClass: groupOfNames
 cn: External Peers
+member: uid=single.account,o=Small Company,dc=example,dc=com
+member: uid=sylvester,ou=Users,o=Acme,dc=example,dc=com
+
+# Unique groups.
+
+dn: cn=Unique Bugs and Friends,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: Unique Bugs and Friends
+uniqueMember: uid=bugs.bunny,ou=Users,o=Acme,dc=example,dc=com
+uniqueMember: uid=elmer.fudd,ou=Users,o=Acme,dc=example,dc=com
+uniqueMember: uid=sylvester,ou=Users,o=Acme,dc=example,dc=com
+
+dn: cn=Unique External Peers,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: Unique External Peers
 uniqueMember: uid=single.account,o=Small Company,dc=example,dc=com
 uniqueMember: uid=sylvester,ou=Users,o=Acme,dc=example,dc=com
+
+dn: cn=Unique Empty Group,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: Unique Empty Group
+
+# POSIX groups.
+
+dn: ou=POSIX Bugs and Friends,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+objectClass: posixGroup
+ou: POSIX Bugs and Friends
+gidNumber: 1
+memberUid: bugs.bunny
+memberUid: elmer.fudd
+memberUid: sylvester
+
+dn: ou=POSIX External Peers,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+objectClass: posixGroup
+ou: POSIX External Peers
+gidNumber: 2
+memberUid: single.account
+memberUid: owner
+memberUid: sylvester
+
+dn: ou=POSIX Empty Group,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+objectClass: posixGroup
+ou: POSIX Empty Group
+gidNumber: 3
+
+dn: ou=POSIX Bugs Bunny Group,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+objectClass: posixGroup
+ou: POSIX Empty Group
+gidNumber: 4
+memberUid: bbunny
 
 # A small company with an account and a person.
 
@@ -144,3 +173,12 @@ objectClass: inetOrgPerson
 uid: single.account
 cn: Single Account
 sn: Single Account
+
+dn: cn=Owner,o=Small Company,dc=example,dc=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+uid: owner
+cn: Owner
+sn: Owner

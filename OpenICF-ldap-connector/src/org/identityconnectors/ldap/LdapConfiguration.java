@@ -112,7 +112,17 @@ public class LdapConfiguration extends AbstractConfiguration {
     /**
      * The LDAP attribute holding the member for non-POSIX static groups.
      */
-    private String groupMemberAttr = "uniqueMember";
+    private String groupMemberAttribute;
+
+    /**
+     * If true, will modify group membership of renamed/deleted entries.
+     */
+    private boolean maintainLdapGroupMembership = false;
+
+    /**
+     * If true, will modify POSIX group membership of renamed/deleted entries.
+     */
+    private boolean maintainPosixGroupMembership = false;
 
     /**
      * If true, when binding check for the Password Expired control (and also Password Policy control)
@@ -339,14 +349,6 @@ public class LdapConfiguration extends AbstractConfiguration {
         this.baseContexts = baseContexts.clone();
     }
 
-    public String getAccountSearchFilter() {
-        return accountSearchFilter;
-    }
-
-    public void setAccountSearchFilter(String accountSearchFilter) {
-        this.accountSearchFilter = accountSearchFilter;
-    }
-
     public String[] getAccountObjectClasses() {
         List<String> ldapClasses = accountConfig.getLdapClasses();
         return ldapClasses.toArray(new String[ldapClasses.size()]);
@@ -356,12 +358,36 @@ public class LdapConfiguration extends AbstractConfiguration {
         accountConfig.setLdapClasses(Arrays.asList(accountObjectClasses));
     }
 
-    public String getGroupMemberAttr() {
-        return groupMemberAttr;
+    public String getAccountSearchFilter() {
+        return accountSearchFilter;
     }
 
-    public void setGroupMemberAttr(String groupMemberAttr) {
-        this.groupMemberAttr = groupMemberAttr;
+    public void setAccountSearchFilter(String accountSearchFilter) {
+        this.accountSearchFilter = accountSearchFilter;
+    }
+
+    public String getGroupMemberAttribute() {
+        return groupMemberAttribute;
+    }
+
+    public void setGroupMemberAttribute(String groupMemberAttribute) {
+        this.groupMemberAttribute = groupMemberAttribute;
+    }
+
+    public boolean isMaintainLdapGroupMembership() {
+        return maintainLdapGroupMembership;
+    }
+
+    public void setMaintainLdapGroupMembership(boolean maintainLdapGroupMembership) {
+        this.maintainLdapGroupMembership = maintainLdapGroupMembership;
+    }
+
+    public boolean isMaintainPosixGroupMembership() {
+        return maintainPosixGroupMembership;
+    }
+
+    public void setMaintainPosixGroupMembership(boolean maintainPosixGroupMembership) {
+        this.maintainPosixGroupMembership = maintainPosixGroupMembership;
     }
 
     public boolean isRespectResourcePasswordPolicyChangeAfterReset() {
@@ -501,7 +527,9 @@ public class LdapConfiguration extends AbstractConfiguration {
         }
         builder.append(accountSearchFilter);
 //        builder.append(passwordAttribute);
-        builder.append(groupMemberAttr);
+        builder.append(groupMemberAttribute);
+        builder.append(maintainLdapGroupMembership);
+        builder.append(maintainPosixGroupMembership);
         builder.append(respectResourcePasswordPolicyChangeAfterReset);
         builder.append(useBlocks);
         builder.append(blockCount);

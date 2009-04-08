@@ -22,28 +22,44 @@
  */
 package org.identityconnectors.ldap.modify;
 
+import java.util.List;
+import java.util.Set;
+
 import javax.naming.NamingException;
 
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.LdapConnection;
+import org.identityconnectors.ldap.LdapModifyOperation;
+import org.identityconnectors.ldap.GroupHelper.GroupMembership;
 import org.identityconnectors.ldap.search.LdapSearches;
 
-public class LdapDelete {
+public class LdapDelete extends LdapModifyOperation {
 
-    private final LdapConnection conn;
     private final ObjectClass oclass;
     private final Uid uid;
 
     public LdapDelete(LdapConnection conn, ObjectClass oclass, Uid uid) {
-        this.conn = conn;
+        super(conn);
         this.oclass = oclass;
         this.uid = uid;
     }
 
     public void execute() {
         String entryDN = LdapSearches.findDN(conn, oclass, uid);
+
+        if (conn.getConfiguration().isMaintainLdapGroupMembership()) {
+            List<String> ldapGroups = groupHelper.getLdapGroups(entryDN);
+            groupHelper.removeLdapGroupMemberships(entryDN, ldapGroups);
+        }
+
+        if (conn.getConfiguration().isMaintainPosixGroupMembership()) {
+            PosixGroupMember posixMember = new PosixGroupMember(entryDN);
+            Set<GroupMembership> memberships = posixMember.getPosixGroupMemberships();
+            groupHelper.removePosixGroupMemberships(memberships);
+        }
+
         try {
             conn.getInitialContext().destroySubcontext(entryDN);
         } catch (NamingException e) {

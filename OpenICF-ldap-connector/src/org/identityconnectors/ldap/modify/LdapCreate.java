@@ -22,12 +22,17 @@
  */
 package org.identityconnectors.ldap.modify;
 
+import static org.identityconnectors.common.CollectionUtil.isEmpty;
+import static org.identityconnectors.common.CollectionUtil.newSet;
+import static org.identityconnectors.common.CollectionUtil.nullAsEmpty;
+import static org.identityconnectors.ldap.LdapUtil.checkedListByFilter;
+
+import java.util.List;
 import java.util.Set;
 
 import javax.naming.NamingException;
 import javax.naming.directory.BasicAttributes;
 
-import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
@@ -36,22 +41,24 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.ldap.GroupHelper;
 import org.identityconnectors.ldap.LdapConnection;
+import org.identityconnectors.ldap.LdapModifyOperation;
+import org.identityconnectors.ldap.LdapPredefinedAttributes;
 import org.identityconnectors.ldap.schema.GuardedPasswordAttribute;
 import org.identityconnectors.ldap.schema.GuardedPasswordAttribute.Accessor;
 
-public class LdapCreate {
+public class LdapCreate extends LdapModifyOperation {
 
     // TODO old LDAP connector has a note about a RFC 4527 Post-Read control.
 
-    private final LdapConnection conn;
     private final ObjectClass oclass;
     private final Set<Attribute> attrs;
 
     public LdapCreate(LdapConnection conn, ObjectClass oclass, Set<Attribute> attrs, OperationOptions options) {
-        this.conn = conn;
+        super(conn);
         this.oclass = oclass;
-        this.attrs = CollectionUtil.newSet(attrs);
+        this.attrs = newSet(attrs);
     }
 
     public Uid execute() {
@@ -69,12 +76,18 @@ public class LdapCreate {
         }
         attrs.remove(nameAttr);
 
+        List<String> ldapGroups = null;
+        List<String> posixGroups = null;
         GuardedPasswordAttribute pwdAttr = null;
         final BasicAttributes ldapAttrs = new BasicAttributes(true);
 
         for (Attribute attr : attrs) {
             javax.naming.directory.Attribute ldapAttr = null;
-            if (attr.is(OperationalAttributes.PASSWORD_NAME)) {
+            if (LdapPredefinedAttributes.isLdapGroups(attr.getName())) {
+                ldapGroups = checkedListByFilter(nullAsEmpty(attr.getValue()), String.class);
+            } else if (LdapPredefinedAttributes.isPosixGroups(attr.getName())) {
+                posixGroups = checkedListByFilter(nullAsEmpty(attr.getValue()), String.class);
+            } else if (attr.is(OperationalAttributes.PASSWORD_NAME)) {
                 pwdAttr = conn.getSchemaMapping().encodePassword(oclass, attr);
             } else {
                 ldapAttr = conn.getSchemaMapping().encodeAttribute(oclass, attr);
@@ -84,18 +97,28 @@ public class LdapCreate {
             }
         }
 
-        final Uid[] uid = { null };
+        final String[] entryDN = { null };
         if (pwdAttr != null) {
             pwdAttr.access(new Accessor() {
                 public void access(javax.naming.directory.Attribute passwordAttr) {
                     ldapAttrs.put(passwordAttr);
-                    uid[0] = conn.getSchemaMapping().create(oclass, nameAttr, ldapAttrs);
+                    entryDN[0] = conn.getSchemaMapping().create(oclass, nameAttr, ldapAttrs);
                 }
             });
         } else {
-            uid[0] = conn.getSchemaMapping().create(oclass, nameAttr, ldapAttrs);
+            entryDN[0] = conn.getSchemaMapping().create(oclass, nameAttr, ldapAttrs);
         }
 
-        return uid[0];
+        if (!isEmpty(ldapGroups)) {
+            groupHelper.addLdapGroupMemberships(entryDN[0], ldapGroups);
+        }
+
+        if (!isEmpty(posixGroups)) {
+            Set<String> posixRefAttrs = getAttributeValues(GroupHelper.getPosixRefAttribute(), null, ldapAttrs);
+            String posixRefAttr = getFirstPosixRefAttr(entryDN[0], posixRefAttrs);
+            groupHelper.addPosixGroupMemberships(posixRefAttr, posixGroups);
+        }
+
+        return conn.getSchemaMapping().createUid(oclass, entryDN[0]);
     }
 }

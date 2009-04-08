@@ -36,6 +36,7 @@ import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.test.common.TestHelpers;
 import org.junit.After;
@@ -59,27 +60,39 @@ public abstract class LdapConnectorTestBase {
     public static final String ACME_DN = "o=Acme,dc=example,dc=com";
     public static final String ACME_O = "Acme";
 
-    public static final String WALT_DISNEY_CN = "Walt Disney";
+    public static final String CZECH_REPUBLIC_DN = "c=Czech Republic,o=Acme,dc=example,dc=com";
+    public static final String CZECH_REPUBLIC_C = "Czech Republic";
+
+    public static final String ACME_USERS_DN = "ou=Users,o=Acme,dc=example,dc=com";
+
     public static final String BUGS_BUNNY_DN = "uid=bugs.bunny,ou=Users,o=Acme,dc=example,dc=com";
     public static final String BUGS_BUNNY_UID = "bugs.bunny";
+    public static final String BBUNNY_UID = "bbunny";
     public static final String BUGS_BUNNY_CN = "Bugs Bunny";
     public static final String ELMER_FUDD_DN = "uid=elmer.fudd,ou=Users,o=Acme,dc=example,dc=com";
     public static final String ELMER_FUDD_UID = "elmer.fudd";
-    public static final String SYLVESTER_CN = "Sylvester";
+    public static final String SYLVESTER_DN = "uid=sylvester,ou=Users,o=Acme,dc=example,dc=com";
+    public static final String SYLVESTER_UID = "sylvester";
     public static final String EXPIRED_DN = "uid=expired,ou=Users,o=Acme,dc=example,dc=com";
 
-    public static final String LOONEY_TUNES_DN = "cn=Looney Tunes,o=Acme,dc=example,dc=com";
-    public static final String LOONEY_TUNES_CN = "Looney Tunes";
-    public static final String LOONEY_TUNES_DESCRIPTION = "Characters from Looney Tunes";
     public static final String BUGS_AND_FRIENDS_DN = "cn=Bugs and Friends,o=Acme,dc=example,dc=com";
+    public static final String EXTERNAL_PEERS_DN = "cn=External Peers,o=Acme,dc=example,dc=com";
 
-    public static final String CZECH_REPUBLIC_DN = "c=Czech Republic,o=Acme,dc=example,dc=com";
-    public static final String CZECH_REPUBLIC_C = "Czech Republic";
+    public static final String UNIQUE_BUGS_AND_FRIENDS_DN = "cn=Unique Bugs and Friends,o=Acme,dc=example,dc=com";
+    public static final String UNIQUE_BUGS_AND_FRIENDS_CN = "Unique Bugs and Friends";
+    public static final String UNIQUE_EXTERNAL_PEERS_DN = "cn=Unique External Peers,o=Acme,dc=example,dc=com";
+    public static final String UNIQUE_EMPTY_GROUP_DN = "cn=Unique Empty Group,o=Acme,dc=example,dc=com";
+
+    public static final String POSIX_BUGS_AND_FRIENDS_DN = "ou=POSIX Bugs and Friends,o=Acme,dc=example,dc=com";
+    public static final String POSIX_EXTERNAL_PEERS_DN = "ou=POSIX External Peers,o=Acme,dc=example,dc=com";
+    public static final String POSIX_EMPTY_GROUP_DN = "ou=POSIX Empty Group,o=Acme,dc=example,dc=com";
+    public static final String POSIX_BUGS_BUNNY_GROUP = "ou=POSIX Bugs Bunny Group,o=Acme,dc=example,dc=com";
 
     public static final String SMALL_COMPANY_DN = "o=Small Company,dc=example,dc=com";
     public static final String SMALL_COMPANY_O = "Small Company";
     public static final String SINGLE_ACCOUNT_DN = "uid=single.account,o=Small Company,dc=example,dc=com";
     public static final String SINGLE_ACCOUNT_UID = "single.account";
+    public static final String OWNER_DN = "cn=Owner,o=Small Company,dc=example,dc=com";
 
     public static final String BIG_COMPANY_DN = "o=Big Company,dc=example,dc=com";
     public static final String BIG_COMPANY_O = "Big Company";
@@ -141,6 +154,13 @@ public abstract class LdapConnectorTestBase {
         config.setBaseContexts(ACME_DN, BIG_COMPANY_DN);
         config.setPrincipal(ADMIN_DN);
         config.setCredentials(ADMIN_PASSWORD);
+        // Set the group member attribute to the IdM default.
+        config.setGroupMemberAttribute("uniqueMember");
+        // Otherwise it would try to use VLV, which we don't yet support.
+        config.setUsePagedResultControl(true);
+        // IDM will not read the schema. So prefer to test with that setting, unless we are testing
+        // extended object classes, in which case we do need to read the schema.
+        config.setReadSchema(extObjectClassesAndNamingAttributes.length > 0);
         String[] extendedObjectClasses = new String[extObjectClassesAndNamingAttributes.length];
         String[] extendedNamingAttributes = new String[extObjectClassesAndNamingAttributes.length];
         for (int i = 0; i < extObjectClassesAndNamingAttributes.length; i++) {
@@ -152,11 +172,6 @@ public abstract class LdapConnectorTestBase {
         }
         config.setExtendedObjectClasses(extendedObjectClasses);
         config.setExtendedNamingAttributes(extendedNamingAttributes);
-        // Otherwise it would try to use VLV, which we don't yet support.
-        config.setUsePagedResultControl(true);
-        // IDM will not read the schema. So prefer to test with that setting, unless we are testing
-        // extended object classes, in which case we do need to read the schema.
-        config.setReadSchema(extObjectClassesAndNamingAttributes.length > 0);
         return config;
     }
 
@@ -171,7 +186,13 @@ public abstract class LdapConnectorTestBase {
     }
 
     public static ConnectorObject searchByAttribute(ConnectorFacade facade, ObjectClass oclass, Attribute attr) {
-        return searchByAttribute(facade, oclass, attr, null);
+        return searchByAttribute(facade, oclass, attr, (OperationOptions) null);
+    }
+
+    public static ConnectorObject searchByAttribute(ConnectorFacade facade, ObjectClass oclass, Attribute attr, String... attributesToGet) {
+        OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        builder.setAttributesToGet(attributesToGet);
+        return searchByAttribute(facade, oclass, attr, builder.build());
     }
 
     public static ConnectorObject searchByAttribute(ConnectorFacade facade, ObjectClass oclass, Attribute attr, OperationOptions options) {

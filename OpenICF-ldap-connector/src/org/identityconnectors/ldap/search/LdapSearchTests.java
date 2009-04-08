@@ -198,10 +198,7 @@ public class LdapSearchTests extends LdapConnectorTestBase {
     @Test
     public void testAttributesToGet() {
         ConnectorFacade facade = newFacade();
-
-        OperationOptionsBuilder optionsBuilder = new OperationOptionsBuilder();
-        optionsBuilder.setAttributesToGet("employeeNumber", "telephoneNumber");
-        ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(USER_0_DN), optionsBuilder.build());
+        ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(USER_0_DN), "employeeNumber", "telephoneNumber");
 
         Set<Attribute> attrs = CollectionUtil.newSet(object.getAttributes());
         assertTrue(attrs.remove(AttributeUtil.find(Uid.NAME, attrs)));
@@ -217,10 +214,7 @@ public class LdapSearchTests extends LdapConnectorTestBase {
         // XXX not sure this is the right behavior, but that's what we are doing currently.
 
         ConnectorFacade facade = newFacade();
-
-        OperationOptionsBuilder optionsBuilder = new OperationOptionsBuilder();
-        optionsBuilder.setAttributesToGet("employeeNumber");
-        ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN), optionsBuilder.build());
+        ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN), "employeeNumber");
 
         assertNull(object.getAttributeByName("employeeNumber"));
     }

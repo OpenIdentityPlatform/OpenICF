@@ -239,14 +239,18 @@ public class LdapSchemaMapping {
         return createUid(getLdapUidAttribute(oclass), entry.getAttributes());
     }
 
-    private Uid createUid(ObjectClass oclass, String entryDN) throws NamingException {
+    public Uid createUid(ObjectClass oclass, String entryDN) {
         String ldapUidAttr = getLdapUidAttribute(oclass);
         if (isDNAttribute(ldapUidAttr)) {
             // Short path for the simple case; avoids another trip to the server.
             return new Uid(entryDN);
         } else {
-            Attributes attributes = conn.getInitialContext().getAttributes(entryDN, new String[] { ldapUidAttr });
-            return createUid(ldapUidAttr, attributes);
+            try {
+                Attributes attributes = conn.getInitialContext().getAttributes(entryDN, new String[] { ldapUidAttr });
+                return createUid(ldapUidAttr, attributes);
+            } catch (NamingException e) {
+                throw new ConnectorException(e);
+            }
         }
     }
 
@@ -330,8 +334,8 @@ public class LdapSchemaMapping {
         }
         return builder.build();
     }
-    
-    public Uid create(ObjectClass oclass, Name name, javax.naming.directory.Attributes initialAttrs) {
+
+    public String create(ObjectClass oclass, Name name, javax.naming.directory.Attributes initialAttrs) {
         String ldapNameAttr = getLdapNameAttribute(oclass);
         if (!"entryDN".equals(ldapNameAttr)) {
             // Not yet implemented.
@@ -357,7 +361,7 @@ public class LdapSchemaMapping {
         try {
             LdapContext parentCtx = (LdapContext) conn.getInitialContext().lookup(containerDN);
             LdapContext newCtx = (LdapContext) parentCtx.createSubcontext(rdn.toString(), ldapAttrs);
-            return createUid(oclass, newCtx.getNameInNamespace());
+            return newCtx.getNameInNamespace();
         } catch (NamingException e) {
             throw new ConnectorException(e);
         }
@@ -396,17 +400,20 @@ public class LdapSchemaMapping {
         return GuardedPasswordAttribute.create(LDAP_PASSWORD_ATTR);
     }
 
-    public Uid rename(ObjectClass oclass, String entryDN, Name newName) {
+    public String getEntryDN(ObjectClass oclass, Name name) {
         String ldapNameAttr = getLdapNameAttribute(oclass);
         if (!"entryDN".equals(ldapNameAttr)) {
             // Not yet implemented.
             throw new UnsupportedOperationException("Name can only be mapped to entryDN");
         }
+        return name.getNameValue();
+    }
 
-        String newEntryDN = newName.getNameValue();
+    public String rename(ObjectClass oclass, String entryDN, Name newName) {
+        String newEntryDN = getEntryDN(oclass, newName);
         try {
             conn.getInitialContext().rename(entryDN, newEntryDN);
-            return createUid(oclass, newEntryDN);
+            return newEntryDN;
         } catch (NamingException e) {
             throw new ConnectorException(e);
         }

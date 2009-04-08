@@ -22,6 +22,8 @@
  */
 package org.identityconnectors.ldap.search;
 
+import static org.identityconnectors.ldap.LdapUtil.getStringAttrValues;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -35,6 +37,7 @@ import javax.naming.ldap.PagedResultsControl;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.Name;
@@ -43,8 +46,10 @@ import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.QualifiedUid;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.ldap.GroupHelper;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapEntry;
+import org.identityconnectors.ldap.LdapPredefinedAttributes;
 
 import com.sun.jndi.ldap.ctl.VirtualListViewControl;
 
@@ -59,12 +64,15 @@ public class LdapSearch {
     private final ObjectClass oclass;
     private final LdapFilter filter;
     private final OperationOptions options;
+    private final GroupHelper groupHelper;
 
     public LdapSearch(LdapConnection conn, ObjectClass oclass, LdapFilter filter, OperationOptions options) {
         this.conn = conn;
         this.oclass = oclass;
         this.filter = filter;
         this.options = options;
+
+        groupHelper = new GroupHelper(conn);
     }
 
     /**
@@ -131,10 +139,7 @@ public class LdapSearch {
         }
 
         SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
-        Set<String> ldapAttrsToGet = conn.getSchemaMapping().getLdapAttributes(oclass, attrsToGet, true);
-        // For compatibility with the adapter, we do not ask the server for DN attributes,
-        // such as entryDN; we compute them ourselves. Some servers might not support such attributes anyway.
-        ldapAttrsToGet.removeAll(LdapEntry.ENTRY_DN_ATTRS);
+        Set<String> ldapAttrsToGet = getLdapAttributesToGet(attrsToGet);
         controls.setReturningAttributes(ldapAttrsToGet.toArray(new String[ldapAttrsToGet.size()]));
         controls.setSearchScope(searchScope);
 
@@ -144,6 +149,21 @@ public class LdapSearch {
             userFilter = conn.getConfiguration().getAccountSearchFilter();
         }
         return new LdapInternalSearch(conn, getSearchFilter(nativeFilter, userFilter), baseDNs, getSearchStrategy(), controls, ignoreNonExistingBaseDNs);
+    }
+
+    private Set<String> getLdapAttributesToGet(Set<String> attrsToGet) {
+        Set<String> cleanAttrsToGet = CollectionUtil.newCaseInsensitiveSet();
+        cleanAttrsToGet.addAll(attrsToGet);
+        cleanAttrsToGet.remove(LdapPredefinedAttributes.LDAP_GROUPS_NAME);
+        boolean posixGroups = cleanAttrsToGet.remove(LdapPredefinedAttributes.POSIX_GROUPS_NAME);
+        Set<String> result = conn.getSchemaMapping().getLdapAttributes(oclass, cleanAttrsToGet, true);
+        if (posixGroups) {
+            result.add(GroupHelper.getPosixRefAttribute());
+        }
+        // For compatibility with the adapter, we do not ask the server for DN attributes,
+        // such as entryDN; we compute them ourselves. Some servers might not support such attributes anyway.
+        result.removeAll(LdapEntry.ENTRY_DN_ATTRS);
+        return result;
     }
 
     /**
@@ -161,7 +181,17 @@ public class LdapSearch {
         builder.setName(conn.getSchemaMapping().createName(oclass, entry));
 
         for (String attrName : attrsToGet) {
-            Attribute attribute = conn.getSchemaMapping().createAttribute(oclass, attrName, entry);
+            Attribute attribute = null;
+            if (LdapPredefinedAttributes.isLdapGroups(attrName)) {
+                List<String> ldapGroups = groupHelper.getLdapGroups(entry.getDN().toString());
+                attribute = AttributeBuilder.build(LdapPredefinedAttributes.LDAP_GROUPS_NAME, ldapGroups);
+            } else if (LdapPredefinedAttributes.isPosixGroups(attrName)) {
+                Set<String> posixRefAttrs = getStringAttrValues(entry.getAttributes(), GroupHelper.getPosixRefAttribute());
+                List<String> posixGroups = groupHelper.getPosixGroups(posixRefAttrs);
+                attribute = AttributeBuilder.build(LdapPredefinedAttributes.POSIX_GROUPS_NAME, posixGroups);
+            } else {
+                attribute = conn.getSchemaMapping().createAttribute(oclass, attrName, entry);
+            }
             if (attribute != null) {
                 builder.addAttribute(attribute);
             }
@@ -252,7 +282,7 @@ public class LdapSearch {
         if (attributesToGet != null) {
             result = CollectionUtil.newCaseInsensitiveSet();
             result.addAll(Arrays.asList(attributesToGet));
-            conn.getSchemaMapping().removeNonReadableAttributes(oclass, result);
+            removeNonReadableAttributes(result);
             result.add(Name.NAME);
         } else {
             // This should include Name.NAME, so no need to include it explicitly.
@@ -261,6 +291,21 @@ public class LdapSearch {
         // Since Uid is not in the schema, but it is required to construct a ConnectorObject.
         result.add(Uid.NAME);
         return result;
+    }
+
+    private void removeNonReadableAttributes(Set<String> attributes) {
+        // Since the groups attributes are fake attributes, we don't want to
+        // send them to LdapSchemaMapping. This, for example, avoid an (unlikely)
+        // conflict with a custom attribute defined in the server schema.
+        boolean ldapGroups = attributes.remove(LdapPredefinedAttributes.LDAP_GROUPS_NAME);
+        boolean posixGroups = attributes.remove(LdapPredefinedAttributes.POSIX_GROUPS_NAME);
+        conn.getSchemaMapping().removeNonReadableAttributes(oclass, attributes);
+        if (ldapGroups) {
+            attributes.add(LdapPredefinedAttributes.LDAP_GROUPS_NAME);
+        }
+        if (posixGroups) {
+            attributes.add(LdapPredefinedAttributes.POSIX_GROUPS_NAME);
+        }
     }
 
     private int getLdapSearchScope() {

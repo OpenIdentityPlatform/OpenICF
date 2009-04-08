@@ -23,6 +23,7 @@
 package org.identityconnectors.ldap.search;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -171,24 +172,14 @@ public class LdapSearches {
         return !result.isEmpty() ? result.get(0) : null;
     }
 
-    public static List<String> findSubentriesUids(LdapConnection conn, LdapName containerDN, ObjectClass oclass) {
-        log.ok("Searching for subentries of {0}", containerDN);
+    public static void findEntries(SearchResultsHandler handler, LdapConnection conn, String filter, String... ldapAttrsToGet) {
+        log.ok("Searching for entries matching {0}", filter);
 
-        final List<String> result = new ArrayList<String>();
-
-        OperationOptionsBuilder builder = new OperationOptionsBuilder();
-        builder.setOption(LdapConnector.OP_BASE_DNS, new String[] { containerDN.toString() });
-        builder.setScope(OperationOptions.SCOPE_SUBTREE);
-        builder.setAttributesToGet(Uid.NAME);
-
-        LdapSearch search = new LdapSearch(conn, oclass, null, builder.build());
-        search.execute(new ResultsHandler() {
-            public boolean handle(ConnectorObject object) {
-                result.add(object.getUid().getUidValue());
-                return true;
-            }
-        });
-
-        return result;
+        List<String> baseDNs = Arrays.asList(conn.getConfiguration().getBaseContexts());
+        SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
+        controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+        controls.setReturningAttributes(ldapAttrsToGet);
+        LdapInternalSearch search = new LdapInternalSearch(conn, filter, baseDNs, new DefaultSearchStrategy(), controls, true);
+        search.execute(handler);
     }
 }

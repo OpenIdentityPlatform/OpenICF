@@ -33,7 +33,7 @@ ds-cfg-notify-abandoned-operations: false
 ds-cfg-proxied-authorization-identity-mapper: cn=Exact Match,cn=Identity Mappers,cn=config
 ds-cfg-size-limit: 1000
 ds-cfg-time-limit: 60 seconds
-ds-cfg-lookthrough-limit: 5000
+ds-cfg-lookthrough-limit: 20000
 ds-cfg-writability-mode: enabled
 ds-cfg-bind-with-dn-requires-password: true
 ds-cfg-reject-unauthenticated-requests: false
