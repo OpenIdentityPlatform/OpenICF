@@ -22,11 +22,11 @@
  */
 package org.identityconnectors.ldap;
 
+import static java.util.Collections.min;
 import static org.identityconnectors.common.CollectionUtil.isEmpty;
-import static org.identityconnectors.ldap.LdapUtil.getStringAttrValues;
+import static org.identityconnectors.ldap.LdapUtil.addStringAttrValues;
 import static org.identityconnectors.ldap.LdapUtil.quietCreateLdapName;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -56,7 +56,7 @@ public abstract class LdapModifyOperation {
         Set<String> result = new HashSet<String>();
         if (entryDN != null && !entryDN.isEmpty()) {
             Rdn rdn = entryDN.getRdn(entryDN.size() - 1);
-            result.addAll(getStringAttrValues(rdn.toAttributes(), attrName));
+            addStringAttrValues(rdn.toAttributes(), attrName, result);
         }
         Attribute attr = attrs.get(attrName);
         if (attr != null) {
@@ -80,7 +80,7 @@ public abstract class LdapModifyOperation {
         if (isEmpty(posixRefAttrs)) {
             throw new ConnectorException("Unable to add entry " + entryDN + " to POSIX groups because it doesn't have an " + GroupHelper.getPosixRefAttribute() + " attribute");
         }
-        return Collections.min(posixRefAttrs);
+        return min(posixRefAttrs);
     }
 
     /**

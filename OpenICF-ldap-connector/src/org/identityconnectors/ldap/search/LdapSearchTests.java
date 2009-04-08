@@ -22,6 +22,7 @@
  */
 package org.identityconnectors.ldap.search;
 
+import static org.identityconnectors.common.CollectionUtil.newSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -32,7 +33,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -200,7 +200,7 @@ public class LdapSearchTests extends LdapConnectorTestBase {
         ConnectorFacade facade = newFacade();
         ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(USER_0_DN), "employeeNumber", "telephoneNumber");
 
-        Set<Attribute> attrs = CollectionUtil.newSet(object.getAttributes());
+        Set<Attribute> attrs = newSet(object.getAttributes());
         assertTrue(attrs.remove(AttributeUtil.find(Uid.NAME, attrs)));
         assertTrue(attrs.remove(AttributeUtil.find(Name.NAME, attrs)));
         assertTrue(attrs.remove(AttributeUtil.find("employeeNumber", attrs)));

@@ -22,7 +22,8 @@
  */
 package org.identityconnectors.ldap;
 
-import java.util.Collections;
+import static java.util.Collections.emptySet;
+
 import java.util.Set;
 
 /**
@@ -36,15 +37,15 @@ import java.util.Set;
 public class StaticNativeSchema implements LdapNativeSchema {
 
     public Set<String> getRequiredAttributes(String ldapClass) {
-        return Collections.emptySet();
+        return emptySet();
     }
 
     public Set<String> getOptionalAttributes(String ldapClass) {
-        return Collections.emptySet();
+        return emptySet();
     }
 
     public Set<String> getSuperiorObjectClasses(String ldapClass) {
-        return Collections.emptySet();
+        return emptySet();
     }
 
     public LdapAttributeType getAttributeDescription(String ldapAttrName) {

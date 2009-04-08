@@ -22,12 +22,13 @@
  */
 package org.identityconnectors.ldap.schema;
 
+import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
+
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.Name;
@@ -97,7 +98,7 @@ class LdapSchemaBuilder {
         // OpenLDAP's ipProtocol has MUST ( ... $ description ) MAY ( description )
         optionalAttrs.removeAll(requiredAttrs);
 
-        Set<String> mappedLdapAttributes = CollectionUtil.newCaseInsensitiveSet();
+        Set<String> mappedLdapAttributes = newCaseInsensitiveSet();
 
         String ldapNameAttr = oclassConfig.getNameAttribute();
         if (ldapNameAttr != null) {

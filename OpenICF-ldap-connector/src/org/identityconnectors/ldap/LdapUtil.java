@@ -22,6 +22,8 @@
  */
 package org.identityconnectors.ldap;
 
+import static org.identityconnectors.common.CollectionUtil.newSet;
+
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -36,7 +38,6 @@ import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.ldap.LdapName;
 
-import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
@@ -106,20 +107,24 @@ public class LdapUtil {
      * ldapAttrName} parameter cast to a String.
      */
     public static Set<String> getStringAttrValues(Attributes ldapAttrs, String ldapAttrName) {
-        Set<String> result = CollectionUtil.newCaseInsensitiveSet();
+        Set<String> result = newSet();
+        addStringAttrValues(ldapAttrs, ldapAttrName, result);
+        return result;
+    }
+
+    public static void addStringAttrValues(Attributes ldapAttrs, String ldapAttrName, Set<String> toSet) {
         Attribute attr = ldapAttrs.get(ldapAttrName);
         if (attr == null) {
-            return result;
+            return;
         }
         try {
             NamingEnumeration<?> attrEnum = attr.getAll();
             while (attrEnum.hasMore()) {
-                result.add((String) attrEnum.next());
+                toSet.add((String) attrEnum.next());
             }
         } catch (NamingException e) {
             throw new ConnectorException(e);
         }
-        return result;
     }
 
     /**

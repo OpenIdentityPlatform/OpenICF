@@ -22,10 +22,12 @@
  */
 package org.identityconnectors.ldap;
 
+import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableSet;
+import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValues;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Set;
 
@@ -40,7 +42,6 @@ import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.LdapName;
 
 import org.identityconnectors.common.Assertions;
-import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
@@ -65,7 +66,7 @@ public class LdapConnection {
 
     static {
         // Cf. http://java.sun.com/products/jndi/tutorial/ldap/misc/attrs.html.
-        LDAP_BINARY_SYNTAX_ATTRS = CollectionUtil.newCaseInsensitiveSet();
+        LDAP_BINARY_SYNTAX_ATTRS = newCaseInsensitiveSet();
         LDAP_BINARY_SYNTAX_ATTRS.add("audio");
         LDAP_BINARY_SYNTAX_ATTRS.add("jpegPhoto");
         LDAP_BINARY_SYNTAX_ATTRS.add("photo");
@@ -86,7 +87,7 @@ public class LdapConnection {
         LDAP_BINARY_SYNTAX_ATTRS.add("thumbnailLogo");
 
         // Cf. RFC 4522 and RFC 4523.
-        LDAP_BINARY_OPTION_ATTRS = CollectionUtil.newCaseInsensitiveSet();
+        LDAP_BINARY_OPTION_ATTRS = newCaseInsensitiveSet();
         LDAP_BINARY_OPTION_ATTRS.add("userCertificate");
         LDAP_BINARY_OPTION_ATTRS.add("caCertificate");
         LDAP_BINARY_OPTION_ATTRS.add("authorityRevocationList");
@@ -278,10 +279,10 @@ public class LdapConnection {
         if (supportedControls == null) {
             try {
                 Attributes attrs = getInitialContext().getAttributes("", new String[] { "supportedControl" });
-                supportedControls = Collections.unmodifiableSet(getStringAttrValues(attrs, "supportedControl"));
+                supportedControls = unmodifiableSet(getStringAttrValues(attrs, "supportedControl"));
             } catch (NamingException e) {
                 log.warn(e, "Exception while retrieving the supported controls");
-                supportedControls = Collections.emptySet();
+                supportedControls = emptySet();
             }
         }
         return supportedControls;

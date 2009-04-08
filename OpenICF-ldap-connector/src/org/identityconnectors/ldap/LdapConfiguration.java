@@ -22,9 +22,12 @@
  */
 package org.identityconnectors.ldap;
 
+import static java.util.Collections.singletonList;
+import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
+import static org.identityconnectors.common.CollectionUtil.newList;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +36,6 @@ import java.util.Set;
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 
-import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.EqualsHashCodeBuilder;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
@@ -172,10 +174,10 @@ public class LdapConfiguration extends AbstractConfiguration {
     // Exposed configuration properties end here.
 
     private final ObjectClassMappingConfig accountConfig = new ObjectClassMappingConfig(ObjectClass.ACCOUNT,
-            CollectionUtil.newList("top", "person", "organizationalPerson", "inetOrgPerson"));
+            newList("top", "person", "organizationalPerson", "inetOrgPerson"));
 
     private final ObjectClassMappingConfig groupConfig = new ObjectClassMappingConfig(ObjectClass.GROUP,
-            CollectionUtil.newList("top", "groupOfUniqueNames"));
+            newList("top", "groupOfUniqueNames"));
 
     private List<LdapName> baseContextsAsLdapNames;
 
@@ -200,7 +202,7 @@ public class LdapConfiguration extends AbstractConfiguration {
         if (baseContexts == null || baseContexts.length < 1) {
             throw new ConfigurationException("No base context was provided in the LDAP configuration");
         }
-        Set<String> baseContextSet = CollectionUtil.newCaseInsensitiveSet();
+        Set<String> baseContextSet = newCaseInsensitiveSet();
         baseContextSet.addAll(Arrays.asList(baseContexts));
         if (baseContextSet.size() != baseContexts.length) {
             throw new ConfigurationException("The list of base contexts in the LDAP configuration contains duplicates");
@@ -219,7 +221,7 @@ public class LdapConfiguration extends AbstractConfiguration {
         if (accountConfig.getLdapClasses().size() < 1) {
             throw new ConfigurationException("No base context was provided in the LDAP configuration");
         }
-        Set<String> accountObjectClassSet = CollectionUtil.newCaseInsensitiveSet();
+        Set<String> accountObjectClassSet = newCaseInsensitiveSet();
         accountObjectClassSet.addAll(accountConfig.getLdapClasses());
         if (accountObjectClassSet.size() != accountConfig.getLdapClasses().size()) {
             throw new ConfigurationException("The list of account object clases in the LDAP configuration contains duplicates");
@@ -234,7 +236,7 @@ public class LdapConfiguration extends AbstractConfiguration {
             throw new ConfigurationException("The LDAP attribute to map to Uid cannot be blank");
         }
 
-        Set<String> extendedObjectClassSet = CollectionUtil.newCaseInsensitiveSet();
+        Set<String> extendedObjectClassSet = newCaseInsensitiveSet();
         extendedObjectClassSet.addAll(Arrays.asList(extendedObjectClasses));
         if (extendedObjectClassSet.size() != extendedObjectClasses.length) {
             throw new ConfigurationException("The list of extended object classes in the LDAP configuration contains duplicates");
@@ -494,7 +496,7 @@ public class LdapConfiguration extends AbstractConfiguration {
         for (int i = 0; i < extendedObjectClasses.length; i++) {
             String extendedObjectClass = extendedObjectClasses[i];
             ObjectClassMappingConfig config = new ObjectClassMappingConfig(new ObjectClass(extendedObjectClass),
-                    Collections.singletonList(extendedObjectClass));
+                    singletonList(extendedObjectClass));
             if (i < extendedNamingAttributes.length) {
                 config.setNameAttribute(extendedNamingAttributes[i]);
             } else {

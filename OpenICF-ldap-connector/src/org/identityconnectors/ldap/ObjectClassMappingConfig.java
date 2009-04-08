@@ -22,6 +22,11 @@
  */
 package org.identityconnectors.ldap;
 
+import static java.util.Collections.unmodifiableSet;
+import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
+import static org.identityconnectors.common.CollectionUtil.newReadOnlyList;
+import static org.identityconnectors.common.CollectionUtil.newReadOnlySet;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 
@@ -70,13 +74,13 @@ public class ObjectClassMappingConfig {
     }
 
     public Set<String> getLdapClassesAsSet() {
-        Set<String> result = CollectionUtil.newCaseInsensitiveSet();
+        Set<String> result = newCaseInsensitiveSet();
         result.addAll(ldapClasses);
-        return result;
+        return unmodifiableSet(result);
     }
 
     public void setLdapClasses(List<String> ldapClasses) {
-        this.ldapClasses = CollectionUtil.newReadOnlyList(ldapClasses);
+        this.ldapClasses = newReadOnlyList(ldapClasses);
     }
 
     public boolean isContainer() {
@@ -96,7 +100,7 @@ public class ObjectClassMappingConfig {
     }
 
     public List<AttributeMappingConfig> getAttributeMappings() {
-        return CollectionUtil.newReadOnlyList(attributeMappings);
+        return newReadOnlyList(attributeMappings);
     }
 
     public AttributeMappingConfig getAttributeMapping(String attrName) {
@@ -115,7 +119,7 @@ public class ObjectClassMappingConfig {
     }
 
     public List<AttributeMappingConfig> getDNMappings() {
-        return CollectionUtil.newReadOnlyList(dnMappings);
+        return newReadOnlyList(dnMappings);
     }
 
     public AttributeMappingConfig getDNMapping(String dnValuedAttr) {
@@ -138,7 +142,7 @@ public class ObjectClassMappingConfig {
     }
 
     public Set<AttributeInfo> getOperationalAttributes() {
-        return CollectionUtil.newReadOnlySet(operationalAttributes);
+        return newReadOnlySet(operationalAttributes);
     }
 
     public int hashCode() {

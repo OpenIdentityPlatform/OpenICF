@@ -22,9 +22,11 @@
  */
 package org.identityconnectors.ldap;
 
+import static java.util.Collections.unmodifiableSet;
+import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveMap;
+import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
 import static org.identityconnectors.ldap.LdapUtil.quietCreateLdapName;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,7 +37,6 @@ import javax.naming.directory.BasicAttribute;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.LdapName;
 
-import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 public abstract class LdapEntry {
@@ -43,12 +44,12 @@ public abstract class LdapEntry {
     public static final Set<String> ENTRY_DN_ATTRS;
 
     static {
-        Set<String> set = CollectionUtil.newCaseInsensitiveSet();
+        Set<String> set = newCaseInsensitiveSet();
         set.add("entryDN");
         // These two are used throughout the adapter.
         set.add("dn");
         set.add("distinguishedName");
-        ENTRY_DN_ATTRS = Collections.unmodifiableSet(set);
+        ENTRY_DN_ATTRS = unmodifiableSet(set);
     }
 
     public static LdapEntry create(String baseDN, SearchResult result) {
@@ -168,7 +169,7 @@ public abstract class LdapEntry {
         private static final long serialVersionUID = 1L;
 
         private final LdapEntry ldapEntry;
-        private final Map<String, Attribute> dnAttributes = CollectionUtil.newCaseInsensitiveMap();
+        private final Map<String, Attribute> dnAttributes = newCaseInsensitiveMap();
 
         public DNAttributes(LdapEntry ldapEntry, Attributes delegate) {
             super(delegate);

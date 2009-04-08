@@ -22,7 +22,8 @@
  */
 package org.identityconnectors.ldap;
 
-import java.util.Collections;
+import static java.util.Collections.unmodifiableSet;
+
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -37,7 +38,7 @@ public class LdapAttributeType {
 
     public LdapAttributeType(Class<?> type, Set<Flags> flags) {
         this.type = type;
-        this.flags = Collections.unmodifiableSet(flags);
+        this.flags = unmodifiableSet(flags);
     }
 
     public AttributeInfo createAttributeInfo(String realName, Set<Flags> add, Set<Flags> remove) {

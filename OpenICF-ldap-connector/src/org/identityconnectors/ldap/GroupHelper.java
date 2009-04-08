@@ -22,11 +22,11 @@
  */
 package org.identityconnectors.ldap;
 
+import static java.util.Collections.singletonList;
 import static org.identityconnectors.ldap.LdapUtil.escapeAttrValue;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -75,7 +75,7 @@ public class GroupHelper {
 
     public List<String> getLdapGroups(String entryDN) {
         log.ok("Retrieving LDAP groups for {0}", entryDN);
-        String filter = createAttributeFilter(getLdapGroupMemberAttribute(), Collections.singletonList(entryDN));
+        String filter = createAttributeFilter(getLdapGroupMemberAttribute(), singletonList(entryDN));
         ToDNHandler handler = new ToDNHandler();
         LdapSearches.findEntries(handler, conn, filter);
         return handler.getResults();
@@ -83,7 +83,7 @@ public class GroupHelper {
 
     public Set<GroupMembership> getLdapGroupMemberships(String entryDN) {
         log.ok("Retrieving LDAP group memberships for {0}", entryDN);
-        String filter = createAttributeFilter(getLdapGroupMemberAttribute(), Collections.singletonList(entryDN));
+        String filter = createAttributeFilter(getLdapGroupMemberAttribute(), singletonList(entryDN));
         ToGroupMembershipHandler handler = new ToGroupMembershipHandler();
         handler.setMemberRef(entryDN);
         LdapSearches.findEntries(handler, conn, filter);
@@ -129,7 +129,7 @@ public class GroupHelper {
         log.ok("Retrieving POSIX group memberships for ", posixRefAttrs);
         ToGroupMembershipHandler handler = new ToGroupMembershipHandler();
         for (String posixRefAttr : posixRefAttrs) {
-            String filter = createAttributeFilter("memberUid", Collections.singletonList(posixRefAttr));
+            String filter = createAttributeFilter("memberUid", singletonList(posixRefAttr));
             handler.setMemberRef(posixRefAttr);
             LdapSearches.findEntries(handler, conn, filter);
         }

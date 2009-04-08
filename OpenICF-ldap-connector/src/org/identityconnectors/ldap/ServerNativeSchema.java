@@ -22,9 +22,11 @@
  */
 package org.identityconnectors.ldap;
 
+import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveMap;
+import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
+import static org.identityconnectors.ldap.LdapUtil.addStringAttrValues;
 import static org.identityconnectors.ldap.LdapUtil.attrNameEquals;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValue;
-import static org.identityconnectors.ldap.LdapUtil.getStringAttrValues;
 
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -39,7 +41,6 @@ import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 
-import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 
@@ -54,14 +55,14 @@ public class ServerNativeSchema implements LdapNativeSchema {
     private final LdapConnection conn;
     private final DirContext schemaCtx;
 
-    private final Map<String, Set<String>> ldapClass2MustAttrs = CollectionUtil.newCaseInsensitiveMap();
-    private final Map<String, Set<String>> ldapClass2MayAttrs = CollectionUtil.newCaseInsensitiveMap();
-    private final Map<String, Set<String>> ldapClass2Sup = CollectionUtil.newCaseInsensitiveMap();
+    private final Map<String, Set<String>> ldapClass2MustAttrs = newCaseInsensitiveMap();
+    private final Map<String, Set<String>> ldapClass2MayAttrs = newCaseInsensitiveMap();
+    private final Map<String, Set<String>> ldapClass2Sup = newCaseInsensitiveMap();
 
-    private final Map<String, LdapAttributeType> attrName2Type = CollectionUtil.newCaseInsensitiveMap();
+    private final Map<String, LdapAttributeType> attrName2Type = newCaseInsensitiveMap();
 
     static {
-        LDAP_DIRECTORY_ATTRS = CollectionUtil.newCaseInsensitiveSet();
+        LDAP_DIRECTORY_ATTRS = newCaseInsensitiveSet();
         LDAP_DIRECTORY_ATTRS.add("createTimestamp");
         LDAP_DIRECTORY_ATTRS.add("modifyTimestamp");
         LDAP_DIRECTORY_ATTRS.add("creatorsName");
@@ -89,7 +90,7 @@ public class ServerNativeSchema implements LdapNativeSchema {
     }
 
     private Set<String> getAttributes(String ldapClass, boolean required) {
-        Set<String> result = CollectionUtil.newCaseInsensitiveSet();
+        Set<String> result = newCaseInsensitiveSet();
         Queue<String> queue = new LinkedList<String>();
         Set<String> visited = new HashSet<String>();
         queue.add(ldapClass);
@@ -113,7 +114,7 @@ public class ServerNativeSchema implements LdapNativeSchema {
     }
 
     public Set<String> getSuperiorObjectClasses(String ldapClass) {
-        Set<String> result = CollectionUtil.newCaseInsensitiveSet();
+        Set<String> result = newCaseInsensitiveSet();
         Queue<String> classQueue = new LinkedList<String>();
         Set<String> visitedClasses = new HashSet<String>();
         classQueue.add(ldapClass);
@@ -143,15 +144,20 @@ public class ServerNativeSchema implements LdapNativeSchema {
             String objClassName = objClassEnum.next().getName();
             Attributes attrs = objClassCtx.getAttributes(objClassName);
 
-            Set<String> mustAttrs = getStringAttrValues(attrs, "MUST");
-            Set<String> mayAttrs = getStringAttrValues(attrs, "MAY");
+            Set<String> mustAttrs = newCaseInsensitiveSet();
+            addStringAttrValues(attrs, "MUST", mustAttrs);
+            Set<String> mayAttrs = newCaseInsensitiveSet();
+            addStringAttrValues(attrs, "MAY", mayAttrs);
             // The objectClass attribute must not be required, since it is handled internally by the connector.
             if (mustAttrs.remove("objectClass")) {
                 mayAttrs.add("objectClass");
             }
-            Set<String> supClasses = getStringAttrValues(attrs, "SUP");
+            Set<String> supClasses = newCaseInsensitiveSet();
+            addStringAttrValues(attrs, "SUP", supClasses);
 
-            for (String name : getStringAttrValues(attrs, "NAME")) {
+            Set<String> names = newCaseInsensitiveSet();
+            addStringAttrValues(attrs, "NAME", names);
+            for (String name : names) {
                 ldapClass2MustAttrs.put(name, mustAttrs);
                 ldapClass2MayAttrs.put(name, mayAttrs);
                 ldapClass2Sup.put(name, supClasses);
@@ -171,7 +177,9 @@ public class ServerNativeSchema implements LdapNativeSchema {
             String usage = getStringAttrValue(attrs, "USAGE");
             boolean userApplications = "userApplications".equals(usage) || usage == null;
 
-            for (String name : getStringAttrValues(attrs, "NAME")) {
+            Set<String> names = newCaseInsensitiveSet();
+            addStringAttrValues(attrs, "NAME", names);
+            for (String name : names) {
                 // The objectClass attribute must not be writable, since it is handled internally by the connector.
                 boolean objectClass = attrNameEquals(name, "objectClass");
                 boolean binary = conn.isBinarySyntax(attrName);

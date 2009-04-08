@@ -23,6 +23,7 @@
 package org.identityconnectors.ldap.modify;
 
 import static org.identityconnectors.common.CollectionUtil.isEmpty;
+import static org.identityconnectors.common.CollectionUtil.newSet;
 import static org.identityconnectors.common.CollectionUtil.nullAsEmpty;
 import static org.identityconnectors.ldap.LdapUtil.checkedListByFilter;
 import static org.identityconnectors.ldap.LdapUtil.quietCreateLdapName;
@@ -39,7 +40,6 @@ import javax.naming.directory.BasicAttributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.ModificationItem;
 
-import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.Pair;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -79,7 +79,7 @@ public class LdapUpdate extends LdapModifyOperation {
         Name newName = (Name) AttributeUtil.find(Name.NAME, attrs);
         String newEntryDN = null;
         if (newName != null) {
-            updateAttrs = CollectionUtil.newSet(attrs);
+            updateAttrs = newSet(attrs);
             updateAttrs.remove(newName);
             newEntryDN = conn.getSchemaMapping().getEntryDN(oclass, newName);
         }

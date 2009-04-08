@@ -23,7 +23,6 @@
 package org.identityconnectors.ldap.modify;
 
 import static org.identityconnectors.common.CollectionUtil.isEmpty;
-import static org.identityconnectors.common.CollectionUtil.newSet;
 import static org.identityconnectors.common.CollectionUtil.nullAsEmpty;
 import static org.identityconnectors.ldap.LdapUtil.checkedListByFilter;
 
@@ -58,7 +57,7 @@ public class LdapCreate extends LdapModifyOperation {
     public LdapCreate(LdapConnection conn, ObjectClass oclass, Set<Attribute> attrs, OperationOptions options) {
         super(conn);
         this.oclass = oclass;
-        this.attrs = newSet(attrs);
+        this.attrs = attrs;
     }
 
     public Uid execute() {
@@ -74,7 +73,6 @@ public class LdapCreate extends LdapModifyOperation {
         if (nameAttr == null) {
             throw new IllegalArgumentException("No Name attribute provided in the attributes");
         }
-        attrs.remove(nameAttr);
 
         List<String> ldapGroups = null;
         List<String> posixGroups = null;
@@ -83,7 +81,9 @@ public class LdapCreate extends LdapModifyOperation {
 
         for (Attribute attr : attrs) {
             javax.naming.directory.Attribute ldapAttr = null;
-            if (LdapPredefinedAttributes.isLdapGroups(attr.getName())) {
+            if (attr.is(Name.NAME)) {
+                // Handled already.
+            } else if (LdapPredefinedAttributes.isLdapGroups(attr.getName())) {
                 ldapGroups = checkedListByFilter(nullAsEmpty(attr.getValue()), String.class);
             } else if (LdapPredefinedAttributes.isPosixGroups(attr.getName())) {
                 posixGroups = checkedListByFilter(nullAsEmpty(attr.getValue()), String.class);

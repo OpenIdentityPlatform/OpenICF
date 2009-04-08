@@ -22,6 +22,10 @@
  */
 package org.identityconnectors.ldap.schema;
 
+import static java.util.Collections.unmodifiableSet;
+import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveMap;
+import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
+import static org.identityconnectors.common.CollectionUtil.newReadOnlySet;
 import static org.identityconnectors.ldap.LdapEntry.isDNAttribute;
 import static org.identityconnectors.ldap.LdapUtil.addBinaryOption;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValue;
@@ -29,7 +33,6 @@ import static org.identityconnectors.ldap.LdapUtil.hasBinaryOption;
 import static org.identityconnectors.ldap.LdapUtil.quietCreateLdapName;
 import static org.identityconnectors.ldap.LdapUtil.removeBinaryOption;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +47,6 @@ import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
 
-import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -55,6 +57,7 @@ import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
+import org.identityconnectors.framework.common.objects.ObjectClassUtil;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -94,7 +97,7 @@ public class LdapSchemaMapping {
     static final String LDAP_PASSWORD_ATTR = "userPassword";
 
     private final LdapConnection conn;
-    private final Map<String, Set<String>> ldapClass2Sup = CollectionUtil.newCaseInsensitiveMap();
+    private final Map<String, Set<String>> ldapClass2Sup = newCaseInsensitiveMap();
 
     private Schema schema;
 
@@ -127,8 +130,10 @@ public class LdapSchemaMapping {
         if (oclassConfig != null) {
             return oclassConfig.getLdapClassesAsSet();
         }
-        // XXX will need a check here if object class names are made special.
-        return Collections.singleton(oclass.getObjectClassValue());
+        if (!ObjectClassUtil.isSpecial(oclass)) {
+            return newReadOnlySet(oclass.getObjectClassValue());
+        }
+        throw new ConnectorException("Object class " + oclass.getObjectClassValue() + " is not mapped to an LDAP object class");
     }
 
     /**
@@ -137,12 +142,12 @@ public class LdapSchemaMapping {
      * object classes, any superiors thereof, etc..
      */
     public Set<String> getLdapClassesTransitively(ObjectClass oclass) {
-        Set<String> result = CollectionUtil.newCaseInsensitiveSet();
+        Set<String> result = newCaseInsensitiveSet();
         for (String ldapClass : getLdapClasses(oclass)) {
             result.add(ldapClass);
             result.addAll(getLdapClassSuperiors(ldapClass));
         }
-        return Collections.unmodifiableSet(result);
+        return unmodifiableSet(result);
     }
 
     public String getLdapAttribute(ObjectClass oclass, String attrName, boolean transfer) {
@@ -184,7 +189,7 @@ public class LdapSchemaMapping {
      * the binary option will be added to the attributes which need it.
      */
     public Set<String> getLdapAttributes(ObjectClass oclass, Set<String> attrs, boolean transfer) {
-        Set<String> result = CollectionUtil.newCaseInsensitiveSet();
+        Set<String> result = newCaseInsensitiveSet();
         for (String attr : attrs) {
             String ldapAttr = getLdapAttribute(oclass, attr, transfer);
             if (ldapAttr != null) {
@@ -422,10 +427,10 @@ public class LdapSchemaMapping {
     public Set<String> getAttributesReturnedByDefault(ObjectClass oclass) {
         ObjectClassInfo oci = schema().findObjectClassInfo(oclass.getObjectClassValue());
         if (oci == null) {
-            return CollectionUtil.newCaseInsensitiveSet();
+            return newCaseInsensitiveSet();
         }
 
-        Set<String> result = CollectionUtil.newCaseInsensitiveSet();
+        Set<String> result = newCaseInsensitiveSet();
         for (AttributeInfo info : oci.getAttributeInfo()) {
             if (info.isReturnedByDefault()) {
                 result.add(info.getName());
@@ -440,8 +445,8 @@ public class LdapSchemaMapping {
             return;
         }
 
-        Set<String> attrs = CollectionUtil.newCaseInsensitiveSet();
-        Set<String> readableAttrs = CollectionUtil.newCaseInsensitiveSet();
+        Set<String> attrs = newCaseInsensitiveSet();
+        Set<String> readableAttrs = newCaseInsensitiveSet();
         for (AttributeInfo info : oci.getAttributeInfo()) {
             String attrName = info.getName();
             attrs.add(attrName);

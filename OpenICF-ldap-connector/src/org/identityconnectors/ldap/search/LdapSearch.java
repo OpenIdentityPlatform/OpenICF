@@ -22,10 +22,11 @@
  */
 package org.identityconnectors.ldap.search;
 
+import static java.util.Collections.singletonList;
+import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValues;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -34,7 +35,6 @@ import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.PagedResultsControl;
 
-import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
@@ -129,7 +129,7 @@ public class LdapSearch {
 
         String filterEntryDN = filter != null ? filter.getEntryDN() : null;
         if (filterEntryDN != null) {
-            baseDNs = Collections.singletonList(filterEntryDN);
+            baseDNs = singletonList(filterEntryDN);
             searchScope = SearchControls.OBJECT_SCOPE;
             ignoreNonExistingBaseDNs = true;
         } else {
@@ -152,7 +152,7 @@ public class LdapSearch {
     }
 
     private Set<String> getLdapAttributesToGet(Set<String> attrsToGet) {
-        Set<String> cleanAttrsToGet = CollectionUtil.newCaseInsensitiveSet();
+        Set<String> cleanAttrsToGet = newCaseInsensitiveSet();
         cleanAttrsToGet.addAll(attrsToGet);
         cleanAttrsToGet.remove(LdapPredefinedAttributes.LDAP_GROUPS_NAME);
         boolean posixGroups = cleanAttrsToGet.remove(LdapPredefinedAttributes.POSIX_GROUPS_NAME);
@@ -243,7 +243,7 @@ public class LdapSearch {
             if (opBaseDNs.length > 0) {
                 throw new ConnectorException("Should only specify one of OP_CONTAINER and OP_BASE_DNS");
             }
-            result = Collections.singletonList(LdapSearches.findDN(conn, container));
+            result = singletonList(LdapSearches.findDN(conn, container));
         } else if (opBaseDNs.length > 0) {
             result = Arrays.asList(opBaseDNs);
         } else {
@@ -280,7 +280,7 @@ public class LdapSearch {
         Set<String> result;
         String[] attributesToGet = options.getAttributesToGet();
         if (attributesToGet != null) {
-            result = CollectionUtil.newCaseInsensitiveSet();
+            result = newCaseInsensitiveSet();
             result.addAll(Arrays.asList(attributesToGet));
             removeNonReadableAttributes(result);
             result.add(Name.NAME);

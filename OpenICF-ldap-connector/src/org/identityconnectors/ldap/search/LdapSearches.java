@@ -22,9 +22,10 @@
  */
 package org.identityconnectors.ldap.search;
 
+import static java.util.Collections.singletonList;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import javax.naming.directory.SearchControls;
@@ -161,7 +162,7 @@ public class LdapSearches {
         SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
         controls.setSearchScope(SearchControls.OBJECT_SCOPE);
         controls.setReturningAttributes(ldapAttrsToGet);
-        LdapInternalSearch search = new LdapInternalSearch(conn, null, Collections.singletonList(entryDN.toString()), new DefaultSearchStrategy(), controls, true);
+        LdapInternalSearch search = new LdapInternalSearch(conn, null, singletonList(entryDN.toString()), new DefaultSearchStrategy(), controls, true);
         search.execute(new SearchResultsHandler() {
             public boolean handle(String baseDN, SearchResult searchResult) {
                 result.add(LdapEntry.create(baseDN, searchResult));

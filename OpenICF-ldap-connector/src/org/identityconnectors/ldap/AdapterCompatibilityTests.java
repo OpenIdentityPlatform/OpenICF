@@ -22,6 +22,7 @@
  */
 package org.identityconnectors.ldap;
 
+import static java.util.Collections.singleton;
 import static org.identityconnectors.common.CollectionUtil.newList;
 import static org.identityconnectors.common.CollectionUtil.newSet;
 import static org.identityconnectors.ldap.LdapUtil.checkedListByFilter;
@@ -29,7 +30,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -190,7 +190,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
         ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN), groupsAttr.getName());
         List<Object> oldGroups = newList(object.getAttributeByName(groupsAttr.getName()).getValue());
 
-        Uid uid = facade.addAttributeValues(ObjectClass.ACCOUNT, object.getUid(), Collections.singleton(groupsAttr), null);
+        Uid uid = facade.addAttributeValues(ObjectClass.ACCOUNT, object.getUid(), singleton(groupsAttr), null);
 
         oldGroups.addAll(groupsAttr.getValue());
         assertAttributeValue(oldGroups, facade, ObjectClass.ACCOUNT, uid, groupsAttr.getName());
@@ -216,7 +216,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
         ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(SYLVESTER_DN), groupsAttr.getName());
         List<Object> oldGroups = newList(object.getAttributeByName(groupsAttr.getName()).getValue());
 
-        Uid uid = facade.removeAttributeValues(ObjectClass.ACCOUNT, object.getUid(), Collections.singleton(groupsAttr), null);
+        Uid uid = facade.removeAttributeValues(ObjectClass.ACCOUNT, object.getUid(), singleton(groupsAttr), null);
 
         oldGroups.removeAll(groupsAttr.getValue());
         assertAttributeValue(oldGroups, facade, ObjectClass.ACCOUNT, uid, groupsAttr.getName());
@@ -228,7 +228,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
 
         ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
         Attribute uidAttr = AttributeBuilder.build("uid", BBUNNY_UID);
-        facade.removeAttributeValues(ObjectClass.ACCOUNT, object.getUid(), Collections.singleton(uidAttr), null);
+        facade.removeAttributeValues(ObjectClass.ACCOUNT, object.getUid(), singleton(uidAttr), null);
     }
 
     @Test(expected = ConnectorException.class)
@@ -239,7 +239,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
 
         ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(OWNER_DN));
         Attribute uidAttr = AttributeBuilder.build("uid");
-        facade.update(ObjectClass.ACCOUNT, object.getUid(), Collections.singleton(uidAttr), null);
+        facade.update(ObjectClass.ACCOUNT, object.getUid(), singleton(uidAttr), null);
     }
 
     @Test
@@ -255,7 +255,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
         List<String> oldPosixGroups = checkedListByFilter(object.getAttributeByName(LdapPredefinedAttributes.POSIX_GROUPS_NAME).getValue(), String.class);
 
         Name newName = new Name("uid=sylvester.the.cat," + ACME_USERS_DN);
-        Uid uid = facade.update(ObjectClass.ACCOUNT, object.getUid(), Collections.<Attribute>singleton(newName), null);
+        Uid uid = facade.update(ObjectClass.ACCOUNT, object.getUid(), singleton((Attribute) newName), null);
 
         object = searchByAttribute(facade, ObjectClass.ACCOUNT, uid, LdapPredefinedAttributes.LDAP_GROUPS_NAME, LdapPredefinedAttributes.POSIX_GROUPS_NAME);
         assertAttributeValue(newList(UNIQUE_BUGS_AND_FRIENDS_DN, UNIQUE_EXTERNAL_PEERS_DN),
@@ -322,7 +322,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
         ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(SYLVESTER_DN));
         String newUid = "sylvester.the.cat";
         String newEntryDN = "uid=" + newUid + "," + ACME_USERS_DN;
-        facade.update(ObjectClass.ACCOUNT, object.getUid(), Collections.<Attribute>singleton(new Name(newEntryDN)), null);
+        facade.update(ObjectClass.ACCOUNT, object.getUid(), singleton((Attribute) new Name(newEntryDN)), null);
 
         object = searchByAttribute(facade, new ObjectClass("groupOfUniqueNames"), new Name(UNIQUE_BUGS_AND_FRIENDS_DN), "uniqueMember");
         List<Object> members = object.getAttributeByName("uniqueMember").getValue();
