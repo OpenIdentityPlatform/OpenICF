@@ -243,7 +243,7 @@ public class LdapSearch {
             if (opBaseDNs.length > 0) {
                 throw new ConnectorException("Should only specify one of OP_CONTAINER and OP_BASE_DNS");
             }
-            result = singletonList(LdapSearches.findDN(conn, container));
+            result = singletonList(LdapSearches.findDN(conn, container.getObjectClass(), container.getUid()));
         } else if (opBaseDNs.length > 0) {
             result = Arrays.asList(opBaseDNs);
         } else {

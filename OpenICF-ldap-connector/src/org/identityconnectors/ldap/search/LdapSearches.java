@@ -40,7 +40,6 @@ import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
-import org.identityconnectors.framework.common.objects.QualifiedUid;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
@@ -82,22 +81,6 @@ public class LdapSearches {
             return AttributeUtil.getStringValue(object.getAttributeByName("entryDN"));
         }
         throw new ConnectorException("Unable to find object " + uid);
-    }
-
-    /**
-     * Finds the DN of the entry corresponding to the given qualified Uid.
-     */
-    public static String findDN(LdapConnection conn, QualifiedUid quid) {
-        Uid uid = quid.getUid();
-        ObjectClass oclass = quid.getObjectClass();
-
-        // Workaround for bug 20583.
-        if (oclass.getObjectClassValue().equals("UNKNOWN")) {
-            log.ok("Working around object class UNKNOWN: ", uid);
-            return uid.getUidValue();
-        }
-
-        return findDN(conn, oclass, uid);
     }
 
     public static List<ConnectorObject> findObjects(LdapConnection conn, ObjectClass oclass, String name) {
