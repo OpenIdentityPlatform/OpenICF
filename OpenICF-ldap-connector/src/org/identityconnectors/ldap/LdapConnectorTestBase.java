@@ -83,10 +83,10 @@ public abstract class LdapConnectorTestBase {
     public static final String UNIQUE_EXTERNAL_PEERS_DN = "cn=Unique External Peers,o=Acme,dc=example,dc=com";
     public static final String UNIQUE_EMPTY_GROUP_DN = "cn=Unique Empty Group,o=Acme,dc=example,dc=com";
 
-    public static final String POSIX_BUGS_AND_FRIENDS_DN = "ou=POSIX Bugs and Friends,o=Acme,dc=example,dc=com";
-    public static final String POSIX_EXTERNAL_PEERS_DN = "ou=POSIX External Peers,o=Acme,dc=example,dc=com";
-    public static final String POSIX_EMPTY_GROUP_DN = "ou=POSIX Empty Group,o=Acme,dc=example,dc=com";
-    public static final String POSIX_BUGS_BUNNY_GROUP = "ou=POSIX Bugs Bunny Group,o=Acme,dc=example,dc=com";
+    public static final String POSIX_BUGS_AND_FRIENDS_DN = "cn=POSIX Bugs and Friends,o=Acme,dc=example,dc=com";
+    public static final String POSIX_EXTERNAL_PEERS_DN = "cn=POSIX External Peers,o=Acme,dc=example,dc=com";
+    public static final String POSIX_EMPTY_GROUP_DN = "cn=POSIX Empty Group,o=Acme,dc=example,dc=com";
+    public static final String POSIX_BUGS_BUNNY_GROUP = "cn=POSIX Bugs Bunny Group,o=Acme,dc=example,dc=com";
 
     public static final String SMALL_COMPANY_DN = "o=Small Company,dc=example,dc=com";
     public static final String SMALL_COMPANY_O = "Small Company";
