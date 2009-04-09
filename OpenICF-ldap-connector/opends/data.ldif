@@ -123,38 +123,38 @@ cn: Unique Empty Group
 
 # POSIX groups.
 
-dn: ou=POSIX Bugs and Friends,o=Acme,dc=example,dc=com
+dn: cn=POSIX Bugs and Friends,o=Acme,dc=example,dc=com
 objectClass: top
-objectClass: organizationalUnit
+objectClass: namedObject
 objectClass: posixGroup
-ou: POSIX Bugs and Friends
+cn: POSIX Bugs and Friends
 gidNumber: 1
 memberUid: bugs.bunny
 memberUid: elmer.fudd
 memberUid: sylvester
 
-dn: ou=POSIX External Peers,o=Acme,dc=example,dc=com
+dn: cn=POSIX External Peers,o=Acme,dc=example,dc=com
 objectClass: top
-objectClass: organizationalUnit
+objectClass: namedObject
 objectClass: posixGroup
-ou: POSIX External Peers
+cn: POSIX External Peers
 gidNumber: 2
 memberUid: single.account
 memberUid: owner
 memberUid: sylvester
 
-dn: ou=POSIX Empty Group,o=Acme,dc=example,dc=com
+dn: cn=POSIX Empty Group,o=Acme,dc=example,dc=com
 objectClass: top
-objectClass: organizationalUnit
+objectClass: namedObject
 objectClass: posixGroup
-ou: POSIX Empty Group
+cn: POSIX Empty Group
 gidNumber: 3
 
-dn: ou=POSIX Bugs Bunny Group,o=Acme,dc=example,dc=com
+dn: cn=POSIX Bugs Bunny Group,o=Acme,dc=example,dc=com
 objectClass: top
-objectClass: organizationalUnit
+objectClass: namedObject
 objectClass: posixGroup
-ou: POSIX Empty Group
+cn: POSIX Bugs Bunny Group
 gidNumber: 4
 memberUid: bbunny
 
