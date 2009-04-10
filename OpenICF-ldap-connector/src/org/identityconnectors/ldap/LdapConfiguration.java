@@ -290,7 +290,7 @@ public class LdapConfiguration extends AbstractConfiguration {
     }
 
     public String[] getFailover() {
-        return failover;
+        return failover.clone();
     }
 
     public void setFailover(String... failover) {

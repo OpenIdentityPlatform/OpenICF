@@ -102,7 +102,7 @@ public abstract class LdapModifyOperation {
 
         public Set<GroupMembership> getPosixGroupMemberships() {
             if (posixGroupMemberships == null) {
-                return groupHelper.getPosixGroupMemberships(getPosixRefAttributes());
+                posixGroupMemberships = groupHelper.getPosixGroupMemberships(getPosixRefAttributes());
             }
             return posixGroupMemberships;
         }
