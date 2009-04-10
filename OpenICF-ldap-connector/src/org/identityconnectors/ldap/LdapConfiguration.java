@@ -23,7 +23,6 @@
 package org.identityconnectors.ldap;
 
 import static java.util.Collections.singletonList;
-import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
 import static org.identityconnectors.common.CollectionUtil.newList;
 
 import java.util.ArrayList;
@@ -31,7 +30,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
@@ -58,17 +56,16 @@ public class LdapConfiguration extends AbstractConfiguration {
     private static final Log log = Log.getLog(LdapConfiguration.class);
 
     private static final int DEFAULT_PORT = 389;
-    private static final int DEFAULT_SSL_PORT = 636;
 
     /**
      * The LDAP host server to connect to.
      */
-    private String host = "localhost";
+    private String host;
 
     /**
      * The port the server is listening on.
      */
-    private int port = -1;
+    private int port = DEFAULT_PORT;
 
     /**
      * Whether the port is a secure SSL port.
@@ -91,10 +88,10 @@ public class LdapConfiguration extends AbstractConfiguration {
      */
     private GuardedString credentials;
 
-//    /**
-//     * The name of the password attribute.
-//     */
-//    private String passwordAttribute = null;
+    /**
+     * The name of the password attribute.
+     */
+    private String passwordAttribute = "userPassword";
 
     /**
      * The authentication mechanism to use against the LDAP server.
@@ -104,7 +101,7 @@ public class LdapConfiguration extends AbstractConfiguration {
     /**
      * The base DNs for operations on the server.
      */
-    private String[] baseContexts = { "dc=MYDOMAIN,dc=com" };
+    private String[] baseContexts = { };
 
     /**
      * A search filter that any account needs to match in order to be returned.
@@ -199,13 +196,24 @@ public class LdapConfiguration extends AbstractConfiguration {
      * {@inheritDoc}
      */
     public void validate() {
-        if (baseContexts == null || baseContexts.length < 1) {
-            throw new ConfigurationException("No base context was provided in the LDAP configuration");
+        if (StringUtil.isBlank(host)) {
+            throw new ConfigurationException("The host cannot be empty");
         }
-        Set<String> baseContextSet = newCaseInsensitiveSet();
-        baseContextSet.addAll(Arrays.asList(baseContexts));
-        if (baseContextSet.size() != baseContexts.length) {
-            throw new ConfigurationException("The list of base contexts in the LDAP configuration contains duplicates");
+
+        if (port < 0 || port > 0xffff) {
+            throw new ConfigurationException("The port number should be 0 through 65535");
+        }
+
+        if (failover == null) {
+            throw new ConfigurationException("The failover property cannot not be null");
+        }
+
+        if (StringUtil.isEmpty(passwordAttribute)) {
+            throw new ConfigurationException("The password attribute cannot be empty");
+        }
+
+        if (baseContexts == null || baseContexts.length < 1) {
+            throw new ConfigurationException("The list of base contexts cannot be empty");
         }
         for (String baseContext : baseContexts) {
             try {
@@ -214,17 +222,12 @@ public class LdapConfiguration extends AbstractConfiguration {
                 }
                 new LdapName(baseContext);
             } catch (InvalidNameException e) {
-                throw new ConfigurationException("The base context " + baseContext + " in the LDAP configuration cannot be parsed");
+                throw new ConfigurationException("The base context " + baseContext + " cannot be parsed");
             }
         }
 
         if (accountConfig.getLdapClasses().size() < 1) {
-            throw new ConfigurationException("No base context was provided in the LDAP configuration");
-        }
-        Set<String> accountObjectClassSet = newCaseInsensitiveSet();
-        accountObjectClassSet.addAll(accountConfig.getLdapClasses());
-        if (accountObjectClassSet.size() != accountConfig.getLdapClasses().size()) {
-            throw new ConfigurationException("The list of account object clases in the LDAP configuration contains duplicates");
+            throw new ConfigurationException("The list of account object classes cannot be empty");
         }
         for (String accountObjectClass : accountConfig.getLdapClasses()) {
             if (StringUtil.isBlank(accountObjectClass)) {
@@ -233,13 +236,14 @@ public class LdapConfiguration extends AbstractConfiguration {
         }
 
         if (StringUtil.isBlank(uidAttribute)) {
-            throw new ConfigurationException("The LDAP attribute to map to Uid cannot be blank");
+            throw new ConfigurationException("The attribute to map to Uid cannot be empty");
         }
 
-        Set<String> extendedObjectClassSet = newCaseInsensitiveSet();
-        extendedObjectClassSet.addAll(Arrays.asList(extendedObjectClasses));
-        if (extendedObjectClassSet.size() != extendedObjectClasses.length) {
-            throw new ConfigurationException("The list of extended object classes in the LDAP configuration contains duplicates");
+        if (extendedObjectClasses == null) {
+            throw new ConfigurationException("The list of extended object classes cannot be null");
+        }
+        if (extendedNamingAttributes == null) {
+            throw new ConfigurationException("The list of extended naming attributes cannot be null");
         }
         for (String extendedObjectClass : extendedObjectClasses) {
             if (StringUtil.isBlank(extendedObjectClass)) {
@@ -251,7 +255,7 @@ public class LdapConfiguration extends AbstractConfiguration {
                 throw new ConfigurationException("The readSchema property must be true when using extended object classes");
             }
             if (extendedNamingAttributes.length < extendedObjectClasses.length) {
-                throw new ConfigurationException("No naming attributes were provided for all extended object classes in the LDAP configuration");
+                throw new ConfigurationException("No naming attributes were provided for all extended object classes");
             }
             for (String extendedNamingAttribute : extendedNamingAttributes) {
                 if (StringUtil.isBlank(extendedNamingAttribute)) {
@@ -259,11 +263,6 @@ public class LdapConfiguration extends AbstractConfiguration {
                 }
             }
         }
-
-//        if (passwordAttribute == null) {
-//            String msg = "The name of a password attribute was not provided in the LDAP configuration";
-//            throw new ConfigurationException(msg);
-//        }
     }
 
     public String getHost() {
@@ -271,20 +270,14 @@ public class LdapConfiguration extends AbstractConfiguration {
     }
 
     public void setHost(String host) {
-        if (StringUtil.isBlank(host)) {
-            throw new ConfigurationException("The host name should not be null or whitespace");
-        }
         this.host = host;
     }
 
     public int getPort() {
-        return port != -1 ? port : (ssl ? DEFAULT_SSL_PORT : DEFAULT_PORT);
+        return port;
     }
 
     public void setPort(int port) {
-        if (port < 0 || port > 0xffff) {
-            throw new ConfigurationException("The port number should be 0 through 65535");
-        }
         this.port = port;
     }
 
@@ -301,9 +294,6 @@ public class LdapConfiguration extends AbstractConfiguration {
     }
 
     public void setFailover(String... failover) {
-        if (failover == null) {
-            throw new ConfigurationException("The failover parameter cannot be null");
-        }
         this.failover = failover;
     }
 
@@ -324,13 +314,13 @@ public class LdapConfiguration extends AbstractConfiguration {
         this.credentials = credentials;
     }
 
-//    public String getPasswordAttribute() {
-//        return passwordAttribute;
-//    }
-//
-//    public void setPasswordAttribute(String passwordAttribute) {
-//        this.passwordAttribute = passwordAttribute;
-//    }
+    public String getPasswordAttribute() {
+        return passwordAttribute;
+    }
+
+    public void setPasswordAttribute(String passwordAttribute) {
+        this.passwordAttribute = passwordAttribute;
+    }
 
     public String getAuthentication() {
         return authentication;
@@ -345,9 +335,6 @@ public class LdapConfiguration extends AbstractConfiguration {
     }
 
     public void setBaseContexts(String... baseContexts) {
-        if (baseContexts == null) {
-            throw new ConfigurationException("The baseContexts parameter cannot be null");
-        }
         this.baseContexts = baseContexts.clone();
     }
 
@@ -445,9 +432,6 @@ public class LdapConfiguration extends AbstractConfiguration {
     }
 
     public void setExtendedObjectClasses(String... extendedObjectClasses) {
-        if (extendedObjectClasses == null) {
-            throw new ConfigurationException("The extended object classes parameter cannot be null");
-        }
         this.extendedObjectClasses = (String[]) extendedObjectClasses.clone();
     }
 
@@ -456,9 +440,6 @@ public class LdapConfiguration extends AbstractConfiguration {
     }
 
     public void setExtendedNamingAttributes(String... extendedNamingAttributes) {
-        if (extendedNamingAttributes == null) {
-            throw new ConfigurationException("The extended naming attributes parameter cannot be null");
-        }
         this.extendedNamingAttributes = (String[]) extendedNamingAttributes.clone();
     }
 
@@ -523,12 +504,12 @@ public class LdapConfiguration extends AbstractConfiguration {
         builder.append(failover);
         builder.append(principal);
         builder.append(credentials);
+        builder.append(passwordAttribute);
         builder.append(authentication);
         for (String baseContext : baseContexts) {
             builder.append(baseContext);
         }
         builder.append(accountSearchFilter);
-//        builder.append(passwordAttribute);
         builder.append(groupMemberAttribute);
         builder.append(maintainLdapGroupMembership);
         builder.append(maintainPosixGroupMembership);

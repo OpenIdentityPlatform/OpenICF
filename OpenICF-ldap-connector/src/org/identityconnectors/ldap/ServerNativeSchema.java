@@ -184,7 +184,7 @@ public class ServerNativeSchema implements LdapNativeSchema {
                 boolean objectClass = attrNameEquals(name, "objectClass");
                 boolean binary = conn.isBinarySyntax(attrName);
 
-                boolean password = "userPassword".equals(name);
+                boolean password = "userPassword".equals(name) || conn.getConfiguration().getPasswordAttribute().equals(name);
 
                 Class<?> type;
                 if (password) {

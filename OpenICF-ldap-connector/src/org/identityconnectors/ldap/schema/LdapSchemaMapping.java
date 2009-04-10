@@ -94,8 +94,6 @@ public class LdapSchemaMapping {
      */
     static final String DEFAULT_LDAP_NAME_ATTR = "entryDN";
 
-    static final String LDAP_PASSWORD_ATTR = "userPassword";
-
     private final LdapConnection conn;
     private final Map<String, Set<String>> ldapClass2Sup = newCaseInsensitiveMap();
 
@@ -393,23 +391,24 @@ public class LdapSchemaMapping {
     }
 
     public GuardedPasswordAttribute encodePassword(ObjectClass oclass, Attribute attr) {
-        assert !attr.is(OperationalAttributes.PASSWORD_NAME);
+        assert attr.is(OperationalAttributes.PASSWORD_NAME);
 
+        String pwdAttrName = conn.getConfiguration().getPasswordAttribute();
         List<Object> value = attr.getValue();
         if (value != null) {
             for (Object each : value) {
                 GuardedString password = (GuardedString) each;
-                return GuardedPasswordAttribute.create(LDAP_PASSWORD_ATTR, password);
+                return GuardedPasswordAttribute.create(pwdAttrName, password);
             }
         }
-        return GuardedPasswordAttribute.create(LDAP_PASSWORD_ATTR);
+        return GuardedPasswordAttribute.create(pwdAttrName);
     }
 
     public String getEntryDN(ObjectClass oclass, Name name) {
         String ldapNameAttr = getLdapNameAttribute(oclass);
-        if (!"entryDN".equals(ldapNameAttr)) {
+        if (!isDNAttribute(ldapNameAttr)) {
             // Not yet implemented.
-            throw new UnsupportedOperationException("Name can only be mapped to entryDN");
+            throw new UnsupportedOperationException("Name can only be mapped to the entry DN");
         }
         return name.getNameValue();
     }

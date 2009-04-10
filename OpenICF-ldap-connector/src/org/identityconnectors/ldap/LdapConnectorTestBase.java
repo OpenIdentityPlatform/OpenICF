@@ -150,6 +150,7 @@ public abstract class LdapConnectorTestBase {
     public static LdapConfiguration newConfiguration(String... extObjectClassesAndNamingAttributes) {
         LdapConfiguration config = new LdapConfiguration();
         // Cf. opends/config.ldif.
+        config.setHost("localhost");
         config.setPort(PORT);
         config.setBaseContexts(ACME_DN, BIG_COMPANY_DN);
         config.setPrincipal(ADMIN_DN);
