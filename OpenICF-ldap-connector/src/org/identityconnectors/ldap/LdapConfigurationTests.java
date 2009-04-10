@@ -22,7 +22,6 @@
  */
 package org.identityconnectors.ldap;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
@@ -38,6 +37,8 @@ public class LdapConfigurationTests /* extends LdapConnectorTestBase*/ {
     @Before
     public void before() throws Exception {
         config = new LdapConfiguration();
+        config.setHost("localhost");
+        config.setBaseContexts("dc=example,dc=com");
         assertCanValidate(config);
     }
 
@@ -50,12 +51,6 @@ public class LdapConfigurationTests /* extends LdapConnectorTestBase*/ {
     @Test(expected = ConfigurationException.class)
     public void testNoBaseDNsEmpty() {
         config.setBaseContexts();
-        config.validate();
-    }
-
-    @Test(expected = ConfigurationException.class)
-    public void testBaseDNsNoDuplicates() {
-        config.setBaseContexts(LdapConnectorTestBase.ACME_DN, LdapConnectorTestBase.ACME_DN);
         config.validate();
     }
 
@@ -86,21 +81,6 @@ public class LdapConfigurationTests /* extends LdapConnectorTestBase*/ {
         config.setReadSchema(false);
         // Fails because readSchema is false.
         config.validate();
-    }
-
-    @Test
-    public void testEffectiveValues() {
-        assertEquals(389, config.getPort());
-        config.setSsl(true);
-        assertEquals(636, config.getPort());
-        config.setPort(1234);
-        assertEquals(1234, config.getPort());
-
-        assertEquals("localhost", config.getHost());
-        config.setHost("example.com");
-        assertEquals("example.com", config.getHost());
-
-        assertEquals(0, config.getExtendedObjectClasses().length);
     }
 
     private static void assertCanValidate(LdapConfiguration config) {
