@@ -46,6 +46,7 @@ import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.Line;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.NameValue;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.Separator;
+import org.junit.Test;
 
 /**
  * A simple, and in no way complete, way to modify an LDAP server
@@ -172,5 +173,11 @@ public class LdapModifyForTests {
             }
             toList.add(new ModificationItem(operation, attr));
         }
+    }
+    
+    @Test
+    public void dummy() {
+        // This is here because the class needs to end in "Tests" for it not to be
+        // included in the jar, but then JUnit complains about no runnable methods.
     }
 }
