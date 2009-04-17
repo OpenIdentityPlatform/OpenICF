@@ -22,7 +22,13 @@
  */
 package org.identityconnectors.ldap;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import java.util.Arrays;
 
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.junit.Before;
@@ -81,6 +87,41 @@ public class LdapConfigurationTests /* extends LdapConnectorTestBase*/ {
         config.setReadSchema(false);
         // Fails because readSchema is false.
         config.validate();
+    }
+
+    @Test
+    public void testDefaultValues() {
+        config = new LdapConfiguration();
+        assertNull(config.getHost());
+        assertEquals(LdapConfiguration.DEFAULT_PORT, config.getPort());
+        assertFalse(config.isSsl());
+        assertEquals(0, config.getFailover().length);
+        assertNull(config.getPrincipal());
+        assertNull(config.getCredentials());
+        assertEquals("userPassword", config.getPasswordAttribute());
+        assertNull(config.getAuthentication());
+        assertEquals(0, config.getBaseContexts().length);
+        assertNull(config.getAccountSearchFilter());
+        assertEquals("uniqueMember", config.getGroupMemberAttribute());
+        assertFalse(config.isMaintainLdapGroupMembership());
+        assertFalse(config.isMaintainPosixGroupMembership());
+        assertFalse(config.isRespectResourcePasswordPolicyChangeAfterReset());
+        assertTrue(config.isUseBlocks());
+        assertEquals(100, config.getBlockCount());
+        assertFalse(config.isUsePagedResultControl());
+        assertEquals("entryUUID", config.getUidAttribute());
+        assertTrue(config.isReadSchema());
+        assertEquals(0, config.getExtendedObjectClasses().length);
+        assertEquals(0, config.getExtendedNamingAttributes().length);
+        assertEquals(0, config.getBaseContextsToSynchronize().length);
+        assertTrue(Arrays.equals(new String[] { "inetOrgPerson" }, config.getObjectClassesToSynchronize()));
+        assertEquals(0, config.getAttributesToSynchronize().length);
+        assertEquals(0, config.getModifiersNamesToFilterOut().length);
+        assertNull(config.getAccountSynchronizationFilter());
+        assertEquals(100, config.getChangeLogBlockSize());
+        assertEquals("changeNumber", config.getChangeNumberAttribute());
+        assertFalse(config.isFilterWithOrInsteadOfAnd());
+        assertTrue(config.isRemoveLogEntryObjectClassFromFilter());
     }
 
     private static void assertCanValidate(LdapConfiguration config) {

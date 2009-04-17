@@ -47,7 +47,7 @@ public class LdapDelete extends LdapModifyOperation {
     }
 
     public void execute() {
-        String entryDN = LdapSearches.findDN(conn, oclass, uid);
+        String entryDN = LdapSearches.getEntryDN(conn, oclass, uid);
 
         if (conn.getConfiguration().isMaintainLdapGroupMembership()) {
             List<String> ldapGroups = groupHelper.getLdapGroups(entryDN);

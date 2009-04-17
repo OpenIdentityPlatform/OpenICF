@@ -37,6 +37,8 @@ import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.AttributeInfo;
+import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
@@ -210,13 +212,23 @@ public class LdapSearchTests extends LdapConnectorTestBase {
     }
 
     @Test
-    public void testAttributesToGetNotPresentInEntryAreNotReturned() {
-        // XXX not sure this is the right behavior, but that's what we are doing currently.
+    public void testAttributesReturnedByDefaultWithNoValueAreNotReturned() {
+        LdapConfiguration config = newConfiguration();
+        config.setReadSchema(true);
+        ConnectorFacade facade = newFacade(config);
+        AttributeInfo attr = AttributeInfoUtil.find("givenName", facade.schema().findObjectClassInfo(ObjectClass.ACCOUNT_NAME).getAttributeInfo());
+        assertTrue(attr.isReturnedByDefault());
 
+        ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
+        assertNull(object.getAttributeByName("givenName"));
+    }
+
+    @Test
+    public void testAttributesToGetNotPresentInEntryAreEmpty() {
         ConnectorFacade facade = newFacade();
         ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN), "employeeNumber");
 
-        assertNull(object.getAttributeByName("employeeNumber"));
+        assertTrue(object.getAttributeByName("employeeNumber").getValue().isEmpty());
     }
 
     @Test

@@ -31,6 +31,8 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Schema;
+import org.identityconnectors.framework.common.objects.SyncResultsHandler;
+import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 import org.identityconnectors.framework.spi.Configuration;
@@ -41,6 +43,7 @@ import org.identityconnectors.framework.spi.operations.CreateOp;
 import org.identityconnectors.framework.spi.operations.DeleteOp;
 import org.identityconnectors.framework.spi.operations.SchemaOp;
 import org.identityconnectors.framework.spi.operations.SearchOp;
+import org.identityconnectors.framework.spi.operations.SyncOp;
 import org.identityconnectors.framework.spi.operations.TestOp;
 import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
 import org.identityconnectors.ldap.modify.LdapCreate;
@@ -49,10 +52,11 @@ import org.identityconnectors.ldap.modify.LdapUpdate;
 import org.identityconnectors.ldap.search.LdapFilter;
 import org.identityconnectors.ldap.search.LdapFilterTranslator;
 import org.identityconnectors.ldap.search.LdapSearch;
+import org.identityconnectors.ldap.sync.sunds.SunDSChangeLogSyncStrategy;
 
 @ConnectorClass(configurationClass = LdapConfiguration.class, displayNameKey = "LdapConnector")
 public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, SearchOp<LdapFilter>, AuthenticateOp, CreateOp, DeleteOp,
-        UpdateAttributeValuesOp {
+        UpdateAttributeValuesOp, SyncOp {
 
     // XXX groups.
 
@@ -131,5 +135,13 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
     public Uid removeAttributeValues(ObjectClass oclass, Uid uid, Set<Attribute> valuesToRemove,
             OperationOptions options) {
         return new LdapUpdate(conn, oclass, uid).removeAttributeValues(valuesToRemove);
+    }
+
+    public SyncToken getLatestSyncToken(ObjectClass oclass) {
+        return new SunDSChangeLogSyncStrategy(conn, oclass).getLatestSyncToken();
+    }
+
+    public void sync(ObjectClass oclass, SyncToken token, SyncResultsHandler handler, OperationOptions options) {
+        new SunDSChangeLogSyncStrategy(conn, oclass).sync(token, handler, options);
     }
 }

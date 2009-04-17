@@ -26,6 +26,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValues;
+import static org.identityconnectors.ldap.LdapUtil.isUnderContexts;
 
 import java.util.Arrays;
 import java.util.Hashtable;
@@ -318,7 +319,7 @@ public class LdapConnection {
         for (String entry : entries) {
             try {
                 LdapName entryName = new LdapName(entry);
-                if (!config.isContainedUnderBaseContexts(entryName)) {
+                if (!isUnderContexts(entryName, config.getBaseContextsAsLdapNames())) {
                     return entry;
                 }
             } catch (InvalidNameException e) {

@@ -172,6 +172,22 @@ public class LdapUtil {
         }
     }
 
+    public static boolean isUnderContexts(LdapName entry, List<LdapName> contexts) {
+        for (LdapName context : contexts) {
+            if (entry.startsWith(context)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static String[] nullAsEmpty(String[] array) {
+        if (array == null) {
+            return new String[0];
+        }
+        return array;
+    }
+
     @SuppressWarnings("unchecked")
     public static <T> List<T> checkedListByFilter(List list, Class<T> clazz) {
         return new CheckedListByFilter<T>(list, clazz);

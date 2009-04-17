@@ -33,9 +33,9 @@ import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
  *
  * <p>The problem this class solves is the following.
  * When an attribute, for instance {@link Name}, is mapped to an entry's DN,
- * and the user constructs an {@link EqualsFilter} for that name, the connector
+ * and the user constructs an {@link EqualsFilter} for that attribute, the connector
  * needs to translate that <code>Filter</code> into a native LDAP filter. The connector
- * could use the <code>entryDN</code> attribute, but some servers might
+ * could use the <code>entryDN</code> attribute in the native filter, but some servers might
  * not support that attribute. Instead, such a <code>Filter</code> is translated
  * to an <code>LdapFilter</code> with that entry DN. A composed filter, for instance:</p>
  *
@@ -165,6 +165,6 @@ public final class LdapFilter {
 
     @Override
     public String toString() {
-        return "LdapFilter[nativeFilter='" + nativeFilter + "',entryDN='" + entryDN + "']";
+        return "LdapFilter[nativeFilter: " + nativeFilter + "; entryDN: " + entryDN + "]";
     }
 }

@@ -174,15 +174,15 @@ public class LdapFilterTranslator extends AbstractFilterTranslator<LdapFilter> {
 
         StringBuilder builder = createBuilder(not);
         Object value = filter.getValue();
-        addSimpleFilter(builder, type, attrName, value);
+        addSimpleFilter(attrName, type, value, builder);
         return finishBuilder(builder);
     }
 
-    private void addSimpleFilter(StringBuilder builder, String type, String ldapAttr, Object value) {
-        builder.append(ldapAttr);
-        builder.append(type);
-        if (!escapeAttrValue(value, builder)) {
-            builder.append('*');
+    private void addSimpleFilter(String ldapAttr, String type, Object value, StringBuilder toBuilder) {
+        toBuilder.append(ldapAttr);
+        toBuilder.append(type);
+        if (!escapeAttrValue(value, toBuilder)) {
+            toBuilder.append('*');
         }
     }
 
@@ -208,7 +208,7 @@ public class LdapFilterTranslator extends AbstractFilterTranslator<LdapFilter> {
                 return LdapFilter.forEntryDN(single.toString());
             }
             builder = createBuilder(not);
-            addSimpleFilter(builder, "=", attrName, values.get(0));
+            addSimpleFilter(attrName, "=", values.get(0), builder);
             return finishBuilder(builder);
         default:
             if (isDNAttribute(attrName)) {
@@ -221,7 +221,7 @@ public class LdapFilterTranslator extends AbstractFilterTranslator<LdapFilter> {
                 if (value != null) {
                     hasValue = true;
                     builder.append('(');
-                    addSimpleFilter(builder, "=", attrName, value);
+                    addSimpleFilter(attrName, "=", value, builder);
                     builder.append(')');
                 }
             }

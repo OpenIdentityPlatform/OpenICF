@@ -22,6 +22,7 @@
  */
 package org.identityconnectors.ldap.schema;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableSet;
 import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveMap;
 import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
@@ -290,7 +291,7 @@ public class LdapSchemaMapping {
         return new Name(name);
     }
 
-    public Attribute createAttribute(ObjectClass oclass, String attrName, LdapEntry entry) {
+    public Attribute createAttribute(ObjectClass oclass, String attrName, LdapEntry entry, boolean emptyWhenNotFound) {
         String ldapAttrNameForTransfer = getLdapAttribute(oclass, attrName, true);
         String ldapAttrName;
         if (hasBinaryOption(ldapAttrNameForTransfer)) {
@@ -301,8 +302,11 @@ public class LdapSchemaMapping {
 
         javax.naming.directory.Attribute ldapAttr = entry.getAttributes().get(ldapAttrNameForTransfer);
         if (ldapAttr == null) {
-            return null;
+            return emptyWhenNotFound ? AttributeBuilder.build(attrName, emptyList()) : null;
         }
+
+        AttributeBuilder builder = new AttributeBuilder();
+        builder.setName(attrName);
 
         String mapDnToAttr = null;
         ObjectClassMappingConfig oclassConfig = conn.getConfiguration().getObjectClassMappingConfigs().get(oclass);
@@ -313,8 +317,6 @@ public class LdapSchemaMapping {
             }
         }
 
-        AttributeBuilder builder = new AttributeBuilder();
-        builder.setName(attrName);
         try {
             NamingEnumeration<?> valEnum = ldapAttr.getAll();
             while (valEnum.hasMore()) {
@@ -421,21 +423,6 @@ public class LdapSchemaMapping {
         } catch (NamingException e) {
             throw new ConnectorException(e);
         }
-    }
-
-    public Set<String> getAttributesReturnedByDefault(ObjectClass oclass) {
-        ObjectClassInfo oci = schema().findObjectClassInfo(oclass.getObjectClassValue());
-        if (oci == null) {
-            return newCaseInsensitiveSet();
-        }
-
-        Set<String> result = newCaseInsensitiveSet();
-        for (AttributeInfo info : oci.getAttributeInfo()) {
-            if (info.isReturnedByDefault()) {
-                result.add(info.getName());
-            }
-        }
-        return result;
     }
 
     public void removeNonReadableAttributes(ObjectClass oclass, Set<String> attrNames) {

@@ -93,7 +93,7 @@ public class LdapUpdateTests extends LdapConnectorTestBase {
         newUid = facade.removeAttributeValues(ObjectClass.ACCOUNT, bugs.getUid(), newSet(number1, number2), null);
 
         bugs = facade.getObject(ObjectClass.ACCOUNT, newUid, options);
-        assertNull(bugs.getAttributeByName("telephoneNumber"));
+        assertTrue(bugs.getAttributeByName("telephoneNumber").getValue().isEmpty());
     }
 
     @Test
@@ -145,7 +145,7 @@ public class LdapUpdateTests extends LdapConnectorTestBase {
         builder.setAttributesToGet("telephoneNumber");
 
         bugs = facade.getObject(ObjectClass.ACCOUNT, newUid, builder.build());
-        assertNull(bugs.getAttributeByName("telephoneNumber"));
+        assertTrue(bugs.getAttributeByName("telephoneNumber").getValue().isEmpty());
     }
 
     @Test

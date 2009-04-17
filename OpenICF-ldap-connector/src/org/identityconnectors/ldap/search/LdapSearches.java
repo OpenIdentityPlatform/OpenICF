@@ -23,6 +23,7 @@
 package org.identityconnectors.ldap.search;
 
 import static java.util.Collections.singletonList;
+import static org.identityconnectors.ldap.LdapUtil.isUnderContexts;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,24 +39,26 @@ import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
-import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.ldap.LdapConnection;
-import org.identityconnectors.ldap.LdapConnector;
 import org.identityconnectors.ldap.LdapEntry;
 
+/**
+ * Helper methods for searching. The "get" methods throw an exception when
+ * nothing is found; the "find" methods return null or an empty result.
+ *
+ * @author Andrei Badea
+ */
 public class LdapSearches {
 
     // TODO: when more than one base DN is specified in the configuration,
     // some searches could be faster by searching the entry under all naming
     // contexts on the server and then checking that the entry is really under one of the
     // configured base DNs.
-
-    // XXX: what if a server doesn't implement the entryDN attribute?
 
     private static final Log log = Log.getLog(LdapSearches.class);
 
@@ -65,14 +68,13 @@ public class LdapSearches {
     /**
      * Finds the DN of the entry corresponding to the given qualified Uid.
      */
-    public static String findDN(LdapConnection conn, ObjectClass oclass, Uid uid) {
+    public static String getEntryDN(LdapConnection conn, ObjectClass oclass, Uid uid) {
         log.ok("Searching for object {0} of class {1}", uid.getUidValue(), oclass.getObjectClassValue());
 
         EqualsFilter filter = (EqualsFilter) FilterBuilder.equalTo(uid);
         LdapFilter ldapFilter = new LdapFilterTranslator(conn.getSchemaMapping(), oclass).createEqualsExpression(filter, false);
 
         OperationOptionsBuilder builder = new OperationOptionsBuilder();
-        builder.setScope(OperationOptions.SCOPE_SUBTREE);
         builder.setAttributesToGet("entryDN");
 
         LdapSearch search = new LdapSearch(conn, oclass, ldapFilter, builder.build());
@@ -80,7 +82,7 @@ public class LdapSearches {
         if (object != null) {
             return AttributeUtil.getStringValue(object.getAttributeByName("entryDN"));
         }
-        throw new ConnectorException("Unable to find object " + uid);
+        throw new ConnectorException("Unable to find object " + uid + " of class " + oclass);
     }
 
     public static List<ConnectorObject> findObjects(LdapConnection conn, ObjectClass oclass, String name) {
@@ -92,7 +94,6 @@ public class LdapSearches {
         LdapFilter ldapFilter = new LdapFilterTranslator(conn.getSchemaMapping(), oclass).createEqualsExpression(filter, false);
 
         OperationOptionsBuilder builder = new OperationOptionsBuilder();
-        builder.setScope(OperationOptions.SCOPE_SUBTREE);
         builder.setAttributesToGet("entryDN");
 
         LdapSearch search = new LdapSearch(conn, oclass, ldapFilter, builder.build());
@@ -105,40 +106,21 @@ public class LdapSearches {
         return result;
     }
 
-    public static ConnectorObject findObject(LdapConnection conn, ObjectClass oclass, LdapName entryDN, String... attrsToGet) {
-        log.ok("Searching for object {0} of class {1}", entryDN, oclass.getObjectClassValue());
+    public static ConnectorObject findObject(LdapConnection conn, ObjectClass oclass, LdapFilter filter, String... attrsToGet) {
+        log.ok("Searching for object of class {0} with filter {1}", oclass.getObjectClassValue(), filter);
 
-        final List<ConnectorObject> result = new ArrayList<ConnectorObject>();
+        OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        builder.setAttributesToGet(attrsToGet);
 
-        while (result.isEmpty() && entryDN.size() > 0) {
-            if (!conn.getConfiguration().isContainedUnderBaseContexts(entryDN)) {
-                return null;
-            }
-
-            OperationOptionsBuilder builder = new OperationOptionsBuilder();
-            builder.setOption(LdapConnector.OP_BASE_DNS, new String[] { entryDN.toString() });
-            builder.setScope(OperationOptions.SCOPE_OBJECT);
-            builder.setAttributesToGet(attrsToGet);
-
-            LdapSearch search = new LdapSearch(conn, oclass, null, builder.build());
-            search.execute(new ResultsHandler() {
-                public boolean handle(ConnectorObject object) {
-                    result.add(object);
-                    return false;
-                }
-            });
-
-            entryDN = (LdapName) entryDN.getPrefix(entryDN.size() - 1);
-        }
-
-        return !result.isEmpty() ? result.get(0) : null;
+        LdapSearch search = new LdapSearch(conn, oclass, filter, builder.build());
+        return search.getSingleResult();
     }
 
     public static LdapEntry findEntry(LdapConnection conn, LdapName entryDN, String... ldapAttrsToGet) {
         log.ok("Searching for entry {0}", entryDN);
 
         final List<LdapEntry> result = new ArrayList<LdapEntry>();
-        if (!conn.getConfiguration().isContainedUnderBaseContexts(entryDN)) {
+        if (!isUnderContexts(entryDN, conn.getConfiguration().getBaseContextsAsLdapNames())) {
             return null;
         }
 

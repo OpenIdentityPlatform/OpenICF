@@ -36,7 +36,8 @@ public abstract class LdapSearchStrategy {
     static String searchControlsToString(SearchControls controls) {
         StringBuilder builder = new StringBuilder();
         builder.append("SearchControls: {returningAttributes=");
-        builder.append(Arrays.asList(controls.getReturningAttributes()));
+        String[] attrs = controls.getReturningAttributes();
+        builder.append(attrs != null ? Arrays.asList(attrs) : "null");
         builder.append(", scope=");
         switch (controls.getSearchScope()) {
         case SearchControls.OBJECT_SCOPE:

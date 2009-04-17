@@ -24,6 +24,7 @@ package org.identityconnectors.ldap.search;
 
 import static java.util.Collections.singletonList;
 import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
+import static org.identityconnectors.common.StringUtil.isBlank;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValues;
 
 import java.util.Arrays;
@@ -38,10 +39,12 @@ import javax.naming.ldap.PagedResultsControl;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.QualifiedUid;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
@@ -66,6 +69,19 @@ public class LdapSearch {
     private final OperationOptions options;
     private final GroupHelper groupHelper;
 
+    public static Set<String> getAttributesReturnedByDefault(LdapConnection conn, ObjectClass oclass) {
+        Set<String> result = newCaseInsensitiveSet();
+        ObjectClassInfo oci = conn.getSchemaMapping().schema().findObjectClassInfo(oclass.getObjectClassValue());
+        if (oci != null) {
+            for (AttributeInfo info : oci.getAttributeInfo()) {
+                if (info.isReturnedByDefault()) {
+                    result.add(info.getName());
+                }
+            }
+        }
+        return result;
+    }
+
     public LdapSearch(LdapConnection conn, ObjectClass oclass, LdapFilter filter, OperationOptions options) {
         this.conn = conn;
         this.oclass = oclass;
@@ -85,11 +101,12 @@ public class LdapSearch {
      *             if a JNDI exception occurs.
      */
     public final void execute(final ResultsHandler handler) {
-        final Set<String> attrsToGet = getAttributesToGet();
+        final String[] attrsToGetOption = options.getAttributesToGet();
+        final Set<String> attrsToGet = getAttributesToGet(attrsToGetOption);
         LdapInternalSearch search = getInternalSearch(attrsToGet);
         search.execute(new SearchResultsHandler() {
             public boolean handle(String baseDN, SearchResult result) throws NamingException {
-                return handler.handle(createConnectorObject(baseDN, result, attrsToGet));
+                return handler.handle(createConnectorObject(baseDN, result, attrsToGet, attrsToGetOption != null));
             }
         });
     }
@@ -99,12 +116,13 @@ public class LdapSearch {
      * {@link ConnectorObject} or {@code null}.
      */
     public final ConnectorObject getSingleResult() {
-        final Set<String> attrsToGet = getAttributesToGet();
+        final String[] attrsToGetOption = options.getAttributesToGet();
+        final Set<String> attrsToGet = getAttributesToGet(attrsToGetOption);
         final ConnectorObject[] results = new ConnectorObject[] { null };
         LdapInternalSearch search = getInternalSearch(attrsToGet);
         search.execute(new SearchResultsHandler() {
             public boolean handle(String baseDN, SearchResult result) throws NamingException {
-                results[0] = createConnectorObject(baseDN, result, attrsToGet);
+                results[0] = createConnectorObject(baseDN, result, attrsToGet, attrsToGetOption != null);
                 return false;
             }
         });
@@ -143,12 +161,12 @@ public class LdapSearch {
         controls.setReturningAttributes(ldapAttrsToGet.toArray(new String[ldapAttrsToGet.size()]));
         controls.setSearchScope(searchScope);
 
-        String nativeFilter = filter != null ? filter.getNativeFilter() : null;
         String userFilter = null;
         if (oclass.equals(ObjectClass.ACCOUNT)) {
             userFilter = conn.getConfiguration().getAccountSearchFilter();
         }
-        return new LdapInternalSearch(conn, getSearchFilter(nativeFilter, userFilter), baseDNs, getSearchStrategy(), controls, ignoreNonExistingBaseDNs);
+        String nativeFilter = filter != null ? filter.getNativeFilter() : null;
+        return new LdapInternalSearch(conn, getSearchFilter(userFilter, nativeFilter), baseDNs, getSearchStrategy(), controls, ignoreNonExistingBaseDNs);
     }
 
     private Set<String> getLdapAttributesToGet(Set<String> attrsToGet) {
@@ -172,7 +190,7 @@ public class LdapSearch {
      * baseDN} parameter is needed in order to create the whole entry DN, which
      * is used to compute the connector object's name attribute.
      */
-    private ConnectorObject createConnectorObject(String baseDN, SearchResult result, Set<String> attrsToGet) {
+    private ConnectorObject createConnectorObject(String baseDN, SearchResult result, Set<String> attrsToGet, boolean emptyAttrWhenNotFound) {
         LdapEntry entry = LdapEntry.create(baseDN, result);
 
         ConnectorObjectBuilder builder = new ConnectorObjectBuilder();
@@ -190,7 +208,7 @@ public class LdapSearch {
                 List<String> posixGroups = groupHelper.getPosixGroups(posixRefAttrs);
                 attribute = AttributeBuilder.build(LdapPredefinedAttributes.POSIX_GROUPS_NAME, posixGroups);
             } else {
-                attribute = conn.getSchemaMapping().createAttribute(oclass, attrName, entry);
+                attribute = conn.getSchemaMapping().createAttribute(oclass, attrName, entry, emptyAttrWhenNotFound);
             }
             if (attribute != null) {
                 builder.addAttribute(attribute);
@@ -201,38 +219,43 @@ public class LdapSearch {
     }
 
     /**
-     * Creates the final search filter. It will be composed of an optional native filter, an optional
-     * user filter, and the filters for all LDAP object classes for the searched ObjectClass.
+     * Creates a search filter which will filter to a given {@link ObjectClass}.
+     * It will be composed of an optional filter to be applied before the object class filters,
+     * the filters for all LDAP object classes for the given {@code ObjectClass}, and
+     * an optional filter to be applied before the object class filters.
      */
-    private String getSearchFilter(String nativeFilter, String userFilter) {
+    private String getSearchFilter(String preFilter, String postFilter) {
         StringBuilder builder = new StringBuilder();
         Set<String> ldapClasses = conn.getSchemaMapping().getLdapClasses(oclass);
-        boolean and = userFilter != null || ldapClasses.size() > 1 || nativeFilter != null;
+        boolean and = !isBlank(preFilter) || ldapClasses.size() > 1 || !isBlank(postFilter);
         if (and) {
             builder.append("(&");
         }
-        if (userFilter != null) {
-            boolean enclose = userFilter.length() > 0 && userFilter.charAt(0) != '(';
-            if (enclose) {
-                builder.append('(');
-            }
-            builder.append(userFilter);
-            if (enclose) {
-                builder.append(')');
-            }
-        }
+        appendFilter(preFilter, builder);
         for (String ldapClass : ldapClasses) {
             builder.append("(objectClass=");
             builder.append(ldapClass);
             builder.append(')');
         }
-        if (nativeFilter != null) {
-            builder.append(nativeFilter);
-        }
+        appendFilter(postFilter, builder);
         if (and) {
             builder.append(')');
         }
         return builder.toString();
+    }
+
+    private static void appendFilter(String filter, StringBuilder toBuilder) {
+        if (!isBlank(filter)) {
+            String trimmedUserFilter = filter.trim();
+            boolean enclose = filter.charAt(0) != '(';
+            if (enclose) {
+                toBuilder.append('(');
+            }
+            toBuilder.append(trimmedUserFilter);
+            if (enclose) {
+                toBuilder.append(')');
+            }
+        }
     }
 
     private List<String> getBaseDNs() {
@@ -243,7 +266,7 @@ public class LdapSearch {
             if (opBaseDNs.length > 0) {
                 throw new ConnectorException("Should only specify one of OP_CONTAINER and OP_BASE_DNS");
             }
-            result = singletonList(LdapSearches.findDN(conn, container.getObjectClass(), container.getUid()));
+            result = singletonList(LdapSearches.getEntryDN(conn, container.getObjectClass(), container.getUid()));
         } else if (opBaseDNs.length > 0) {
             result = Arrays.asList(opBaseDNs);
         } else {
@@ -276,9 +299,8 @@ public class LdapSearch {
         return strategy;
     }
 
-    private Set<String> getAttributesToGet() {
+    private Set<String> getAttributesToGet(String[] attributesToGet) {
         Set<String> result;
-        String[] attributesToGet = options.getAttributesToGet();
         if (attributesToGet != null) {
             result = newCaseInsensitiveSet();
             result.addAll(Arrays.asList(attributesToGet));
@@ -286,7 +308,7 @@ public class LdapSearch {
             result.add(Name.NAME);
         } else {
             // This should include Name.NAME, so no need to include it explicitly.
-            result = conn.getSchemaMapping().getAttributesReturnedByDefault(oclass);
+            result = getAttributesReturnedByDefault(conn, oclass);
         }
         // Since Uid is not in the schema, but it is required to construct a ConnectorObject.
         result.add(Uid.NAME);

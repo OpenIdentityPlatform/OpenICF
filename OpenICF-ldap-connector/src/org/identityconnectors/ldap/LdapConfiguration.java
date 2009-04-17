@@ -24,24 +24,28 @@ package org.identityconnectors.ldap;
 
 import static java.util.Collections.singletonList;
 import static org.identityconnectors.common.CollectionUtil.newList;
+import static org.identityconnectors.common.StringUtil.isBlank;
+import static org.identityconnectors.ldap.LdapUtil.nullAsEmpty;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 
 import org.identityconnectors.common.EqualsHashCodeBuilder;
-import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.spi.AbstractConfiguration;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
+import org.identityconnectors.framework.spi.operations.SyncOp;
 
 /**
  * Encapsulates the LDAP connector's configuration.
@@ -55,7 +59,9 @@ public class LdapConfiguration extends AbstractConfiguration {
 
     private static final Log log = Log.getLog(LdapConfiguration.class);
 
-    private static final int DEFAULT_PORT = 389;
+    static final int DEFAULT_PORT = 389;
+
+    // Exposed configuration properties.
 
     /**
      * The LDAP host server to connect to.
@@ -111,7 +117,7 @@ public class LdapConfiguration extends AbstractConfiguration {
     /**
      * The LDAP attribute holding the member for non-POSIX static groups.
      */
-    private String groupMemberAttribute;
+    private String groupMemberAttribute = "uniqueMember";
 
     /**
      * If true, will modify group membership of renamed/deleted entries.
@@ -159,16 +165,36 @@ public class LdapConfiguration extends AbstractConfiguration {
      * The set of object classes to return in the schema
      * (apart from those returned by default).
      */
-    private String[] extendedObjectClasses = new String[0];
+    private String[] extendedObjectClasses = { };
 
     /**
      * The naming attributes for the extended object classes:
      * {@code extendedNamingAttributes[i]} is the naming attribute for
      * {@code extendedObjectClasses[i]}.
      */
-    private String[] extendedNamingAttributes = new String[0];
+    private String[] extendedNamingAttributes = { };
 
-    // Exposed configuration properties end here.
+    // Sync configuration properties.
+
+    private String[] baseContextsToSynchronize = { };
+
+    private String[] objectClassesToSynchronize = { "inetOrgPerson" };
+
+    private String[] attributesToSynchronize = { };
+
+    private String[] modifiersNamesToFilterOut = { };
+
+    private String accountSynchronizationFilter;
+
+    private int changeLogBlockSize = 100;
+
+    private String changeNumberAttribute = "changeNumber";
+
+    private boolean filterWithOrInsteadOfAnd;
+
+    private boolean removeLogEntryObjectClassFromFilter = true;
+
+    // Other state.
 
     private final ObjectClassMappingConfig accountConfig = new ObjectClassMappingConfig(ObjectClass.ACCOUNT,
             newList("top", "person", "organizationalPerson", "inetOrgPerson"));
@@ -176,7 +202,13 @@ public class LdapConfiguration extends AbstractConfiguration {
     private final ObjectClassMappingConfig groupConfig = new ObjectClassMappingConfig(ObjectClass.GROUP,
             newList("top", "groupOfUniqueNames"));
 
+    // Other state not to be included in hashCode/equals.
+
     private List<LdapName> baseContextsAsLdapNames;
+
+    private List<LdapName> baseContextsToSynchronizeAsLdapNames;
+
+    private Set<LdapName> modifiersNamesToFilterOutAsLdapNames;
 
     public LdapConfiguration() {
         // Note: order is important!
@@ -196,8 +228,8 @@ public class LdapConfiguration extends AbstractConfiguration {
      * {@inheritDoc}
      */
     public void validate() {
-        if (StringUtil.isBlank(host)) {
-            throw new ConfigurationException("The host cannot be empty");
+        if (isBlank(host)) {
+            throw new ConfigurationException("The host cannot be blank");
         }
 
         if (port < 0 || port > 0xffff) {
@@ -208,8 +240,8 @@ public class LdapConfiguration extends AbstractConfiguration {
             throw new ConfigurationException("The failover property cannot not be null");
         }
 
-        if (StringUtil.isEmpty(passwordAttribute)) {
-            throw new ConfigurationException("The password attribute cannot be empty");
+        if (isBlank(passwordAttribute)) {
+            throw new ConfigurationException("The password attribute cannot be blank");
         }
 
         if (baseContexts == null || baseContexts.length < 1) {
@@ -217,7 +249,7 @@ public class LdapConfiguration extends AbstractConfiguration {
         }
         for (String baseContext : baseContexts) {
             try {
-                if (StringUtil.isBlank(baseContext)) {
+                if (isBlank(baseContext)) {
                     throw new ConfigurationException("The list of base contexts cannot contain blank values");
                 }
                 new LdapName(baseContext);
@@ -230,12 +262,16 @@ public class LdapConfiguration extends AbstractConfiguration {
             throw new ConfigurationException("The list of account object classes cannot be empty");
         }
         for (String accountObjectClass : accountConfig.getLdapClasses()) {
-            if (StringUtil.isBlank(accountObjectClass)) {
+            if (isBlank(accountObjectClass)) {
                 throw new ConfigurationException("The list of account object classes cannot contain blank values");
             }
         }
 
-        if (StringUtil.isBlank(uidAttribute)) {
+        if (blockCount < 0) {
+            throw new ConfigurationException("The block size should be greather than 0");
+        }
+
+        if (isBlank(uidAttribute)) {
             throw new ConfigurationException("The attribute to map to Uid cannot be empty");
         }
 
@@ -246,7 +282,7 @@ public class LdapConfiguration extends AbstractConfiguration {
             throw new ConfigurationException("The list of extended naming attributes cannot be null");
         }
         for (String extendedObjectClass : extendedObjectClasses) {
-            if (StringUtil.isBlank(extendedObjectClass)) {
+            if (isBlank(extendedObjectClass)) {
                 throw new ConfigurationException("The list of extended object classes cannot contain blank values");
             }
         }
@@ -258,10 +294,18 @@ public class LdapConfiguration extends AbstractConfiguration {
                 throw new ConfigurationException("No naming attributes were provided for all extended object classes");
             }
             for (String extendedNamingAttribute : extendedNamingAttributes) {
-                if (StringUtil.isBlank(extendedNamingAttribute)) {
+                if (isBlank(extendedNamingAttribute)) {
                     throw new ConfigurationException("The list of extended naming attributes cannot contain blank values");
                 }
             }
+        }
+
+        if (changeLogBlockSize < 0) {
+            throw new ConfigurationException("The synchronization block size should be greather than 0");
+        }
+
+        if (isBlank(changeNumberAttribute)) {
+            throw new ConfigurationException("The change number attribute cannot be blank");
         }
     }
 
@@ -443,18 +487,92 @@ public class LdapConfiguration extends AbstractConfiguration {
         this.extendedNamingAttributes = (String[]) extendedNamingAttributes.clone();
     }
 
-    // Getters and setters for configuration properties end here.
+    // Sync properties getters and setters.
 
-    public boolean isContainedUnderBaseContexts(LdapName entry) {
-        for (LdapName container : getBaseContextsAsLdapNames()) {
-            if (entry.startsWith(container)) {
-                return true;
-            }
-        }
-        return false;
+    @ConfigurationProperty(operations = { SyncOp.class })
+    public String[] getBaseContextsToSynchronize() {
+        return baseContextsToSynchronize.clone();
     }
 
-    private List<LdapName> getBaseContextsAsLdapNames() {
+    public void setBaseContextsToSynchronize(String... baseContextsToSynchronize) {
+        this.baseContextsToSynchronize = (String[]) baseContextsToSynchronize.clone();
+    }
+
+    @ConfigurationProperty(operations = { SyncOp.class })
+    public String[] getObjectClassesToSynchronize() {
+        return objectClassesToSynchronize.clone();
+    }
+
+    public void setObjectClassesToSynchronize(String... objectClassesToSynchronize) {
+        this.objectClassesToSynchronize = (String[]) objectClassesToSynchronize.clone();
+    }
+
+    @ConfigurationProperty(operations = { SyncOp.class })
+    public String[] getAttributesToSynchronize() {
+        return attributesToSynchronize.clone();
+    }
+
+    public void setAttributesToSynchronize(String... attributesToSynchronize) {
+        this.attributesToSynchronize = (String[]) attributesToSynchronize.clone();
+    }
+
+    @ConfigurationProperty(operations = { SyncOp.class })
+    public String[] getModifiersNamesToFilterOut() {
+        return modifiersNamesToFilterOut.clone();
+    }
+
+    public void setModifiersNamesToFilterOut(String... modifiersNamesToFilterOut) {
+        this.modifiersNamesToFilterOut = (String[]) modifiersNamesToFilterOut.clone();
+    }
+
+    @ConfigurationProperty(operations = { SyncOp.class })
+    public String getAccountSynchronizationFilter() {
+        return accountSynchronizationFilter;
+    }
+
+    public void setAccountSynchronizationFilter(String accountSynchronizationFilter) {
+        this.accountSynchronizationFilter = accountSynchronizationFilter;
+    }
+
+    @ConfigurationProperty(operations = { SyncOp.class })
+    public int getChangeLogBlockSize() {
+        return changeLogBlockSize;
+    }
+
+    public void setChangeLogBlockSize(int changeLogBlockSize) {
+        this.changeLogBlockSize = changeLogBlockSize;
+    }
+
+    @ConfigurationProperty(operations = { SyncOp.class })
+    public String getChangeNumberAttribute() {
+        return changeNumberAttribute;
+    }
+
+    public void setChangeNumberAttribute(String changeNumberAttribute) {
+        this.changeNumberAttribute = changeNumberAttribute;
+    }
+
+    @ConfigurationProperty(operations = { SyncOp.class })
+    public boolean isFilterWithOrInsteadOfAnd() {
+        return filterWithOrInsteadOfAnd;
+    }
+
+    public void setFilterWithOrInsteadOfAnd(boolean filterWithOrInsteadOfAnd) {
+        this.filterWithOrInsteadOfAnd = filterWithOrInsteadOfAnd;
+    }
+
+    @ConfigurationProperty(operations = { SyncOp.class })
+    public boolean isRemoveLogEntryObjectClassFromFilter() {
+        return removeLogEntryObjectClassFromFilter;
+    }
+
+    public void setRemoveLogEntryObjectClassFromFilter(boolean removeLogEntryObjectClassFromFilter) {
+        this.removeLogEntryObjectClassFromFilter = removeLogEntryObjectClassFromFilter;
+    }
+
+    // Getters and setters for configuration properties end here.
+
+    public List<LdapName> getBaseContextsAsLdapNames() {
         if (baseContextsAsLdapNames == null) {
             List<LdapName> result = new ArrayList<LdapName>(baseContexts.length);
             try {
@@ -467,6 +585,38 @@ public class LdapConfiguration extends AbstractConfiguration {
             baseContextsAsLdapNames = result;
         }
         return baseContextsAsLdapNames;
+    }
+
+    public List<LdapName> getBaseContextsToSynchronizeAsLdapNames() {
+        if (baseContextsToSynchronizeAsLdapNames == null) {
+            String[] source = nullAsEmpty(baseContextsToSynchronize);
+            List<LdapName> result = new ArrayList<LdapName>(source.length);
+            try {
+                for (String each : source) {
+                    result.add(new LdapName(each));
+                }
+            } catch (InvalidNameException e) {
+                throw new ConfigurationException(e);
+            }
+            baseContextsToSynchronizeAsLdapNames = result;
+        }
+        return baseContextsToSynchronizeAsLdapNames;
+    }
+
+    public Set<LdapName> getModifiersNamesToFilterOutAsLdapNames() {
+        if (modifiersNamesToFilterOutAsLdapNames == null) {
+            String[] source = nullAsEmpty(modifiersNamesToFilterOut);
+            Set<LdapName> result = new HashSet<LdapName>(source.length);
+            try {
+                for (String each : source) {
+                    result.add(new LdapName(each));
+                }
+            } catch (InvalidNameException e) {
+                throw new ConfigurationException(e);
+            }
+            modifiersNamesToFilterOutAsLdapNames = result;
+        }
+        return modifiersNamesToFilterOutAsLdapNames;
     }
 
     public Map<ObjectClass, ObjectClassMappingConfig> getObjectClassMappingConfigs() {
@@ -498,6 +648,7 @@ public class LdapConfiguration extends AbstractConfiguration {
 
     private EqualsHashCodeBuilder createHashCodeBuilder() {
         EqualsHashCodeBuilder builder = new EqualsHashCodeBuilder();
+        // Exposed configuration properties.
         builder.append(host);
         builder.append(port);
         builder.append(ssl);
@@ -525,6 +676,25 @@ public class LdapConfiguration extends AbstractConfiguration {
         for (String extendedNamingAttribute : extendedNamingAttributes) {
             builder.append(extendedNamingAttribute);
         }
+        // Sync configuration properties.
+        for (String baseContextToSynchronize : baseContextsToSynchronize) {
+            builder.append(baseContextToSynchronize);
+        }
+        for (String objectClassToSynchronize : objectClassesToSynchronize) {
+            builder.append(objectClassToSynchronize);
+        }
+        for (String attributeToSynchronize : attributesToSynchronize) {
+            builder.append(attributeToSynchronize);
+        }
+        for (String modifiersNameToFilterOut : modifiersNamesToFilterOut) {
+            builder.append(modifiersNameToFilterOut);
+        }
+        builder.append(accountSynchronizationFilter);
+        builder.append(changeLogBlockSize);
+        builder.append(changeNumberAttribute);
+        builder.append(filterWithOrInsteadOfAnd);
+        builder.append(removeLogEntryObjectClassFromFilter);
+        // Other state.
         builder.append(accountConfig);
         builder.append(groupConfig);
         return builder;
