@@ -64,7 +64,7 @@ public class LdifParser implements Iterable<LdifParser.Line> {
         return result;
     }
 
-    private final class LineIterator implements Iterator<Line> {
+    private static final class LineIterator implements Iterator<Line> {
 
         private final Iterator<String> rawLines;
         private Line next;
