@@ -240,10 +240,18 @@ public abstract class ObjectClassRunner extends AbstractSimpleTest {
     @Override
     public OperationOptions getOperationOptionsByOp(Class<? extends APIOperation> clazz) {
         if (clazz.equals(SearchApiOp.class) || clazz.equals(GetApiOp.class) || clazz.equals(SyncApiOp.class)) {
-            // all object class attributes as attrsToGet
+            
+            // names of readable attributes
+            Set<String> readableAttrs = ConnectorHelper.getReadableAttributesNames(getObjectClassInfo());
+            
+            // all *readable* object class attributes as attrsToGet
             Collection<String> attrNames = new ArrayList<String>();
             for (AttributeInfo attrInfo : getObjectClassInfo().getAttributeInfo()) {
-                attrNames.add(attrInfo.getName());
+                
+                if (readableAttrs.contains(attrInfo.getName())) {
+                    attrNames.add(attrInfo.getName());
+                }
+                
             }
             
             OperationOptionsBuilder opOptionsBuilder = new OperationOptionsBuilder();
