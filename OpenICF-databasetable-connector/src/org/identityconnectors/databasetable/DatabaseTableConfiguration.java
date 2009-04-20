@@ -54,8 +54,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return quoting value
      */
     @ConfigurationProperty(order = 1, 
-                           displayMessageKey = "QUOTING.display", 
-                           helpMessageKey = "QUOTING.help")
+                           displayMessageKey = "QUOTING_DISPLAY", 
+                           helpMessageKey = "QUOTING_HELP")
     public String getQuoting() {
         return this.quoting;
     }
@@ -79,8 +79,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return quoting value
      */
     @ConfigurationProperty(order = 2, 
-                           displayMessageKey = "HOST.display", 
-                           helpMessageKey = "HOST.help")
+                           displayMessageKey = "HOST_DISPLAY", 
+                           helpMessageKey = "HOST_HELP")
     public String getHost() {
         return this.host;
     }
@@ -105,8 +105,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return quoting value
      */
     @ConfigurationProperty(order = 3, 
-                           displayMessageKey = "PORT.display", 
-                           helpMessageKey = "PORT.help")
+                           displayMessageKey = "PORT_DISPLAY", 
+                           helpMessageKey = "PORT_HELP")
     public String getPort() {
         return this.port;
     }
@@ -130,8 +130,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return user value
      */
     @ConfigurationProperty(order = 4,
-            displayMessageKey = "USER.display", 
-            helpMessageKey = "USER.help")
+            displayMessageKey = "USER_DISPLAY", 
+            helpMessageKey = "USER_HELP")
     public String getUser() {
         return this.user;
     }
@@ -154,8 +154,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return password value
      */
     @ConfigurationProperty ( order=5, confidential=true,
-            displayMessageKey = "PASSWORD.display", 
-            helpMessageKey = "PASSWORD.help")
+            displayMessageKey = "PASSWORD_DISPLAY", 
+            helpMessageKey = "PASSWORD_HELP")
     public GuardedString getPassword() {
         return this.password;
     }
@@ -177,8 +177,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return user value
      */
     @ConfigurationProperty(order = 6,
-            displayMessageKey = "DATABASE.display", 
-            helpMessageKey = "DATABASE.help")
+            displayMessageKey = "DATABASE_DISPLAY", 
+            helpMessageKey = "DATABASE_HELP")
     public String getDatabase() {
         return this.database;
     }
@@ -202,8 +202,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * Please notice, there are used non default message keys
      */
     @ConfigurationProperty(order = 7, required=true, 
-            displayMessageKey = "TABLE.display", 
-            helpMessageKey = "TABLE.help")
+            displayMessageKey = "TABLE_DISPLAY", 
+            helpMessageKey = "TABLE_HELP")
     public String getTable() {
         return this.table;
     }
@@ -228,8 +228,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return keyColumn value
      */
     @ConfigurationProperty(order = 8, required = true,
-            displayMessageKey = "KEY_COLUMN.display", 
-            helpMessageKey = "KEY_COLUMN.help")
+            displayMessageKey = "KEY_COLUMN_DISPLAY", 
+            helpMessageKey = "KEY_COLUMN_HELP")
     public String getKeyColumn() {
         return this.keyColumn;
     }
@@ -254,8 +254,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return passwordColumn value
      */
     @ConfigurationProperty(order = 9,
-            displayMessageKey = "PASSWORD_COLUMN.display", 
-            helpMessageKey = "PASSWORD_COLUMN.help")
+            displayMessageKey = "PASSWORD_COLUMN_DISPLAY", 
+            helpMessageKey = "PASSWORD_COLUMN_HELP")
     public String getPasswordColumn() {
         return this.passwordColumn;
     }
@@ -279,8 +279,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return jdbcDriver value
      */
     @ConfigurationProperty(order = 10,
-            displayMessageKey = "JDBC_DRIVER.display", 
-            helpMessageKey = "JDBC_DRIVER.help")
+            displayMessageKey = "JDBC_DRIVER_DISPLAY", 
+            helpMessageKey = "JDBC_DRIVER_HELP")
     public String getJdbcDriver() {
         return this.jdbcDriver;
     }
@@ -303,8 +303,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return url value
      */
     @ConfigurationProperty(order = 11,
-            displayMessageKey = "URL_TEMPLATE.display", 
-            helpMessageKey = "URL_TEMPLATE.help")
+            displayMessageKey = "URL_TEMPLATE_DISPLAY", 
+            helpMessageKey = "URL_TEMPLATE_HELP")
     public String getJdbcUrlTemplate() {
         return jdbcUrlTemplate;
     }    
@@ -327,8 +327,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return the enableEmptyString
      */
     @ConfigurationProperty(order = 12,
-            displayMessageKey = "ENABLE_EMPTY_STRING.display", 
-            helpMessageKey = "ENABLE_EMPTY_STRING.help")
+            displayMessageKey = "ENABLE_EMPTY_STRING_DISPLAY", 
+            helpMessageKey = "ENABLE_EMPTY_STRING_HELP")
     public boolean isEnableEmptyString() {
         return enableEmptyString;
     }
@@ -353,8 +353,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return the rethrowAllSQLExceptions
      */
     @ConfigurationProperty(order = 14,
-            displayMessageKey = "RETHROW_ALL_SQLEXCEPTIONS.display", 
-            helpMessageKey = "RETHROW_ALL_SQLEXCEPTIONS.help")
+            displayMessageKey = "RETHROW_ALL_SQLEXCEPTIONS_DISPLAY", 
+            helpMessageKey = "RETHROW_ALL_SQLEXCEPTIONS_HELP")
     public boolean isRethrowAllSQLExceptions() {
         return rethrowAllSQLExceptions;
     }
@@ -379,8 +379,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return the nativeTimestamps
      */
     @ConfigurationProperty(order = 15,
-            displayMessageKey = "NATIVE_TIMESTAMPS.display", 
-            helpMessageKey = "NATIVE_TIMESTAMPS.help")
+            displayMessageKey = "NATIVE_TIMESTAMPS_DISPLAY", 
+            helpMessageKey = "NATIVE_TIMESTAMPS_HELP")
     public boolean isNativeTimestamps() {
         return nativeTimestamps;
     }
@@ -405,8 +405,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return the allNative
      */
     @ConfigurationProperty(order = 16,
-            displayMessageKey = "ALL_NATIVE.display", 
-            helpMessageKey = "ALL_NATIVE.help")
+            displayMessageKey = "ALL_NATIVE_DISPLAY", 
+            helpMessageKey = "ALL_NATIVE_HELP")
     public boolean isAllNative() {
         return allNative;
     }
@@ -431,8 +431,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return validConnectionQuery value
      */
     @ConfigurationProperty(order = 17,
-            displayMessageKey = "VALID_CONNECTION_QUERY.display", 
-            helpMessageKey = "VALID_CONNECTION_QUERY.help")
+            displayMessageKey = "VALID_CONNECTION_QUERY_DISPLAY", 
+            helpMessageKey = "VALID_CONNECTION_QUERY_HELP")
     public String getValidConnectionQuery() {
         return this.validConnectionQuery;
     }
@@ -457,8 +457,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return Log Column 
      */
     @ConfigurationProperty(order = 19, operations = SyncOp.class,
-            displayMessageKey = "CHANGE_LOG_COLUMN.display", 
-            helpMessageKey = "CHANGE_LOG_COLUMN.help")
+            displayMessageKey = "CHANGE_LOG_COLUMN_DISPLAY", 
+            helpMessageKey = "CHANGE_LOG_COLUMN_HELP")
     public String getChangeLogColumn() {
         return this.changeLogColumn;
     }
@@ -484,8 +484,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return datasource value
      */
     @ConfigurationProperty(order = 20,
-            displayMessageKey = "DATASOURCE.display", 
-            helpMessageKey = "DATASOURCE.help")
+            displayMessageKey = "DATASOURCE_DISPLAY", 
+            helpMessageKey = "DATASOURCE_HELP")
     public String getDatasource() {
         return datasource;
     }
@@ -508,8 +508,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return jndiFactory value
      */
     @ConfigurationProperty(order = 21,
-            displayMessageKey = "JNDI_PROPERTIES.display", 
-            helpMessageKey = "JNDI_PROPERTIES.help")
+            displayMessageKey = "JNDI_PROPERTIES_DISPLAY", 
+            helpMessageKey = "JNDI_PROPERTIES_HELP")
     public String[] getJndiProperties() {
         return jndiProperties;
     }
