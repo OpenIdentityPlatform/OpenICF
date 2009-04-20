@@ -88,7 +88,7 @@ import org.identityconnectors.framework.spi.operations.UpdateOp;
  * @since 1.0
  */
 @ConnectorClass(
-        displayNameKey = "DatabaseTable",
+        displayNameKey = "DBTABLE_CONNECTOR",
         configurationClass = DatabaseTableConfiguration.class)
 public class DatabaseTableConnector implements PoolableConnector, CreateOp, SearchOp<FilterWhereBuilder>,
         DeleteOp, UpdateOp, SchemaOp, TestOp, AuthenticateOp, SyncOp {
@@ -604,7 +604,6 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      * @see org.identityconnectors.framework.spi.operations.TestOp#test()
      */
     public void test() {
-        config.validate();
         conn.test();        
     }
         

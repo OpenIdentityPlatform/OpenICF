@@ -65,4 +65,7 @@ public class DatabaseTableConstants {
     static final String MSG_INVALID_ATTRIBUTE_SET="invalid.attribute.set";
     static final String MSG_UID_BLANK="uid.blank";
     static final String MSG_RESULT_HANDLER_NULL="result.handler.null";
+    static final String MSG_PASSWD_COLUMN_EQ_KEY_COLUMN="passwd.column.eq.key.column";
+    static final String MSG_PASSWD_COLUMN_EQ_CHANGE_LOG_COLUMN="passwd.column.eq.change.log.column";
+    static final String MSG_KEY_COLUMN_EQ_CHANGE_LOG_COLUMN="key.column.eq.change.log.column";
 }

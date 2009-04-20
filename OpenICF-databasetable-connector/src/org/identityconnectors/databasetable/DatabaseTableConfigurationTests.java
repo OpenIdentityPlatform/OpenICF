@@ -185,6 +185,50 @@ public class DatabaseTableConfigurationTests {
     
     /**
      * test method
+     * 
+     * @throws Exception
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testConfigurationKeyEQPassword() {
+        DatabaseTableConfiguration config = getConfiguration();
+        config.setKeyColumn("a");
+        config.setPasswordColumn("a");
+        // check defaults..
+        config.validate();
+        Assert.fail("testConfigurationKeyEQPassword");
+    }  
+
+    /**
+     * test method
+     * 
+     * @throws Exception
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testConfigurationKeyEQChange() {
+        DatabaseTableConfiguration config = getConfiguration();
+        config.setKeyColumn("a");
+        config.setChangeLogColumn("a");
+        // check defaults..
+        config.validate();
+        Assert.fail("testConfigurationKeyEQChange");
+    } 
+    /**
+     * test method
+     * 
+     * @throws Exception
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testConfigurationPasswdEQChange() {
+        DatabaseTableConfiguration config = getConfiguration();
+        config.setPasswordColumn("a");
+        config.setChangeLogColumn("a");
+        // check defaults..
+        config.validate();
+        Assert.fail("testConfigurationPasswdEQChange");
+    }      
+    
+    /**
+     * test method
      * @throws Exception 
      */
     @Test
