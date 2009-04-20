@@ -887,14 +887,15 @@ public final class SQLUtil {
     
     /**
      * Selects single value (first column) from select.
-     * It fetches only first row, does not check whether more rows are returned by select
+     * It fetches only first row, does not check whether more rows are returned by select.
+     * If no row is returned, returns null
      * @param conn JDBC connection
      * @param sql Select statement with or without parameters
      * @param params Parameters to use in statement
      * @return first row and first column value 
      * @throws SQLException
      */
-    public static Object selectFirstRowFirstValue(Connection conn, String sql, Object ...params) throws SQLException{
+    public static Object selectSingleValue(Connection conn, String sql, Object ...params) throws SQLException{
         PreparedStatement st = null;
         ResultSet rs = null;
         try{
@@ -907,9 +908,7 @@ public final class SQLUtil {
                 value = rs.getObject(1);
                 return value;
             }
-            else{
-                throw new IllegalStateException("No row found");
-            }
+            return null;
         }
         finally{
             closeQuietly(rs);
