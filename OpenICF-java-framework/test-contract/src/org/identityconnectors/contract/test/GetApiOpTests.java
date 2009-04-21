@@ -67,6 +67,7 @@ public class GetApiOpTests extends ObjectClassRunner {
         Set<Class<? extends APIOperation>> s = new HashSet<Class<? extends APIOperation>>();
         s.add(GetApiOp.class);
         s.add(CreateApiOp.class);
+        s.add(SearchApiOp.class);
         return s;
     }
 

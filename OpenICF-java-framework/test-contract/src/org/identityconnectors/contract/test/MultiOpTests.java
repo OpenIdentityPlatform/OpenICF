@@ -259,7 +259,7 @@ public class MultiOpTests extends ObjectClassRunner {
                     // one deleted, one updated (if existed attributes to
                     // update)
                     assertTrue("Sync returned unexpected number of deltas. Exptected: max 2, but returned: "
-                                    + deltas.size(), deltas.size() <= 2);
+                                    + deltas.size(), ((deltas.size() <= 2) && (deltas.size() > 0)));
 
                     for (int i = 0; i < deltas.size(); i++) {
                         SyncDelta delta = deltas.get(i);

@@ -221,6 +221,7 @@ public class SearchApiOpTests extends ObjectClassRunner {
                             deluid, false, getOperationOptionsByOp(DeleteApiOp.class));
                 } catch (Exception e) {
                     // ok
+                    // note: this is thrown, when we delete the same object twice.
                 }
             }
         }
@@ -229,6 +230,7 @@ public class SearchApiOpTests extends ObjectClassRunner {
     
     /**
      * Test Search without specified OperationOptions attrsToGet which is the default for all other tests.
+     * All the other tests contain explicit attrsToGet.
      */
     @Test
     public void testSearchWithoutAttrsToGet() {

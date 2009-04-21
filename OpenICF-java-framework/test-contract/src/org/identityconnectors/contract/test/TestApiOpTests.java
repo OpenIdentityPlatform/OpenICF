@@ -58,7 +58,7 @@ public class TestApiOpTests extends AbstractSimpleTest {
     private static final String PROPERTY_NAME_INVALID_CONFIG = "invalidConfig";
     
     /**
-     * Tests test() with configuration that should NOT be correct.
+     * Tests test() with configuration that should NOT be correct. Expects a RuntimeException to be thrown.
      */
     @Test
     public void testTestFail() {
