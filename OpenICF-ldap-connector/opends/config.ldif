@@ -216,6 +216,15 @@ objectClass: top
 objectClass: ds-cfg-branch
 cn: VLV Index
 
+dn: ds-cfg-name=index-uid,cn=VLV Index,ds-cfg-backend-id=userRoot,cn=Backends,cn=config
+objectClass: ds-cfg-local-db-vlv-index
+objectClass: top
+ds-cfg-filter: (&(objectClass=inetOrgPerson)(objectClass=organizationalPerson)(objectClass=person)(objectClass=top))
+ds-cfg-base-dn: dc=example,dc=com
+ds-cfg-sort-order: uid
+ds-cfg-scope: whole-subtree
+ds-cfg-name: index-uid
+
 dn: ds-cfg-backend-id=backup,cn=Backends,cn=config
 objectClass: top
 objectClass: ds-cfg-backend

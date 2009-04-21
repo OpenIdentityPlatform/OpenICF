@@ -23,21 +23,14 @@
 package org.identityconnectors.ldap.sync.sunds;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.reverse;
-import static java.util.Collections.sort;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.naming.NamingException;
-import javax.naming.directory.SearchControls;
-import javax.naming.directory.SearchResult;
-import javax.naming.ldap.LdapName;
 
-import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
@@ -50,53 +43,15 @@ import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.LdapConfiguration;
 import org.identityconnectors.ldap.LdapConnection;
-import org.identityconnectors.ldap.LdapEntry;
-import org.identityconnectors.ldap.search.DefaultSearchStrategy;
-import org.identityconnectors.ldap.search.LdapInternalSearch;
-import org.identityconnectors.ldap.search.SearchResultsHandler;
-import org.identityconnectors.test.common.TestHelpers;
+import org.identityconnectors.ldap.SunDSTestBase;
 import org.junit.Test;
 
-public class SunDSChangeLogSyncStrategyTests {
-
-    private static LdapConfiguration newConfiguration() {
-        LdapConfiguration config = new LdapConfiguration();
-        config.setHost(TestHelpers.getProperty("host", null));
-        config.setPort(Integer.parseInt(TestHelpers.getProperty("port", "389")));
-        config.setPrincipal(TestHelpers.getProperty("principal", null));
-        config.setCredentials(new GuardedString(TestHelpers.getProperty("credentials", "").toCharArray()));
-        config.setBaseContexts(TestHelpers.getProperty("baseContext", null));
-        config.setUseBlocks(false);
-        config.setReadSchema(false);
-        config.setUidAttribute("entryDN");
-        config.validate();
-        return config;
-    }
+public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
 
     private static LdapConnection newConnection(LdapConfiguration config) throws NamingException {
         LdapConnection conn = new LdapConnection(config);
-        cleanup(conn);
+        cleanupBaseContext(conn);
         return conn;
-    }
-
-    private static void cleanup(LdapConnection conn) throws NamingException {
-        SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
-        controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
-        LdapInternalSearch search = new LdapInternalSearch(conn, null, Arrays.asList(conn.getConfiguration().getBaseContexts()),
-                new DefaultSearchStrategy(), controls, false);
-        final List<LdapName> entryDNs = new ArrayList<LdapName>();
-        search.execute(new SearchResultsHandler() {
-            public boolean handle(String baseDN, SearchResult result) throws NamingException {
-                entryDNs.add(LdapEntry.create(baseDN, result).getDN());
-                return true;
-            }
-        });
-        entryDNs.removeAll(conn.getConfiguration().getBaseContextsAsLdapNames());
-        sort(entryDNs);
-        reverse(entryDNs); // Cf. LdapName.compareTo().
-        for (LdapName entryDN : entryDNs) {
-            conn.getInitialContext().destroySubcontext(entryDN);
-        }
     }
 
     private List<SyncDelta> doTest(LdapConnection conn, String ldif) throws NamingException {

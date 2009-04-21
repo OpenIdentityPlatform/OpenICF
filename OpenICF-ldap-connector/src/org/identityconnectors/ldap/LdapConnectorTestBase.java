@@ -54,6 +54,8 @@ public abstract class LdapConnectorTestBase {
     public static final int PORT = 2389;
     public static final int SSL_PORT = 2636;
 
+    public static final String EXAMPLE_COM_DN = "dc=example,dc=com";
+
     public static final String ADMIN_DN = "uid=admin,dc=example,dc=com";
     public static final GuardedString ADMIN_PASSWORD = new GuardedString("password".toCharArray());
 
@@ -157,9 +159,8 @@ public abstract class LdapConnectorTestBase {
         config.setCredentials(ADMIN_PASSWORD);
         // Set the group member attribute to the IdM default.
         config.setGroupMemberAttribute("uniqueMember");
-        // Otherwise it would try to use VLV, which we don't yet support.
-        config.setUsePagedResultControl(true);
-        // IDM will not read the schema. So prefer to test with that setting, unless we are testing
+        // config.setUsePagedResultControl(true);
+        // IdM will not read the schema. So prefer to test with that setting, unless we are testing
         // extended object classes, in which case we do need to read the schema.
         config.setReadSchema(extObjectClassesAndNamingAttributes.length > 0);
         String[] extendedObjectClasses = new String[extObjectClassesAndNamingAttributes.length];

@@ -39,10 +39,6 @@ import javax.naming.ldap.PagedResultsResponseControl;
 
 import org.identityconnectors.common.logging.Log;
 
-/**
- *
- * @author Andrei Badea
- */
 public class SimplePagedSearchStrategy extends LdapSearchStrategy {
 
     private static final Log log = Log.getLog(SimplePagedSearchStrategy.class);
@@ -54,7 +50,7 @@ public class SimplePagedSearchStrategy extends LdapSearchStrategy {
     }
 
     @Override
-    public void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler, boolean ignoreNonExistingBaseDNs) throws NamingException {
+    public void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler, boolean ignoreNonExistingBaseDNs) throws IOException, NamingException {
         log.ok("Searching in {0} with filter {1} and {2}", baseDNs, query, searchControlsToString(searchControls));
 
         LdapContext ctx = initCtx.newInstance(null);
@@ -67,7 +63,7 @@ public class SimplePagedSearchStrategy extends LdapSearchStrategy {
                 byte[] cookie = null;
 
                 do {
-                    ctx.setRequestControls(new Control[] { createControl(cookie) });
+                    ctx.setRequestControls(new Control[] { new PagedResultsControl(pageSize, cookie, Control.CRITICAL) });
                     NamingEnumeration<SearchResult> results;
                     try {
                         results = ctx.search(baseDN, query, searchControls);
@@ -96,14 +92,6 @@ public class SimplePagedSearchStrategy extends LdapSearchStrategy {
             }
         } finally {
             ctx.close();
-        }
-    }
-
-    private Control createControl(byte[] cookie) throws NamingException {
-        try {
-            return new PagedResultsControl(pageSize, cookie, Control.CRITICAL);
-        } catch (IOException e) {
-            throw (NamingException) new NamingException(e.getMessage()).initCause(e);
         }
     }
 

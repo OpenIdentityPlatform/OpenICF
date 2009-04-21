@@ -127,11 +127,23 @@ public abstract class LdapEntry {
                 if (result.isRelative()) {
                     dn = join(result.getName(), baseDN);
                 } else {
-                    // XXX probably need to filter the starting part of the URL.
-                    dn = join(result.getName(), null);
+                    // Striping the scheme and host, according to a comment in the adapter.
+                    dn = join(getDNFromLdapUrl(result.getName()), null);
                 }
             }
             return dn;
+        }
+
+        private String getDNFromLdapUrl(String url) {
+            int schemeEndPos = url.indexOf("://");
+            if (schemeEndPos < 0) {
+                return null;
+            }
+            int slashAfterHostPos = url.indexOf('/', schemeEndPos + 3);
+            if (slashAfterHostPos < 0) {
+                return null;
+            }
+            return url.substring(slashAfterHostPos + 1);
         }
     }
 

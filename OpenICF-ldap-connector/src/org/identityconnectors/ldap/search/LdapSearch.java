@@ -141,16 +141,19 @@ public class LdapSearch {
         // will just search over our base DNs looking for entries
         // matching the native filter.
 
+        LdapSearchStrategy strategy;
         List<String> baseDNs;
         int searchScope;
         boolean ignoreNonExistingBaseDNs;
 
         String filterEntryDN = filter != null ? filter.getEntryDN() : null;
         if (filterEntryDN != null) {
+            strategy = new DefaultSearchStrategy();
             baseDNs = singletonList(filterEntryDN);
             searchScope = SearchControls.OBJECT_SCOPE;
             ignoreNonExistingBaseDNs = true;
         } else {
+            strategy = getSearchStrategy();
             baseDNs = getBaseDNs();
             searchScope = getLdapSearchScope();
             ignoreNonExistingBaseDNs = false;
@@ -166,7 +169,7 @@ public class LdapSearch {
             userFilter = conn.getConfiguration().getAccountSearchFilter();
         }
         String nativeFilter = filter != null ? filter.getNativeFilter() : null;
-        return new LdapInternalSearch(conn, getSearchFilter(userFilter, nativeFilter), baseDNs, getSearchStrategy(), controls, ignoreNonExistingBaseDNs);
+        return new LdapInternalSearch(conn, getSearchFilter(userFilter, nativeFilter), baseDNs, strategy, controls, ignoreNonExistingBaseDNs);
     }
 
     private Set<String> getLdapAttributesToGet(Set<String> attrsToGet) {
@@ -281,13 +284,13 @@ public class LdapSearch {
         if (ObjectClass.ACCOUNT.equals(oclass)) {
             // Only consider paged strategies for accounts, just as the adapter does.
 
-            int pageSize = conn.getConfiguration().getBlockCount();
             boolean useBlocks = conn.getConfiguration().isUseBlocks();
             boolean usePagedResultsControl = conn.getConfiguration().isUsePagedResultControl();
+            int pageSize = conn.getConfiguration().getBlockCount();
 
             if (useBlocks && !usePagedResultsControl && conn.supportsControl(VirtualListViewControl.OID)) {
-                // TODO: VLV index strategy.
-                strategy = new SimplePagedSearchStrategy(pageSize);
+                String vlvSortAttr = conn.getConfiguration().getVlvSortAttribute();
+                strategy = new VlvIndexSearchStrategy(vlvSortAttr, pageSize);
             } else if (useBlocks && conn.supportsControl(PagedResultsControl.OID)) {
                 strategy = new SimplePagedSearchStrategy(pageSize);
             } else {

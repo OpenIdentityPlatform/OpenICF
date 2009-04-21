@@ -37,8 +37,8 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * -----------
  */
-host = "__configureme__"
-port = 389
-principal = "__configureme__"
-credentials = "__configureme__"
-baseContext = "__configureme__"
+sunds.host = "__configureme__"
+sunds.port = 390
+sunds.principal = "__configureme__"
+sunds.credentials = "__configureme__"
+sunds.baseContext = "__configureme__"

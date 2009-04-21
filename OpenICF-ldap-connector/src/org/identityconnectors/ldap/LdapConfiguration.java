@@ -149,7 +149,12 @@ public class LdapConfiguration extends AbstractConfiguration {
      * If true, simple paged search will be preferred over VLV index search
      * when both are available.
      */
-    private boolean usePagedResultControl;
+    private boolean usePagedResultControl = true;
+
+    /**
+     * The attribute used as the sort key for the VLV index.
+     */
+    private String vlvSortAttribute = "uid";
 
     /**
      * The LDAP attribute to map Uid to.
@@ -451,6 +456,14 @@ public class LdapConfiguration extends AbstractConfiguration {
         return usePagedResultControl;
     }
 
+    public String getVlvSortAttribute() {
+        return vlvSortAttribute;
+    }
+
+    public void setVlvSortAttribute(String vlvSortAttribute) {
+        this.vlvSortAttribute = vlvSortAttribute;
+    }
+
     public void setUsePagedResultControl(boolean usePagedResultControl) {
         this.usePagedResultControl = usePagedResultControl;
     }
@@ -668,6 +681,7 @@ public class LdapConfiguration extends AbstractConfiguration {
         builder.append(useBlocks);
         builder.append(blockCount);
         builder.append(usePagedResultControl);
+        builder.append(vlvSortAttribute);
         builder.append(uidAttribute);
         builder.append(readSchema);
         for (String extendedObjectClass : extendedObjectClasses) {

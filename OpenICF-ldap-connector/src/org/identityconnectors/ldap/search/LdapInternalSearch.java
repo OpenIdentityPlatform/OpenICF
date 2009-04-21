@@ -22,6 +22,7 @@
  */
 package org.identityconnectors.ldap.search;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.naming.NamingException;
@@ -57,6 +58,8 @@ public class LdapInternalSearch {
         String filter = nullAsAllObjects(this.filter);
         try {
             strategy.doSearch(conn.getInitialContext(), baseDNs, filter, controls, handler, ignoreNonExistingBaseDNs);
+        } catch (IOException e) {
+            throw new ConnectorException(e);
         } catch (NamingException e) {
             throw new ConnectorException(e);
         }

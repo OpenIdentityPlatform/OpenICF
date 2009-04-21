@@ -80,6 +80,7 @@
                 <include name="bin/import-ldif"/>
                 <include name="bin/ldapmodify"/>
                 <include name="bin/make-ldif"/>
+                <include name="bin/rebuild-index"/>
                 <include name="bin/start-ds"/>
                 <include name="bin/stop-ds"/>
                 <include name="lib/_client-script.sh"/>
@@ -120,6 +121,12 @@
             <arg value="--backendID"/>
             <arg value="userRoot"/>
         </exec>
+        <exec executable="${opends.setup.dir}/bin/rebuild-index" dir="${opends.setup.dir}">
+            <arg value="--baseDN"/>
+            <arg value="dc=example,dc=com"/>
+            <arg value="--index"/>
+            <arg value="vlv.index-uid"/>
+        </exec>
 
         <!-- Set up an admin user. -->
         <exec executable="${opends.setup.dir}/bin/start-ds" dir="${opends.setup.dir}"/>
@@ -153,7 +160,7 @@
                 <include name="config/config.ldif"/>
                 <include name="config/keystore"/>
                 <include name="config/keystore.pin"/>
-                <include name="db/userRoot/00000000.jdb"/>
+                <include name="db/userRoot/*.jdb"/>
             </fileset>
         </copy>
     </target>

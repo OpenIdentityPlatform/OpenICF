@@ -22,7 +22,7 @@
 # -- END LICENSE
 define suffix=dc=example,dc=com
 define maildomain=example.com
-define numusers=10000
+define numusers=2000
 
 branch: [suffix]
 

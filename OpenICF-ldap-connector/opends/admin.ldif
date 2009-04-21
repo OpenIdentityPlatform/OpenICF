@@ -28,6 +28,7 @@ objectClass: organizationalPerson
 objectClass: inetOrgPerson
 sn: Administrator
 cn: Administrator
+uid: admin
 userPassword: password
 # Cf. https://www.opends.org/wiki/page/HowToManageRootUserGlobalAdministratorAndAdministratorAccounts
 # This is needed for searches like (objectClass=inetOrgPerson) which return almost all entries.
@@ -44,3 +45,13 @@ dn: cn=Access Control Handler,cn=config
 changetype: modify
 add: ds-cfg-global-aci
 ds-cfg-global-aci: (targetcontrol = "1.2.840.113556.1.4.319")(version 3.0; acl "Allow Simple Paged Control Admin Access"; allow(read) userdn = "ldap:///uid=admin,dc=example,dc=com";)
+
+dn: cn=Access Control Handler,cn=config
+changetype: modify
+add: ds-cfg-global-aci
+ds-cfg-global-aci: (targetcontrol = "1.2.840.113556.1.4.473")(version 3.0; acl "Allow Sort Control Admin Access"; allow(read) userdn = "ldap:///uid=admin,dc=example,dc=com";)
+
+dn: cn=Access Control Handler,cn=config
+changetype: modify
+add: ds-cfg-global-aci
+ds-cfg-global-aci: (targetcontrol = "2.16.840.1.113730.3.4.9")(version 3.0; acl "Allow Virtual List View Control Admin Access"; allow(read) userdn = "ldap:///uid=admin,dc=example,dc=com";)

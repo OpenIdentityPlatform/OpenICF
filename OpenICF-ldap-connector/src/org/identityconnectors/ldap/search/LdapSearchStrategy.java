@@ -22,6 +22,7 @@
  */
 package org.identityconnectors.ldap.search;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -31,7 +32,8 @@ import javax.naming.ldap.LdapContext;
 
 public abstract class LdapSearchStrategy {
 
-    public abstract void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler, boolean ignoreNonExistingBaseDNs) throws NamingException;
+    public abstract void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler, boolean ignoreNonExistingBaseDNs)
+            throws IOException, NamingException;
 
     static String searchControlsToString(SearchControls controls) {
         StringBuilder builder = new StringBuilder();

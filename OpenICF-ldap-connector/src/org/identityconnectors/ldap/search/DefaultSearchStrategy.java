@@ -35,10 +35,6 @@ import javax.naming.ldap.LdapContext;
 
 import org.identityconnectors.common.logging.Log;
 
-/**
- *
- * @author Andrei Badea
- */
 public class DefaultSearchStrategy extends LdapSearchStrategy {
 
     private static final Log log = Log.getLog(DefaultSearchStrategy.class);

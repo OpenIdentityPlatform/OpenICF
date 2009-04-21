@@ -169,15 +169,38 @@ public class LdapSearchTests extends LdapConnectorTestBase {
     @Test
     public void testSimplePagedSearch() {
         LdapConfiguration config = newConfiguration();
-        assertTrue(config.isUseBlocks());
-        assertTrue(config.isUsePagedResultControl());
+        config.setUseBlocks(true);
+        config.setUsePagedResultControl(true);
         ConnectorFacade facade = newFacade(config);
 
         List<ConnectorObject> objects = TestHelpers.searchToList(facade, ObjectClass.ACCOUNT, null);
         assertNotNull(getObjectByName(objects, BUGS_BUNNY_DN));
-        assertNotNull(getObjectByName(objects, ELMER_FUDD_DN));
+        assertNotNull(getObjectByName(objects, USER_0_DN));
         // 1000 is the default search size limit for OpenDS.
         assertTrue(objects.size() > 1000);
+    }
+
+    @Test
+    public void testVlvIndexSearch() {
+        LdapConfiguration config = newConfiguration();
+        config.setBaseContexts(EXAMPLE_COM_DN);
+        config.setUseBlocks(true);
+        config.setUsePagedResultControl(false);
+        config.setUidAttribute("entryDN");
+        ConnectorFacade facade = newFacade(config);
+
+        List<ConnectorObject> objects = TestHelpers.searchToList(facade, ObjectClass.ACCOUNT, null);
+        assertNotNull(getObjectByName(objects, USER_0_DN));
+        // 1000 is the default search size limit for OpenDS.
+        assertTrue(objects.size() > 1000);
+
+        // OpenDS-specific.
+        OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        builder.setAttributesToGet("debugsearchindex");
+        FirstOnlyResultsHandler handler = new FirstOnlyResultsHandler();
+        facade.search(ObjectClass.ACCOUNT, null, handler, builder.build());
+        String debugsearch = handler.getSingleResult().getAttributeByName("debugsearchindex").getValue().get(0).toString();
+        assertTrue(debugsearch.contains("vlv"));
     }
 
     @Test(expected = ConnectorException.class)
@@ -186,7 +209,7 @@ public class LdapSearchTests extends LdapConnectorTestBase {
         config.setUseBlocks(false);
         ConnectorFacade facade = newFacade(config);
         // This should fail, since the search will exceed the maximum number of
-        // entries to return when to block-based control (simple paged, etc.)is in effect.
+        // entries to return.
         TestHelpers.searchToList(facade, ObjectClass.ACCOUNT, null);
     }
 
@@ -407,6 +430,10 @@ public class LdapSearchTests extends LdapConnectorTestBase {
 
         public void assertSingleResult() {
             assertEquals(1, objects.size());
+        }
+
+        public ConnectorObject getSingleResult() {
+            return objects.get(0);
         }
     }
 }
