@@ -90,6 +90,8 @@ public class VlvIndexSearchStrategy extends LdapSearchStrategy {
     }
 
     private boolean searchBaseDN(LdapContext ctx, String baseDN, String query, SearchControls searchControls, SearchResultsHandler handler, boolean ignoreNonExistingBaseDNs) throws IOException, NamingException {
+        getLog().ok("Searching in {0}", baseDN);
+        
         index = 1;
         lastListSize = 0;
         cookie = null;
@@ -98,8 +100,12 @@ public class VlvIndexSearchStrategy extends LdapSearchStrategy {
 
         for (;;) {
             SortControl sortControl = new SortControl(vlvIndexAttr, Control.CRITICAL);
-            VirtualListViewControl vlvControl = new VirtualListViewControl(index, lastListSize, 0, blockSize - 1, Control.CRITICAL);
+            
+            int afterCount = blockSize - 1;
+            VirtualListViewControl vlvControl = new VirtualListViewControl(index, lastListSize, 0, afterCount, Control.CRITICAL);
             vlvControl.setContextID(cookie);
+            
+            getLog().ok("New search: target = {0}, afterCount = {1}", index, afterCount);
             ctx.setRequestControls(new Control[] { sortControl, vlvControl });
 
             NamingEnumeration<SearchResult> results;
