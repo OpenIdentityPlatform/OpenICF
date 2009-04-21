@@ -108,7 +108,7 @@ public class LdapConfigurationTests /* extends LdapConnectorTestBase*/ {
         assertFalse(config.isRespectResourcePasswordPolicyChangeAfterReset());
         assertTrue(config.isUseBlocks());
         assertEquals(100, config.getBlockCount());
-        assertTrue(config.isUsePagedResultControl());
+        assertFalse(config.isUsePagedResultControl());
         assertEquals("uid", config.getVlvSortAttribute());
         assertEquals("entryUUID", config.getUidAttribute());
         assertTrue(config.isReadSchema());
