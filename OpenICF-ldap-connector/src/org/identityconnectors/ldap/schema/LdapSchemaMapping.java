@@ -26,7 +26,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableSet;
 import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveMap;
 import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
-import static org.identityconnectors.common.CollectionUtil.newReadOnlySet;
+import static org.identityconnectors.common.CollectionUtil.newReadOnlyList;
 import static org.identityconnectors.ldap.LdapEntry.isDNAttribute;
 import static org.identityconnectors.ldap.LdapUtil.addBinaryOption;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValue;
@@ -124,13 +124,13 @@ public class LdapSchemaMapping {
      * Returns the LDAP object classes to which the given framework object
      * class is mapped.
      */
-    public Set<String> getLdapClasses(ObjectClass oclass) {
+    public List<String> getLdapClasses(ObjectClass oclass) {
         ObjectClassMappingConfig oclassConfig = conn.getConfiguration().getObjectClassMappingConfigs().get(oclass);
         if (oclassConfig != null) {
-            return oclassConfig.getLdapClassesAsSet();
+            return oclassConfig.getLdapClasses();
         }
         if (!ObjectClassUtil.isSpecial(oclass)) {
-            return newReadOnlySet(oclass.getObjectClassValue());
+            return newReadOnlyList(oclass.getObjectClassValue());
         }
         throw new ConnectorException("Object class " + oclass.getObjectClassValue() + " is not mapped to an LDAP object class");
     }

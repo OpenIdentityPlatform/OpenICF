@@ -166,7 +166,7 @@ public class LdapSearch {
             userFilter = conn.getConfiguration().getAccountSearchFilter();
         }
         String nativeFilter = filter != null ? filter.getNativeFilter() : null;
-        return new LdapInternalSearch(conn, getSearchFilter(userFilter, nativeFilter), baseDNs, strategy, controls);
+        return new LdapInternalSearch(conn, getSearchFilter(nativeFilter, userFilter), baseDNs, strategy, controls);
     }
 
     private Set<String> getLdapAttributesToGet(Set<String> attrsToGet) {
@@ -224,20 +224,34 @@ public class LdapSearch {
      * the filters for all LDAP object classes for the given {@code ObjectClass}, and
      * an optional filter to be applied before the object class filters.
      */
-    private String getSearchFilter(String preFilter, String postFilter) {
+    private String getSearchFilter(String prePreFilter, String preFilter) {
         StringBuilder builder = new StringBuilder();
-        Set<String> ldapClasses = conn.getSchemaMapping().getLdapClasses(oclass);
-        boolean and = !isBlank(preFilter) || ldapClasses.size() > 1 || !isBlank(postFilter);
+        String ocFilter = getObjectClassFilter();
+        int nonBlank = (isBlank(prePreFilter) ? 0 : 1) + (isBlank(preFilter) ? 0 : 1) + (isBlank(ocFilter) ? 0 : 1);
+        if (nonBlank > 1) {
+            builder.append("(&");
+        }
+        appendFilter(prePreFilter, builder);
+        appendFilter(preFilter, builder);
+        appendFilter(ocFilter, builder);
+        if (nonBlank > 1) {
+            builder.append(')');
+        }
+        return builder.toString();
+    }
+
+    private String getObjectClassFilter() {
+        StringBuilder builder = new StringBuilder();
+        List<String> ldapClasses = conn.getSchemaMapping().getLdapClasses(oclass);
+        boolean and = ldapClasses.size() > 1;
         if (and) {
             builder.append("(&");
         }
-        appendFilter(preFilter, builder);
         for (String ldapClass : ldapClasses) {
             builder.append("(objectClass=");
             builder.append(ldapClass);
             builder.append(')');
         }
-        appendFilter(postFilter, builder);
         if (and) {
             builder.append(')');
         }

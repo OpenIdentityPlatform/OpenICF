@@ -91,7 +91,7 @@ class LdapSchemaBuilder {
     private Set<AttributeInfo> createAttributeInfos(ObjectClassMappingConfig oclassConfig) {
         Set<AttributeInfo> result = new HashSet<AttributeInfo>();
 
-        Set<String> ldapClasses = oclassConfig.getLdapClassesAsSet();
+        List<String> ldapClasses = oclassConfig.getLdapClasses();
 
         Set<String> requiredAttrs = getRequiredAttributes(ldapClasses);
         Set<String> optionalAttrs = getOptionalAttributes(ldapClasses);
@@ -145,7 +145,7 @@ class LdapSchemaBuilder {
         return result;
     }
 
-    private Set<String> getRequiredAttributes(Set<String> ldapClasses) {
+    private Set<String> getRequiredAttributes(List<String> ldapClasses) {
         Set<String> result = new HashSet<String>();
         for (String ldapClass : ldapClasses) {
             result.addAll(nativeSchema.getRequiredAttributes(ldapClass));
@@ -153,7 +153,7 @@ class LdapSchemaBuilder {
         return result;
     }
 
-    private Set<String> getOptionalAttributes(Set<String> ldapClasses) {
+    private Set<String> getOptionalAttributes(List<String> ldapClasses) {
         Set<String> result = new HashSet<String>();
         for (String ldapClass : ldapClasses) {
             result.addAll(nativeSchema.getOptionalAttributes(ldapClass));
@@ -161,13 +161,13 @@ class LdapSchemaBuilder {
         return result;
     }
 
-    private void addAttributeInfos(Set<String> ldapClasses, Set<String> attrs, Set<Flags> add, Set<Flags> remove, Set<AttributeInfo> toSet) {
+    private void addAttributeInfos(List<String> ldapClasses, Set<String> attrs, Set<Flags> add, Set<Flags> remove, Set<AttributeInfo> toSet) {
         for (String attr : attrs) {
             addAttributeInfo(ldapClasses, attr, attr, add, remove, toSet);
         }
     }
 
-    private void addAttributeInfo(Set<String> ldapClasses, String ldapAttrName, String realName, Set<Flags> add, Set<Flags> remove, Set<AttributeInfo> toSet) {
+    private void addAttributeInfo(List<String> ldapClasses, String ldapAttrName, String realName, Set<Flags> add, Set<Flags> remove, Set<AttributeInfo> toSet) {
         LdapAttributeType attrDesc = nativeSchema.getAttributeDescription(ldapAttrName);
         if (attrDesc != null) {
             toSet.add(attrDesc.createAttributeInfo(realName, add, remove));

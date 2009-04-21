@@ -22,8 +22,6 @@
  */
 package org.identityconnectors.ldap;
 
-import static java.util.Collections.unmodifiableSet;
-import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
 import static org.identityconnectors.common.CollectionUtil.newReadOnlyList;
 import static org.identityconnectors.common.CollectionUtil.newReadOnlySet;
 
@@ -62,7 +60,7 @@ public class ObjectClassMappingConfig {
         assert objectClass != null;
         assert ldapClasses != null;
         this.objectClass = objectClass;
-        this.ldapClasses = ldapClasses;
+        setLdapClasses(ldapClasses);
     }
 
     public ObjectClass getObjectClass() {
@@ -71,12 +69,6 @@ public class ObjectClassMappingConfig {
 
     public List<String> getLdapClasses() {
         return ldapClasses;
-    }
-
-    public Set<String> getLdapClassesAsSet() {
-        Set<String> result = newCaseInsensitiveSet();
-        result.addAll(ldapClasses);
-        return unmodifiableSet(result);
     }
 
     public void setLdapClasses(List<String> ldapClasses) {
