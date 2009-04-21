@@ -704,14 +704,14 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      * @return the Column Name value
      */
     public String getColumnName(String attributeName) {
-        if(Name.NAME.equalsIgnoreCase(attributeName)) {
+        if (AttributeUtil.namesEqual(attributeName, Name.NAME)) {
             return config.getKeyColumn();
         }
-        if(Uid.NAME.equalsIgnoreCase(attributeName)) {
+        if (AttributeUtil.namesEqual(attributeName, Uid.NAME)) {
             return config.getKeyColumn();
         }
-        if(!StringUtil.isBlank(config.getPasswordColumn()) && 
-                OperationalAttributes.PASSWORD_NAME.equalsIgnoreCase(attributeName)) {
+        if (!StringUtil.isBlank(config.getPasswordColumn())
+                && AttributeUtil.namesEqual(attributeName, OperationalAttributes.PASSWORD_NAME)) {
             return config.getPasswordColumn();
         }
         return attributeName;
