@@ -68,7 +68,7 @@ public class GroupHelper {
     private String getLdapGroupMemberAttribute() {
         String memberAttr = conn.getConfiguration().getGroupMemberAttribute();
         if (memberAttr == null) {
-            memberAttr = "member"; // For groupOfNames.
+            memberAttr = "uniqueMember"; // For groupOfUniqueNames.
         }
         return memberAttr;
     }

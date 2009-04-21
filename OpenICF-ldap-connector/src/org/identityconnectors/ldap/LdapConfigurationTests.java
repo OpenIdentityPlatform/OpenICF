@@ -65,6 +65,13 @@ public class LdapConfigurationTests /* extends LdapConnectorTestBase*/ {
         config.setBaseContexts(LdapConnectorTestBase.ACME_DN, INVALID_DN);
         config.validate();
     }
+    
+    @Test(expected = ConfigurationException.class)
+    public void testGroupMemberAttributeNeededWhenMaintainingGroupMembership() {
+        config.setGroupMemberAttribute(null);
+        config.setMaintainLdapGroupMembership(true);
+        config.validate();
+    }
 
     @Test(expected = ConfigurationException.class)
     public void testUidAttributeCannotBeNull() {

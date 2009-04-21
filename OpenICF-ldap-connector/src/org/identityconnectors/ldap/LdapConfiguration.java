@@ -271,6 +271,10 @@ public class LdapConfiguration extends AbstractConfiguration {
                 throw new ConfigurationException("The list of account object classes cannot contain blank values");
             }
         }
+        
+        if (maintainLdapGroupMembership && isBlank(groupMemberAttribute)) {
+            throw new ConfigurationException("The group member attribute cannot be blank when maintaining LDAP groups membership");
+        }
 
         if (blockCount < 0) {
             throw new ConfigurationException("The block size should be greather than 0");
