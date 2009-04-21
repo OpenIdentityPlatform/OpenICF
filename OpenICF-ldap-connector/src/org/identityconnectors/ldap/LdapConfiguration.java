@@ -149,7 +149,7 @@ public class LdapConfiguration extends AbstractConfiguration {
      * If true, simple paged search will be preferred over VLV index search
      * when both are available.
      */
-    private boolean usePagedResultControl = true;
+    private boolean usePagedResultControl = false;
 
     /**
      * The attribute used as the sort key for the VLV index.
