@@ -125,7 +125,7 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
         controls.setSearchScope(SearchControls.ONELEVEL_SCOPE);
         controls.setReturningAttributes(new String[] { changeNumberAttr, "targetDN", "changeType", "changes", "newRdn", "deleteOldRdn", "newSuperior" });
 
-        LdapInternalSearch search = new LdapInternalSearch(conn, filter, singletonList(context), new DefaultSearchStrategy(), controls, false);
+        LdapInternalSearch search = new LdapInternalSearch(conn, filter, singletonList(context), new DefaultSearchStrategy(false), controls);
         search.execute(new SearchResultsHandler() {
             public boolean handle(String baseDN, SearchResult result) throws NamingException {
                 LdapEntry entry = LdapEntry.create(baseDN, result);

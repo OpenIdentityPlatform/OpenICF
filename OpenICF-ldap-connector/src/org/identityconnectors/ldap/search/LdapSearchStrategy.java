@@ -32,7 +32,7 @@ import javax.naming.ldap.LdapContext;
 
 public abstract class LdapSearchStrategy {
 
-    public abstract void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler, boolean ignoreNonExistingBaseDNs)
+    public abstract void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler)
             throws IOException, NamingException;
 
     static String searchControlsToString(SearchControls controls) {

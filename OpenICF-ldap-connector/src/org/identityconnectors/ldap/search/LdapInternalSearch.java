@@ -43,21 +43,19 @@ public class LdapInternalSearch {
     private final List<String> baseDNs;
     private final LdapSearchStrategy strategy;
     private final SearchControls controls;
-    private final boolean ignoreNonExistingBaseDNs;
 
-    public LdapInternalSearch(LdapConnection conn, String filter, List<String> baseDNs, LdapSearchStrategy strategy, SearchControls controls, boolean ignoreNonExistingBaseDNs) {
+    public LdapInternalSearch(LdapConnection conn, String filter, List<String> baseDNs, LdapSearchStrategy strategy, SearchControls controls) {
         this.conn = conn;
         this.filter = filter;
         this.baseDNs = baseDNs;
         this.strategy = strategy;
         this.controls = controls;
-        this.ignoreNonExistingBaseDNs = ignoreNonExistingBaseDNs;
     }
 
     public void execute(SearchResultsHandler handler) {
         String filter = nullAsAllObjects(this.filter);
         try {
-            strategy.doSearch(conn.getInitialContext(), baseDNs, filter, controls, handler, ignoreNonExistingBaseDNs);
+            strategy.doSearch(conn.getInitialContext(), baseDNs, filter, controls, handler);
         } catch (IOException e) {
             throw new ConnectorException(e);
         } catch (NamingException e) {

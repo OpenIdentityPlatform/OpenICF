@@ -144,19 +144,16 @@ public class LdapSearch {
         LdapSearchStrategy strategy;
         List<String> baseDNs;
         int searchScope;
-        boolean ignoreNonExistingBaseDNs;
 
         String filterEntryDN = filter != null ? filter.getEntryDN() : null;
         if (filterEntryDN != null) {
-            strategy = new DefaultSearchStrategy();
+            strategy = new DefaultSearchStrategy(true);
             baseDNs = singletonList(filterEntryDN);
             searchScope = SearchControls.OBJECT_SCOPE;
-            ignoreNonExistingBaseDNs = true;
         } else {
             strategy = getSearchStrategy();
             baseDNs = getBaseDNs();
             searchScope = getLdapSearchScope();
-            ignoreNonExistingBaseDNs = false;
         }
 
         SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
@@ -169,7 +166,7 @@ public class LdapSearch {
             userFilter = conn.getConfiguration().getAccountSearchFilter();
         }
         String nativeFilter = filter != null ? filter.getNativeFilter() : null;
-        return new LdapInternalSearch(conn, getSearchFilter(userFilter, nativeFilter), baseDNs, strategy, controls, ignoreNonExistingBaseDNs);
+        return new LdapInternalSearch(conn, getSearchFilter(userFilter, nativeFilter), baseDNs, strategy, controls);
     }
 
     private Set<String> getLdapAttributesToGet(Set<String> attrsToGet) {
@@ -294,10 +291,10 @@ public class LdapSearch {
             } else if (useBlocks && conn.supportsControl(PagedResultsControl.OID)) {
                 strategy = new SimplePagedSearchStrategy(pageSize);
             } else {
-                strategy = new DefaultSearchStrategy();
+                strategy = new DefaultSearchStrategy(false);
             }
         } else {
-            strategy = new DefaultSearchStrategy();
+            strategy = new DefaultSearchStrategy(false);
         }
         return strategy;
     }

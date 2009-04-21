@@ -26,8 +26,6 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.naming.InvalidNameException;
-import javax.naming.NameNotFoundException;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.SearchControls;
@@ -50,7 +48,7 @@ public class SimplePagedSearchStrategy extends LdapSearchStrategy {
     }
 
     @Override
-    public void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler, boolean ignoreNonExistingBaseDNs) throws IOException, NamingException {
+    public void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler) throws IOException, NamingException {
         log.ok("Searching in {0} with filter {1} and {2}", baseDNs, query, searchControlsToString(searchControls));
 
         LdapContext ctx = initCtx.newInstance(null);
@@ -58,28 +56,12 @@ public class SimplePagedSearchStrategy extends LdapSearchStrategy {
             Iterator<String> baseDNIter = baseDNs.iterator();
             boolean proceed = true;
 
-            main: while (baseDNIter.hasNext() && proceed) {
+            while (baseDNIter.hasNext() && proceed) {
                 String baseDN = baseDNIter.next();
                 byte[] cookie = null;
-
                 do {
                     ctx.setRequestControls(new Control[] { new PagedResultsControl(pageSize, cookie, Control.CRITICAL) });
-                    NamingEnumeration<SearchResult> results;
-                    try {
-                        results = ctx.search(baseDN, query, searchControls);
-                    } catch (NameNotFoundException e) {
-                        if (!ignoreNonExistingBaseDNs) {
-                            throw e;
-                        }
-                        log.warn(e, null);
-                        continue main;
-                    } catch (InvalidNameException e) {
-                        if (!ignoreNonExistingBaseDNs) {
-                            throw e;
-                        }
-                        log.warn(e, null);
-                        continue main;
-                    }
+                    NamingEnumeration<SearchResult> results = ctx.search(baseDN, query, searchControls);
                     try {
                         while (proceed && results.hasMore()) {
                             proceed = handler.handle(baseDN, results.next());

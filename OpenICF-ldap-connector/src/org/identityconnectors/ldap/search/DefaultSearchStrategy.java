@@ -39,11 +39,14 @@ public class DefaultSearchStrategy extends LdapSearchStrategy {
 
     private static final Log log = Log.getLog(DefaultSearchStrategy.class);
 
-    public DefaultSearchStrategy() {
+    private final boolean ignoreNonExistingBaseDNs;
+
+    public DefaultSearchStrategy(boolean ignoreNonExistingBaseDNs) {
+        this.ignoreNonExistingBaseDNs = ignoreNonExistingBaseDNs;
     }
 
     @Override
-    public void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler, boolean ignoreNonExistingBaseDNs) throws NamingException {
+    public void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler) throws NamingException {
         log.ok("Searching in {0} with filter {1} and {2}", baseDNs, query, searchControlsToString(searchControls));
 
         Iterator<String> baseDNIter = baseDNs.iterator();

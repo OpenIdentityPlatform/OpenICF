@@ -29,8 +29,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.naming.InvalidNameException;
-import javax.naming.NameNotFoundException;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.SearchControls;
@@ -73,7 +71,7 @@ public class VlvIndexSearchStrategy extends LdapSearchStrategy {
     }
 
     @Override
-    public void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler, boolean ignoreNonExistingBaseDNs) throws IOException, NamingException {
+    public void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler) throws IOException, NamingException {
         getLog().ok("Searching in {0} with filter {1} and {2}", baseDNs, query, searchControlsToString(searchControls));
 
         Iterator<String> baseDNIter = baseDNs.iterator();
@@ -82,14 +80,14 @@ public class VlvIndexSearchStrategy extends LdapSearchStrategy {
         LdapContext ctx = initCtx.newInstance(null);
         try {
             while (baseDNIter.hasNext() && proceed) {
-                proceed = searchBaseDN(ctx, baseDNIter.next(), query, searchControls, handler, ignoreNonExistingBaseDNs);
+                proceed = searchBaseDN(ctx, baseDNIter.next(), query, searchControls, handler);
             }
         } finally {
             ctx.close();
         }
     }
 
-    private boolean searchBaseDN(LdapContext ctx, String baseDN, String query, SearchControls searchControls, SearchResultsHandler handler, boolean ignoreNonExistingBaseDNs) throws IOException, NamingException {
+    private boolean searchBaseDN(LdapContext ctx, String baseDN, String query, SearchControls searchControls, SearchResultsHandler handler) throws IOException, NamingException {
         getLog().ok("Searching in {0}", baseDN);
         
         index = 1;
@@ -108,23 +106,6 @@ public class VlvIndexSearchStrategy extends LdapSearchStrategy {
             getLog().ok("New search: target = {0}, afterCount = {1}", index, afterCount);
             ctx.setRequestControls(new Control[] { sortControl, vlvControl });
 
-            NamingEnumeration<SearchResult> results;
-            try {
-                results = ctx.search(baseDN, query, searchControls);
-            } catch (NameNotFoundException e) {
-                if (!ignoreNonExistingBaseDNs) {
-                    throw e;
-                }
-                getLog().warn(e, null);
-                return true;
-            } catch (InvalidNameException e) {
-                if (!ignoreNonExistingBaseDNs) {
-                    throw e;
-                }
-                getLog().warn(e, null);
-                return true;
-            }
-
             // Need to process the response controls, which are available after
             // all results have been processed, before sending anything to the caller
             // (because processing the response controls might throw exceptions that
@@ -132,6 +113,7 @@ public class VlvIndexSearchStrategy extends LdapSearchStrategy {
             // So storing the results before actually sending them to the handler.
             List<SearchResult> resultList = new ArrayList<SearchResult>(blockSize);
 
+            NamingEnumeration<SearchResult> results = ctx.search(baseDN, query, searchControls);
             try {
                 while (results.hasMore()) {
                     SearchResult result = results.next();

@@ -62,7 +62,7 @@ public class SunDSTestBase {
         SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
         controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
         LdapInternalSearch search = new LdapInternalSearch(conn, null, Arrays.asList(conn.getConfiguration().getBaseContexts()),
-                new DefaultSearchStrategy(), controls, false);
+                new DefaultSearchStrategy(false), controls);
         final List<LdapName> entryDNs = new ArrayList<LdapName>();
         search.execute(new SearchResultsHandler() {
             public boolean handle(String baseDN, SearchResult result) throws NamingException {
