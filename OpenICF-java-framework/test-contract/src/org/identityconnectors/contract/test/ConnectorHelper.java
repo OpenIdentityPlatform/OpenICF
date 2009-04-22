@@ -31,6 +31,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -307,6 +308,22 @@ public class ConnectorHelper {
                 new ResultsHandler() {
                     public boolean handle(ConnectorObject obj) {
                         foundObjects.add(obj);
+                        return true;
+                    }
+                }, opOptions);        
+        return foundObjects;
+    }
+    
+    /**
+     * Performs search on connector facade with specified object class, filter and operation options.
+     * @return Map of {@link Uid}s to {@link ConnectorObject}s that were found. 
+     */
+    public static Map<Uid, ConnectorObject> search2Map(ConnectorFacade connectorFacade, ObjectClass objClass, Filter filter, OperationOptions opOptions) {
+        final Map<Uid, ConnectorObject> foundObjects = new Hashtable<Uid, ConnectorObject>();
+        connectorFacade.search(objClass, filter,
+                new ResultsHandler() {
+                    public boolean handle(ConnectorObject obj) {
+                        foundObjects.put(obj.getUid(), obj);
                         return true;
                     }
                 }, opOptions);        

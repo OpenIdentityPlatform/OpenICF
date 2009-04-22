@@ -29,6 +29,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
@@ -70,6 +71,8 @@ public class SearchApiOpTests extends ObjectClassRunner {
     private static final String CASE_INSENSITIVE_PREFIX = "caseinsensitive";
     private static final String DISABLE = "disable";
     
+    private static final String COMPARE_BY_UID_ONLY = "compareExistingObjectsByUidOnly";
+    
     public SearchApiOpTests(ObjectClass oclass) {
         super(oclass);
     }
@@ -103,7 +106,7 @@ public class SearchApiOpTests extends ObjectClassRunner {
             // obtain objects stored in connector resource, before test inserts
             // own test data
             // should throw if object class is not supported and test ends
-            List<ConnectorObject> coBeforeTest = ConnectorHelper.search(getConnectorFacade(),
+            Map<Uid, ConnectorObject> coBeforeTest = ConnectorHelper.search2Map(getConnectorFacade(),
                     getObjectClass(), null, getOperationOptionsByOp(SearchApiOp.class));
             
             //prepare the data
@@ -204,9 +207,14 @@ public class SearchApiOpTests extends ObjectClassRunner {
                     // compare the attributes
                     ConnectorHelper.checkObject(getObjectClassInfo(), cObject, attrs.get(idx));
                 } else {
-                    assertTrue(
-                            "Object returned by null-filter search is neither in list of objects created by test nor in list of objects that were in connector resource before test.",
-                            coBeforeTest.contains(cObject));
+                    if (compareExistingObjectsByUidOnly()) {
+                        assertTrue("Object returned by null-filter search is neither in list of objects created by test nor in list of objects that were in connector resource before test. Objects were compared by Uid only.",
+                                coBeforeTest.containsKey(cObject.getUid()));
+                    }
+                    else {
+                        assertTrue("Object returned by null-filter search is neither in list of objects created by test nor in list of objects that were in connector resource before test. Objects were compared by all attributes.",
+                                coBeforeTest.containsValue(cObject));
+                    }                    
                 }
             }
             assertTrue("Null-filter search didn't return all created objects by search test.",
@@ -438,8 +446,23 @@ public class SearchApiOpTests extends ObjectClassRunner {
         return canSearchCIns;
     }
 
+    /**
+     * Returns true if tests should compare already existing objects by uid only. 
+     */
+    protected static boolean compareExistingObjectsByUidOnly() {
+        // by default it's supposed that all attributes all compared
+        boolean compareByUidOnly = false;
+        try {
+            compareByUidOnly = (Boolean) getDataProvider().getTestSuiteAttribute(
+                    COMPARE_BY_UID_ONLY, TEST_NAME);
 
+        } catch (ObjectNotFoundException ex) {
+            // exceptions is throw in case property definition is not found
+            // ok -- indicates enabling the property
+        }
 
+        return compareByUidOnly;
+    }
 
 
 }

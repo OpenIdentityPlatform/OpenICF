@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
@@ -109,7 +110,7 @@ public class MultiOpTests extends ObjectClassRunner {
         List<Set<Attribute>> attrs = new ArrayList<Set<Attribute>>();
 
         // objects stored in connector resource before test
-        List<ConnectorObject> coBeforeTest = null;        
+        Map<Uid, ConnectorObject> coBeforeTest = null;        
         
         // sync variables
         SyncToken token = null;
@@ -122,8 +123,8 @@ public class MultiOpTests extends ObjectClassRunner {
             /* SearchApiOp - get objects stored in connector resource before test */
             if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), SearchApiOp.class)) {
                 // null filter
-                coBeforeTest = ConnectorHelper.search(getConnectorFacade(), getObjectClass(), null,
-                        getOperationOptionsByOp(SearchApiOp.class));
+                coBeforeTest = ConnectorHelper.search2Map(getConnectorFacade(), getObjectClass(),
+                        null, getOperationOptionsByOp(SearchApiOp.class));
             }
             
             /* SyncApiOp - start synchronizing from now */
@@ -203,8 +204,14 @@ public class MultiOpTests extends ObjectClassRunner {
                         int index = uids.indexOf(obj.getUid());
                         ConnectorHelper.checkObject(getObjectClassInfo(), obj, attrs.get(index));
                     } else {
-                        assertTrue("Search with null filter returned unexpected object " + obj,
-                                coBeforeTest.contains(obj));
+                        if (SearchApiOpTests.compareExistingObjectsByUidOnly()) {
+                            assertTrue("Search with null filter returned unexpected object " + obj + ", objects were compared by Uid.",
+                                    coBeforeTest.containsKey(obj.getUid()));
+                        }
+                        else {
+                            assertTrue("Search with null filter returned unexpected object " + obj + ", objects were compared by Uid.",
+                                    coBeforeTest.containsValue(obj));
+                        }                        
                     }
                 }
             }
