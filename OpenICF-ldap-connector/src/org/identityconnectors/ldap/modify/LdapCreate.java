@@ -101,6 +101,7 @@ public class LdapCreate extends LdapModifyOperation {
         if (pwdAttr != null) {
             pwdAttr.access(new Accessor() {
                 public void access(javax.naming.directory.Attribute passwordAttr) {
+                    hashPassword(passwordAttr, null);
                     ldapAttrs.put(passwordAttr);
                     entryDN[0] = conn.getSchemaMapping().create(oclass, nameAttr, ldapAttrs);
                 }

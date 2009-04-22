@@ -49,19 +49,31 @@ public class LdapConfigurationTests /* extends LdapConnectorTestBase*/ {
     }
 
     @Test(expected = ConfigurationException.class)
-    public void testNoBaseDNsNull() {
+    public void testNoPasswordAttributeNull() {
+        config.setPasswordAttribute(null);
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testNoPasswordAttributeBlank() {
+        config.setPasswordAttribute(" ");
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testNoBaseContextsNull() {
         config.setBaseContexts((String) null);
         config.validate();
     }
 
     @Test(expected = ConfigurationException.class)
-    public void testNoBaseDNsEmpty() {
+    public void testNoBaseContextsEmpty() {
         config.setBaseContexts();
         config.validate();
     }
 
     @Test(expected = ConfigurationException.class)
-    public void testInvalidBaseDNsNotAllowed() {
+    public void testInvalidBaseContextsNotAllowed() {
         config.setBaseContexts(LdapConnectorTestBase.ACME_DN, INVALID_DN);
         config.validate();
     }
@@ -113,6 +125,7 @@ public class LdapConfigurationTests /* extends LdapConnectorTestBase*/ {
         assertFalse(config.isMaintainLdapGroupMembership());
         assertFalse(config.isMaintainPosixGroupMembership());
         assertFalse(config.isRespectResourcePasswordPolicyChangeAfterReset());
+        assertNull(config.getPasswordHashAlgorithm());
         assertTrue(config.isUseBlocks());
         assertEquals(100, config.getBlockCount());
         assertFalse(config.isUsePagedResultControl());

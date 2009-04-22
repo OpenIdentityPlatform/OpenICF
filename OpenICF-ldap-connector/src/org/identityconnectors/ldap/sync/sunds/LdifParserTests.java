@@ -53,7 +53,6 @@ public class LdifParserTests {
         		" uid\n" +
         		"uid: \n" +
         		" 1\n";
-        System.out.println(ldif);
 
         LdifParser parser = new LdifParser(ldif);
         Iterator<Line> lines = parser.iterator();

@@ -35,6 +35,8 @@ import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
+import org.identityconnectors.framework.common.objects.OperationalAttributeInfos;
+import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 import org.identityconnectors.ldap.LdapConfiguration;
@@ -86,6 +88,9 @@ public class LdapSchemaMappingTests extends LdapConnectorTestBase {
 
         info = AttributeInfoUtil.find("sn", attrInfos);
         assertEquals(AttributeInfoBuilder.build("sn", String.class, EnumSet.of(Flags.REQUIRED, Flags.MULTIVALUED)), info);
+
+        info = AttributeInfoUtil.find(OperationalAttributes.PASSWORD_NAME, attrInfos);
+        assertEquals(OperationalAttributeInfos.PASSWORD, info);
     }
 
     @Test

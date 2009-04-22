@@ -291,16 +291,24 @@ public class LdapSchemaMapping {
         return new Name(name);
     }
 
+    /**
+     * Returns an empty attribute instead of <code>null</code> when <code>emptyWhenNotFound</code>
+     * is <code>true</code>.
+     */
     public Attribute createAttribute(ObjectClass oclass, String attrName, LdapEntry entry, boolean emptyWhenNotFound) {
         String ldapAttrNameForTransfer = getLdapAttribute(oclass, attrName, true);
         String ldapAttrName;
-        if (hasBinaryOption(ldapAttrNameForTransfer)) {
+        if (ldapAttrNameForTransfer != null && hasBinaryOption(ldapAttrNameForTransfer)) {
             ldapAttrName = removeBinaryOption(ldapAttrNameForTransfer);
         } else {
             ldapAttrName = ldapAttrNameForTransfer;
         }
 
-        javax.naming.directory.Attribute ldapAttr = entry.getAttributes().get(ldapAttrNameForTransfer);
+        javax.naming.directory.Attribute ldapAttr = null;
+        if (ldapAttrNameForTransfer != null) {
+            ldapAttr = entry.getAttributes().get(ldapAttrNameForTransfer);
+        }
+
         if (ldapAttr == null) {
             return emptyWhenNotFound ? AttributeBuilder.build(attrName, emptyList()) : null;
         }

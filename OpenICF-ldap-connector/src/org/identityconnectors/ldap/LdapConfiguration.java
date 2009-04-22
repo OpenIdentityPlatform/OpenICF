@@ -43,6 +43,7 @@ import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationalAttributeInfos;
 import org.identityconnectors.framework.spi.AbstractConfiguration;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
 import org.identityconnectors.framework.spi.operations.SyncOp;
@@ -95,7 +96,8 @@ public class LdapConfiguration extends AbstractConfiguration {
     private GuardedString credentials;
 
     /**
-     * The name of the password attribute.
+     * The name of the attribute which the predefined PASSWORD attribute
+     * will be written to.
      */
     private String passwordAttribute = "userPassword";
 
@@ -128,6 +130,12 @@ public class LdapConfiguration extends AbstractConfiguration {
      * If true, will modify POSIX group membership of renamed/deleted entries.
      */
     private boolean maintainPosixGroupMembership = false;
+
+    /**
+     * If the server stores passwords in clear text, we will hash them with
+     * the algorithm specified here.
+     */
+    private String passwordHashAlgorithm;
 
     /**
      * If true, when binding check for the Password Expired control (and also Password Policy control)
@@ -224,6 +232,7 @@ public class LdapConfiguration extends AbstractConfiguration {
         accountConfig.addAttributeMapping("givenName", "givenName");
         accountConfig.addAttributeMapping("sn", "sn");
         accountConfig.addAttributeMapping("modifyTimeStamp", "modifyTimeStamp");
+        accountConfig.addOperationalAttributes(OperationalAttributeInfos.PASSWORD);
 
         groupConfig.setNameAttribute("entryDN");
         groupConfig.addAttributeMapping("cn", "cn");
@@ -430,6 +439,14 @@ public class LdapConfiguration extends AbstractConfiguration {
 
     public void setMaintainPosixGroupMembership(boolean maintainPosixGroupMembership) {
         this.maintainPosixGroupMembership = maintainPosixGroupMembership;
+    }
+
+    public String getPasswordHashAlgorithm() {
+        return passwordHashAlgorithm;
+    }
+
+    public void setPasswordHashAlgorithm(String passwordHashAlgorithm) {
+        this.passwordHashAlgorithm = passwordHashAlgorithm;
     }
 
     public boolean isRespectResourcePasswordPolicyChangeAfterReset() {
@@ -681,6 +698,7 @@ public class LdapConfiguration extends AbstractConfiguration {
         builder.append(groupMemberAttribute);
         builder.append(maintainLdapGroupMembership);
         builder.append(maintainPosixGroupMembership);
+        builder.append(passwordHashAlgorithm);
         builder.append(respectResourcePasswordPolicyChangeAfterReset);
         builder.append(useBlocks);
         builder.append(blockCount);

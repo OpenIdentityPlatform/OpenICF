@@ -41,7 +41,6 @@ import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 
-import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 
 /**
@@ -184,18 +183,14 @@ public class ServerNativeSchema implements LdapNativeSchema {
                 boolean objectClass = attrNameEquals(name, "objectClass");
                 boolean binary = conn.isBinarySyntax(attrName);
 
-                boolean password = "userPassword".equals(name) || conn.getConfiguration().getPasswordAttribute().equals(name);
-
                 Class<?> type;
-                if (password) {
-                    type = GuardedString.class;
-                } else if (binary) {
+                if (binary) {
                     type = byte[].class;
                 } else {
                     type = String.class;
                 }
                 Set<Flags> flags = EnumSet.noneOf(Flags.class);
-                if (!singleValue && !password) {
+                if (!singleValue) {
                     flags.add(Flags.MULTIVALUED);
                 }
                 if (noUserModification || objectClass) {

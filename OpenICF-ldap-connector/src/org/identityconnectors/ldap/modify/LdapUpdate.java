@@ -268,6 +268,7 @@ public class LdapUpdate extends LdapModifyOperation {
                 public void access(javax.naming.directory.Attribute passwordAttr) {
                     // Do not add the password to the result Attributes because
                     // it is a guarded value.
+                    hashPassword(passwordAttr, entryDN);
                     modItems.add(new ModificationItem(ldapModifyOp, passwordAttr));
                     modifyAttributes(entryDN, modItems);
                 }

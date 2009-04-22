@@ -30,19 +30,26 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.AttributeInfo;
+import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
+import org.identityconnectors.framework.common.objects.OperationalAttributeInfos;
+import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.test.common.TestHelpers;
 import org.junit.Test;
@@ -54,6 +61,15 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
     @Override
     protected boolean restartServerAfterEachTest() {
         return true;
+    }
+
+    @Test
+    public void testAccountOperationalAttributes() {
+        ConnectorFacade facade = newFacade();
+        ObjectClassInfo oci = facade.schema().findObjectClassInfo(ObjectClass.ACCOUNT_NAME);
+
+        AttributeInfo info = AttributeInfoUtil.find(OperationalAttributes.PASSWORD_NAME, oci.getAttributeInfo());
+        assertEquals(OperationalAttributeInfos.PASSWORD, info);
     }
 
     @Test
@@ -397,6 +413,52 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
         object = searchByAttribute(facade, new ObjectClass("posixGroup"), new Name(POSIX_EXTERNAL_PEERS_DN), "memberUid");
         members = object.getAttributeByName("memberUid").getValue();
         assertTrue(members.contains(SYLVESTER_UID));
+    }
+
+    @Test
+    public void testPasswordHashing() throws Exception {
+        LdapConfiguration config = newConfiguration();
+        config.setPasswordHashAlgorithm("SHA");
+        ConnectorFacade facade = newFacade(config);
+
+        doTestPasswordHashing(facade, "SHA");
+    }
+
+    @Test
+    public void testSaltedPasswordHashing() throws Exception {
+        LdapConfiguration config = newConfiguration();
+        config.setPasswordHashAlgorithm("SSHA");
+        ConnectorFacade facade = newFacade(config);
+
+        doTestPasswordHashing(facade, "SSHA");
+    }
+
+    private void doTestPasswordHashing(ConnectorFacade facade, String algorithm) throws UnsupportedEncodingException {
+        String algorithmLabel = "{" + algorithm + "}";
+
+        Set<Attribute> attrs = new HashSet<Attribute>();
+        String entryDN = "uid=daffy.duck," + ACME_USERS_DN;
+        attrs.add(new Name(entryDN));
+        attrs.add(AttributeBuilder.build("uid", "daffy.duck"));
+        attrs.add(AttributeBuilder.build("cn", "Daffy Duck"));
+        attrs.add(AttributeBuilder.build("sn", "Duck"));
+        attrs.add(AttributeBuilder.build("ds-pwp-password-policy-dn", "cn=Clear Text Password Policy,cn=Password Policies,cn=config"));
+        GuardedString password = new GuardedString("foobar".toCharArray());
+        attrs.add(AttributeBuilder.buildPassword(password));
+        Uid uid = facade.create(ObjectClass.ACCOUNT, attrs, null);
+
+        ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, uid, "userPassword");
+        byte[] passwordBytes = (byte[]) object.getAttributeByName("userPassword").getValue().get(0);
+        assertTrue(new String(passwordBytes, "UTF-8").startsWith(algorithmLabel));
+        facade.authenticate(ObjectClass.ACCOUNT, entryDN, password, null);
+
+        password = new GuardedString("newpassword".toCharArray());
+        facade.update(ObjectClass.ACCOUNT, object.getUid(), singleton(AttributeBuilder.buildPassword(password)), null);
+
+        object = searchByAttribute(facade, ObjectClass.ACCOUNT, uid, "userPassword");
+        passwordBytes = (byte[]) object.getAttributeByName("userPassword").getValue().get(0);
+        assertTrue(new String(passwordBytes, "UTF-8").startsWith(algorithmLabel));
+        facade.authenticate(ObjectClass.ACCOUNT, entryDN, password, null);
     }
 
     private static void assertAttributeValue(List<?> expected, ConnectorFacade facade, ObjectClass oclass, Uid uid, String attrName) {

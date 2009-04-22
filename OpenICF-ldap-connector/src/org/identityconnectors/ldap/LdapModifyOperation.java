@@ -24,11 +24,15 @@ package org.identityconnectors.ldap;
 
 import static java.util.Collections.min;
 import static org.identityconnectors.common.CollectionUtil.isEmpty;
+import static org.identityconnectors.common.StringUtil.isBlank;
 import static org.identityconnectors.ldap.LdapUtil.addStringAttrValues;
 import static org.identityconnectors.ldap.LdapUtil.quietCreateLdapName;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import javax.naming.NamingEnumeration;
@@ -38,6 +42,7 @@ import javax.naming.directory.Attributes;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
 
+import org.identityconnectors.common.Base64;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.ldap.GroupHelper.GroupMembership;
 import org.identityconnectors.ldap.search.LdapSearches;
@@ -50,6 +55,69 @@ public abstract class LdapModifyOperation {
     public LdapModifyOperation(LdapConnection conn) {
         this.conn = conn;
         groupHelper = new GroupHelper(conn);
+    }
+
+    protected final void hashPassword(Attribute passwordAttr, String entryDN) {
+        String hashAlgorithm = conn.getConfiguration().getPasswordHashAlgorithm();
+        if (isBlank(hashAlgorithm) || "NONE".equalsIgnoreCase(hashAlgorithm)) {
+            return;
+        }
+        try {
+            byte[] password = (byte[]) passwordAttr.get();
+            if (password != null) {
+                String newPassword = hashBytes(password, hashAlgorithm, entryDN != null ? entryDN.hashCode() : 0);
+                passwordAttr.clear();
+                passwordAttr.add(newPassword);
+            }
+        } catch (NamingException e) {
+            throw new ConnectorException(e);
+        }
+    }
+
+    private String hashBytes(byte[] plain, String algorithm, long randSeed) {
+        MessageDigest digest = null;
+        try {
+            if ( algorithm.equalsIgnoreCase("SSHA") || algorithm.equalsIgnoreCase("SHA") ) {
+                digest = MessageDigest.getInstance("SHA-1");
+            } else if ( algorithm.equalsIgnoreCase("SMD5") || algorithm.equalsIgnoreCase("MD5") ) {
+                digest = MessageDigest.getInstance("MD5");
+            }
+        } catch (NoSuchAlgorithmException e) {
+            throw new ConnectorException("Could not find MessageDigest algorithm (" + algorithm + ") implementation");
+        }
+        if ( digest == null ) {
+            throw new ConnectorException("Unsupported hash algorithm: " + algorithm);
+        }
+
+        byte[] salt = { };
+
+        if ( algorithm.equalsIgnoreCase("SSHA") || algorithm.equalsIgnoreCase("SMD5") ) {
+            Random rand = new Random();
+            rand.setSeed(System.currentTimeMillis() + randSeed);
+            // A RSA whitepaper <http://www.rsasecurity.com/solutions/developers/whitepapers/Article3-PBE.pdf>
+            // suggested the salt length be the same as the output of the
+            // hash function being used. The adapter uses the length of the input,
+            // hoping that it is close enough an approximation.
+            salt = new byte[8];
+            rand.nextBytes(salt);
+        }
+
+        digest.reset();
+        digest.update(plain);
+        digest.update(salt);
+        byte[] hash = digest.digest();
+
+        byte[] hashPlusSalt = new byte[hash.length + salt.length];
+        System.arraycopy(hash, 0, hashPlusSalt, 0, hash.length);
+        System.arraycopy(salt, 0, hashPlusSalt, hash.length, salt.length);
+
+        StringBuilder result = new StringBuilder(algorithm.length() + hashPlusSalt.length);
+        result.append('{');
+        result.append(algorithm);
+        result.append('}');
+        result.append(Base64.encode(hashPlusSalt));
+
+        return result.toString();
     }
 
     protected final static Set<String> getAttributeValues(String attrName, LdapName entryDN, Attributes attrs) {
