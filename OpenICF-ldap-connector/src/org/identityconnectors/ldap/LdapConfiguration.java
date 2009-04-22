@@ -27,6 +27,7 @@ import static org.identityconnectors.common.CollectionUtil.newList;
 import static org.identityconnectors.common.StringUtil.isBlank;
 import static org.identityconnectors.ldap.LdapUtil.nullAsEmpty;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -261,16 +262,8 @@ public class LdapConfiguration extends AbstractConfiguration {
         if (baseContexts == null || baseContexts.length < 1) {
             throw new ConfigurationException("The list of base contexts cannot be empty");
         }
-        for (String baseContext : baseContexts) {
-            try {
-                if (isBlank(baseContext)) {
-                    throw new ConfigurationException("The list of base contexts cannot contain blank values");
-                }
-                new LdapName(baseContext);
-            } catch (InvalidNameException e) {
-                throw new ConfigurationException("The base context " + baseContext + " cannot be parsed");
-            }
-        }
+        checkNoBlankValues(baseContexts, "The list of base contexts cannot contain blank values");
+        checkNoInvalidLdapNames(baseContexts, "The base context {0} cannot be parsed");
 
         if (accountConfig.getLdapClasses().size() < 1) {
             throw new ConfigurationException("The list of account object classes cannot be empty");
@@ -280,30 +273,31 @@ public class LdapConfiguration extends AbstractConfiguration {
                 throw new ConfigurationException("The list of account object classes cannot contain blank values");
             }
         }
-        
-        if (maintainLdapGroupMembership && isBlank(groupMemberAttribute)) {
-            throw new ConfigurationException("The group member attribute cannot be blank when maintaining LDAP groups membership");
+
+        if (isBlank(groupMemberAttribute)) {
+            throw new ConfigurationException("The group member attribute cannot be blank");
         }
 
-        if (blockCount < 0) {
+        if (blockCount <= 0) {
             throw new ConfigurationException("The block size should be greather than 0");
         }
 
+        if (isBlank(vlvSortAttribute)) {
+            throw new ConfigurationException("The VLV sort attribute cannot be blank");
+        }
+
         if (isBlank(uidAttribute)) {
-            throw new ConfigurationException("The attribute to map to Uid cannot be empty");
+            throw new ConfigurationException("The attribute to map to Uid cannot be blank");
         }
 
         if (extendedObjectClasses == null) {
             throw new ConfigurationException("The list of extended object classes cannot be null");
         }
+        checkNoBlankValues(extendedObjectClasses, "The list of extended object classes cannot contain blank values");
         if (extendedNamingAttributes == null) {
             throw new ConfigurationException("The list of extended naming attributes cannot be null");
         }
-        for (String extendedObjectClass : extendedObjectClasses) {
-            if (isBlank(extendedObjectClass)) {
-                throw new ConfigurationException("The list of extended object classes cannot contain blank values");
-            }
-        }
+        checkNoBlankValues(extendedNamingAttributes, "The list of extended naming attributes cannot contain blank values");
         if (extendedObjectClasses.length > 0) {
             if (!readSchema) {
                 throw new ConfigurationException("The readSchema property must be true when using extended object classes");
@@ -311,19 +305,51 @@ public class LdapConfiguration extends AbstractConfiguration {
             if (extendedNamingAttributes.length < extendedObjectClasses.length) {
                 throw new ConfigurationException("No naming attributes were provided for all extended object classes");
             }
-            for (String extendedNamingAttribute : extendedNamingAttributes) {
-                if (isBlank(extendedNamingAttribute)) {
-                    throw new ConfigurationException("The list of extended naming attributes cannot contain blank values");
-                }
-            }
         }
 
-        if (changeLogBlockSize < 0) {
-            throw new ConfigurationException("The synchronization block size should be greather than 0");
+        if (baseContextsToSynchronize != null) {
+            checkNoBlankValues(baseContextsToSynchronize, "The list of base contexts to synchronize cannot contain blank values");
+            checkNoInvalidLdapNames(baseContextsToSynchronize, "The base context to synchronize {0} cannot be parsed");
+        }
+
+        if (objectClassesToSynchronize == null || objectClassesToSynchronize.length < 1) {
+            throw new ConfigurationException("The list of object classes to synchronize cannot be empty");
+        }
+        checkNoBlankValues(objectClassesToSynchronize, "The list of object classes to synchronize cannot contain blank values");
+
+        if (attributesToSynchronize != null) {
+            checkNoBlankValues(attributesToSynchronize, "The list of attributes to synchronize cannot contain blank values");
+        }
+
+        if (modifiersNamesToFilterOut != null) {
+            checkNoBlankValues(modifiersNamesToFilterOut, "The list of modifiers' names to filter out cannot contain blank values");
+            checkNoInvalidLdapNames(modifiersNamesToFilterOut, "The modifier's name to filter out {0} cannot be parsed");
         }
 
         if (isBlank(changeNumberAttribute)) {
             throw new ConfigurationException("The change number attribute cannot be blank");
+        }
+
+        if (changeLogBlockSize <= 0) {
+            throw new ConfigurationException("The synchronization block size should be greather than 0");
+        }
+    }
+
+    private void checkNoBlankValues(String[] array, String errorMessage) {
+        for (String each : array) {
+            if (isBlank(each)) {
+                throw new ConfigurationException(errorMessage);
+            }
+        }
+    }
+
+    private void checkNoInvalidLdapNames(String[] array, String errorMessage) {
+        for (String each : array) {
+            try {
+                new LdapName(each);
+            } catch (InvalidNameException e) {
+                throw new ConfigurationException(MessageFormat.format(errorMessage, each));
+            }
         }
     }
 
@@ -532,7 +558,7 @@ public class LdapConfiguration extends AbstractConfiguration {
         this.baseContextsToSynchronize = (String[]) baseContextsToSynchronize.clone();
     }
 
-    @ConfigurationProperty(operations = { SyncOp.class })
+    @ConfigurationProperty(operations = { SyncOp.class }, required = true)
     public String[] getObjectClassesToSynchronize() {
         return objectClassesToSynchronize.clone();
     }
@@ -568,7 +594,7 @@ public class LdapConfiguration extends AbstractConfiguration {
         this.accountSynchronizationFilter = accountSynchronizationFilter;
     }
 
-    @ConfigurationProperty(operations = { SyncOp.class })
+    @ConfigurationProperty(operations = { SyncOp.class }, required = true)
     public int getChangeLogBlockSize() {
         return changeLogBlockSize;
     }
@@ -577,7 +603,7 @@ public class LdapConfiguration extends AbstractConfiguration {
         this.changeLogBlockSize = changeLogBlockSize;
     }
 
-    @ConfigurationProperty(operations = { SyncOp.class })
+    @ConfigurationProperty(operations = { SyncOp.class }, required = true)
     public String getChangeNumberAttribute() {
         return changeNumberAttribute;
     }

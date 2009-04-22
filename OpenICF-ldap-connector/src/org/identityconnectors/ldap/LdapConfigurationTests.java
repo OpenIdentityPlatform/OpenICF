@@ -34,7 +34,7 @@ import org.identityconnectors.framework.common.exceptions.ConfigurationException
 import org.junit.Before;
 import org.junit.Test;
 
-public class LdapConfigurationTests /* extends LdapConnectorTestBase*/ {
+public class LdapConfigurationTests {
 
     private static final String INVALID_DN = "dc=a,,";
 
@@ -49,52 +49,80 @@ public class LdapConfigurationTests /* extends LdapConnectorTestBase*/ {
     }
 
     @Test(expected = ConfigurationException.class)
-    public void testNoPasswordAttributeNull() {
+    public void testPasswordAttributeNotNull() {
         config.setPasswordAttribute(null);
         config.validate();
     }
 
     @Test(expected = ConfigurationException.class)
-    public void testNoPasswordAttributeBlank() {
+    public void testPasswordAttributeNotBlank() {
         config.setPasswordAttribute(" ");
         config.validate();
     }
 
     @Test(expected = ConfigurationException.class)
-    public void testNoBaseContextsNull() {
-        config.setBaseContexts((String) null);
-        config.validate();
-    }
-
-    @Test(expected = ConfigurationException.class)
-    public void testNoBaseContextsEmpty() {
+    public void testBaseContextsNotEmpty() {
         config.setBaseContexts();
         config.validate();
     }
 
     @Test(expected = ConfigurationException.class)
-    public void testInvalidBaseContextsNotAllowed() {
-        config.setBaseContexts(LdapConnectorTestBase.ACME_DN, INVALID_DN);
-        config.validate();
-    }
-    
-    @Test(expected = ConfigurationException.class)
-    public void testGroupMemberAttributeNeededWhenMaintainingGroupMembership() {
-        config.setGroupMemberAttribute(null);
-        config.setMaintainLdapGroupMembership(true);
+    public void testBaseContextsItemNotNull() {
+        config.setBaseContexts((String) null);
         config.validate();
     }
 
     @Test(expected = ConfigurationException.class)
-    public void testUidAttributeCannotBeNull() {
-        assertCanValidate(config);
+    public void testBaseContextsItemNotBlank() {
+        config.setBaseContexts(" ");
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testBaseContextsValid() {
+        config.setBaseContexts(LdapConnectorTestBase.ACME_DN, INVALID_DN);
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testGroupMemberAttributeNotNull() {
+        config.setGroupMemberAttribute(null);
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testGroupMemberAttributeNotBlank() {
+        config.setGroupMemberAttribute(" ");
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testBlockCountGreatherThanZero() {
+        config.setBlockCount(0);
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testVlvSortAttributeNotNull() {
         config.setUidAttribute(null);
         config.validate();
     }
 
     @Test(expected = ConfigurationException.class)
-    public void testUidAttributeCannotBeBlank() {
-        config.setUidAttribute("");
+    public void testVlvSortAttributeNotBlank() {
+        config.setUidAttribute(" ");
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testUidAttributeNotNull() {
+        config.setUidAttribute(null);
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testUidAttributeNotBlank() {
+        config.setUidAttribute(" ");
         config.validate();
     }
 
@@ -105,6 +133,90 @@ public class LdapConfigurationTests /* extends LdapConnectorTestBase*/ {
         config.setExtendedNamingAttributes("dc");
         config.setReadSchema(false);
         // Fails because readSchema is false.
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testBaseContextsToSynchronizeItemNotNull() {
+        config.setBaseContextsToSynchronize((String) null);
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testBaseContextsToSynchronizeItemNotBlank() {
+        config.setBaseContextsToSynchronize(" ");
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testBaseContextsToSyncronizeValid() {
+        config.setBaseContextsToSynchronize(LdapConnectorTestBase.ACME_DN, INVALID_DN);
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testObjectClassesToSynchronizeNotEmpty() {
+        config.setObjectClassesToSynchronize();
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testObjectClassesToSynchronizeItemNotNull() {
+        config.setObjectClassesToSynchronize((String) null);
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testObjectClassesToSynchronizeItemNotBlank() {
+        config.setObjectClassesToSynchronize(" ");
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testAttributesToSynchronizeItemNotNull() {
+        config.setAttributesToSynchronize((String) null);
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testAttributesToSynchronizeItemNotBlank() {
+        config.setAttributesToSynchronize(" ");
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testModifiersNamesToFilterOutItemNotNull() {
+        config.setModifiersNamesToFilterOut((String) null);
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testModifiersNamesToFilterOutItemNotBlank() {
+        config.setModifiersNamesToFilterOut(" ");
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testModifiersNamesToFilterOutValid() {
+        config.setModifiersNamesToFilterOut(LdapConnectorTestBase.ACME_DN, INVALID_DN);
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testChangeNumberAttributeNotNull() {
+        config.setChangeNumberAttribute(null);
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testChangeLogBlockSizeGreatherThanZero() {
+        config.setChangeLogBlockSize(0);
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testChangeNumberAttributeNotBlank() {
+        config.setChangeNumberAttribute(" ");
         config.validate();
     }
 
