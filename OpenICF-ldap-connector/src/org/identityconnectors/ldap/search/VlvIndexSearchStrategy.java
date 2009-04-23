@@ -121,7 +121,7 @@ public class VlvIndexSearchStrategy extends LdapSearchStrategy {
                     boolean overlap = false;
                     if (lastResultName != null) {
                         if (lastResultName.equals(result.getName())) {
-                            getLog().ok("Working around rounding error overlap at index " + index);
+                            getLog().warn("Working around rounding error overlap at index " + index);
                             overlap = true;
                         }
                         lastResultName = null;
@@ -153,6 +153,16 @@ public class VlvIndexSearchStrategy extends LdapSearchStrategy {
             if (index > lastListSize) {
                 break;
             }
+
+            // DSEE seems to only have a single VLV index (although it claims to support more).
+            // It returns at the server content count the sum of sizes of all indexes,
+            // but it only returns the entries in the base context we are asking for.
+            // So, in this case, index will never reach lastListSize. To avoid an infinite loop,
+            // ending search if we received no results in the last iteration.
+            if (resultList.isEmpty()) {
+                getLog().warn("Ending search because received no results");
+                break;
+            }
         }
         return true;
     }
@@ -171,6 +181,7 @@ public class VlvIndexSearchStrategy extends LdapSearchStrategy {
                     if (vlvControl.getResultCode() == 0) {
                         lastListSize = vlvControl.getListSize();
                         cookie = vlvControl.getContextID();
+                        getLog().ok("Response control: lastListSize = {0}", lastListSize);
                     } else {
                         throw vlvControl.getException();
                     }

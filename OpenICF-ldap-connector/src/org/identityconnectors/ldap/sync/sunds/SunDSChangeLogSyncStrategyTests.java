@@ -44,6 +44,7 @@ import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.LdapConfiguration;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.SunDSTestBase;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
@@ -163,6 +164,7 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
     }
 
     @Test
+    @Ignore
     public void testFilterOutByBaseContexts() throws NamingException {
         LdapConfiguration config = newConfiguration();
         String baseContext = config.getBaseContexts()[0];
@@ -172,6 +174,7 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
     }
 
     @Test
+    @Ignore
     public void testFilterOutByModifiersNames() throws NamingException {
         LdapConfiguration config = newConfiguration();
         config.setModifiersNamesToFilterOut("cn=Directory Manager");
@@ -180,6 +183,7 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
     }
 
     @Test
+    @Ignore
     public void testFilterOutByAttributes() throws NamingException {
         LdapConfiguration config = newConfiguration();
         config.setAttributesToSynchronize("telephoneNumber");
@@ -188,6 +192,7 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
     }
 
     @Test
+    @Ignore
     public void testFilterOutByObjectClasses() throws NamingException {
         LdapConfiguration config = newConfiguration();
         config.setObjectClassesToSynchronize("groupOfUniqueNames");
@@ -196,6 +201,7 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
     }
 
     @Test
+    @Ignore
     public void testAccountSynchronizationFilter() throws NamingException {
         LdapConfiguration config = newConfiguration();
         config.setAccountSynchronizationFilter("cn=value");

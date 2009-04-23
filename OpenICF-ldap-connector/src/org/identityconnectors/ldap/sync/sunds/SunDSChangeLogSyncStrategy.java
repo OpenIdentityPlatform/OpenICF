@@ -414,7 +414,7 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
     private String getChangeLogSearchFilter(String changeNumberAttr, int startChangeNumber) {
         int blockSize = conn.getConfiguration().getChangeLogBlockSize();
         boolean filterWithOrInsteadOfAnd = conn.getConfiguration().isFilterWithOrInsteadOfAnd();
-        boolean filterByLogEntryOClass = conn.getConfiguration().isRemoveLogEntryObjectClassFromFilter();
+        boolean filterByLogEntryOClass = !conn.getConfiguration().isRemoveLogEntryObjectClassFromFilter();
 
         StringBuilder result = new StringBuilder();
         if (filterWithOrInsteadOfAnd) {

@@ -45,6 +45,7 @@ import org.identityconnectors.ldap.LdapConnector;
 import org.identityconnectors.ldap.SunDSTestBase;
 import org.identityconnectors.test.common.TestHelpers;
 import org.identityconnectors.test.common.ToListResultsHandler;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class VlvIndexSearchStrategyTests extends SunDSTestBase {
@@ -65,6 +66,7 @@ public class VlvIndexSearchStrategyTests extends SunDSTestBase {
      * search strategy works around these rounding errors.
      */
     @Test
+    @Ignore
     public void testOverlapWorkaround() throws Exception {
         // Rounding errors occur with small block sizes, so using a size of 2.
         LdapConfiguration config = newConfiguration(2);
