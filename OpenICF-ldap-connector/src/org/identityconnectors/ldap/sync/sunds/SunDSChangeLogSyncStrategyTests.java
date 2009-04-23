@@ -62,12 +62,23 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
         LdapModifyForTests.modify(conn, ldif);
         OperationOptionsBuilder builder = new OperationOptionsBuilder();
         builder.setAttributesToGet("cn", "sn", "givenName", "uid");
-        sync.sync(token, new SyncResultsHandler() {
-            public boolean handle(SyncDelta delta) {
-                result.add(delta);
-                return true;
+        for (int i = 0; i < 10; i++) {
+            sync.sync(token, new SyncResultsHandler() {
+                public boolean handle(SyncDelta delta) {
+                    result.add(delta);
+                    return true;
+                }
+            }, builder.build());
+            if (result.isEmpty()) {
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    // Nothing.
+                }
+            } else {
+                break;
             }
-        }, builder.build());
+        }
         return result;
     }
 
