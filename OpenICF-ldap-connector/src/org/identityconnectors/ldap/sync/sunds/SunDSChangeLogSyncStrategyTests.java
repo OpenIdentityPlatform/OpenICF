@@ -31,10 +31,12 @@ import java.util.List;
 
 import javax.naming.NamingException;
 
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncDeltaType;
@@ -44,10 +46,14 @@ import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.LdapConfiguration;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.SunDSTestBase;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
+
+    private static final Log log = Log.getLog(SunDSChangeLogSyncStrategyTests.class);
+
+    private static final int WAIT_TIMES = 10;
+    private static final int WAIT = 500; /* milliseconds */
 
     private static LdapConnection newConnection(LdapConfiguration config) throws NamingException {
         LdapConnection conn = new LdapConnection(config);
@@ -55,30 +61,38 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
         return conn;
     }
 
-    private List<SyncDelta> doTest(LdapConnection conn, String ldif) throws NamingException {
+    private List<SyncDelta> doTest(LdapConnection conn, String ldif, int expected) throws NamingException {
         SunDSChangeLogSyncStrategy sync = new SunDSChangeLogSyncStrategy(conn, ObjectClass.ACCOUNT);
-        final List<SyncDelta> result = new ArrayList<SyncDelta>();
         SyncToken token = sync.getLatestSyncToken();
+
         LdapModifyForTests.modify(conn, ldif);
+
         OperationOptionsBuilder builder = new OperationOptionsBuilder();
         builder.setAttributesToGet("cn", "sn", "givenName", "uid");
-        for (int i = 0; i < 10; i++) {
+        OperationOptions options = builder.build();
+
+        final List<SyncDelta> result = new ArrayList<SyncDelta>();
+        for (int i = 0; i < WAIT_TIMES; i++) {
             sync.sync(token, new SyncResultsHandler() {
                 public boolean handle(SyncDelta delta) {
                     result.add(delta);
                     return true;
                 }
-            }, builder.build());
-            if (result.isEmpty()) {
+            }, options);
+            // The change log seems to be asynchronous, need to wait.
+            // Wait at least once if expecting == 0 (not expecting any deltas),
+            // to make sure that we process the change log entry.
+            if (result.size() < expected || (expected == 0 && i == 0)) {
                 try {
-                    Thread.sleep(200);
+                    log.ok("Going to wait (result size = {0}, expected = {0})", result.size(), expected);
+                    Thread.sleep(WAIT);
                 } catch (InterruptedException e) {
-                    // Nothing.
+                    // Ignore.
                 }
             } else {
                 break;
             }
-        }
+        };
         return result;
     }
 
@@ -97,7 +111,7 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
                 "objectClass: top\n" +
                 "uid: foobar\n" +
                 "cn: Foo Bar\n" +
-                "sn: Bar\n");
+                "sn: Bar\n", 1);
 
         assertEquals(1, result.size());
         SyncDelta delta = result.get(0);
@@ -112,7 +126,7 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
         result = doTest(conn,
                 "dn: " + entryDN + "\n" +
                 "changeType: modrdn\n" +
-                "newRdn: cn=Foo Bar");
+                "newRdn: cn=Foo Bar", 1);
         entryDN = "cn=Foo Bar," + baseContext;
 
         assertEquals(1, result.size());
@@ -129,7 +143,7 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
                 "dn: " + entryDN + "\n" +
                 "changeType: modify\n" +
                 "add: cn\n" +
-                "cn: Dummy User");
+                "cn: Dummy User", 1);
 
         assertEquals(1, result.size());
         delta = result.get(0);
@@ -141,7 +155,7 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
                 "dn: " + entryDN + "\n" +
                 "changeType: modrdn\n" +
                 "newRdn: cn=Dummy User\n" +
-                "deleteOldRdn: FALSE");
+                "deleteOldRdn: FALSE", 1);
         entryDN = "cn=Dummy User," + baseContext;
 
         assertEquals(1, result.size());
@@ -156,7 +170,7 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
                 "dn: " + entryDN + "\n" +
                 "changeType: modify\n" +
                 "delete: cn\n" +
-                "cn: Foo Bar");
+                "cn: Foo Bar", 1);
 
         assertEquals(1, result.size());
         delta = result.get(0);
@@ -166,7 +180,7 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
 
         result = doTest(conn,
                 "dn: " + entryDN + "\n" +
-                "changeType: delete");
+                "changeType: delete", 1);
 
         assertEquals(1, result.size());
         delta = result.get(0);
@@ -175,7 +189,6 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
     }
 
     @Test
-    @Ignore
     public void testFilterOutByBaseContexts() throws NamingException {
         LdapConfiguration config = newConfiguration();
         String baseContext = config.getBaseContexts()[0];
@@ -185,7 +198,6 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
     }
 
     @Test
-    @Ignore
     public void testFilterOutByModifiersNames() throws NamingException {
         LdapConfiguration config = newConfiguration();
         config.setModifiersNamesToFilterOut("cn=Directory Manager");
@@ -194,7 +206,6 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
     }
 
     @Test
-    @Ignore
     public void testFilterOutByAttributes() throws NamingException {
         LdapConfiguration config = newConfiguration();
         config.setAttributesToSynchronize("telephoneNumber");
@@ -203,7 +214,6 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
     }
 
     @Test
-    @Ignore
     public void testFilterOutByObjectClasses() throws NamingException {
         LdapConfiguration config = newConfiguration();
         config.setObjectClassesToSynchronize("groupOfUniqueNames");
@@ -212,7 +222,6 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
     }
 
     @Test
-    @Ignore
     public void testAccountSynchronizationFilter() throws NamingException {
         LdapConfiguration config = newConfiguration();
         config.setAccountSynchronizationFilter("cn=value");
@@ -232,7 +241,7 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
                 "objectClass: top\n" +
                 "uid: foobar\n" +
                 "cn: Foo Bar\n" +
-                "sn: Bar\n");
+                "sn: Bar\n", 0);
         assertTrue(result.isEmpty());
     }
 }
