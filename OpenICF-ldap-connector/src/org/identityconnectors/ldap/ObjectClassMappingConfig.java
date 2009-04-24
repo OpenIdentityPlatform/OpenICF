@@ -46,8 +46,6 @@ public class ObjectClassMappingConfig {
 
     private boolean container;
 
-    private String nameAttribute; // Maps to Name.
-
     private final Map<String, AttributeMappingConfig> attrName2Mapping = new HashMap<String, AttributeMappingConfig>();
     private final List<AttributeMappingConfig> attributeMappings = new ArrayList<AttributeMappingConfig>();
 
@@ -81,14 +79,6 @@ public class ObjectClassMappingConfig {
 
     public void setContainer(boolean container) {
         this.container = container;
-    }
-
-    public String getNameAttribute() {
-        return nameAttribute;
-    }
-
-    public void setNameAttribute(String nameAttribute) {
-        this.nameAttribute = nameAttribute;
     }
 
     public List<AttributeMappingConfig> getAttributeMappings() {
@@ -148,9 +138,6 @@ public class ObjectClassMappingConfig {
                 return false;
             }
             if ((ldapClasses == null) ? (that.ldapClasses != null) : !ldapClasses.equals(that.ldapClasses)) {
-                return false;
-            }
-            if ((nameAttribute == null) ? (that.nameAttribute != null) : !nameAttribute.equals(that.nameAttribute)) {
                 return false;
             }
             if (!attributeMappings.equals(that.attributeMappings)) {

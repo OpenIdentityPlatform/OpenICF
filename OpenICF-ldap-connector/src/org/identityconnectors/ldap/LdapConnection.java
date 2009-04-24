@@ -25,25 +25,21 @@ package org.identityconnectors.ldap;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
+import static org.identityconnectors.common.StringUtil.isNotBlank;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValues;
-import static org.identityconnectors.ldap.LdapUtil.isUnderContexts;
 
-import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Set;
 
 import javax.naming.AuthenticationException;
 import javax.naming.Context;
-import javax.naming.InvalidNameException;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 import javax.naming.ldap.Control;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
-import javax.naming.ldap.LdapName;
 
 import org.identityconnectors.common.Assertions;
-import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.common.security.GuardedString.Accessor;
@@ -51,7 +47,6 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.ConnectorSecurityException;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.identityconnectors.framework.common.exceptions.PasswordExpiredException;
-import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.ldap.schema.LdapSchemaMapping;
 
 import com.sun.jndi.ldap.ctl.PasswordExpiredResponseControl;
@@ -136,13 +131,10 @@ public class LdapConnection {
             env.put(Context.SECURITY_PROTOCOL, "ssl");
         }
 
-        String authentication = config.getAuthentication();
-        if (StringUtil.isBlank(authentication)) {
-            authentication = principal != null ? "simple" : "none";
-        }
+        String authentication = isNotBlank(principal) ? "simple" : "none";
         env.put(Context.SECURITY_AUTHENTICATION, authentication);
 
-        if (!"none".equals(authentication)) {
+        if (isNotBlank(principal)) {
             env.put(Context.SECURITY_PRINCIPAL, principal);
             if (credentials != null) {
                 credentials.access(new Accessor() {
@@ -287,46 +279,6 @@ public class LdapConnection {
             }
         }
         return supportedControls;
-    }
-
-    /**
-     * Returns the base DNs passed through the {@link LdapConnector#OP_BASE_DNS}
-     * option, or an empty array if the option is not present.
-     */
-    public String[] getOptionsBaseDNs(OperationOptions options) {
-        String[] result = (String[]) options.getOptions().get(LdapConnector.OP_BASE_DNS);
-        if (result != null) {
-            if (result.length == 0) {
-                throw new ConnectorException("The value of the OP_BASE_DNS option should not be an empty array");
-            }
-            String illegalBaseDN = checkBaseDNs(result);
-            if (illegalBaseDN != null) {
-                throw new ConnectorException("Base DN " + illegalBaseDN
-                        + " passed in OP_BASE_DNS is not under one of the configured base DNs "
-                        + Arrays.asList(config.getBaseContexts()));
-            }
-            return result;
-        }
-        return new String[0];
-    }
-
-    /**
-     * Checks that the wanted base DNs are included in the permitted base DNs.
-     * Returns the first wanted base DN for which this assertion is false or
-     * {@code null}.
-     */
-    private String checkBaseDNs(String[] entries) {
-        for (String entry : entries) {
-            try {
-                LdapName entryName = new LdapName(entry);
-                if (!isUnderContexts(entryName, config.getBaseContextsAsLdapNames())) {
-                    return entry;
-                }
-            } catch (InvalidNameException e) {
-                throw new ConnectorException(e);
-            }
-        }
-        return null;
     }
 
     public boolean needsBinaryOption(String attrName) {

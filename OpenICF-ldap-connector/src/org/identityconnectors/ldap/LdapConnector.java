@@ -25,7 +25,6 @@ package org.identityconnectors.ldap;
 import java.util.Set;
 
 import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.framework.api.operations.SearchApiOp;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
@@ -59,12 +58,6 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
         UpdateAttributeValuesOp, SyncOp {
 
     // XXX groups.
-
-    /**
-     * An operation option to use with {@link SearchApiOp} that specifies the
-     * base DNs to search in. The value should be a subset of {@link LdapConfiguration#getBaseContexts()}.
-     */
-    public static final String OP_BASE_DNS = "BASE_DNS";
 
     /**
      * The configuration for this connector instance.

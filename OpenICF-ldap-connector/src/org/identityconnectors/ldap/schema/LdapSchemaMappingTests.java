@@ -120,7 +120,7 @@ public class LdapSchemaMappingTests extends LdapConnectorTestBase {
 
     @Test
     public void testExtendedObjectClasses() {
-        Schema schema = newFacade(newConfiguration("dNSDomain:dc")).schema();
+        Schema schema = newFacade(newConfiguration("dNSDomain")).schema();
 
         ObjectClassInfo dnsDomainInfo = schema.findObjectClassInfo("dNSDomain");
         Set<AttributeInfo> dnsDomainAttrInfos = dnsDomainInfo .getAttributeInfo();

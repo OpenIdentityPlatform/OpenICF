@@ -212,15 +212,7 @@ public class LdapSchemaMapping {
      * object class was not configured explicitly in the configuration.
      */
     public String getLdapNameAttribute(ObjectClass oclass) {
-        String result = null;
-        ObjectClassMappingConfig oclassConfig = conn.getConfiguration().getObjectClassMappingConfigs().get(oclass);
-        if (oclassConfig != null) {
-            result = oclassConfig.getNameAttribute();
-        }
-        if (result == null) {
-            result = DEFAULT_LDAP_NAME_ATTR;
-        }
-        return result;
+        return DEFAULT_LDAP_NAME_ATTR;
     }
 
     public String getLdapMappedAttribute(ObjectClass oclass, String attrName) {

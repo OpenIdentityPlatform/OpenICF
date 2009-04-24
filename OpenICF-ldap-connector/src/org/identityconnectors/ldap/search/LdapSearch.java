@@ -36,7 +36,6 @@ import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.PagedResultsControl;
 
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
@@ -275,14 +274,8 @@ public class LdapSearch {
     private List<String> getBaseDNs() {
         List<String> result;
         QualifiedUid container = options.getContainer();
-        String[] opBaseDNs = conn.getOptionsBaseDNs(options);
         if (container != null) {
-            if (opBaseDNs.length > 0) {
-                throw new ConnectorException("Should only specify one of OP_CONTAINER and OP_BASE_DNS");
-            }
             result = singletonList(LdapSearches.getEntryDN(conn, container.getObjectClass(), container.getUid()));
-        } else if (opBaseDNs.length > 0) {
-            result = Arrays.asList(opBaseDNs);
         } else {
             result = Arrays.asList(conn.getConfiguration().getBaseContexts());
         }

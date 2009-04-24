@@ -52,7 +52,6 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.ldap.LdapConfiguration;
 import org.identityconnectors.ldap.LdapConnection;
-import org.identityconnectors.ldap.LdapConnector;
 import org.identityconnectors.ldap.LdapConnectorTestBase;
 import org.identityconnectors.test.common.TestHelpers;
 import org.identityconnectors.test.common.ToListResultsHandler;
@@ -325,49 +324,6 @@ public class LdapSearchTests extends LdapConnectorTestBase {
         List<ConnectorObject> objects = TestHelpers.searchToList(facade, ObjectClass.ACCOUNT, null);
         assertNotNull(getObjectByName(objects, BUGS_BUNNY_DN));
         assertNotNull(getObjectByName(objects, USER_0_DN));
-    }
-
-    @Test
-    public void testBaseDNsOption() {
-        LdapConfiguration config = newConfiguration();
-        config.setBaseContexts(ACME_DN, SMALL_COMPANY_DN, BIG_COMPANY_DN);
-        ConnectorFacade facade = newFacade(config);
-
-        // Specifying both OP_BASE_DNS and OP_CONTAINER is prohibited.
-        OperationOptionsBuilder optionsBuilder = new OperationOptionsBuilder();
-        optionsBuilder.setOption(LdapConnector.OP_BASE_DNS, new String[] { ACME_DN, SMALL_COMPANY_DN });
-        List<ConnectorObject> objects = TestHelpers.searchToList(facade, ObjectClass.ACCOUNT, null, optionsBuilder.build());
-        assertNotNull(getObjectByName(objects, BUGS_BUNNY_DN));
-        assertNotNull(getObjectByName(objects, ELMER_FUDD_DN));
-        assertNotNull(getObjectByName(objects, SINGLE_ACCOUNT_DN));
-        // We only searched inside Acme and Small Company, not inside Big Company.
-        assertNull(getObjectByName(objects, USER_0_UID));
-    }
-
-    @Test(expected = ConnectorException.class)
-    public void testBaseDNsOptionConflictsWithContainerOption() {
-        ConnectorFacade facade = newFacade();
-        // Find an organization to pass in OP_CONTAINER.
-        ObjectClass oclass = new ObjectClass("organization");
-        ConnectorObject organization = searchByAttribute(facade, oclass, new Name(BIG_COMPANY_DN));
-
-        // Specifying both OP_BASE_DNS and OP_CONTAINER is prohibited.
-        OperationOptionsBuilder optionsBuilder = new OperationOptionsBuilder();
-        optionsBuilder.setOption(LdapConnector.OP_BASE_DNS, new String[] { ACME_DN });
-        optionsBuilder.setContainer(new QualifiedUid(oclass, organization.getUid()));
-        TestHelpers.searchToList(facade, ObjectClass.ACCOUNT, null, optionsBuilder.build());
-    }
-
-    @Test(expected = ConnectorException.class)
-    public void testBaseDNsFromOptionOnlyAllowedFromConfigBaseDNs() {
-        LdapConfiguration config = newConfiguration();
-        config.setBaseContexts(ACME_DN);
-        ConnectorFacade facade = newFacade(config);
-
-        OperationOptionsBuilder optionsBuilder = new OperationOptionsBuilder();
-        // Specifying a base DN for OP_BASE_DNS which is not in LdapConfiguration.getBaseDNs() is prohibited.
-        optionsBuilder.setOption(LdapConnector.OP_BASE_DNS, new String[] { BIG_COMPANY_DN });
-        TestHelpers.searchToList(facade, ObjectClass.ACCOUNT, null, optionsBuilder.build());
     }
 
     @Test

@@ -103,11 +103,6 @@ public class LdapConfiguration extends AbstractConfiguration {
     private String passwordAttribute = "userPassword";
 
     /**
-     * The authentication mechanism to use against the LDAP server.
-     */
-    private String authentication = null;
-
-    /**
      * The base DNs for operations on the server.
      */
     private String[] baseContexts = { };
@@ -181,13 +176,6 @@ public class LdapConfiguration extends AbstractConfiguration {
      */
     private String[] extendedObjectClasses = { };
 
-    /**
-     * The naming attributes for the extended object classes:
-     * {@code extendedNamingAttributes[i]} is the naming attribute for
-     * {@code extendedObjectClasses[i]}.
-     */
-    private String[] extendedNamingAttributes = { };
-
     // Sync configuration properties.
 
     private String[] baseContextsToSynchronize = { };
@@ -227,7 +215,6 @@ public class LdapConfiguration extends AbstractConfiguration {
     public LdapConfiguration() {
         // Note: order is important!
 
-        accountConfig.setNameAttribute("entryDN");
         accountConfig.addAttributeMapping("uid", "uid");
         accountConfig.addAttributeMapping("cn", "cn");
         accountConfig.addAttributeMapping("givenName", "givenName");
@@ -235,7 +222,6 @@ public class LdapConfiguration extends AbstractConfiguration {
         accountConfig.addAttributeMapping("modifyTimeStamp", "modifyTimeStamp");
         accountConfig.addOperationalAttributes(OperationalAttributeInfos.PASSWORD);
 
-        groupConfig.setNameAttribute("entryDN");
         groupConfig.addAttributeMapping("cn", "cn");
     }
 
@@ -294,16 +280,9 @@ public class LdapConfiguration extends AbstractConfiguration {
             throw new ConfigurationException("The list of extended object classes cannot be null");
         }
         checkNoBlankValues(extendedObjectClasses, "The list of extended object classes cannot contain blank values");
-        if (extendedNamingAttributes == null) {
-            throw new ConfigurationException("The list of extended naming attributes cannot be null");
-        }
-        checkNoBlankValues(extendedNamingAttributes, "The list of extended naming attributes cannot contain blank values");
         if (extendedObjectClasses.length > 0) {
             if (!readSchema) {
                 throw new ConfigurationException("The readSchema property must be true when using extended object classes");
-            }
-            if (extendedNamingAttributes.length < extendedObjectClasses.length) {
-                throw new ConfigurationException("No naming attributes were provided for all extended object classes");
             }
         }
 
@@ -408,14 +387,6 @@ public class LdapConfiguration extends AbstractConfiguration {
 
     public void setPasswordAttribute(String passwordAttribute) {
         this.passwordAttribute = passwordAttribute;
-    }
-
-    public String getAuthentication() {
-        return authentication;
-    }
-
-    public void setAuthentication(String authentication) {
-        this.authentication = authentication;
     }
 
     public String[] getBaseContexts() {
@@ -537,14 +508,6 @@ public class LdapConfiguration extends AbstractConfiguration {
 
     public void setExtendedObjectClasses(String... extendedObjectClasses) {
         this.extendedObjectClasses = (String[]) extendedObjectClasses.clone();
-    }
-
-    public String[] getExtendedNamingAttributes() {
-        return extendedNamingAttributes.clone();
-    }
-
-    public void setExtendedNamingAttributes(String... extendedNamingAttributes) {
-        this.extendedNamingAttributes = (String[]) extendedNamingAttributes.clone();
     }
 
     // Sync properties getters and setters.
@@ -688,15 +651,6 @@ public class LdapConfiguration extends AbstractConfiguration {
             String extendedObjectClass = extendedObjectClasses[i];
             ObjectClassMappingConfig config = new ObjectClassMappingConfig(new ObjectClass(extendedObjectClass),
                     singletonList(extendedObjectClass));
-            if (i < extendedNamingAttributes.length) {
-                config.setNameAttribute(extendedNamingAttributes[i]);
-            } else {
-                // Just in the case extendedNamingAttributes is not in sync with
-                // extendedObjectClasses, we need to set a default naming attribute -- one
-                // that always exists.
-                // XXX or perhaps just throw an exception.
-                config.setNameAttribute("entryDN");
-            }
             if (!result.containsKey(config.getObjectClass())) {
                 result.put(config.getObjectClass(), config);
             } else {
@@ -716,7 +670,6 @@ public class LdapConfiguration extends AbstractConfiguration {
         builder.append(principal);
         builder.append(credentials);
         builder.append(passwordAttribute);
-        builder.append(authentication);
         for (String baseContext : baseContexts) {
             builder.append(baseContext);
         }
@@ -734,9 +687,6 @@ public class LdapConfiguration extends AbstractConfiguration {
         builder.append(readSchema);
         for (String extendedObjectClass : extendedObjectClasses) {
             builder.append(extendedObjectClass);
-        }
-        for (String extendedNamingAttribute : extendedNamingAttributes) {
-            builder.append(extendedNamingAttribute);
         }
         // Sync configuration properties.
         for (String baseContextToSynchronize : baseContextsToSynchronize) {

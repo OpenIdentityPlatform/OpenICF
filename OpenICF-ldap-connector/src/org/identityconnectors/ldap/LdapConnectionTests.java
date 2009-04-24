@@ -84,13 +84,11 @@ public class LdapConnectionTests extends LdapConnectorTestBase {
     @Test
     public void testDefaultAuthenticationMethodIsInferred() throws NamingException {
         LdapConfiguration config = newConfiguration();
-        config.setAuthentication(null);
         config.setPrincipal(null);
         LdapConnection conn = new LdapConnection(config);
         assertEquals("none", conn.getInitialContext().getEnvironment().get(Context.SECURITY_AUTHENTICATION));
 
         config = newConfiguration();
-        config.setAuthentication(null);
         config.setPrincipal(ADMIN_DN);
         config.setCredentials(ADMIN_PASSWORD);
         conn = new LdapConnection(config);

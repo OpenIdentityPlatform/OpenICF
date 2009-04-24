@@ -149,7 +149,7 @@ public abstract class LdapConnectorTestBase {
 
     protected abstract boolean restartServerAfterEachTest();
 
-    public static LdapConfiguration newConfiguration(String... extObjectClassesAndNamingAttributes) {
+    public static LdapConfiguration newConfiguration(String... extendedObjectClasses) {
         LdapConfiguration config = new LdapConfiguration();
         // Cf. opends/config.ldif.
         config.setHost("localhost");
@@ -158,22 +158,10 @@ public abstract class LdapConnectorTestBase {
         config.setPrincipal(ADMIN_DN);
         config.setCredentials(ADMIN_PASSWORD);
         // Set the group member attribute to the IdM default.
-        config.setGroupMemberAttribute("uniqueMember");
-        // config.setUsePagedResultControl(true);
         // IdM will not read the schema. So prefer to test with that setting, unless we are testing
         // extended object classes, in which case we do need to read the schema.
-        config.setReadSchema(extObjectClassesAndNamingAttributes.length > 0);
-        String[] extendedObjectClasses = new String[extObjectClassesAndNamingAttributes.length];
-        String[] extendedNamingAttributes = new String[extObjectClassesAndNamingAttributes.length];
-        for (int i = 0; i < extObjectClassesAndNamingAttributes.length; i++) {
-            String entry = extObjectClassesAndNamingAttributes[i];
-            int colon = entry.indexOf(':');
-            assert colon > 0 && colon + 1 < entry.length();
-            extendedObjectClasses[i] = entry.substring(0, colon);
-            extendedNamingAttributes[i] = entry.substring(colon + 1);
-        }
+        config.setReadSchema(extendedObjectClasses.length > 0);
         config.setExtendedObjectClasses(extendedObjectClasses);
-        config.setExtendedNamingAttributes(extendedNamingAttributes);
         return config;
     }
 

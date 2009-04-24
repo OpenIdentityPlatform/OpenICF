@@ -100,7 +100,7 @@ class LdapSchemaBuilder {
 
         Set<String> mappedLdapAttributes = newCaseInsensitiveSet();
 
-        String ldapNameAttr = oclassConfig.getNameAttribute();
+        String ldapNameAttr = "entryDN"; // XXX yuck!
         if (ldapNameAttr != null) {
             // Name is required. So if Name is mapped to a required LDAP attribute,
             // make that attribute optional for further mapping.
