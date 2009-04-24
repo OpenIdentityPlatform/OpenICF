@@ -91,8 +91,7 @@ public class ConnectorHelper {
     private static final Log LOG = Log.getLog(ConnectorHelper.class);
     
     private static final String JVM_ARG_DATA_PROVIDER = "data-provider";
-    private static final Class DEFAULT_DATA_PROVIDER = GroovyDataProvider.class;
-    private static final String WRONG_CONFIGURATION_PREFIX = "wrong";
+    private static final Class<? extends DataProvider> DEFAULT_DATA_PROVIDER = GroovyDataProvider.class;
 
     public static DataProvider createDataProvider() {
         DataProvider dp = null;
@@ -647,7 +646,7 @@ public class ConnectorHelper {
                             , dataName, objectClassInfo.getType(), sequenceNumber, attributeInfo.isMultiValued());
                     
                     if(attributeValue instanceof Collection) {
-                        attributes.add(AttributeBuilder.build(attributeName, (Collection)attributeValue));
+                        attributes.add(AttributeBuilder.build(attributeName, (Collection<?>)attributeValue));
                     } else {
                         if (attributeInfo.is(OperationalAttributes.PASSWORD_NAME)) {
                             //password attribute
@@ -1032,7 +1031,7 @@ public class ConnectorHelper {
     }
     
     public static Object get(DataProvider dataProvider, String componentName, 
-            Class dataTypeName, String name, String objectClassName, 
+            Class<?> dataTypeName, String name, String objectClassName, 
             int sequenceNumber, boolean isMultivalue) throws ObjectNotFoundException {
         return dataProvider.get(dataTypeName, formatDataName(name, objectClassName), 
                 componentName, sequenceNumber, isMultivalue);

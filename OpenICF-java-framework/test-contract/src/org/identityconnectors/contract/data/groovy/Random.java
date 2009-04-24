@@ -38,7 +38,7 @@ import org.identityconnectors.contract.data.RandomGenerator;
  */
 public class Random extends Lazy {
 
-    private Class clazz;
+    private Class<?> clazz;
 
     /**
      * Creates a random string based on given pattern.
@@ -59,7 +59,7 @@ public class Random extends Lazy {
      * @param clazz
      *            the class that will be the type of generated object
      */
-    protected Random(Object pattern, Class clazz) {
+    protected Random(Object pattern, Class<?> clazz) {
         value = pattern;
         this.clazz = clazz;
     }
@@ -75,7 +75,7 @@ public class Random extends Lazy {
     /**
      * @return the type of generated random class
      */
-    public Class getClazz() {
+    public Class<?> getClazz() {
         return clazz;
     }
 }

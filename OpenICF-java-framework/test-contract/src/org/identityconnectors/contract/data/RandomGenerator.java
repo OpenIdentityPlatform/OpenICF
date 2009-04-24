@@ -90,8 +90,8 @@ public class RandomGenerator {
      *            see the definition in class header
      * @return object initialized with random string
      */
-    public static Object generate(String pattern, Class clazz) {
-        Constructor c;
+    public static Object generate(String pattern, Class<?> clazz) {
+        Constructor<?> c;
         try {
             String generatedStr = createRandomString(pattern,
                     getDefaultCharacterSetMap());

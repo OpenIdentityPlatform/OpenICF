@@ -98,7 +98,7 @@ public abstract class Lazy {
      * @param clazz
      * @return
      */
-    public static Lazy random(Object pattern, Class clazz) {
+    public static Lazy random(Object pattern, Class<?> clazz) {
         return new Random(pattern, clazz);
     }
 

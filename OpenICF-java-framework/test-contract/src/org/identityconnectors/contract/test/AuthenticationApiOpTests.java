@@ -411,7 +411,6 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                         getObjectClassInfo().getType(), 0);
 
                 // and now authenticate
-                boolean authenticateFailed = false;
                 PasswordExpiredException pwe = authenticateExpectingPasswordExpired(name, password);
                 assertNotNull("Authenticate should throw PasswordExpiredException.",
                         pwe);

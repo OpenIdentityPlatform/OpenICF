@@ -50,6 +50,7 @@ public class GetApiOpTests extends ObjectClassRunner {
     /**
      * Logging..
      */
+    @SuppressWarnings("unused")
     private static final Log LOG = Log.getLog(GetApiOpTests.class);
     private static final String TEST_NAME = "Get";
 
