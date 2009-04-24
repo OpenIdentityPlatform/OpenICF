@@ -30,9 +30,7 @@ import static org.identityconnectors.common.CollectionUtil.newReadOnlyList;
 import static org.identityconnectors.ldap.LdapEntry.isDNAttribute;
 import static org.identityconnectors.ldap.LdapUtil.addBinaryOption;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValue;
-import static org.identityconnectors.ldap.LdapUtil.hasBinaryOption;
 import static org.identityconnectors.ldap.LdapUtil.quietCreateLdapName;
-import static org.identityconnectors.ldap.LdapUtil.removeBinaryOption;
 
 import java.util.Iterator;
 import java.util.List;
@@ -62,11 +60,9 @@ import org.identityconnectors.framework.common.objects.ObjectClassUtil;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.identityconnectors.ldap.AttributeMappingConfig;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapEntry;
 import org.identityconnectors.ldap.ObjectClassMappingConfig;
-import org.identityconnectors.ldap.search.LdapSearches;
 
 /**
  * The authoritative description of the mapping between the LDAP schema
@@ -155,8 +151,6 @@ public class LdapSchemaMapping {
             result = getLdapUidAttribute(oclass);
         } else if (AttributeUtil.namesEqual(Name.NAME, attrName)) {
             result = getLdapNameAttribute(oclass);
-        } else {
-            result = getLdapMappedAttribute(oclass, attrName);
         }
 
         if (result == null && !AttributeUtil.isSpecialName(attrName)) {
@@ -213,18 +207,6 @@ public class LdapSchemaMapping {
      */
     public String getLdapNameAttribute(ObjectClass oclass) {
         return DEFAULT_LDAP_NAME_ATTR;
-    }
-
-    public String getLdapMappedAttribute(ObjectClass oclass, String attrName) {
-        String result = null;
-        ObjectClassMappingConfig oclassConfig = conn.getConfiguration().getObjectClassMappingConfigs().get(oclass);
-        if (oclassConfig != null) {
-            AttributeMappingConfig attrConfig = oclassConfig.getAttributeMapping(attrName);
-            if (attrConfig != null) {
-                result = attrConfig.getToAttribute();
-            }
-        }
-        return result;
     }
 
     /**
@@ -289,13 +271,6 @@ public class LdapSchemaMapping {
      */
     public Attribute createAttribute(ObjectClass oclass, String attrName, LdapEntry entry, boolean emptyWhenNotFound) {
         String ldapAttrNameForTransfer = getLdapAttribute(oclass, attrName, true);
-        String ldapAttrName;
-        if (ldapAttrNameForTransfer != null && hasBinaryOption(ldapAttrNameForTransfer)) {
-            ldapAttrName = removeBinaryOption(ldapAttrNameForTransfer);
-        } else {
-            ldapAttrName = ldapAttrNameForTransfer;
-        }
-
         javax.naming.directory.Attribute ldapAttr = null;
         if (ldapAttrNameForTransfer != null) {
             ldapAttr = entry.getAttributes().get(ldapAttrNameForTransfer);
@@ -307,32 +282,10 @@ public class LdapSchemaMapping {
 
         AttributeBuilder builder = new AttributeBuilder();
         builder.setName(attrName);
-
-        String mapDnToAttr = null;
-        ObjectClassMappingConfig oclassConfig = conn.getConfiguration().getObjectClassMappingConfigs().get(oclass);
-        if (oclassConfig != null) {
-            AttributeMappingConfig attrConfig = oclassConfig.getDNMapping(ldapAttrName);
-            if (attrConfig != null) {
-                mapDnToAttr = attrConfig.getToAttribute();
-            }
-        }
-
         try {
             NamingEnumeration<?> valEnum = ldapAttr.getAll();
             while (valEnum.hasMore()) {
-                Object value = valEnum.next();
-                if (mapDnToAttr != null && value != null) {
-                    LdapName entryDN = quietCreateLdapName(value.toString());
-                    LdapEntry mapToEntry = LdapSearches.findEntry(conn, entryDN, mapDnToAttr);
-                    if (mapToEntry != null) {
-                        Object mappedValue = mapToEntry.getAttributes().get(mapDnToAttr).get();
-                        if (mappedValue != null) {
-                            // Only set value to the mapped value if one exists.
-                            value = mappedValue;
-                        }
-                    }
-                }
-                builder.addValue(value);
+                builder.addValue(valEnum.next());
             }
         } catch (NamingException e) {
             throw new ConnectorException(e);
@@ -342,9 +295,9 @@ public class LdapSchemaMapping {
 
     public String create(ObjectClass oclass, Name name, javax.naming.directory.Attributes initialAttrs) {
         String ldapNameAttr = getLdapNameAttribute(oclass);
-        if (!"entryDN".equals(ldapNameAttr)) {
+        if (!isDNAttribute(ldapNameAttr)) {
             // Not yet implemented.
-            throw new UnsupportedOperationException("Name can only be mapped to entryDN");
+            throw new UnsupportedOperationException("Name can only be mapped to the DN");
         }
 
         LdapName entryName = quietCreateLdapName(name.getNameValue());

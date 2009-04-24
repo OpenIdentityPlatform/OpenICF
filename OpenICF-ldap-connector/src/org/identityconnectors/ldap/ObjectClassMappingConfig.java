@@ -25,12 +25,9 @@ package org.identityconnectors.ldap;
 import static org.identityconnectors.common.CollectionUtil.newReadOnlyList;
 import static org.identityconnectors.common.CollectionUtil.newReadOnlySet;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.identityconnectors.framework.common.objects.AttributeInfo;
@@ -46,19 +43,15 @@ public class ObjectClassMappingConfig {
 
     private boolean container;
 
-    private final Map<String, AttributeMappingConfig> attrName2Mapping = new HashMap<String, AttributeMappingConfig>();
-    private final List<AttributeMappingConfig> attributeMappings = new ArrayList<AttributeMappingConfig>();
-
-    private final Map<String, AttributeMappingConfig> attrName2DNMapping = new HashMap<String, AttributeMappingConfig>();
-    private final List<AttributeMappingConfig> dnMappings = new ArrayList<AttributeMappingConfig>();
-
     private final Set<AttributeInfo> operationalAttributes = new HashSet<AttributeInfo>();
 
-    public ObjectClassMappingConfig(ObjectClass objectClass, List<String> ldapClasses) {
+    public ObjectClassMappingConfig(ObjectClass objectClass, List<String> ldapClasses, boolean container, AttributeInfo... operationalAttributes) {
         assert objectClass != null;
         assert ldapClasses != null;
         this.objectClass = objectClass;
         setLdapClasses(ldapClasses);
+        setContainer(container);
+        addOperationalAttributes(operationalAttributes);
     }
 
     public ObjectClass getObjectClass() {
@@ -81,44 +74,6 @@ public class ObjectClassMappingConfig {
         this.container = container;
     }
 
-    public List<AttributeMappingConfig> getAttributeMappings() {
-        return newReadOnlyList(attributeMappings);
-    }
-
-    public AttributeMappingConfig getAttributeMapping(String attrName) {
-        return attrName2Mapping.get(attrName);
-    }
-
-    public void addAttributeMapping(String attrName, String ldapAttrName) {
-        assert attrName != null;
-        assert ldapAttrName != null;
-        if (attrName2Mapping.containsKey(attrName)) {
-            throw new IllegalStateException("Attribute " + attrName + "is already mapped");
-        }
-        AttributeMappingConfig mapping = new AttributeMappingConfig(attrName, ldapAttrName);
-        attrName2Mapping.put(attrName, mapping);
-        attributeMappings.add(mapping);
-    }
-
-    public List<AttributeMappingConfig> getDNMappings() {
-        return newReadOnlyList(dnMappings);
-    }
-
-    public AttributeMappingConfig getDNMapping(String dnValuedAttr) {
-        return attrName2DNMapping.get(dnValuedAttr);
-    }
-
-    public void addDNMapping(String dnValuedAttr, String mapToAttr) {
-        assert dnValuedAttr != null;
-        assert mapToAttr != null;
-        if (attrName2DNMapping.containsKey(dnValuedAttr)) {
-            throw new IllegalStateException("DN value of attribute " + dnValuedAttr + "is already mapped");
-        }
-        AttributeMappingConfig mapping = new AttributeMappingConfig(dnValuedAttr, mapToAttr);
-        attrName2DNMapping.put(dnValuedAttr, mapping);
-        dnMappings.add(mapping);
-    }
-
     public void addOperationalAttributes(AttributeInfo... attributeInfos) {
         operationalAttributes.addAll(Arrays.asList(attributeInfos));
     }
@@ -138,12 +93,6 @@ public class ObjectClassMappingConfig {
                 return false;
             }
             if ((ldapClasses == null) ? (that.ldapClasses != null) : !ldapClasses.equals(that.ldapClasses)) {
-                return false;
-            }
-            if (!attributeMappings.equals(that.attributeMappings)) {
-                return false;
-            }
-            if (!dnMappings.equals(that.dnMappings)) {
                 return false;
             }
             if (!operationalAttributes.equals(that.operationalAttributes)) {

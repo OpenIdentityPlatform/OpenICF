@@ -199,10 +199,10 @@ public class LdapConfiguration extends AbstractConfiguration {
     // Other state.
 
     private final ObjectClassMappingConfig accountConfig = new ObjectClassMappingConfig(ObjectClass.ACCOUNT,
-            newList("top", "person", "organizationalPerson", "inetOrgPerson"));
+            newList("top", "person", "organizationalPerson", "inetOrgPerson"), false, OperationalAttributeInfos.PASSWORD);
 
     private final ObjectClassMappingConfig groupConfig = new ObjectClassMappingConfig(ObjectClass.GROUP,
-            newList("top", "groupOfUniqueNames"));
+            newList("top", "groupOfUniqueNames"), false);
 
     // Other state not to be included in hashCode/equals.
 
@@ -213,16 +213,6 @@ public class LdapConfiguration extends AbstractConfiguration {
     private Set<LdapName> modifiersNamesToFilterOutAsLdapNames;
 
     public LdapConfiguration() {
-        // Note: order is important!
-
-        accountConfig.addAttributeMapping("uid", "uid");
-        accountConfig.addAttributeMapping("cn", "cn");
-        accountConfig.addAttributeMapping("givenName", "givenName");
-        accountConfig.addAttributeMapping("sn", "sn");
-        accountConfig.addAttributeMapping("modifyTimeStamp", "modifyTimeStamp");
-        accountConfig.addOperationalAttributes(OperationalAttributeInfos.PASSWORD);
-
-        groupConfig.addAttributeMapping("cn", "cn");
     }
 
     /**
@@ -650,7 +640,7 @@ public class LdapConfiguration extends AbstractConfiguration {
         for (int i = 0; i < extendedObjectClasses.length; i++) {
             String extendedObjectClass = extendedObjectClasses[i];
             ObjectClassMappingConfig config = new ObjectClassMappingConfig(new ObjectClass(extendedObjectClass),
-                    singletonList(extendedObjectClass));
+                    singletonList(extendedObjectClass), false);
             if (!result.containsKey(config.getObjectClass())) {
                 result.put(config.getObjectClass(), config);
             } else {

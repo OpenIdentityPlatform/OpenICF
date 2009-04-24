@@ -75,20 +75,18 @@ public class LdapSchemaMappingTests extends LdapConnectorTestBase {
         ObjectClassInfo oci = schema.findObjectClassInfo(ObjectClass.ACCOUNT_NAME);
         assertFalse(oci.isContainer());
 
+        // Check some, but not all, attributes of inetOrgClass.
         Set<AttributeInfo> attrInfos = oci.getAttributeInfo();
-
         AttributeInfo info = AttributeInfoUtil.find("cn", attrInfos);
         assertEquals(AttributeInfoBuilder.build("cn", String.class, EnumSet.of(Flags.REQUIRED, Flags.MULTIVALUED)), info);
-
         info = AttributeInfoUtil.find("uid", attrInfos);
         assertEquals(AttributeInfoBuilder.build("uid", String.class, EnumSet.of(Flags.MULTIVALUED)), info);
-
         info = AttributeInfoUtil.find("givenName", attrInfos);
         assertEquals(AttributeInfoBuilder.build("givenName", String.class, EnumSet.of(Flags.MULTIVALUED)), info);
-
         info = AttributeInfoUtil.find("sn", attrInfos);
         assertEquals(AttributeInfoBuilder.build("sn", String.class, EnumSet.of(Flags.REQUIRED, Flags.MULTIVALUED)), info);
 
+        // Operational attributes.
         info = AttributeInfoUtil.find(OperationalAttributes.PASSWORD_NAME, attrInfos);
         assertEquals(OperationalAttributeInfos.PASSWORD, info);
     }
@@ -123,14 +121,17 @@ public class LdapSchemaMappingTests extends LdapConnectorTestBase {
         Schema schema = newFacade(newConfiguration("dNSDomain")).schema();
 
         ObjectClassInfo dnsDomainInfo = schema.findObjectClassInfo("dNSDomain");
-        Set<AttributeInfo> dnsDomainAttrInfos = dnsDomainInfo .getAttributeInfo();
+        assertFalse(dnsDomainInfo.isContainer());
 
+        Set<AttributeInfo> dnsDomainAttrInfos = dnsDomainInfo .getAttributeInfo();
         // Inherited from domain.
-        AttributeInfo dcInfo = AttributeInfoUtil.find("telephoneNumber", dnsDomainAttrInfos );
-        assertEquals(AttributeInfoBuilder.build("telephoneNumber", String.class, EnumSet.of(Flags.MULTIVALUED)), dcInfo);
+        AttributeInfo info = AttributeInfoUtil.find("dc", dnsDomainAttrInfos );
+        assertEquals(AttributeInfoBuilder.build("dc", String.class, EnumSet.of(Flags.REQUIRED)), info);
+        info = AttributeInfoUtil.find("telephoneNumber", dnsDomainAttrInfos );
+        assertEquals(AttributeInfoBuilder.build("telephoneNumber", String.class, EnumSet.of(Flags.MULTIVALUED)), info);
         // Defined in dNSDomain.
-        AttributeInfo mxRecordInfo = AttributeInfoUtil.find("MXRecord", dnsDomainAttrInfos );
-        assertEquals(AttributeInfoBuilder.build("MXRecord", String.class, EnumSet.of(Flags.MULTIVALUED)), mxRecordInfo);
+        info = AttributeInfoUtil.find("MXRecord", dnsDomainAttrInfos );
+        assertEquals(AttributeInfoBuilder.build("MXRecord", String.class, EnumSet.of(Flags.MULTIVALUED)), info);
     }
 
     @Test

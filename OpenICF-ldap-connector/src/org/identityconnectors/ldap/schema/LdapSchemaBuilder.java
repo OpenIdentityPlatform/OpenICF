@@ -22,8 +22,6 @@
  */
 package org.identityconnectors.ldap.schema;
 
-import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
-
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -31,7 +29,6 @@ import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
-import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
@@ -39,7 +36,6 @@ import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.SchemaBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
-import org.identityconnectors.ldap.AttributeMappingConfig;
 import org.identityconnectors.ldap.LdapAttributeType;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapConnector;
@@ -98,49 +94,10 @@ class LdapSchemaBuilder {
         // OpenLDAP's ipProtocol has MUST ( ... $ description ) MAY ( description )
         optionalAttrs.removeAll(requiredAttrs);
 
-        Set<String> mappedLdapAttributes = newCaseInsensitiveSet();
-
-        String ldapNameAttr = "entryDN"; // XXX yuck!
-        if (ldapNameAttr != null) {
-            // Name is required. So if Name is mapped to a required LDAP attribute,
-            // make that attribute optional for further mapping.
-            if (requiredAttrs.remove(ldapNameAttr)) {
-                optionalAttrs.add(ldapNameAttr);
-            }
-            mappedLdapAttributes.add(ldapNameAttr);
-            result.add(Name.INFO);
-        }
-
-        List<AttributeMappingConfig> attrMappings = oclassConfig.getAttributeMappings();
-        for (AttributeMappingConfig attrMapping : attrMappings) {
-            String attrName = attrMapping.getFromAttribute();
-            String ldapAttrName = attrMapping.getToAttribute();
-            boolean required;
-            if (requiredAttrs.remove(ldapAttrName)) {
-                required = true;
-                optionalAttrs.add(ldapAttrName);
-            } else {
-                required = false;
-            }
-            mappedLdapAttributes.add(ldapAttrName);
-            // Explicitly mapped attributes are always returned by default.
-            addAttributeInfo(ldapClasses, ldapAttrName, attrName, required ? EnumSet.of(Flags.REQUIRED) : null, EnumSet.of(Flags.NOT_RETURNED_BY_DEFAULT), result);
-        }
-
-        // Now add the attributes which were not mapped explicitly.
-
-        requiredAttrs.removeAll(mappedLdapAttributes);
-        optionalAttrs.removeAll(mappedLdapAttributes);
-
-        if (attrMappings.isEmpty()) {
-            // If no attributes were mapped explicitly, add all attributes.
-            addAttributeInfos(ldapClasses, requiredAttrs, EnumSet.of(Flags.REQUIRED), null, result);
-            addAttributeInfos(ldapClasses, optionalAttrs, null, null, result);
-        } else {
-            // Otherwise add the non-mapped attributes, but do not return them by default.
-            addAttributeInfos(ldapClasses, requiredAttrs, EnumSet.of(Flags.REQUIRED, Flags.NOT_RETURNED_BY_DEFAULT), null, result);
-            addAttributeInfos(ldapClasses, optionalAttrs, EnumSet.of(Flags.NOT_RETURNED_BY_DEFAULT), null, result);
-        }
+        // Add required attributes as returned by default and the optional attributes
+        // as not returned by default (assuming the optional attributes are less important).
+        addAttributeInfos(ldapClasses, requiredAttrs, EnumSet.of(Flags.REQUIRED), null, result);
+        addAttributeInfos(ldapClasses, optionalAttrs, null, null, result);
 
         return result;
     }
