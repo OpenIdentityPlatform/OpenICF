@@ -28,6 +28,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
@@ -108,6 +109,20 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
             Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
                     getObjectClassInfo(), getTestName(), 0, true, false);
 
+            // Remove enabled and password_expired, connector must create valid account then  
+            for (Iterator<Attribute> i = attrs.iterator(); i.hasNext();) {
+                Attribute attr = i.next();
+                if (attr.is(OperationalAttributes.PASSWORD_EXPIRED_NAME) 
+                        || attr.is(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME)
+                        || attr.is(OperationalAttributes.ENABLE_DATE_NAME)
+                        || attr.is(OperationalAttributes.ENABLE_NAME)) {
+                    
+                    if (!ConnectorHelper.isRequired(getObjectClassInfo(), attr)) {
+                        i.remove();
+                    }
+                }
+            }
+            
             uid = getConnectorFacade().create(getObjectClass(), attrs, getOperationOptionsByOp(CreateApiOp.class));
 
             // get the user to make sure it exists now
@@ -218,7 +233,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
     @Test
     public void testOpEnable() {
         // now try to set the password to be expired and authenticate again
-        // it's possible only in case Update and PASSWORD_EXPIRED
+        // it's possible only in case Update and PASSWORD_EXPIRED are supported
         if (ConnectorHelper.operationsSupported(getConnectorFacade(), getObjectClass(), getAPIOperations())
                 && isOperationalAttributeUpdateable(OperationalAttributes.ENABLE_NAME)) {
             Uid uid = null;
@@ -226,6 +241,20 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                 // create an user
                 Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
                         getObjectClassInfo(), getTestName(), 0, true, false);
+                
+                // Remove enabled and password_expired, connector must create valid account then
+                for (Iterator<Attribute> i = attrs.iterator(); i.hasNext();) {
+                    Attribute attr = i.next();
+                    if (attr.is(OperationalAttributes.PASSWORD_EXPIRED_NAME)
+                            || attr.is(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME)
+                            || attr.is(OperationalAttributes.ENABLE_DATE_NAME)) {
+                        
+                        if (!ConnectorHelper.isRequired(getObjectClassInfo(), attr)) {
+                            i.remove();
+                        }
+                    }
+                }
+                
                 uid = getConnectorFacade().create(getObjectClass(), attrs,
                         getOperationOptionsByOp(CreateApiOp.class));
                 
@@ -276,6 +305,20 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                 // create an user
                 Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
                         getObjectClassInfo(), getTestName(), 0, true, false);
+                
+                // Remove enabled and password_expired, connector must create valid account then
+                for (Iterator<Attribute> i = attrs.iterator(); i.hasNext();) {
+                    Attribute attr = i.next();
+                    if (attr.is(OperationalAttributes.ENABLE_NAME)
+                            || attr.is(OperationalAttributes.ENABLE_DATE_NAME)
+                            || attr.is(OperationalAttributes.PASSWORD_EXPIRED_NAME)) {
+                        
+                        if (!ConnectorHelper.isRequired(getObjectClassInfo(), attr)) {
+                            i.remove();
+                        }
+                    }
+                }
+                
                 uid = getConnectorFacade().create(getObjectClass(), attrs,
                         getOperationOptionsByOp(CreateApiOp.class));
                 
@@ -331,6 +374,20 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                 // create an user
                 Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
                         getObjectClassInfo(), getTestName(), 0, true, false);
+                        
+                // Remove enabled and password_expired, connector must create valid account then  
+                for (Iterator<Attribute> i = attrs.iterator(); i.hasNext();) {
+                    Attribute attr = i.next();
+                    if (attr.is(OperationalAttributes.ENABLE_NAME)
+                            || attr.is(OperationalAttributes.ENABLE_DATE_NAME)
+                            || attr.is(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME)) {
+                        
+                        if (!ConnectorHelper.isRequired(getObjectClassInfo(), attr)) {
+                            i.remove();
+                        }
+                    }
+                }
+                        
                 uid = getConnectorFacade().create(getObjectClass(), attrs,
                         getOperationOptionsByOp(CreateApiOp.class));
                 
@@ -387,6 +444,20 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                 // create an user
                 Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
                         getObjectClassInfo(), getTestName(), 0, true, false);
+                
+                // Remove enabled and password_expired, connector must create valid account then  
+                for (Iterator<Attribute> i = attrs.iterator(); i.hasNext();) {
+                    Attribute attr = i.next();
+                    if (attr.is(OperationalAttributes.ENABLE_NAME)
+                            || attr.is(OperationalAttributes.ENABLE_DATE_NAME)
+                            || attr.is(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME)) {
+                        
+                        if (!ConnectorHelper.isRequired(getObjectClassInfo(), attr)) {
+                            i.remove();
+                        }
+                    }
+                }
+                
                 uid = getConnectorFacade().create(getObjectClass(), attrs,
                         getOperationOptionsByOp(CreateApiOp.class));
                 
