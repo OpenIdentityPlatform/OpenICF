@@ -45,7 +45,6 @@ import org.identityconnectors.ldap.LdapConnector;
 import org.identityconnectors.ldap.SunDSTestBase;
 import org.identityconnectors.test.common.TestHelpers;
 import org.identityconnectors.test.common.ToListResultsHandler;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class VlvIndexSearchStrategyTests extends SunDSTestBase {
@@ -53,7 +52,7 @@ public class VlvIndexSearchStrategyTests extends SunDSTestBase {
     public static LdapConfiguration newConfiguration(int blockSize) {
         LdapConfiguration config = newConfiguration();
         config.setUseBlocks(true);
-        config.setBlockCount(blockSize);
+        config.setBlockSize(blockSize);
         config.setUsePagedResultControl(false);
         config.validate();
         return config;

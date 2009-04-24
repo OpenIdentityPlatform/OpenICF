@@ -184,7 +184,7 @@ public class LdapUpdateTests extends LdapConnectorTestBase {
         LdapConfiguration config = newConfiguration();
         config.setPrincipal(ELMER_FUDD_DN);
         config.setCredentials(password);
-        config.setBlockCount(0); // Do not use paged search, since the user doesn't have the privilege.
+        config.setUseBlocks(false); // Do not use block (paged, VLV) search, since the user doesn't have the privilege.
         facade = newFacade(config);
         List<ConnectorObject> objects = TestHelpers.searchToList(facade, new ObjectClass("organization"), null);
         assertNotNull(findByAttribute(objects, Name.NAME, ACME_DN));

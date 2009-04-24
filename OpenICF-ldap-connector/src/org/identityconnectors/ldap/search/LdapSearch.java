@@ -297,7 +297,7 @@ public class LdapSearch {
 
             boolean useBlocks = conn.getConfiguration().isUseBlocks();
             boolean usePagedResultsControl = conn.getConfiguration().isUsePagedResultControl();
-            int pageSize = conn.getConfiguration().getBlockCount();
+            int pageSize = conn.getConfiguration().getBlockSize();
 
             if (useBlocks && !usePagedResultsControl && conn.supportsControl(VirtualListViewControl.OID)) {
                 String vlvSortAttr = conn.getConfiguration().getVlvSortAttribute();

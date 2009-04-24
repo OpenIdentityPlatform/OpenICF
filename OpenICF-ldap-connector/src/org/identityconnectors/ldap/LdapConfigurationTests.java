@@ -98,7 +98,7 @@ public class LdapConfigurationTests {
 
     @Test(expected = ConfigurationException.class)
     public void testBlockCountGreatherThanZero() {
-        config.setBlockCount(0);
+        config.setBlockSize(0);
         config.validate();
     }
 
@@ -239,7 +239,7 @@ public class LdapConfigurationTests {
         assertFalse(config.isRespectResourcePasswordPolicyChangeAfterReset());
         assertNull(config.getPasswordHashAlgorithm());
         assertTrue(config.isUseBlocks());
-        assertEquals(100, config.getBlockCount());
+        assertEquals(100, config.getBlockSize());
         assertFalse(config.isUsePagedResultControl());
         assertEquals("uid", config.getVlvSortAttribute());
         assertEquals("entryUUID", config.getUidAttribute());

@@ -150,9 +150,9 @@ public class LdapConfiguration extends AbstractConfiguration {
     private boolean useBlocks = true;
 
     /**
-     * The block size (not count, but that's what IDM calls it) for paged and VLV index searches.
+     * The block size for simple paged results and VLV index searches.
      */
-    private int blockCount = 100;
+    private int blockSize = 100;
 
     /**
      * If true, simple paged search will be preferred over VLV index search
@@ -278,7 +278,7 @@ public class LdapConfiguration extends AbstractConfiguration {
             throw new ConfigurationException("The group member attribute cannot be blank");
         }
 
-        if (blockCount <= 0) {
+        if (blockSize <= 0) {
             throw new ConfigurationException("The block size should be greather than 0");
         }
 
@@ -491,12 +491,12 @@ public class LdapConfiguration extends AbstractConfiguration {
         this.useBlocks = useBlocks;
     }
 
-    public int getBlockCount() {
-        return blockCount;
+    public int getBlockSize() {
+        return blockSize;
     }
 
-    public void setBlockCount(int blockCount) {
-        this.blockCount = blockCount;
+    public void setBlockSize(int blockSize) {
+        this.blockSize = blockSize;
     }
 
     public boolean isUsePagedResultControl() {
@@ -727,7 +727,7 @@ public class LdapConfiguration extends AbstractConfiguration {
         builder.append(passwordHashAlgorithm);
         builder.append(respectResourcePasswordPolicyChangeAfterReset);
         builder.append(useBlocks);
-        builder.append(blockCount);
+        builder.append(blockSize);
         builder.append(usePagedResultControl);
         builder.append(vlvSortAttribute);
         builder.append(uidAttribute);
