@@ -13,7 +13,7 @@ import org.identityconnectors.framework.common.objects.ConnectorMessages;
 public class LocalizedAssert {
 
     private ConnectorMessages cm;
-    private boolean localizeAruments;
+    private boolean localizeArguments;
 
     /**
      * Creates asserts with messages
@@ -33,17 +33,17 @@ public class LocalizedAssert {
      * @param localizeAruments
      * @throws IllegalArgumentException if cm param is null
      */
-    public LocalizedAssert(ConnectorMessages cm, boolean localizeAruments){
+    public LocalizedAssert(ConnectorMessages cm, boolean localizeArguments){
         if(cm == null){
             throw new IllegalArgumentException("ConnectorMessages argument is null");
         }
         this.cm = cm;
-        this.localizeAruments = localizeAruments;
+        this.localizeArguments = localizeArguments;
     }
     
     
     private void throwException(String locKey,String argument){
-    	if(localizeAruments){
+    	if(localizeArguments){
     		argument = cm.format(argument, argument);
     	}
         String msg = cm.format(locKey, null, argument);
