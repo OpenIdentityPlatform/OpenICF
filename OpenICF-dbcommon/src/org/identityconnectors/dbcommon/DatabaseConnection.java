@@ -100,8 +100,10 @@ public class DatabaseConnection  {
             // partial transactions to be committed at this point. Also,
             // PostgreSQL apparently caches BOTH operations, so this still
             // does not work against that DB.
+            
             getConnection().setAutoCommit(!getConnection().getAutoCommit());
             getConnection().setAutoCommit(!getConnection().getAutoCommit());
+            log.info("connection tested");
         } catch (Exception e) {
             // anything, not just SQLException
             // if the connection is not valid anymore,
@@ -128,10 +130,13 @@ public class DatabaseConnection  {
      * @throws SQLException an exception in statement
      */
     public PreparedStatement prepareStatement(final String sql, final List<SQLParam> params) throws SQLException {
+        log.info("normalize statement {0}", sql);
         final List<SQLParam> out = new ArrayList<SQLParam>();
         final String nomalized = SQLUtil.normalizeNullValues(sql, params, out);
+        log.info("prepare statement {0}", nomalized);
         final PreparedStatement prepareStatement = getConnection().prepareStatement(nomalized);
         SQLUtil.setParams(prepareStatement, out);
+        log.ok("statement {0} prepared", nomalized);
         return prepareStatement;
     }
 
@@ -142,7 +147,9 @@ public class DatabaseConnection  {
      * @throws SQLException an exception in statement
      */
     public PreparedStatement prepareStatement(DatabaseQueryBuilder query) throws SQLException {
-        return prepareStatement(query.getSQL(), query.getParams());
+        final String sql = query.getSQL();
+        log.info("prepareStatement {0}", sql);
+        return prepareStatement(sql, query.getParams());
     }
 
 
@@ -154,10 +161,13 @@ public class DatabaseConnection  {
      * @throws SQLException an exception in statement
      */
     public CallableStatement prepareCall(final String sql, final List<SQLParam> params) throws SQLException {
+        log.info("normalize call statement {0}", sql);
         final List<SQLParam> out = new ArrayList<SQLParam>();
         final String nomalized = SQLUtil.normalizeNullValues(sql, params, out);
+        log.info("prepare call statement {0}", nomalized);
         final CallableStatement prepareCall = getConnection().prepareCall(nomalized);
         SQLUtil.setParams(prepareCall, out);
+        log.ok("call statement {0} prepared", nomalized);
         return prepareCall;
     }    
 

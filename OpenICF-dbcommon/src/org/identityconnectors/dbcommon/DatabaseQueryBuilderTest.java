@@ -123,7 +123,7 @@ public class DatabaseQueryBuilderTest {
         DatabaseQueryBuilder actual = new DatabaseQueryBuilder(SELECT_WITH_WHERE);
         actual.setWhere(where);        
         assertNotNull(actual);
-        assertEquals(SELECT_WITH_WHERE + " AND ( name = ? )", actual.getSQL());
+        assertEquals("SELECT * FROM Users WHERE ( test = 1) AND ( name = ? )", actual.getSQL());
         assertEquals("not one value for binding", 1, actual.getParams().size());
     }
     

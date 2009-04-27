@@ -52,7 +52,6 @@ import javax.sql.DataSource;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.StringUtil;
-import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -65,11 +64,6 @@ import org.identityconnectors.framework.common.objects.AttributeBuilder;
  * @since 1.0
  */
 public final class SQLUtil {
-    
-    /**
-     * Setup logging for the {@link DatabaseTableConnector}.
-     */
-    static final Log log = Log.getLog(SQLUtil.class);
    
     /**
      * Never allow this to be instantiated.
@@ -602,7 +596,6 @@ public final class SQLUtil {
         default:   
             object = resultSet.getString(i);
         }
-        log.ok("getSQLParam to value {0}, class: {1},  sql type: {2}", object, object == null ? null : object.getClass().getSimpleName(), sqlType);
         return new SQLParam(object, sqlType);
     }
     
@@ -663,7 +656,6 @@ public final class SQLUtil {
     public static void setSQLParam(final PreparedStatement stmt, final int idx, SQLParam parm) throws SQLException {
         Assertions.nullCheck(stmt, "statement");
         Assertions.nullCheck(parm, "parm");
-        log.ok("setSQLParam to value {0}, class: {1},  sql type: {2}", parm.getValue(), parm.getValue() == null ? null : parm.getValue().getClass().getSimpleName(), parm.getSqlType());
         // Handle the null value
         
         final int sqlType = parm.getSqlType();        

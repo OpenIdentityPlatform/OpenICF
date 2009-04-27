@@ -151,7 +151,7 @@ public class DatabaseQueryBuilder {
         if (where != null) {
             final String whereSql = where.getWhereClause();
             if (!StringUtil.isBlank(whereSql)) {
-                ret += (selectFrom.indexOf("WHERE") == -1) ? " WHERE " + whereSql : " AND ( " + whereSql + " )";
+                ret = whereAnd(selectFrom, whereSql);
             }
         }
         if (this.orderBy != null) {
@@ -171,6 +171,16 @@ public class DatabaseQueryBuilder {
         }
         return ret;
     }
+    
+    /**
+     * @param sqlSelect 
+     * @param whereAnd
+     * @return
+     */
+    private String whereAnd(String sqlSelect, String whereAnd) {
+        int iofw = sqlSelect.indexOf("WHERE");
+        return (iofw == -1) ? sqlSelect + " WHERE " + whereAnd : sqlSelect.substring(0, iofw) + "WHERE ("+sqlSelect.substring(iofw + 5) +") AND ( " + whereAnd + " )";
+    }    
 
     /**
      * @param columns
