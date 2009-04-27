@@ -175,8 +175,7 @@ public class LdapCreateTests extends LdapConnectorTestBase{
         ConnectorFacade facade = newFacade();
 
         Set<Attribute> attributes = new HashSet<Attribute>();
-        String name = "uid=daffy.duck,ou=Users,o=Acme,dc=example,dc=com";
-        attributes.add(new Name(name));
+        attributes.add(new Name("uid=daffy.duck,ou=Users,o=Acme,dc=example,dc=com"));
         attributes.add(AttributeBuilder.build("uid", "daffy.duck"));
         attributes.add(AttributeBuilder.build("cn", "Daffy Duck"));
         attributes.add(AttributeBuilder.build("givenName", "Daffy"));
@@ -185,6 +184,6 @@ public class LdapCreateTests extends LdapConnectorTestBase{
         attributes.add(AttributeBuilder.buildPassword(password));
         facade.create(ObjectClass.ACCOUNT, attributes, null);
 
-        facade.authenticate(ObjectClass.ACCOUNT, name, password, null);
+        facade.authenticate(ObjectClass.ACCOUNT, "daffy.duck", password, null);
     }
 }

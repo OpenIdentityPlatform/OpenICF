@@ -437,8 +437,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
         String algorithmLabel = "{" + algorithm + "}";
 
         Set<Attribute> attrs = new HashSet<Attribute>();
-        String entryDN = "uid=daffy.duck," + ACME_USERS_DN;
-        attrs.add(new Name(entryDN));
+        attrs.add(new Name("uid=daffy.duck," + ACME_USERS_DN));
         attrs.add(AttributeBuilder.build("uid", "daffy.duck"));
         attrs.add(AttributeBuilder.build("cn", "Daffy Duck"));
         attrs.add(AttributeBuilder.build("sn", "Duck"));
@@ -450,7 +449,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
         ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, uid, "userPassword");
         byte[] passwordBytes = (byte[]) object.getAttributeByName("userPassword").getValue().get(0);
         assertTrue(new String(passwordBytes, "UTF-8").startsWith(algorithmLabel));
-        facade.authenticate(ObjectClass.ACCOUNT, entryDN, password, null);
+        facade.authenticate(ObjectClass.ACCOUNT, "daffy.duck", password, null);
 
         password = new GuardedString("newpassword".toCharArray());
         facade.update(ObjectClass.ACCOUNT, object.getUid(), singleton(AttributeBuilder.buildPassword(password)), null);
@@ -458,7 +457,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
         object = searchByAttribute(facade, ObjectClass.ACCOUNT, uid, "userPassword");
         passwordBytes = (byte[]) object.getAttributeByName("userPassword").getValue().get(0);
         assertTrue(new String(passwordBytes, "UTF-8").startsWith(algorithmLabel));
-        facade.authenticate(ObjectClass.ACCOUNT, entryDN, password, null);
+        facade.authenticate(ObjectClass.ACCOUNT, "daffy.duck", password, null);
     }
 
     private static void assertAttributeValue(List<?> expected, ConnectorFacade facade, ObjectClass oclass, Uid uid, String attrName) {
