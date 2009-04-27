@@ -144,7 +144,7 @@ public class DatabaseTableConnection extends DatabaseConnection {
         log.info("Prepare SQL Statement : {0}", sql);        
         final PreparedStatement prepareStatement = getConnection().prepareStatement(sql);
         DatabaseTableSQLUtil.setParams(sms, prepareStatement, params);
-        log.ok("SQL Statement {0} is prepared with params {1}", sql, params);        
+        log.ok("SQL Statement ok");        
         return prepareStatement;
     }
 
@@ -160,7 +160,7 @@ public class DatabaseTableConnection extends DatabaseConnection {
         log.info("Prepare SQL Call : {0}", sql);        
         final CallableStatement prepareCall = getConnection().prepareCall(sql);
         DatabaseTableSQLUtil.setParams(sms, prepareCall, params);
-        log.ok("SQL Call statement {0} is prepared with params {1}", sql, params);        
+        log.ok("SQL Call statement ok");        
         return prepareCall;
     }     
 
