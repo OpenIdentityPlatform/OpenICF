@@ -51,7 +51,7 @@ import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.GroupHelper;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapEntry;
-import org.identityconnectors.ldap.LdapPredefinedAttributes;
+import org.identityconnectors.ldap.LdapConstants;
 
 import com.sun.jndi.ldap.ctl.VirtualListViewControl;
 
@@ -174,8 +174,8 @@ public class LdapSearch {
     private Set<String> getLdapAttributesToGet(Set<String> attrsToGet) {
         Set<String> cleanAttrsToGet = newCaseInsensitiveSet();
         cleanAttrsToGet.addAll(attrsToGet);
-        cleanAttrsToGet.remove(LdapPredefinedAttributes.LDAP_GROUPS_NAME);
-        boolean posixGroups = cleanAttrsToGet.remove(LdapPredefinedAttributes.POSIX_GROUPS_NAME);
+        cleanAttrsToGet.remove(LdapConstants.LDAP_GROUPS_NAME);
+        boolean posixGroups = cleanAttrsToGet.remove(LdapConstants.POSIX_GROUPS_NAME);
         Set<String> result = conn.getSchemaMapping().getLdapAttributes(oclass, cleanAttrsToGet, true);
         if (posixGroups) {
             result.add(GroupHelper.getPosixRefAttribute());
@@ -202,13 +202,13 @@ public class LdapSearch {
 
         for (String attrName : attrsToGet) {
             Attribute attribute = null;
-            if (LdapPredefinedAttributes.isLdapGroups(attrName)) {
+            if (LdapConstants.isLdapGroups(attrName)) {
                 List<String> ldapGroups = groupHelper.getLdapGroups(entry.getDN().toString());
-                attribute = AttributeBuilder.build(LdapPredefinedAttributes.LDAP_GROUPS_NAME, ldapGroups);
-            } else if (LdapPredefinedAttributes.isPosixGroups(attrName)) {
+                attribute = AttributeBuilder.build(LdapConstants.LDAP_GROUPS_NAME, ldapGroups);
+            } else if (LdapConstants.isPosixGroups(attrName)) {
                 Set<String> posixRefAttrs = getStringAttrValues(entry.getAttributes(), GroupHelper.getPosixRefAttribute());
                 List<String> posixGroups = groupHelper.getPosixGroups(posixRefAttrs);
-                attribute = AttributeBuilder.build(LdapPredefinedAttributes.POSIX_GROUPS_NAME, posixGroups);
+                attribute = AttributeBuilder.build(LdapConstants.POSIX_GROUPS_NAME, posixGroups);
             } else {
                 attribute = conn.getSchemaMapping().createAttribute(oclass, attrName, entry, emptyAttrWhenNotFound);
             }
@@ -329,14 +329,14 @@ public class LdapSearch {
         // Since the groups attributes are fake attributes, we don't want to
         // send them to LdapSchemaMapping. This, for example, avoid an (unlikely)
         // conflict with a custom attribute defined in the server schema.
-        boolean ldapGroups = attributes.remove(LdapPredefinedAttributes.LDAP_GROUPS_NAME);
-        boolean posixGroups = attributes.remove(LdapPredefinedAttributes.POSIX_GROUPS_NAME);
+        boolean ldapGroups = attributes.remove(LdapConstants.LDAP_GROUPS_NAME);
+        boolean posixGroups = attributes.remove(LdapConstants.POSIX_GROUPS_NAME);
         conn.getSchemaMapping().removeNonReadableAttributes(oclass, attributes);
         if (ldapGroups) {
-            attributes.add(LdapPredefinedAttributes.LDAP_GROUPS_NAME);
+            attributes.add(LdapConstants.LDAP_GROUPS_NAME);
         }
         if (posixGroups) {
-            attributes.add(LdapPredefinedAttributes.POSIX_GROUPS_NAME);
+            attributes.add(LdapConstants.POSIX_GROUPS_NAME);
         }
     }
 

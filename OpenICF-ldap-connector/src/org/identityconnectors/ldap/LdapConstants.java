@@ -22,7 +22,7 @@
  */
 package org.identityconnectors.ldap;
 
-public class LdapPredefinedAttributes {
+public class LdapConstants {
 
     public static final String LDAP_GROUPS_NAME = "ldapGroups";
 
@@ -35,4 +35,6 @@ public class LdapPredefinedAttributes {
     public static boolean isPosixGroups(String attrName) {
         return POSIX_GROUPS_NAME.equalsIgnoreCase(attrName);
     }
+
+    private LdapConstants() { }
 }

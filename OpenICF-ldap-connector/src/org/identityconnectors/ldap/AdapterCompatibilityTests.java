@@ -123,31 +123,31 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
     @Test
     public void testRetriveLdapGroups() {
         ConnectorFacade facade = newFacade();
-        ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(SYLVESTER_DN), LdapPredefinedAttributes.LDAP_GROUPS_NAME);
+        ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(SYLVESTER_DN), LdapConstants.LDAP_GROUPS_NAME);
         assertAttributeValue(newList(UNIQUE_BUGS_AND_FRIENDS_DN, UNIQUE_EXTERNAL_PEERS_DN),
-                object.getAttributeByName(LdapPredefinedAttributes.LDAP_GROUPS_NAME));
+                object.getAttributeByName(LdapConstants.LDAP_GROUPS_NAME));
 
         LdapConfiguration config = newConfiguration();
         config.setGroupMemberAttribute("member");
         facade = newFacade(config);
-        object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(SYLVESTER_DN), LdapPredefinedAttributes.LDAP_GROUPS_NAME);
+        object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(SYLVESTER_DN), LdapConstants.LDAP_GROUPS_NAME);
         assertAttributeValue(newList(BUGS_AND_FRIENDS_DN, EXTERNAL_PEERS_DN),
-                object.getAttributeByName(LdapPredefinedAttributes.LDAP_GROUPS_NAME));
+                object.getAttributeByName(LdapConstants.LDAP_GROUPS_NAME));
     }
 
     @Test
     public void testRetrivePosixGroups() {
         ConnectorFacade facade = newFacade();
-        ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(SYLVESTER_DN), LdapPredefinedAttributes.POSIX_GROUPS_NAME);
+        ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(SYLVESTER_DN), LdapConstants.POSIX_GROUPS_NAME);
         assertAttributeValue(newList(POSIX_BUGS_AND_FRIENDS_DN, POSIX_EXTERNAL_PEERS_DN),
-                object.getAttributeByName(LdapPredefinedAttributes.POSIX_GROUPS_NAME));
+                object.getAttributeByName(LdapConstants.POSIX_GROUPS_NAME));
     }
 
     @Test
     public void testCreateWithUniqueLdapGroups() {
         ConnectorFacade facade = newFacade();
 
-        Attribute groupsAttr = AttributeBuilder.build(LdapPredefinedAttributes.LDAP_GROUPS_NAME,
+        Attribute groupsAttr = AttributeBuilder.build(LdapConstants.LDAP_GROUPS_NAME,
                 UNIQUE_BUGS_AND_FRIENDS_DN, UNIQUE_EXTERNAL_PEERS_DN);
         doTestCreateWithGroups(facade, groupsAttr);
     }
@@ -159,7 +159,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
         config.setGroupMemberAttribute("member"); // For groupOfNames.
         facade = newFacade(config);
 
-        Attribute groupsAttr = AttributeBuilder.build(LdapPredefinedAttributes.LDAP_GROUPS_NAME,
+        Attribute groupsAttr = AttributeBuilder.build(LdapConstants.LDAP_GROUPS_NAME,
                 BUGS_AND_FRIENDS_DN, EXTERNAL_PEERS_DN);
         doTestCreateWithGroups(facade, groupsAttr);
     }
@@ -168,7 +168,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
     public void testCreateWithPosixGroups() {
         ConnectorFacade facade = newFacade();
 
-        Attribute groupsAttr = AttributeBuilder.build(LdapPredefinedAttributes.POSIX_GROUPS_NAME,
+        Attribute groupsAttr = AttributeBuilder.build(LdapConstants.POSIX_GROUPS_NAME,
                 POSIX_BUGS_AND_FRIENDS_DN, POSIX_EXTERNAL_PEERS_DN);
         doTestCreateWithGroups(facade, groupsAttr);
     }
@@ -190,7 +190,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
     public void testAddLdapGroups() {
         ConnectorFacade facade = newFacade();
 
-        Attribute groupsAttr = AttributeBuilder.build(LdapPredefinedAttributes.LDAP_GROUPS_NAME, UNIQUE_EMPTY_GROUP_DN);
+        Attribute groupsAttr = AttributeBuilder.build(LdapConstants.LDAP_GROUPS_NAME, UNIQUE_EMPTY_GROUP_DN);
         doTestAddGroups(facade, groupsAttr);
     }
 
@@ -198,7 +198,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
     public void testAddPosixGroups() {
         ConnectorFacade facade = newFacade();
 
-        Attribute groupsAttr = AttributeBuilder.build(LdapPredefinedAttributes.POSIX_GROUPS_NAME, POSIX_EMPTY_GROUP_DN);
+        Attribute groupsAttr = AttributeBuilder.build(LdapConstants.POSIX_GROUPS_NAME, POSIX_EMPTY_GROUP_DN);
         doTestAddGroups(facade, groupsAttr);
     }
 
@@ -216,7 +216,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
     public void testRemoveUniqueLdapGroups() {
         ConnectorFacade facade = newFacade();
 
-        Attribute groupsAttr = AttributeBuilder.build(LdapPredefinedAttributes.LDAP_GROUPS_NAME, UNIQUE_EXTERNAL_PEERS_DN);
+        Attribute groupsAttr = AttributeBuilder.build(LdapConstants.LDAP_GROUPS_NAME, UNIQUE_EXTERNAL_PEERS_DN);
         doTestRemoveGroups(facade, groupsAttr);
     }
 
@@ -224,7 +224,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
     public void testRemovePosixGroups() {
         ConnectorFacade facade = newFacade();
 
-        Attribute groupsAttr = AttributeBuilder.build(LdapPredefinedAttributes.POSIX_GROUPS_NAME, POSIX_EXTERNAL_PEERS_DN);
+        Attribute groupsAttr = AttributeBuilder.build(LdapConstants.POSIX_GROUPS_NAME, POSIX_EXTERNAL_PEERS_DN);
         doTestRemoveGroups(facade, groupsAttr);
     }
 
@@ -266,18 +266,18 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
         ConnectorFacade facade = newFacade(config);
 
         ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(SYLVESTER_DN),
-                LdapPredefinedAttributes.LDAP_GROUPS_NAME, LdapPredefinedAttributes.POSIX_GROUPS_NAME);
-        List<String> oldLdapGroups = checkedListByFilter(object.getAttributeByName(LdapPredefinedAttributes.LDAP_GROUPS_NAME).getValue(), String.class);
-        List<String> oldPosixGroups = checkedListByFilter(object.getAttributeByName(LdapPredefinedAttributes.POSIX_GROUPS_NAME).getValue(), String.class);
+                LdapConstants.LDAP_GROUPS_NAME, LdapConstants.POSIX_GROUPS_NAME);
+        List<String> oldLdapGroups = checkedListByFilter(object.getAttributeByName(LdapConstants.LDAP_GROUPS_NAME).getValue(), String.class);
+        List<String> oldPosixGroups = checkedListByFilter(object.getAttributeByName(LdapConstants.POSIX_GROUPS_NAME).getValue(), String.class);
 
         Name newName = new Name("uid=sylvester.the.cat," + ACME_USERS_DN);
         Uid uid = facade.update(ObjectClass.ACCOUNT, object.getUid(), singleton((Attribute) newName), null);
 
-        object = searchByAttribute(facade, ObjectClass.ACCOUNT, uid, LdapPredefinedAttributes.LDAP_GROUPS_NAME, LdapPredefinedAttributes.POSIX_GROUPS_NAME);
+        object = searchByAttribute(facade, ObjectClass.ACCOUNT, uid, LdapConstants.LDAP_GROUPS_NAME, LdapConstants.POSIX_GROUPS_NAME);
         assertAttributeValue(newList(UNIQUE_BUGS_AND_FRIENDS_DN, UNIQUE_EXTERNAL_PEERS_DN),
-                object.getAttributeByName(LdapPredefinedAttributes.LDAP_GROUPS_NAME));
+                object.getAttributeByName(LdapConstants.LDAP_GROUPS_NAME));
         assertAttributeValue(newList(POSIX_BUGS_AND_FRIENDS_DN, POSIX_EXTERNAL_PEERS_DN),
-                object.getAttributeByName(LdapPredefinedAttributes.POSIX_GROUPS_NAME));
+                object.getAttributeByName(LdapConstants.POSIX_GROUPS_NAME));
 
         // Also need to test that the old entries were actually removed from the old groups.
         for (String group : oldLdapGroups) {
@@ -300,20 +300,20 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
         ConnectorFacade facade = newFacade(config);
 
         ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(SYLVESTER_DN),
-                LdapPredefinedAttributes.LDAP_GROUPS_NAME, LdapPredefinedAttributes.POSIX_GROUPS_NAME);
-        List<String> oldLdapGroups = checkedListByFilter(object.getAttributeByName(LdapPredefinedAttributes.LDAP_GROUPS_NAME).getValue(), String.class);
-        List<String> oldPosixGroups = checkedListByFilter(object.getAttributeByName(LdapPredefinedAttributes.POSIX_GROUPS_NAME).getValue(), String.class);
+                LdapConstants.LDAP_GROUPS_NAME, LdapConstants.POSIX_GROUPS_NAME);
+        List<String> oldLdapGroups = checkedListByFilter(object.getAttributeByName(LdapConstants.LDAP_GROUPS_NAME).getValue(), String.class);
+        List<String> oldPosixGroups = checkedListByFilter(object.getAttributeByName(LdapConstants.POSIX_GROUPS_NAME).getValue(), String.class);
 
         Name newName = new Name("uid=sylvester.the.cat," + ACME_USERS_DN);
-        Attribute ldapGroupsAttr = AttributeBuilder.build(LdapPredefinedAttributes.LDAP_GROUPS_NAME,
+        Attribute ldapGroupsAttr = AttributeBuilder.build(LdapConstants.LDAP_GROUPS_NAME,
                 UNIQUE_EXTERNAL_PEERS_DN, UNIQUE_EMPTY_GROUP_DN);
-        Attribute posixGroupsAttr = AttributeBuilder.build(LdapPredefinedAttributes.POSIX_GROUPS_NAME,
+        Attribute posixGroupsAttr = AttributeBuilder.build(LdapConstants.POSIX_GROUPS_NAME,
                 POSIX_EXTERNAL_PEERS_DN, POSIX_EMPTY_GROUP_DN);
         Uid uid = facade.update(ObjectClass.ACCOUNT, object.getUid(), newSet(newName, ldapGroupsAttr, posixGroupsAttr), null);
 
-        object = searchByAttribute(facade, ObjectClass.ACCOUNT, uid, LdapPredefinedAttributes.LDAP_GROUPS_NAME, LdapPredefinedAttributes.POSIX_GROUPS_NAME);
-        assertAttributeValue(ldapGroupsAttr.getValue(), object.getAttributeByName(LdapPredefinedAttributes.LDAP_GROUPS_NAME));
-        assertAttributeValue(posixGroupsAttr.getValue(), object.getAttributeByName(LdapPredefinedAttributes.POSIX_GROUPS_NAME));
+        object = searchByAttribute(facade, ObjectClass.ACCOUNT, uid, LdapConstants.LDAP_GROUPS_NAME, LdapConstants.POSIX_GROUPS_NAME);
+        assertAttributeValue(ldapGroupsAttr.getValue(), object.getAttributeByName(LdapConstants.LDAP_GROUPS_NAME));
+        assertAttributeValue(posixGroupsAttr.getValue(), object.getAttributeByName(LdapConstants.POSIX_GROUPS_NAME));
 
         // Also need to test that the old entries were actually removed from the old groups.
         for (String group : oldLdapGroups) {
@@ -369,9 +369,9 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
         ConnectorFacade facade = newFacade(config);
 
         ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(SYLVESTER_DN),
-                LdapPredefinedAttributes.LDAP_GROUPS_NAME, LdapPredefinedAttributes.POSIX_GROUPS_NAME);
-        List<String> oldLdapGroups = checkedListByFilter(object.getAttributeByName(LdapPredefinedAttributes.LDAP_GROUPS_NAME).getValue(), String.class);
-        List<String> oldPosixGroups = checkedListByFilter(object.getAttributeByName(LdapPredefinedAttributes.POSIX_GROUPS_NAME).getValue(), String.class);
+                LdapConstants.LDAP_GROUPS_NAME, LdapConstants.POSIX_GROUPS_NAME);
+        List<String> oldLdapGroups = checkedListByFilter(object.getAttributeByName(LdapConstants.LDAP_GROUPS_NAME).getValue(), String.class);
+        List<String> oldPosixGroups = checkedListByFilter(object.getAttributeByName(LdapConstants.POSIX_GROUPS_NAME).getValue(), String.class);
 
         facade.delete(ObjectClass.ACCOUNT, object.getUid(), null);
 

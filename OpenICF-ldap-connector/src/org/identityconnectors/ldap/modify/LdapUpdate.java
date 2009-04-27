@@ -51,7 +51,7 @@ import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.GroupHelper;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapModifyOperation;
-import org.identityconnectors.ldap.LdapPredefinedAttributes;
+import org.identityconnectors.ldap.LdapConstants;
 import org.identityconnectors.ldap.GroupHelper.GroupMembership;
 import org.identityconnectors.ldap.GroupHelper.Modification;
 import org.identityconnectors.ldap.schema.GuardedPasswordAttribute;
@@ -84,8 +84,8 @@ public class LdapUpdate extends LdapModifyOperation {
             newEntryDN = conn.getSchemaMapping().getEntryDN(oclass, newName);
         }
 
-        List<String> ldapGroups = getStringListValue(updateAttrs, LdapPredefinedAttributes.LDAP_GROUPS_NAME);
-        List<String> posixGroups = getStringListValue(updateAttrs, LdapPredefinedAttributes.POSIX_GROUPS_NAME);
+        List<String> ldapGroups = getStringListValue(updateAttrs, LdapConstants.LDAP_GROUPS_NAME);
+        List<String> posixGroups = getStringListValue(updateAttrs, LdapConstants.POSIX_GROUPS_NAME);
 
         Pair<Attributes, GuardedPasswordAttribute> attrToModify = getAttributesToModify(updateAttrs);
         Attributes ldapAttrs = attrToModify.first;
@@ -167,12 +167,12 @@ public class LdapUpdate extends LdapModifyOperation {
         Pair<Attributes, GuardedPasswordAttribute> attrsToModify = getAttributesToModify(attrs);
         modifyAttributes(entryDN, attrsToModify, DirContext.ADD_ATTRIBUTE);
 
-        List<String> ldapGroups = getStringListValue(attrs, LdapPredefinedAttributes.LDAP_GROUPS_NAME);
+        List<String> ldapGroups = getStringListValue(attrs, LdapConstants.LDAP_GROUPS_NAME);
         if (!isEmpty(ldapGroups)) {
             groupHelper.addLdapGroupMemberships(entryDN, ldapGroups);
         }
 
-        List<String> posixGroups = getStringListValue(attrs, LdapPredefinedAttributes.POSIX_GROUPS_NAME);
+        List<String> posixGroups = getStringListValue(attrs, LdapConstants.POSIX_GROUPS_NAME);
         if (!isEmpty(posixGroups)) {
             Set<String> posixRefAttrs = posixMember.getPosixRefAttributes();
             String posixRefAttr = getFirstPosixRefAttr(entryDN, posixRefAttrs);
@@ -196,12 +196,12 @@ public class LdapUpdate extends LdapModifyOperation {
 
         modifyAttributes(entryDN, attrsToModify, DirContext.REMOVE_ATTRIBUTE);
 
-        List<String> ldapGroups = getStringListValue(attrs, LdapPredefinedAttributes.LDAP_GROUPS_NAME);
+        List<String> ldapGroups = getStringListValue(attrs, LdapConstants.LDAP_GROUPS_NAME);
         if (!isEmpty(ldapGroups)) {
             groupHelper.removeLdapGroupMemberships(entryDN, ldapGroups);
         }
 
-        List<String> posixGroups = getStringListValue(attrs, LdapPredefinedAttributes.POSIX_GROUPS_NAME);
+        List<String> posixGroups = getStringListValue(attrs, LdapConstants.POSIX_GROUPS_NAME);
         if (!isEmpty(posixGroups)) {
             Set<GroupMembership> members = posixMember.getPosixGroupMembershipsByGroups(posixGroups);
             groupHelper.removePosixGroupMemberships(members);
@@ -228,9 +228,9 @@ public class LdapUpdate extends LdapModifyOperation {
             } else if (attr.is(Name.NAME)) {
                 // Such a change would have been handled in update() above.
                 throw new IllegalArgumentException("Unable to modify an object's name");
-            } else if (LdapPredefinedAttributes.isLdapGroups(attr.getName())) {
+            } else if (LdapConstants.isLdapGroups(attr.getName())) {
                 // Handled elsewhere.
-            } else if (LdapPredefinedAttributes.isPosixGroups(attr.getName())) {
+            } else if (LdapConstants.isPosixGroups(attr.getName())) {
                 // Handled elsewhere.
             } else if (attr.is(OperationalAttributes.PASSWORD_NAME)) {
                 pwdAttr = conn.getSchemaMapping().encodePassword(oclass, attr);

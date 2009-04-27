@@ -43,7 +43,7 @@ import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.GroupHelper;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapModifyOperation;
-import org.identityconnectors.ldap.LdapPredefinedAttributes;
+import org.identityconnectors.ldap.LdapConstants;
 import org.identityconnectors.ldap.schema.GuardedPasswordAttribute;
 import org.identityconnectors.ldap.schema.GuardedPasswordAttribute.Accessor;
 
@@ -83,9 +83,9 @@ public class LdapCreate extends LdapModifyOperation {
             javax.naming.directory.Attribute ldapAttr = null;
             if (attr.is(Name.NAME)) {
                 // Handled already.
-            } else if (LdapPredefinedAttributes.isLdapGroups(attr.getName())) {
+            } else if (LdapConstants.isLdapGroups(attr.getName())) {
                 ldapGroups = checkedListByFilter(nullAsEmpty(attr.getValue()), String.class);
-            } else if (LdapPredefinedAttributes.isPosixGroups(attr.getName())) {
+            } else if (LdapConstants.isPosixGroups(attr.getName())) {
                 posixGroups = checkedListByFilter(nullAsEmpty(attr.getValue()), String.class);
             } else if (attr.is(OperationalAttributes.PASSWORD_NAME)) {
                 pwdAttr = conn.getSchemaMapping().encodePassword(oclass, attr);
