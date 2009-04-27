@@ -30,6 +30,8 @@ import static org.identityconnectors.ldap.LdapUtil.nullAsEmpty;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -97,15 +99,15 @@ public class LdapConfiguration extends AbstractConfiguration {
     private GuardedString credentials;
 
     /**
+     * The base DNs for operations on the server.
+     */
+    private String[] baseContexts = { };
+
+    /**
      * The name of the attribute which the predefined PASSWORD attribute
      * will be written to.
      */
     private String passwordAttribute = "userPassword";
-
-    /**
-     * The base DNs for operations on the server.
-     */
-    private String[] baseContexts = { };
 
     /**
      * A search filter that any account needs to match in order to be returned.
@@ -199,10 +201,11 @@ public class LdapConfiguration extends AbstractConfiguration {
     // Other state.
 
     private final ObjectClassMappingConfig accountConfig = new ObjectClassMappingConfig(ObjectClass.ACCOUNT,
-            newList("top", "person", "organizationalPerson", "inetOrgPerson"), false, OperationalAttributeInfos.PASSWORD);
+            newList("top", "person", "organizationalPerson", "inetOrgPerson"), false, newList("uid", "cn"),
+            OperationalAttributeInfos.PASSWORD);
 
     private final ObjectClassMappingConfig groupConfig = new ObjectClassMappingConfig(ObjectClass.GROUP,
-            newList("top", "groupOfUniqueNames"), false);
+            newList("top", "groupOfUniqueNames"), false, Collections.<String>emptyList());
 
     // Other state not to be included in hashCode/equals.
 
@@ -227,28 +230,19 @@ public class LdapConfiguration extends AbstractConfiguration {
             throw new ConfigurationException("The port number should be 0 through 65535");
         }
 
-        if (failover == null) {
-            throw new ConfigurationException("The failover property cannot not be null");
-        }
+        checkNotEmpty(baseContexts, "The list of base contexts cannot be empty");
+        checkNoBlankValues(baseContexts, "The list of base contexts cannot contain blank values");
+        checkNoInvalidLdapNames(baseContexts, "The base context {0} cannot be parsed");
 
         if (isBlank(passwordAttribute)) {
             throw new ConfigurationException("The password attribute cannot be blank");
         }
 
-        if (baseContexts == null || baseContexts.length < 1) {
-            throw new ConfigurationException("The list of base contexts cannot be empty");
-        }
-        checkNoBlankValues(baseContexts, "The list of base contexts cannot contain blank values");
-        checkNoInvalidLdapNames(baseContexts, "The base context {0} cannot be parsed");
+        checkNotEmpty(accountConfig.getLdapClasses(), "The list of account object classes cannot be empty");
+        checkNoBlankValues(accountConfig.getLdapClasses(), "The list of account object classes cannot contain blank values");
 
-        if (accountConfig.getLdapClasses().size() < 1) {
-            throw new ConfigurationException("The list of account object classes cannot be empty");
-        }
-        for (String accountObjectClass : accountConfig.getLdapClasses()) {
-            if (isBlank(accountObjectClass)) {
-                throw new ConfigurationException("The list of account object classes cannot contain blank values");
-            }
-        }
+        checkNotEmpty(accountConfig.getShortNameLdapAttributes(), "The list of account user name attributes cannot be empty");
+        checkNoBlankValues(accountConfig.getShortNameLdapAttributes(), "The list of account user name attributes cannot contain blank values");
 
         if (isBlank(groupMemberAttribute)) {
             throw new ConfigurationException("The group member attribute cannot be blank");
@@ -281,9 +275,7 @@ public class LdapConfiguration extends AbstractConfiguration {
             checkNoInvalidLdapNames(baseContextsToSynchronize, "The base context to synchronize {0} cannot be parsed");
         }
 
-        if (objectClassesToSynchronize == null || objectClassesToSynchronize.length < 1) {
-            throw new ConfigurationException("The list of object classes to synchronize cannot be empty");
-        }
+        checkNotEmpty(objectClassesToSynchronize, "The list of object classes to synchronize cannot be empty");
         checkNoBlankValues(objectClassesToSynchronize, "The list of object classes to synchronize cannot contain blank values");
 
         if (attributesToSynchronize != null) {
@@ -301,6 +293,26 @@ public class LdapConfiguration extends AbstractConfiguration {
 
         if (changeLogBlockSize <= 0) {
             throw new ConfigurationException("The synchronization block size should be greather than 0");
+        }
+    }
+
+    private void checkNotEmpty(Collection<?> collection, String errorMessage) {
+        if (collection.size() < 1) {
+            throw new ConfigurationException(errorMessage);
+        }
+    }
+
+    private void checkNotEmpty(String[] array, String errorMessage) {
+        if (array == null || array.length < 1) {
+            throw new ConfigurationException(errorMessage);
+        }
+    }
+
+    private void checkNoBlankValues(Collection<String> collection, String errorMessage) {
+        for (String each : collection) {
+            if (isBlank(each)) {
+                throw new ConfigurationException(errorMessage);
+            }
         }
     }
 
@@ -371,20 +383,20 @@ public class LdapConfiguration extends AbstractConfiguration {
         this.credentials = credentials;
     }
 
-    public String getPasswordAttribute() {
-        return passwordAttribute;
-    }
-
-    public void setPasswordAttribute(String passwordAttribute) {
-        this.passwordAttribute = passwordAttribute;
-    }
-
     public String[] getBaseContexts() {
         return baseContexts.clone();
     }
 
     public void setBaseContexts(String... baseContexts) {
         this.baseContexts = baseContexts.clone();
+    }
+
+    public String getPasswordAttribute() {
+        return passwordAttribute;
+    }
+
+    public void setPasswordAttribute(String passwordAttribute) {
+        this.passwordAttribute = passwordAttribute;
     }
 
     public String[] getAccountObjectClasses() {
@@ -394,6 +406,15 @@ public class LdapConfiguration extends AbstractConfiguration {
 
     public void setAccountObjectClasses(String... accountObjectClasses) {
         accountConfig.setLdapClasses(Arrays.asList(accountObjectClasses));
+    }
+
+    public String[] getAccountUserNameAttributes() {
+        List<String> shortNameLdapAttributes = accountConfig.getShortNameLdapAttributes();
+        return shortNameLdapAttributes.toArray(new String[shortNameLdapAttributes.size()]);
+    }
+
+    public void setAccountUserNameAttributes(String... accountUserNameAttributes) {
+        accountConfig.setShortNameLdapAttributes(Arrays.asList(accountUserNameAttributes));
     }
 
     public String getAccountSearchFilter() {
@@ -640,7 +661,7 @@ public class LdapConfiguration extends AbstractConfiguration {
         for (int i = 0; i < extendedObjectClasses.length; i++) {
             String extendedObjectClass = extendedObjectClasses[i];
             ObjectClassMappingConfig config = new ObjectClassMappingConfig(new ObjectClass(extendedObjectClass),
-                    singletonList(extendedObjectClass), false);
+                    singletonList(extendedObjectClass), false, Collections.<String>emptyList());
             if (!result.containsKey(config.getObjectClass())) {
                 result.put(config.getObjectClass(), config);
             } else {
@@ -659,10 +680,10 @@ public class LdapConfiguration extends AbstractConfiguration {
         builder.append(failover);
         builder.append(principal);
         builder.append(credentials);
-        builder.append(passwordAttribute);
         for (String baseContext : baseContexts) {
             builder.append(baseContext);
         }
+        builder.append(passwordAttribute);
         builder.append(accountSearchFilter);
         builder.append(groupMemberAttribute);
         builder.append(maintainLdapGroupMembership);

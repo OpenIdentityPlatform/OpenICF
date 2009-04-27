@@ -98,7 +98,7 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
     }
 
     public Uid authenticate(ObjectClass objectClass, String username, GuardedString password, OperationOptions options) {
-        return new LdapAuthenticate(conn, objectClass, username, password).execute();
+        return new LdapAuthenticate(conn, objectClass, username, password, options).execute();
     }
 
     public FilterTranslator<LdapFilter> createFilterTranslator(ObjectClass oclass, OperationOptions options) {

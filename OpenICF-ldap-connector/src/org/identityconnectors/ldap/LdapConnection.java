@@ -27,8 +27,11 @@ import static java.util.Collections.unmodifiableSet;
 import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
 import static org.identityconnectors.common.StringUtil.isNotBlank;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValues;
+import static org.identityconnectors.ldap.LdapUtil.nullAsEmpty;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Set;
 
 import javax.naming.AuthenticationException;
@@ -39,13 +42,12 @@ import javax.naming.ldap.Control;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 
-import org.identityconnectors.common.Assertions;
+import org.identityconnectors.common.Pair;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.common.security.GuardedString.Accessor;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.ConnectorSecurityException;
-import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.identityconnectors.framework.common.exceptions.PasswordExpiredException;
 import org.identityconnectors.ldap.schema.LdapSchemaMapping;
 
@@ -107,6 +109,10 @@ public class LdapConnection {
         schemaMapping = new LdapSchemaMapping(this);
     }
 
+    public String format(String key, String dflt, Object... args) {
+        return config.getConnectorMessages().format(key, dflt, args);
+    }
+
     public LdapConfiguration getConfiguration() {
         return config;
     }
@@ -115,12 +121,21 @@ public class LdapConnection {
         if (initCtx != null) {
             return initCtx;
         }
-        initCtx = createContext(config.getPrincipal(), config.getCredentials());
+        initCtx = connect(config.getPrincipal(), config.getCredentials());
         return initCtx;
     }
 
-    private LdapContext createContext(String principal, GuardedString credentials) {
-        final LdapContext[] result = { null };
+    private LdapContext connect(String principal, GuardedString credentials) {
+        Pair<AuthenticationResult, LdapContext> pair = createContext(principal, credentials);
+        if (pair.first.getType().equals(AuthenticationResultType.SUCCESS)) {
+            return pair.second;
+        }
+        pair.first.propagate();
+        throw new IllegalStateException("Should never get here");
+    }
+
+    private Pair<AuthenticationResult, LdapContext> createContext(String principal, GuardedString credentials) {
+        final List<Pair<AuthenticationResult, LdapContext>> result = new ArrayList<Pair<AuthenticationResult, LdapContext>>(1);
 
         final Hashtable<Object, Object> env = new Hashtable<Object, Object>();
         env.put(Context.INITIAL_CONTEXT_FACTORY, LDAP_CTX_FACTORY);
@@ -141,40 +156,48 @@ public class LdapConnection {
                     public void access(char[] clearChars) {
                         env.put(Context.SECURITY_CREDENTIALS, clearChars);
                         // Connect while in the accessor, otherwise clearChars will be cleared.
-                        result[0] = doCreateContext(env);
+                        result.add(createContext(env));
                     }
                 });
+                assert result.size() > 0;
             } else {
-                result[0] = doCreateContext(env);
+                result.add(createContext(env));
             }
         } else {
-            result[0] = doCreateContext(env);
+            result.add(createContext(env));
         }
 
-        return result[0];
+        return result.get(0);
     }
 
-    private LdapContext doCreateContext(Hashtable<?, ?> env) {
+    private Pair<AuthenticationResult, LdapContext> createContext(Hashtable<?, ?> env) {
+        AuthenticationResult authnResult = null;
+        InitialLdapContext context = null;
         try {
-            InitialLdapContext context = new InitialLdapContext(env, null);
+            context = new InitialLdapContext(env, null);
             if (config.isRespectResourcePasswordPolicyChangeAfterReset()) {
                 if (hasPasswordExpiredControl(context.getResponseControls())) {
-                    throw new PasswordExpiredException();
+                    authnResult = new AuthenticationResult(AuthenticationResultType.PASSWORD_EXPIRED);
                 }
             }
             // TODO: process Password Policy control.
-            return context;
         } catch (AuthenticationException e) {
-            if (e.getMessage().toLowerCase().contains("invalid credentials")) {
-                throw new InvalidCredentialException(e);
-            } if (e.getMessage().toLowerCase().contains("password expired")) {
-                throw new PasswordExpiredException(e);
+            String message = e.getMessage().toLowerCase();
+            if (message.contains("password expired")) { // Sun DS.
+                authnResult = new AuthenticationResult(AuthenticationResultType.PASSWORD_EXPIRED, e);
+            } else if (message.contains("password has expired")) { // RACF.
+                authnResult = new AuthenticationResult(AuthenticationResultType.PASSWORD_EXPIRED, e);
             } else {
-                throw new ConnectorSecurityException(e);
+                authnResult = new AuthenticationResult(AuthenticationResultType.FAILED, e);
             }
         } catch (NamingException e) {
-            throw new ConnectorException(e);
+            authnResult = new AuthenticationResult(AuthenticationResultType.FAILED, e);
         }
+        if (authnResult == null) {
+            assert context != null;
+            authnResult = new AuthenticationResult(AuthenticationResultType.SUCCESS);
+        }
+        return new Pair<AuthenticationResult, LdapContext>(authnResult, context);
     }
 
     private static boolean hasPasswordExpiredControl(Control[] controls) {
@@ -194,7 +217,7 @@ public class LdapConnection {
         builder.append(config.getHost());
         builder.append(':');
         builder.append(config.getPort());
-        for (String failover : config.getFailover()) {
+        for (String failover : nullAsEmpty(config.getFailover())) {
             builder.append(' ');
             builder.append(failover);
         }
@@ -235,16 +258,15 @@ public class LdapConnection {
         }
     }
 
-    public void authenticate(String username, GuardedString password) {
-        Assertions.nullCheck(username, "username");
-        Assertions.nullCheck(password, "password");
-
-        LdapContext ctx = null;
-        try {
-            ctx = createContext(username, password);
-        } finally {
-            quietClose(ctx);
+    public AuthenticationResult authenticate(String entryDN, GuardedString password) {
+        assert entryDN != null;
+        log.ok("Attempting to authenticate {0}", entryDN);
+        Pair<AuthenticationResult, LdapContext> pair = createContext(entryDN, password);
+        if (pair.second != null) {
+            quietClose(pair.second);
         }
+        log.ok("Authentication result: {0}", pair.first);
+        return pair.first;
     }
 
     public void test() {
@@ -287,5 +309,63 @@ public class LdapConnection {
 
     public boolean isBinarySyntax(String attrName) {
         return LDAP_BINARY_SYNTAX_ATTRS.contains(attrName);
+    }
+
+    public enum AuthenticationResultType {
+
+        SUCCESS {
+            @Override
+            public void propagate(Exception cause) {
+            }
+        },
+        PASSWORD_EXPIRED {
+            @Override
+            public void propagate(Exception cause) {
+                throw new PasswordExpiredException(cause);
+            }
+        },
+        FAILED {
+            @Override
+            public void propagate(Exception cause) {
+                throw new ConnectorSecurityException(cause);
+            }
+        };
+
+        public abstract void propagate(Exception cause);
+    }
+
+    public static class AuthenticationResult {
+
+        private final AuthenticationResultType type;
+        private final Exception cause;
+
+        public AuthenticationResult(AuthenticationResultType type) {
+            this(type, null);
+        }
+
+        public AuthenticationResult(AuthenticationResultType type, Exception cause) {
+            assert type != null;
+            this.type = type;
+            this.cause = cause;
+        }
+
+        public void propagate() {
+            type.propagate(cause);
+        }
+
+        public AuthenticationResultType getType() {
+            return type;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder result = new StringBuilder();
+            result.append("AuthenticationResult[type: " + type);
+            if (cause != null) {
+                result.append("; cause: " + cause.getMessage());
+            }
+            result.append(']');
+            return result.toString();
+        }
     }
 }

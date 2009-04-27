@@ -25,8 +25,6 @@ package org.identityconnectors.ldap;
 import static org.identityconnectors.common.CollectionUtil.newReadOnlyList;
 import static org.identityconnectors.common.CollectionUtil.newReadOnlySet;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -40,18 +38,19 @@ public class ObjectClassMappingConfig {
 
     private final ObjectClass objectClass;
     private List<String> ldapClasses;
+    private final boolean container;
+    private List<String> shortNameLdapAttributes;
+    private final Set<AttributeInfo> operationalAttributes;
 
-    private boolean container;
-
-    private final Set<AttributeInfo> operationalAttributes = new HashSet<AttributeInfo>();
-
-    public ObjectClassMappingConfig(ObjectClass objectClass, List<String> ldapClasses, boolean container, AttributeInfo... operationalAttributes) {
+    public ObjectClassMappingConfig(ObjectClass objectClass, List<String> ldapClasses, boolean container, List<String> shortNameLdapAttributes, AttributeInfo... operationalAttributes) {
         assert objectClass != null;
-        assert ldapClasses != null;
         this.objectClass = objectClass;
+        assert ldapClasses != null;
         setLdapClasses(ldapClasses);
-        setContainer(container);
-        addOperationalAttributes(operationalAttributes);
+        this.container = container;
+        assert shortNameLdapAttributes != null;
+        this.shortNameLdapAttributes = newReadOnlyList(shortNameLdapAttributes);
+        this.operationalAttributes = newReadOnlySet(operationalAttributes);
     }
 
     public ObjectClass getObjectClass() {
@@ -70,16 +69,16 @@ public class ObjectClassMappingConfig {
         return container;
     }
 
-    public void setContainer(boolean container) {
-        this.container = container;
+    public List<String> getShortNameLdapAttributes() {
+        return shortNameLdapAttributes;
     }
 
-    public void addOperationalAttributes(AttributeInfo... attributeInfos) {
-        operationalAttributes.addAll(Arrays.asList(attributeInfos));
+    public void setShortNameLdapAttributes(List<String> shortNameLdapAttributes) {
+        this.shortNameLdapAttributes = newReadOnlyList(shortNameLdapAttributes);
     }
 
     public Set<AttributeInfo> getOperationalAttributes() {
-        return newReadOnlySet(operationalAttributes);
+        return operationalAttributes;
     }
 
     public int hashCode() {
@@ -92,7 +91,13 @@ public class ObjectClassMappingConfig {
             if (!objectClass.equals(that.objectClass)) {
                 return false;
             }
-            if ((ldapClasses == null) ? (that.ldapClasses != null) : !ldapClasses.equals(that.ldapClasses)) {
+            if (!ldapClasses.equals(that.ldapClasses)) {
+                return false;
+            }
+            if (container != that.container) {
+                return false;
+            }
+            if (!shortNameLdapAttributes.equals(that.shortNameLdapAttributes)) {
                 return false;
             }
             if (!operationalAttributes.equals(that.operationalAttributes)) {

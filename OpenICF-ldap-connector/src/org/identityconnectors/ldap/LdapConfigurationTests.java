@@ -22,6 +22,7 @@
  */
 package org.identityconnectors.ldap;
 
+import static org.identityconnectors.common.CollectionUtil.newList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -49,18 +50,6 @@ public class LdapConfigurationTests {
     }
 
     @Test(expected = ConfigurationException.class)
-    public void testPasswordAttributeNotNull() {
-        config.setPasswordAttribute(null);
-        config.validate();
-    }
-
-    @Test(expected = ConfigurationException.class)
-    public void testPasswordAttributeNotBlank() {
-        config.setPasswordAttribute(" ");
-        config.validate();
-    }
-
-    @Test(expected = ConfigurationException.class)
     public void testBaseContextsNotEmpty() {
         config.setBaseContexts();
         config.validate();
@@ -81,6 +70,42 @@ public class LdapConfigurationTests {
     @Test(expected = ConfigurationException.class)
     public void testBaseContextsValid() {
         config.setBaseContexts(LdapConnectorTestBase.ACME_DN, INVALID_DN);
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testPasswordAttributeNotNull() {
+        config.setPasswordAttribute(null);
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testPasswordAttributeNotBlank() {
+        config.setPasswordAttribute(" ");
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testAccountObjectClassesNotEmpty() {
+        config.setAccountObjectClasses();
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testAccountObjectClassesItemNotNull() {
+        config.setAccountObjectClasses((String) null);
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testAccountUserNameAttributesNotEmpty() {
+        config.setAccountUserNameAttributes();
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testAccountUserNameAttributesItemNotNull() {
+        config.setAccountUserNameAttributes((String) null);
         config.validate();
     }
 
@@ -228,8 +253,10 @@ public class LdapConfigurationTests {
         assertEquals(0, config.getFailover().length);
         assertNull(config.getPrincipal());
         assertNull(config.getCredentials());
-        assertEquals("userPassword", config.getPasswordAttribute());
         assertEquals(0, config.getBaseContexts().length);
+        assertEquals("userPassword", config.getPasswordAttribute());
+        assertEquals(newList("top", "person", "organizationalPerson", "inetOrgPerson"), Arrays.asList(config.getAccountObjectClasses()));
+        assertEquals(newList("uid", "cn"), Arrays.asList(config.getAccountUserNameAttributes()));
         assertNull(config.getAccountSearchFilter());
         assertEquals("uniqueMember", config.getGroupMemberAttribute());
         assertFalse(config.isMaintainLdapGroupMembership());

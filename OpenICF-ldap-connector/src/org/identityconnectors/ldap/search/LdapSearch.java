@@ -67,6 +67,7 @@ public class LdapSearch {
     private final LdapFilter filter;
     private final OperationOptions options;
     private final GroupHelper groupHelper;
+    private final String[] baseDNs;
 
     public static Set<String> getAttributesReturnedByDefault(LdapConnection conn, ObjectClass oclass) {
         Set<String> result = newCaseInsensitiveSet();
@@ -82,10 +83,15 @@ public class LdapSearch {
     }
 
     public LdapSearch(LdapConnection conn, ObjectClass oclass, LdapFilter filter, OperationOptions options) {
+        this(conn, oclass, filter, options, conn.getConfiguration().getBaseContexts());
+    }
+
+    public LdapSearch(LdapConnection conn, ObjectClass oclass, LdapFilter filter, OperationOptions options, String... baseDNs) {
         this.conn = conn;
         this.oclass = oclass;
         this.filter = filter;
         this.options = options;
+        this.baseDNs = baseDNs;
 
         groupHelper = new GroupHelper(conn);
     }
@@ -280,7 +286,7 @@ public class LdapSearch {
         if (container != null) {
             result = singletonList(LdapSearches.getEntryDN(conn, container.getObjectClass(), container.getUid()));
         } else {
-            result = Arrays.asList(conn.getConfiguration().getBaseContexts());
+            result = Arrays.asList(baseDNs);
         }
         assert result != null;
         return result;

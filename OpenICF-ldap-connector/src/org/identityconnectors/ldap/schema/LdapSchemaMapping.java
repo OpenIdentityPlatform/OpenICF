@@ -145,6 +145,14 @@ public class LdapSchemaMapping {
         return unmodifiableSet(result);
     }
 
+    public List<String> getUserNameLdapAttributes(ObjectClass oclass) {
+        ObjectClassMappingConfig oclassConfig = conn.getConfiguration().getObjectClassMappingConfigs().get(oclass);
+        if (oclassConfig != null) {
+            return oclassConfig.getShortNameLdapAttributes();
+        }
+        return emptyList();
+    }
+
     public String getLdapAttribute(ObjectClass oclass, String attrName, boolean transfer) {
         String result = null;
         if (AttributeUtil.namesEqual(Uid.NAME, attrName)) {

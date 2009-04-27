@@ -35,9 +35,9 @@ import javax.naming.ldap.LdapName;
 
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
-import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
@@ -85,18 +85,18 @@ public class LdapSearches {
         throw new ConnectorException("Unable to find object " + uid + " of class " + oclass);
     }
 
-    public static List<ConnectorObject> findObjects(LdapConnection conn, ObjectClass oclass, String name) {
-        log.ok("Searching for object name {0} of class {1}", name, oclass.getObjectClassValue());
+    public static List<ConnectorObject> findObjects(LdapConnection conn, ObjectClass oclass, String baseDN, Attribute attr, String... attrsToGet) {
+        log.ok("Searching for object with attribute {0} of class {1} in {2}", attr, oclass.getObjectClassValue(), baseDN);
 
         final List<ConnectorObject> result = new ArrayList<ConnectorObject>();
 
-        EqualsFilter filter = (EqualsFilter) FilterBuilder.equalTo(new Name(name));
+        EqualsFilter filter = (EqualsFilter) FilterBuilder.equalTo(attr);
         LdapFilter ldapFilter = new LdapFilterTranslator(conn.getSchemaMapping(), oclass).createEqualsExpression(filter, false);
 
         OperationOptionsBuilder builder = new OperationOptionsBuilder();
-        builder.setAttributesToGet("entryDN");
+        builder.setAttributesToGet(attrsToGet);
 
-        LdapSearch search = new LdapSearch(conn, oclass, ldapFilter, builder.build());
+        LdapSearch search = new LdapSearch(conn, oclass, ldapFilter, builder.build(), baseDN);
         search.execute(new ResultsHandler() {
             public boolean handle(ConnectorObject object) {
                 result.add(object);

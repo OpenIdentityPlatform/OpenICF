@@ -71,11 +71,12 @@ public abstract class LdapConnectorTestBase {
     public static final String BUGS_BUNNY_UID = "bugs.bunny";
     public static final String BBUNNY_UID = "bbunny";
     public static final String BUGS_BUNNY_CN = "Bugs Bunny";
+    public static final String BUGS_BUNNY_SN = "Bunny";
     public static final String ELMER_FUDD_DN = "uid=elmer.fudd,ou=Users,o=Acme,dc=example,dc=com";
     public static final String ELMER_FUDD_UID = "elmer.fudd";
     public static final String SYLVESTER_DN = "uid=sylvester,ou=Users,o=Acme,dc=example,dc=com";
     public static final String SYLVESTER_UID = "sylvester";
-    public static final String EXPIRED_DN = "uid=expired,ou=Users,o=Acme,dc=example,dc=com";
+    public static final String EXPIRED_UID = "expired";
 
     public static final String BUGS_AND_FRIENDS_DN = "cn=Bugs and Friends,o=Acme,dc=example,dc=com";
     public static final String EXTERNAL_PEERS_DN = "cn=External Peers,o=Acme,dc=example,dc=com";

@@ -22,14 +22,23 @@
  */
 package org.identityconnectors.ldap;
 
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
-import org.identityconnectors.framework.common.objects.AttributeUtil;
+import org.identityconnectors.framework.common.exceptions.ConnectorSecurityException;
+import org.identityconnectors.framework.common.exceptions.PasswordExpiredException;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.ldap.LdapConnection.AuthenticationResult;
+import org.identityconnectors.ldap.LdapConnection.AuthenticationResultType;
 import org.identityconnectors.ldap.search.LdapSearches;
 
 public class LdapAuthenticate {
@@ -38,27 +47,88 @@ public class LdapAuthenticate {
     private final ObjectClass oclass;
     private final String username;
     private final GuardedString password;
+    private final OperationOptions options;
 
-    public LdapAuthenticate(LdapConnection conn, ObjectClass oclass, String username, GuardedString password) {
+    public LdapAuthenticate(LdapConnection conn, ObjectClass oclass, String username, GuardedString password, OperationOptions options) {
         this.conn = conn;
         this.oclass = oclass;
         this.username = username;
         this.password = password;
+        this.options = options;
     }
 
     public Uid execute() {
-        List<ConnectorObject> objects = LdapSearches.findObjects(conn, oclass, username);
-        if (objects.isEmpty()) {
-            throw new InvalidCredentialException("No user with this name was found");
+        List<String> userNameAttrs = getUserNameAttributes();
+        Map<ConnectorObject, AuthenticationResult> object2SuccessAuthn = new HashMap<ConnectorObject, AuthenticationResult>();
+        int matchedObjectCount = 0;
+
+        ctxLoop: for (String baseContext : conn.getConfiguration().getBaseContexts()) {
+            /* attrLoop: */ for (String userNameAttr : userNameAttrs) {
+                Attribute attr = AttributeBuilder.build(userNameAttr, username);
+                List<ConnectorObject> objects = LdapSearches.findObjects(conn, oclass, baseContext, attr, "entryDN");
+                matchedObjectCount += objects.size();
+
+                for (ConnectorObject object : objects) {
+                    String entryDN = object.getAttributeByName("entryDN").getValue().get(0).toString();
+                    AuthenticationResult authnResult = conn.authenticate(entryDN, password);
+
+                    if (isSuccess(authnResult)) {
+                        object2SuccessAuthn.put(object, authnResult);
+                        if (object2SuccessAuthn.size() > 1) {
+                            // We will throw an exception below for more than one authenticated objects,
+                            // so it is useless to try for more.
+                            break ctxLoop;
+                        }
+                        // Does not make a lot of sense to stop when having authenticated
+                        // the first user for the current attribute, but that's what the adapter does.
+                        // break attrLoop;
+                    }
+                }
+            }
         }
 
-        for (ConnectorObject object : objects) {
-            String bindDN = AttributeUtil.getAsStringValue(object.getAttributeByName("entryDN"));
-            conn.authenticate(bindDN, password);
-            return object.getUid();
+        if (object2SuccessAuthn.isEmpty()) {
+            String message;
+            switch (matchedObjectCount) {
+                case 0:
+                    message = conn.format("AUTH_NO_USER_MATCHED", null, username);
+                    break;
+                case 1:
+                    message = conn.format("AUTH_FAILED", null, username);
+                    break;
+                default:
+                    message = conn.format("AUTH_MORE_THAN_ONE_USER_MATCHED", null, username);
+                    break;
+            }
+            throw new ConnectorSecurityException(message);
+        } else if (object2SuccessAuthn.size() > 1) {
+            throw new ConnectorSecurityException(conn.format("AUTH_MORE_THAN_ONE_USER_MATCHED_WITH_PASSWORD", null, username));
         }
 
-        assert false : "Should never get here";
-        return null;
+        Entry<ConnectorObject, AuthenticationResult> entry = object2SuccessAuthn.entrySet().iterator().next();
+        ConnectorObject object = entry.getKey();
+        AuthenticationResult authnResult = entry.getValue();
+        try {
+            authnResult.propagate();
+        } catch (PasswordExpiredException e) {
+            e.initUid(object.getUid());
+            throw e;
+        }
+        // AuthenticationResult did not throw an exception, so this authentication was successful.
+        return object.getUid();
+    }
+
+    private List<String> getUserNameAttributes() {
+        String[] result = LdapConstants.getLdapUidAttributes(options);
+        if (result != null && result.length > 0) {
+            return Arrays.asList(result);
+        }
+        return conn.getSchemaMapping().getUserNameLdapAttributes(oclass);
+    }
+
+    private static boolean isSuccess(AuthenticationResult authResult) {
+        // We consider PASSWORD_EXPIRED to be a success, because it means the credentials were right.
+        AuthenticationResultType type = authResult.getType();
+        return type.equals(AuthenticationResultType.SUCCESS) || type.equals(AuthenticationResultType.PASSWORD_EXPIRED);
     }
 }

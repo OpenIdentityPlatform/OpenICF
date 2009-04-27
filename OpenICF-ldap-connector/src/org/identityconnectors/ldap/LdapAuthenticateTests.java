@@ -23,16 +23,17 @@
 package org.identityconnectors.ldap;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.ConnectorFacade;
-import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
+import org.identityconnectors.framework.common.exceptions.ConnectorSecurityException;
 import org.identityconnectors.framework.common.exceptions.PasswordExpiredException;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.junit.Test;
 
@@ -44,20 +45,55 @@ public class LdapAuthenticateTests extends LdapConnectorTestBase {
     }
 
     @Test
-    public void testAuthenticate() {
+    public void testAuthenticateWithDefaultConfiguration() {
         ConnectorFacade facade = newFacade();
+        ConnectorObject bugs = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
+        Uid uid = facade.authenticate(ObjectClass.ACCOUNT, BUGS_BUNNY_CN, new GuardedString("carrot".toCharArray()), null);
+        assertEquals(bugs.getUid(), uid);
+
+        uid = facade.authenticate(ObjectClass.ACCOUNT, BUGS_BUNNY_UID, new GuardedString("carrot".toCharArray()), null);
+        assertEquals(bugs.getUid(), uid);
+    }
+
+    @Test
+    public void testAuthenticateWithCustomAttributes() {
+        ConnectorFacade facade = newFacade();
+        ConnectorObject bugs = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
+        OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        builder.setOption(LdapConstants.LDAP_UID_ATTRS_NAME, new String[] { "sn" });
+        OperationOptions options = builder.build();
+        Uid uid = facade.authenticate(ObjectClass.ACCOUNT, BUGS_BUNNY_SN, new GuardedString("carrot".toCharArray()), options);
+        assertEquals(bugs.getUid(), uid);
+
+        // Should not be possible to authenticate with the attributes from the default configuration ("cn" and "uid").
+        try {
+            facade.authenticate(ObjectClass.ACCOUNT, BUGS_BUNNY_CN, new GuardedString("carrot".toCharArray()), options);
+            fail();
+        } catch (ConnectorSecurityException e) { }
+
+        try {
+            uid = facade.authenticate(ObjectClass.ACCOUNT, BUGS_BUNNY_UID, new GuardedString("carrot".toCharArray()), options);
+            fail();
+        } catch (ConnectorSecurityException e) { }
+    }
+
+    @Test
+    public void testAuthenticateWithEntryDN() {
+        LdapConfiguration config = newConfiguration();
+        config.setAccountUserNameAttributes("entryDN");
+        ConnectorFacade facade = newFacade(config);
         ConnectorObject bugs = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
         Uid uid = facade.authenticate(ObjectClass.ACCOUNT, BUGS_BUNNY_DN, new GuardedString("carrot".toCharArray()), null);
         assertEquals(bugs.getUid(), uid);
     }
 
-    @Test(expected = InvalidCredentialException.class)
+    @Test(expected = ConnectorSecurityException.class)
     public void testAuthenticateInvalidPassword() {
         ConnectorFacade facade = newFacade();
-        facade.authenticate(ObjectClass.ACCOUNT, BUGS_BUNNY_DN, new GuardedString("rabbithole".toCharArray()), null);
+        facade.authenticate(ObjectClass.ACCOUNT, BUGS_BUNNY_CN, new GuardedString("rabbithole".toCharArray()), null);
     }
 
-    @Test(expected = InvalidCredentialException.class)
+    @Test(expected = ConnectorSecurityException.class)
     public void testAuthenticateUnknownAccount() {
         ConnectorFacade facade = newFacade();
         facade.authenticate(ObjectClass.ACCOUNT, "hopefully.inexisting.user", new GuardedString("none".toCharArray()), null);
@@ -66,15 +102,15 @@ public class LdapAuthenticateTests extends LdapConnectorTestBase {
     @Test
     public void testAuthenticateExpiredPassword() {
         LdapConfiguration config = newConfiguration();
-        assertFalse(config.isRespectResourcePasswordPolicyChangeAfterReset());
+        config.setRespectResourcePasswordPolicyChangeAfterReset(false);
         ConnectorFacade facade = newFacade(config);
-        facade.authenticate(ObjectClass.ACCOUNT, EXPIRED_DN, new GuardedString("password".toCharArray()), null);
+        facade.authenticate(ObjectClass.ACCOUNT, EXPIRED_UID, new GuardedString("password".toCharArray()), null);
 
         config = newConfiguration();
         config.setRespectResourcePasswordPolicyChangeAfterReset(true);
         facade = newFacade(config);
         try {
-            facade.authenticate(ObjectClass.ACCOUNT, EXPIRED_DN, new GuardedString("password".toCharArray()), null);
+            facade.authenticate(ObjectClass.ACCOUNT, EXPIRED_UID, new GuardedString("password".toCharArray()), null);
             fail();
         } catch (PasswordExpiredException e) {
             // OK.

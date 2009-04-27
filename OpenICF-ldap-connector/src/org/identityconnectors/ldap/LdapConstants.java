@@ -22,11 +22,15 @@
  */
 package org.identityconnectors.ldap;
 
+import org.identityconnectors.framework.common.objects.OperationOptions;
+
 public class LdapConstants {
 
     public static final String LDAP_GROUPS_NAME = "ldapGroups";
 
     public static final String POSIX_GROUPS_NAME = "posixGroups";
+
+    public static final String LDAP_UID_ATTRS_NAME = "ldap_uid_attributes";
 
     public static boolean isLdapGroups(String attrName) {
         return LDAP_GROUPS_NAME.equalsIgnoreCase(attrName);
@@ -34,6 +38,10 @@ public class LdapConstants {
 
     public static boolean isPosixGroups(String attrName) {
         return POSIX_GROUPS_NAME.equalsIgnoreCase(attrName);
+    }
+
+    public static String[] getLdapUidAttributes(OperationOptions options) {
+        return (String[]) options.getOptions().get(LDAP_UID_ATTRS_NAME);
     }
 
     private LdapConstants() { }
