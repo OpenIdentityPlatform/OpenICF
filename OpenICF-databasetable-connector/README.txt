@@ -1,3 +1,8 @@
+Changelog:
+
+Version 1.0:
+ Initial version
+
 Supported JDBC drivers:
 =======================
 - MySQL Connector/J 5.1.6

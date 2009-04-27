@@ -25,6 +25,7 @@ package org.identityconnectors.databasetable;
 import static org.identityconnectors.databasetable.DatabaseTableConstants.*;
 
 import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.dbcommon.JNDIUtil;
 import org.identityconnectors.framework.spi.AbstractConfiguration;
@@ -38,6 +39,11 @@ import org.identityconnectors.framework.spi.operations.SyncOp;
  * parameters to initialize the JDBC Connector.
  */
 public class DatabaseTableConfiguration extends AbstractConfiguration {
+
+    /**
+     * Setup logging for the {@link DatabaseTableConfiguration}.
+     */
+    static Log log = Log.getLog(DatabaseTableConfiguration.class);
 
     // =======================================================================
     // DatabaseTableConfiguration
@@ -531,16 +537,15 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      */
     @Override
     public void validate() {
+        log.info("Validate DatabaseTableConfiguration");        
         // check that there is a table to query..
         if (StringUtil.isBlank(getTable())) {
             throw new IllegalArgumentException(getMessage(MSG_TABLE_BLANK));
          }      
-
         // check the url is configured
         if (StringUtil.isBlank(getJdbcUrlTemplate())) {
             throw new IllegalArgumentException(getMessage(MSG_JDBC_TEMPLATE_BLANK));
         }   
-        
         // determine if you can get a key column
         if (StringUtil.isBlank(getKeyColumn())) {
            throw new IllegalArgumentException(getMessage(MSG_KEY_COLUMN_BLANK));
@@ -549,7 +554,6 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
                 throw new IllegalArgumentException(getMessage(MSG_KEY_COLUMN_EQ_CHANGE_LOG_COLUMN));               
             }                       
         }
-        
         // key column, password column
         if (StringUtil.isNotBlank(getPasswordColumn())) {
            if (getPasswordColumn().equalsIgnoreCase(getKeyColumn())) {
@@ -560,10 +564,10 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
                throw new IllegalArgumentException(getMessage(MSG_PASSWD_COLUMN_EQ_CHANGE_LOG_COLUMN));               
            }           
         }        
-        
-        
         // check that there is not a datasource
         if(StringUtil.isBlank(getDatasource())){ 
+            log.info("Validate driver configuration.");        
+            
             // determine if you can get a connection to the database..
             if (getUser() == null) {
                 throw new IllegalArgumentException(getMessage(MSG_USER_BLANK));
@@ -600,9 +604,12 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
             } catch (ClassNotFoundException e) {
                 throw new IllegalArgumentException(getMessage(MSG_JDBC_DRIVER_NOT_FOUND));
             }
+            log.ok("driver configuration is ok");        
         } else {
+            log.info("Validate datasource configuration");        
             //Validate the JNDI properties
             JNDIUtil.arrayToHashtable(getJndiProperties(), getConnectorMessages());
+            log.ok("datasource configuration is ok");        
         }
         
         try {
@@ -610,6 +617,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(getMessage(MSG_INVALID_QUOTING, getQuoting()));
         }
+        log.ok("Configuration is valid");        
     }
     
     /**
@@ -618,6 +626,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return the database url 
      */
     public String formatUrlTemplate() {
+        log.info("format UrlTemplate");        
         final StringBuffer b = new StringBuffer();
         final String url = getJdbcUrlTemplate();
         final int len = url.length();
@@ -639,6 +648,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
             }
         }
         String formattedURL = b.toString();
+        log.ok("UrlTemplate is formated to {0}", formattedURL);        
         return formattedURL;
     }
     
@@ -648,7 +658,9 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return return the formated message
      */
     public String getMessage(String key) {
-        return getConnectorMessages().format(key, key);
+        final String fmt = getConnectorMessages().format(key, key);
+        log.ok("Get for a key {0} connector message {1}", key, fmt);        
+        return fmt;
     }
     
     /**
@@ -658,6 +670,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
      * @return the localized message string
      */
     public String getMessage(String key, Object... objects) {
-        return getConnectorMessages().format(key, key, objects);
+        final String fmt = getConnectorMessages().format(key, key, objects);
+        log.ok("Get for a key {0} connector message {1}", key, fmt);        
+        return fmt;
     }    
 }

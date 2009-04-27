@@ -34,14 +34,11 @@ public class DatabaseTableConstants {
     /**  The default connect URL template.  */
     public static final String DEFAULT_TEMPLATE = "jdbc:oracle:thin:@%h:%p:%d";
     
-    /**
-     * The default value for the RA_DRIVER resource attribute.
-     */
+    /**  The default value for the RA_DRIVER resource attribute. */
     public static final String DEFAULT_DRIVER = "oracle.jdbc.driver.OracleDriver";    
 
     /** The null column default value */
     public static final String EMPTY_STR = "";    
-
     
     // Validate messages constants
     static final String MSG_NAME_BLANK = "name.blank";
@@ -68,4 +65,7 @@ public class DatabaseTableConstants {
     static final String MSG_PASSWD_COLUMN_EQ_KEY_COLUMN="passwd.column.eq.key.column";
     static final String MSG_PASSWD_COLUMN_EQ_CHANGE_LOG_COLUMN="passwd.column.eq.change.log.column";
     static final String MSG_KEY_COLUMN_EQ_CHANGE_LOG_COLUMN="key.column.eq.change.log.column";
+    static final String MSG_QUERY_INVALID = "query.invalid";   
+    static final String MSG_MORE_USERS_DELETED = "more.users.deleted"; 
+    
 }
