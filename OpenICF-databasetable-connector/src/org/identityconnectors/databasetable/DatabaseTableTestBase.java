@@ -713,7 +713,7 @@ public abstract class DatabaseTableTestBase {
             // attempt to find the newly created object..
             con.sync(ObjectClass.ACCOUNT, null, handler, null);
             assertTrue(ERR1, handler.found);
-            assertEquals(10L, handler.token.getValue());
+            assertEquals(0L, handler.token.getValue());
             // assertEquals(expected, handler.deltaType); // not definned till now 
 
             //Test the created attributes are equal the searched
@@ -806,7 +806,7 @@ public abstract class DatabaseTableTestBase {
         // update the last change
         PreparedStatement ps = null;
         DatabaseTableConnection conn = con.getConnection();
-        Integer changed = 20;
+        Integer changed = new Long(System.currentTimeMillis()).intValue();
         try {
             List<SQLParam> values = new ArrayList<SQLParam>();
             values.add(new SQLParam(changed, Types.INTEGER));
