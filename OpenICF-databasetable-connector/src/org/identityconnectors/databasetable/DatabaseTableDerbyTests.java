@@ -186,21 +186,15 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
          ret.add(AttributeBuilder.build(EMAIL, randomString(r, 50)));
          ret.add(AttributeBuilder.build(DEPARTMENT, randomString(r, 50)));
          ret.add(AttributeBuilder.build(TITLE, randomString(r, 50)));
-         if(!cfg.getChangeLogColumn().equalsIgnoreCase(AGE)){
-             ret.add(AttributeBuilder.build(AGE, r.nextInt(100)));
-         }
-         if(!cfg.getChangeLogColumn().equalsIgnoreCase(ACCESSED)){
-             ret.add(AttributeBuilder.build(ACCESSED, r.nextLong()));
-         }
+         ret.add(AttributeBuilder.build(AGE, r.nextInt(100)));
+         ret.add(AttributeBuilder.build(ACCESSED, r.nextLong()));
          ret.add(AttributeBuilder.build(SALARY, new BigDecimal("360536.75")));
          ret.add(AttributeBuilder.build(JPEGPHOTO, randomBytes(r, 2000)));
          ret.add(AttributeBuilder.build(OPENTIME, new java.sql.Time(System.currentTimeMillis()).toString()));
          ret.add(AttributeBuilder.build(ACTIVATE, new java.sql.Date(System.currentTimeMillis()).toString()));
          ret.add(AttributeBuilder.build(ENROLLED, new Timestamp(System.currentTimeMillis()).toString()));
          ret.add(AttributeBuilder.build(CHANGED, new Timestamp(System.currentTimeMillis()).toString()));
-         if(!cfg.getChangeLogColumn().equalsIgnoreCase(CHANGELOG)){
-             ret.add(AttributeBuilder.build(CHANGELOG, new Timestamp(System.currentTimeMillis()).getTime()));
-         }
+         ret.add(AttributeBuilder.build(CHANGELOG, 10L));
          return ret;
      }
 
@@ -253,7 +247,7 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
         final ExpectProxy<MappingStrategy> smse = new ExpectProxy<MappingStrategy>();
         MappingStrategy sms = smse.getProxy(MappingStrategy.class);
         //Schema
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < 16; i++) {
             smse.expectAndReturn("getSQLAttributeType", String.class);
         }
         //Create fail
@@ -279,7 +273,7 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
 
         final ExpectProxy<MappingStrategy> smse = new ExpectProxy<MappingStrategy>();
         MappingStrategy sms = smse.getProxy(MappingStrategy.class);
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < 16; i++) {
             smse.expectAndReturn("getSQLAttributeType", String.class);
         }
         smse.expectAndThrow("setSQLParam", new SQLException("test reason", "411", 411));
@@ -301,7 +295,7 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
 
         final ExpectProxy<MappingStrategy> smse = new ExpectProxy<MappingStrategy>();
         MappingStrategy sms = smse.getProxy(MappingStrategy.class);
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < 16; i++) {
             smse.expectAndReturn("getSQLAttributeType", String.class);
         }
         smse.expectAndThrow("setSQLParam", new SQLException("test reason", "0", 0));

@@ -570,7 +570,6 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         
         final List<OrderBy> orderBy = new ArrayList<OrderBy>();
         //Add also the token column
-        columnNames.add(changeLogColumnName);
         orderBy.add(new OrderBy(changeLogColumnName, true));
         log.ok("OrderBy {0}", orderBy);        
 
@@ -948,9 +947,6 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
                 // Password attribute
                 attrInfo.add(OperationalAttributeInfos.PASSWORD);                
                 log.ok("password column in password attribute in the schema");
-            } else if (name.equalsIgnoreCase(config.getChangeLogColumn())) {
-                // skip changelog column from the schema. It is not part of the contract
-                log.ok("skip changelog column from the schema");
             } else {
                 // All other attributed taken from the table
                 final Class<?> dataType = conn.getSms().getSQLAttributeType(columnType);
@@ -1007,9 +1003,6 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             } else if (columnName.equalsIgnoreCase(config.getPasswordColumn())) {
                 // No Password in the result object
                 log.ok("No Password in the result object");                
-            } else if (columnName.equalsIgnoreCase(config.getChangeLogColumn())) {
-            	//No changelogcolumn attribute in the results
-                log.ok("changelogcolumn attribute in the result");                
             } else {
                 if(value != null) { 
                     bld.addAttribute(AttributeBuilder.build(columnName, value));
