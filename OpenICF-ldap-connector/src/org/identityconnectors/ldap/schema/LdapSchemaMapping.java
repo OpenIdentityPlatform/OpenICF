@@ -86,6 +86,8 @@ public class LdapSchemaMapping {
     // XXX need a method like getAttributesToReturn(String[] wanted);
     // XXX need to check that (extended) naming attributes really exist.
 
+    public static final ObjectClass ANY_OBJECT_CLASS = new ObjectClass(ObjectClassUtil.createSpecialName("ANY"));
+
     /**
      * The LDAP attribute to map to {@link Name} by default.
      */
@@ -121,6 +123,9 @@ public class LdapSchemaMapping {
      * class is mapped.
      */
     public List<String> getLdapClasses(ObjectClass oclass) {
+        if (oclass.equals(ANY_OBJECT_CLASS)) {
+            return emptyList();
+        }
         ObjectClassMappingConfig oclassConfig = conn.getConfiguration().getObjectClassMappingConfigs().get(oclass);
         if (oclassConfig != null) {
             return oclassConfig.getLdapClasses();
@@ -169,7 +174,7 @@ public class LdapSchemaMapping {
             result = addBinaryOption(result);
         }
 
-        if (result == null) {
+        if (result == null && !oclass.equals(ANY_OBJECT_CLASS)) {
             log.warn("Attribute {0} of object class {1} is not mapped to an LDAP attribute",
                     attrName, oclass.getObjectClassValue());
         }

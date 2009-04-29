@@ -22,6 +22,8 @@
  */
 package org.identityconnectors.ldap.search;
 
+import static org.identityconnectors.common.StringUtil.isNotBlank;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -53,7 +55,7 @@ public class LdapInternalSearch {
     }
 
     public void execute(SearchResultsHandler handler) {
-        String filter = nullAsAllObjects(this.filter);
+        String filter = blankAsAllObjects(this.filter);
         try {
             strategy.doSearch(conn.getInitialContext(), baseDNs, filter, controls, handler);
         } catch (IOException e) {
@@ -63,8 +65,8 @@ public class LdapInternalSearch {
         }
     }
 
-    private static String nullAsAllObjects(String query) {
-        return query != null ? query : "(objectClass=*)";
+    private static String blankAsAllObjects(String query) {
+        return isNotBlank(query) ? query : "(objectClass=*)";
     }
 
     public static SearchControls createDefaultSearchControls() {

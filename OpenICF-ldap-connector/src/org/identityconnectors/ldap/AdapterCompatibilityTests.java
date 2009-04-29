@@ -51,6 +51,9 @@ import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.OperationalAttributeInfos;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.common.objects.filter.Filter;
+import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
+import org.identityconnectors.ldap.schema.LdapSchemaMapping;
 import org.identityconnectors.test.common.TestHelpers;
 import org.junit.Test;
 
@@ -458,6 +461,21 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
         passwordBytes = (byte[]) object.getAttributeByName("userPassword").getValue().get(0);
         assertTrue(new String(passwordBytes, "UTF-8").startsWith(algorithmLabel));
         facade.authenticate(ObjectClass.ACCOUNT, "daffy.duck", password, null);
+    }
+
+    @Test
+    public void testSearchAnyObjectClass() {
+        ConnectorFacade facade = newFacade();
+
+        Filter filter = FilterBuilder.equalTo(AttributeBuilder.build(Name.NAME, BUGS_BUNNY_DN));
+        OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        builder.setAttributesToGet("cn", "dn");
+        List<ConnectorObject> objects = TestHelpers.searchToList(facade, LdapSchemaMapping.ANY_OBJECT_CLASS, filter, builder.build());
+
+        ConnectorObject bunny = objects.get(0);
+        assertEquals(LdapSchemaMapping.ANY_OBJECT_CLASS, bunny.getObjectClass());
+        assertEquals(BUGS_BUNNY_DN, bunny.getName().getNameValue());
+        assertEquals(BUGS_BUNNY_CN, bunny.getAttributeByName("cn").getValue().get(0));
     }
 
     private static void assertAttributeValue(List<?> expected, ConnectorFacade facade, ObjectClass oclass, Uid uid, String attrName) {

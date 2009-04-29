@@ -24,6 +24,7 @@ package org.identityconnectors.ldap.search;
 
 import static java.util.Collections.singletonList;
 import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
+import static org.identityconnectors.common.CollectionUtil.newSet;
 import static org.identityconnectors.common.StringUtil.isBlank;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValues;
 
@@ -50,8 +51,9 @@ import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.GroupHelper;
 import org.identityconnectors.ldap.LdapConnection;
-import org.identityconnectors.ldap.LdapEntry;
 import org.identityconnectors.ldap.LdapConstants;
+import org.identityconnectors.ldap.LdapEntry;
+import org.identityconnectors.ldap.schema.LdapSchemaMapping;
 
 import com.sun.jndi.ldap.ctl.VirtualListViewControl;
 
@@ -70,6 +72,9 @@ public class LdapSearch {
     private final String[] baseDNs;
 
     public static Set<String> getAttributesReturnedByDefault(LdapConnection conn, ObjectClass oclass) {
+        if (oclass.equals(LdapSchemaMapping.ANY_OBJECT_CLASS)) {
+            return newSet(Name.NAME);
+        }
         Set<String> result = newCaseInsensitiveSet();
         ObjectClassInfo oci = conn.getSchemaMapping().schema().findObjectClassInfo(oclass.getObjectClassValue());
         if (oci != null) {
