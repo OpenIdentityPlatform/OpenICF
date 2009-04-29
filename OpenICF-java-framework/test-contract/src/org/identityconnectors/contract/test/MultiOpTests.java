@@ -550,9 +550,6 @@ public class MultiOpTests extends ObjectClassRunner {
         if (isObjectClassSupported()
                 && ConnectorHelper.isCRU(getObjectClassInfo(), OperationalAttributes.PASSWORD_EXPIRED_NAME)) {
 
-            // check PASSWORD_EXPIRED for true
-            checkOpAttribute(OperationalAttributes.PASSWORD_EXPIRED_NAME, true, false, Boolean.class);
-
             // check PASSWORD_EXPIRED for false
             checkOpAttribute(OperationalAttributes.PASSWORD_EXPIRED_NAME, false, true, Boolean.class);
         }
