@@ -67,5 +67,6 @@ public class DatabaseTableConstants {
     static final String MSG_KEY_COLUMN_EQ_CHANGE_LOG_COLUMN="key.column.eq.change.log.column";
     static final String MSG_QUERY_INVALID = "query.invalid";   
     static final String MSG_MORE_USERS_DELETED = "more.users.deleted"; 
+    static final String MSG_INVALID_SYNC_TOKEN_VALUE="invalid.sync.token.value";
     
 }

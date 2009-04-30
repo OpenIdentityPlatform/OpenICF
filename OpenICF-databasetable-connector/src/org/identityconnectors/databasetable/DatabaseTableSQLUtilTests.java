@@ -24,7 +24,6 @@ package org.identityconnectors.databasetable;
 
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.sql.CallableStatement;
@@ -37,7 +36,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+
+import junit.framework.Assert;
 
 import org.identityconnectors.common.Pair;
 import org.identityconnectors.common.security.GuardedString;
@@ -45,8 +45,6 @@ import org.identityconnectors.databasetable.mapping.DefaultStrategy;
 import org.identityconnectors.databasetable.mapping.MappingStrategy;
 import org.identityconnectors.dbcommon.ExpectProxy;
 import org.identityconnectors.dbcommon.SQLParam;
-import org.identityconnectors.framework.common.objects.Attribute;
-import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.junit.Test;
 
 
@@ -62,7 +60,7 @@ public class DatabaseTableSQLUtilTests {
      * @throws SQLException 
      */
     @Test
-    public void testGetAttributeSet() throws SQLException {
+    public void testGetColumnValues() throws SQLException {
         final String TEST1 = "test1";
         final String TEST_VAL1 = "testValue1";
         final String TEST2 = "test2";
@@ -86,14 +84,16 @@ public class DatabaseTableSQLUtilTests {
         trs.expectAndReturn("getString", TEST_VAL2);
         
         final DefaultStrategy derbyDbStrategy = new DefaultStrategy();
-        final Set<Attribute> actual = DatabaseTableSQLUtil.getAttributeSet(derbyDbStrategy, resultSetProxy);
+        final Map<String, SQLParam> actual = DatabaseTableSQLUtil.getColumnValues(derbyDbStrategy, resultSetProxy);
         assertTrue(trs.isDone());
         assertTrue(trsmd.isDone());
         assertEquals(2, actual.size());
-        assertNotNull(AttributeUtil.find(TEST1, actual));
-        assertNotNull(AttributeUtil.find(TEST2, actual));
-        assertEquals(TEST_VAL1,AttributeUtil.find(TEST1, actual).getValue().get(0));
-        assertEquals(TEST_VAL2,AttributeUtil.find(TEST2, actual).getValue().get(0));
+        final SQLParam tv1 =  actual.get(TEST1);
+        Assert.assertNotNull(tv1);
+        assertEquals(TEST_VAL1, tv1.getValue()); 
+        final SQLParam tv2 =  actual.get(TEST2);
+        Assert.assertNotNull(tv2);
+        assertEquals(TEST_VAL2, tv2.getValue()); 
      }   
     
     /**

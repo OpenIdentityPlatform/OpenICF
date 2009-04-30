@@ -28,18 +28,17 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import org.identityconnectors.common.Assertions;
+import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.databasetable.mapping.MappingStrategy;
 import org.identityconnectors.dbcommon.SQLParam;
-import org.identityconnectors.framework.common.objects.Attribute;
-import org.identityconnectors.framework.common.objects.AttributeBuilder;
+
 
 
 /**
@@ -120,24 +119,23 @@ public final class DatabaseTableSQLUtil {
     }
 
     /**
-     * Read one row from database result set and convert a columns to attribute set.  
+     * Read one row from database result set and convert it to columnValues map.  
      * @param sms 
      * @param scs 
      * @param resultSet database data
-     * @return The transformed attribute set
+     * @return The transformed column values map
      * @throws SQLException 
      */
-    public static Set<Attribute> getAttributeSet(final MappingStrategy sms, ResultSet resultSet) throws SQLException {
+    public static Map<String, SQLParam> getColumnValues(final MappingStrategy sms, ResultSet resultSet) throws SQLException {
         Assertions.nullCheck(resultSet,"resultSet");
-        Set<Attribute> ret = new HashSet<Attribute>();
+        Map<String, SQLParam> ret = CollectionUtil.<SQLParam>newCaseInsensitiveMap();
         final ResultSetMetaData meta = resultSet.getMetaData();
         int count = meta.getColumnCount();
         for (int i = 1; i <= count; i++) {
             final String name = meta.getColumnName(i);
             final int sqlType = meta.getColumnType(i);
             final SQLParam param = sms.getSQLParam(resultSet, i, sqlType);
-            final Attribute attr = AttributeBuilder.build(name, param.getValue());
-            ret.add(attr);
+            ret.put(name, param);
         }
         return ret;
     }

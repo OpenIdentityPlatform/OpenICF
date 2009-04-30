@@ -33,7 +33,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
@@ -49,7 +49,6 @@ import org.identityconnectors.dbcommon.JNDIUtil;
 import org.identityconnectors.dbcommon.SQLParam;
 import org.identityconnectors.dbcommon.SQLUtil;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ConnectorMessages;
 import org.identityconnectors.framework.spi.Configuration;
 
@@ -224,13 +223,13 @@ public class DatabaseTableConnection extends DatabaseConnection {
     }
 
     /**
-     * Get the attribute set
+     * Get the Column Values map
      * @param result
-     * @return the result of attribute set generation
+     * @return the result of Column Values map
      * @throws SQLException 
      */
-    public Set<Attribute> getAttributeSet(ResultSet result) throws SQLException {
-       return DatabaseTableSQLUtil.getAttributeSet(sms, result);
+    public Map<String, SQLParam> getColumnValues(ResultSet result) throws SQLException {
+       return DatabaseTableSQLUtil.getColumnValues(sms, result);
     }
 
     /**

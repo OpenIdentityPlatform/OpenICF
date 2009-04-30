@@ -514,12 +514,12 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             result = statement.executeQuery();
             log.ok("executeQuery {0} on {1}", query.getSQL(), oclass);
             while (result.next()) {
-                final Set<Attribute> attributeSet = conn.getAttributeSet(result);
-                log.ok("Attributes {0} from result set ", attributeSet);
+                final Map<String, SQLParam> columnValues = conn.getColumnValues(result);
+                log.ok("Column values {0} from result set ", columnValues);
                 // create the connector object
-                final ConnectorObjectBuilder bld = buildConnectorObject(attributeSet);
+                final ConnectorObjectBuilder bld = buildConnectorObject(columnValues);
                 if (!handler.handle(bld.build())) {
-                    log.ok("Stop processing of the result set", attributeSet);
+                    log.ok("Stop processing of the result set");
                     break;
                 }
             }
@@ -593,13 +593,13 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             result = statement.executeQuery();
             log.info("execute sync query {0} on {1}", query.getSQL(), oclass);
             while (result.next()) {
-                final Set<Attribute> attributeSet = SQLUtil.getAttributeSet(result);
-                log.ok("Attributes {0} from sync result set ", attributeSet);
+                final Map<String, SQLParam> columnValues = conn.getColumnValues(result);
+                log.ok("Column values {0} from sync result set ", columnValues);
                 
                 // create the connector object..
-                final SyncDeltaBuilder sdb = buildSyncDelta(attributeSet);
+                final SyncDeltaBuilder sdb = buildSyncDelta(columnValues);
                 if (!handler.handle(sdb.build())) {
-                    log.ok("Stop processing of the sync result set", attributeSet);
+                    log.ok("Stop processing of the sync result set");
                     break;
                 }
             }
@@ -985,24 +985,24 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      * Construct a connector object
      * <p>Taking care about special attributes</p>
      *  
-     * @param attributeSet from the database table
+     * @param columnValues from the result set
      * @return ConnectorObjectBuilder object
      */
-    private ConnectorObjectBuilder buildConnectorObject(Set<Attribute> attributeSet) {
+    private ConnectorObjectBuilder buildConnectorObject(Map<String, SQLParam> columnValues) {
         log.info("build ConnectorObject");
         String uidValue = null;
-        ConnectorObjectBuilder bld = new ConnectorObjectBuilder();
-        for (Attribute attribute : attributeSet) {
-            final String columnName = attribute.getName();
-            final Object value = AttributeUtil.getSingleValue(attribute);
+        ConnectorObjectBuilder bld = new ConnectorObjectBuilder();               
+        for (Map.Entry<String, SQLParam> colValue : columnValues.entrySet()) {
+            final String columnName = colValue.getKey();
+            final SQLParam value = colValue.getValue();
             // Map the special
             if (columnName.equalsIgnoreCase(config.getKeyColumn())) {
-                if (value == null) {
+                if (value == null || value.getValue() == null) {
                     log.error("Name cannot be null.");
                     String msg = "Name cannot be null.";
                     throw new IllegalArgumentException(msg);
                 }
-                uidValue = value.toString();
+                uidValue = value.getValue().toString();
                 bld.setName(uidValue);
             } else if (columnName.equalsIgnoreCase(config.getPasswordColumn())) {
                 // No Password in the result object
@@ -1011,8 +1011,10 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             	//No changelogcolumn attribute in the results
                 log.ok("changelogcolumn attribute in the result");                
             } else {
-                if(value != null) { 
-                    bld.addAttribute(AttributeBuilder.build(columnName, value));
+                if(value != null && value.getValue() != null) { 
+                    bld.addAttribute(AttributeBuilder.build(columnName, value.getValue()));
+                } else {
+                    bld.addAttribute(AttributeBuilder.build(columnName));                    
                 }
             }
         }
@@ -1033,34 +1035,35 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
 
     
     /**
-     * Construct a connector object
+     * Construct a SyncDeltaBuilder the sync builder
      * <p>Taking care about special attributes</p>
      *  
-     * @param attributeSet from the database table
-     * @return ConnectorObjectBuilder object
+     * @param columnValues from the resultSet
+     * @return SyncDeltaBuilder the sync builder
      */
-    private SyncDeltaBuilder buildSyncDelta(Set<Attribute> attributeSet) {
-        Object token = null;
+    private SyncDeltaBuilder buildSyncDelta(Map<String, SQLParam> columnValues) {
+      	log.info("buildSyncDelta");                
         SyncDeltaBuilder bld = new SyncDeltaBuilder();
-        Attribute attribute = AttributeUtil.find(config.getChangeLogColumn(), 
-                attributeSet);
-        if ( attribute != null ) {
-            token = AttributeUtil.getSingleValue(attribute);
-        }
+        // Find a token
+        SQLParam tokenParam = columnValues.get(config.getChangeLogColumn());
         
-        if ( token == null ) {
-            token = 0L;
+        if ( tokenParam == null ) {
+            throw new IllegalArgumentException(config.getMessage(MSG_INVALID_SYNC_TOKEN_VALUE));
         }
+        Object token = tokenParam.getValue();
+        // Null token, set some acceptable value
+        if ( token == null ) {
+        	log.ok("token value is null, replacing to 0L");                
+            token = 0L;
+        }        
         
         // To be sure that sync token is present
-        if(token != null) {
-            bld.setToken(new SyncToken(token));
-        }  
-        
-        bld.setObject(buildConnectorObject(attributeSet).build());
+        bld.setToken(new SyncToken(token));
+        bld.setObject(buildConnectorObject(columnValues).build());
         
         // only deals w/ updates
         bld.setDeltaType(SyncDeltaType.CREATE_OR_UPDATE);
+      	log.ok("SyncDeltaBuilder is ok");                
         return bld;
     }       
 
