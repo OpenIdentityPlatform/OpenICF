@@ -485,16 +485,16 @@ public class LdapConfiguration extends AbstractConfiguration {
         return usePagedResultControl;
     }
 
+    public void setUsePagedResultControl(boolean usePagedResultControl) {
+        this.usePagedResultControl = usePagedResultControl;
+    }
+
     public String getVlvSortAttribute() {
         return vlvSortAttribute;
     }
 
     public void setVlvSortAttribute(String vlvSortAttribute) {
         this.vlvSortAttribute = vlvSortAttribute;
-    }
-
-    public void setUsePagedResultControl(boolean usePagedResultControl) {
-        this.usePagedResultControl = usePagedResultControl;
     }
 
     public String getUidAttribute() {
