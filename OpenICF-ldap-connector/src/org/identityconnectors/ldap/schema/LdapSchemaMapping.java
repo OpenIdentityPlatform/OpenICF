@@ -258,24 +258,12 @@ public class LdapSchemaMapping {
      * contains the attribute returned by {@link #getLdapNameAttribute}.
      */
     public Name createName(ObjectClass oclass, LdapEntry entry) {
-        // First try the short way: assume the naming attribute is in the search result.
-        String nameAttr = getLdapNameAttribute(oclass);
-        if (nameAttr != null) {
-            String name = getStringAttrValue(entry.getAttributes(), nameAttr);
-            if (name != null) {
-                return new Name(name);
-            }
+        String ldapNameAttr = getLdapNameAttribute(oclass);
+        if (!isDNAttribute(ldapNameAttr)) {
+            // Not yet implemented.
+            throw new UnsupportedOperationException("Name can only be mapped to the entry DN");
         }
-
-        // No naming attribute. Try to derive it from the DN.
-        LdapName dn = entry.getDN();
-        Rdn rdn = dn.getRdn(dn.size() - 1);
-        if (rdn.size() != 1) {
-            // XXX perhaps just use the first attribute?
-            throw new ConnectorException("Unsupported number of naming attributes: " + rdn.size());
-        }
-        String name = (String) rdn.getValue();
-        return new Name(name);
+        return new Name(entry.getDN().toString());
     }
 
     /**
@@ -307,13 +295,7 @@ public class LdapSchemaMapping {
     }
 
     public String create(ObjectClass oclass, Name name, javax.naming.directory.Attributes initialAttrs) {
-        String ldapNameAttr = getLdapNameAttribute(oclass);
-        if (!isDNAttribute(ldapNameAttr)) {
-            // Not yet implemented.
-            throw new UnsupportedOperationException("Name can only be mapped to the DN");
-        }
-
-        LdapName entryName = quietCreateLdapName(name.getNameValue());
+        LdapName entryName = quietCreateLdapName(getEntryDN(oclass, name));
         Rdn rdn = entryName.getRdn(entryName.size() - 1);
         String containerDN = entryName.getPrefix(entryName.size() - 1).toString();
 

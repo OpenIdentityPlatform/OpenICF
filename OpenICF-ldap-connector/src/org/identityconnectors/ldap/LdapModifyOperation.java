@@ -144,9 +144,9 @@ public abstract class LdapModifyOperation {
         return result.isEmpty() ? null : result;
     }
 
-    protected final static String getFirstPosixRefAttr(String entryDN, Set<String> posixRefAttrs) {
+    protected final String getFirstPosixRefAttr(String entryDN, Set<String> posixRefAttrs) {
         if (isEmpty(posixRefAttrs)) {
-            throw new ConnectorException("Unable to add entry " + entryDN + " to POSIX groups because it doesn't have an " + GroupHelper.getPosixRefAttribute() + " attribute");
+            throw new ConnectorException(conn.format("cannotAddToPosixGroup", null, entryDN, GroupHelper.getPosixRefAttribute()));
         }
         return min(posixRefAttrs);
     }
@@ -208,10 +208,7 @@ public abstract class LdapModifyOperation {
 
         private LdapEntry getLdapEntry() {
             if (entry == null) {
-                entry = LdapSearches.findEntry(conn, quietCreateLdapName(entryDN), GroupHelper.getPosixRefAttribute());
-                if (entry == null) {
-                    throw new ConnectorException("Entry " + entryDN + " not found");
-                }
+                entry = LdapSearches.getEntry(conn, quietCreateLdapName(entryDN), GroupHelper.getPosixRefAttribute());
             }
             return entry;
         }

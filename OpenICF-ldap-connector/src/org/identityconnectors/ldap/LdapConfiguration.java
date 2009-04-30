@@ -27,7 +27,6 @@ import static org.identityconnectors.common.CollectionUtil.newList;
 import static org.identityconnectors.common.StringUtil.isBlank;
 import static org.identityconnectors.ldap.LdapUtil.nullAsEmpty;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -223,95 +222,94 @@ public class LdapConfiguration extends AbstractConfiguration {
      */
     public void validate() {
         if (isBlank(host)) {
-            throw new ConfigurationException("The host cannot be blank");
+            failValidation("host.notBlank");
         }
 
         if (port < 0 || port > 0xffff) {
-            throw new ConfigurationException("The port number should be 0 through 65535");
+            failValidation("port.legalValue");
         }
 
-        checkNotEmpty(baseContexts, "The list of base contexts cannot be empty");
-        checkNoBlankValues(baseContexts, "The list of base contexts cannot contain blank values");
-        checkNoInvalidLdapNames(baseContexts, "The base context {0} cannot be parsed");
+        checkNotEmpty(baseContexts, "baseContexts.notEmpty");
+        checkNoBlankValues(baseContexts, "baseContexts.noBlankValues");
+        checkNoInvalidLdapNames(baseContexts, "baseContexts.noInvalidLdapNames");
 
         if (isBlank(passwordAttribute)) {
-            throw new ConfigurationException("The password attribute cannot be blank");
+            failValidation("passwordAttribute.notBlank");
         }
 
-        checkNotEmpty(accountConfig.getLdapClasses(), "The list of account object classes cannot be empty");
-        checkNoBlankValues(accountConfig.getLdapClasses(), "The list of account object classes cannot contain blank values");
+        checkNotEmpty(accountConfig.getLdapClasses(), "accountObjectClasses.notEmpty");
+        checkNoBlankValues(accountConfig.getLdapClasses(), "accountObjectClasses.noBlankValues");
 
-        checkNotEmpty(accountConfig.getShortNameLdapAttributes(), "The list of account user name attributes cannot be empty");
-        checkNoBlankValues(accountConfig.getShortNameLdapAttributes(), "The list of account user name attributes cannot contain blank values");
+        checkNotEmpty(accountConfig.getShortNameLdapAttributes(), "accountUserNameAttributes.notEmpty");
+        checkNoBlankValues(accountConfig.getShortNameLdapAttributes(), "accountUserNameAttributes.noBlankValues");
 
         if (isBlank(groupMemberAttribute)) {
-            throw new ConfigurationException("The group member attribute cannot be blank");
+            failValidation("groupMemberAttribute.notBlank");
         }
 
         if (blockSize <= 0) {
-            throw new ConfigurationException("The block size should be greather than 0");
+            failValidation("blockSize.legalValue");
         }
 
         if (isBlank(vlvSortAttribute)) {
-            throw new ConfigurationException("The VLV sort attribute cannot be blank");
+            failValidation("vlvSortAttribute.notBlank");
         }
 
         if (isBlank(uidAttribute)) {
-            throw new ConfigurationException("The attribute to map to Uid cannot be blank");
+            failValidation("uidAttribute.notBlank");
         }
 
-        if (extendedObjectClasses == null) {
-            throw new ConfigurationException("The list of extended object classes cannot be null");
-        }
-        checkNoBlankValues(extendedObjectClasses, "The list of extended object classes cannot contain blank values");
-        if (extendedObjectClasses.length > 0) {
-            if (!readSchema) {
-                throw new ConfigurationException("The readSchema property must be true when using extended object classes");
+        if (extendedObjectClasses != null) {
+            checkNoBlankValues(extendedObjectClasses, "extendedObjectClasses.noBlankValues");
+            if (extendedObjectClasses.length > 0) {
+                if (!readSchema) {
+                    failValidation("readSchema.mustBeTrueWithExtendedObjectClasses");
+                }
             }
         }
 
         if (baseContextsToSynchronize != null) {
-            checkNoBlankValues(baseContextsToSynchronize, "The list of base contexts to synchronize cannot contain blank values");
-            checkNoInvalidLdapNames(baseContextsToSynchronize, "The base context to synchronize {0} cannot be parsed");
+            checkNoBlankValues(baseContextsToSynchronize, "baseContextsToSynchronize.noBlankValues");
+            checkNoInvalidLdapNames(baseContextsToSynchronize, "baseContextsToSynchronize.noInvalidLdapNames");
         }
 
-        checkNotEmpty(objectClassesToSynchronize, "The list of object classes to synchronize cannot be empty");
-        checkNoBlankValues(objectClassesToSynchronize, "The list of object classes to synchronize cannot contain blank values");
+        checkNotEmpty(objectClassesToSynchronize, "objectClassesToSynchronize.notEmpty");
+        checkNoBlankValues(objectClassesToSynchronize, "objectClassesToSynchronize.noBlankValues");
 
         if (attributesToSynchronize != null) {
-            checkNoBlankValues(attributesToSynchronize, "The list of attributes to synchronize cannot contain blank values");
+            checkNoBlankValues(attributesToSynchronize, "attributesToSynchronize.noBlankValues");
         }
 
         if (modifiersNamesToFilterOut != null) {
-            checkNoBlankValues(modifiersNamesToFilterOut, "The list of modifiers' names to filter out cannot contain blank values");
-            checkNoInvalidLdapNames(modifiersNamesToFilterOut, "The modifier's name to filter out {0} cannot be parsed");
+            checkNoBlankValues(modifiersNamesToFilterOut, "modifiersNamesToFilterOut.noBlankValues");
+            checkNoInvalidLdapNames(modifiersNamesToFilterOut, "modifiersNamesToFilterOut.noInvalidLdapNames");
         }
 
         if (isBlank(changeNumberAttribute)) {
-            throw new ConfigurationException("The change number attribute cannot be blank");
+            failValidation("changeNumberAttribute.notBlank");
         }
 
         if (changeLogBlockSize <= 0) {
-            throw new ConfigurationException("The synchronization block size should be greather than 0");
+            failValidation("changeLogBlockSize.legalValue");
         }
     }
 
     private void checkNotEmpty(Collection<?> collection, String errorMessage) {
         if (collection.size() < 1) {
-            throw new ConfigurationException(errorMessage);
+            failValidation(errorMessage);
         }
     }
 
     private void checkNotEmpty(String[] array, String errorMessage) {
         if (array == null || array.length < 1) {
-            throw new ConfigurationException(errorMessage);
+            failValidation(errorMessage);
         }
     }
 
     private void checkNoBlankValues(Collection<String> collection, String errorMessage) {
         for (String each : collection) {
             if (isBlank(each)) {
-                throw new ConfigurationException(errorMessage);
+                failValidation(errorMessage);
             }
         }
     }
@@ -319,7 +317,7 @@ public class LdapConfiguration extends AbstractConfiguration {
     private void checkNoBlankValues(String[] array, String errorMessage) {
         for (String each : array) {
             if (isBlank(each)) {
-                throw new ConfigurationException(errorMessage);
+                failValidation(errorMessage);
             }
         }
     }
@@ -329,9 +327,14 @@ public class LdapConfiguration extends AbstractConfiguration {
             try {
                 new LdapName(each);
             } catch (InvalidNameException e) {
-                throw new ConfigurationException(MessageFormat.format(errorMessage, each));
+                failValidation(errorMessage, each);
             }
         }
+    }
+
+    private void failValidation(String key, Object... args) {
+        String message = getConnectorMessages().format(key, null, args);
+        throw new ConfigurationException(message);
     }
 
     public String getHost() {
@@ -658,14 +661,16 @@ public class LdapConfiguration extends AbstractConfiguration {
         result.put(accountConfig.getObjectClass(), accountConfig);
         result.put(groupConfig.getObjectClass(), groupConfig);
 
-        for (int i = 0; i < extendedObjectClasses.length; i++) {
-            String extendedObjectClass = extendedObjectClasses[i];
-            ObjectClassMappingConfig config = new ObjectClassMappingConfig(new ObjectClass(extendedObjectClass),
-                    singletonList(extendedObjectClass), false, Collections.<String>emptyList());
-            if (!result.containsKey(config.getObjectClass())) {
-                result.put(config.getObjectClass(), config);
-            } else {
-                log.warn("Ignoring mapping configuration for object class {0} because it is already mapped", config.getObjectClass().getObjectClassValue());
+        if (extendedObjectClasses != null) {
+            for (int i = 0; i < extendedObjectClasses.length; i++) {
+                String extendedObjectClass = extendedObjectClasses[i];
+                ObjectClassMappingConfig config = new ObjectClassMappingConfig(new ObjectClass(extendedObjectClass),
+                        singletonList(extendedObjectClass), false, Collections.<String>emptyList());
+                if (!result.containsKey(config.getObjectClass())) {
+                    result.put(config.getObjectClass(), config);
+                } else {
+                    log.warn("Ignoring mapping configuration for object class {0} because it is already mapped", config.getObjectClass().getObjectClassValue());
+                }
             }
         }
         return result;

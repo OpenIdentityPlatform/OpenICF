@@ -213,7 +213,7 @@ public class LdapUpdate extends LdapModifyOperation {
     private void checkRemovedPosixRefAttrs(Set<String> removedPosixRefAttrs, Set<GroupMembership> memberships) {
         for (GroupMembership membership : memberships) {
             if (removedPosixRefAttrs.contains(membership.getMemberRef())) {
-                throw new ConnectorException("Cannot remove the " + GroupHelper.getPosixRefAttribute() + " attribute when the user is a member of POSIX groups");
+                throw new ConnectorException(conn.format("cannotRemoveBecausePosixMember", GroupHelper.getPosixRefAttribute()));
             }
         }
     }

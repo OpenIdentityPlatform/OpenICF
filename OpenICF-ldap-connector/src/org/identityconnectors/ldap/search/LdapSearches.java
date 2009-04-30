@@ -82,7 +82,7 @@ public class LdapSearches {
         if (object != null) {
             return AttributeUtil.getStringValue(object.getAttributeByName("entryDN"));
         }
-        throw new ConnectorException("Unable to find object " + uid + " of class " + oclass);
+        throw new ConnectorException(conn.format("objectNotFound", null, uid, oclass));
     }
 
     public static List<ConnectorObject> findObjects(LdapConnection conn, ObjectClass oclass, String baseDN, Attribute attr, String... attrsToGet) {
@@ -116,7 +116,7 @@ public class LdapSearches {
         return search.getSingleResult();
     }
 
-    public static LdapEntry findEntry(LdapConnection conn, LdapName entryDN, String... ldapAttrsToGet) {
+    public static LdapEntry getEntry(LdapConnection conn, LdapName entryDN, String... ldapAttrsToGet) {
         log.ok("Searching for entry {0}", entryDN);
 
         final List<LdapEntry> result = new ArrayList<LdapEntry>();
@@ -134,8 +134,10 @@ public class LdapSearches {
                 return false;
             }
         });
-
-        return !result.isEmpty() ? result.get(0) : null;
+        if (!result.isEmpty()) {
+            return result.get(0);
+        }
+        throw new ConnectorException(conn.format("entryNotFound", null, entryDN));
     }
 
     public static void findEntries(SearchResultsHandler handler, LdapConnection conn, String filter, String... ldapAttrsToGet) {

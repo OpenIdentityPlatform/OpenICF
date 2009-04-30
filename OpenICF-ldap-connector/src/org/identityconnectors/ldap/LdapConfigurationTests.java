@@ -32,6 +32,7 @@ import static org.junit.Assert.fail;
 import java.util.Arrays;
 
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
+import org.identityconnectors.test.common.TestHelpers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,6 +45,7 @@ public class LdapConfigurationTests {
     @Before
     public void before() throws Exception {
         config = new LdapConfiguration();
+        config.setConnectorMessages(TestHelpers.createDummyMessages());
         config.setHost("localhost");
         config.setBaseContexts("dc=example,dc=com");
         assertCanValidate(config);

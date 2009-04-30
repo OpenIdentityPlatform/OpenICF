@@ -91,18 +91,18 @@ public class LdapAuthenticate {
             String message;
             switch (matchedObjectCount) {
                 case 0:
-                    message = conn.format("AUTH_NO_USER_MATCHED", null, username);
+                    message = conn.format("noUserMatched", null, username);
                     break;
                 case 1:
-                    message = conn.format("AUTH_FAILED", null, username);
+                    message = conn.format("authenticationFailed", null, username);
                     break;
                 default:
-                    message = conn.format("AUTH_MORE_THAN_ONE_USER_MATCHED", null, username);
+                    message = conn.format("moreThanOneUserMatched", null, username);
                     break;
             }
             throw new ConnectorSecurityException(message);
         } else if (object2SuccessAuthn.size() > 1) {
-            throw new ConnectorSecurityException(conn.format("AUTH_MORE_THAN_ONE_USER_MATCHED_WITH_PASSWORD", null, username));
+            throw new ConnectorSecurityException(conn.format("moreThanOneUserMatchedWithPassword", null, username));
         }
 
         Entry<ConnectorObject, AuthenticationResult> entry = object2SuccessAuthn.entrySet().iterator().next();
