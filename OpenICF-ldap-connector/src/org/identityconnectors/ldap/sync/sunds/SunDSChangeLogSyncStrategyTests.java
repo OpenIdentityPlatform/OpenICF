@@ -54,11 +54,30 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
 
     private static final int WAIT_TIMES = 10;
     private static final int WAIT = 500; /* milliseconds */
+    private static final int STABLE_CHANGELOG_INTERVAL = 2000; /* milliseconds */
 
     private static LdapConnection newConnection(LdapConfiguration config) throws NamingException {
         LdapConnection conn = new LdapConnection(config);
         cleanupBaseContext(conn);
+        waitForChangeLogToStabilize(conn);
         return conn;
+    }
+
+    private static void waitForChangeLogToStabilize(LdapConnection conn) {
+        int lastChangeNumber = -1;
+        int previousLastChangeNumber;
+        do {
+            if (lastChangeNumber > 0) {
+                log.ok("Waiting for change log to stabilize (last change number: {0}", lastChangeNumber);
+                try {
+                    Thread.sleep(STABLE_CHANGELOG_INTERVAL);
+                } catch (InterruptedException e) {
+                    // Ignore.
+                }
+            }
+            previousLastChangeNumber = lastChangeNumber;
+            lastChangeNumber = new SunDSChangeLogSyncStrategy(conn, ObjectClass.ACCOUNT).getChangeLogAttributes().getLastChangeNumber();
+        } while (lastChangeNumber != previousLastChangeNumber);
     }
 
     private List<SyncDelta> doTest(LdapConnection conn, String ldif, int expected) throws NamingException {
@@ -84,7 +103,7 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
             // to make sure that we process the change log entry.
             if (result.size() < expected || (expected == 0 && i == 0)) {
                 try {
-                    log.ok("Going to wait (result size = {0}, expected = {0})", result.size(), expected);
+                    log.ok("Going to wait (result size: {0}, expected: {0})", result.size(), expected);
                     Thread.sleep(WAIT);
                 } catch (InterruptedException e) {
                     // Ignore.

@@ -464,7 +464,7 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
         return result.toString();
     }
 
-    private ChangeLogAttributes getChangeLogAttributes() {
+    ChangeLogAttributes getChangeLogAttributes() {
         if (changeLogAttrs == null) {
             try {
                 Attributes attrs = conn.getInitialContext().getAttributes("", new String[] { "changeLog", "firstChangeNumber", "lastChangeNumber" });
