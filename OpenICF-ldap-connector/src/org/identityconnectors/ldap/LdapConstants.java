@@ -32,6 +32,8 @@ public class LdapConstants {
 
     public static final String LDAP_UID_ATTRS_NAME = "ldap_uid_attributes";
 
+    public static final String NEW_DN_NAME = "newDN";
+
     public static boolean isLdapGroups(String attrName) {
         return LDAP_GROUPS_NAME.equalsIgnoreCase(attrName);
     }

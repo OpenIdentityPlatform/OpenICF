@@ -54,6 +54,7 @@ import org.identityconnectors.common.Base64;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -64,6 +65,7 @@ import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.ldap.LdapConnection;
+import org.identityconnectors.ldap.LdapConstants;
 import org.identityconnectors.ldap.LdapEntry;
 import org.identityconnectors.ldap.search.DefaultSearchStrategy;
 import org.identityconnectors.ldap.search.LdapFilter;
@@ -193,6 +195,7 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
         // If the change type was modrdn, we need to compute the DN that the entry
         // was modified to.
         String newTargetDN = targetDN;
+        Attribute newDNAttr = null;
         if ("modrdn".equalsIgnoreCase(changeType)) {
             String newRdn = getStringAttrValue(changeLogEntry.getAttributes(), "newRdn");
             if (isBlank(newRdn)) {
@@ -201,6 +204,7 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
             }
             String newSuperior = getStringAttrValue(changeLogEntry.getAttributes(), "newSuperior");
             newTargetDN = getNewTargetDN(targetName, newSuperior, newRdn);
+            newDNAttr = AttributeBuilder.build(LdapConstants.NEW_DN_NAME, newTargetDN);
         }
 
         // Always specify the attributes to get. This will return attributes with
@@ -223,24 +227,30 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
         }
 
         Attribute oclassAttr = object.getAttributeByName("objectClass");
-        if (oclassAttr != null) {
-            List<String> objectClasses = checkedListByFilter(nullAsEmpty(oclassAttr.getValue()), String.class);
-            if (filterOutByObjectClasses(objectClasses)) {
-                log.ok("Skipping entry because no object class in the list of object classes to synchronize");
-                return null;
-            }
+        List<String> objectClasses = checkedListByFilter(nullAsEmpty(oclassAttr.getValue()), String.class);
+        if (filterOutByObjectClasses(objectClasses)) {
+            log.ok("Skipping entry because no object class in the list of object classes to synchronize");
+            return null;
+        }
+
+        if (removeObjectClass || newDNAttr != null) {
+            ConnectorObjectBuilder objectBuilder = new ConnectorObjectBuilder();
+            objectBuilder.setObjectClass(object.getObjectClass());
+            objectBuilder.setUid(object.getUid());
+            objectBuilder.setName(object.getName());
             if (removeObjectClass) {
-                ConnectorObjectBuilder objectBuilder = new ConnectorObjectBuilder();
-                objectBuilder.setObjectClass(object.getObjectClass());
-                objectBuilder.setUid(object.getUid());
-                objectBuilder.setName(object.getName());
                 for (Attribute attr : object.getAttributes()) {
                     if (attr != oclassAttr) {
                         objectBuilder.addAttribute(attr);
                     }
                 }
-                object = objectBuilder.build();
+            } else {
+                objectBuilder.addAttributes(object.getAttributes());
             }
+            if (newDNAttr != null) {
+                objectBuilder.addAttribute(newDNAttr);
+            }
+            object = objectBuilder.build();
         }
 
         log.ok("Creating sync delta for created or updated entry");

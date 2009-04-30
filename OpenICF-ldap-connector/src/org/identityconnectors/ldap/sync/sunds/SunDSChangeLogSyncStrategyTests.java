@@ -45,11 +45,10 @@ import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.LdapConfiguration;
 import org.identityconnectors.ldap.LdapConnection;
+import org.identityconnectors.ldap.LdapConstants;
 import org.identityconnectors.ldap.SunDSTestBase;
-import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore
 public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
 
     private static final Log log = Log.getLog(SunDSChangeLogSyncStrategyTests.class);
@@ -159,6 +158,7 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
         assertEquals(AttributeBuilder.build("uid", emptyList()), object.getAttributeByName("uid"));
         assertEquals(AttributeBuilder.build("cn", "Foo Bar"), object.getAttributeByName("cn"));
         assertEquals(AttributeBuilder.build("sn", "Bar"), object.getAttributeByName("sn"));
+        assertEquals(AttributeBuilder.build(LdapConstants.NEW_DN_NAME, entryDN), object.getAttributeByName(LdapConstants.NEW_DN_NAME));
 
         result = doTest(conn,
                 "dn: " + entryDN + "\n" +
@@ -186,6 +186,7 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
         assertEquals(new Uid(entryDN), object.getUid());
         assertEquals(new Name(entryDN), object.getName());
         assertEquals(AttributeBuilder.build("cn", "Foo Bar", "Dummy User"), object.getAttributeByName("cn"));
+        assertEquals(AttributeBuilder.build(LdapConstants.NEW_DN_NAME, entryDN), object.getAttributeByName(LdapConstants.NEW_DN_NAME));
 
         result = doTest(conn,
                 "dn: " + entryDN + "\n" +
