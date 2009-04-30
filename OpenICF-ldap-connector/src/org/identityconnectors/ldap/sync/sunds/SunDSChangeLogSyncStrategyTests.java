@@ -46,8 +46,10 @@ import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.LdapConfiguration;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.SunDSTestBase;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
 
     private static final Log log = Log.getLog(SunDSChangeLogSyncStrategyTests.class);
