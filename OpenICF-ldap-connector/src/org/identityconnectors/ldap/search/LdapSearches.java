@@ -35,6 +35,7 @@ import javax.naming.ldap.LdapName;
 
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
@@ -82,7 +83,7 @@ public class LdapSearches {
         if (object != null) {
             return AttributeUtil.getStringValue(object.getAttributeByName("entryDN"));
         }
-        throw new ConnectorException(conn.format("objectNotFound", null, uid, oclass));
+        throw new UnknownUidException(conn.format("objectNotFound", null, uid, oclass));
     }
 
     public static List<ConnectorObject> findObjects(LdapConnection conn, ObjectClass oclass, String baseDN, Attribute attr, String... attrsToGet) {
