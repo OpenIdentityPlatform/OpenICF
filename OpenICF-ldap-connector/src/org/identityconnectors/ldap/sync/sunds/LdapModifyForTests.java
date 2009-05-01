@@ -42,6 +42,7 @@ import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
 
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.ChangeSeparator;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.Line;
@@ -54,6 +55,8 @@ import org.junit.Test;
  * based on an LDIF file. 
  */
 public class LdapModifyForTests {
+    
+    private static final Log log = Log.getLog(LdapModifyForTests.class);
 
     public static void modify(LdapConnection conn, String ldif) throws NamingException {
         LdifParser parser = new LdifParser(ldif);
@@ -156,6 +159,7 @@ public class LdapModifyForTests {
                 attrs.put(attr);
             }
             LdapName newName = quietCreateLdapName(dn);
+            log.ok("Creating context {0} with attributes {1}", newName, attrs);
             String container = newName.getPrefix(newName.size() - 1).toString();
             Rdn rdn = newName.getRdn(newName.size() - 1);
             LdapContext containerCtx = (LdapContext) conn.getInitialContext().lookup(container);
@@ -164,13 +168,16 @@ public class LdapModifyForTests {
             List<ModificationItem> modItems = new ArrayList<ModificationItem>();
             addModificationItems(DirContext.ADD_ATTRIBUTE, added, modItems);
             addModificationItems(DirContext.REMOVE_ATTRIBUTE, deleted, modItems);
+            log.ok("Modifying context {0} with attributes {1}", dn, modItems);
             conn.getInitialContext().modifyAttributes(dn, modItems.toArray(new ModificationItem[modItems.size()]));
         } else if ("delete".equalsIgnoreCase(changeType)) {
+            log.ok("Deleting context {0}");
             conn.getInitialContext().destroySubcontext(dn);
         } else if ("modrdn".equalsIgnoreCase(changeType)) {
             LdapName oldName = quietCreateLdapName(dn);
             LdapName newName = (LdapName) oldName.getPrefix(oldName.size() - 1);
             newName.add(newRdn);
+            log.ok("Renaming context {0} to {1}", oldName, newName);
             LdapContext ctx = conn.getInitialContext().newInstance(null);
             try {
                 ctx.addToEnvironment("java.naming.ldap.deleteRDN", deleteOldRdn);
