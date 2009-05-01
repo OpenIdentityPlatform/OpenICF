@@ -26,6 +26,7 @@ import static java.util.Collections.emptyList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,8 +54,6 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
 
     private static final Log log = Log.getLog(SunDSChangeLogSyncStrategyTests.class);
 
-    private static final int WAIT_TIMES = 10;
-    private static final int WAIT = 500; /* milliseconds */
     private static final int STABLE_CHANGELOG_INTERVAL = 2000; /* milliseconds */
 
     private static LdapConnection newConnection(LdapConfiguration config) throws NamingException {
@@ -69,7 +68,7 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
         int previousLastChangeNumber;
         do {
             if (lastChangeNumber > 0) {
-                log.ok("Waiting for change log to stabilize (last change number: {0}", lastChangeNumber);
+                log.ok("Waiting for change log to stabilize (last change number: {0})", lastChangeNumber);
                 try {
                     Thread.sleep(STABLE_CHANGELOG_INTERVAL);
                 } catch (InterruptedException e) {
@@ -86,33 +85,19 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
         SyncToken token = sync.getLatestSyncToken();
 
         LdapModifyForTests.modify(conn, ldif);
+        waitForChangeLogToStabilize(conn);
 
         OperationOptionsBuilder builder = new OperationOptionsBuilder();
         builder.setAttributesToGet("cn", "sn", "givenName", "uid");
         OperationOptions options = builder.build();
 
         final List<SyncDelta> result = new ArrayList<SyncDelta>();
-        for (int i = 0; i < WAIT_TIMES; i++) {
-            sync.sync(token, new SyncResultsHandler() {
-                public boolean handle(SyncDelta delta) {
-                    result.add(delta);
-                    return true;
-                }
-            }, options);
-            // The change log seems to be asynchronous, need to wait.
-            // Wait at least once if expecting == 0 (not expecting any deltas),
-            // to make sure that we process the change log entry.
-            if (result.size() < expected || (expected == 0 && i == 0)) {
-                try {
-                    log.ok("Going to wait (result size: {0}, expected: {0})", result.size(), expected);
-                    Thread.sleep(WAIT);
-                } catch (InterruptedException e) {
-                    // Ignore.
-                }
-            } else {
-                break;
+        sync.sync(token, new SyncResultsHandler() {
+            public boolean handle(SyncDelta delta) {
+                result.add(delta);
+                return true;
             }
-        };
+        }, options);
         return result;
     }
 
@@ -208,6 +193,45 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
         delta = result.get(0);
         assertEquals(SyncDeltaType.DELETE, delta.getDeltaType());
         assertEquals(new Uid(entryDN), delta.getUid());
+    }
+
+    @Test
+    public void testAllBlocksReturnedFromSingleSyncCall() throws NamingException {
+        LdapConfiguration config = newConfiguration();
+        // Set a small block size so connector would have to do
+        // a couple of searches to return all deltas.
+        config.setChangeLogBlockSize(2);
+        LdapConnection conn = newConnection(config);
+        String baseContext = conn.getConfiguration().getBaseContexts()[0];
+
+        int COUNT = 10;
+        StringBuilder ldif = new StringBuilder();
+        for (int i = 0; i < COUNT; i++) {
+            String name = "user." + i;
+            String entryDN = "uid=" + name + "," + baseContext;
+            ldif.append(MessageFormat.format(
+                    "dn: {0}\n" +
+                    "changetype: add\n" +
+                    "objectClass: inetOrgPerson\n" +
+                    "objectClass: organizationalPerson\n" +
+                    "objectClass: person\n" +
+                    "objectClass: top\n" +
+                    "uid: {1}\n" +
+                    "cn: {1}\n" +
+                    "sn: {1}\n" +
+                    "\n",
+                    entryDN, name));
+        }
+
+        List<SyncDelta> result = doTest(conn, ldif.toString(), COUNT);
+        assertEquals(10, result.size());
+        for (int i = 0; i < COUNT; i++) {
+            String name = "user." + i;
+            String entryDN = "uid=" + name + "," + baseContext;
+            ConnectorObject object = result.get(i).getObject();
+            assertEquals(new Uid(entryDN), object.getUid());
+            assertEquals(new Name(entryDN), object.getName());
+        }
     }
 
     @Test

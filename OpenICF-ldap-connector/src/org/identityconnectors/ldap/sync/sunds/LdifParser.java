@@ -67,6 +67,7 @@ public class LdifParser implements Iterable<LdifParser.Line> {
     private static final class LineIterator implements Iterator<Line> {
 
         private final Iterator<String> rawLines;
+        private Line lastLine;
         private Line next;
 
         public LineIterator(List<String> rawLines) {
@@ -93,19 +94,28 @@ public class LdifParser implements Iterable<LdifParser.Line> {
         }
 
         private Line getNext() {
-            while (rawLines.hasNext()) {
+            Line result = null;
+            while (result == null && rawLines.hasNext()) {
                 String rawLine = rawLines.next();
-                if (rawLine.startsWith("-")) {
-                    return Separator.INSTANCE;
-                }
-                int sepIndex = rawLine.indexOf(':');
-                if (sepIndex > 0) {
-                    String name = rawLine.substring(0, sepIndex).trim();
-                    String value = rawLine.substring(sepIndex + 1).trim();
-                    return new NameValue(name, value);
+                if (rawLine.trim().length() == 0 && lastLine != ChangeSeparator.INSTANCE) {
+                    result = ChangeSeparator.INSTANCE;
+                } else if (rawLine.startsWith("-") && lastLine != Separator.INSTANCE) {
+                    result = Separator.INSTANCE;
+                } else {
+                    int sepIndex = rawLine.indexOf(':');
+                    if (sepIndex > 0) {
+                        String name = rawLine.substring(0, sepIndex).trim();
+                        String value = rawLine.substring(sepIndex + 1).trim();
+                        result = new NameValue(name, value);
+                    }
                 }
             }
-            return null;
+            // Always send a change separator as the last thing.
+            if (result == null && lastLine != ChangeSeparator.INSTANCE) {
+                result = ChangeSeparator.INSTANCE;
+            }
+            lastLine = result;
+            return result;
         }
 
         public void remove() {
@@ -152,6 +162,19 @@ public class LdifParser implements Iterable<LdifParser.Line> {
         @Override
         public String toString() {
             return "LdifParser$Separator";
+        }
+    }
+
+    public static final class ChangeSeparator extends Line {
+
+        final static ChangeSeparator INSTANCE = new ChangeSeparator();
+
+        private ChangeSeparator() {
+        }
+
+        @Override
+        public String toString() {
+            return "LdifParser$ChangeSeparator";
         }
     }
 }

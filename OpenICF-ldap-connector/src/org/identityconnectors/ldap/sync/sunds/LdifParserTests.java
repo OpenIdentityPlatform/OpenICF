@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
 
+import org.identityconnectors.ldap.sync.sunds.LdifParser.ChangeSeparator;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.Line;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.NameValue;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.Separator;
@@ -37,7 +38,7 @@ public class LdifParserTests {
     @Test
     public void testSimple() {
         String ldif =
-                "changetype: mo\n" +
+                "changeType: mo\n" +
         		" dify\n" +
         		"rep\n" +
         		" lace: cn\n" +
@@ -46,24 +47,43 @@ public class LdifParserTests {
         		"cn: Name 2\n" +
         		"-\n" +
         		"\n" +
+        		"\n" +
         		"c\n" +
         		" hang\n" +
-        		" etype: add\n" +
+        		" eType: add\n" +
         		"add: \n" +
         		" uid\n" +
         		"uid: \n" +
-        		" 1\n";
+        		" 1\n" +
+        		"\n" +
+        		"changeType: delete\n";
 
         LdifParser parser = new LdifParser(ldif);
         Iterator<Line> lines = parser.iterator();
-        assertLineEquals(lines.next(), new NameValue("changetype", "modify"));
+        assertLineEquals(lines.next(), new NameValue("changeType", "modify"));
         assertLineEquals(lines.next(), new NameValue("replace", "cn"));
         assertLineEquals(lines.next(), new NameValue("cn", "Name 1"));
         assertLineEquals(lines.next(), new NameValue("cn", "Name 2"));
         assertTrue(lines.next() instanceof Separator);
-        assertLineEquals(lines.next(), new NameValue("changetype", "add"));
+        // LdifParser merges multiple change separators into one.
+        assertTrue(lines.next() instanceof ChangeSeparator);
+        assertLineEquals(lines.next(), new NameValue("changeType", "add"));
         assertLineEquals(lines.next(), new NameValue("add", "uid"));
         assertLineEquals(lines.next(), new NameValue("uid", "1"));
+        assertTrue(lines.next() instanceof ChangeSeparator);
+        assertLineEquals(lines.next(), new NameValue("changeType", "delete"));
+        assertTrue(lines.next() instanceof ChangeSeparator);
+    }
+
+    @Test
+    public void testChangeSeparatorAsLastLine() {
+        String ldif =
+            "changeType: modify";
+
+        LdifParser parser = new LdifParser(ldif);
+        Iterator<Line> lines = parser.iterator();
+        assertLineEquals(lines.next(), new NameValue("changeType", "modify"));
+        assertTrue(lines.next() instanceof ChangeSeparator);
     }
 
     private static void assertLineEquals(Line expected, NameValue value) {

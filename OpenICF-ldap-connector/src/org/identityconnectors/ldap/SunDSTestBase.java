@@ -47,6 +47,7 @@ public class SunDSTestBase {
 
     public static LdapConfiguration newConfiguration() {
         LdapConfiguration config = new LdapConfiguration();
+        config.setConnectorMessages(TestHelpers.createDummyMessages());
         config.setHost(TestHelpers.getProperty("sunds.host", null));
         config.setPort(Integer.parseInt(TestHelpers.getProperty("sunds.port", "389")));
         config.setPrincipal(TestHelpers.getProperty("sunds.principal", null));

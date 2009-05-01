@@ -43,6 +43,7 @@ import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
 
 import org.identityconnectors.ldap.LdapConnection;
+import org.identityconnectors.ldap.sync.sunds.LdifParser.ChangeSeparator;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.Line;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.NameValue;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.Separator;
@@ -70,6 +71,17 @@ public class LdapModifyForTests {
 
         while (lines.hasNext()) {
             Line line = lines.next();
+            if (line instanceof ChangeSeparator && dn != null) {
+                performChange(conn, dn, changeType, added, deleted, newRdn, deleteOldRdn);
+                dn = null;
+                changeType = null;
+                added.clear();
+                deleted.clear();
+                modifyMap = null;
+                newRdn = null;
+                deleteOldRdn = "true";
+                continue;
+            }
             if (dn == null) {
                 NameValue nameValue = (NameValue) line;
                 if (!"dn".equalsIgnoreCase(nameValue.getName())) {
@@ -129,7 +141,11 @@ public class LdapModifyForTests {
                 }
             }
         }
+    }
 
+    private static void performChange(LdapConnection conn, String dn, String changeType,
+            Map<String, List<String>> added, Map<String, List<String>> deleted, String newRdn, String deleteOldRdn)
+            throws NamingException {
         if ("add".equalsIgnoreCase(changeType)) {
             BasicAttributes attrs = new BasicAttributes();
             for (Entry<String, List<String>> entry : added.entrySet()) {

@@ -74,6 +74,7 @@ import org.identityconnectors.ldap.search.LdapSearch;
 import org.identityconnectors.ldap.search.LdapSearches;
 import org.identityconnectors.ldap.search.SearchResultsHandler;
 import org.identityconnectors.ldap.sync.LdapSyncStrategy;
+import org.identityconnectors.ldap.sync.sunds.LdifParser.ChangeSeparator;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.Line;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.NameValue;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.Separator;
@@ -117,33 +118,45 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
     }
 
     public void sync(SyncToken token, final SyncResultsHandler handler, final OperationOptions options) {
-        final int[] currentChangeNumber = { getStartChangeNumber(token) };
-        final String changeNumberAttr = getChangeNumberAttribute();
-
-        String filter = getChangeLogSearchFilter(changeNumberAttr, currentChangeNumber[0]);
         String context = getChangeLogAttributes().getChangeLogContext();
-
+        final String changeNumberAttr = getChangeNumberAttribute();
         SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
         controls.setSearchScope(SearchControls.ONELEVEL_SCOPE);
         controls.setReturningAttributes(new String[] { changeNumberAttr, "targetDN", "changeType", "changes", "newRdn", "deleteOldRdn", "newSuperior" });
 
-        LdapInternalSearch search = new LdapInternalSearch(conn, filter, singletonList(context), new DefaultSearchStrategy(false), controls);
-        search.execute(new SearchResultsHandler() {
-            public boolean handle(String baseDN, SearchResult result) throws NamingException {
-                LdapEntry entry = LdapEntry.create(baseDN, result);
+        final int[] currentChangeNumber = { getStartChangeNumber(token) };
 
-                int changeNumber = convertToInt(getStringAttrValue(entry.getAttributes(), changeNumberAttr), -1);
-                if (changeNumber > currentChangeNumber[0]) {
-                    currentChangeNumber[0] = changeNumber;
-                }
+        final boolean[] results = new boolean[1];
+        do {
+            results[0] = false;
 
-                SyncDelta delta = createSyncDelta(entry, changeNumber, options.getAttributesToGet());
-                if (delta != null) {
-                    return handler.handle(delta);
+            String filter = getChangeLogSearchFilter(changeNumberAttr, currentChangeNumber[0]);
+            LdapInternalSearch search = new LdapInternalSearch(conn, filter, singletonList(context), new DefaultSearchStrategy(false), controls);
+
+            search.execute(new SearchResultsHandler() {
+                public boolean handle(String baseDN, SearchResult result) throws NamingException {
+                    results[0] = true;
+                    LdapEntry entry = LdapEntry.create(baseDN, result);
+
+                    int changeNumber = convertToInt(getStringAttrValue(entry.getAttributes(), changeNumberAttr), -1);
+                    if (changeNumber > currentChangeNumber[0]) {
+                        currentChangeNumber[0] = changeNumber;
+                    }
+
+                    SyncDelta delta = createSyncDelta(entry, changeNumber, options.getAttributesToGet());
+                    if (delta != null) {
+                        return handler.handle(delta);
+                    }
+                    return true;
                 }
-                return true;
+            });
+
+            // We have already processed the current change.
+            // In the next cycle we want to start with the next change.
+            if (results[0]) {
+                currentChangeNumber[0]++;
             }
-        });
+        } while (results[0]);
     }
 
     private SyncDelta createSyncDelta(LdapEntry changeLogEntry, int changeNumber, String[] attrsToGetOption) {
@@ -352,7 +365,8 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
             Iterator<Line> lines = parser.iterator();
             while (lines.hasNext()) {
                 Line line = lines.next();
-                if (line instanceof Separator) {
+                // We only expect one change, so ignore any change separators.
+                if (line instanceof Separator || line instanceof ChangeSeparator) {
                     continue;
                 }
                 NameValue nameValue = (NameValue) line;
@@ -381,7 +395,8 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
             Iterator<Line> lines = parser.iterator();
             while (lines.hasNext()) {
                 Line line = lines.next();
-                if (line instanceof Separator) {
+                // We only expect one change, so ignore any change separators.
+                if (line instanceof Separator || line instanceof ChangeSeparator) {
                     continue;
                 }
                 NameValue nameValue = (NameValue) line;
