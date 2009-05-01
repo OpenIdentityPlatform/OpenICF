@@ -83,7 +83,7 @@ public class LdapSearches {
         if (object != null) {
             return AttributeUtil.getStringValue(object.getAttributeByName("entryDN"));
         }
-        throw new UnknownUidException(conn.format("objectNotFound", null, uid, oclass));
+        throw new UnknownUidException(uid, oclass);
     }
 
     public static List<ConnectorObject> findObjects(LdapConnection conn, ObjectClass oclass, String baseDN, Attribute attr, String... attrsToGet) {
