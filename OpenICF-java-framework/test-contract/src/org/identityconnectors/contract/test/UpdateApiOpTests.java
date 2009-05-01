@@ -38,7 +38,6 @@ import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
 import org.identityconnectors.framework.api.operations.GetApiOp;
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
-import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
@@ -437,59 +436,6 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                             getObjectClass());
             LOG
                     .info("----------------------------------------------------------------------------------------");
-        }
-    }
-    
-    @Test
-    public void testUpdateThrowUnknownUid() {
-        // run the contract test only if delete is supported
-        if (ConnectorHelper.operationsSupported(getConnectorFacade(), getObjectClass(), getAPIOperations())
-                && ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), DeleteApiOp.class)) {
-            Uid uid = null;
-            ConnectorObject obj = null;
-            
-            try {
-                // create an object to update
-                uid = ConnectorHelper.createObject(getConnectorFacade(), getDataProvider(),
-                        getObjectClassInfo(), getTestName(), 3, getOperationOptionsByOp(CreateApiOp.class));
-                assertNotNull("Create returned null Uid.", uid);
-                
-                // delete the object, so we are sure, there is a non-existing uid
-                ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid, false,
-                        getOperationOptionsByOp(DeleteApiOp.class));
-                
-                // get by uid
-                obj = getConnectorFacade().getObject(getSupportedObjectClass(), uid, getOperationOptionsByOp(GetApiOp.class));
-                Assert.assertNull("Failed to delete created object.", obj);
-
-                Set<Attribute> replaceAttributes = ConnectorHelper.getUpdateableAttributes(
-                        getDataProvider(), getObjectClassInfo(), getTestName(), MODIFIED, 3, false,
-                        false);
-
-                if (replaceAttributes.size() > 0) {
-                    // update only in case there is something to update or when object class is not supported
-                    assertTrue("no update attributes were found", (replaceAttributes.size() > 0));
-                    try {
-                        getConnectorFacade().update(
-                                getObjectClass(), uid, replaceAttributes, getOperationOptionsByOp(UpdateApiOp.class));
-                        Assert.fail("Update contains an unknown Uid, it should throw UnknownUidException.");
-                    } catch (UnknownUidException ex) {
-                        // ok
-                    } catch (RuntimeException ex) {
-                        Assert.fail("UnknownUidException should be thrown.");
-                    }
-                }
-            }
-            finally {
-                // try to delete if anything failed
-                ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid, false,
-                        getOperationOptionsByOp(DeleteApiOp.class));
-            }
-        }
-        else {
-            LOG.info("----------------------------------------------------------------------------------------");
-            LOG.info("Skipping test ''testDeleteThrowUnknownUid'' for object class ''{0}''.", getObjectClass());
-            LOG.info("----------------------------------------------------------------------------------------");
         }
     }
     
