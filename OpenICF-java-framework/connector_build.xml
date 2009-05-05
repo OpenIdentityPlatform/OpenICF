@@ -357,7 +357,7 @@
             
             <!-- Set the key for TestHelpers to use -->
             <sysproperty key="project.name" value="${ant.project.name}"/>
-            <sysproperty key="configuraton" value="${configuration}"/>
+            <sysproperty key="configuration" value="${configuration}"/>
 
             <!-- reference the test classpath -->
             <classpath>
