@@ -478,6 +478,18 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
         assertEquals(BUGS_BUNNY_CN, bunny.getAttributeByName("cn").getValue().get(0));
     }
 
+    @Test
+    public void testSearchFilter() {
+        ConnectorFacade facade = newFacade();
+        OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        builder.setOption(LdapConstants.SEARCH_FILTER_NAME, "(uid=" + BUGS_BUNNY_UID + ")");
+        List<ConnectorObject> objects = TestHelpers.searchToList(facade, ObjectClass.ACCOUNT, null, builder.build());
+
+        assertEquals(1, objects.size());
+        ConnectorObject bunny = objects.get(0);
+        assertEquals(BUGS_BUNNY_DN, bunny.getName().getNameValue());
+    }
+
     private static void assertAttributeValue(List<?> expected, ConnectorFacade facade, ObjectClass oclass, Uid uid, String attrName) {
         ConnectorObject object = searchByAttribute(facade, oclass, uid, attrName);
         assertAttributeValue(expected, object.getAttributeByName(attrName));

@@ -32,6 +32,8 @@ public class LdapConstants {
 
     public static final String LDAP_UID_ATTRS_NAME = "ldap_uid_attributes";
 
+    public static final String SEARCH_FILTER_NAME = "searchFilter";
+
     public static final String NEW_DN_NAME = "newDN";
 
     public static boolean isLdapGroups(String attrName) {
@@ -44,6 +46,10 @@ public class LdapConstants {
 
     public static String[] getLdapUidAttributes(OperationOptions options) {
         return (String[]) options.getOptions().get(LDAP_UID_ATTRS_NAME);
+    }
+
+    public static String getSearchFilter(OperationOptions options) {
+        return (String) options.getOptions().get(SEARCH_FILTER_NAME);
     }
 
     private LdapConstants() { }

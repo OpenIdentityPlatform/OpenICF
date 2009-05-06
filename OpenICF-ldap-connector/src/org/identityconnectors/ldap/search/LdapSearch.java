@@ -174,12 +174,13 @@ public class LdapSearch {
         controls.setReturningAttributes(ldapAttrsToGet.toArray(new String[ldapAttrsToGet.size()]));
         controls.setSearchScope(searchScope);
 
+        String optionsFilter = LdapConstants.getSearchFilter(options);
         String userFilter = null;
         if (oclass.equals(ObjectClass.ACCOUNT)) {
             userFilter = conn.getConfiguration().getAccountSearchFilter();
         }
         String nativeFilter = filter != null ? filter.getNativeFilter() : null;
-        return new LdapInternalSearch(conn, getSearchFilter(nativeFilter, userFilter), baseDNs, strategy, controls);
+        return new LdapInternalSearch(conn, getSearchFilter(optionsFilter, nativeFilter, userFilter), baseDNs, strategy, controls);
     }
 
     private Set<String> getLdapAttributesToGet(Set<String> attrsToGet) {
@@ -237,16 +238,20 @@ public class LdapSearch {
      * the filters for all LDAP object classes for the given {@code ObjectClass}, and
      * an optional filter to be applied before the object class filters.
      */
-    private String getSearchFilter(String prePreFilter, String preFilter) {
+    private String getSearchFilter(String... optionalFilters) {
         StringBuilder builder = new StringBuilder();
         String ocFilter = getObjectClassFilter();
-        int nonBlank = (isBlank(prePreFilter) ? 0 : 1) + (isBlank(preFilter) ? 0 : 1) + (isBlank(ocFilter) ? 0 : 1);
+        int nonBlank = isBlank(ocFilter) ? 0 : 1;
+        for (String optionalFilter : optionalFilters) {
+            nonBlank += (isBlank(optionalFilter) ? 0 : 1);
+        }
         if (nonBlank > 1) {
             builder.append("(&");
         }
-        appendFilter(prePreFilter, builder);
-        appendFilter(preFilter, builder);
         appendFilter(ocFilter, builder);
+        for (String optionalFilter : optionalFilters) {
+            appendFilter(optionalFilter, builder);
+        }
         if (nonBlank > 1) {
             builder.append(')');
         }
