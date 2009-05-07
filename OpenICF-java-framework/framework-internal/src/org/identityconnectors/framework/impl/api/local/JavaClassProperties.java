@@ -29,7 +29,6 @@ import java.beans.IndexedPropertyDescriptor;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Array;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -82,9 +81,6 @@ public class JavaClassProperties
             return createBean2(properties,config);
         }
         catch (Exception e) {
-        	if(e instanceof InvocationTargetException){
-        		throw new ConfigurationException(((InvocationTargetException)e).getTargetException());
-        	}
             throw new ConfigurationException(e);
         }
     }
