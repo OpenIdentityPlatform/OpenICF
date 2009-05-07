@@ -41,7 +41,7 @@
   "null | Array | Boolean | boolean | Character | char | Integer |
   int | Long | long | Float | float | Double | double | String |
   URI | File | BigDecimal | BigInteger | ByteArray | Class |
-  Map | List | Set | Locale | GuardedString
+  Map | List | Set | Locale | GuardedByteArray | GuardedString
   ">
 
 <!ENTITY % xmlObject
@@ -120,6 +120,7 @@ OperationOptionInfo | SyncDeltaType | SyncToken | SyncDelta | QualifiedUid
     country CDATA #IMPLIED
     variant CDATA #IMPLIED
 >
+<!ELEMENT GuardedByteArray (#PCDATA)>
 <!ELEMENT GuardedString (#PCDATA)>
 
 <!--=======================================================-->

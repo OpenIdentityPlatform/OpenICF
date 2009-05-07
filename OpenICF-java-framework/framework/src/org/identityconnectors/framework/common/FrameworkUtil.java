@@ -35,6 +35,7 @@ import java.util.Set;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.ReflectionUtil;
+import org.identityconnectors.common.security.GuardedByteArray;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
@@ -187,6 +188,7 @@ public final class FrameworkUtil {
         CONFIG_SUPPORTED_TYPES.add(Boolean.class);
         CONFIG_SUPPORTED_TYPES.add(URI.class);
         CONFIG_SUPPORTED_TYPES.add(File.class);
+        CONFIG_SUPPORTED_TYPES.add(GuardedByteArray.class);
         CONFIG_SUPPORTED_TYPES.add(GuardedString.class);
     }
     
@@ -232,6 +234,7 @@ public final class FrameworkUtil {
         ATTR_SUPPORTED_TYPES.add(byte[].class);
         ATTR_SUPPORTED_TYPES.add(BigDecimal.class);
         ATTR_SUPPORTED_TYPES.add(BigInteger.class);
+        ATTR_SUPPORTED_TYPES.add(GuardedByteArray.class);
         ATTR_SUPPORTED_TYPES.add(GuardedString.class);
     }
     

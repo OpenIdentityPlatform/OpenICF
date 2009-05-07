@@ -39,6 +39,7 @@ import java.util.SortedSet;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.security.EncryptorFactory;
+import org.identityconnectors.common.security.GuardedByteArray;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.common.security.SecurityUtil;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -551,6 +552,39 @@ class Primitives {
                         finally {
                             SecurityUtil.clear(encryptedBytes);
                             SecurityUtil.clear(clearBytes);
+                        }                        
+                    }});
+            }
+            
+        });
+        HANDLERS.add(
+                new AbstractObjectSerializationHandler(GuardedByteArray.class,"GuardedByteArray") {
+            
+            public Object deserialize(ObjectDecoder decoder)  {
+                byte [] encryptedBytes = null;
+                byte [] clearBytes = null;
+                try {
+                    encryptedBytes = decoder.readByteArrayContents();
+                    clearBytes     = EncryptorFactory.getInstance().getDefaultEncryptor().decrypt(encryptedBytes);
+                    return new GuardedByteArray(clearBytes);
+                }
+                finally {
+                    SecurityUtil.clear(encryptedBytes);
+                    SecurityUtil.clear(clearBytes);
+                }
+            }
+
+            public void serialize(Object object, final ObjectEncoder encoder) {
+                GuardedByteArray val = (GuardedByteArray)object;
+                val.access(new GuardedByteArray.Accessor() {
+                    public void access(byte[] clearBytes) {
+                        byte [] encryptedBytes = null;
+                        try {
+                            encryptedBytes = EncryptorFactory.getInstance().getDefaultEncryptor().encrypt(clearBytes);
+                            encoder.writeByteArrayContents(encryptedBytes);
+                        }
+                        finally {
+                            SecurityUtil.clear(encryptedBytes);
                         }                        
                     }});
             }

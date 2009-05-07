@@ -23,11 +23,13 @@
 package org.identityconnectors.test.framework.impl.serializer;
 
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,6 +42,7 @@ import junit.framework.Assert;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.pooling.ObjectPoolConfiguration;
+import org.identityconnectors.common.security.GuardedByteArray;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.ConnectorKey;
 import org.identityconnectors.framework.api.operations.APIOperation;
@@ -1042,6 +1045,13 @@ public class ObjectSerializationTests {
     }
     
     @Test
+    public void testGuardedByteArray() {
+        GuardedByteArray v1 = new GuardedByteArray(new byte[] { 0x00, 0x01, 0x02, 0x03 });
+        GuardedByteArray v2 = (GuardedByteArray)cloneObject(v1);
+        Assert.assertTrue(Arrays.equals(new byte[] { 0x00, 0x01, 0x02, 0x03 }, decryptToBytes(v2)));
+    }
+    
+    @Test
     public void testQualifiedUid() {
         QualifiedUid v1 = new QualifiedUid(new ObjectClass("myclass"),
                 new Uid("myuid"));
@@ -1066,6 +1076,21 @@ public class ObjectSerializationTests {
         return buf.toString();
     }
     
+    /**
+     * Highly insecure method! Do not do this in production
+     * code. This is only for test purposes
+     */
+    private byte[] decryptToBytes(GuardedByteArray bytes) {
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        bytes.access(
+                new GuardedByteArray.Accessor() {
+                    public void access(byte[] bytes) {
+                        out.write(bytes, 0, bytes.length);
+                    }                    
+                });
+        return out.toByteArray();
+    }
+
     protected Object cloneObject(Object o) {
         return SerializerUtil.cloneObject(o);
     }
