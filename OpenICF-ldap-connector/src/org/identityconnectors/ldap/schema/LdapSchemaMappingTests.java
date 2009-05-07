@@ -35,12 +35,12 @@ import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
-import org.identityconnectors.framework.common.objects.OperationalAttributeInfos;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 import org.identityconnectors.ldap.LdapConfiguration;
 import org.identityconnectors.ldap.LdapConnectorTestBase;
+import org.identityconnectors.ldap.LdapConstants;
 import org.junit.Test;
 
 public class LdapSchemaMappingTests extends LdapConnectorTestBase {
@@ -88,7 +88,7 @@ public class LdapSchemaMappingTests extends LdapConnectorTestBase {
 
         // Operational attributes.
         info = AttributeInfoUtil.find(OperationalAttributes.PASSWORD_NAME, attrInfos);
-        assertEquals(OperationalAttributeInfos.PASSWORD, info);
+        assertEquals(LdapConstants.PASSWORD, info);
     }
 
     @Test

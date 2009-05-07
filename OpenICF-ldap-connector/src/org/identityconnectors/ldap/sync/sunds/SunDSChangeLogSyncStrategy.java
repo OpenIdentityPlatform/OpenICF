@@ -52,6 +52,8 @@ import javax.naming.ldap.LdapName;
 
 import org.identityconnectors.common.Base64;
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.common.security.GuardedByteArray.Accessor;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
@@ -59,6 +61,7 @@ import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
 import org.identityconnectors.framework.common.objects.SyncDeltaType;
@@ -100,6 +103,7 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
     private ChangeLogAttributes changeLogAttrs;
     private Set<String> oclassesToSync;
     private Set<String> attrsToSync;
+    private PasswordDecryptor passwordDecryptor;
 
     static {
         LDIF_MODIFY_OPS = newCaseInsensitiveSet();
@@ -204,7 +208,7 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
             log.ok("Skipping entry because no changed attributes in the list of attributes to synchronize");
             return null;
         }
-
+        
         // If the change type was modrdn, we need to compute the DN that the entry
         // was modified to.
         String newTargetDN = targetDN;
@@ -226,6 +230,9 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
         Set<String> attrsToGet;
         if (attrsToGetOption != null) {
             attrsToGet = newSet(attrsToGetOption);
+            // Do not retrieve the password attribute from the entry (usually it is an unusable
+            // hashed value anyway). We will use the one from the change log below.
+            attrsToGet.remove(OperationalAttributes.PASSWORD_NAME);
         } else {
             attrsToGet = newSet(LdapSearch.getAttributesReturnedByDefault(conn, oclass));
         }
@@ -246,7 +253,17 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
             return null;
         }
 
-        if (removeObjectClass || newDNAttr != null) {
+        Attribute passwordAttr = null;
+        if (conn.getConfiguration().isSynchronizePasswords()) {
+            List<Object> passwordValues = attrChanges.get(conn.getConfiguration().getPasswordAttributeToSynchronize());
+            if (!passwordValues.isEmpty()) {
+                byte[] encryptedPwd = (byte[]) passwordValues.get(0); 
+                String decryptedPwd = getPasswordDecryptor().decryptPassword(encryptedPwd);
+                passwordAttr = AttributeBuilder.buildPassword(new GuardedString(decryptedPwd.toCharArray()));
+            }
+        }
+
+        if (removeObjectClass || newDNAttr != null || passwordAttr != null) {
             ConnectorObjectBuilder objectBuilder = new ConnectorObjectBuilder();
             objectBuilder.setObjectClass(object.getObjectClass());
             objectBuilder.setUid(object.getUid());
@@ -262,6 +279,9 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
             }
             if (newDNAttr != null) {
                 objectBuilder.addAttribute(newDNAttr);
+            }
+            if (passwordAttr != null) {
+                objectBuilder.addAttribute(passwordAttr);
             }
             object = objectBuilder.build();
         }
@@ -537,6 +557,22 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
             oclassesToSync = result;
         }
         return oclassesToSync;
+    }
+    
+    private PasswordDecryptor getPasswordDecryptor() {
+        if (passwordDecryptor == null) {
+            conn.getConfiguration().getPasswordDecryptionKey().access(new Accessor() {
+                public void access(final byte[] decryptionKey) {
+                    conn.getConfiguration().getPasswordDecryptionInitializationVector().access(new Accessor() {
+                        public void access(byte[] decryptionIV) {
+                            passwordDecryptor = new PasswordDecryptor(decryptionKey, decryptionIV);
+                        }
+                    });
+                }
+            });
+        }
+        assert passwordDecryptor != null;
+        return passwordDecryptor;
     }
 
     private boolean containsAny(Set<String> haystack, Collection<String> needles) {

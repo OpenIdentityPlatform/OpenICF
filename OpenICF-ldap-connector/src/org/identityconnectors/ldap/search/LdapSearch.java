@@ -37,6 +37,7 @@ import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.PagedResultsControl;
 
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
@@ -46,6 +47,7 @@ import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.QualifiedUid;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -338,6 +340,10 @@ public class LdapSearch {
         }
         // Since Uid is not in the schema, but it is required to construct a ConnectorObject.
         result.add(Uid.NAME);
+        // Our password is marked as readable because of sync(). We really can't return it from search.
+        if (result.contains(OperationalAttributes.PASSWORD_NAME)) {
+            throw new ConnectorException(conn.format("readingPasswordsNotSupported", null));
+        }
         return result;
     }
 

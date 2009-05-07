@@ -48,7 +48,6 @@ import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
-import org.identityconnectors.framework.common.objects.OperationalAttributeInfos;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.Filter;
@@ -72,7 +71,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
         ObjectClassInfo oci = facade.schema().findObjectClassInfo(ObjectClass.ACCOUNT_NAME);
 
         AttributeInfo info = AttributeInfoUtil.find(OperationalAttributes.PASSWORD_NAME, oci.getAttributeInfo());
-        assertEquals(OperationalAttributeInfos.PASSWORD, info);
+        assertEquals(LdapConstants.PASSWORD, info);
     }
 
     @Test

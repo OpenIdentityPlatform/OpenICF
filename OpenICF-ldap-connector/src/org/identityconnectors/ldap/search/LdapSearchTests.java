@@ -45,6 +45,7 @@ import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
+import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.QualifiedUid;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -364,6 +365,12 @@ public class LdapSearchTests extends LdapConnectorTestBase {
         objects = TestHelpers.searchToList(facade, new ObjectClass("country"), filter, builder.build());
         czechRep = getObjectByName(objects, CZECH_REPUBLIC_DN);
         assertEquals(CZECH_REPUBLIC_C, AttributeUtil.getAsStringValue(czechRep.getAttributeByName("c")));
+    }
+
+    @Test(expected = ConnectorException.class)
+    public void testCannotReturnPasswordFromSearch() {
+        ConnectorFacade facade = newFacade();
+        searchByAttribute(facade, ObjectClass.ACCOUNT, new Uid(BUGS_BUNNY_DN), OperationalAttributes.PASSWORD_NAME);
     }
 
     private static ConnectorObject getObjectByName(List<ConnectorObject> objects, String name) {

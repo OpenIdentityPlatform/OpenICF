@@ -22,7 +22,14 @@
  */
 package org.identityconnectors.ldap;
 
+import java.util.EnumSet;
+
+import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.objects.AttributeInfo;
+import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.OperationalAttributes;
+import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 
 public class LdapConstants {
 
@@ -35,6 +42,17 @@ public class LdapConstants {
     public static final String SEARCH_FILTER_NAME = "searchFilter";
 
     public static final String NEW_DN_NAME = "newDN";
+    
+    public static final String OP_SEARCH_FILTER = "searchFilter";
+
+    /**
+     * Overrides the framework-defined password because ours is readable:
+     * we can return the password from <code>sync()</code> when doing
+     * password synchronization.
+     */
+    public static final AttributeInfo PASSWORD = AttributeInfoBuilder.build(
+            OperationalAttributes.PASSWORD_NAME, GuardedString.class,
+            EnumSet.of(Flags.NOT_RETURNED_BY_DEFAULT));
 
     public static boolean isLdapGroups(String attrName) {
         return LDAP_GROUPS_NAME.equalsIgnoreCase(attrName);

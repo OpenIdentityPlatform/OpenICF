@@ -31,6 +31,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 
+import org.identityconnectors.common.security.GuardedByteArray;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.test.common.TestHelpers;
 import org.junit.Before;
@@ -235,14 +236,64 @@ public class LdapConfigurationTests {
     }
 
     @Test(expected = ConfigurationException.class)
+    public void testChangeNumberAttributeNotBlank() {
+        config.setChangeNumberAttribute(" ");
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
     public void testChangeLogBlockSizeGreatherThanZero() {
         config.setChangeLogBlockSize(0);
         config.validate();
     }
 
     @Test(expected = ConfigurationException.class)
-    public void testChangeNumberAttributeNotBlank() {
-        config.setChangeNumberAttribute(" ");
+    public void testPasswordAttributeToSynchronizeNotNull() {
+        config.setSynchronizePasswords(true);
+        config.setPasswordAttributeToSynchronize(null);
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testPasswordAttributeToSynchronizeNotBlank() {
+        config.setSynchronizePasswords(true);
+        config.setPasswordAttributeToSynchronize(" ");
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testPasswordDecryptionKeyNotNull() {
+        config.setSynchronizePasswords(true);
+        config.setPasswordAttributeToSynchronize("somepassword");
+        config.setPasswordDecryptionKey(null);
+        config.setPasswordDecryptionInitializationVector(new GuardedByteArray(new byte[1]));
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testPasswordDecryptionKeyNotBlank() {
+        config.setSynchronizePasswords(true);
+        config.setPasswordAttributeToSynchronize("somepassword");
+        config.setPasswordDecryptionKey(new GuardedByteArray(new byte[0]));
+        config.setPasswordDecryptionInitializationVector(new GuardedByteArray(new byte[1]));
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testPasswordDecryptionInitializationVectorNotNull() {
+        config.setSynchronizePasswords(true);
+        config.setPasswordAttributeToSynchronize("somepassword");
+        config.setPasswordDecryptionKey(new GuardedByteArray(new byte[1]));
+        config.setPasswordDecryptionInitializationVector(null);
+        config.validate();
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void testPasswordDecryptionInitializationVectorNotBlank() {
+        config.setSynchronizePasswords(true);
+        config.setPasswordAttributeToSynchronize("somepassword");
+        config.setPasswordDecryptionKey(new GuardedByteArray(new byte[1]));
+        config.setPasswordDecryptionInitializationVector(new GuardedByteArray(new byte[0]));
         config.validate();
     }
 
@@ -281,6 +332,10 @@ public class LdapConfigurationTests {
         assertEquals("changeNumber", config.getChangeNumberAttribute());
         assertFalse(config.isFilterWithOrInsteadOfAnd());
         assertTrue(config.isRemoveLogEntryObjectClassFromFilter());
+        assertFalse(config.isSynchronizePasswords());
+        assertNull(config.getPasswordAttributeToSynchronize());
+        assertNull(config.getPasswordDecryptionKey());
+        assertNull(config.getPasswordDecryptionInitializationVector());
     }
 
     private static void assertCanValidate(LdapConfiguration config) {
