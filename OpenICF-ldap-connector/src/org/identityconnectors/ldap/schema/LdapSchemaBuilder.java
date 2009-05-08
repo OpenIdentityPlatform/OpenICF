@@ -36,11 +36,13 @@ import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.SchemaBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
+import org.identityconnectors.framework.spi.operations.SyncOp;
 import org.identityconnectors.ldap.LdapAttributeType;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapConnector;
 import org.identityconnectors.ldap.LdapNativeSchema;
 import org.identityconnectors.ldap.ObjectClassMappingConfig;
+import org.identityconnectors.ldap.LdapConnection.ServerType;
 
 class LdapSchemaBuilder {
 
@@ -76,8 +78,14 @@ class LdapSchemaBuilder {
 
             ObjectClassInfo oci = objClassBld.build();
             schemaBld.defineObjectClass(oci);
+
+            // XXX hack: these decisions should be made outside of LdapSchemaBuilder.
             if (!oci.is(ObjectClass.ACCOUNT_NAME)) {
                 schemaBld.removeSupportedObjectClass(AuthenticateOp.class, oci);
+            }
+            // Since we are not sure we can detect Sun DSEE correctly, only disable sync() for servers known not to support it.
+            if (conn.getServerType() == ServerType.OPENDS) {
+                schemaBld.removeSupportedObjectClass(SyncOp.class, oci);
             }
         }
 
@@ -94,8 +102,6 @@ class LdapSchemaBuilder {
         // OpenLDAP's ipProtocol has MUST ( ... $ description ) MAY ( description )
         optionalAttrs.removeAll(requiredAttrs);
 
-        // Add required attributes as returned by default and the optional attributes
-        // as not returned by default (assuming the optional attributes are less important).
         addAttributeInfos(ldapClasses, requiredAttrs, EnumSet.of(Flags.REQUIRED), null, result);
         addAttributeInfos(ldapClasses, optionalAttrs, null, null, result);
 

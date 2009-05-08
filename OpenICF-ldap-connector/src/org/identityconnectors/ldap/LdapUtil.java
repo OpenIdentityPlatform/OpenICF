@@ -135,12 +135,34 @@ public class LdapUtil {
         if (value == null) {
             return false;
         }
-        String str = value.toString();
-        if (StringUtil.isEmpty(str)) {
+        if (value instanceof byte[]) {
+            return escapeByteArrayAttrValue((byte[]) value, toBuilder);
+        } else {
+            return escapeStringAttrValue(value.toString(), toBuilder);
+        }
+    }
+
+    private static boolean escapeByteArrayAttrValue(byte[] bytes, StringBuilder toBuilder) {
+        if (bytes.length == 0) {
             return false;
         }
-        for (int i = 0; i < str.length(); i++) {
-            char ch = str.charAt(i);
+        for (byte b : bytes) {
+            toBuilder.append('\\');
+            String hex = Integer.toHexString(b & 0xff); // Make a negative byte positive.
+            if (hex.length() < 2) {
+                toBuilder.append('0');
+            }
+            toBuilder.append(hex);
+        }
+        return true;
+    }
+
+    private static boolean escapeStringAttrValue(String string, StringBuilder toBuilder) {
+        if (StringUtil.isEmpty(string)) {
+            return false;
+        }
+        for (int i = 0; i < string.length(); i++) {
+            char ch = string.charAt(i);
             switch (ch) {
             case '*':
                 toBuilder.append("\\2a");

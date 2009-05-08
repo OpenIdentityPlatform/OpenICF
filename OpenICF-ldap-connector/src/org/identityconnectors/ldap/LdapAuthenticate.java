@@ -30,6 +30,7 @@ import java.util.Map.Entry;
 
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorSecurityException;
+import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.identityconnectors.framework.common.exceptions.PasswordExpiredException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
@@ -88,19 +89,14 @@ public class LdapAuthenticate {
         }
 
         if (object2SuccessAuthn.isEmpty()) {
-            String message;
             switch (matchedObjectCount) {
                 case 0:
-                    message = conn.format("noUserMatched", null, username);
-                    break;
+                    throw new ConnectorSecurityException(conn.format("noUserMatched", null, username));
                 case 1:
-                    message = conn.format("authenticationFailed", null, username);
-                    break;
+                    throw new InvalidCredentialException(conn.format("authenticationFailed", null, username));
                 default:
-                    message = conn.format("moreThanOneUserMatched", null, username);
-                    break;
+                    throw new ConnectorSecurityException(conn.format("moreThanOneUserMatched", null, username));
             }
-            throw new ConnectorSecurityException(message);
         } else if (object2SuccessAuthn.size() > 1) {
             throw new ConnectorSecurityException(conn.format("moreThanOneUserMatchedWithPassword", null, username));
         }

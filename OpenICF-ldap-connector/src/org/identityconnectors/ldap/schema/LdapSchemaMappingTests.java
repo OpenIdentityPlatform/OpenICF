@@ -30,6 +30,7 @@ import java.util.EnumSet;
 import java.util.Set;
 
 import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
+import org.identityconnectors.framework.api.operations.SyncApiOp;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
@@ -39,8 +40,10 @@ import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 import org.identityconnectors.ldap.LdapConfiguration;
+import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapConnectorTestBase;
 import org.identityconnectors.ldap.LdapConstants;
+import org.identityconnectors.ldap.LdapConnection.ServerType;
 import org.junit.Test;
 
 public class LdapSchemaMappingTests extends LdapConnectorTestBase {
@@ -150,5 +153,14 @@ public class LdapSchemaMappingTests extends LdapConnectorTestBase {
         assertEquals(byte[].class, AttributeInfoUtil.find("jpegPhoto", accountAttrInfos).getType());
         assertEquals(byte[].class, AttributeInfoUtil.find("userCertificate", accountAttrInfos).getType());
         assertEquals(byte[].class, AttributeInfoUtil.find("x500UniqueIdentifier", accountAttrInfos).getType());
+    }
+
+    @Test
+    public void testSyncNotSupported() {
+        LdapConfiguration config = newConfiguration();
+        LdapConnection conn = new LdapConnection(config);
+        assertEquals(ServerType.OPENDS, conn.getServerType());
+        Schema schema = newFacade(config).schema();
+        assertTrue(schema.getSupportedObjectClassesByOperation().get(SyncApiOp.class).isEmpty());
     }
 }

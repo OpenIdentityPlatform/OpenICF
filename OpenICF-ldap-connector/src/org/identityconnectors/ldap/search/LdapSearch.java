@@ -37,7 +37,8 @@ import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.PagedResultsControl;
 
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
@@ -65,6 +66,8 @@ import com.sun.jndi.ldap.ctl.VirtualListViewControl;
  * @author Andrei Badea
  */
 public class LdapSearch {
+
+    private static final Log log = Log.getLog(LdapSearch.class);
 
     private final LdapConnection conn;
     private final ObjectClass oclass;
@@ -223,6 +226,8 @@ public class LdapSearch {
                 Set<String> posixRefAttrs = getStringAttrValues(entry.getAttributes(), GroupHelper.getPosixRefAttribute());
                 List<String> posixGroups = groupHelper.getPosixGroups(posixRefAttrs);
                 attribute = AttributeBuilder.build(LdapConstants.POSIX_GROUPS_NAME, posixGroups);
+            } else if (LdapConstants.PASSWORD.is(attrName)) {
+                attribute = AttributeBuilder.build(attrName, new GuardedString());
             } else {
                 attribute = conn.getSchemaMapping().createAttribute(oclass, attrName, entry, emptyAttrWhenNotFound);
             }
@@ -342,7 +347,8 @@ public class LdapSearch {
         result.add(Uid.NAME);
         // Our password is marked as readable because of sync(). We really can't return it from search.
         if (result.contains(OperationalAttributes.PASSWORD_NAME)) {
-            throw new ConnectorException(conn.format("readingPasswordsNotSupported", null));
+            log.warn("Reading passwords not supported");
+            // throw new ConnectorException(conn.format("readingPasswordsNotSupported", null));
         }
         return result;
     }

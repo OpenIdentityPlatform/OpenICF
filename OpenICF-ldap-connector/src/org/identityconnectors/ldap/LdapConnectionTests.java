@@ -33,6 +33,7 @@ import javax.naming.directory.Attributes;
 
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.ldap.LdapConnection.ServerType;
 import org.junit.Test;
 
 import com.sun.jndi.ldap.ctl.PagedResultsControl;
@@ -161,5 +162,11 @@ public class LdapConnectionTests extends LdapConnectorTestBase {
         LdapConnection conn = new LdapConnection(newConfiguration());
         assertTrue(conn.supportsControl(PagedResultsControl.OID));
         assertTrue(conn.supportsControl(VirtualListViewControl.OID));
+    }
+
+    @Test
+    public void testServerType() {
+        LdapConnection conn = new LdapConnection(newConfiguration());
+        assertEquals(ServerType.OPENDS, conn.getServerType());
     }
 }

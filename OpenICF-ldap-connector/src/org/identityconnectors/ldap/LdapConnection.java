@@ -26,6 +26,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
 import static org.identityconnectors.common.StringUtil.isNotBlank;
+import static org.identityconnectors.ldap.LdapUtil.getStringAttrValue;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValues;
 import static org.identityconnectors.ldap.LdapUtil.nullAsEmpty;
 
@@ -103,6 +104,7 @@ public class LdapConnection {
 
     private LdapContext initCtx;
     private Set<String> supportedControls;
+    private ServerType serverType;
 
     public LdapConnection(LdapConfiguration config) {
         this.config = config;
@@ -303,6 +305,29 @@ public class LdapConnection {
         return supportedControls;
     }
 
+    public ServerType getServerType() {
+        if (serverType == null) {
+            serverType = detectServerType();
+        }
+        return serverType;
+    }
+
+    private ServerType detectServerType() {
+        try {
+            Attributes attrs = getInitialContext().getAttributes("", new String[] { "vendorVersion" });
+            String vendorVersion = getStringAttrValue(attrs, "vendorVersion").toLowerCase();
+            if (vendorVersion.contains("opends")) {
+                return ServerType.OPENDS;
+            }
+            if (vendorVersion.contains("sun") && vendorVersion.contains("directory")) {
+                return ServerType.SUN_DSEE;
+            }
+        } catch (NamingException e) {
+            log.warn(e, "Exception while detecting the server type");
+        }
+        return ServerType.UNKNOWN;
+    }
+
     public boolean needsBinaryOption(String attrName) {
         return LDAP_BINARY_OPTION_ATTRS.contains(attrName);
     }
@@ -367,5 +392,10 @@ public class LdapConnection {
             result.append(']');
             return result.toString();
         }
+    }
+
+    public enum ServerType {
+
+        SUN_DSEE, OPENDS, UNKNOWN
     }
 }

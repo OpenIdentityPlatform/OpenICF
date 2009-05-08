@@ -22,6 +22,7 @@
  */
 package org.identityconnectors.ldap.search;
 
+import static java.util.Collections.singleton;
 import static org.identityconnectors.common.CollectionUtil.newSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -33,6 +34,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.common.security.GuardedString.Accessor;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -221,6 +224,19 @@ public class LdapSearchTests extends LdapConnectorTestBase {
     }
 
     @Test
+    public void testWithFilterByBinaryAttribute() {
+        ConnectorFacade facade = newFacade();
+        ConnectorObject bunny = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
+
+        byte[] photo = { -4, -3, -2, -1, 0, 1, 2, 3, 63, 127 };
+        Attribute photoAttr = AttributeBuilder.build("jpegPhoto", photo);
+        Uid newUid = facade.addAttributeValues(ObjectClass.ACCOUNT, bunny.getUid(), singleton(photoAttr), null);
+
+        ConnectorObject bunnyWithPhoto = searchByAttribute(facade, ObjectClass.ACCOUNT, photoAttr, "jpegPhoto");
+        assertEquals(newUid, bunnyWithPhoto.getUid());
+    }
+
+    @Test
     public void testAttributesToGet() {
         ConnectorFacade facade = newFacade();
         ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(USER_0_DN), "employeeNumber", "telephoneNumber");
@@ -367,10 +383,16 @@ public class LdapSearchTests extends LdapConnectorTestBase {
         assertEquals(CZECH_REPUBLIC_C, AttributeUtil.getAsStringValue(czechRep.getAttributeByName("c")));
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test
     public void testCannotReturnPasswordFromSearch() {
         ConnectorFacade facade = newFacade();
-        searchByAttribute(facade, ObjectClass.ACCOUNT, new Uid(BUGS_BUNNY_DN), OperationalAttributes.PASSWORD_NAME);
+        ConnectorObject bunny = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN), OperationalAttributes.PASSWORD_NAME);
+        GuardedString password = (GuardedString) bunny.getAttributeByName(OperationalAttributes.PASSWORD_NAME).getValue().get(0);
+        password.access(new Accessor() {
+            public void access(char[] clearChars) {
+                assertEquals(0, clearChars.length);
+            }
+        });
     }
 
     private static ConnectorObject getObjectByName(List<ConnectorObject> objects, String name) {

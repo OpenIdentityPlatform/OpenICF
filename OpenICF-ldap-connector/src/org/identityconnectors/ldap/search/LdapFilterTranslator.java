@@ -44,8 +44,6 @@ import org.identityconnectors.ldap.schema.LdapSchemaMapping;
 
 public class LdapFilterTranslator extends AbstractFilterTranslator<LdapFilter> {
 
-    // XXX all objects values converted to string, is that OK?
-
     // Notes:
     //
     // - The connector EqualsFilter matches an attribute and

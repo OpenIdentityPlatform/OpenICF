@@ -33,12 +33,15 @@ import java.util.List;
 import javax.naming.NamingException;
 
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.framework.api.operations.SyncApiOp;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
+import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
@@ -48,6 +51,7 @@ import org.identityconnectors.ldap.LdapConfiguration;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapConstants;
 import org.identityconnectors.ldap.SunDSTestBase;
+import org.identityconnectors.ldap.LdapConnection.ServerType;
 import org.junit.Test;
 
 public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
@@ -289,5 +293,15 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
                 "cn: Foo Bar\n" +
                 "sn: Bar\n", 0);
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testSyncSupported() throws NamingException {
+        LdapConfiguration config = newConfiguration();
+        LdapConnection conn = newConnection(config);
+        assertEquals(ServerType.SUN_DSEE, conn.getServerType());
+        Schema schema = newFacade(config).schema();
+        ObjectClassInfo accountInfo = schema.findObjectClassInfo(ObjectClass.ACCOUNT_NAME);
+        assertTrue(schema.getSupportedObjectClassesByOperation().get(SyncApiOp.class).contains(accountInfo));
     }
 }
