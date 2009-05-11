@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
@@ -557,7 +558,7 @@ public class MultiOpTests extends ObjectClassRunner {
                 && ConnectorHelper.isCRU(getObjectClassInfo(), OperationalAttributes.PASSWORD_EXPIRED_NAME)) {
 
             // check PASSWORD_EXPIRED for false
-            checkOpAttribute(OperationalAttributes.PASSWORD_EXPIRED_NAME, false, true, Boolean.class);
+            checkOpAttribute(OperationalAttributes.PASSWORD_EXPIRED_NAME, false, true, Boolean.class, true);
         }
         else {
             LOG.info("----------------------------------------------------------------------------------------");
@@ -591,13 +592,14 @@ public class MultiOpTests extends ObjectClassRunner {
      * @param createValue value used for create
      * @param updateValue value used for update
      * @param type expected type of the value
+     * @param addPassword, add password to attributes in the update
      */
-    private void checkOpAttribute(String attrName, Object createValue, Object updateValue, Class<?> type) {
-
+    private void checkOpAttribute(String attrName, Object createValue, Object updateValue, Class<?> type, boolean addPassword) {
+        final int iteration = 0;
         Set<Attribute> attrs = null;
 
         attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(), getObjectClassInfo(),
-                getTestName(), 0, true, false);
+                getTestName(), iteration, true, false);
 
         //remove attrName if present
         for (Attribute attribute : attrs) {
@@ -624,6 +626,17 @@ public class MultiOpTests extends ObjectClassRunner {
             
             //add update value
             attrs.add(AttributeBuilder.build(attrName, updateValue));
+            
+            if (addPassword) {
+                // add the same password, that was created before in the following update
+                String password = ConnectorHelper.getString(getDataProvider(),
+                        getTestName(), OperationalAttributes.PASSWORD_NAME,
+                        getObjectClassInfo().getType(), iteration);
+                Attribute attrPasswd = AttributeBuilder.build(
+                        OperationalAttributes.PASSWORD_NAME, new GuardedString(
+                                password.toCharArray()));
+                attrs.add(attrPasswd);
+            }
 
             // add uid for update
             attrs.add(uid);
@@ -638,6 +651,13 @@ public class MultiOpTests extends ObjectClassRunner {
         } finally {
             ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid, false, null);
         }
+    }
+    
+    /**
+     * {@link MultiOpTests#checkOpAttribute(String, Object, Object, Class, boolean)}
+     */
+    private void checkOpAttribute(String attrName, Object createValue, Object updateValue, Class<?> type) {
+        checkOpAttribute(attrName, createValue, updateValue, type, false);
     }
 
     /**
