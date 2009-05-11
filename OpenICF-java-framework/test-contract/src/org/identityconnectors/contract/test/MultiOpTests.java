@@ -436,10 +436,16 @@ public class MultiOpTests extends ObjectClassRunner {
     public void testEnableDateOpAttribute() {
         if (isObjectClassSupported()
                 && ConnectorHelper.isCRU(getObjectClassInfo(), OperationalAttributes.ENABLE_DATE_NAME)) {
+        	
+        	// try to retrieve the optional contract tests property for setting the dates, otherwise use the default values
+        	//"now"
+            final long createValue = getDateProperty(OperationalAttributes.ENABLE_DATE_NAME, (new Date()).getTime(), false);
+            //"1.1.1970"
+            final long updateValue = getDateProperty(OperationalAttributes.ENABLE_DATE_NAME, (new Date(0)).getTime(), true);
             
             // check ENABLE_DATE for "now" and "1.1.1970"
-            checkOpAttribute(OperationalAttributes.ENABLE_DATE_NAME, (new Date()).getTime(),
-                    (new Date(0)).getTime(), Long.class);
+            checkOpAttribute(OperationalAttributes.ENABLE_DATE_NAME, createValue,
+                    updateValue, Long.class);
         }
         else {
             LOG.info("----------------------------------------------------------------------------------------");
