@@ -22,6 +22,7 @@
  */
 package org.identityconnectors.ldap;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
 import static org.identityconnectors.common.CollectionUtil.newList;
 import static org.identityconnectors.common.CollectionUtil.newSet;
@@ -120,6 +121,25 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
 
         ConnectorObject object = findByAttribute(objects, "dn", BUGS_BUNNY_DN);
         assertEquals(BUGS_BUNNY_CN, AttributeUtil.getStringValue(object.getAttributeByName("cn")));
+    }
+
+    @Test
+    public void testCreateGroupOfUniqueNamesWithoutMembers() {
+        LdapConfiguration config = newConfiguration();
+        ConnectorFacade facade = newFacade(config);
+
+        ObjectClass oclass = new ObjectClass("groupOfUniqueNames");
+        Set<Attribute> attributes = new HashSet<Attribute>();
+        Name name = new Name("cn=Another Group," + ACME_DN);
+        attributes.add(name);
+        attributes.add(AttributeBuilder.build("cn", "Another Group"));
+        // If "uniqueMember" is sent to the server as an empty attribute, the server complains.
+        // The test makes sure it is not sent at all.
+        attributes.add(AttributeBuilder.build("uniqueMember", emptyList()));
+        Uid uid = facade.create(oclass, attributes, null);
+
+        ConnectorObject newGroup = facade.getObject(oclass, uid, null);
+        assertEquals(name, newGroup.getName());
     }
 
     @Test

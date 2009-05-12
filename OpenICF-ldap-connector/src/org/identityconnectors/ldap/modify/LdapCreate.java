@@ -91,7 +91,8 @@ public class LdapCreate extends LdapModifyOperation {
                 pwdAttr = conn.getSchemaMapping().encodePassword(oclass, attr);
             } else {
                 ldapAttr = conn.getSchemaMapping().encodeAttribute(oclass, attr);
-                if (ldapAttr != null) {
+                // Do not send empty attributes. The server complains for "uniqueMember", for example.
+                if (ldapAttr != null && ldapAttr.size() > 0) {
                     ldapAttrs.put(ldapAttr);
                 }
             }
