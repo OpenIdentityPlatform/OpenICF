@@ -287,13 +287,15 @@ public class GroovyDataProvider implements DataProvider {
      */
     public GroovyDataProvider(String configFilePath, String nullStr2, String null3) {
 
-        doBootstrap();
+        configObject = doBootstrap();
 
         File f = new File(configFilePath);
 
         try {
             // parse the configuration file once
-            configObject = cs.parse(f.toURL());
+            ConfigObject highPriorityCO = cs.parse(f.toURL());
+            configObject = mergeConfigObjects(configObject, highPriorityCO);
+
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }

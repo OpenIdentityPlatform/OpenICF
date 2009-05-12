@@ -39,8 +39,9 @@ import junit.framework.Assert;
 
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -56,13 +57,13 @@ public class GroovyDataProviderTest {
     private static GroovyDataProvider gdp;
     public static final String CONFIG_FILE_PATH = "configfileTest.groovy";
 
-    @BeforeClass
-    public static void setUp() {
+    @Before
+    public void setUp() {
         gdp = new GroovyDataProvider(CONFIG_FILE_PATH, null, null);
     }
 
-    @AfterClass
-    public static void tearDown() {
+    @After
+    public void tearDown() {
         gdp = null;
     }
 
@@ -74,6 +75,89 @@ public class GroovyDataProviderTest {
                 .assertEquals(
                         "If you think you can do a thing or think you can't do a thing, you're right. (H. Ford)",
                         gdp.get("aSimpleString", "string", true));
+    }
+    
+    @Test
+    public void testProperDefaulting() {
+        Object o = get("nonexistingAttribute");
+        Assert.assertNotNull(o);
+        Assert.assertTrue(o instanceof String);
+        String nonExistingAttribute = (String) o;
+
+        Object o2 = get("nonexistingAttribute");
+        Assert.assertNotNull(o2);
+        Assert.assertTrue(o2 instanceof String);
+        String nonExistingAttribute2 = (String) o2;
+
+        final String message = "if we query the same attribute twice, it should return the same default value";
+        Assert.assertTrue(message, nonExistingAttribute
+                .equals(nonExistingAttribute2));
+
+        Object o3 = get("anotherNonExistingAttribute");
+        Assert.assertNotNull(o3);
+        Assert.assertTrue(o3 instanceof String);
+        String anotherNonExistingAttribute = (String) o3;
+
+        Assert.assertTrue(
+                "different properties should return different 'generated' values!",
+                !anotherNonExistingAttribute.equals(nonExistingAttribute));
+
+        Object o4 = get("anotherNonExistingAttribute");
+        Assert.assertNotNull(o4);
+        Assert.assertTrue(o4 instanceof String);
+        String anotherNonExistingAttribute2 = (String) o4;
+
+        Assert.assertTrue(message, anotherNonExistingAttribute
+                .equals(anotherNonExistingAttribute2));
+    }
+
+    /** helper method of {@link GroovyDataProviderTest#testProperDefaulting()};
+     * in case of missing value should return default one.
+     */
+    private Object get(String string) {
+        return gdp.get(String.class, string, "foocomponent");
+    }
+    
+    @Test @Ignore
+    public void testProperDefaultingMulti() {
+        Object o = getMulti("nonexistingAttribute");
+        Assert.assertNotNull(o);
+        Assert.assertTrue(o instanceof List && ((List) o).get(0) instanceof String);
+        List nonExistingAttribute = (List) o;
+
+        Object o2 = getMulti("nonexistingAttribute");
+        Assert.assertNotNull(o2);
+        Assert.assertTrue(o2 instanceof List && ((List) o2).get(0) instanceof String);
+        List nonExistingAttribute2 = (List) o2;
+
+        final String message = "if we query the same attribute twice, it should return the same default value";
+        Assert.assertTrue(message, nonExistingAttribute
+                .equals(nonExistingAttribute2));
+
+        Object o3 = getMulti("anotherNonExistingAttribute");
+        Assert.assertNotNull(o3);
+        Assert.assertTrue(o3 instanceof List && ((List) o3).get(0) instanceof String);
+        List anotherNonExistingAttribute = (List) o3;
+
+        //TODO fix problem with uniform unique values.
+        Assert.assertTrue(
+                "different properties should return different 'generated' values!",
+                !anotherNonExistingAttribute.equals(nonExistingAttribute));
+
+        Object o4 = getMulti("anotherNonExistingAttribute");
+        Assert.assertNotNull(o4);
+        Assert.assertTrue(o4 instanceof List && ((List) o4).get(0) instanceof String);
+        List anotherNonExistingAttribute2 = (List) o4;
+
+        Assert.assertTrue(message, anotherNonExistingAttribute
+                .equals(anotherNonExistingAttribute2));
+    }
+
+    /** helper method of {@link GroovyDataProviderTest#testProperDefaultingMulti()
+     * in case of missing value should return default one. 
+     */
+    private Object getMulti(String string) {
+        return gdp.get(String.class, string, "foocomponent", 0, true);
     }
 
     @Test(expected = ObjectNotFoundException.class)
