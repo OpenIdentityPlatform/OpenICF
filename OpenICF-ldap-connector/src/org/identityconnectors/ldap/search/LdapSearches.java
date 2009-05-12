@@ -71,6 +71,12 @@ public class LdapSearches {
      */
     public static String getEntryDN(LdapConnection conn, ObjectClass oclass, Uid uid) {
         log.ok("Searching for object {0} of class {1}", uid.getUidValue(), oclass.getObjectClassValue());
+        
+        // If the Uid actually the entry DN, just return it.
+        String uidAttr = conn.getSchemaMapping().getLdapUidAttribute(oclass);
+        if (LdapEntry.isDNAttribute(uidAttr)) {
+            return uid.getUidValue();
+        }
 
         EqualsFilter filter = (EqualsFilter) FilterBuilder.equalTo(uid);
         LdapFilter ldapFilter = new LdapFilterTranslator(conn.getSchemaMapping(), oclass).createEqualsExpression(filter, false);
