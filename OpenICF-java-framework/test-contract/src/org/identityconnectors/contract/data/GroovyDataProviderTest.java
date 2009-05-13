@@ -118,7 +118,7 @@ public class GroovyDataProviderTest {
         return gdp.get(String.class, string, "foocomponent");
     }
     
-    @Test @Ignore
+    @Test 
     public void testProperDefaultingMulti() {
         Object o = getMulti("nonexistingAttribute");
         Assert.assertNotNull(o);
@@ -343,6 +343,18 @@ public class GroovyDataProviderTest {
             List l = (List) o;
             printList(l);
             System.out.println();
+            Object previous = null; 
+            for (Object object : l) {
+
+                String msg = String.format("default value for Random multiString should contain Strings only, but found different type: ", object.getClass().getName());
+                Assert.assertTrue(msg, object instanceof String);
+                
+                if (previous != null) {
+                    msg = String.format("two objects on the randomized list should differ, but there are two equal values: %s = %s", previous, object);
+                    Assert.assertTrue(msg, !previous.equals(object));
+                }
+                previous = object;
+            }
         }
     }
 

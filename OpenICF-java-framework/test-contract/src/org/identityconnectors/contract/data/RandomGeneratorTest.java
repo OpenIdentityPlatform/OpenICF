@@ -66,4 +66,19 @@ public class RandomGeneratorTest {
             System.out.println(o.toString());
         }
     }
+    
+    @Test
+    public void testUnique() {
+        {
+            Object o = RandomGenerator.generate("###X##");
+            Object o2 = RandomGenerator.generate("###X##");
+            Assert.assertNotNull(o);
+            Assert.assertNotNull(o2);
+            Assert.assertTrue(o.toString().contains("X"));
+            Assert.assertTrue(o2.toString().contains("X"));
+            Assert.assertTrue(!o2.equals(o));
+            System.out.println(o.toString() + "\n" + o2.toString());
+        }
+    }
+
 }

@@ -33,6 +33,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -651,21 +652,20 @@ public class GroovyDataProvider implements DataProvider {
      * @return the list with resolved values
      */
     private List resolveList(List list) {
-        List localList = list;
-        for (ListIterator it = localList.listIterator(); it.hasNext();) {
-            Object object = (Object) it.next();
+        List result = new ArrayList();
+        for (Object object : list) {
             if (object instanceof Lazy) {
                 Lazy lazyO = (Lazy) object;
                 Object resolvedObj = resolveLazy(lazyO);
-                it.set(resolvedObj);
+                result.add(resolvedObj);
             } else if (object instanceof List) {
                 // recursively resolve attributes in nested lists
                 List arg = (List) object;
                 List resolvedList = resolveList(arg);
-                it.set(resolvedList);
+                result.add(resolvedList);
             }
-        }// for list
-        return localList;
+        }
+        return result;
     }
 
     /**
