@@ -44,15 +44,13 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.spi.InitialContextFactory;
 import javax.sql.DataSource;
 
-import org.identityconnectors.framework.common.objects.Attribute;
-import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -158,7 +156,7 @@ public class SQLUtilTests {
      */
     @Test(expected=NullPointerException.class)
     public void testBuildConnectorObjectBuilderNull() throws SQLException {
-        SQLUtil.getAttributeSet(null);
+        SQLUtil.getColumnValues(null);
     }
     
     /**
@@ -363,14 +361,14 @@ public class SQLUtilTests {
         trsmd.expectAndReturn("getColumnType", Types.VARCHAR);
         trs.expectAndReturn("getString", TEST_VAL2);
         
-        final Set<Attribute> actual = SQLUtil.getAttributeSet(resultSetProxy);
+        final Map<String, SQLParam> actual = SQLUtil.getColumnValues(resultSetProxy);
         assertTrue(trs.isDone());
         assertTrue(trsmd.isDone());
         assertEquals(2, actual.size());
-        assertNotNull(AttributeUtil.find(TEST1, actual));
-        assertNotNull(AttributeUtil.find(TEST2, actual));
-        assertEquals(TEST_VAL1,AttributeUtil.find(TEST1, actual).getValue().get(0));
-        assertEquals(TEST_VAL2,AttributeUtil.find(TEST2, actual).getValue().get(0));
+        assertNotNull(actual.get(TEST1));
+        assertNotNull(actual.get(TEST2));
+        assertEquals(TEST_VAL1,actual.get(TEST1).getValue());
+        assertEquals(TEST_VAL2,actual.get(TEST2).getValue());
      }
     
     /**

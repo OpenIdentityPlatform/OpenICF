@@ -41,21 +41,19 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.identityconnectors.common.Assertions;
+import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.objects.Attribute;
-import org.identityconnectors.framework.common.objects.AttributeBuilder;
 
 
 /**
@@ -525,18 +523,16 @@ public final class SQLUtil {
      * @return The transformed attribute set
      * @throws SQLException 
      */
-    public static Set<Attribute> getAttributeSet(ResultSet resultSet) throws SQLException {
+    public static Map<String, SQLParam> getColumnValues(ResultSet resultSet) throws SQLException {
         Assertions.nullCheck(resultSet,"resultSet");
-        Set<Attribute> ret = new HashSet<Attribute>();
+        Map<String, SQLParam> ret = CollectionUtil.<SQLParam>newCaseInsensitiveMap();
         final ResultSetMetaData meta = resultSet.getMetaData();
         int count = meta.getColumnCount();
         for (int i = 1; i <= count; i++) {
             final String name = meta.getColumnName(i);
             final int sqlType = meta.getColumnType(i);
-            final SQLParam param = getSQLParam(resultSet, i, sqlType);
-            final Object value = jdbc2AttributeValue(param.getValue());
-            final Attribute attr = AttributeBuilder.build(name, value);
-            ret.add(attr);
+            final SQLParam param = getSQLParam(resultSet, i, sqlType);            
+            ret.put(name, param);
         }
         return ret;
     }

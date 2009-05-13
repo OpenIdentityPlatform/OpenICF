@@ -73,8 +73,6 @@ public class DatabaseConnection  {
 
     /**
      * Closes the internal {@link java.sql.Connection}.
-     * 
-     * @see org.identityconnectors.framework.Connection#dispose()
      */
     public void dispose() {
         SQLUtil.closeQuietly(conn);
