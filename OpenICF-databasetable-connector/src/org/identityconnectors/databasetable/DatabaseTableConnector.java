@@ -269,18 +269,19 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             pstmt = conn.prepareStatement(sql, bld.getParams());
             // execute the SQL statement
             pstmt.execute();
+           
         } catch (SQLException e) {
-            log.error(e, "Create account {0} error", accountName);
+            log.error(e, "Create account ''{0}'' error", accountName);
             if (throwIt(e.getErrorCode()) ) {            
                 SQLUtil.rollbackQuietly(conn);
-                throw ConnectorException.wrap(e);
+                throw new ConnectorException(config.getMessage(MSG_CAN_NOT_CREATE, accountName), e);
             }            
         } finally {
             // clean up...
             SQLUtil.closeQuietly(pstmt);
         }
         log.info("Create account {0} commit", accountName);
-        conn.commit();
+        conn.commit();         
         log.ok("Account {0} created", accountName);
         // create and return the uid..
         return new Uid(accountName);
@@ -357,9 +358,9 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
                 throw new IllegalArgumentException(config.getMessage(MSG_MORE_USERS_DELETED, accountUid));
             }            
         } catch (SQLException e) {
-            log.error(e, "Delete account {0} SQL error", accountUid);
+            log.error(e, "Delete account ''{0}'' SQL error", accountUid);
             SQLUtil.rollbackQuietly(conn);
-            throw ConnectorException.wrap(e);
+            throw new ConnectorException(config.getMessage(MSG_CAN_NOT_DELETE, accountUid), e);
         } finally {
             // clean up..
             SQLUtil.closeQuietly(stmt);
@@ -446,7 +447,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             log.error(e, "Update account {0} error", accountName);
             if (throwIt(e.getErrorCode()) ) {            
                 SQLUtil.rollbackQuietly(conn);
-                throw ConnectorException.wrap(e);
+                throw new ConnectorException(config.getMessage(MSG_CAN_NOT_UPDATE, accountName), e);                
             }
         } finally {
             // clean up..
@@ -526,8 +527,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         } catch (SQLException e) {
             log.error(e, "Query {0} on {1} error", query.getSQL(), oclass);    
             SQLUtil.rollbackQuietly(conn);
-            if (throwIt(e.getErrorCode()) ) {            
-                throw ConnectorException.wrap(e);
+            if (throwIt(e.getErrorCode()) ) {
+                throw new ConnectorException(config.getMessage(MSG_CAN_NOT_READ, tblname), e);
             }             
         } finally {
             SQLUtil.closeQuietly(result);
@@ -606,7 +607,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         } catch (SQLException e) {
             log.error(e, "sync {0} on {1} error", query.getSQL(), oclass);
             SQLUtil.rollbackQuietly(conn);
-            throw ConnectorException.wrap(e);
+            throw new ConnectorException(config.getMessage(MSG_CAN_NOT_READ, tblname), e);              
         } finally {
             SQLUtil.closeQuietly(result);
             SQLUtil.closeQuietly(statement);
@@ -657,7 +658,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         } catch (SQLException e) {  
             log.error(e, "getLatestSyncToken sql {0} on {1} error", sql, oclass);  
             SQLUtil.rollbackQuietly(conn);
-            throw ConnectorException.wrap(e);
+            throw new ConnectorException(config.getMessage(MSG_CAN_NOT_READ, tblname), e);                            
         } finally {
             // clean up..
             SQLUtil.closeQuietly(rset);
@@ -753,7 +754,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         } catch (SQLException e) {
             log.error(e, "Account: {0} authentication failed ", username);
             SQLUtil.rollbackQuietly(conn);
-            throw ConnectorException.wrap(e);            
+            throw new ConnectorException(config.getMessage(MSG_CAN_NOT_READ, config.getTable()), e);
         } finally {
             SQLUtil.closeQuietly(result);
             SQLUtil.closeQuietly(stmt);
@@ -897,23 +898,22 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             // create the query..
             stmt = conn.getConnection().createStatement();
 
-            log.info("executeQuery {0}", sql);
+            log.info("executeQuery ''{0}''", sql);
             rset = stmt.executeQuery(sql);
             log.ok("query executed");
             // get the results queued..
             attrInfo = buildAttributeInfoSet(rset);
         } catch (SQLException ex) {
-            log.error(ex, "buildSelectBasedAttributeInfo in SQL: {0}",sql);
+            log.error(ex, "buildSelectBasedAttributeInfo in SQL: ''{0}''", sql);
             SQLUtil.rollbackQuietly(conn);
-            throw ConnectorException.wrap(ex);
+            throw new ConnectorException(config.getMessage(MSG_CAN_NOT_READ, config.getTable()), ex);
         } finally {
             SQLUtil.closeQuietly(rset);
             SQLUtil.closeQuietly(stmt);
         }
-
         // commit changes
         log.info("commit get schema");
-        conn.commit();
+        conn.commit();        
         log.ok("schema created");
         return attrInfo;
     }
@@ -994,15 +994,15 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         ConnectorObjectBuilder bld = new ConnectorObjectBuilder();               
         for (Map.Entry<String, SQLParam> colValue : columnValues.entrySet()) {
             final String columnName = colValue.getKey();
-            final SQLParam value = colValue.getValue();
+            final SQLParam param = colValue.getValue();
             // Map the special
             if (columnName.equalsIgnoreCase(config.getKeyColumn())) {
-                if (value == null || value.getValue() == null) {
+                if (param == null || param.getValue() == null) {
                     log.error("Name cannot be null.");
                     String msg = "Name cannot be null.";
                     throw new IllegalArgumentException(msg);
                 }
-                uidValue = value.getValue().toString();
+                uidValue = param.getValue().toString();
                 bld.setName(uidValue);
             } else if (columnName.equalsIgnoreCase(config.getPasswordColumn())) {
                 // No Password in the result object
@@ -1011,8 +1011,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             	//No changelogcolumn attribute in the results
                 log.ok("changelogcolumn attribute in the result");                
             } else {
-                if(value != null && value.getValue() != null) { 
-                    bld.addAttribute(AttributeBuilder.build(columnName, value.getValue()));
+                if(param != null && param.getValue() != null) { 
+                    bld.addAttribute(AttributeBuilder.build(columnName, param.getValue()));
                 } else {
                     bld.addAttribute(AttributeBuilder.build(columnName));                    
                 }

@@ -22,6 +22,7 @@
  */
 package org.identityconnectors.databasetable;
 
+import static org.identityconnectors.databasetable.DatabaseTableConstants.MSG_CAN_NOT_READ;
 import static org.identityconnectors.databasetable.DatabaseTableConstants.MSG_QUERY_INVALID;
 
 import java.lang.reflect.Method;
@@ -123,7 +124,7 @@ public class DatabaseTableConnection extends DatabaseConnection {
             } catch (Exception ex) {
                 // anything, not just SQLException
                 // nothing to do, just invalidate the connection
-                throw ConnectorException.wrap(ex);
+                throw new ConnectorException(config.getMessage(MSG_CAN_NOT_READ, sql), ex);
             } finally {
                 SQLUtil.closeQuietly(stmt);
             }

@@ -68,5 +68,9 @@ public class DatabaseTableConstants {
     static final String MSG_QUERY_INVALID = "query.invalid";   
     static final String MSG_MORE_USERS_DELETED = "more.users.deleted"; 
     static final String MSG_INVALID_SYNC_TOKEN_VALUE="invalid.sync.token.value";
+    static final String MSG_CAN_NOT_READ="can.not.read";
+    static final String MSG_CAN_NOT_CREATE="can.not.create";
+    static final String MSG_CAN_NOT_UPDATE="can.not.update";
+    static final String MSG_CAN_NOT_DELETE="can.not.delete";
     
 }
