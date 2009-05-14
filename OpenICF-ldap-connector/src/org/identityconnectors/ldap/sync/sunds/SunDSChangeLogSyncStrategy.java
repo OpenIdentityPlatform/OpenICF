@@ -68,7 +68,6 @@ import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.ldap.LdapConnection;
-import org.identityconnectors.ldap.LdapConstants;
 import org.identityconnectors.ldap.LdapEntry;
 import org.identityconnectors.ldap.search.DefaultSearchStrategy;
 import org.identityconnectors.ldap.search.LdapFilter;
@@ -212,7 +211,6 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
         // If the change type was modrdn, we need to compute the DN that the entry
         // was modified to.
         String newTargetDN = targetDN;
-        Attribute newDNAttr = null;
         if ("modrdn".equalsIgnoreCase(changeType)) {
             String newRdn = getStringAttrValue(changeLogEntry.getAttributes(), "newRdn");
             if (isBlank(newRdn)) {
@@ -221,7 +219,6 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
             }
             String newSuperior = getStringAttrValue(changeLogEntry.getAttributes(), "newSuperior");
             newTargetDN = getNewTargetDN(targetName, newSuperior, newRdn);
-            newDNAttr = AttributeBuilder.build(LdapConstants.NEW_DN_NAME, newTargetDN);
         }
 
         // Always specify the attributes to get. This will return attributes with
@@ -263,7 +260,7 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
             }
         }
 
-        if (removeObjectClass || newDNAttr != null || passwordAttr != null) {
+        if (removeObjectClass || passwordAttr != null) {
             ConnectorObjectBuilder objectBuilder = new ConnectorObjectBuilder();
             objectBuilder.setObjectClass(object.getObjectClass());
             objectBuilder.setUid(object.getUid());
@@ -277,9 +274,6 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
             } else {
                 objectBuilder.addAttributes(object.getAttributes());
             }
-            if (newDNAttr != null) {
-                objectBuilder.addAttribute(newDNAttr);
-            }
             if (passwordAttr != null) {
                 objectBuilder.addAttribute(passwordAttr);
             }
@@ -287,6 +281,13 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
         }
 
         log.ok("Creating sync delta for created or updated entry");
+        if ("modrdn".equalsIgnoreCase(changeType)) {
+            String uidAttr = conn.getSchemaMapping().getLdapUidAttribute(oclass);
+            // We can only set the previous Uid if it is the entry DN, which is readily available.
+            if (LdapEntry.isDNAttribute(uidAttr)) {
+                syncDeltaBuilder.setPreviousUid(conn.getSchemaMapping().createUid(oclass, targetDN));
+            }
+        }
         syncDeltaBuilder.setUid(object.getUid());
         syncDeltaBuilder.setObject(object);
         return syncDeltaBuilder.build();

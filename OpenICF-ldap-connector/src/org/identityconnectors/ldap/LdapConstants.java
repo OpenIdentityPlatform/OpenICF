@@ -41,8 +41,6 @@ public class LdapConstants {
 
     public static final String SEARCH_FILTER_NAME = "searchFilter";
 
-    public static final String NEW_DN_NAME = "newDN";
-    
     public static final String OP_SEARCH_FILTER = "searchFilter";
 
     /**
