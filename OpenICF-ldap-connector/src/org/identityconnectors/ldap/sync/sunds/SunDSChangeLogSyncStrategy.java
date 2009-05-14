@@ -545,6 +545,9 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
         if (attrsToSync == null) {
             Set<String> result = newCaseInsensitiveSet();
             result.addAll(Arrays.asList(nullAsEmpty(conn.getConfiguration().getAttributesToSynchronize())));
+            if (conn.getConfiguration().isSynchronizePasswords()) {
+                result.add(conn.getConfiguration().getPasswordAttributeToSynchronize());
+            }
             attrsToSync = result;
         }
         return attrsToSync;
