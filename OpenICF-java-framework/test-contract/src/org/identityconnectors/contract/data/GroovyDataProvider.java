@@ -663,6 +663,8 @@ public class GroovyDataProvider implements DataProvider {
                 List arg = (List) object;
                 List resolvedList = resolveList(arg);
                 result.add(resolvedList);
+            } else {
+                result.add(object);
             }
         }
         return result;

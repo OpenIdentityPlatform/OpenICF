@@ -116,3 +116,7 @@ abcAccount{
     all."__NAME__"="CONUSR-" + Lazy.random("AAAAA")
     all."__PASSWORD__"="tstpwd"
 }
+
+
+sampleFooBarList = ["a", "b", "b"];
+sampleFooBarListWithLazy = ["a", "b", Lazy.random("AAA\\X")];

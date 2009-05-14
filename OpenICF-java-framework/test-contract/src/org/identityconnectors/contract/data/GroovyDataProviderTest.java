@@ -68,6 +68,49 @@ public class GroovyDataProviderTest {
     }
 
     @Test
+    public void testListAcquire() throws Exception {
+        Assert.assertTrue(new File(CONFIG_FILE_PATH)
+        .exists());
+        Object o = getProperty(gdp, "sampleFooBarList");
+        Assert.assertNotNull(o);
+        Assert.assertTrue(o instanceof List);
+        Assert.assertTrue(((List) o).size() == 3);
+        List l = (List) o;
+        int iter = 0;
+        for (Object object : l) {
+            switch(iter) {
+            case 0: Assert.assertTrue(object.equals("a")); break;
+            case 1: Assert.assertTrue(object.equals("b")); break;
+            case 2: Assert.assertTrue(object.equals("b")); break;
+            }
+            iter++;
+        }
+    }
+    
+    @Test
+    public void testListAcquireWithLazy() throws Exception {
+        Assert.assertTrue(new File(CONFIG_FILE_PATH)
+        .exists());
+        Object o = getProperty(gdp, "sampleFooBarListWithLazy");
+        Assert.assertNotNull(o);
+        Assert.assertTrue(o instanceof List);
+        Assert.assertTrue(((List) o).size() == 3);
+        List l = (List) o;
+        int iter = 0;
+        for (Object object : l) {
+            switch(iter) {
+            case 0: Assert.assertTrue(object.equals("a")); break;
+            case 1: Assert.assertTrue(object.equals("b")); break;
+            case 2:
+                Assert.assertTrue(object instanceof String);
+                Assert.assertTrue(object.toString().contains("X"));
+            break;
+            }
+            iter++;
+        }
+    }
+    
+    @Test
     public void testSimpleStr() throws Exception {
         Assert.assertTrue(new File(CONFIG_FILE_PATH)
                 .exists());
