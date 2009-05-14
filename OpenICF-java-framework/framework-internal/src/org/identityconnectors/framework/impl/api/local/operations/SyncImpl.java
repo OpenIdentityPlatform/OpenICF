@@ -83,10 +83,7 @@ public class SyncImpl extends ConnectorAPIOperationRunner implements SyncApiOp {
         }
 
         public boolean handle(SyncDelta delta) {
-            SyncDeltaBuilder bld = new SyncDeltaBuilder();
-            bld.setUid(delta.getUid());
-            bld.setToken(delta.getToken());
-            bld.setDeltaType(delta.getDeltaType());
+            SyncDeltaBuilder bld = new SyncDeltaBuilder(delta);
             if ( delta.getObject() != null ) {
                 bld.setObject(reduceToAttrsToGet(delta.getObject()));
             }

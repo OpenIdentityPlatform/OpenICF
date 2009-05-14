@@ -1019,11 +1019,13 @@ public class ObjectSerializationTests {
         bld.setUid("foo");
         bld.setName("name");
         SyncDeltaBuilder builder = new SyncDeltaBuilder();
+        builder.setPreviousUid(new Uid("previous"));
         builder.setObject(bld.build());
         builder.setDeltaType(SyncDeltaType.CREATE_OR_UPDATE);
         builder.setToken(new SyncToken("mytoken"));
         SyncDelta v1 = builder.build();
         SyncDelta v2 = (SyncDelta)cloneObject(v1);
+        Assert.assertEquals(new Uid("previous"),v2.getPreviousUid());
         Assert.assertEquals(new Uid("foo"),v2.getObject().getUid());
         Assert.assertEquals(new SyncToken("mytoken"),v2.getToken());
         Assert.assertEquals(SyncDeltaType.CREATE_OR_UPDATE,v2.getDeltaType());

@@ -28,6 +28,7 @@ package org.identityconnectors.framework.common.objects;
 public final class SyncDeltaBuilder {
     private SyncToken _token;
     private SyncDeltaType _deltaType;
+    private Uid _previousUid;
     private Uid _uid;
     private ConnectorObject _object;
 
@@ -49,6 +50,7 @@ public final class SyncDeltaBuilder {
         _token = delta.getToken();
         _deltaType = delta.getDeltaType();
         _object = delta.getObject();
+        _previousUid = delta.getPreviousUid();
         _uid = delta.getUid();
     }
 
@@ -90,6 +92,25 @@ public final class SyncDeltaBuilder {
     public SyncDeltaBuilder setDeltaType(SyncDeltaType type) {
         _deltaType = type;
         return this;
+    }
+
+    /**
+     * Gets the Uid of the object before the change.
+     * 
+     * @return The Uid of the object before the change.
+     */
+    public Uid getPreviousUid() {
+        return _previousUid;
+    }
+
+    /**
+     * Sets the Uid of the object before the change.
+     * 
+     * @param previousUid
+     *           The Uid of the object before the change.
+     */
+    public void setPreviousUid(Uid previousUid) {
+        _previousUid = previousUid;
     }
 
     /**
@@ -149,6 +170,6 @@ public final class SyncDeltaBuilder {
      * </ol>
      */
     public SyncDelta build() {
-        return new SyncDelta(_token, _deltaType, _uid, _object);
+        return new SyncDelta(_token, _deltaType, _previousUid, _uid, _object);
     }
 }

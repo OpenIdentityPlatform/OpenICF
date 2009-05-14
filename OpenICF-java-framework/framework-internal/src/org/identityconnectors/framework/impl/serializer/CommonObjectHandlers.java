@@ -625,6 +625,7 @@ class CommonObjectHandlers {
                     SyncDeltaBuilder builder = new SyncDeltaBuilder();
                     builder.setDeltaType((SyncDeltaType)decoder.readObjectField("SyncDeltaType",SyncDeltaType.class,null));
                     builder.setToken((SyncToken)decoder.readObjectField("SyncToken",SyncToken.class,null));
+                    builder.setPreviousUid((Uid)decoder.readObjectField("PreviousUid",Uid.class,null));
                     builder.setUid((Uid)decoder.readObjectField("Uid",Uid.class,null));
                     builder.setObject((ConnectorObject)decoder.readObjectField("ConnectorObject",ConnectorObject.class,null));
                     return builder.build();
@@ -635,6 +636,7 @@ class CommonObjectHandlers {
                     SyncDelta val = (SyncDelta)object;
                     encoder.writeObjectField("SyncDeltaType", val.getDeltaType(), true);
                     encoder.writeObjectField("SyncToken", val.getToken(), true);
+                    encoder.writeObjectField("PreviousUid", val.getPreviousUid(), true);
                     encoder.writeObjectField("Uid", val.getUid(), true);
                     encoder.writeObjectField("ConnectorObject", val.getObject(), true);
                 }

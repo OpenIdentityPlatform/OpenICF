@@ -309,7 +309,9 @@ OperationOptionInfo | SyncDeltaType | SyncToken | SyncDelta | QualifiedUid
    value ( CREATE_OR_UPDATE | DELETE ) #REQUIRED
 >
 <!ELEMENT SyncToken (value)>
-<!ELEMENT SyncDelta (SyncDeltaType,SyncToken,Uid,ConnectorObject?)>
+<!ELEMENT SyncDelta (SyncDeltaType,SyncToken,PreviousUid,Uid,ConnectorObject?)>
+
+<!ELEMENT PreviousUid (#PCDATA)>
 
 <!ELEMENT QualifiedUid (ObjectClass,Uid)>
 

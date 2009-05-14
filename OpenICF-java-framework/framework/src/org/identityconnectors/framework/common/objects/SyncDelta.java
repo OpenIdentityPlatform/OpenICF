@@ -39,6 +39,7 @@ import org.identityconnectors.framework.spi.operations.SyncOp;
 public final class SyncDelta {
     private final SyncToken _token;
     private final SyncDeltaType _deltaType;
+    private final Uid _previousUid;
     private final Uid _uid;
     private final ConnectorObject _object;
 
@@ -54,11 +55,16 @@ public final class SyncDelta {
      *            The object that has changed. May be null for delete.
      */
     SyncDelta(SyncToken token, SyncDeltaType deltaType,
-            Uid uid,
+            Uid previousUid, Uid uid,
             ConnectorObject object) {
         Assertions.nullCheck(token, "token");
         Assertions.nullCheck(deltaType, "deltaType");
         Assertions.nullCheck(uid, "uid");
+        
+        //do not allow previous Uid for anything else than create or update
+        if ( previousUid != null && deltaType != SyncDeltaType.CREATE_OR_UPDATE) {
+            throw new IllegalArgumentException("The previous Uid can only be specified for create or update.");
+        }
         
         //only allow null object for delete
         if ( object == null && 
@@ -76,8 +82,21 @@ public final class SyncDelta {
 
         _token = token;
         _deltaType = deltaType;
+        _previousUid = previousUid;
         _uid    = uid;
         _object = object;
+    }
+    
+    /**
+     * If the change described by this <code>SyncDelta</code> modified the
+     * object's Uid, this method returns the Uid before the change. Not
+     * all resources can determine the previous Uid, so this method can
+     * return <code>null</code>.
+     * @return the previous Uid or null if it could not be determined 
+     *         or the change did not modify the Uid.
+     */
+    public Uid getPreviousUid() {
+        return _previousUid;
     }
     
     /**
@@ -122,6 +141,7 @@ public final class SyncDelta {
         Map<String,Object> values = new HashMap<String, Object>();
         values.put("Token", _token);
         values.put("DeltaType", _deltaType);
+        values.put("PreviousUid", _previousUid);
         values.put("Uid", _uid);
         values.put("Object", _object);
         return values.toString();
@@ -140,6 +160,14 @@ public final class SyncDelta {
                 return false;
             }
             if (!_deltaType.equals(other._deltaType)) {
+                return false;
+            }
+            if (_previousUid == null) {
+                if (other._previousUid != null) {
+                    return false;
+                }
+            }
+            else if (!_previousUid.equals(other._previousUid)) {
                 return false;
             }
             if (!_uid.equals(other._uid)) {
