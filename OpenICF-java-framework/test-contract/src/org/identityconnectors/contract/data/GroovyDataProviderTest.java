@@ -642,6 +642,19 @@ public class GroovyDataProviderTest {
         // output, might comment this out
         // System.out.println(o.toString());
     }
+    
+    @Test
+    public void testCombinedLazyValue() {
+        String firstName = (String) gdp.get("Xfirst");
+        Assert.assertNotNull(firstName);
+        String lastName = (String) gdp.get("Xlast");
+        Assert.assertNotNull(firstName);
+        String fullName = (String) gdp.get("Xfull");
+        Assert.assertNotNull(firstName);
+        
+        String msg = String.format("Error, doesn't fulfill the concatenation: \n firstname: '%s' lastname: '%s' fullname: '%s'", firstName, lastName, fullName);
+        Assert.assertTrue(msg, String.format("%s %s", firstName, lastName).equals(fullName));
+    }
 
     /**
      * method controls, if single parameters are correctly quoted, and multi

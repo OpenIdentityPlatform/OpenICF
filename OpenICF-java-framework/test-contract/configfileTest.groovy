@@ -120,3 +120,7 @@ abcAccount{
 
 sampleFooBarList = ["a", "b", "b"];
 sampleFooBarListWithLazy = ["a", "b", Lazy.random("AAA\\X")];
+
+Xfirst = "FIRST" + Lazy.random("###")
+Xlast = "LAST" + Lazy.random("###")
+Xfull = Lazy.get("Xfirst") + " " + Lazy.get("Xlast")
