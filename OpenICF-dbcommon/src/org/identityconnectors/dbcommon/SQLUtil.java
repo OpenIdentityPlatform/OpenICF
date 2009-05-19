@@ -889,7 +889,7 @@ public final class SQLUtil {
         try{
             st = conn.prepareStatement(sql);
             setParams(st, SQLParam.asList(Arrays.asList(params)));
-            rs = st.executeQuery(sql);
+            rs = st.executeQuery();
             Object value = null;
             if(rs.next()){
                 //If needed , switch to getSQLParam
@@ -921,7 +921,7 @@ public final class SQLUtil {
         try{
             st = conn.prepareStatement(sql);
             setParams(st, SQLParam.asList(Arrays.asList(params)));
-            rs = st.executeQuery(sql);
+            rs = st.executeQuery();
             final ResultSetMetaData metaData = rs.getMetaData();
             while(rs.next()){
                 Object[] row = new Object[metaData.getColumnCount()];
