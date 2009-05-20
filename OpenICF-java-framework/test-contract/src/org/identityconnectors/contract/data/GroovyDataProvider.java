@@ -34,13 +34,13 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
@@ -53,7 +53,6 @@ import org.identityconnectors.contract.data.groovy.Lazy;
 import org.identityconnectors.contract.data.groovy.Random;
 import org.identityconnectors.contract.exceptions.ContractException;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
-import org.identityconnectors.contract.test.ConnectorHelper;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
@@ -879,8 +878,7 @@ public class GroovyDataProvider implements DataProvider {
      */
     @SuppressWarnings("unchecked")
     private Map<String, Object> getPropertyMap(final String setName) {
-        DataProvider dataProvider = ConnectorHelper.createDataProvider();
-        Map<String, Object> propMap = (Map<String, Object>) dataProvider
+        Map<String, Object> propMap = (Map<String, Object>) this
                 .get(setName);
         return propMap;
     }
@@ -921,7 +919,13 @@ public class GroovyDataProvider implements DataProvider {
             } else if (OperationalAttributes.LOCK_OUT_NAME.equals(key)) {
                 attrSet.add(AttributeBuilder.buildLockOut((Boolean) value));
             } else {
-                attrSet.add(AttributeBuilder.build(key, value));
+                if (!value.getClass().isArray()) {
+                    attrSet.add(AttributeBuilder.build(key, value));
+                } else {
+                    Object[] array = (Object[]) value;
+                    List list = Arrays.asList(array);
+                    attrSet.add(AttributeBuilder.build(key, list));
+                }
             }
         }
         return attrSet;
