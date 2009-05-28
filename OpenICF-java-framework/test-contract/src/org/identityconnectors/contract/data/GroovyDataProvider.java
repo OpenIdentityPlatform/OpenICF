@@ -1094,7 +1094,7 @@ public class GroovyDataProvider implements DataProvider {
         }else {
             // resolve as "Object" and use quotes, if needed
             /* simply print out a string for all types of objects, that are not recognized */
-            String output = obj.toString();
+            String output = (obj == null) ? "null" : obj.toString();
             switch (choice) {
             case QUOTED:
                 svalue = String.format("\"%s\"", output);
