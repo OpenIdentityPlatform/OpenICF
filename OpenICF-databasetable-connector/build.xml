@@ -39,34 +39,34 @@
     <target name="run-contract-tests" depends="contract-init">
         <!-- mysql configuration -->
         <antcall target="contract-dist" inheritAll="false">
-            <param name="configuration" value="mysql"/>
+            <param name="testConfig" value="mysql"/>
         </antcall>
         <antcall target="contract-tests" inheritAll="false">
-            <param name="configuration" value="mysql"/>
+            <param name="testConfig" value="mysql"/>
         </antcall>
         
         <!-- mssql configuration -->
         <antcall target="contract-dist" inheritAll="false">
-            <param name="configuration" value="mssql"/>
+            <param name="testConfig" value="mssql"/>
         </antcall>
         <antcall target="contract-tests" inheritAll="false">
-            <param name="configuration" value="mssql"/>
+            <param name="testConfig" value="mssql"/>
         </antcall>
         
         <!-- db2 configuration -->
         <antcall target="contract-dist" inheritAll="false">
-            <param name="configuration" value="db2"/>
+            <param name="testConfig" value="db2"/>
         </antcall>
         <antcall target="contract-tests" inheritAll="false">
-            <param name="configuration" value="db2"/>
+            <param name="testConfig" value="db2"/>
         </antcall>
         
         <!-- oracle configuration -->
         <antcall target="contract-dist" inheritAll="false">
-            <param name="configuration" value="oracle"/>
+            <param name="testConfig" value="oracle"/>
         </antcall>
         <antcall target="contract-tests" inheritAll="false">
-            <param name="configuration" value="oracle"/>
+            <param name="testConfig" value="oracle"/>
         </antcall>
     </target> 	  
 </project>
