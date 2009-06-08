@@ -340,7 +340,7 @@ public class GroovyDataProvider implements DataProvider {
         configurations.add(projectPath.getAbsolutePath() + FS + CONFIG + FS + BUILD_GROOVY);
 
         // determine the configuration property
-        String cfg = System.getProperty("configuration", null);        
+        String cfg = System.getProperty("testConfig", null);        
         
         if (StringUtil.isNotBlank(cfg)) {
             // #2: ${bundle.dir}/${configuration}/build.groovy

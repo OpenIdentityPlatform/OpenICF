@@ -28,20 +28,20 @@
     +  /(_)\                                                                  +
     + =========================================================S=U=N=.=C=O=M= +
     </description>
-    <!-- set a default for configuration -->
-    <property name="configuration" value="default"/>
+    <!-- set a default for testConfig -->
+    <property name="testConfig" value="default"/>
 <!-- the following two imports should not be necessary -->
-<!--load user project-configuration properties -->
-<!--<property file="${user.home}/.connectors/${ant.project.name}/${configuration}/build.groovy" /> -->
+<!--load user project-testConfig properties -->
+<!--<property file="${user.home}/.connectors/${ant.project.name}/${testConfig}/build.groovy" /> -->
 <!--load user project properties -->
 <!--<property file="${user.home}/.connectors/${ant.project.name}.groovy" /> -->
     <!-- load user global properties -->
     <property file="${user.home}/.connectors/connectors.properties" />
-    <!-- configuration based directory for user libs -->
+    <!-- testConfig based directory for user libs -->
     <condition property="userlib"
         value="${user.home}/.connectors/${ant.project.name}/lib"
-        else="${user.home}/.connectors/${ant.project.name}/${configuration}/lib">
-        <equals arg1="${configuration}" arg2="default" trim="true"/>
+        else="${user.home}/.connectors/${ant.project.name}/${testConfig}/lib">
+        <equals arg1="${testConfig}" arg2="default" trim="true"/>
     </condition>
     <!-- load local properties -->
     <property file="build.properties" />
@@ -357,7 +357,7 @@
             
             <!-- Set the key for TestHelpers to use -->
             <sysproperty key="project.name" value="${ant.project.name}"/>
-            <sysproperty key="configuration" value="${configuration}"/>
+            <sysproperty key="testConfig" value="${testConfig}"/>
 
             <!-- reference the test classpath -->
             <classpath>
@@ -453,11 +453,11 @@
             <!-- common properties -->            
             <sysproperty key="data-provider" value="${data.provider}"/>            
             <sysproperty key="project.name" value="${ant.project.name}"/>
-            <sysproperty key="configuration" value="${configuration}"/>
+            <sysproperty key="testConfig" value="${testConfig}"/>
             <sysproperty key="test.parameters.outFile" value="${test.parameters.outFile}"/>
             <sysproperty key="org.identityconnectors.common.logging.class" value="org.identityconnectors.common.logging.impl.JDKLogger"/>
             
-            <test todir="${reports}/contracts" outfile="TEST-${contract-package}.test.ContractTestSuite-${configuration}"
+            <test todir="${reports}/contracts" outfile="TEST-${contract-package}.test.ContractTestSuite-${testConfig}"
                 name="${contract.suite.classname}"/>
             <formatter type="xml" usefile="yes" />
             <formatter type="plain" usefile="false" />
