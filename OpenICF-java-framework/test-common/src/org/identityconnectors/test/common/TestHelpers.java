@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Map.Entry;
 
-import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
@@ -270,7 +269,7 @@ public final class TestHelpers {
         } catch (IOException e) {
             LOG.info(GERR, fName);
         }
-        String cfg = System.getProperty("configuration", null);
+        String cfg = System.getProperty("testConfig", null);
 
         // load the project (public) configuration-specific configuration groovy file
         if (StringUtil.isNotBlank(cfg) && !"default".equals(cfg)) {
