@@ -149,7 +149,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
     public void init(Configuration cfg) {
         log.info("init DatabaseTable connector");                
         this.config = (DatabaseTableConfiguration) cfg;
-        this.conn = DatabaseTableConnection.getConnection(this.config);
+        this.conn = DatabaseTableConnection.createDBTableConnection(this.config);
         this.schema = null;
         this.defaultAttributesToGet = null;
         this.columnSQLTypes = null;
@@ -162,6 +162,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
     public void checkAlive() {
         log.info("checkAlive DatabaseTable connector");                
         conn.test();
+        conn.commit();
         log.ok("checkAlive DatabaseTable connector ok");                
     }
     
@@ -685,6 +686,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             cacheSchema();
         }
         assert schema != null;
+        conn.commit();
         log.ok("schema");
         return schema;
     }
@@ -697,6 +699,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
     public void test() {
         log.info("test");
         conn.test();        
+        conn.commit();
         log.ok("connector test ok");
     }
         
@@ -765,7 +768,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         log.info("Account: {0} authenticated ", username);
         return uid;
     }
-    
+
     /**
      * Used to escape the table or column name.
      * @param value Value to be quoted

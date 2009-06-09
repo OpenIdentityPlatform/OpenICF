@@ -80,7 +80,7 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
     /**
      * 
      */
-    static final String DB_DIR = "test_db";
+    static final String DB_DIR = "test_db1";
 
 
     /**
@@ -91,12 +91,17 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
     /**
      * URL used to connect to a derby database.
      */
-    static final String URL_TEMPLATE = "jdbc:derby:%d;create=true";
+    static final String URL_CONN = "jdbc:derby:"+getDBDirectory().toString();
 
+    /**
+     * URL used to connect to a derby database.
+     */
+    static final String URL_CREATE = URL_CONN+";create=true";    
+    
     /**
      * URL used to shutdown a derby database.
      */
-    static final String URL_SHUTDOWN = "jdbc:derby:;shutdown=true";
+    static final String URL_SHUTDOWN = URL_CONN+";shutdown=true";
 
     //The tested table
     static final String DB_TABLE = "Accounts";
@@ -114,15 +119,11 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
         // clear out the test database directory..
         IOUtil.delete(f);
         // attempt to create the database in the directory..
-        final DatabaseTableConfiguration config = new DatabaseTableConfiguration();
-        config.setJdbcDriver(DRIVER);
-        config.setJdbcUrlTemplate(URL_TEMPLATE);
-        config.setDatabase(f.toString());
         Connection conn = null;
         Statement stmt = null;
         try {
-            final DatabaseTableConnection con = DatabaseTableConnection.getConnection(config);
-            conn = con.getConnection();
+            Class.forName(DRIVER);            
+            conn = DriverManager.getConnection(URL_CREATE, "", "");
             // create the database..
             stmt = conn.createStatement();
             final String create = getResourceAsString("derbyTest.sql");
@@ -161,7 +162,7 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
         config.setKeyColumn(ACCOUNTID);
         config.setPasswordColumn(PASSWORD);
         config.setDatabase(getDBDirectory().toString());
-        config.setJdbcUrlTemplate(URL_TEMPLATE);
+        config.setJdbcUrlTemplate(URL_CONN);
         config.setChangeLogColumn(CHANGELOG);
         config.setConnectorMessages(TestHelpers.createDummyMessages());
         return config;
@@ -227,8 +228,8 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
         assertEquals(ACCOUNTID, config.getKeyColumn());
         config.setTable(DB_TABLE);
         assertEquals(DB_TABLE, config.getTable());
-        config.setJdbcUrlTemplate(URL_TEMPLATE);
-        assertEquals(URL_TEMPLATE, config.getJdbcUrlTemplate());
+        config.setJdbcUrlTemplate(URL_CONN);
+        assertEquals(URL_CONN, config.getJdbcUrlTemplate());
         config.setDatabase(getDBDirectory().toString());
         assertEquals(getDBDirectory().toString(), config.getDatabase());        
         config.setUser(ACCOUNTID);
@@ -264,7 +265,7 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
         Set<Attribute> expected = getCreateAttributeSet(cfg);
         Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
         con.update(ObjectClass.ACCOUNT, uid, expected, null);
-        smse.isDone();
+        assertTrue("setSQLParam not called", smse.isDone());
     }
     
     /**
@@ -286,7 +287,7 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
         con.getConnection().setSms(sms);
         Set<Attribute> expected = getCreateAttributeSet(cfg);
         con.create(ObjectClass.ACCOUNT, expected, null);
-        smse.isDone();
+        assertTrue("setSQLParam not called", smse.isDone());
     }    
     
     /**
@@ -308,7 +309,7 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
         con.getConnection().setSms(sms);
         Set<Attribute> expected = getCreateAttributeSet(cfg);
         con.create(ObjectClass.ACCOUNT, expected, null);
-        smse.isDone();
+        assertTrue("setSQLParam not called", smse.isDone());
     }    
 
     /**
@@ -394,7 +395,7 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
         PreparedStatement ps = null;
         DatabaseTableConnection conn = null;
         try {
-            conn = DatabaseTableConnection.getConnection(getConfiguration());
+            conn = DatabaseTableConnection.createDBTableConnection(getConfiguration());
 
             List<SQLParam> values = new ArrayList<SQLParam>();
             values.add(new SQLParam(changelog, Types.INTEGER));

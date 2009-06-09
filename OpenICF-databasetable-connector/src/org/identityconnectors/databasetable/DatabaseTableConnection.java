@@ -62,23 +62,97 @@ public class DatabaseTableConnection extends DatabaseConnection {
      * Setup logging for the {@link DatabaseTableConnection}.
      */
     static Log log = Log.getLog(DatabaseTableConnection.class);
-    
+
     /**
-     * Information from the {@link Configuration} can help determine how to test
-     * the viability of the {@link Connection}.
+     * Get the instance method
+     * 
+     * @param config
+     *            a {@link DatabaseTableConfiguration} object
+     * @return a new {@link DatabaseTableConnection} connection
      */
-    final DatabaseTableConfiguration config;
-    
+    static DatabaseTableConnection createDBTableConnection(DatabaseTableConfiguration config) {
+        Connection connection = getNativeConnection(config);
+        return new DatabaseTableConnection(connection, config);
+    }
+
+    /**
+     * @param config
+     * @return
+     */
+    private static java.sql.Connection getNativeConnection(DatabaseTableConfiguration config) {
+        java.sql.Connection connection;
+        final String login = config.getUser();
+        final GuardedString password = config.getPassword();
+        final String datasource = config.getDatasource();
+        if (StringUtil.isNotBlank(datasource)) {
+            log.info("Get a new connection using datasource {0}", datasource);
+            final String[] jndiProperties = config.getJndiProperties();
+            final ConnectorMessages connectorMessages = config.getConnectorMessages();
+            final Hashtable<String, String> prop = JNDIUtil.arrayToHashtable(jndiProperties, connectorMessages);
+            if (StringUtil.isNotBlank(login) && password != null) {
+                connection = SQLUtil.getDatasourceConnection(datasource, login, password, prop);
+            } else {
+                connection = SQLUtil.getDatasourceConnection(datasource, prop);
+            }
+            log.ok("The new connection using datasource {0} created", datasource);
+        } else {
+            final String driver = config.getJdbcDriver();
+            final String connectionUrl = config.formatUrlTemplate();
+            log.info("Get a new connection using connection url {0} and user {1}", connectionUrl, login);
+            connection = SQLUtil.getDriverMangerConnection(driver, connectionUrl, login, password);
+            log.ok("The new connection using connection url {0} and user {1} created", connectionUrl, login);
+        }
+
+        /* On Oracle enable the synonyms */
+        try {
+            Class<?> clazz = Class.forName("oracle.jdbc.OracleConnection");
+            if (clazz != null && clazz.isAssignableFrom(connection.getClass())) {
+                try {
+                    final Method getIncludeSynonyms = clazz.getMethod("getIncludeSynonyms");
+                    final Object includeSynonyms = getIncludeSynonyms.invoke(connection);
+                    log.info("getIncludeSynonyms on ORACLE : {0}", includeSynonyms);
+                    if (Boolean.FALSE.equals(includeSynonyms)) {
+                        final Method setIncludeSynonyms = clazz.getMethod("setIncludeSynonyms", boolean.class);
+                        setIncludeSynonyms.invoke(connection, Boolean.TRUE);
+                        log.ok("setIncludeSynonyms to true success");
+                    }
+                } catch (Exception e) {
+                    log.error(e, "setIncludeSynonyms on ORACLE exception");
+                }
+            }
+        } catch (ClassNotFoundException e) {
+            //expected
+        }
+
+        //Disable auto-commit mode
+        try {
+            if ( connection.getAutoCommit() ) {
+                log.info("setAutoCommit(false)");
+                connection.setAutoCommit(false);
+            }
+        } catch (SQLException expected) {
+            //expected
+            log.error(expected, "setAutoCommit(false) exception");
+        }
+        return connection;
+    }
+
     /**
      * DefaultStrategy is a default jdbc attribute mapping strategy
      */
     private MappingStrategy sms = null;
 
     /**
-     * Use the {@link Configuration} passed in to immediately connect to a
-     * database. If the {@link Connection} fails a {@link RuntimeException} will
-     * be thrown.
-     * @param conn 
+     * Information from the {@link Configuration} can help determine how to test the viability of the {@link Connection}
+     * .
+     */
+    final DatabaseTableConfiguration config;
+
+    /**
+     * Use the {@link Configuration} passed in to immediately connect to a database. If the {@link Connection} fails a
+     * {@link RuntimeException} will be thrown.
+     * 
+     * @param conn
      *            Connection created in the time of calling the newConnection
      * @param config
      *            Configuration required to obtain a valid connection.
@@ -90,6 +164,93 @@ public class DatabaseTableConnection extends DatabaseConnection {
         this.config = config;
         this.sms = createMappingStrategy(conn, config);
         log.ok("New DatabaseTableConnection for : {0}", config.getUser());
+    }
+
+    /**
+     * The strategy utility
+     * 
+     * @param conn
+     * @param config
+     * @return the created strategy
+     */
+    public MappingStrategy createMappingStrategy(Connection conn, DatabaseTableConfiguration config) {
+        log.info("Create: DefaultStrategy");
+        log.info("Append: JdbcConvertor");
+        // tail is always convert to jdbc and do the default statement
+        MappingStrategy tail = new JdbcConvertor(new DefaultStrategy());
+        if (!config.isAllNative()) {
+            log.info("Append: StringStrategy");
+            // Backward compatibility is to read and write as string all attributes which make sance to read 
+            tail = new StringStrategy(tail);
+            // Native timestamps will read as timestamp and convert to String
+            if (config.isNativeTimestamps()) {
+                log.info("Append: NativeTimestampsStrategy");
+                tail = new NativeTimestampsStrategy(tail);
+            }
+        }
+        // head is convert all attributes to acceptable type, if they are not already
+        log.info("Append: AttributeConvertor");
+        return new AttributeConvertor(tail);
+    }
+
+    /**
+     * Get the Column Values map
+     * 
+     * @param result
+     * @return the result of Column Values map
+     * @throws SQLException
+     */
+    public Map<String, SQLParam> getColumnValues(ResultSet result) throws SQLException {
+        return DatabaseTableSQLUtil.getColumnValues(sms, result);
+    }
+
+    /**
+     * Accessor for the sms property
+     * 
+     * @return the sms
+     */
+    public MappingStrategy getSms() {
+        return sms;
+    }
+
+    /**
+     * Indirect call of prepareCall statement with mapped callable statement parameters
+     * 
+     * @param sql
+     *            a <CODE>String</CODE> sql statement definition
+     * @param params
+     *            the bind parameter values
+     * @return return a callable statement
+     * @throws SQLException
+     *             an exception in statement
+     */
+    @Override
+    public CallableStatement prepareCall(final String sql, final List<SQLParam> params) throws SQLException {
+        log.info("Prepare SQL Call : {0}", sql);
+        final CallableStatement prepareCall = getConnection().prepareCall(sql);
+        DatabaseTableSQLUtil.setParams(sms, prepareCall, params);
+        log.ok("SQL Call statement ok");
+        return prepareCall;
+    }
+
+    /**
+     * Indirect call of prepare statement with mapped prepare statement parameters
+     * 
+     * @param sql
+     *            a <CODE>String</CODE> sql statement definition
+     * @param params
+     *            the bind parameter values
+     * @return return a prepared statement
+     * @throws SQLException
+     *             an exception in statement
+     */
+    @Override
+    public PreparedStatement prepareStatement(final String sql, final List<SQLParam> params) throws SQLException {
+        log.info("Prepare SQL Statement : {0}", sql);
+        final PreparedStatement prepareStatement = getConnection().prepareStatement(sql);
+        DatabaseTableSQLUtil.setParams(sms, prepareStatement, params);
+        log.ok("SQL Statement ok");
+        return prepareStatement;
     }
 
     /**
@@ -130,148 +291,34 @@ public class DatabaseTableConnection extends DatabaseConnection {
             }
         }        
     }
-    
 
     /**
-     * Indirect call of prepare statement with mapped prepare statement parameters
-     * @param sql a <CODE>String</CODE> sql statement definition
-     * @param params the bind parameter values
-     * @return return a prepared statement
-     * @throws SQLException an exception in statement
-     */
-    @Override
-    public PreparedStatement prepareStatement(final String sql, final List<SQLParam> params) throws SQLException {
-        log.info("Prepare SQL Statement : {0}", sql);        
-        final PreparedStatement prepareStatement = getConnection().prepareStatement(sql);
-        DatabaseTableSQLUtil.setParams(sms, prepareStatement, params);
-        log.ok("SQL Statement ok");        
-        return prepareStatement;
-    }
-
-    /**
-     * Indirect call of prepareCall statement with mapped callable statement parameters
-     * @param sql a <CODE>String</CODE> sql statement definition
-     * @param params the bind parameter values
-     * @return return a callable statement
-     * @throws SQLException an exception in statement
-     */
-    @Override
-    public CallableStatement prepareCall(final String sql, final List<SQLParam> params) throws SQLException {
-        log.info("Prepare SQL Call : {0}", sql);        
-        final CallableStatement prepareCall = getConnection().prepareCall(sql);
-        DatabaseTableSQLUtil.setParams(sms, prepareCall, params);
-        log.ok("SQL Call statement ok");        
-        return prepareCall;
-    }     
-
-    /**
-     * Get the instance method
+     * Setter for the sms
      * 
-     * @param config a {@link DatabaseTableConfiguration} object
-     * @return a new {@link DatabaseTableConnection} connection
-     */
-    static DatabaseTableConnection getConnection(DatabaseTableConfiguration config) {
-        java.sql.Connection connection;
-        final String login = config.getUser();
-        final GuardedString password = config.getPassword();
-        final String datasource = config.getDatasource();
-        if (StringUtil.isNotBlank(datasource)) {
-            log.info("Get a new connection using datasource {0}", datasource);
-            final String[] jndiProperties = config.getJndiProperties();
-            final ConnectorMessages connectorMessages = config.getConnectorMessages();
-            final Hashtable<String, String> prop = JNDIUtil.arrayToHashtable(jndiProperties, connectorMessages);
-            if (StringUtil.isNotBlank(login) && password != null) {
-                connection = SQLUtil.getDatasourceConnection(datasource, login, password, prop);
-            } else {
-                connection = SQLUtil.getDatasourceConnection(datasource, prop);
-            }
-            log.ok("The new connection using datasource {0} created", datasource);
-        } else {
-            final String driver = config.getJdbcDriver();
-            final String connectionUrl = config.formatUrlTemplate();
-            log.info("Get a new connection using connection url {0} and user {1}", connectionUrl, login);
-            connection = SQLUtil.getDriverMangerConnection(driver, connectionUrl, login, password);
-            log.ok("The new connection using connection url {0} and user {1} created", connectionUrl, login);
-        }
-
-        /* On Oracle enable the synonyms */
-        try {
-            Class<?> clazz = Class.forName("oracle.jdbc.OracleConnection");
-            if (clazz != null && clazz.isAssignableFrom(connection.getClass())) {
-                try {
-                    log.info("setIncludeSynonyms on ORACLE");
-                    Method m = clazz.getMethod("setIncludeSynonyms", boolean.class);
-                    m.invoke(connection, Boolean.TRUE);
-                    log.ok("setIncludeSynonyms success");
-                } catch (Exception e) {
-                    log.error(e, "setIncludeSynonyms on ORACLE exception");
-                }
-            }
-        } catch (ClassNotFoundException e) {
-            //expected
-        }        
-        
-        //Disable auto-commit mode
-        try {
-            log.info("setAutoCommit(false)");
-            connection.setAutoCommit(false);
-        } catch (SQLException expected) {
-            //expected
-            log.error(expected, "setAutoCommit(false) exception");
-        }
-
-        return new DatabaseTableConnection(connection, config);
-    }
-
-    /**
-     * Get the Column Values map
-     * @param result
-     * @return the result of Column Values map
-     * @throws SQLException 
-     */
-    public Map<String, SQLParam> getColumnValues(ResultSet result) throws SQLException {
-       return DatabaseTableSQLUtil.getColumnValues(sms, result);
-    }
-
-    /**
-     * Accessor for the sms property
-     * @return the sms
-     */
-    public MappingStrategy getSms() {
-        return sms;
-    }
-    
-    /**
-     * Setter for the sms 
-     * @param sms the strategy
+     * @param sms
+     *            the strategy
      */
     void setSms(MappingStrategy sms) {
         this.sms = sms;
-    }    
-
+    }
+    
     /**
-     * The strategy utility
-     * @param conn
-     * @param config
-     * @return the created strategy
+     * Close connection if pooled
      */
-    public MappingStrategy createMappingStrategy(Connection conn, DatabaseTableConfiguration config) {
-        log.info("Create: DefaultStrategy");                
-        log.info("Append: JdbcConvertor");
-        // tail is always convert to jdbc and do the default statement
-        MappingStrategy tail = new JdbcConvertor(new DefaultStrategy());
-        if(!config.isAllNative()) {
-            log.info("Append: StringStrategy");                
-            // Backward compatibility is to read and write as string all attributes which make sance to read 
-            tail = new StringStrategy(tail);            
-            // Native timestamps will read as timestamp and convert to String
-            if(config.isNativeTimestamps()) {
-                log.info("Append: NativeTimestampsStrategy");                
-                tail = new NativeTimestampsStrategy(tail);
-            }                       
-        }        
-        // head is convert all attributes to acceptable type, if they are not already
-        log.info("Append: AttributeConvertor");                
-        return new AttributeConvertor(tail);
+    void closeConnection() {
+        if( getConnection() != null && StringUtil.isNotBlank(config.getDatasource()) /*&& this.conn.getConnection() instanceof PooledConnection */) {
+            log.info("Close the pooled connection");
+            dispose();
+        }
+    }
+    /**
+     * Create new connection if pooled and taken from the datasource
+     * @throws SQLException
+     */
+    void openConnection() throws SQLException {
+        if (getConnection() == null || getConnection().isClosed()) {
+            log.info("Get new connection, it is closed");
+            setConnection(getNativeConnection(config));
+        }
     }    
 }

@@ -578,7 +578,7 @@ public abstract class DatabaseTableTestBase {
         final String sql = MessageFormat.format(SQL_TEMPLATE, cfg.getTable(), cfg.getKeyColumn());
         con = getConnector(cfg);
         PreparedStatement ps = null;
-        DatabaseTableConnection conn = con.getConnection();
+        DatabaseTableConnection conn = DatabaseTableConnection.createDBTableConnection(cfg);
         final Set<Attribute> expected = getCreateAttributeSet(cfg);
         Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
 
@@ -759,7 +759,7 @@ public abstract class DatabaseTableTestBase {
 
         // update the last change
         PreparedStatement ps = null;
-        DatabaseTableConnection conn = con.getConnection();
+        DatabaseTableConnection conn = DatabaseTableConnection.createDBTableConnection(cfg);
         try {
             List<SQLParam> values = new ArrayList<SQLParam>();
             values.add(new SQLParam(changelog, Types.INTEGER));
@@ -805,7 +805,7 @@ public abstract class DatabaseTableTestBase {
 
         // update the last change
         PreparedStatement ps = null;
-        DatabaseTableConnection conn = con.getConnection();
+        DatabaseTableConnection conn = DatabaseTableConnection.createDBTableConnection(cfg);
         Integer changed = new Long(System.currentTimeMillis()).intValue();
         try {
             List<SQLParam> values = new ArrayList<SQLParam>();
@@ -853,7 +853,7 @@ public abstract class DatabaseTableTestBase {
 
         // update the last change
         PreparedStatement ps = null;
-        DatabaseTableConnection conn = con.getConnection();
+        DatabaseTableConnection conn = DatabaseTableConnection.createDBTableConnection(cfg);
         Integer changed = new Long(System.currentTimeMillis()).intValue();
         try {
             List<SQLParam> values = new ArrayList<SQLParam>();

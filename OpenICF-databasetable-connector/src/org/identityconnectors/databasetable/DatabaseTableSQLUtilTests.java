@@ -85,8 +85,8 @@ public class DatabaseTableSQLUtilTests {
         
         final DefaultStrategy derbyDbStrategy = new DefaultStrategy();
         final Map<String, SQLParam> actual = DatabaseTableSQLUtil.getColumnValues(derbyDbStrategy, resultSetProxy);
-        assertTrue(trs.isDone());
-        assertTrue(trsmd.isDone());
+        assertTrue("getString not called", trs.isDone());
+        assertTrue("getColumnType not called", trsmd.isDone());
         assertEquals(2, actual.size());
         final SQLParam tv1 =  actual.get(TEST1);
         Assert.assertNotNull(tv1);
@@ -136,13 +136,13 @@ public class DatabaseTableSQLUtilTests {
         mse.expect("setSQLParam");
         
         DatabaseTableSQLUtil.setParams(ms, ps, params );
-        mse.isDone();
-        pse.isDone();
+        assertTrue("setSQLParam not called", mse.isDone());
+        assertTrue("setSQLParam not called", pse.isDone());
 
         mse.expect("setSQLParam");       
         mse.expect("setSQLParam");
         DatabaseTableSQLUtil.setParams(ms, cs, params);
-        mse.isDone();
-        cse.isDone();
+        assertTrue("setSQLParam not called", mse.isDone());
+        assertTrue("setSQLParam not called", cse.isDone());
     }        
 }
