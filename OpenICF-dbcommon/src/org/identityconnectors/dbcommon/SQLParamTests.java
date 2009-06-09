@@ -59,6 +59,7 @@ public class SQLParamTests {
         assertEquals("b", list.get(1).getValue());
         assertEquals(5, list.get(2).getValue());
         assertEquals(0, list.get(0).getSqlType());
+        System.out.print(list);
     }
 }
 

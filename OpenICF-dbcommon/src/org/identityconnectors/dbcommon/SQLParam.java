@@ -28,6 +28,7 @@ import java.util.List;
 
 import org.identityconnectors.common.Pair;
 
+
 /**
  * The SQL parameter / util class
  * 
@@ -104,6 +105,43 @@ public final class SQLParam {
 
     @Override
     public String toString() {
-        return param.toString();
+        StringBuilder ret = new StringBuilder("\""+getValue().toString()+"\":[");
+        switch (getSqlType()) {
+        case Types.ARRAY: ret.append("ARRAY"); break;
+        case Types.BIGINT: ret.append("BIGINT"); break;
+        case Types.BINARY: ret.append("BINARY"); break;
+        case Types.BIT: ret.append("BIT"); break;
+        case Types.BLOB: ret.append("BLOB"); break;
+        case Types.BOOLEAN: ret.append("BOOLEAN"); break;
+        case Types.CHAR: ret.append("CHAR"); break;
+        case Types.CLOB: ret.append("CLOB"); break;
+        case Types.DATALINK: ret.append("DATALINK"); break;
+        case Types.DATE: ret.append("DATE"); break;
+        case Types.DECIMAL: ret.append("DECIMAL"); break;
+        case Types.DISTINCT: ret.append("DISTINCT"); break;
+        case Types.DOUBLE: ret.append("DOUBLE"); break;
+        case Types.FLOAT: ret.append("FLOAT"); break;
+        case Types.INTEGER: ret.append("INTEGER"); break;
+        case Types.JAVA_OBJECT: ret.append("JAVA_OBJECT"); break;
+        case Types.LONGVARBINARY: ret.append("LONGVARBINARY"); break;
+        case Types.LONGVARCHAR: ret.append("LONGVARCHAR"); break;
+        case Types.NULL: ret.append("NULL"); break;
+        case Types.NUMERIC: ret.append("NUMERIC"); break;
+        case Types.OTHER: ret.append("OTHER"); break;
+        case Types.REAL: ret.append("REAL"); break;
+        case Types.REF: ret.append("REF"); break;
+        case Types.SMALLINT: ret.append("SMALLINT"); break;
+        case Types.STRUCT: ret.append("STRUCT"); break;
+        case Types.TIME: ret.append("TIME"); break;
+        case Types.TIMESTAMP: ret.append("TIMESTAMP"); break;
+        case Types.TINYINT: ret.append("TINYINT"); break;
+        case Types.VARBINARY: ret.append("VARBINARY"); break;
+        case Types.VARCHAR: ret.append("VARCHAR"); break;
+        default:
+            ret.append("SQL Type"+getSqlType());
+        }
+        ret.append("]");
+        return ret.toString();
+        
     }
 }

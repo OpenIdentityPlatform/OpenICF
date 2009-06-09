@@ -131,9 +131,14 @@ public class LocalizedAssertTest {
             new LocalizedAssert(null);
             fail("Must fail for null ConnectorMessages");
         }
-        catch(RuntimeException e){}
+        catch(RuntimeException e){
+            //emptyS
+        }
     }
     
+    /** 
+     * test method
+     */
     @Test
     public void testLocalizeArgumentNames(){
     	LocalizedAssert la = new LocalizedAssert(new TestConnectorMessages(),true);

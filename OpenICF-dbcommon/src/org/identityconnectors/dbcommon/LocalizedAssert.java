@@ -30,7 +30,7 @@ public class LocalizedAssert {
     /**
      * Creates asserts with messages with flag whether to localize argument names
      * @param cm
-     * @param localizeAruments
+     * @param localizeArguments the arg
      * @throws IllegalArgumentException if cm param is null
      */
     public LocalizedAssert(ConnectorMessages cm, boolean localizeArguments){

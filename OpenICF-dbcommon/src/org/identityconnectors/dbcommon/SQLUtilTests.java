@@ -74,14 +74,14 @@ public class SQLUtilTests {
         Connection c = tp.getProxy(Connection.class);
         DatabaseConnection dbc = new DatabaseConnection(c);
         SQLUtil.closeQuietly(dbc);
-        Assert.assertTrue(tp.isDone());
+        Assert.assertTrue("close not called", tp.isDone());
         
         tp = new ExpectProxy<Connection>();
         tp.expectAndReturn("isClosed",Boolean.TRUE); 
         c = tp.getProxy(Connection.class);
         dbc = new DatabaseConnection(c);
         SQLUtil.closeQuietly(dbc);
-        Assert.assertTrue(tp.isDone());
+        Assert.assertTrue("isClosed not called", tp.isDone());
         
         //null tests
         dbc = null;
@@ -100,7 +100,7 @@ public class SQLUtilTests {
         Connection s = tp.getProxy(Connection.class);
         DatabaseConnection dbc = new DatabaseConnection(s);
         SQLUtil.rollbackQuietly(dbc);
-        Assert.assertTrue(tp.isDone());
+        Assert.assertTrue("rollback not called", tp.isDone());
         
         tp = new ExpectProxy<Connection>();
         tp.expectAndReturn("isClosed",Boolean.TRUE); 
@@ -173,7 +173,7 @@ public class SQLUtilTests {
         final Object object = SQLUtil.jdbc2AttributeValue( blob);
         assertEquals(expected[0], ((byte[]) object)[0]);
         assertEquals(expected[3], ((byte[]) object)[3]);
-        assertTrue(tb.isDone());
+        assertTrue("getBinaryStream not called", tb.isDone());
     }
     
     /**
@@ -362,8 +362,8 @@ public class SQLUtilTests {
         trs.expectAndReturn("getString", TEST_VAL2);
         
         final Map<String, SQLParam> actual = SQLUtil.getColumnValues(resultSetProxy);
-        assertTrue(trs.isDone());
-        assertTrue(trsmd.isDone());
+        assertTrue("getString not called", trs.isDone());
+        assertTrue("getColumnType not called", trsmd.isDone());
         assertEquals(2, actual.size());
         assertNotNull(actual.get(TEST1));
         assertNotNull(actual.get(TEST2));
@@ -388,49 +388,49 @@ public class SQLUtilTests {
         
         trs.expectAndReturn("getObject", TEST_STR);        
         SQLParam actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.NULL);
-        assertTrue(trs.isDone());
+        assertTrue("getObject not called", trs.isDone());
         assertNotNull(actual);
         assertEquals(TEST_STR, actual.getValue());
         
         trs.expectAndReturn("getString", TEST_STR);
         actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.VARCHAR);
-        assertTrue(trs.isDone());
+        assertTrue("getString not called", trs.isDone());
         assertNotNull(actual);
         assertEquals(TEST_STR, actual.getValue());
         
         trs.expectAndReturn("getObject", TEST_STR);
         actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.DOUBLE);
-        assertTrue(trs.isDone());
+        assertTrue("getObject not called", trs.isDone());
         assertNotNull(actual);
         assertEquals(TEST_STR, actual.getValue());
         
         trs.expectAndReturn("getObject", TEST_STR);
         actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.BLOB);
-        assertTrue(trs.isDone());
+        assertTrue("getObject not called", trs.isDone());
         assertNotNull(actual);
         assertEquals(TEST_STR, actual.getValue());        
         
         trs.expectAndReturn("getTimestamp", TEST_TMS);
         actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.TIMESTAMP);
-        assertTrue(trs.isDone());
+        assertTrue("getTimestamp not callled", trs.isDone());
         assertNotNull(actual);
         assertEquals(TEST_TMS, actual.getValue());     
         
         trs.expectAndReturn("getDate", TEST_DATE);
         actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.DATE);
-        assertTrue(trs.isDone());
+        assertTrue("getDate not called", trs.isDone());
         assertNotNull(actual);
         assertEquals(TEST_DATE, actual.getValue()); 
         
         trs.expectAndReturn("getTime", TEST_TIME);
         actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.TIME);
-        assertTrue(trs.isDone());
+        assertTrue("getTime not callled", trs.isDone());
         assertNotNull(actual);
         assertEquals(TEST_TIME, actual.getValue()); 
         
         trs.expectAndReturn("getBoolean", Boolean.TRUE);
         actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.BOOLEAN);
-        assertTrue(trs.isDone());
+        assertTrue("getBoolean not called", trs.isDone());
         assertNotNull(actual);
         assertEquals(Boolean.TRUE, actual.getValue());         
      }    
@@ -453,31 +453,31 @@ public class SQLUtilTests {
         
         trs.expect("setNull");        
         SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(null, Types.CHAR));
-        assertTrue(trs.isDone());
+        assertTrue("setNull not called", trs.isDone());
         
         trs.expect("setObject");        
         SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_STR, Types.NULL));
-        assertTrue(trs.isDone());
+        assertTrue("setObject not called", trs.isDone());
         
         trs.expect("setString");        
         SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_STR, Types.CHAR));
-        assertTrue(trs.isDone());
+        assertTrue("setString not called", trs.isDone());
         
         trs.expect("setBoolean");        
         SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(Boolean.TRUE, Types.BOOLEAN));
-        assertTrue(trs.isDone());
+        assertTrue("setBoolean not called", trs.isDone());
         
         trs.expect("setTimestamp");        
         SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_TMS, Types.TIMESTAMP));
-        assertTrue(trs.isDone());
+        assertTrue("setTimestamp not callled", trs.isDone());
         
         trs.expect("setTime");        
         SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_TIME, Types.TIME));
-        assertTrue(trs.isDone());
+        assertTrue("setTime not callled", trs.isDone());
         
         trs.expect("setDate");        
         SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_DATE, Types.DATE));
-        assertTrue(trs.isDone());        
+        assertTrue("setDate not callled", trs.isDone());        
      }        
     
     

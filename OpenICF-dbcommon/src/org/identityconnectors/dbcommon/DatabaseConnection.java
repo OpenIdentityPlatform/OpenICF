@@ -50,7 +50,7 @@ public class DatabaseConnection  {
     /**
      * Internal JDBC connection.
      */
-    private Connection conn = null;
+    private Connection nativeConn = null;
     
     /**
      * Test constructor 
@@ -68,14 +68,14 @@ public class DatabaseConnection  {
      *             if there is a problem creating a {@link java.sql.Connection}.
      */
     public DatabaseConnection(Connection conn) {
-        this.conn = conn;
+        this.nativeConn = conn;
     }
 
     /**
      * Closes the internal {@link java.sql.Connection}.
      */
     public void dispose() {
-        SQLUtil.closeQuietly(conn);
+        SQLUtil.closeQuietly(nativeConn);
     }
 
     /**
@@ -101,12 +101,14 @@ public class DatabaseConnection  {
             
             getConnection().setAutoCommit(!getConnection().getAutoCommit());
             getConnection().setAutoCommit(!getConnection().getAutoCommit());
+            commit();
             log.info("connection tested");
         } catch (Exception e) {
             // anything, not just SQLException
             // if the connection is not valid anymore,
             // a new one will be created, so there is no
             // need to set auto commit back to its original value
+            SQLUtil.rollbackQuietly(getConnection());
             throw ConnectorException.wrap(e);
         }
     }
@@ -117,9 +119,18 @@ public class DatabaseConnection  {
      * @return the connection
      */
     public Connection getConnection() {
-        return this.conn;
+        return this.nativeConn;
     }
 
+    /**
+     * Get the internal JDBC connection.
+     * @param connection new connection
+     */
+    public void setConnection(Connection connection) {
+        this.nativeConn = connection;
+    }
+
+    
     /**
      * Indirect call of prepare statement with mapped prepare statement parameters
      * @param sql a <CODE>String</CODE> sql statement definition
