@@ -105,7 +105,7 @@ public final class SQLParam {
 
     @Override
     public String toString() {
-        StringBuilder ret = new StringBuilder("\""+getValue().toString()+"\":[");
+        StringBuilder ret = new StringBuilder("\""+getValue()+"\":[");
         switch (getSqlType()) {
         case Types.ARRAY: ret.append("ARRAY"); break;
         case Types.BIGINT: ret.append("BIGINT"); break;
