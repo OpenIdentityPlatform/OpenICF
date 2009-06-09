@@ -110,6 +110,7 @@ public class DatabaseConnectionTest {
         tp.expect("setAutoCommit");
         tp.expectAndReturn("getAutoCommit", Boolean.TRUE);
         tp.expect("setAutoCommit");
+        tp.expect("commit");
         DatabaseConnection dbc = new DatabaseConnection(tp.getProxy(Connection.class));
         dbc.test();
         assertTrue("test called", tp.isDone());
