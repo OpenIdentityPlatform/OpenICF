@@ -207,7 +207,7 @@ public abstract class DatabaseTableTestBase {
         DatabaseTableConfiguration cfg = getConfiguration();
         DatabaseTableConnector con = getConnector(cfg);
 
-        deleteAllFromAccounts(con.getConnection());
+        deleteAllFromAccounts(con.getConn());
         Set<Attribute> expected = getCreateAttributeSet(cfg);
         Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
         // attempt to get the record back..
@@ -654,7 +654,7 @@ public abstract class DatabaseTableTestBase {
         // create connector
         final DatabaseTableConfiguration cfg = getConfiguration();
         con = getConnector(cfg);
-        deleteAllFromAccounts(con.getConnection());
+        deleteAllFromAccounts(con.getConn());
         final Set<Attribute> expected = getCreateAttributeSet(cfg);
 
         // create the object

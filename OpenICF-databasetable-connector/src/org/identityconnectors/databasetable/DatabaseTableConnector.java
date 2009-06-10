@@ -160,17 +160,28 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      * @see org.identityconnectors.framework.spi.PoolableConnector#init(Configuration)
      */
     public void checkAlive() {
-        log.info("checkAlive DatabaseTable connector");                
-        conn.test();
-        conn.commit();
+        log.info("checkAlive DatabaseTable connector");
+        try {
+            if ( StringUtil.isNotBlank(config.getDatasource())) {
+                openConnection();
+            } else {
+                getConn().test();
+                commit();
+            }
+        } catch (SQLException e) {
+          log.error(e, "error in checkAlive");
+          throw ConnectorException.wrap(e);
+        } 
+        //Check alive will not close the connection, the next API call is expected
         log.ok("checkAlive DatabaseTable connector ok");                
     }
     
     /**
      * The connector connection access method
      * @return connection
+     * @throws SQLException 
      */
-    DatabaseTableConnection getConnection() {
+    DatabaseTableConnection getConn() {
         return conn;
     }    
 
@@ -236,7 +247,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         }
         log.info("process and check the Attribute Set");                
         //All attribute names should be in create columns statement 
-        for (Attribute attr : attrs) {
+        for (Attribute attr : attrs) {            
             // quoted column name
             final String columnName = getColumnName(attr.getName());
             Object value = AttributeUtil.getSingleValue(attr);
@@ -267,22 +278,23 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
 
         PreparedStatement pstmt = null;
         try {
-            pstmt = conn.prepareStatement(sql, bld.getParams());
+            openConnection();
+            pstmt = getConn().prepareStatement(sql, bld.getParams());
             // execute the SQL statement
             pstmt.execute();
-           
+            log.info("Create account {0} commit", accountName);
+            commit();                    
         } catch (SQLException e) {
             log.error(e, "Create account ''{0}'' error", accountName);
             if (throwIt(e.getErrorCode()) ) {            
-                SQLUtil.rollbackQuietly(conn);
+                SQLUtil.rollbackQuietly(getConn());
                 throw new ConnectorException(config.getMessage(MSG_CAN_NOT_CREATE, accountName), e);
             }            
         } finally {
             // clean up...
-            SQLUtil.closeQuietly(pstmt);
+            SQLUtil.closeQuietly(pstmt);            
+            closeConnection();
         }
-        log.info("Create account {0} commit", accountName);
-        conn.commit();         
         log.ok("Account {0} created", accountName);
         // create and return the uid..
         return new Uid(accountName);
@@ -341,8 +353,9 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         final String sql = MessageFormat.format(SQL_DELETE, tblname, keycol);
         try {
             log.info("delete account SQL {0}", sql);
+            openConnection();
             // create a prepared call..
-            stmt = conn.getConnection().prepareStatement(sql);
+            stmt = getConn().getConnection().prepareStatement(sql);
             // set object to delete..
             stmt.setString(1, accountUid);
             // uid to delete..
@@ -350,24 +363,25 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             final int dr = stmt.executeUpdate();
             if (dr < 1) {
                 log.error("No account Uid: {0} found", accountUid);
-                SQLUtil.rollbackQuietly(conn);
+                SQLUtil.rollbackQuietly(getConn());
                 throw new UnknownUidException();
             }
             if (dr > 1) {
-                log.error("Mre then one account Uid: {0} found", accountUid);
-                SQLUtil.rollbackQuietly(conn);
+                log.error("More then one account Uid: {0} found", accountUid);
+                SQLUtil.rollbackQuietly(getConn());
                 throw new IllegalArgumentException(config.getMessage(MSG_MORE_USERS_DELETED, accountUid));
             }            
+            log.info("Delete account {0} commit", accountUid);
+            commit();
         } catch (SQLException e) {
             log.error(e, "Delete account ''{0}'' SQL error", accountUid);
-            SQLUtil.rollbackQuietly(conn);
+            SQLUtil.rollbackQuietly(getConn());
             throw new ConnectorException(config.getMessage(MSG_CAN_NOT_DELETE, accountUid), e);
         } finally {
             // clean up..
             SQLUtil.closeQuietly(stmt);
+            closeConnection();
         }
-        log.info("Delete account {0} commit", accountUid);
-        conn.commit();
         log.ok("Account Uid {0} deleted", accountUid);
     }
 
@@ -441,22 +455,25 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         final String sql = MessageFormat.format(SQL_TEMPLATE, tblname ,updateSet.getSQL(), keycol );                
         PreparedStatement stmt = null;
         try {
+            openConnection();            
             // create the prepared statement..
-            stmt = conn.prepareStatement(sql, updateSet.getParams());
+            stmt = getConn().prepareStatement(sql, updateSet.getParams());
             stmt.executeUpdate();
+            // commit changes
+            log.info("Update account {0} commit", accountName);
+            commit();
         } catch (SQLException e) {
             log.error(e, "Update account {0} error", accountName);
             if (throwIt(e.getErrorCode()) ) {            
-                SQLUtil.rollbackQuietly(conn);
+                SQLUtil.rollbackQuietly(getConn());
                 throw new ConnectorException(config.getMessage(MSG_CAN_NOT_UPDATE, accountName), e);                
             }
         } finally {
             // clean up..
             SQLUtil.closeQuietly(stmt);
+            
+            closeConnection();
         }
-        // commit changes
-        log.info("Update account {0} commit", accountName);
-        conn.commit();
         log.ok("Account {0} updated", accountName);
         return ret;
     }    
@@ -512,11 +529,12 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         ResultSet result = null;
         PreparedStatement statement = null;
         try {
-            statement = conn.prepareStatement(query);
+            openConnection();
+            statement = getConn().prepareStatement(query);
             result = statement.executeQuery();
             log.ok("executeQuery {0} on {1}", query.getSQL(), oclass);
             while (result.next()) {
-                final Map<String, SQLParam> columnValues = conn.getColumnValues(result);
+                final Map<String, SQLParam> columnValues = getConn().getColumnValues(result);
                 log.ok("Column values {0} from result set ", columnValues);
                 // create the connector object
                 final ConnectorObjectBuilder bld = buildConnectorObject(columnValues);
@@ -525,19 +543,20 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
                     break;
                 }
             }
+            // commit changes
+            log.info("commit executeQuery account");
+            commit();            
         } catch (SQLException e) {
             log.error(e, "Query {0} on {1} error", query.getSQL(), oclass);    
-            SQLUtil.rollbackQuietly(conn);
+            SQLUtil.rollbackQuietly(getConn());
             if (throwIt(e.getErrorCode()) ) {
                 throw new ConnectorException(config.getMessage(MSG_CAN_NOT_READ, tblname), e);
             }             
         } finally {
             SQLUtil.closeQuietly(result);
             SQLUtil.closeQuietly(statement);
+            closeConnection();
         }
-        // commit changes
-        log.info("commit executeQuery account");
-        conn.commit();
         log.ok("Query Account commited");        
     }
 
@@ -591,11 +610,13 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         ResultSet result = null;
         PreparedStatement statement = null;
         try {
-            statement = conn.prepareStatement(query);
+            openConnection();
+            
+            statement = getConn().prepareStatement(query);
             result = statement.executeQuery();
             log.info("execute sync query {0} on {1}", query.getSQL(), oclass);
             while (result.next()) {
-                final Map<String, SQLParam> columnValues = conn.getColumnValues(result);
+                final Map<String, SQLParam> columnValues = getConn().getColumnValues(result);
                 log.ok("Column values {0} from sync result set ", columnValues);
                 
                 // create the connector object..
@@ -605,17 +626,19 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
                     break;
                 }
             }
+            // commit changes
+            log.info("commit sync account");
+            commit();            
         } catch (SQLException e) {
             log.error(e, "sync {0} on {1} error", query.getSQL(), oclass);
-            SQLUtil.rollbackQuietly(conn);
+            SQLUtil.rollbackQuietly(getConn());
             throw new ConnectorException(config.getMessage(MSG_CAN_NOT_READ, tblname), e);              
         } finally {
             SQLUtil.closeQuietly(result);
             SQLUtil.closeQuietly(statement);
+            
+            closeConnection();
         }      
-        // commit changes
-        log.info("commit sync account");
-        conn.commit();
         log.ok("Sync Account commited");        
     }
     
@@ -644,8 +667,9 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         PreparedStatement stmt = null;
         ResultSet rset = null;
         try {
+            openConnection();
             // create the prepared statement..
-            stmt = conn.getConnection().prepareStatement(sql);
+            stmt = getConn().getConnection().prepareStatement(sql);
             rset = stmt.executeQuery();
             log.ok("The statement {0} executed", sql);               
             if (rset.next()) {
@@ -656,18 +680,21 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             	}
             }
             log.ok("getLatestSyncToken", ret);
+            // commit changes
+            log.info("commit getLatestSyncToken");
+            commit();            
         } catch (SQLException e) {  
             log.error(e, "getLatestSyncToken sql {0} on {1} error", sql, oclass);  
-            SQLUtil.rollbackQuietly(conn);
+            SQLUtil.rollbackQuietly(getConn());
             throw new ConnectorException(config.getMessage(MSG_CAN_NOT_READ, tblname), e);                            
         } finally {
             // clean up..
             SQLUtil.closeQuietly(rset);
             SQLUtil.closeQuietly(stmt);
+            
+            closeConnection();
         }
-        // commit changes
-        log.info("commit getLatestSyncToken");
-        conn.commit();
+
         log.ok("getLatestSyncToken commited");          
         return ret;
     }
@@ -681,12 +708,20 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      * @see SchemaOp#schema()
      */
     public Schema schema() {
-        if (schema == null) {
-            log.info("cache schema");
-            cacheSchema();
+        try {
+            openConnection();
+            if (schema == null) {
+                log.info("cache schema");
+                cacheSchema();
+            }
+            assert schema != null;
+            commit();
+        } catch (SQLException e) {
+            log.error(e, "error in schema");
+            throw ConnectorException.wrap(e);
+        } finally {
+            closeConnection();
         }
-        assert schema != null;
-        conn.commit();
         log.ok("schema");
         return schema;
     }
@@ -698,9 +733,38 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      */
     public void test() {
         log.info("test");
-        conn.test();        
-        conn.commit();
+        try {
+            openConnection();
+            getConn().test();        
+            commit();
+        } catch (SQLException e) {
+            log.error(e, "error in test");
+            throw ConnectorException.wrap(e);
+        } finally {
+            closeConnection();
+        }
         log.ok("connector test ok");
+    }
+
+    /**
+     * 
+     */
+    private void closeConnection() {
+        getConn().closeConnection();
+    }
+
+    /**
+     * @throws SQLException
+     */
+    private void openConnection() throws SQLException {
+        getConn().openConnection();
+    }
+
+    /**
+     * @throws SQLException
+     */
+    private void commit() throws SQLException {
+        getConn().getConnection().commit();
     }
         
     /**
@@ -745,7 +809,9 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         try {
             // replace the ? in the SQL_AUTH statement with real data
             log.info("authenticate Account: {0}", username);
-            stmt = conn.prepareStatement(sql, values);
+            openConnection();
+            
+            stmt = getConn().prepareStatement(sql, values);
             result = stmt.executeQuery();
             log.ok("authenticate query for account {0} executed ", username);
             //No PasswordExpired capability
@@ -754,17 +820,19 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
                 throw new InvalidCredentialException(config.getMessage(MSG_AUTH_FAILED, username)); 
             }
             uid = new Uid( result.getString(1));
+            // commit changes
+            log.info("commit authenticate");
+            commit();
         } catch (SQLException e) {
             log.error(e, "Account: {0} authentication failed ", username);
-            SQLUtil.rollbackQuietly(conn);
+            SQLUtil.rollbackQuietly(getConn());
             throw new ConnectorException(config.getMessage(MSG_CAN_NOT_READ, config.getTable()), e);
         } finally {
             SQLUtil.closeQuietly(result);
             SQLUtil.closeQuietly(stmt);
+            
+            closeConnection();
         }
-        // commit changes
-        log.info("commit authenticate");
-        conn.commit();
         log.info("Account: {0} authenticated ", username);
         return uid;
     }
@@ -899,24 +967,24 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         Statement stmt = null;
         try {
             // create the query..
-            stmt = conn.getConnection().createStatement();
+            stmt = getConn().getConnection().createStatement();
 
             log.info("executeQuery ''{0}''", sql);
             rset = stmt.executeQuery(sql);
             log.ok("query executed");
             // get the results queued..
             attrInfo = buildAttributeInfoSet(rset);
+            // commit changes
+            log.info("commit get schema");
+            commit();               
         } catch (SQLException ex) {
             log.error(ex, "buildSelectBasedAttributeInfo in SQL: ''{0}''", sql);
-            SQLUtil.rollbackQuietly(conn);
+            SQLUtil.rollbackQuietly(getConn());
             throw new ConnectorException(config.getMessage(MSG_CAN_NOT_READ, config.getTable()), ex);
         } finally {
             SQLUtil.closeQuietly(rset);
             SQLUtil.closeQuietly(stmt);
-        }
-        // commit changes
-        log.info("commit get schema");
-        conn.commit();        
+        }     
         log.ok("schema created");
         return attrInfo;
     }
@@ -956,7 +1024,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
                 log.ok("skip changelog column from the schema");
             } else {
                 // All other attributed taken from the table
-                final Class<?> dataType = conn.getSms().getSQLAttributeType(columnType);
+                final Class<?> dataType = getConn().getSms().getSQLAttributeType(columnType);
                 attrBld.setType(dataType);
                 attrBld.setName(name);
                 final boolean required = meta.isNullable(i)==ResultSetMetaData.columnNoNulls;

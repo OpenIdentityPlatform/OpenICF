@@ -29,6 +29,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -39,9 +42,15 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.naming.Context;
+import javax.naming.NamingException;
+import javax.naming.spi.InitialContextFactory;
+import javax.sql.DataSource;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.IOUtil;
@@ -70,7 +79,7 @@ import org.junit.Test;
 /**
  * Attempts to test the Connector with the framework.
  */
-public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
+public class DatabaseTableDSDerbyTests extends DatabaseTableTestBase {
 
     /**
      * 
@@ -80,13 +89,18 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
     /**
      * 
      */
-    static final String DB_DIR = "test_db1";
+    static final String DB_DIR = "test_db2";
 
 
     /**
      * Derby's embedded driver.
      */
     static final String DRIVER = "org.apache.derby.jdbc.EmbeddedDriver";
+    
+    /**
+     * Derby's embedded ds.
+     */
+    static final String TEST_DS="testDS";
 
     /**
      * URL used to connect to a derby database.
@@ -96,7 +110,8 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
     /**
      * URL used to connect to a derby database.
      */
-    static final String URL_CREATE = URL_CONN+";create=true";    
+    static final String URL_CREATE = URL_CONN+";create=true";
+
     
     /**
      * URL used to shutdown a derby database.
@@ -105,6 +120,9 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
 
     //The tested table
     static final String DB_TABLE = "Accounts";
+
+    //jndi for datasource
+    static final String[] jndiProperties = new String[]{"java.naming.factory.initial=" + MockContextFactory.class.getName()};
 
 
 
@@ -122,7 +140,7 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
         Connection conn = null;
         Statement stmt = null;
         try {
-            Class.forName(DRIVER);            
+            Class.forName(DRIVER);             
             conn = DriverManager.getConnection(URL_CREATE, "", "");
             // create the database..
             stmt = conn.createStatement();
@@ -156,14 +174,12 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
     protected DatabaseTableConfiguration getConfiguration() throws Exception {
         DatabaseTableConfiguration config = new DatabaseTableConfiguration();
         config.setJdbcDriver(DRIVER);
-        config.setUser("");
-        config.setPassword(new GuardedString("".toCharArray()));
+        config.setDatasource(TEST_DS);
         config.setTable(DB_TABLE);
+        config.setJndiProperties(jndiProperties);
+        config.setChangeLogColumn(CHANGELOG);
         config.setKeyColumn(ACCOUNTID);
         config.setPasswordColumn(PASSWORD);
-        config.setDatabase(getDBDirectory().toString());
-        config.setJdbcUrlTemplate(URL_CONN);
-        config.setChangeLogColumn(CHANGELOG);
         config.setConnectorMessages(TestHelpers.createDummyMessages());
         return config;
     }
@@ -211,35 +227,25 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
      @Override
      protected Set<Attribute> getModifyAttributeSet(DatabaseTableConfiguration cfg) throws Exception {         
          return getCreateAttributeSet(cfg);
+     }    
+     
+     /**
+      * Make sure the Create call works..
+      * @throws Exception 
+      */
+     @Test
+     public void testCreateClosedConnection() throws Exception {
+         log.ok("testCreateClosedConnection");
+         DatabaseTableConfiguration cfg = getConfiguration();
+         DatabaseTableConnector con = getConnector(cfg);
+
+         Set<Attribute> expected = getCreateAttributeSet(cfg);
+         con.create(ObjectClass.ACCOUNT, expected, null);
+         // attempt to get the record back..
+         
+         assertEquals("Connection should be closed", true,
+                 con.getConn().getConnection().isClosed());
      }     
-
-    /**
-     * test method
-     */
-    @Override
-    @Test
-    public void testConfiguration() {
-        // attempt to test driver info..
-        DatabaseTableConfiguration config = new DatabaseTableConfiguration();
-        // check defaults..        
-        config.setJdbcDriver(DRIVER);
-        assertEquals(DRIVER, config.getJdbcDriver());
-        config.setKeyColumn(ACCOUNTID);
-        assertEquals(ACCOUNTID, config.getKeyColumn());
-        config.setTable(DB_TABLE);
-        assertEquals(DB_TABLE, config.getTable());
-        config.setJdbcUrlTemplate(URL_CONN);
-        assertEquals(URL_CONN, config.getJdbcUrlTemplate());
-        config.setDatabase(getDBDirectory().toString());
-        assertEquals(getDBDirectory().toString(), config.getDatabase());        
-        config.setUser(ACCOUNTID);
-        assertEquals(ACCOUNTID, config.getUser());
-        config.setPassword(new GuardedString("".toCharArray()));
-        assertEquals(ACCOUNTID, config.getUser());
-        config.validate();
-    }
-    
-
 
     /**
      * For testing purposes we creating connection an not the framework.
@@ -415,12 +421,56 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
     }     
     
     static String getResourceAsString(String res) {
-        return IOUtil.getResourceAsString(DatabaseTableDerbyTests.class, res);
+        return IOUtil.getResourceAsString(DatabaseTableDSDerbyTests.class, res);
     }    
-    
+
+    /**
+     * Context is set in jndiProperties
+     */
+    public static class MockContextFactory implements InitialContextFactory {
+
+        @SuppressWarnings("unchecked")
+        public Context getInitialContext(Hashtable environment) throws NamingException {
+            Context context = (Context) Proxy.newProxyInstance(getClass().getClassLoader(),
+                    new Class[] { Context.class }, new ContextIH());
+            return context;
+        }
+    }
+   
+    /**
+     *  MockContextFactory create the ContextIH
+     *  The looup method will return DataSourceIH
+     */
+    static class ContextIH implements InvocationHandler {
+
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            if (method.getName().equals("lookup")) {
+                return Proxy.newProxyInstance(getClass().getClassLoader(), new Class[] { DataSource.class },
+                        new DataSourceIH());
+            }
+            return null;
+        }
+    }
+
+    /**
+     * ContextIH create DataSourceIH
+     * The getConnection method will return ConnectionIH
+     */
+    static class DataSourceIH implements InvocationHandler {
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            if (method.getName().equals("getConnection")) {
+                return DriverManager.getConnection(URL_CONN, "", "");
+            }
+            throw new IllegalArgumentException("DataSource, invalid method:"+method.getName());            
+        }
+    }      
+
+    /**
+     * The dir acces method
+     * @return
+     */
     static File getDBDirectory() {
         return new File(System.getProperty("java.io.tmpdir"), DB_DIR);
     }
-
-    
+        
 }

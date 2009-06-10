@@ -145,7 +145,7 @@ public class DatabaseTableOracleTests extends DatabaseTableTestBase{
         cfg.setTable("BUG17551");
         cfg.setNativeTimestamps(true);
         con = getConnector(cfg);
-        deleteAllFromBug(con.getConnection());
+        deleteAllFromBug(con.getConn());
         Set<Attribute> expected = getTimestampColumnAttributeSet();
         Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
         // attempt to get the record back..
@@ -174,7 +174,7 @@ public class DatabaseTableOracleTests extends DatabaseTableTestBase{
         cfg.setTable("BUG17551");
         cfg.setNativeTimestamps(false);
         con = getConnector(cfg);
-        deleteAllFromBug(con.getConnection());
+        deleteAllFromBug(con.getConn());
         Set<Attribute> expected = getTimestampColumnAttributeSet();
         Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
         // attempt to get the record back..
