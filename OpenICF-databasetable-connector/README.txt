@@ -1,7 +1,9 @@
 Changelog:
-
+Version 1.1:
+ When datasource is configured, added closing connections functionality  
 Version 1.0:
  Initial version
+ 
 
 Supported JDBC drivers:
 =======================
