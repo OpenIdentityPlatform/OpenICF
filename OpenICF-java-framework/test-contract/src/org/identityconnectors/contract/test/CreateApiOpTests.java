@@ -123,7 +123,7 @@ public class CreateApiOpTests extends ObjectClassRunner {
             try{
                 unsupportedAttribute = (String) getDataProvider().getTestSuiteAttribute(NON_EXISTING_PROP_NAME, TEST_NAME);
             } catch (ObjectNotFoundException ex) {
-                unsupportedAttribute = "NONEXISTINGATTRIBUTE##__&&_$$";
+                unsupportedAttribute = "nonExistingAndUnlikelyAttrName";
             }
             
             attrs.add(AttributeBuilder.build(unsupportedAttribute));

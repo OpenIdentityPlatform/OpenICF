@@ -391,7 +391,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                                 .getTestSuiteAttribute(NON_EXISTING_PROP_NAME,
                                         TEST_NAME);
                     } catch (ObjectNotFoundException ex) {
-                        unsupportedAttribute = "NONEXISTINGATTRIBUTE##__&&_$$";
+                        unsupportedAttribute = "nonExistingAndUnlikelyAttrName";
                     }
                     // + add one non-existing attribute
                     replaceAttributes.add(AttributeBuilder
