@@ -25,6 +25,7 @@ package org.identityconnectors.framework.spi.operations;
 import java.util.Set;
 
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
+import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
@@ -67,6 +68,8 @@ public interface UpdateAttributeValuesOp extends UpdateOp {
      *            Will never be null.
      * @return the {@link Uid} of the updated object in case the update changes
      *         the formation of the unique identifier.
+     * @throws UnknownUidException
+     *            iff the {@link Uid} does not exist on the resource.
      */
     public Uid addAttributeValues(ObjectClass objclass,
             Uid uid,
@@ -101,6 +104,8 @@ public interface UpdateAttributeValuesOp extends UpdateOp {
      *            Will never be null..
      * @return the {@link Uid} of the updated object in case the update changes
      *         the formation of the unique identifier.
+     * @throws UnknownUidException
+     *            iff the {@link Uid} does not exist on the resource.
      */
     public Uid removeAttributeValues(ObjectClass objclass,
             Uid uid,
