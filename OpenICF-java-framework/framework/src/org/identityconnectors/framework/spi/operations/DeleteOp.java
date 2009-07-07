@@ -50,7 +50,7 @@ public interface DeleteOp extends SPIOperation {
      *            an empty set of options, so SPI need not worry
      *            about this ever being null.
      * @throws UnknownUidException
-     *             iff the {@link Uid} does not exist on the resource.
+     *            iff the {@link Uid} does not exist on the resource.
      */
     void delete(final ObjectClass objClass, final Uid uid, final OperationOptions options);
 }

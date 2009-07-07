@@ -40,10 +40,10 @@ public interface DeleteApiOp extends APIOperation {
      *            additional options that impact the way this operation is run.
      *            May be null.
      * @throws UnknownUidException
-     *             iff the {@link Uid} does not exist on the resource.
+     *            iff the {@link Uid} does not exist on the resource.
      * @throws RuntimeException
-     *             iff the is issue during the operation for instance an
-     *             operational timeout.
+     *            iff a problem occurs during the operation (for instance, an
+     *            operational timeout).
      */
     public void delete(final ObjectClass objClass, final Uid uid, final OperationOptions options);
 }

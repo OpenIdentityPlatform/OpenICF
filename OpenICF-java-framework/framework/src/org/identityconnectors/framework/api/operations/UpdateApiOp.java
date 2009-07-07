@@ -78,7 +78,7 @@ public interface UpdateApiOp extends APIOperation {
      *            additional options that impact the way this operation is run.
      *            May be null.
      * @return the {@link Uid} of the updated object in case the update changes
-     *         the formation of the unique identifier.
+     *            the formation of the unique identifier.
      * @throws UnknownUidException
      *            iff the {@link Uid} does not exist on the resource.
      */
@@ -120,7 +120,7 @@ public interface UpdateApiOp extends APIOperation {
      *            additional options that impact the way this operation is run.
      *            May be null.
      * @return the {@link Uid} of the updated object in case the update changes
-     *         the formation of the unique identifier.
+     *            the formation of the unique identifier.
      * @throws UnknownUidException
      *            iff the {@link Uid} does not exist on the resource.
      */
@@ -163,7 +163,7 @@ public interface UpdateApiOp extends APIOperation {
      *            additional options that impact the way this operation is run.
      *            May be null.
      * @return the {@link Uid} of the updated object in case the update changes
-     *         the formation of the unique identifier.
+     *            the formation of the unique identifier.
      * @throws UnknownUidException
      *            iff the {@link Uid} does not exist on the resource.
      */
