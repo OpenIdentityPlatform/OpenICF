@@ -42,7 +42,8 @@ public interface GetApiOp extends APIOperation {
      * @param options
      *            additional options that impact the way this operation is run.
      *            May be null.
-     * @return {@link ConnectorObject} based on the {@link Uid} provided.
+     * @return {@link ConnectorObject} based on the {@link Uid} provided or
+     *            <code>null</code> if no such object could be found.
      */
     public ConnectorObject getObject(ObjectClass objClass, Uid uid, OperationOptions options);
 }
