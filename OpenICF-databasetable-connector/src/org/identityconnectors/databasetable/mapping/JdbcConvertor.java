@@ -52,9 +52,9 @@ public class JdbcConvertor implements MappingStrategy {
     /* (non-Javadoc)
      * @see org.identityconnectors.databasetable.MappingStrategy#getSQLParam(java.sql.ResultSet, int, int)
      */
-    public SQLParam getSQLParam(ResultSet resultSet, int i, final int sqlType) throws SQLException {
+    public SQLParam getSQLParam(ResultSet resultSet, int i, String name, final int sqlType) throws SQLException {
         //Default processing otherwise
-        return delegate.getSQLParam(resultSet, i, sqlType);
+        return delegate.getSQLParam(resultSet, i, name, sqlType);
     } 
     
     /* (non-Javadoc)
@@ -69,7 +69,7 @@ public class JdbcConvertor implements MappingStrategy {
      */
     public void setSQLParam(final PreparedStatement stmt, final int idx, SQLParam parm) throws SQLException {
         final Object val = SQLUtil.attribute2jdbcValue(parm.getValue(), parm.getSqlType());
-        delegate.setSQLParam(stmt, idx, new SQLParam(val, parm.getSqlType()));
+        delegate.setSQLParam(stmt, idx, new SQLParam(parm.getName(), val, parm.getSqlType()));
     }    
 }
 

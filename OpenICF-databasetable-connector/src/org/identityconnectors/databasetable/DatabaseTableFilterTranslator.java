@@ -49,15 +49,6 @@ public class DatabaseTableFilterTranslator extends DatabaseFilterTranslator {
     }
 
     /* (non-Javadoc)
-     * @see org.identityconnectors.dbcommon.DatabaseFilterTranslator#getDatabaseColumnName(org.identityconnectors.framework.common.objects.Attribute, org.identityconnectors.framework.common.objects.ObjectClass, org.identityconnectors.framework.common.objects.OperationOptions)
-     */
-    @Override
-    protected String getDatabaseColumnName(Attribute attribute, ObjectClass oclass, OperationOptions options) {
-        final String columnName = connector.getColumnName(attribute.getName());
-        return connector.quoteName(columnName);
-    }
-
-    /* (non-Javadoc)
      * @see org.identityconnectors.dbcommon.DatabaseFilterTranslator#getDatabaseColumnType(org.identityconnectors.framework.common.objects.Attribute, org.identityconnectors.framework.common.objects.ObjectClass, org.identityconnectors.framework.common.objects.OperationOptions)
      */
     @Override
@@ -65,7 +56,7 @@ public class DatabaseTableFilterTranslator extends DatabaseFilterTranslator {
         final Object value = AttributeUtil.getSingleValue(attribute);
         final String columnName = connector.getColumnName(attribute.getName());
         final Integer columnType = connector.getColumnType(columnName);
-        return new SQLParam(value,columnType);
+        return new SQLParam(columnName, value,columnType);
     }
 
 }

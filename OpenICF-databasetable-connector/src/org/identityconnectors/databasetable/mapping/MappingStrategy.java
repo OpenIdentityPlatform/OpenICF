@@ -59,11 +59,12 @@ public interface MappingStrategy {
      * Retrieve the SQL value from result set
      * @param resultSet the result set
      * @param i index
+     * @param name of the param
      * @param sqlType expected SQL type or  Types.NULL for generic
      * @return the object return the retrieved object
      * @throws SQLException any SQL error
      */
-    public SQLParam getSQLParam(ResultSet resultSet, int i, final int sqlType) throws SQLException;
+    public SQLParam getSQLParam(ResultSet resultSet, int i, String name, final int sqlType) throws SQLException;
 
     /**
      * Convert database type to connector supported set of attribute types

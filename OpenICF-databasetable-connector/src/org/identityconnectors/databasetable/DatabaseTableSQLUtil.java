@@ -112,7 +112,7 @@ public final class DatabaseTableSQLUtil {
     static void setParam(final MappingStrategy sms, final PreparedStatement stmt, final int idx, SQLParam parm) throws SQLException {
         // Guarded string conversion
         if (parm.getValue() instanceof GuardedString) {
-            setGuardedStringParam(sms, stmt, idx, (GuardedString) parm.getValue());
+            setGuardedStringParam(sms, stmt, idx, parm);
         } else {
           sms.setSQLParam(stmt, idx, parm);
         }       
@@ -134,7 +134,7 @@ public final class DatabaseTableSQLUtil {
         for (int i = 1; i <= count; i++) {
             final String name = meta.getColumnName(i);
             final int sqlType = meta.getColumnType(i);
-            final SQLParam param = sms.getSQLParam(resultSet, i, sqlType);
+            final SQLParam param = sms.getSQLParam(resultSet, i, name, sqlType);
             ret.put(name, param);
         }
         return ret;
@@ -145,17 +145,19 @@ public final class DatabaseTableSQLUtil {
      * @param sms 
      * @param stmt to bind to
      * @param idx index of the object
-     * @param guard a <CODE>GuardedString</CODE> parameter
+     * @param param a <CODE>GuardedString</CODE> parameter
      * @throws SQLException
      */
-    static void setGuardedStringParam(final MappingStrategy sms, final PreparedStatement stmt, final int idx, GuardedString guard)
+    static void setGuardedStringParam(final MappingStrategy sms, final PreparedStatement stmt, final int idx, SQLParam param)
             throws SQLException {
+        final GuardedString guard = (GuardedString) param.getValue();
+        final String name = param.getName();
         try {
             guard.access(new GuardedString.Accessor() {
                 public void access(char[] clearChars) {
                     try {
                         //Never use setString, the DB2 database will fail for secured columns
-                        sms.setSQLParam(stmt, idx, new SQLParam(new String(clearChars), Types.VARCHAR));
+                        sms.setSQLParam(stmt, idx, new SQLParam(name, new String(clearChars), Types.VARCHAR));
                     } catch (SQLException e) {
                         // checked exception are not allowed in the access method 
                         // Lets use the exception softening pattern

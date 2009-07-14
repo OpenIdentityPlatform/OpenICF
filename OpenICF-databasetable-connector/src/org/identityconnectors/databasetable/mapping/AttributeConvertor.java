@@ -52,10 +52,10 @@ public class AttributeConvertor implements MappingStrategy {
     /* (non-Javadoc)
      * @see org.identityconnectors.databasetable.MappingStrategy#getSQLParam(java.sql.ResultSet, int, int)
      */
-    public SQLParam getSQLParam(ResultSet resultSet, int i, final int sqlType) throws SQLException {
+    public SQLParam getSQLParam(ResultSet resultSet, int i, String name, final int sqlType) throws SQLException {
         // Convert all types to attribute supported types
-        final SQLParam param = delegate.getSQLParam(resultSet, i, sqlType);
-        return new SQLParam(SQLUtil.jdbc2AttributeValue(param.getValue()), sqlType); 
+        final SQLParam param = delegate.getSQLParam(resultSet, i,name, sqlType);
+        return new SQLParam(name, SQLUtil.jdbc2AttributeValue(param.getValue()), sqlType); 
     } 
     
     /* (non-Javadoc)

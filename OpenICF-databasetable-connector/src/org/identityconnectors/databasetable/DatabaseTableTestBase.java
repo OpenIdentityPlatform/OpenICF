@@ -586,7 +586,7 @@ public abstract class DatabaseTableTestBase {
         //expected.setPassword((String) null);
         try {
             List<SQLParam> values = new ArrayList<SQLParam>();
-            values.add(new SQLParam(uid.getUidValue(), Types.VARCHAR));
+            values.add(new SQLParam("user", uid.getUidValue(), Types.VARCHAR));
             ps = conn.prepareStatement(sql, values);
             ps.execute();
             conn.commit();
@@ -762,8 +762,8 @@ public abstract class DatabaseTableTestBase {
         DatabaseTableConnection conn = DatabaseTableConnection.createDBTableConnection(cfg);
         try {
             List<SQLParam> values = new ArrayList<SQLParam>();
-            values.add(new SQLParam(changelog, Types.INTEGER));
-            values.add(new SQLParam(uid.getUidValue(), Types.VARCHAR));
+            values.add(new SQLParam("changelog", changelog, Types.INTEGER));
+            values.add(new SQLParam("accountId", uid.getUidValue(), Types.VARCHAR));
             ps = conn.prepareStatement(SQL_TEMPLATE, values);
             ps.execute();
             conn.commit();
@@ -809,8 +809,8 @@ public abstract class DatabaseTableTestBase {
         Integer changed = new Long(System.currentTimeMillis()).intValue();
         try {
             List<SQLParam> values = new ArrayList<SQLParam>();
-            values.add(new SQLParam(changed, Types.INTEGER));
-            values.add(new SQLParam(uid.getUidValue(), Types.VARCHAR));
+            values.add(new SQLParam("age", changed, Types.INTEGER));
+            values.add(new SQLParam("accountId", uid.getUidValue(), Types.VARCHAR));
             ps = conn.prepareStatement(SQL_TEMPLATE, values);
             ps.execute();
             conn.commit();
@@ -857,8 +857,8 @@ public abstract class DatabaseTableTestBase {
         Integer changed = new Long(System.currentTimeMillis()).intValue();
         try {
             List<SQLParam> values = new ArrayList<SQLParam>();
-            values.add(new SQLParam(changed, Types.INTEGER));
-            values.add(new SQLParam(uid.getUidValue(), Types.VARCHAR));
+            values.add(new SQLParam("accessed", changed, Types.INTEGER));
+            values.add(new SQLParam("accountId", uid.getUidValue(), Types.VARCHAR));
             ps = conn.prepareStatement(SQL_TEMPLATE, values);
             ps.execute();
             conn.commit();

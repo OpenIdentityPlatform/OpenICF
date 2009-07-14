@@ -398,8 +398,8 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
             conn = DatabaseTableConnection.createDBTableConnection(getConfiguration());
 
             List<SQLParam> values = new ArrayList<SQLParam>();
-            values.add(new SQLParam(changelog, Types.INTEGER));
-            values.add(new SQLParam(uid.getUidValue(), Types.VARCHAR));
+            values.add(new SQLParam("changelog", changelog, Types.INTEGER));
+            values.add(new SQLParam("accountId", uid.getUidValue(), Types.VARCHAR));
             ps = conn.prepareStatement(SQL_TEMPLATE, values);
             ps.execute();
             conn.commit();

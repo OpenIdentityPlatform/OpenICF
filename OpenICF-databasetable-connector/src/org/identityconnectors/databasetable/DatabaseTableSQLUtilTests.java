@@ -130,8 +130,8 @@ public class DatabaseTableSQLUtilTests {
         CallableStatement cs = cse.getProxy(CallableStatement.class);        
         
         List<SQLParam> params = new ArrayList<SQLParam>();
-        params.add(new SQLParam("test", Types.VARCHAR));
-        params.add(new SQLParam(new GuardedString("tst".toCharArray()), Types.VARCHAR));
+        params.add(new SQLParam("test", "test", Types.VARCHAR));
+        params.add(new SQLParam("password", new GuardedString("tst".toCharArray()), Types.VARCHAR));
         mse.expect("setSQLParam");
         mse.expect("setSQLParam");
         

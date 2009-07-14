@@ -258,7 +258,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             } 
             final int sqlType = getColumnType(columnName);
             log.info("attribute {0} fit column {1} and sql type {2}", attr.getName(), columnName, sqlType);                
-            bld.addBind(quoteName(columnName), new SQLParam(value, sqlType));
+            bld.addBind(new SQLParam(quoteName(columnName), value, sqlType));
             missingRequiredColumns.remove(columnName);
             log.ok("attribute {0} was added to insert", attr.getName());                
         }
@@ -267,7 +267,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         if(config.isEnableEmptyString()) {
             log.info("there are columns not matched in attribute set which should be empty");                
             for(String mCol : missingRequiredColumns) {
-                bld.addBind(quoteName(mCol), new SQLParam(DatabaseTableConstants.EMPTY_STR, getColumnType(mCol)));                               
+                bld.addBind(new SQLParam(quoteName(mCol), DatabaseTableConstants.EMPTY_STR, getColumnType(mCol)));                               
                 log.ok("Required empty value to column {0} added", mCol);                
             }            
         }
@@ -441,8 +441,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
                     value = DatabaseTableConstants.EMPTY_STR;
                 }                
                 final Integer sqlType = getColumnType(columnName);
-                final SQLParam param = new SQLParam(value, sqlType);
-                updateSet.addBind(quoteName(columnName), param);
+                final SQLParam param = new SQLParam(quoteName(columnName), value, sqlType);
+                updateSet.addBind(param);
                 log.ok("Appended to update statement the attribute {0} for columnName {1} and sqlType {2}", attributeName, columnName, sqlType);                        
             }
         }
@@ -451,7 +451,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         // Format the update query
         final String tblname = config.getTable();
         final String keycol = quoteName(config.getKeyColumn());
-        updateSet.addValue(new SQLParam(accountUid, getColumnType(config.getKeyColumn())));
+        updateSet.addValue(new SQLParam(keycol, accountUid, getColumnType(config.getKeyColumn())));
         final String sql = MessageFormat.format(SQL_TEMPLATE, tblname ,updateSet.getSQL(), keycol );                
         PreparedStatement stmt = null;
         try {
@@ -601,7 +601,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             final Object tokenVal = token.getValue();
             log.info("Sync token is {0}", tokenVal);        
             final Integer sqlType = getColumnType(config.getChangeLogColumn());
-            where.addBind(changeLogColumnName, ">", new SQLParam(tokenVal, sqlType));
+            where.addBind(new SQLParam(changeLogColumnName, tokenVal, sqlType),">" );
         }
         final DatabaseQueryBuilder query = new DatabaseQueryBuilder(tblname, columnNames);
         query.setWhere(where);
@@ -795,12 +795,13 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
          }        
         log.ok("The password is ok");        
             
-        String sql = MessageFormat.format(SQL_AUTH_QUERY, quoteName(config
-                .getKeyColumn()), config.getTable(), quoteName(config.getPasswordColumn()));
+        final String keyColumnName = quoteName(config.getKeyColumn());
+        final String passwordColumnName = quoteName(config.getPasswordColumn());
+        String sql = MessageFormat.format(SQL_AUTH_QUERY, keyColumnName, config.getTable(), passwordColumnName);
 
         final List<SQLParam> values = new ArrayList<SQLParam>();
-        values.add( new SQLParam(username, getColumnType(config.getKeyColumn()))); // real username
-        values.add( new SQLParam(password)); // real password
+        values.add( new SQLParam(keyColumnName, username, getColumnType(config.getKeyColumn()))); // real username
+        values.add( new SQLParam(passwordColumnName, password)); // real password
 
         PreparedStatement stmt = null;
         ResultSet result = null;

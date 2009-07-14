@@ -46,8 +46,8 @@ public class DefaultStrategy implements MappingStrategy {
     /* (non-Javadoc)
      * @see org.identityconnectors.databasetable.MappingStrategy#getSQLParam(java.sql.ResultSet, int, int)
      */
-    public SQLParam getSQLParam(ResultSet resultSet, int i, final int sqlType) throws SQLException {
-        return SQLUtil.getSQLParam(resultSet, i, sqlType);
+    public SQLParam getSQLParam(ResultSet resultSet, int i, String name, final int sqlType) throws SQLException {
+        return SQLUtil.getSQLParam(resultSet, i, name, sqlType);
     } 
     
     /* (non-Javadoc)
