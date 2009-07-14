@@ -24,8 +24,7 @@ package org.identityconnectors.dbcommon;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Arrays;
-import java.util.List;
+import java.sql.Types;
 
 import org.junit.Test;
 
@@ -42,24 +41,55 @@ public class SQLParamTests {
      */
     @Test
     public void paramCreateValue() {
-        SQLParam a = new SQLParam("A", 5);
-        assertEquals("A", a.getValue());
+        SQLParam a = new SQLParam("A", "B", 5);
+        assertEquals("A", a.getName());
+        assertEquals("B", a.getValue());
         assertEquals(5, a.getSqlType());
+    }
+
+    
+    /**
+     * Test method
+     */
+    @Test
+    public void paramCreateNoSQLType() {
+        SQLParam a = new SQLParam("A", "B");
+        assertEquals("A", a.getName());
+        assertEquals("B", a.getValue());
+    }
+    
+
+    
+    /**
+     * Test method
+     */
+    @Test
+    public void paramTestHashEqual2() {
+        SQLParam a = new SQLParam("A", "B");
+        SQLParam b = new SQLParam("A", "B");
+        assertEquals("A", a.hashCode(), b.hashCode());
+        assertEquals("A", a, b);
+    }
+
+    
+    /**
+     * Test method
+     */
+    @Test
+    public void paramTestHashEqual3() {
+        SQLParam a = new SQLParam("A","B", Types.VARCHAR);
+        SQLParam b = new SQLParam("A","B", Types.VARCHAR);
+        assertEquals("A", a.hashCode(), b.hashCode());
+        assertEquals("A", a, b);
     }
     
     /**
      * Test method
      */
     @Test
-    public void paramCreateList() {
-        Object[] a = {"a","b",5};
-        List<SQLParam> list = SQLParam.asList(Arrays.asList(a));
-        assertEquals(3, list.size());
-        assertEquals("a", list.get(0).getValue());
-        assertEquals("b", list.get(1).getValue());
-        assertEquals(5, list.get(2).getValue());
-        assertEquals(0, list.get(0).getSqlType());
-        System.out.print(list);
-    }
+    public void toStringTest() {
+        SQLParam a = new SQLParam("A","B", Types.VARCHAR);
+        assertEquals("A=\"B\":[VARCHAR]", a.toString());
+    }    
 }
 

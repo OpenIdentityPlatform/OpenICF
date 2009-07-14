@@ -279,9 +279,9 @@ public class SQLUtilTests {
     public void testNormalizeNullValues() {
         final String sql = "insert into table values(?, ?, ?)";
         final List<SQLParam> params = new ArrayList<SQLParam>();
-        params.add(new SQLParam("test"));
-        params.add(new SQLParam(null)); //Null unspecified should be normalized
-        params.add(new SQLParam(null, Types.VARCHAR)); //Null typed should remain
+        params.add(new SQLParam("test", "test"));
+        params.add(new SQLParam("null", null)); //Null unspecified should be normalized
+        params.add(new SQLParam("null2", null, Types.VARCHAR)); //Null typed should remain
         final List<SQLParam> out = new ArrayList<SQLParam>();
         String actual = SQLUtil.normalizeNullValues(sql, params, out);
         assertNotNull("sql",actual);
@@ -297,9 +297,9 @@ public class SQLUtilTests {
     public void testNormalizeNullValuesSame() {
         final String sql = "insert into table values(?, ?, ?)";
         final List<SQLParam> params = new ArrayList<SQLParam>();
-        params.add(new SQLParam("test"));
-        params.add(new SQLParam(1)); 
-        params.add(new SQLParam(5, Types.VARCHAR)); 
+        params.add(new SQLParam("test1", "test"));
+        params.add(new SQLParam("test2", 1)); 
+        params.add(new SQLParam("test3", 5, Types.VARCHAR)); 
         final List<SQLParam> out = new ArrayList<SQLParam>();
         String actual = SQLUtil.normalizeNullValues(sql, params, out);
         assertNotNull("sql",actual);
@@ -315,8 +315,8 @@ public class SQLUtilTests {
     public void testNormalizeNullValuesLess() {
         final String sql = "insert into table values(?, ?, ?)";
         final List<SQLParam> params = new ArrayList<SQLParam>();
-        params.add(new SQLParam("test"));
-        params.add(new SQLParam(3)); 
+        params.add(new SQLParam("test1", "test"));
+        params.add(new SQLParam("test2", 3)); 
         final List<SQLParam> out = new ArrayList<SQLParam>();
         try {
             SQLUtil.normalizeNullValues(sql, params, out);
@@ -324,8 +324,8 @@ public class SQLUtilTests {
         } catch (IllegalStateException expected) {
             // expected
         }
-        params.add(new SQLParam(3));
-        params.add(new SQLParam(3)); 
+        params.add(new SQLParam("test3", 3));
+        params.add(new SQLParam("test4", 3)); 
         try {
             SQLUtil.normalizeNullValues(sql, params, out);
             fail("IllegalStateException expected");
@@ -367,8 +367,8 @@ public class SQLUtilTests {
         assertEquals(2, actual.size());
         assertNotNull(actual.get(TEST1));
         assertNotNull(actual.get(TEST2));
-        assertEquals(TEST_VAL1,actual.get(TEST1).getValue());
-        assertEquals(TEST_VAL2,actual.get(TEST2).getValue());
+        assertEquals(TEST_VAL1, actual.get(TEST1).getValue());
+        assertEquals(TEST_VAL2, actual.get(TEST2).getValue());
      }
     
     /**
@@ -387,49 +387,49 @@ public class SQLUtilTests {
         ResultSet resultSetProxy = trs.getProxy(ResultSet.class);
         
         trs.expectAndReturn("getObject", TEST_STR);        
-        SQLParam actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.NULL);
+        SQLParam actual = SQLUtil.getSQLParam(resultSetProxy, 0, TEST_STR, Types.NULL);
         assertTrue("getObject not called", trs.isDone());
         assertNotNull(actual);
         assertEquals(TEST_STR, actual.getValue());
         
         trs.expectAndReturn("getString", TEST_STR);
-        actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.VARCHAR);
+        actual = SQLUtil.getSQLParam(resultSetProxy, 0, TEST_STR, Types.VARCHAR);
         assertTrue("getString not called", trs.isDone());
         assertNotNull(actual);
         assertEquals(TEST_STR, actual.getValue());
         
         trs.expectAndReturn("getObject", TEST_STR);
-        actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.DOUBLE);
+        actual = SQLUtil.getSQLParam(resultSetProxy, 0, TEST_STR, Types.DOUBLE);
         assertTrue("getObject not called", trs.isDone());
         assertNotNull(actual);
         assertEquals(TEST_STR, actual.getValue());
         
         trs.expectAndReturn("getObject", TEST_STR);
-        actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.BLOB);
+        actual = SQLUtil.getSQLParam(resultSetProxy, 0, TEST_STR, Types.BLOB);
         assertTrue("getObject not called", trs.isDone());
         assertNotNull(actual);
         assertEquals(TEST_STR, actual.getValue());        
         
         trs.expectAndReturn("getTimestamp", TEST_TMS);
-        actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.TIMESTAMP);
+        actual = SQLUtil.getSQLParam(resultSetProxy, 0, TEST_STR, Types.TIMESTAMP);
         assertTrue("getTimestamp not callled", trs.isDone());
         assertNotNull(actual);
         assertEquals(TEST_TMS, actual.getValue());     
         
         trs.expectAndReturn("getDate", TEST_DATE);
-        actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.DATE);
+        actual = SQLUtil.getSQLParam(resultSetProxy, 0, TEST_STR, Types.DATE);
         assertTrue("getDate not called", trs.isDone());
         assertNotNull(actual);
         assertEquals(TEST_DATE, actual.getValue()); 
         
         trs.expectAndReturn("getTime", TEST_TIME);
-        actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.TIME);
+        actual = SQLUtil.getSQLParam(resultSetProxy, 0, TEST_STR, Types.TIME);
         assertTrue("getTime not callled", trs.isDone());
         assertNotNull(actual);
         assertEquals(TEST_TIME, actual.getValue()); 
         
         trs.expectAndReturn("getBoolean", Boolean.TRUE);
-        actual = SQLUtil.getSQLParam(resultSetProxy, 0, Types.BOOLEAN);
+        actual = SQLUtil.getSQLParam(resultSetProxy, 0, TEST_STR, Types.BOOLEAN);
         assertTrue("getBoolean not called", trs.isDone());
         assertNotNull(actual);
         assertEquals(Boolean.TRUE, actual.getValue());         
@@ -452,31 +452,31 @@ public class SQLUtilTests {
         PreparedStatement resultSetProxy = trs.getProxy(PreparedStatement.class);
         
         trs.expect("setNull");        
-        SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(null, Types.CHAR));
+        SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_STR, null, Types.CHAR));
         assertTrue("setNull not called", trs.isDone());
         
         trs.expect("setObject");        
-        SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_STR, Types.NULL));
+        SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_STR, TEST_STR));
         assertTrue("setObject not called", trs.isDone());
         
         trs.expect("setString");        
-        SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_STR, Types.CHAR));
+        SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_STR, TEST_STR, Types.CHAR));
         assertTrue("setString not called", trs.isDone());
         
         trs.expect("setBoolean");        
-        SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(Boolean.TRUE, Types.BOOLEAN));
+        SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_STR, Boolean.TRUE, Types.BOOLEAN));
         assertTrue("setBoolean not called", trs.isDone());
         
         trs.expect("setTimestamp");        
-        SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_TMS, Types.TIMESTAMP));
+        SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_STR, TEST_TMS, Types.TIMESTAMP));
         assertTrue("setTimestamp not callled", trs.isDone());
         
         trs.expect("setTime");        
-        SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_TIME, Types.TIME));
+        SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_STR, TEST_TIME, Types.TIME));
         assertTrue("setTime not callled", trs.isDone());
         
         trs.expect("setDate");        
-        SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_DATE, Types.DATE));
+        SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_STR, TEST_DATE, Types.DATE));
         assertTrue("setDate not callled", trs.isDone());        
      }        
     

@@ -38,7 +38,7 @@ import org.junit.Test;
 public class UpdateSetBuilderTest {
 
     private static final String MYSQL_USER_COLUMN  = "User";
-    private static final SQLParam VALUE = new SQLParam("name", Types.VARCHAR);
+    private static final SQLParam VALUE = new SQLParam(MYSQL_USER_COLUMN , "name", Types.VARCHAR);
 
    
     /**
@@ -60,8 +60,8 @@ public class UpdateSetBuilderTest {
         assertNotNull(actual);
         
         // do the update
-        actual.addBind("test1","password(?)",new SQLParam("val1"));
-        actual.addBind("test2","max(?)",new SQLParam("val2"));
+        actual.addBind(new SQLParam("test1", "val1"), "password(?)");
+        actual.addBind(new SQLParam("test2", "val2"), "max(?)");
         
         assertNotNull(actual.getSQL());
         assertEquals("The update string","test1 = password(?) , test2 = max(?)",actual.getSQL());
@@ -80,7 +80,7 @@ public class UpdateSetBuilderTest {
         assertNotNull(actual);
 
         // do the update
-        actual.addBind(MYSQL_USER_COLUMN, VALUE);
+        actual.addBind(VALUE);
         
         assertNotNull(actual.getSQL());
         assertEquals("The update string","User = ?",actual.getSQL());
@@ -100,7 +100,7 @@ public class UpdateSetBuilderTest {
         assertNotNull(actual);
 
         // do the update
-        actual.addBind(MYSQL_USER_COLUMN, VALUE);
+        actual.addBind(VALUE);
 
         
         assertNotNull(actual.getParams());

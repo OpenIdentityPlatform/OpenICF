@@ -90,10 +90,6 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if (!validateSearchAttribute(attribute)) {
             return null;
         }
-        final String dbname = getDatabaseColumnName(attribute, oclass, options);
-        if (dbname == null) {
-            return null;
-        }
         
         SQLParam param = getSQLParam(attribute, oclass, options);
         if (param == null) {
@@ -103,10 +99,10 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if (not) ret.getWhere().append("NOT ");
         // Normalize NULLs
         if (param.getValue() == null) {
-            ret.addNull(dbname);
+            ret.addNull(param.getName());
             return ret;
         }
-        ret.addBind(dbname, "=", param);
+        ret.addBind(param, "=" );
         return ret;
     }
    
@@ -116,23 +112,14 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if (!validateSearchAttribute(attribute)) {
             return null;
         }
-        final String dbname = getDatabaseColumnName(attribute, oclass, options);
-        if (dbname == null) {
-            return null;
-        }        
+
         SQLParam param = getSQLParam(attribute, oclass, options);
-        if (param == null) {
+        if (param == null || param.getValue() == null || !(param.getValue() instanceof String)) {
+            //Null value filter is not supported
             return null;
         }
-        if (!(param.getValue() instanceof String)) {
-            return null;
-        }
-        
+       
         String value = (String) param.getValue();
-        //Null value filter is not supported
-        if (value == null) {
-            return null;
-        }        
         
         final FilterWhereBuilder ret = createBuilder();
         if (not) ret.getWhere().append("NOT ");
@@ -143,7 +130,7 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if(!value.endsWith("%")) {
             value = value + "%";
         }
-        ret.addBind(dbname, "LIKE", new SQLParam(value, param.getSqlType()));
+        ret.addBind(new SQLParam(param.getName(), value, param.getSqlType()), "LIKE");
         return ret;
     }
     
@@ -153,23 +140,14 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if (!validateSearchAttribute(attribute)) {
             return null;
         }
-        final String dbname = getDatabaseColumnName(attribute, oclass, options);
-        if (dbname == null) {
-            return null;
-        }        
+   
         SQLParam param = getSQLParam(attribute, oclass, options);
-        if (param == null) {
-            return null;
-        }
-        if (!(param.getValue() instanceof String)) {
+        if (param == null || param.getValue() == null || !(param.getValue() instanceof String)) {
+            //Null value filter is not supported
             return null;
         }
         
         String value = (String) param.getValue();
-        //Null value filter is not supported
-        if (value == null) {
-            return null;
-        }        
         
         final FilterWhereBuilder ret = createBuilder();
         if (not) ret.getWhere().append("NOT ");
@@ -177,7 +155,7 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if(!value.startsWith("%")) {
             value = "%" + value;
         }
-        ret.addBind(dbname, "LIKE", new SQLParam(value, param.getSqlType()));
+        ret.addBind(new SQLParam(param.getName(), value, param.getSqlType()), "LIKE");
         return ret;
     }
     
@@ -187,23 +165,14 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if (!validateSearchAttribute(attribute)) {
             return null;
         }
-        final String dbname = getDatabaseColumnName(attribute, oclass, options);
-        if (dbname == null) {
-            return null;
-        }        
+      
         SQLParam param = getSQLParam(attribute, oclass, options);
-        if (param == null) {
-            return null;
-        }
-        if (!(param.getValue() instanceof String)) {
+        if (param == null || param.getValue() == null || !(param.getValue() instanceof String)) {
+            //Null value filter is not supported
             return null;
         }
         
         String value = (String) param.getValue();
-        //Null value filter is not supported
-        if (value == null) {
-            return null;
-        }        
         
         final FilterWhereBuilder ret = createBuilder();
         if (not) ret.getWhere().append("NOT ");
@@ -211,7 +180,7 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if(!value.endsWith("%")) {
             value = value + "%";
         }
-        ret.addBind(dbname, "LIKE", new SQLParam(value, param.getSqlType()));
+        ret.addBind(new SQLParam(param.getName(), value, param.getSqlType()), "LIKE" );
         return ret;
     }
     
@@ -221,10 +190,6 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if (!validateSearchAttribute(attribute)) {
             return null;
         }
-        final String dbname = getDatabaseColumnName(attribute, oclass, options);
-        if (dbname == null) {
-            return null;
-        }
         
         SQLParam param = getSQLParam(attribute, oclass, options);
         if (param == null || param.getValue() == null) {
@@ -232,7 +197,7 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         }
         final FilterWhereBuilder ret = createBuilder();
         final String op = not ? "<=" : ">";
-        ret.addBind(dbname, op, param);
+        ret.addBind(param, op);
         return ret;
     }
     
@@ -242,10 +207,7 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if (!validateSearchAttribute(attribute)) {
             return null;
         }
-        final String dbname = getDatabaseColumnName(attribute, oclass, options);
-        if (dbname == null) {
-            return null;
-        }        
+
         SQLParam param = getSQLParam(attribute, oclass, options);
         if (param == null || param.getValue() == null) {
             return null;
@@ -253,7 +215,7 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         
         final FilterWhereBuilder ret = createBuilder();
         final String op = not ? "<" : ">=";
-        ret.addBind(dbname, op, param);
+        ret.addBind(param, op);
         return ret;
     }
     
@@ -263,10 +225,7 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         if (!validateSearchAttribute(attribute)) {
             return null;
         }
-        final String dbname = getDatabaseColumnName(attribute, oclass, options);
-        if (dbname == null) {
-            return null;
-        }
+
         SQLParam param = getSQLParam(attribute, oclass, options);
         if (param == null || param.getValue() == null) {
             return null;
@@ -274,7 +233,7 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         
         final FilterWhereBuilder ret = createBuilder();
         final String op = not ? ">=" : "<";
-        ret.addBind(dbname, op, param);
+        ret.addBind(param, op);
         return ret;
     }
     
@@ -282,10 +241,6 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
     protected FilterWhereBuilder createLessThanOrEqualExpression(LessThanOrEqualFilter filter, boolean not) {
         final Attribute attribute = filter.getAttribute();
         if (!validateSearchAttribute(attribute)) {
-            return null;
-        }
-        final String dbname = getDatabaseColumnName(attribute, oclass, options);
-        if (dbname == null) {
             return null;
         }
         
@@ -296,21 +251,14 @@ public abstract class DatabaseFilterTranslator extends AbstractFilterTranslator<
         
         final FilterWhereBuilder ret = createBuilder();
         final String op = not ? ">" : "<=";
-        ret.addBind(dbname, op, param);
+        ret.addBind(param, op);
         return ret;
     }
-    
-    /**
-     * Get the name of attribute translated to database column name
-     * @param attribute to translate
-     * @return the expected column name, or null if column is not supported
-     */
-    protected abstract String getDatabaseColumnName(Attribute attribute, ObjectClass oclass, OperationOptions options);
 
     /**
      * Get the SQLParam for given attribute
      * @param attribute to translate
-     * @return the expected SQLParam
+     * @return the expected SQLParam, or null if filter not supported 
      * {@link java.sql.Types} 
      */
     protected abstract SQLParam getSQLParam(Attribute attribute, ObjectClass oclass, OperationOptions options);

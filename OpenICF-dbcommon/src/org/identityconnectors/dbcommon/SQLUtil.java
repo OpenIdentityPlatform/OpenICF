@@ -479,7 +479,7 @@ public final class SQLUtil {
             final int idx = i + 1;
             final SQLParam parm = params.get(i);
             final int sqlType = parm.getSqlType();
-            final SQLParam val =  new SQLParam(attribute2jdbcValue(parm.getValue(), sqlType),sqlType);
+            final SQLParam val =  new SQLParam(parm.getName(), attribute2jdbcValue(parm.getValue(), sqlType),sqlType);
             setParam(statement, idx, val);
         }
     }
@@ -531,7 +531,7 @@ public final class SQLUtil {
         for (int i = 1; i <= count; i++) {
             final String name = meta.getColumnName(i);
             final int sqlType = meta.getColumnType(i);
-            final SQLParam param = getSQLParam(resultSet, i, sqlType);            
+            final SQLParam param = getSQLParam(resultSet, i, name, sqlType);            
             ret.put(name, param);
         }
         return ret;
@@ -541,13 +541,15 @@ public final class SQLUtil {
      * Retrieve the SQL value from result set
      * @param resultSet the result set
      * @param i index
+     * @param name param name
      * @param sqlType expected SQL type or  Types.NULL for generic
      * @return the object return the retrieved object
      * @throws SQLException any SQL error
      */
-    public static SQLParam getSQLParam(ResultSet resultSet, int i, final int sqlType) throws SQLException {
+    public static SQLParam getSQLParam(ResultSet resultSet, int i, String name, final int sqlType) throws SQLException {
         Assertions.nullCheck(resultSet, "resultSet");
         Object object;
+        
         switch (sqlType) {
         //Known conversions
         case Types.NULL:
@@ -592,7 +594,7 @@ public final class SQLUtil {
         default:   
             object = resultSet.getString(i);
         }
-        return new SQLParam(object, sqlType);
+        return new SQLParam(name, object, sqlType);
     }
     
     /**
@@ -883,12 +885,12 @@ public final class SQLUtil {
      * @return first row and first column value 
      * @throws SQLException
      */
-    public static Object selectSingleValue(Connection conn, String sql, Object ...params) throws SQLException{
+    public static Object selectSingleValue(Connection conn, String sql, SQLParam ...params) throws SQLException{
         PreparedStatement st = null;
         ResultSet rs = null;
         try{
             st = conn.prepareStatement(sql);
-            setParams(st, SQLParam.asList(Arrays.asList(params)));
+            setParams(st, Arrays.asList(params));
             rs = st.executeQuery();
             Object value = null;
             if(rs.next()){
@@ -914,19 +916,19 @@ public final class SQLUtil {
      * @return list of selected rows
      * @throws SQLException
      */
-    public static List<Object[]> selectRows(Connection conn, String sql, Object ...params) throws SQLException{
+    public static List<Object[]> selectRows(Connection conn, String sql, SQLParam ...params) throws SQLException{
         PreparedStatement st = null;
         ResultSet rs = null;
         List<Object[]> rows = new ArrayList<Object[]>();
         try{
             st = conn.prepareStatement(sql);
-            setParams(st, SQLParam.asList(Arrays.asList(params)));
+            setParams(st, Arrays.asList(params));
             rs = st.executeQuery();
             final ResultSetMetaData metaData = rs.getMetaData();
             while(rs.next()){
                 Object[] row = new Object[metaData.getColumnCount()];
                 for(int i = 0; i < row.length;i++){
-                    final SQLParam param = getSQLParam(rs, i + 1, metaData.getColumnType(i + 1));
+                    final SQLParam param = getSQLParam(rs, i + 1, metaData.getColumnName(i + 1), metaData.getColumnType(i + 1));
                     row[i] = jdbc2AttributeValue(param.getValue());
 
                 }
@@ -949,11 +951,11 @@ public final class SQLUtil {
      * @return number of rows affected as defined by {@link PreparedStatement#executeUpdate()}
      * @throws SQLException
      */
-    public static int executeUpdateStatement(Connection conn, String sql, Object ...params) throws SQLException{
+    public static int executeUpdateStatement(Connection conn, String sql, SQLParam ...params) throws SQLException{
         PreparedStatement st = null;
         try{
             st = conn.prepareStatement(sql);
-            setParams(st, SQLParam.asList(Arrays.asList(params)));
+            setParams(st, Arrays.asList(params));
             return st.executeUpdate();
         }
         finally{

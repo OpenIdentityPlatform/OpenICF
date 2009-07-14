@@ -94,14 +94,13 @@ public class FilterWhereBuilder {
      * 
      * @see FilterWhereBuilder#getWhereClause()
      * 
-     * @param name of the column
-     * @param operator an operator to compare
      * @param param value to builder
+     * @param operator an operator to compare
      * @param index 
      */
-    public void addBind(final String name, final String operator, final SQLParam param) {
+    public void addBind(final SQLParam param, final String operator) {
         if (param == null) throw new IllegalArgumentException("null.param.not.suported");
-        where.append(name);
+        where.append(param.getName());
         where.append(" ").append(operator).append(" ?");
         params.add(param);
     }

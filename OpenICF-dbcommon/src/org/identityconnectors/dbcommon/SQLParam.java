@@ -23,10 +23,6 @@
 package org.identityconnectors.dbcommon;
 
 import java.sql.Types;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.identityconnectors.common.Pair;
 
 
 /**
@@ -37,39 +33,51 @@ import org.identityconnectors.common.Pair;
  */
 public final class SQLParam {
 
-    private Pair<Object, Integer> param = new Pair<Object, Integer>();
+    private String _name;
+    private Object _value;
+    private int _sqlType;
+
 
     /**
      * The Sql param is a pair of value and its sqlType
      * 
-     * @param value
-     * @param sqlType
+     * @param name name of the attribute
+     * @param value value
+     * @param sqlType sql type
      */
-    public SQLParam(Object value, int sqlType) {
-        param.first = value;
-        param.second = sqlType;
-    }
-
-    /**
-     * The Sql param is a pair of value and its sqlType
-     * 
-     * @param value
-     */
-    public SQLParam(Object value) {
-        param.first = value;
-        param.second = Types.NULL;
-    }
-    /**
-     * The list convertor util method
-     * @param values
-     * @return the list of SQLParam values
-     */
-    public static List<SQLParam> asList(List<Object> values){
-        List<SQLParam>  ret = new ArrayList<SQLParam>();
-        for (Object value : values) {
-            ret.add(new SQLParam(value));
+    public SQLParam(String name, Object value, int sqlType) {
+        if (name == null || name.length() == 0) {
+            //TODO localize this
+            throw new IllegalArgumentException("SQL param name should be not null");
         }
-        return ret;
+        _name = name;
+        _value = value;
+        _sqlType = sqlType;
+    }    
+    
+    /**
+     * The Sql param is a pair of value and its sqlType
+     * 
+     * @param name name of the attribute
+     * @param value value
+     */
+    public SQLParam(String name, Object value) {
+        if (name == null || name.length() == 0) {
+            //TODO localize this
+            throw new IllegalArgumentException("SQL param name should be not null");
+        }
+        _name = name;
+        _value = value;
+        _sqlType = Types.NULL;
+    }    
+
+
+    /**
+     * Accessor for the name property
+     * @return the _name
+     */
+    public String getName() {
+        return _name;
     }
     
     /**
@@ -78,7 +86,7 @@ public final class SQLParam {
      * @return a value
      */
     public Object getValue() {
-        return param.first;
+        return _value;
     }
 
     /**
@@ -87,61 +95,76 @@ public final class SQLParam {
      * @return a type
      */
     public int getSqlType() {
-        return param.second;
+        return _sqlType;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof SQLParam) {
-            return param.equals(((SQLParam) obj).param);
+        if(this == obj) {
+            return true;
         }
-        return false;
+        if((obj == null) || (obj.getClass() != this.getClass())) {
+            return false;        
+        }
+        SQLParam other = (SQLParam) obj;
+        return (_name == other._name || (_name != null && _name.equals(other._name))) &&
+               (_value == other._value || (_value != null && _value.equals(other._value))) &&
+               _sqlType == other._sqlType;
     }
 
     @Override
     public int hashCode() {
-        return param.hashCode();
+        int hash = 7;
+        hash = 31 * hash + (null == _name ? 0 : _name.hashCode());
+        hash = 31 * hash + (null == _value ? 0 : _value.hashCode());
+        hash = 31 * hash + _sqlType;
+        return hash;
     }
 
     @Override
     public String toString() {
-        StringBuilder ret = new StringBuilder("\""+getValue()+"\":[");
-        switch (getSqlType()) {
-        case Types.ARRAY: ret.append("ARRAY"); break;
-        case Types.BIGINT: ret.append("BIGINT"); break;
-        case Types.BINARY: ret.append("BINARY"); break;
-        case Types.BIT: ret.append("BIT"); break;
-        case Types.BLOB: ret.append("BLOB"); break;
-        case Types.BOOLEAN: ret.append("BOOLEAN"); break;
-        case Types.CHAR: ret.append("CHAR"); break;
-        case Types.CLOB: ret.append("CLOB"); break;
-        case Types.DATALINK: ret.append("DATALINK"); break;
-        case Types.DATE: ret.append("DATE"); break;
-        case Types.DECIMAL: ret.append("DECIMAL"); break;
-        case Types.DISTINCT: ret.append("DISTINCT"); break;
-        case Types.DOUBLE: ret.append("DOUBLE"); break;
-        case Types.FLOAT: ret.append("FLOAT"); break;
-        case Types.INTEGER: ret.append("INTEGER"); break;
-        case Types.JAVA_OBJECT: ret.append("JAVA_OBJECT"); break;
-        case Types.LONGVARBINARY: ret.append("LONGVARBINARY"); break;
-        case Types.LONGVARCHAR: ret.append("LONGVARCHAR"); break;
-        case Types.NULL: ret.append("NULL"); break;
-        case Types.NUMERIC: ret.append("NUMERIC"); break;
-        case Types.OTHER: ret.append("OTHER"); break;
-        case Types.REAL: ret.append("REAL"); break;
-        case Types.REF: ret.append("REF"); break;
-        case Types.SMALLINT: ret.append("SMALLINT"); break;
-        case Types.STRUCT: ret.append("STRUCT"); break;
-        case Types.TIME: ret.append("TIME"); break;
-        case Types.TIMESTAMP: ret.append("TIMESTAMP"); break;
-        case Types.TINYINT: ret.append("TINYINT"); break;
-        case Types.VARBINARY: ret.append("VARBINARY"); break;
-        case Types.VARCHAR: ret.append("VARCHAR"); break;
-        default:
-            ret.append("SQL Type"+getSqlType());
+        StringBuilder ret = new StringBuilder();
+        if(getName()!=null) {
+            ret.append(getName());
+            ret.append("=");
         }
-        ret.append("]");
+        ret .append("\""+getValue()+"\"");
+        switch (getSqlType()) {
+        case Types.ARRAY:  ret.append(":[ARRAY]]"); break;
+        case Types.BIGINT: ret.append(":[BIGINT]"); break;
+        case Types.BINARY: ret.append(":[BINARY]"); break;
+        case Types.BIT: ret.append(":[BIT]"); break;
+        case Types.BLOB: ret.append(":[BLOB]"); break;
+        case Types.BOOLEAN: ret.append(":[BOOLEAN]"); break;
+        case Types.CHAR: ret.append(":[CHAR]"); break;
+        case Types.CLOB: ret.append(":[CLOB]"); break;
+        case Types.DATALINK: ret.append(":[DATALINK]"); break;
+        case Types.DATE: ret.append(":[DATE]"); break;
+        case Types.DECIMAL: ret.append(":[DECIMAL]"); break;
+        case Types.DISTINCT: ret.append(":[DISTINCT]"); break;
+        case Types.DOUBLE: ret.append(":[DOUBLE]"); break;
+        case Types.FLOAT: ret.append(":[FLOAT]"); break;
+        case Types.INTEGER: ret.append(":[INTEGER]"); break;
+        case Types.JAVA_OBJECT: ret.append(":[JAVA_OBJECT]"); break;
+        case Types.LONGVARBINARY: ret.append(":[LONGVARBINARY]"); break;
+        case Types.LONGVARCHAR: ret.append(":[LONGVARCHAR]"); break;
+        case Types.NULL: break;
+        case Types.NUMERIC: ret.append(":[NUMERIC]"); break;
+        case Types.OTHER: ret.append(":[OTHER]"); break;
+        case Types.REAL: ret.append(":[REAL]"); break;
+        case Types.REF: ret.append(":[REF]"); break;
+        case Types.SMALLINT: ret.append(":[SMALLINT]"); break;
+        case Types.STRUCT: ret.append(":[STRUCT]"); break;
+        case Types.TIME: ret.append(":[TIME]"); break;
+        case Types.TIMESTAMP: ret.append(":[TIMESTAMP]"); break;
+        case Types.TINYINT: ret.append(":[TINYINT]"); break;
+        case Types.VARBINARY: ret.append(":[VARBINARY]"); break;
+        case Types.VARCHAR: ret.append(":[VARCHAR]"); break;
+        default:
+            ret.append(":[SQL Type:"+getSqlType()+"]");
+        }
         return ret.toString();
         
     }
+
 }

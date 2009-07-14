@@ -26,6 +26,7 @@ import static org.identityconnectors.framework.common.objects.AttributeBuilder.b
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.*;
 import static org.junit.Assert.assertEquals;
 
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,7 +55,7 @@ public class DatabaseFilterTranslatorTests {
                 lessThanOrEqualTo(attr) };
         String ops[] = new String[] { "=", ">", ">=", "<", "<=" };
         List<SQLParam> expected = new ArrayList<SQLParam>();
-        expected.add(new SQLParam(2));
+        expected.add(new SQLParam("count", 2, Types.INTEGER));
 
         for (int i = 0; i < filters.length; i++) {
             DatabaseFilterTranslator tr = getDatabaseFilterTranslator();
@@ -75,8 +76,8 @@ public class DatabaseFilterTranslatorTests {
         Filter lf = greaterThan(build("count", 4));
         Filter rf = lessThan(build("count", 20));
         List<SQLParam> expected = new ArrayList<SQLParam>();
-        expected.add(new SQLParam(4));
-        expected.add(new SQLParam(20));
+        expected.add(new SQLParam("count", 4, Types.INTEGER));
+        expected.add(new SQLParam("count", 20, Types.INTEGER));
 
         // test and
         Filter f = FilterBuilder.and(lf, rf);
@@ -107,8 +108,8 @@ public class DatabaseFilterTranslatorTests {
         Filter lf = greaterThan(build("count", 4));
         Filter rf = lessThan(build("count", 20));
         List<SQLParam> expected = new ArrayList<SQLParam>();
-        expected.add(new SQLParam(4));
-        expected.add(new SQLParam(20));
+        expected.add(new SQLParam("count", 4, Types.INTEGER));
+        expected.add(new SQLParam("count", 20, Types.INTEGER));
 
         // test and
         Filter f = FilterBuilder.or(lf, rf);
@@ -131,10 +132,9 @@ public class DatabaseFilterTranslatorTests {
         Filter f2 = lessThan(build("count", 20));
         Filter f3 = equalTo(build("count", 10));
         List<SQLParam> expected = new ArrayList<SQLParam>();
-        expected.add(new SQLParam(4));
-        expected.add(new SQLParam(20));
-        expected.add(new SQLParam(10));
-
+        expected.add(new SQLParam("count", 4, Types.INTEGER));
+        expected.add(new SQLParam("count", 20, Types.INTEGER));
+        expected.add(new SQLParam("count", 10, Types.INTEGER));
         // test and
         Filter f12 = FilterBuilder.or(f1, f2);
         Filter f = FilterBuilder.and(f12, f3);
@@ -159,12 +159,12 @@ public class DatabaseFilterTranslatorTests {
         Filter f5 = equalTo(build("e", 1));
         Filter f6 = equalTo(build("f", 1));
         List<SQLParam> expected = new ArrayList<SQLParam>();
-        expected.add(new SQLParam(1));
-        expected.add(new SQLParam(1));
-        expected.add(new SQLParam(1));
-        expected.add(new SQLParam(1));
-        expected.add(new SQLParam(1));
-        expected.add(new SQLParam(1));
+        expected.add(new SQLParam("a",1));
+        expected.add(new SQLParam("b",1));
+        expected.add(new SQLParam("c",1));
+        expected.add(new SQLParam("d",1));
+        expected.add(new SQLParam("e",1));
+        expected.add(new SQLParam("f",1));
 
         // test and
         Filter f12 = FilterBuilder.or(f1, f2);
@@ -192,9 +192,9 @@ public class DatabaseFilterTranslatorTests {
         Filter f2 = lessThan(build("count", 20));
         Filter f3 = equalTo(build("count", 10));
         List<SQLParam> expected = new ArrayList<SQLParam>();
-        expected.add(new SQLParam(4));
-        expected.add(new SQLParam(20));
-        expected.add(new SQLParam(10));
+        expected.add(new SQLParam("count", 4, Types.INTEGER));
+        expected.add(new SQLParam("count", 20, Types.INTEGER));
+        expected.add(new SQLParam("count", 10, Types.INTEGER));
 
         // test and
         Filter f1o2 = FilterBuilder.or(f1, f2);
@@ -223,20 +223,16 @@ public class DatabaseFilterTranslatorTests {
         final FilterWhereBuilder b = blist.get(0);
         assertEquals("count <= ?", b.getWhereClause());
         List<SQLParam> expected = new ArrayList<SQLParam>();
-        expected.add(new SQLParam(4));
+        expected.add(new SQLParam("count", 4, Types.INTEGER));
         assertEquals(expected.size(), b.getParams().size());
     }
     
     DatabaseFilterTranslator getDatabaseFilterTranslator() {
         return new DatabaseFilterTranslator(ObjectClass.ACCOUNT, null) {
-            @Override
-            protected String getDatabaseColumnName(Attribute attribute, ObjectClass oclass, OperationOptions options) {
-                return attribute.getName();
-            }
 
             @Override
             protected SQLParam getSQLParam(Attribute attribute, ObjectClass oclass, OperationOptions options) {
-                return new SQLParam(AttributeUtil.getSingleValue(attribute));
+                return new SQLParam(attribute.getName(), AttributeUtil.getSingleValue(attribute),Types.NULL);
             }
 
         };

@@ -59,7 +59,7 @@ public class InsertIntoBuilderTest {
         assertNotNull(actual);
 
         // do the update
-        actual.addBind("test1", new SQLParam("val1"));
+        actual.addBind(new SQLParam("test1", "val1"));
 
         assertNotNull(actual.getInto());
         assertEquals("The update string", "test1", actual.getInto());
@@ -81,8 +81,8 @@ public class InsertIntoBuilderTest {
         assertNotNull(actual);
 
         // do the update
-        actual.addBind("test1", new SQLParam("val1"));
-        actual.addBind("test2", new SQLParam("val2", Types.VARCHAR));
+        actual.addBind(new SQLParam("test1", "val1"));
+        actual.addBind(new SQLParam("test2", "val2", Types.VARCHAR));
 
         assertNotNull(actual.getInto());
         assertEquals("The update string", "test1, test2", actual.getInto());

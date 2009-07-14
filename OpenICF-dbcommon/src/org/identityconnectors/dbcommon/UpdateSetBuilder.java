@@ -49,24 +49,22 @@ public class UpdateSetBuilder {
      * @param sqlType
      * @return self
      */
-    public UpdateSetBuilder addBind(String name, SQLParam param) {
-        return addBind(name,"?", param);
+    public UpdateSetBuilder addBind(SQLParam param) {
+        return addBind(param, "?");
     }
 
     /**
      * Add column name and expression value pair
      * The names are quoted using the {@link #columnQuote} value
-     * @param name of the column
-     * @param value the Comparable expression
      * @param param the value to bind
-     * @param sqlType the SQL database type
+     * @param expression the expression
      * @return self
      */
-    public UpdateSetBuilder addBind(String name, Object value, SQLParam param) {
+    public UpdateSetBuilder addBind(SQLParam param, String expression) {
         if(set.length()>0) {
             set.append(" , ");
         }
-        set.append(name).append(" = ").append(value);
+        set.append(param.getName()).append(" = ").append(expression);
         params.add(param);
         return this;
     }    

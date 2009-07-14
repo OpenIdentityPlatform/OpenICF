@@ -56,8 +56,8 @@ public class DatabaseConnectionTest {
     @Before
     public void setUp() throws Exception {
         values = new ArrayList<SQLParam>();
-        values.add(new SQLParam(LOGIN)); 
-        values.add(new SQLParam(NAME)); 
+        values.add(new SQLParam(LOGIN, LOGIN)); 
+        values.add(new SQLParam(NAME, NAME)); 
     }
 
     /**

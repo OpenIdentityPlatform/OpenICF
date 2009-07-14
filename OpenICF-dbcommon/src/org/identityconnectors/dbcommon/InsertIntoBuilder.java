@@ -50,12 +50,12 @@ public class InsertIntoBuilder {
      * @param sqlType 
      * @return self, builder pattern
      */
-    public InsertIntoBuilder addBind(String name, SQLParam param) {
+    public InsertIntoBuilder addBind(SQLParam param) {
         if(!first) {
             into.append(", ");
             values.append(", ");
         }
-        into.append(name);
+        into.append(param.getName());
         values.append("?");
         params.add(param);
         first = false;
