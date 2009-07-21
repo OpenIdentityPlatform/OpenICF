@@ -654,8 +654,6 @@ public class ConnectorInfoManagerTests {
         List<URL> rv = new ArrayList<URL>();
         rv.add(makeURL(testBundlesDir,"testbundlev1/dist/org.identityconnectors.testbundle-1.0.0.0.jar"));
         rv.add(makeURL(testBundlesDir,"testbundlev2/dist/org.identityconnectors.testbundle-2.0.0.0.jar"));
-        rv.add(makeURL(testBundlesDir,"testcommonv1/dist/org.identityconnectors.testcommon-1.0.0.0.jar"));
-        rv.add(makeURL(testBundlesDir,"testcommonv2/dist/org.identityconnectors.testcommon-2.0.0.0.jar"));
         return rv;
     }
 
