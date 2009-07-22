@@ -143,7 +143,7 @@ public class LdapConnectionTests extends LdapConnectorTestBase {
         conn.test();
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testCheckAlive() {
         LdapConfiguration config = newConfiguration();
         config.setReadSchema(true); // Since we are calling createNativeSchema() below.
@@ -153,8 +153,13 @@ public class LdapConnectionTests extends LdapConnectorTestBase {
         conn.createNativeSchema();
         conn.checkAlive();
         stopServer();
-        // This should throw RuntimeException.
-        conn.checkAlive();
+        try {
+            // This should throw RuntimeException.
+            conn.checkAlive();
+            fail();
+        } catch (RuntimeException e) {
+            // OK.
+        }
     }
 
     @Test
