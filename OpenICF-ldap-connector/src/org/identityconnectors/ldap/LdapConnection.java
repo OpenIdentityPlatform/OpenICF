@@ -315,12 +315,15 @@ public class LdapConnection {
     private ServerType detectServerType() {
         try {
             Attributes attrs = getInitialContext().getAttributes("", new String[] { "vendorVersion" });
-            String vendorVersion = getStringAttrValue(attrs, "vendorVersion").toLowerCase();
-            if (vendorVersion.contains("opends")) {
-                return ServerType.OPENDS;
-            }
-            if (vendorVersion.contains("sun") && vendorVersion.contains("directory")) {
-                return ServerType.SUN_DSEE;
+            String vendorVersion = getStringAttrValue(attrs, "vendorVersion");
+            if (vendorVersion != null) {
+                vendorVersion = vendorVersion.toLowerCase();
+                if (vendorVersion.contains("opends")) {
+                    return ServerType.OPENDS;
+                }
+                if (vendorVersion.contains("sun") && vendorVersion.contains("directory")) {
+                    return ServerType.SUN_DSEE;
+                }
             }
         } catch (NamingException e) {
             log.warn(e, "Exception while detecting the server type");
