@@ -22,6 +22,8 @@
  */
 package org.identityconnectors.test.common.spi;
 
+import java.util.Map;
+
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.common.objects.ConnectorMessages;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -40,6 +42,8 @@ public interface TestHelpersSpi {
 
     public APIConfiguration createTestConfiguration(
             Class<? extends Connector> clazz, Configuration config);
+
+    public void fillConfiguration(Configuration config, Map<String, ? extends Object> configData);
 
     public void search(SearchOp<?> search,
             final ObjectClass oclass, final Filter filter,

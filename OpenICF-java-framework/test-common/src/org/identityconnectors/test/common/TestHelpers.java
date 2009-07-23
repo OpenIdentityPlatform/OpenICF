@@ -69,6 +69,19 @@ public final class TestHelpers {
     }
 
     /**
+     * Fills a configuration bean with data from the given map. The map
+     * keys are configuration property names and the values are
+     * configuration property values.
+     * 
+     * @param config the configuration bean.
+     * @param configData the map with configuration data.
+     */
+    public static void fillConfiguration(Configuration config,
+            Map<String, ? extends Object> configData) {
+        getSpi().fillConfiguration(config, configData);
+    }
+
+    /**
      * Creates an dummy message catalog ideal for unit testing. All messages are
      * formatted as follows:
      * <p>

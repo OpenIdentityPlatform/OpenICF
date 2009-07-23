@@ -201,8 +201,7 @@ public interface DataProvider {
      * @throws InvocationTargetException   
      * @throws SecurityException 
      */
-    public void loadConfiguration(final String propertyName, Configuration cfg)
-        throws IllegalAccessException, InvocationTargetException, SecurityException, NoSuchMethodException;
+    public void loadConfiguration(final String propertyName, Configuration cfg);
     
     /**
      * converts the given property submap to Attribute set.

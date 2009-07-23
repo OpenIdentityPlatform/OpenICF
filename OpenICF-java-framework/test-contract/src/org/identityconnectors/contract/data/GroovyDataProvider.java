@@ -58,6 +58,7 @@ import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.Configuration;
+import org.identityconnectors.test.common.TestHelpers;
 import org.junit.Assert;
 /**
  * <p>
@@ -939,49 +940,10 @@ public class GroovyDataProvider implements DataProvider {
      * @throws NoSuchMethodException 
      * @throws SecurityException 
      */
-    public void loadConfiguration(final String configName, Configuration cfg) throws IllegalAccessException,
-            InvocationTargetException, SecurityException, NoSuchMethodException {
-        Map<String, Object> propMap = getPropertyMap(configName);
+    public void loadConfiguration(final String configName, Configuration cfg) {
+        Map<String, ? extends Object> propMap = getPropertyMap(configName);
         assertNotNull(propMap);
-        for (Entry<String, Object> entry : propMap.entrySet()) {
-            final String key = entry.getKey();
-            final Object value = entry.getValue();
-            final String methodName = "set" + key.substring(0, 1).toUpperCase() + key.substring(1);
-            Method method = null;
-            try {
-                method = cfg.getClass().getDeclaredMethod(methodName, value.getClass());
-            } catch (NoSuchMethodException ex) {
-                //Try if exist the primitive type seter method
-                try {
-                    if (value instanceof Boolean)
-                        method = cfg.getClass().getDeclaredMethod(methodName, Boolean.TYPE);
-                    else if (value instanceof Integer)
-                        method = cfg.getClass().getDeclaredMethod(methodName, Integer.TYPE);
-                    else if (value instanceof Long)
-                        method = cfg.getClass().getDeclaredMethod(methodName, Long.TYPE);
-                    else if (value instanceof Float)
-                        method = cfg.getClass().getDeclaredMethod(methodName, Float.TYPE);
-                    else if (value instanceof Double)
-                        method = cfg.getClass().getDeclaredMethod(methodName, Double.TYPE);
-                    else if (value instanceof Byte)
-                        method = cfg.getClass().getDeclaredMethod(methodName, Byte.TYPE);
-                    else if (value instanceof Short)
-                        method = cfg.getClass().getDeclaredMethod(methodName, Short.TYPE);
-                    else if (value instanceof Character)
-                        method = cfg.getClass().getDeclaredMethod(methodName, Character.TYPE);
-                    else if (value instanceof Byte[])
-                        method = cfg.getClass().getDeclaredMethod(methodName, byte[].class);
-                    else if (value instanceof Character[])
-                        method = cfg.getClass().getDeclaredMethod(methodName, char[].class);
-                } catch (NoSuchMethodException nex) {
-                    LOG.warn(nex, "The setter {0} in the configuration does not exist!", methodName);
-                }
-            }
-            if (method != null) {
-                method.setAccessible(true);
-                method.invoke(cfg, value);
-            }
-        }
+        TestHelpers.fillConfiguration(cfg, propMap);
     }
     /* ************** AUXILIARY METHODS *********************** */
     /**

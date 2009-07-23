@@ -187,6 +187,7 @@
             destdir="${build-contract-test}">
           <oc:classpath>
             <oc:pathelement location='${build-framework}'/>
+            <oc:pathelement location='${build-test-common}'/>
           </oc:classpath>
         </oc:javac>
     </target>

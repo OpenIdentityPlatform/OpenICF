@@ -76,15 +76,30 @@ public class JavaClassProperties
      */
     public static Configuration 
     createBean(ConfigurationPropertiesImpl properties,
-    Class<? extends Configuration> config) {
+    Class<? extends Configuration> configClass) {
         try {
-            return createBean2(properties,config);
+            return createBean2(properties,configClass);
         }
         catch (Exception e) {
             throw new ConfigurationException(e);
         }
     }
     
+    /**
+     * Given a configuration bean and populated properties,
+     * merges the properties into the bean.
+     */
+    public static void
+    mergeIntoBean(ConfigurationPropertiesImpl properties,
+    Configuration config) {
+        try {
+            mergeIntoBean2(properties,config);
+        }
+        catch (Exception e) {
+            throw new ConfigurationException(e);
+        }
+    }
+
     private static ConfigurationPropertiesImpl 
     createConfigurationProperties2(Configuration defaultObject) 
     throws Exception {
@@ -168,16 +183,24 @@ public class JavaClassProperties
 
     private static Configuration createBean2(
             ConfigurationPropertiesImpl properties,
-            Class<? extends Configuration> config) throws Exception {
-        Configuration rv = config.newInstance();
+            Class<? extends Configuration> configClass) throws Exception {
+        Configuration rv = configClass.newInstance();
         rv.setConnectorMessages(properties.getParent().getConnectorInfo().getMessages());
-        Map<String, PropertyDescriptor> descriptors = getFilteredProperties(config);
+        mergeIntoBean2(properties,rv);
+        return rv;
+    }
+    
+    private static void mergeIntoBean2(
+            ConfigurationPropertiesImpl properties,
+            Configuration config) throws Exception {
+        Class<? extends Configuration> configClass = config.getClass();
+        Map<String, PropertyDescriptor> descriptors = getFilteredProperties(configClass);
         for (ConfigurationPropertyImpl property : properties.getProperties()) {
             String name = property.getName();
             PropertyDescriptor desc = descriptors.get(name);
             if (desc == null) {
                 final String FMT = "Class ''{0}'' does not have a property ''{1}''.";
-                final String MSG = MessageFormat.format(FMT, config.getName(), name);
+                final String MSG = MessageFormat.format(FMT, configClass.getName(), name);
                 throw new IllegalArgumentException(MSG);
             }
             Object value = property.getValue();
@@ -187,7 +210,7 @@ public class JavaClassProperties
             value = SerializerUtil.cloneObject(value);
             Method setter = desc.getWriteMethod();
             try {
-                setter.invoke(rv, value);
+                setter.invoke(config, value);
             } catch (IllegalArgumentException ex) {
                 // just throw if the value is null..
                 if (value == null) {
@@ -202,7 +225,6 @@ public class JavaClassProperties
                 throw new IllegalArgumentException(msg);
             }
         }
-        return rv;
     }
     
     private static Map<String,PropertyDescriptor> 

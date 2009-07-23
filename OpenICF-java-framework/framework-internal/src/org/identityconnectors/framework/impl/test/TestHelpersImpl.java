@@ -22,6 +22,10 @@
  */
 package org.identityconnectors.framework.impl.test;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorKey;
 import org.identityconnectors.framework.common.FrameworkUtil;
@@ -45,6 +49,8 @@ import org.identityconnectors.test.common.spi.TestHelpersSpi;
 
 
 public class TestHelpersImpl implements TestHelpersSpi {
+
+    private static final Log log = Log.getLog(TestHelpersImpl.class);
     
     /**
      * Method for convenient testing of local connectors. 
@@ -77,6 +83,25 @@ public class TestHelpersImpl implements TestHelpersSpi {
             throw ConnectorException.wrap(e);
         }
     }        
+    
+    public void fillConfiguration(Configuration config, Map<String, ? extends Object> configData) {
+        Map<String, Object> configDataCopy = new HashMap<String, Object>(configData);
+        ConfigurationPropertiesImpl configProps =
+            JavaClassProperties.createConfigurationProperties(config);
+        for (String propName : configProps.getPropertyNames()) {
+            // Remove the entry from the config map, so that at the end
+            // the map only contains entries that were not assigned to a config property.
+            Object value = configDataCopy.remove(propName);
+            if (value != null) {
+                configProps.setPropertyValue(propName, value);
+            }
+        }
+        // The config map now contains entries that were not assigned to a config property.
+        for (String propName : configDataCopy.keySet()) {
+            log.warn("Configuration property {0} does not exist!", propName);
+        }
+        JavaClassProperties.mergeIntoBean(configProps, config);
+    }
         
     /**
      * Performs a raw, unfiltered search at the SPI level,
