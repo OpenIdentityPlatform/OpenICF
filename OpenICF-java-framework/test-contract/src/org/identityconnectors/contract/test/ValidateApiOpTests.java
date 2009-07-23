@@ -40,7 +40,7 @@ import org.junit.Test;
  * Contract test of {@link ValidateApiOp} operation.
  * Positive test for validate() is performed every time connector facade is created.
  */
-public class ValidateApiOpTests extends AbstractSimpleTest {
+public class ValidateApiOpTests extends ContractTestBase {
     
     private static final String PROPERTY_NAME_INVALID_CONFIG = "invalidConfig";
     /**

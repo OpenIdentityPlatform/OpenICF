@@ -46,7 +46,7 @@ import org.junit.Test;
  * 
  * @author Zdenek Louzensky
  */
-public class ScriptOnResourceApiOpTests extends AbstractSimpleTest {
+public class ScriptOnResourceApiOpTests extends ContractTestBase {
 
     /**
      * Logging..

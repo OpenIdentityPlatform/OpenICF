@@ -43,7 +43,7 @@ import org.junit.Test;
  * 
  * @author Zdenek Louzensky
  */
-public class ScriptOnConnectorApiOpTests extends AbstractSimpleTest {
+public class ScriptOnConnectorApiOpTests extends ContractTestBase {
 
     /**
      * Logging..

@@ -52,7 +52,7 @@ import org.junit.runners.Parameterized.Parameters;
 /**
  * Simple base class that will run through all the {@link ObjectClass}s.
  */
-public abstract class ObjectClassRunner extends AbstractSimpleTest {
+public abstract class ObjectClassRunner extends ContractTestBase {
 
     /**
      * Logging..

@@ -56,7 +56,7 @@ import org.junit.Test;
  * @author Zdenek Louzensky
  *
  */
-public class SchemaApiOpTests extends AbstractSimpleTest {
+public class SchemaApiOpTests extends ContractTestBase {
 
     /**
      * Logging..

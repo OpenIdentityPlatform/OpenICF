@@ -38,7 +38,7 @@ import org.junit.Before;
  * 
  * @author Zdenek Louzensky
  */
-public abstract class AbstractSimpleTest {
+public abstract class ContractTestBase {
 
     private static DataProvider _dataProvider;
     

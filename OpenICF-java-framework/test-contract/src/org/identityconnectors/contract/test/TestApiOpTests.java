@@ -44,7 +44,7 @@ import org.junit.Test;
  * 
  * Currently there is not ability in API to test contract in case connection is lost.
  */
-public class TestApiOpTests extends AbstractSimpleTest {
+public class TestApiOpTests extends ContractTestBase {
     
     /**
      * Logging..
