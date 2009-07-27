@@ -53,6 +53,8 @@ import org.identityconnectors.contract.data.groovy.Lazy;
 import org.identityconnectors.contract.data.groovy.Random;
 import org.identityconnectors.contract.exceptions.ContractException;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
+import org.identityconnectors.framework.api.APIConfiguration;
+import org.identityconnectors.framework.api.ConfigurationProperties;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
@@ -920,12 +922,14 @@ public class GroovyDataProvider implements DataProvider {
             } else if (OperationalAttributes.LOCK_OUT_NAME.equals(key)) {
                 attrSet.add(AttributeBuilder.buildLockOut((Boolean) value));
             } else {
-                if (!value.getClass().isArray()) {
-                    attrSet.add(AttributeBuilder.build(key, value));
-                } else {
+                if (value.getClass().isArray()) {
                     Object[] array = (Object[]) value;
-                    List list = Arrays.asList(array);
+                    List<?> list = Arrays.asList(array);
                     attrSet.add(AttributeBuilder.build(key, list));
+                } else if (value instanceof Collection<?>) {
+                    attrSet.add(AttributeBuilder.build(key, (Collection<?>) value));
+                } else {
+                    attrSet.add(AttributeBuilder.build(key, value));
                 }
             }
         }

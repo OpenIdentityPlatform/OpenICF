@@ -28,6 +28,7 @@ import java.util.Set;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.spi.Configuration;
+import org.identityconnectors.framework.spi.Connector;
 
 /**
  * DataProvider is a facility used for getting (reading/generating) data for

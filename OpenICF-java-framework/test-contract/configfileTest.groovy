@@ -115,6 +115,12 @@ mapWithLazyCalls = [key1: Lazy.random("###"), key2: ("rrr" + Lazy.random("###"))
 abcAccount{
     all."__NAME__"="CONUSR-" + Lazy.random("AAAAA")
     all."__PASSWORD__"="tstpwd"
+    
+    tst.name = "String"
+    tst.id = 15
+    tst.arl = ["elm1","elm2"]
+    tst.ara = ["elm1","elm2"] as String []
+    tst.bool = true
 }
 
 

@@ -39,6 +39,7 @@ import junit.framework.Assert;
 
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
+import org.identityconnectors.framework.common.objects.Attribute;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -655,6 +656,39 @@ public class GroovyDataProviderTest {
         String msg = String.format("Error, doesn't fulfill the concatenation: \n firstname: '%s' lastname: '%s' fullname: '%s'", firstName, lastName, fullName);
         Assert.assertTrue(msg, String.format("%s %s", firstName, lastName).equals(fullName));
     }
+    
+
+    @Test
+    public void testGetAttributeSet() throws Exception {
+        Assert.assertTrue(new File(CONFIG_FILE_PATH)
+        .exists());
+        Set<Attribute> as = gdp.getAttributeSet("abcAccount.tst");
+
+        Assert.assertNotNull(as);
+        Assert.assertTrue(as.size() == 5);
+        
+        for (Attribute attr : as) {
+            if ( attr.getName().equals("name")) {
+                Assert.assertEquals("String", attr.getValue().get(0));
+            } else if ( attr.getName().equals("id")) {
+                Assert.assertEquals(15, attr.getValue().get(0));
+                
+            } else if ( attr.getName().equals("arl")) {
+                Assert.assertEquals(2, attr.getValue().size());                
+                Assert.assertEquals("elm1", attr.getValue().get(0));                
+                Assert.assertEquals("elm2", attr.getValue().get(1));                
+            } else if ( attr.getName().equals("ara")) {
+                Assert.assertEquals(2, attr.getValue().size());                
+                Assert.assertEquals("elm1", attr.getValue().get(0));                
+                Assert.assertEquals("elm2", attr.getValue().get(1));              
+            } else if ( attr.getName().equals("bool")) {
+                Assert.assertEquals(true, attr.getValue().get(0));                
+            } else {
+                Assert.fail("Unexpected attribute");
+            }
+        }
+    }
+    
 
     /**
      * method controls, if single parameters are correctly quoted, and multi
