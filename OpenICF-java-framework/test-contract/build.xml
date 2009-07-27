@@ -23,4 +23,49 @@
 <project name="test-contract" default="all"> 
     <property name="framework.dir" value=".."/>
     <import file="${framework.dir}/connector_build.xml"/>	  
+
+
+
+  <!-- this is copied over from connector_build.xml. The only real change is that 
+       contract tests unit tests end with *Test, and there are no other tests. -->
+
+  <target name="run-unit-tests" depends="test-init, instrument, build-testclasspath">
+        <!-- run all the junits -->
+        <junit fork="yes" forkmode="once" dir="${basedir}" showoutput="true"
+            failureProperty="test.failed" printsummary="true">
+            <!--
+                Specify the name of the coverage data file to use.
+                The value specified below is the default.
+            -->
+            <sysproperty key="net.sourceforge.cobertura.datafile" 
+                file="${basedir}/cobertura.ser" />
+            
+            <!-- Set the key for TestHelpers to use -->
+            <sysproperty key="project.name" value="${ant.project.name}"/>
+            <sysproperty key="testConfig" value="${testConfig}"/>
+
+            <!-- reference the test classpath -->
+            <classpath>
+                <path refid="test-classpath" />
+                <fileset refid="user.libs" />
+            </classpath>
+            <!-- output for Netbeans JUnit window -->
+            <formatter usefile="false" type="brief"/>
+            <!-- output in xml for build automation -->
+            <formatter type="xml" />
+            <!-- turn full assertions -->
+            <assertions enableSystemAssertions="true" />
+            <batchtest todir="${reports}/junit">
+                <fileset dir="${src}">
+                    <include name="**/*Test.java" />
+                    
+                    <!-- exclude contract tests and run junit --> 
+                    <!-- <include name="**/*Tests.java" /> -->
+
+                    <exclude name="**/AllTests.java" />
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
 </project>
