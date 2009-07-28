@@ -173,10 +173,9 @@ public class DatabaseConnection  {
         log.info("normalize call statement {0}", sql);
         final List<SQLParam> out = new ArrayList<SQLParam>();
         final String nomalized = SQLUtil.normalizeNullValues(sql, params, out);
-        log.info("prepare call statement {0}", nomalized);
         final CallableStatement prepareCall = getConnection().prepareCall(nomalized);
         SQLUtil.setParams(prepareCall, out);
-        log.ok("call statement {0} prepared", nomalized);
+        log.ok("call statement {0} normalizead and prepared", nomalized);
         return prepareCall;
     }    
 

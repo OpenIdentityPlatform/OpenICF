@@ -421,7 +421,7 @@ public final class SQLUtil {
             ret.append(string);
             if(params != null && i < params.size()) {
                 final SQLParam param = params.get(i);
-                if (param.getValue() == null && param.getSqlType() == Types.NULL) {
+                if (param == null || (param.getValue() == null && param.getSqlType() == Types.NULL)) {
                   ret.append("null");
                 } else {
                   ret.append("?");
