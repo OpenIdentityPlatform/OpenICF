@@ -46,7 +46,6 @@ public class RemoteConnectorInfoManagerClearTests extends ConnectorInfoManagerTe
      */
     @Override
     protected ConnectorInfoManager getConnectorInfoManager() throws Exception {
-        shutdownConnnectorInfoManager();
         List<URL> urls = getTestBundles();
         
         final int PORT = 8759;

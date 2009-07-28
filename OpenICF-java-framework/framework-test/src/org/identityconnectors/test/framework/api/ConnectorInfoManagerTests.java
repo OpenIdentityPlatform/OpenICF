@@ -64,6 +64,7 @@ import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.impl.api.ConfigurationPropertyImpl;
 import org.identityconnectors.framework.impl.api.local.ConnectorPoolManager;
+import org.junit.After;
 import org.junit.Test;
 
 
@@ -83,6 +84,11 @@ public class ConnectorInfoManagerTests {
             }
         }
         return null;
+    }
+
+    @After
+    public void after() {
+        shutdownConnnectorInfoManager();
     }
 
     @Test
@@ -132,7 +138,6 @@ public class ConnectorInfoManagerTests {
         
         //make sure thread local classloader is restored
         Assert.assertSame(startLocal, Thread.currentThread().getContextClassLoader());
-        shutdownConnnectorInfoManager();
     }
     
     /**
@@ -188,7 +193,6 @@ public class ConnectorInfoManagerTests {
         ConnectorFacade facade = facf.newInstance(api);
         // call the various create/update/delete commands..
         facade.schema();
-        shutdownConnnectorInfoManager();
     }
     
     /**
@@ -243,7 +247,6 @@ public class ConnectorInfoManagerTests {
         finally {
             CurrentLocale.clear();
         }
-        shutdownConnnectorInfoManager();
     }
     
     /**
@@ -311,8 +314,6 @@ public class ConnectorInfoManagerTests {
             Assert.assertEquals(String.valueOf(i),
                     obj.getUid().getUidValue());
         }
-        
-        shutdownConnnectorInfoManager();
     }
     
     //@Test 
@@ -341,8 +342,6 @@ public class ConnectorInfoManagerTests {
         },null);
         long end = System.currentTimeMillis();
         System.out.println("Test took: "+(end-start)/1000);
-        
-        shutdownConnnectorInfoManager();
     }
     //@Test 
     public void testSchemaStress() throws Exception {
@@ -362,8 +361,6 @@ public class ConnectorInfoManagerTests {
         for (int i = 0; i < 1000; i++) {
             facade.schema();
         }
-        
-        shutdownConnnectorInfoManager();
     }
     
     //@Test 
@@ -388,8 +385,6 @@ public class ConnectorInfoManagerTests {
             }
             facade.create(ObjectClass.ACCOUNT,attrs,null);
         }
-        
-        shutdownConnnectorInfoManager();
     }
     
     
@@ -461,8 +456,6 @@ public class ConnectorInfoManagerTests {
             Assert.assertEquals(String.valueOf(i),
                     obj.getObject().getUid().getUidValue());
         }
-        
-        shutdownConnnectorInfoManager();
     }
     
     //TODO: this needs to overridden for C# testing
@@ -537,7 +530,6 @@ public class ConnectorInfoManagerTests {
             Attribute attr = (Attribute) facade.runScriptOnConnector(builder.build(), null);
             Assert.assertEquals("myattr", attr.getName());
         }
-        shutdownConnnectorInfoManager();
     }
     
     @Test
@@ -589,7 +581,6 @@ public class ConnectorInfoManagerTests {
         Assert.assertEquals("5", facade1.create(ObjectClass.ACCOUNT,attrs,options).getUidValue());
         Assert.assertEquals("5", facade1.create(ObjectClass.ACCOUNT,attrs,options).getUidValue());
         Assert.assertEquals("5", facade1.create(ObjectClass.ACCOUNT,attrs,options).getUidValue());
-        shutdownConnnectorInfoManager();
     }
     
     @Test
@@ -635,8 +626,6 @@ public class ConnectorInfoManagerTests {
         catch (OperationTimeoutException e) {
             //expected
         }
-        
-        shutdownConnnectorInfoManager();
     }
     
     private final static String TEST_BUNDLES_DIR_PROPERTY = "testbundles.dir";
@@ -670,8 +659,7 @@ public class ConnectorInfoManagerTests {
     }
     
     protected void shutdownConnnectorInfoManager() {
-        
+        ConnectorFacadeFactory.getInstance().dispose();
+        ConnectorInfoManagerFactory.getInstance().clearLocalCache();
     }
-    
-    
 }
