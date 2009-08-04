@@ -35,6 +35,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -144,6 +145,10 @@ public class AttributeUtilTests {
         Assert.assertEquals(TEST_VALUE, value);
         // test null
         attr = AttributeBuilder.build("long");
+        value = AttributeUtil.getSingleValue(attr);
+        Assert.assertNull(value);
+        // test empty
+        attr = AttributeBuilder.build("long", Collections.emptyList());
         value = AttributeUtil.getSingleValue(attr);
         Assert.assertNull(value);
         // test illegal argument exception

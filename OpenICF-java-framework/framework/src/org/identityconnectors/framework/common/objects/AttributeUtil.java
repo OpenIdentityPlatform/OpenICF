@@ -202,12 +202,13 @@ public final class AttributeUtil {
 
     /**
      * Get the <code>Object</code> value from the specified (single-valued)
-     * attribute.
+     * attribute. Return <code>null</code> if the attribute's list of values
+     * is <code>null</code> or empty.
      */
     public static Object getSingleValue(Attribute attr) {
         Object ret = null;
         List<Object> val = attr.getValue();
-        if (val != null) {
+        if (val != null && !val.isEmpty()) {
             // make sure this only called for single value..
             if (val.size() > 1) {
                 final String MSG = "The method is only for single value attributes.";
