@@ -484,7 +484,7 @@ public class GroovyDataProviderTest {
         Assert.assertTrue(GroovyDataProvider.getShortTypeName(String.class).equals("Tstring"));
         byte[] barr = new byte[0];
         Assert.assertTrue(GroovyDataProvider.getShortTypeName(barr.getClass()).equals("Tbytearray"));
-        Assert.assertTrue(GroovyDataProvider.getShortTypeName(GuardedString.class).equals("Tstring"));
+        Assert.assertTrue(GroovyDataProvider.getShortTypeName(GuardedString.class).equals("Tguardedstring"));
     }
     
     @Test
@@ -689,6 +689,33 @@ public class GroovyDataProviderTest {
         }
     }
     
+    @Test
+    public void testGuardedStringDefaulting() {
+        Object defaultedValue = ((DataProvider) gdp).get(GuardedString.class, "nonexistingAttributeFooBarBaz", "");
+        Assert.assertNotNull(defaultedValue);
+        Assert.assertTrue(defaultedValue instanceof GuardedString);
+        GuardedString gs = (GuardedString) defaultedValue;
+        gs.access(new GuardedString.Accessor() {
+            public void access(char[] clearChars) {
+                 String result = new String(clearChars);
+                 Assert.assertTrue(result.length() > 0);
+            }
+        });
+    }
+    
+    @Test
+    public void testGuardedStringSuccess() {
+        Object seekedValue = ((DataProvider) gdp).get(GuardedString.class, "generatedPassword", "");
+        Assert.assertNotNull(seekedValue);
+        Assert.assertTrue(seekedValue instanceof GuardedString);
+        GuardedString gs = (GuardedString) seekedValue;
+        gs.access(new GuardedString.Accessor() {
+            public void access(char[] clearChars) {
+                 String result = new String(clearChars);
+                 Assert.assertTrue(result.length() > 0 && result.endsWith("ahoj"));
+            }
+        });
+    }
 
     /**
      * method controls, if single parameters are correctly quoted, and multi

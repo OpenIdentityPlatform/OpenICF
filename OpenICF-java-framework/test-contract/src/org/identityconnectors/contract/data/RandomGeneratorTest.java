@@ -24,6 +24,7 @@ package org.identityconnectors.contract.data;
 
 import junit.framework.Assert;
 
+import org.identityconnectors.common.security.GuardedString;
 import org.junit.Test;
 
 /**
@@ -79,6 +80,27 @@ public class RandomGeneratorTest {
             Assert.assertTrue(!o2.equals(o));
             System.out.println(o.toString() + "\n" + o2.toString());
         }
+    }
+    
+    @Test
+    public void testGuardedStr() {
+        Object o = RandomGenerator.generate("\\a\\h###\\s\\h", GuardedString.class);
+        Assert.assertTrue(o instanceof GuardedString);
+        GuardedString pass = (GuardedString) o;
+        pass.access(new GuardedString.Accessor() {
+            public void access(char[] clearChars) {
+                final String result = new String(clearChars);
+                Assert.assertTrue(result.startsWith("ah"));
+                Assert.assertTrue(result.endsWith("sh"));
+            }
+        });
+    }
+    
+    @Test
+    public void testChar() {
+        Object o = RandomGenerator.generate("A", Character.class);
+        Assert.assertNotNull(o);
+        Assert.assertTrue(o instanceof Character);
     }
 
 }

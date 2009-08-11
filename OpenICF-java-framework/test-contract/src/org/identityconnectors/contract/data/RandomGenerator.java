@@ -92,23 +92,32 @@ public class RandomGenerator {
      */
     public static Object generate(String pattern, Class<?> clazz) {
         Constructor<?> c;
+        String generatedStr = createRandomString(pattern,
+                getDefaultCharacterSetMap());
+
+        // resolve Character and ByteArray types:
+        if (clazz.isInstance(new byte[0])) {
+            return generatedStr.getBytes();
+        }
+        if (Character.class.isAssignableFrom(clazz)) {
+            char[] arr = generatedStr.toCharArray();
+            return arr[0];
+        }
+
         try {
-            String generatedStr = createRandomString(pattern,
-                    getDefaultCharacterSetMap());
+            Constructor<?> method = clazz.getConstructor(char[].class);
+            return method.newInstance(generatedStr.toCharArray());
+        } catch (Exception e) {
+            // OK
+        }
 
-            // resolve Character and ByteArray types:
-            if (clazz.isInstance(new byte[0])) {
-                return generatedStr.getBytes();
-            }
-            if (clazz.isInstance(new Character('a'))) {
-                char[] arr = generatedStr.toCharArray();
-                return arr[0];
-            }
-
+        // Among others, this handles the conversion to a GuardedString,
+        // whose constructor takes a char[]. 
+        try {
             c = clazz.getConstructor(String.class);
             return c.newInstance(generatedStr);
         } catch (Exception e) {
-            e.printStackTrace(); // TODO
+            // ok
         }
         return null;
     }

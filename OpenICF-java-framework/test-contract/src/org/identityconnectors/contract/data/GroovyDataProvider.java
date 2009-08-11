@@ -964,10 +964,6 @@ public class GroovyDataProvider implements DataProvider {
         String shortName = dataType.getSimpleName();
         final boolean isArray = dataType.isArray();
         
-        if (dataType.equals(GuardedString.class)) {
-            shortName = String.class.getSimpleName();
-        }
-        
         if (isArray) {
             if (shortName.length() > 2) {
                 String tmp = shortName.replace("[]", ARRAY_MARKER);
