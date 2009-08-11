@@ -65,7 +65,6 @@ import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.OperationOptions;
-import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.SyncDelta;
@@ -170,9 +169,6 @@ public class ConnectorHelper {
                 if (configObject != null) {
                     LOG.info("Setting property ''{0}'' to value ''{1}''",
                             propName, configObject.toString());
-                    if (prop.getType().equals(GuardedString.class) && !(configObject instanceof GuardedString)) {
-                        configObject = new GuardedString(configObject.toString().toCharArray());
-                    }
                     properties.setPropertyValue(propName, configObject);
                 } else {
                     LOG.warn(
@@ -223,12 +219,6 @@ public class ConnectorHelper {
             try {
                 Object setProperty = (!wrongPropertyMap.containsKey(propName)) ? dataProvider
                         .getConnectorAttribute(propName) : wrongProp;
-
-                if (prop.getType().equals(GuardedString.class)
-                        && !(setProperty instanceof GuardedString) && (setProperty!=null)) {
-                    setProperty = new GuardedString(setProperty.toString()
-                            .toCharArray());
-                }
 
                 LOG.info("Setting property ''{0}'' to value ''{1}''", propName,
                         ((setProperty == null)? "null" : setProperty.toString()));
@@ -648,15 +638,7 @@ public class ConnectorHelper {
                     if(attributeValue instanceof Collection) {
                         attributes.add(AttributeBuilder.build(attributeName, (Collection<?>)attributeValue));
                     } else {
-                        if (attributeInfo.is(OperationalAttributes.PASSWORD_NAME)) {
-                            //password attribute
-                            attributes.add(AttributeBuilder.buildPassword(((String) attributeValue).toCharArray()));
-                        } else if (attributeInfo.is(OperationalAttributes.CURRENT_PASSWORD_NAME)) {
-                            //current password attribute
-                            attributes.add(AttributeBuilder.buildCurrentPassword(((String) attributeValue).toCharArray()));                            
-                        } else {
-                            attributes.add(AttributeBuilder.build(attributeName, attributeValue));
-                        }
+                        attributes.add(AttributeBuilder.build(attributeName, attributeValue));
                     }
                 }
             } catch (ObjectNotFoundException ex) {

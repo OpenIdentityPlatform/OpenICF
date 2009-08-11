@@ -130,3 +130,5 @@ sampleFooBarListWithLazy = ["a", "b", Lazy.random("AAA\\X")];
 Xfirst = "FIRST" + Lazy.random("###")
 Xlast = "LAST" + Lazy.random("###")
 Xfull = Lazy.get("Xfirst") + " " + Lazy.get("Xlast")
+
+generatedPassword = Lazy.random("###AAA\\a\\h\\o\\j", org.identityconnectors.common.security.GuardedString.class)
