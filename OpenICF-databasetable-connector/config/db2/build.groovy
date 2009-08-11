@@ -55,7 +55,7 @@ connector {
       passwordColumn="PASSWORD"
       table="ACCOUNTS"
       user="__configureme__"
-      password="__configureme__"
+      password=new GuardedString("__configureme__".toCharArray())
       jdbcUrlTemplate="jdbc:db2://%h:%p/%d"
       host="__configureme__"
       port="50000"

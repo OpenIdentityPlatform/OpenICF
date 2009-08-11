@@ -59,7 +59,7 @@ connector {
     host="__configureme__"
     database="test"
     user="__configureme__"
-    password="__configureme__"
+    password=new GuardedString("__configureme__".toCharArray())
     changeLogColumn="CHANGELOG" 
 }
 

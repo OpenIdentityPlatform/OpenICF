@@ -56,7 +56,7 @@ configurations {
         table="ACCOUNTS"
         user="__configureme__"
         jdbcUrlTemplate="jdbc:oracle:thin:@%h:%p:%d"
-        password="__configureme__"
+        password=new GuardedString("__configureme__".toCharArray())
         host="__configureme__"
         port="1521"
         database="XE"

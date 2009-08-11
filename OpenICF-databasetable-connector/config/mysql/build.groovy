@@ -56,7 +56,7 @@ connector {
     passwordColumn="PASSWORD"
     table="ACCOUNTS"
     user="__configureme__"
-    password="__configureme__"
+    password=new GuardedString("__configureme__".toCharArray())
     jdbcUrlTemplate="jdbc:mysql://%h/%d"
     host="__configureme__"
     database="idm_sync"
