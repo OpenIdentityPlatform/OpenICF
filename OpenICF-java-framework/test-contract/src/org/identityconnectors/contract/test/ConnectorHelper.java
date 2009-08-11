@@ -960,8 +960,8 @@ public class ConnectorHelper {
         return apiConfig;
     }
     
-    private static String formatDataName(String name, String objectClassName) {
-        StringBuffer sbPath = new StringBuffer(objectClassName);
+    private static String formatDataName(String objectClassName, String name) {
+        StringBuilder sbPath = new StringBuilder(objectClassName);
         sbPath.append(".");
         sbPath.append(name);
         return sbPath.toString();
@@ -978,7 +978,7 @@ public class ConnectorHelper {
      */
     public static String getString(DataProvider dataProvider, String componentName, 
             String name, String objectClassName) throws ObjectNotFoundException {
-        return dataProvider.getString(formatDataName(name, objectClassName), 
+        return dataProvider.getString(formatDataName(objectClassName, name), 
                 componentName);
     }
         
@@ -1001,7 +1001,7 @@ public class ConnectorHelper {
             name = qualifier + "." + name;
         }
         
-        String dataName = formatDataName(name, objectClassName);
+        String dataName = formatDataName(objectClassName, name);
         return dataProvider.getString(dataName, componentName, sequenceNumber);
     }
         
@@ -1015,9 +1015,17 @@ public class ConnectorHelper {
     public static Object get(DataProvider dataProvider, String componentName, 
             Class<?> dataTypeName, String name, String objectClassName, 
             int sequenceNumber, boolean isMultivalue) throws ObjectNotFoundException {
-        return dataProvider.get(dataTypeName, formatDataName(name, objectClassName), 
+        return dataProvider.get(dataTypeName, formatDataName(objectClassName, name), 
                 componentName, sequenceNumber, isMultivalue);
     }
+    
+    public static Object get(DataProvider dataProvider, String componentName, 
+            Class<?> dataTypeName, String name, String qualifier, String objectClassName, 
+            int sequenceNumber, boolean isMultivalue) throws ObjectNotFoundException {
+        return dataProvider.get(dataTypeName, formatDataName(objectClassName, formatDataName(name, qualifier)), 
+                componentName, sequenceNumber, isMultivalue);
+    }
+
 
     /**
      * Returns object class based on object class info.

@@ -147,9 +147,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                     authenticateFailed);
 
             // now try with the right password
-            String password = ConnectorHelper.getString(getDataProvider(),
-                    getTestName(), OperationalAttributes.PASSWORD_NAME,
-                    getObjectClassInfo().getType(), 0);
+            GuardedString password = (GuardedString) ConnectorHelper.get(getDataProvider(), getTestName(), GuardedString.class, OperationalAttributes.PASSWORD_NAME, getObjectClass().getObjectClassValue(), 0, false);
             
             Uid authenticatedUid = authenticateExpectingSuccess(name, password);
 
@@ -159,16 +157,14 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
             // test that PASSWORD change works, CURRENT_PASSWORD should be set
             // to old password value if supported
             if (isOperationalAttributeUpdateable(OperationalAttributes.PASSWORD_NAME)) {
-                String newpassword = ConnectorHelper.getString(getDataProvider(), getTestName(),
-                        OperationalAttributes.PASSWORD_NAME, UpdateApiOpTests.MODIFIED,
-                        getObjectClassInfo().getType(), 0);
+                GuardedString newpassword = (GuardedString) ConnectorHelper.get(getDataProvider(), getTestName(), GuardedString.class, OperationalAttributes.PASSWORD_NAME, UpdateApiOpTests.MODIFIED, getObjectClass().getObjectClassValue(), 0, false); 
                 Set<Attribute> replaceAttrs = new HashSet<Attribute>();
-                replaceAttrs.add(AttributeBuilder.buildPassword(newpassword.toCharArray()));
+                replaceAttrs.add(AttributeBuilder.buildPassword(newpassword));
 
                 if (ConnectorHelper.isAttrSupported(getObjectClassInfo(),
                         OperationalAttributes.CURRENT_PASSWORD_NAME)) {
                     // CURRENT_PASSWORD must be set to old password
-                    replaceAttrs.add(AttributeBuilder.buildCurrentPassword(password.toCharArray()));
+                    replaceAttrs.add(AttributeBuilder.buildCurrentPassword(password));
                 }
                 // update to new password
                 uid = getConnectorFacade().update(getObjectClass(),
@@ -585,13 +581,13 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
     	return authenticateFailed;
     }
     
-    private Uid authenticateExpectingSuccess(String name, String password) {
+    private Uid authenticateExpectingSuccess(String name, GuardedString password) {
     	Uid authenticatedUid = null;
     	RuntimeException lastException = null;
     	
     	for(int i=0;i<getLongTestParam(MAX_ITERATIONS, 1);i++) {
             try {
-                authenticatedUid = getConnectorFacade().authenticate(ObjectClass.ACCOUNT, name,new GuardedString(password.toCharArray()),
+                authenticatedUid = getConnectorFacade().authenticate(ObjectClass.ACCOUNT, name,password,
                         getOperationOptionsByOp(AuthenticationApiOp.class));
                 lastException = null;
                 break;
