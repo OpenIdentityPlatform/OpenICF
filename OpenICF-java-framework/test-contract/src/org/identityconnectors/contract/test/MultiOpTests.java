@@ -629,12 +629,11 @@ public class MultiOpTests extends ObjectClassRunner {
             
             if (addPassword) {
                 // add the same password, that was created before in the following update
-                String password = ConnectorHelper.getString(getDataProvider(),
-                        getTestName(), OperationalAttributes.PASSWORD_NAME,
-                        getObjectClassInfo().getType(), iteration);
-                Attribute attrPasswd = AttributeBuilder.build(
-                        OperationalAttributes.PASSWORD_NAME, new GuardedString(
-                                password.toCharArray()));
+                GuardedString password = (GuardedString) ConnectorHelper.get(getDataProvider(),
+                        getTestName(), GuardedString.class, OperationalAttributes.PASSWORD_NAME,
+                        getObjectClassInfo().getType(), iteration, false);
+                Attribute attrPasswd = AttributeBuilder.build(OperationalAttributes.PASSWORD_NAME,
+                        password);
                 attrs.add(attrPasswd);
             }
 
