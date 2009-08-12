@@ -493,7 +493,7 @@
         <javadoc overview="${src}/overview.html"
             author="true" version="true" source="1.5"
             classpathref="build.path" destdir="${dist}/javadoc" 
-            sourcepath="${framework.dir}/framework/src"
+            sourcepath="${framework.dir}/framework/src/main/java"
             excludepackagenames="org.identityconnectors.framework.*,org.identityconnectors.common.*">
             <fileset dir="${src}" includes="**/*.java" excludes="**/*Test*"/>
         </javadoc>

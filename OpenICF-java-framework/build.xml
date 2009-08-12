@@ -36,18 +36,24 @@
     <property name="version" value="${MAJOR}.${MINOR}.${SVN_REVISION}"/>
     <!-- set defaults if they are not already set -->
     <property name="debug" value="true" />
-    <property name="src-framework" location="framework/src" />
-    <property name="src-framework-internal" location="framework-internal/src" />
-    <property name="src-framework-test" location="framework-test/src" />
-    <property name="src-test-common" location="test-common/src"/>
-    <property name="src-contract-test" location="test-contract/src"/>
+    <property name="src-framework" location="framework/src/main/java" />
+    <property name="src-framework-internal" location="framework-internal/src/main/java" />
+    <property name="src-test-common" location="test-common/src/main/java"/>
+    <property name="src-contract-test" location="test-contract/src/main/java"/>
+    <property name="test-framework" location="framework/src/test/java" />
+    <property name="test-framework-internal" location="framework-internal/src/test/java" />
+    <property name="test-test-common" location="test-common/src/test/java"/>
+    <property name="test-contract-test" location="test-contract/src/test/java"/>
     <property name="src-toolkit" location="toolkit"/>
     <property name="build" location="build"/>
     <property name="build-framework" location="build/framework/classes" />
     <property name="build-framework-internal" location="build/framework-internal/classes" />
-    <property name="build-framework-test" location="build/framework-test/classes" />
-    <property name="build-test-common" location="build/test-common"/>
-    <property name="build-contract-test" location="build/contract-tests"/>
+    <property name="build-test-common" location="build/test-common/classes"/>
+    <property name="build-contract-test" location="build/contract-tests/classes"/>
+    <property name="build-test-framework" location="build/framework/testclasses" />
+    <property name="build-test-framework-internal" location="build/framework-internal/testclasses" />
+    <property name="build-test-test-common" location="build/test-common/testclasses"/>
+    <property name="build-test-contract-test" location="build/contract-tests/testclasses"/>
     <property name="instrumented" value="build/instrumented" />
     <property name="dist" location="dist" />
     <property name="netbeans" location="netbeans" />
@@ -122,21 +128,15 @@
         <patternset refid='ignore'/>
         <exclude name="**/*.java" />
     </patternset>
-    <patternset id="exclude.test">
-        <exclude name="**/*Test*" />
-        <exclude name="**/test/**"/>
-    </patternset>
     <path id="class.path">
         <fileset dir="${lib-framework-internal}">
             <include name="**/*jar" />
         </fileset>
     </path>
-    <fileset id="test.fileset" dir="${src-framework-test}">
-        <include name="**/*Test.java" />
-        <include name="**/*Tests.java" />
-        <!-- exclude helper class -->
-        <exclude name="**/JMXTests.java" />
-    </fileset>
+    <patternset id="test.sources">
+        <include name="**/*Test.java"/>
+        <include name="**/*Tests.java"/>
+    </patternset>
 
     <!-- ********************************************************* -->
     <!-- ********************************************************* -->
@@ -146,14 +146,21 @@
     <target name="compile" description="compile the source ">
         <mkdir dir="${build-framework}" />
         <mkdir dir="${build-framework-internal}" />
-        <mkdir dir="${build-framework-test}" />
         <mkdir dir="${build-test-common}" />
         <mkdir dir="${build-contract-test}" />
-        <!-- compile all source files -->
+        <!-- compile framework -->
         <oc:javac 
             classpathref="class.path"
             srcdir="${src-framework}"
             destdir="${build-framework}" />
+        <copy todir="${build-framework}">
+            <fileset dir="${src-framework}">
+                <patternset refid="exclude.javasrc"/>
+            </fileset>
+            <fileset file="${license.file}" />
+            <fileset file="${thirdpartyreadme.file}" />
+        </copy>
+        <!-- compile test-common -->
         <oc:javac 
             classpathref="class.path"
             srcdir="${src-test-common}"
@@ -162,6 +169,14 @@
             <oc:pathelement location='${build-framework}'/>
           </oc:classpath>
         </oc:javac>
+        <copy todir="${build-test-common}">
+            <fileset dir="${src-test-common}">
+                <patternset refid="exclude.javasrc"/>
+            </fileset>
+            <fileset file="${license.file}" />
+            <fileset file="${thirdpartyreadme.file}" />
+        </copy>
+        <!-- compile framework-internal -->
         <oc:javac 
             classpathref="class.path"
             srcdir="${src-framework-internal}"
@@ -171,16 +186,14 @@
             <oc:pathelement location='${build-test-common}'/>
           </oc:classpath>
         </oc:javac>
-        <oc:javac
-            classpathref="class.path"
-            srcdir="${src-framework-test}"
-            destdir="${build-framework-test}">
-          <oc:classpath>
-            <oc:pathelement location='${build-framework}'/>
-            <oc:pathelement location='${build-test-common}'/>
-            <oc:pathelement location='${build-framework-internal}'/>
-          </oc:classpath>
-        </oc:javac>
+        <copy todir="${build-framework-internal}">
+            <fileset dir="${src-framework-internal}">
+                <patternset refid="exclude.javasrc"/>
+            </fileset>
+            <fileset file="${license.file}" />
+            <fileset file="${thirdpartyreadme.file}" />
+        </copy>
+        <!-- compile contract tests -->
         <oc:javac
             classpathref="class.path"
             srcdir="${src-contract-test}"
@@ -190,6 +203,13 @@
             <oc:pathelement location='${build-test-common}'/>
           </oc:classpath>
         </oc:javac>
+        <copy todir="${build-contract-test}">
+            <fileset dir="${src-contract-test}">
+                <patternset refid="exclude.javasrc"/>
+            </fileset>
+            <fileset file="${license.file}" />
+            <fileset file="${thirdpartyreadme.file}" />
+        </copy>
     </target>
 
     <macrodef name="jarframework">
@@ -223,44 +243,24 @@
             title="Connectors Framework">
             <filesets>
                 <fileset dir="${build-framework}"/>
-                <fileset dir="${src-framework}">
-                    <patternset refid="exclude.javasrc"/>
-                </fileset>
-                <fileset file="${license.file}" />
-                <fileset file="${thirdpartyreadme.file}" />
             </filesets>
         </jarframework>
         <jarframework file="${jar.file-internal}"
             title="Connectors Framework - Internal">
             <filesets>
                 <fileset dir="${build-framework-internal}"/>
-                <fileset dir="${src-framework-internal}">
-                    <patternset refid="exclude.javasrc"/>
-                </fileset>
-                <fileset file="${license.file}" />
-                <fileset file="${thirdpartyreadme.file}" />
             </filesets>
         </jarframework>
         <jarframework file="${jar.file-test-common}"
             title="Connectors Framework - Common Test Utilities">
             <filesets>
                 <fileset dir="${build-test-common}"/>
-                <fileset dir="${src-test-common}">
-                    <patternset refid="exclude.javasrc"/>
-                </fileset>
-                <fileset file="${license.file}" />
-                <fileset file="${thirdpartyreadme.file}" />
             </filesets>
         </jarframework>
         <jarframework file="${jar.file-contract}" 
             title="Connectors Framework - Contract">
             <filesets>
                 <fileset dir="${build-contract-test}"/>
-                <fileset dir="${src-contract-test}">
-                    <patternset refid="exclude.javasrc"/>
-                </fileset>
-                <fileset file="${license.file}" />
-                <fileset file="${thirdpartyreadme.file}" />
             </filesets>
         </jarframework>
     </target>
@@ -274,10 +274,6 @@
         <mkdir dir="${dist}/javadoc" />
         <oc:javadoc overview="${src-framework}/overview.html" 
             classpathref="class.path" destdir="${dist}/javadoc">
-            <!--oc:classpath>
-                <oc:path refid="class.path" />
-                <oc:pathelement location="${build-framework}" />
-            </oc:classpath-->
             <oc:fileset dir="${src-framework}">
                 <oc:patternset refid="ignore"/>
                 <oc:exclude name="**/package.html"/>
@@ -343,7 +339,6 @@
                 <pathelement location="${src-framework}"/>
                 <pathelement location="${src-test-common}"/>
                 <pathelement location="${src-framework-internal}"/>
-                <pathelement location="${src-framework-test}"/>
             </sourcePath>
             <!-- core jar files -->
             <class location="${jar.file}"/>
@@ -357,6 +352,60 @@
     <!-- ********************************************************* -->
     <!-- ********************************************************* -->
     <target name="test" depends="dist, test-toolkit, run-tests, report-tests" />
+
+    <target name="compile-tests">
+        <mkdir dir="${build-test-framework}" />
+        <mkdir dir="${build-test-framework-internal}" />
+        <mkdir dir="${build-test-test-common}" />
+        <mkdir dir="${build-test-contract-test}" />
+        <!-- compile framework tests -->
+        <oc:javac 
+            classpathref="class.path"
+            srcdir="${test-framework}"
+            destdir="${build-test-framework}">
+          <oc:classpath>
+            <oc:pathelement location='${build-framework}'/>
+          </oc:classpath>
+        </oc:javac>
+        <copy todir="${build-test-framework}">
+            <fileset dir="${test-framework}">
+                <patternset refid="exclude.javasrc"/>
+            </fileset>
+        </copy>
+        <!-- compile test-common tests -->
+        <oc:javac 
+            classpathref="class.path"
+            srcdir="${test-test-common}"
+            destdir="${build-test-test-common}">
+          <oc:classpath>
+            <oc:pathelement location='${build-framework}'/>
+            <oc:pathelement location='${build-test-common}'/>
+          </oc:classpath>
+        </oc:javac>
+        <copy todir="${build-test-test-common}">
+            <fileset dir="${test-test-common}">
+                <patternset refid="exclude.javasrc"/>
+            </fileset>
+        </copy>
+        <!-- compile framework-internal tests -->
+        <oc:javac 
+            classpathref="class.path"
+            srcdir="${test-framework-internal}"
+            destdir="${build-test-framework-internal}">
+          <oc:classpath>
+            <oc:pathelement location='${build-framework}'/>
+            <oc:pathelement location='${build-test-common}'/>
+            <oc:pathelement location='${build-framework-internal}'/>
+          </oc:classpath>
+        </oc:javac>
+        <copy todir="${build-test-framework-internal}">
+            <fileset dir="${test-framework-internal}">
+                <patternset refid="exclude.javasrc"/>
+            </fileset>
+        </copy>
+        <!-- TODO: add contract test tests -->
+    </target>
+
     <!--
         Run unit tests with converage..
     -->
@@ -389,14 +438,12 @@
         depends="build-testclasspath-with-coverage">
         <path id="test-classpath">
             <path refid="class.path" />
-            <pathelement location="${src-framework}" />
-            <pathelement location="${src-test-common}" />
-            <pathelement location="${src-framework-internal}" />
-            <pathelement location="${src-framework-test}" />
             <pathelement location="${build-framework}" />
             <pathelement location="${build-test-common}" />
             <pathelement location="${build-framework-internal}" />
-            <pathelement location="${build-framework-test}" />
+            <pathelement location="${build-test-framework}" />
+            <pathelement location="${build-test-test-common}" />
+            <pathelement location="${build-test-framework-internal}" />
         </path>
     </target>
     <target name="build-testclasspath-with-coverage" if="useCobertura">
@@ -411,18 +458,16 @@
             <path refid="class.path" />
             <path refid="cobertura.classpath" />
             <pathelement location="${instrumented}" />
-            <pathelement location="${src-framework}" />
-            <pathelement location="${src-test-common}" />
-            <pathelement location="${src-framework-internal}" />
-            <pathelement location="${src-framework-test}" />
             <pathelement location="${build-framework}" />
             <pathelement location="${build-test-common}" />
             <pathelement location="${build-framework-internal}" />
-            <pathelement location="${build-framework-test}" />
+            <pathelement location="${build-test-framework}" />
+            <pathelement location="${build-test-test-common}" />
+            <pathelement location="${build-test-framework-internal}" />
         </path>
     </target>
 
-    <target name="run-tests" depends="instrument, build-testclasspath">
+    <target name="run-tests" depends="compile-tests, instrument, build-testclasspath">
         <!-- clear out previous test results -->
         <delete dir="${reports}/junit" />
         <mkdir dir="${reports}/junit" />
@@ -449,11 +494,21 @@
             <!-- turn full assertions -->
             <assertions enableSystemAssertions="true" />
             <batchtest todir="${reports}/junit">
-                <fileset refid="test.fileset" />
+                <fileset dir="${test-framework}">
+                    <patternset refid="test.sources"/>
+                </fileset>
+                <fileset dir="${test-test-common}">
+                    <patternset refid="test.sources"/>
+                </fileset>
+                <fileset dir="${test-framework-internal}">
+                    <patternset refid="test.sources"/>
+                </fileset>
             </batchtest>
         </junit>    
     </target>
+
     <target name="report-tests" depends="report-junits, report-instrument"/>
+
     <target name="report-instrument" if="useCobertura">
         <mkdir dir="${reports}/coverage" />
         <delete dir="${reports}/coverage" />
