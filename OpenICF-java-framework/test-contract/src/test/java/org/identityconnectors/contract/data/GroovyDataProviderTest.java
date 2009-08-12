@@ -27,8 +27,9 @@ import groovy.util.ConfigSlurper;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -42,7 +43,6 @@ import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -56,11 +56,15 @@ import org.junit.Test;
 public class GroovyDataProviderTest {
     private static final String NON_EXISTING_PROPERTY = "abcdefghi123asiosfjds";
     private static GroovyDataProvider gdp;
-    public static final String CONFIG_FILE_PATH = "configfileTest.groovy";
+    public static final String CONFIG_FILE_NAME = "configfileTest.groovy";
+
+    private static URL getConfigFileUrl() {
+        return GroovyDataProviderTest.class.getResource(CONFIG_FILE_NAME);
+    }
 
     @Before
     public void setUp() {
-        gdp = new GroovyDataProvider(CONFIG_FILE_PATH, null, null);
+        gdp = new GroovyDataProvider(getConfigFileUrl(), null, null);
     }
 
     @After
@@ -70,8 +74,6 @@ public class GroovyDataProviderTest {
 
     @Test
     public void testListAcquire() throws Exception {
-        Assert.assertTrue(new File(CONFIG_FILE_PATH)
-        .exists());
         Object o = getProperty(gdp, "sampleFooBarList");
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof List);
@@ -90,8 +92,6 @@ public class GroovyDataProviderTest {
     
     @Test
     public void testListAcquireWithLazy() throws Exception {
-        Assert.assertTrue(new File(CONFIG_FILE_PATH)
-        .exists());
         Object o = getProperty(gdp, "sampleFooBarListWithLazy");
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof List);
@@ -113,8 +113,6 @@ public class GroovyDataProviderTest {
     
     @Test
     public void testSimpleStr() throws Exception {
-        Assert.assertTrue(new File(CONFIG_FILE_PATH)
-                .exists());
         Assert
                 .assertEquals(
                         "If you think you can do a thing or think you can't do a thing, you're right. (H. Ford)",
@@ -206,8 +204,6 @@ public class GroovyDataProviderTest {
 
     @Test(expected = ObjectNotFoundException.class)
     public void testNonExistingProperty() throws Exception {
-        Assert.assertTrue(new File(CONFIG_FILE_PATH)
-                .exists());
         Object o = getProperty(gdp, NON_EXISTING_PROPERTY);
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof ConfigObject);
@@ -219,8 +215,6 @@ public class GroovyDataProviderTest {
 
     @Test
     public void testSimpleMapAcquire() throws Exception {
-        Assert.assertTrue(new File(CONFIG_FILE_PATH)
-                .exists());
         Object o = getProperty(gdp, "sampleMap");
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof Map);
@@ -229,8 +223,6 @@ public class GroovyDataProviderTest {
 
     @Test
     public void testDotInNameMapAcquire() throws Exception {
-        Assert.assertTrue(new File(CONFIG_FILE_PATH)
-                .exists());
         Object o = getProperty(gdp, "sampleMap.foo.bar");
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof Map);
@@ -239,8 +231,6 @@ public class GroovyDataProviderTest {
 
     @Test
     public void testRecursiveAcquire() throws Exception {
-        Assert.assertTrue(new File(CONFIG_FILE_PATH)
-                .exists());
         // query for a property with non-existing prefix foo
         // the DataProvider should try to evaluate substrings of the property
         // name (divided by .)
@@ -253,8 +243,6 @@ public class GroovyDataProviderTest {
 
     @Test
     public void testDotNameString() throws Exception {
-        Assert.assertTrue(new File(CONFIG_FILE_PATH)
-                .exists());
         Object o = getProperty(gdp, "eggs.spam.sausage");
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof String);
@@ -263,8 +251,6 @@ public class GroovyDataProviderTest {
 
     @Test
     public void testRandom() throws Exception {
-        Assert.assertTrue(new File(CONFIG_FILE_PATH)
-                .exists());
         Object o = getProperty(gdp, "random");
         Object o2 = getProperty(gdp, "random");
         Assert.assertNotNull(o);
@@ -273,8 +259,6 @@ public class GroovyDataProviderTest {
 
     @Test
     public void testRandomHierarchicalName() throws Exception {
-        Assert.assertTrue(new File(CONFIG_FILE_PATH)
-                .exists());
         Object o = getProperty(gdp, "foo.bla.horror.random");
         Object o2 = getProperty(gdp, "foo.bla.horror.random");
         Assert.assertNotNull(o);
@@ -312,9 +296,6 @@ public class GroovyDataProviderTest {
 
     @Test
     public void testNewRandomGenerator() throws Exception {
-        Assert.assertTrue(new File(CONFIG_FILE_PATH)
-                .exists());
-
         Object o = getProperty(gdp, "randomNewAge");
         Object o2 = getProperty(gdp, "remus");
 
@@ -330,8 +311,6 @@ public class GroovyDataProviderTest {
 
     @Test
     public void testMapAttributesNew() throws Exception {
-        Assert.assertTrue(new File(CONFIG_FILE_PATH)
-                .exists());
 
         {
             Object o = getProperty(gdp, "attributeMap.string");
@@ -346,9 +325,6 @@ public class GroovyDataProviderTest {
             Assert.assertTrue(o instanceof String);
             Assert.assertTrue(o.toString() == "Good morning Mrs. Smith!");
         }
-
-        Assert.assertTrue(new File(CONFIG_FILE_PATH)
-                .exists());
 
         {
             Object o = getProperty(gdp, "Delete.account.__NAME__.string");
@@ -634,7 +610,7 @@ public class GroovyDataProviderTest {
         Object o = gdp.writeDataToFile();
 
         // read the file line by line
-        List<String> lines = readLines(CONFIG_FILE_PATH);
+        List<String> lines = readLines(getConfigFileUrl());
 
         // parse and control the properties in the written file
         // FOR NOW just left side from the assigment is controlled.
@@ -660,8 +636,6 @@ public class GroovyDataProviderTest {
 
     @Test
     public void testGetAttributeSet() throws Exception {
-        Assert.assertTrue(new File(CONFIG_FILE_PATH)
-        .exists());
         Set<Attribute> as = gdp.getAttributeSet("abcAccount.tst");
 
         Assert.assertNotNull(as);
@@ -755,12 +729,12 @@ public class GroovyDataProviderTest {
     }
 
     /** read lines from given file line by line */
-    private List<String> readLines(String configFilePath) throws IOException {
+    private List<String> readLines(URL url) throws IOException {
         List<String> result = new ArrayList<String>();
 
         // get the lines of the original property file
-        BufferedReader input = new BufferedReader(new FileReader(
-                CONFIG_FILE_PATH));
+        BufferedReader input = new BufferedReader(new InputStreamReader(
+                url.openStream()));
         try {
             String line = null; // not declared within while loop
 

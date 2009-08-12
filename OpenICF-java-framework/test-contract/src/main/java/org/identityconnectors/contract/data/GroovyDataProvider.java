@@ -288,20 +288,12 @@ public class GroovyDataProvider implements DataProvider {
     /**
      * Constructor for JUnit Testing purposes only. Do not use it normally.
      */
-    public GroovyDataProvider(String configFilePath, String nullStr2, String null3) {
-
+    public GroovyDataProvider(URL configURL, String nullStr2, String null3) {
         configObject = doBootstrap();
 
-        File f = new File(configFilePath);
-
-        try {
-            // parse the configuration file once
-            ConfigObject highPriorityCO = cs.parse(f.toURL());
-            configObject = mergeConfigObjects(configObject, highPriorityCO);
-
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
+        // parse the configuration file once
+        ConfigObject highPriorityCO = cs.parse(configURL);
+        configObject = mergeConfigObjects(configObject, highPriorityCO);
     }
 
     /** load the bootstrap configuration */
