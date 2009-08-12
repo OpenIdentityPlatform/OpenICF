@@ -992,7 +992,7 @@ public class ConnectorHelper {
     public static Object get(DataProvider dataProvider, String componentName, 
             Class<?> dataTypeName, String name, String qualifier, String objectClassName, 
             int sequenceNumber, boolean isMultivalue) throws ObjectNotFoundException {
-        return dataProvider.get(dataTypeName, formatDataName(objectClassName, formatDataName(name, qualifier)), 
+        return dataProvider.get(dataTypeName, formatDataName(objectClassName, formatDataName(qualifier, name)), 
                 componentName, sequenceNumber, isMultivalue);
     }
 
