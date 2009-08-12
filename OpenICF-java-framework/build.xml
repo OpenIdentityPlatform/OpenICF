@@ -39,21 +39,21 @@
     <property name="src-framework" location="framework/src/main/java" />
     <property name="src-framework-internal" location="framework-internal/src/main/java" />
     <property name="src-test-common" location="test-common/src/main/java"/>
-    <property name="src-contract-test" location="test-contract/src/main/java"/>
+    <property name="src-test-contract" location="test-contract/src/main/java"/>
     <property name="test-framework" location="framework/src/test/java" />
     <property name="test-framework-internal" location="framework-internal/src/test/java" />
     <property name="test-test-common" location="test-common/src/test/java"/>
-    <property name="test-contract-test" location="test-contract/src/test/java"/>
+    <property name="test-test-contract" location="test-contract/src/test/java"/>
     <property name="src-toolkit" location="toolkit"/>
     <property name="build" location="build"/>
     <property name="build-framework" location="build/framework/classes" />
     <property name="build-framework-internal" location="build/framework-internal/classes" />
     <property name="build-test-common" location="build/test-common/classes"/>
-    <property name="build-contract-test" location="build/contract-tests/classes"/>
+    <property name="build-test-contract" location="build/test-contract/classes"/>
     <property name="build-test-framework" location="build/framework/testclasses" />
     <property name="build-test-framework-internal" location="build/framework-internal/testclasses" />
     <property name="build-test-test-common" location="build/test-common/testclasses"/>
-    <property name="build-test-contract-test" location="build/contract-tests/testclasses"/>
+    <property name="build-test-test-contract" location="build/test-contract/testclasses"/>
     <property name="instrumented" value="build/instrumented" />
     <property name="dist" location="dist" />
     <property name="netbeans" location="netbeans" />
@@ -147,7 +147,7 @@
         <mkdir dir="${build-framework}" />
         <mkdir dir="${build-framework-internal}" />
         <mkdir dir="${build-test-common}" />
-        <mkdir dir="${build-contract-test}" />
+        <mkdir dir="${build-test-contract}" />
         <!-- compile framework -->
         <oc:javac 
             classpathref="class.path"
@@ -193,18 +193,18 @@
             <fileset file="${license.file}" />
             <fileset file="${thirdpartyreadme.file}" />
         </copy>
-        <!-- compile contract tests -->
+        <!-- compile test-contract -->
         <oc:javac
             classpathref="class.path"
-            srcdir="${src-contract-test}"
-            destdir="${build-contract-test}">
+            srcdir="${src-test-contract}"
+            destdir="${build-test-contract}">
           <oc:classpath>
             <oc:pathelement location='${build-framework}'/>
             <oc:pathelement location='${build-test-common}'/>
           </oc:classpath>
         </oc:javac>
-        <copy todir="${build-contract-test}">
-            <fileset dir="${src-contract-test}">
+        <copy todir="${build-test-contract}">
+            <fileset dir="${src-test-contract}">
                 <patternset refid="exclude.javasrc"/>
             </fileset>
             <fileset file="${license.file}" />
@@ -258,9 +258,9 @@
             </filesets>
         </jarframework>
         <jarframework file="${jar.file-contract}" 
-            title="Connectors Framework - Contract">
+            title="Connectors Framework - Contract Tests">
             <filesets>
-                <fileset dir="${build-contract-test}"/>
+                <fileset dir="${build-test-contract}"/>
             </filesets>
         </jarframework>
     </target>
@@ -357,7 +357,7 @@
         <mkdir dir="${build-test-framework}" />
         <mkdir dir="${build-test-framework-internal}" />
         <mkdir dir="${build-test-test-common}" />
-        <mkdir dir="${build-test-contract-test}" />
+        <mkdir dir="${build-test-test-contract}" />
         <!-- compile framework tests -->
         <oc:javac 
             classpathref="class.path"
@@ -403,7 +403,22 @@
                 <patternset refid="exclude.javasrc"/>
             </fileset>
         </copy>
-        <!-- TODO: add contract test tests -->
+        <!-- compile test-contract tests -->
+        <oc:javac 
+            classpathref="class.path"
+            srcdir="${test-test-contract}"
+            destdir="${build-test-test-contract}">
+          <oc:classpath>
+            <oc:pathelement location='${build-framework}'/>
+            <oc:pathelement location='${build-test-common}'/>
+            <oc:pathelement location='${build-test-contract}'/>
+          </oc:classpath>
+        </oc:javac>
+        <copy todir="${build-test-test-contract}">
+            <fileset dir="${test-test-contract}">
+                <patternset refid="exclude.javasrc"/>
+            </fileset>
+        </copy>
     </target>
 
     <!--
@@ -441,9 +456,11 @@
             <pathelement location="${build-framework}" />
             <pathelement location="${build-test-common}" />
             <pathelement location="${build-framework-internal}" />
+            <pathelement location="${build-test-contract}" />
             <pathelement location="${build-test-framework}" />
             <pathelement location="${build-test-test-common}" />
             <pathelement location="${build-test-framework-internal}" />
+            <pathelement location="${build-test-test-contract}" />
         </path>
     </target>
     <target name="build-testclasspath-with-coverage" if="useCobertura">
@@ -461,9 +478,11 @@
             <pathelement location="${build-framework}" />
             <pathelement location="${build-test-common}" />
             <pathelement location="${build-framework-internal}" />
+            <pathelement location="${build-test-contract}" />
             <pathelement location="${build-test-framework}" />
             <pathelement location="${build-test-test-common}" />
             <pathelement location="${build-test-framework-internal}" />
+            <pathelement location="${build-test-test-contract}" />
         </path>
     </target>
 
@@ -501,6 +520,9 @@
                     <patternset refid="test.sources"/>
                 </fileset>
                 <fileset dir="${test-framework-internal}">
+                    <patternset refid="test.sources"/>
+                </fileset>
+                <fileset dir="${test-test-contract}">
                     <patternset refid="test.sources"/>
                 </fileset>
             </batchtest>
