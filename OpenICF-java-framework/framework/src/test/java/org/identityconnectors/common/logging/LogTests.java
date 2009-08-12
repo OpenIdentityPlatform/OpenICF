@@ -61,13 +61,11 @@ public class LogTests {
 
     public static class StubLogSpi implements LogSpi {
 
-		@Override
 		public boolean isLoggable(Class<?> clazz, Level level) {
 			// TODO Auto-generated method stub
 			return false;
 		}
 
-		@Override
 		public void log(Class<?> clazz, String method, Level level,
 				String message, Throwable ex) {
 		}
