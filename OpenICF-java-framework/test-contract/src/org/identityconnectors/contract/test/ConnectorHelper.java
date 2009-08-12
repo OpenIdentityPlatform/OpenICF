@@ -981,36 +981,6 @@ public class ConnectorHelper {
         return dataProvider.getString(formatDataName(objectClassName, name), 
                 componentName);
     }
-        
-    /**
-     * appends qualifier and objectclass
-     * @param dataProvider
-     * @param componentName
-     * @param name
-     * @param qualifier
-     * @param objectClassName
-     * @param sequenceNumber
-     * @return
-     * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
-     */
-    public static String getString(DataProvider dataProvider, String componentName, 
-            String name, String qualifier, String objectClassName,
-            int sequenceNumber) throws ObjectNotFoundException {
-        
-        if(qualifier.length() > 0) {
-            name = qualifier + "." + name;
-        }
-        
-        String dataName = formatDataName(objectClassName, name);
-        return dataProvider.getString(dataName, componentName, sequenceNumber);
-    }
-        
-    public static String getString(DataProvider dataProvider, String componentName, 
-            String name, String objectClassName,
-            int sequenceNumber) throws ObjectNotFoundException {
-        return getString(dataProvider, componentName, name, "", 
-                objectClassName, sequenceNumber);
-    }
     
     public static Object get(DataProvider dataProvider, String componentName, 
             Class<?> dataTypeName, String name, String objectClassName, 
