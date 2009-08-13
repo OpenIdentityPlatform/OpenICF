@@ -580,7 +580,7 @@
                 <not>
                     <available 
                         type="file"
-                        file="${test_connector.dir}/src/custom/foo/FooConnector.java" />
+                        file="${test_connector.dir}/src/main/java/custom/foo/FooConnector.java" />
                 </not>
             </condition>
         </fail>
@@ -636,7 +636,8 @@
             <oc:fileset dir="${src-toolkit}"/>
         </oc:copy>
         <!-- copy in the connector build -->
-        <oc:copy todir="${build-toolkit}" file="connector_build.xml"/>       
+        <oc:copy todir="${build-toolkit}" file="connector_build.xml"/>
+	<oc:copy todir="${build-toolkit}" file="connector_build_old.xml"/>              
         <!-- build and copy in the netbeans module (conditionally) -->
         <antcall target="nbm"/> 
         <!-- package it -->
