@@ -888,41 +888,15 @@ public class GroovyDataProvider implements DataProvider {
         Set<Attribute> attrSet = new LinkedHashSet<Attribute>();
         for (Entry<String, Object> entry : propMap.entrySet()) {
             final String key = entry.getKey();
-            final Object value = entry.getValue();
-
-            if (Uid.NAME.equals(key)) {
-                attrSet.add(new Uid(value.toString()));
-            } else if (OperationalAttributes.PASSWORD_NAME.equals(key)) {
-                attrSet.add(AttributeBuilder.buildPassword(value.toString()
-                        .toCharArray()));
-            } else if (OperationalAttributes.CURRENT_PASSWORD_NAME.equals(key)) {
-                attrSet.add(AttributeBuilder.buildCurrentPassword(value
-                        .toString().toCharArray()));
-            } else if (OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME
-                    .equals(key)) {
-                attrSet.add(AttributeBuilder
-                        .buildPasswordExpirationDate((Long) value));
-            } else if (OperationalAttributes.PASSWORD_EXPIRED_NAME.equals(key)) {
-                attrSet.add(AttributeBuilder
-                        .buildPasswordExpired((Boolean) value));
-            } else if (OperationalAttributes.DISABLE_DATE_NAME.equals(key)) {
-                attrSet.add(AttributeBuilder.buildDisableDate((Long) value));
-            } else if (OperationalAttributes.ENABLE_DATE_NAME.equals(key)) {
-                attrSet.add(AttributeBuilder.buildEnableDate((Long) value));
-            } else if (OperationalAttributes.ENABLE_NAME.equals(key)) {
-                attrSet.add(AttributeBuilder.buildEnabled((Boolean) value));
-            } else if (OperationalAttributes.LOCK_OUT_NAME.equals(key)) {
-                attrSet.add(AttributeBuilder.buildLockOut((Boolean) value));
+            final Object value = entry.getValue(); 
+            if (value.getClass().isArray()) {
+                Object[] array = (Object[]) value;
+                List<?> list = Arrays.asList(array);
+                attrSet.add(AttributeBuilder.build(key, list));
+            } else if (value instanceof Collection<?>) {
+                attrSet.add(AttributeBuilder.build(key, (Collection<?>) value));
             } else {
-                if (value.getClass().isArray()) {
-                    Object[] array = (Object[]) value;
-                    List<?> list = Arrays.asList(array);
-                    attrSet.add(AttributeBuilder.build(key, list));
-                } else if (value instanceof Collection<?>) {
-                    attrSet.add(AttributeBuilder.build(key, (Collection<?>) value));
-                } else {
-                    attrSet.add(AttributeBuilder.build(key, value));
-                }
+                attrSet.add(AttributeBuilder.build(key, value));
             }
         }
         return attrSet;
