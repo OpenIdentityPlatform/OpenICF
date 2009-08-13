@@ -42,7 +42,7 @@
         <property name="opends.zip.default.dir" value="${user.home}/.connectors/connector-ldap"/>
         <property name="opends.zip.default" value="${opends.zip.default.dir}/OpenDS-1.0.0.zip"/>
         <property name="opends.ldif" location="opends"/>
-        <property name="opends.dest.dir" location="${srctestjava}/org/identityconnectors/ldap/opends"/>
+	<property name="opends.dest.dir" location="${build.test}/org/identityconnectors/ldap/opends"/>
     	<property name="opends.setup.dir" location="${java.io.tmpdir}/opends-setup"/>
     	<property name="lib.dir" value="lib"/>
         <patternset id="opends.libs">
