@@ -29,8 +29,6 @@ import org.identityconnectors.common.logging.LogSpi;
 import org.identityconnectors.common.logging.impl.NoOpLogger;
 import org.junit.Test;
 
-
-
 /**
  * Just make sure the class behavior doesn't change..
  */

@@ -20,7 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
-package org.identityconnectors.common.logging.impl;
+package org.identityconnectors.common.logging;
 
 import java.io.PrintStream;
 import java.text.MessageFormat;
@@ -29,7 +29,6 @@ import java.util.Date;
 import org.identityconnectors.common.StringPrintWriter;
 import org.identityconnectors.common.logging.LogSpi;
 import org.identityconnectors.common.logging.Log.Level;
-
 
 /**
  * Standard out logger. It logs all messages to STDOUT. The method
@@ -40,7 +39,7 @@ import org.identityconnectors.common.logging.Log.Level;
  * @version $Revision: 1.5 $
  * @since 1.0
  */
-public class StdOutLogger implements LogSpi {
+class StdOutLogger implements LogSpi {
 
     private static final String PATTERN = "Thread Id: {0}\tTime: {1}\tClass: {2}\tMethod: {3}\tLevel: {4}\tMessage: {5}";
     /**

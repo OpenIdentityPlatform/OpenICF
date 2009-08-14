@@ -20,7 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
-package org.identityconnectors.common.logging.impl;
+package org.identityconnectors.common.logging;
 
 import static org.junit.Assert.assertEquals;
 
@@ -34,14 +34,11 @@ import java.util.Map;
 import org.identityconnectors.common.StringPrintWriter;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.logging.LogSpi;
-import org.identityconnectors.common.logging.impl.StdOutLogger;
 import org.junit.Assert;
 import org.junit.Test;
 
-
-
 /**
- * Simple tests of the STDOUT logger.
+ * Simple tests of {@link StdOutLogger}.
  */
 public class StdOutLoggerTests {
     

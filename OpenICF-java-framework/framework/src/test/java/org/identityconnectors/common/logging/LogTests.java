@@ -59,18 +59,6 @@ public class LogTests {
         }
     }
 
-    public static class StubLogSpi implements LogSpi {
-
-		public boolean isLoggable(Class<?> clazz, Level level) {
-			// TODO Auto-generated method stub
-			return false;
-		}
-
-		public void log(Class<?> clazz, String method, Level level,
-				String message, Throwable ex) {
-		}
-    }
-
     @Test
     public void checkIsLoggableMethods() {
         // create log w/ Mock..
@@ -287,15 +275,14 @@ public class LogTests {
             try {
                 // check the default..
                 Log.getLog(String.class);
-                // Next line temporarily commented out.
-                // assertEquals(StdOutLogger.class, Log.getSpiClass());
-                // attempt to get the NoOpLogger
+                assertEquals(StdOutLogger.class, Log.getSpiClass());
+                // attempt to get the mock logger
                 Log.setSpiClass(null);
                 System.setProperty(Log.LOGSPI_PROP, MockLogSpi.class.getName());
                 Log.getLog(String.class);
                 assertEquals(MockLogSpi.class, Log.getSpiClass());
                 // attempt to change it, so make sure its cached..
-                System.setProperty(Log.LOGSPI_PROP, StubLogSpi.class.getName());
+                System.setProperty(Log.LOGSPI_PROP, StdOutLogger.class.getName());
                 assertEquals(MockLogSpi.class, Log.getSpiClass());
             } finally {
                 // restore logger to original state..

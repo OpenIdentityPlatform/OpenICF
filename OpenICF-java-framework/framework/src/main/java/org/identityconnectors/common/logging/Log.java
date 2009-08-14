@@ -37,21 +37,26 @@ import org.identityconnectors.common.StringUtil;
  * Yet another logging abstraction.
  */
 public final class Log {
-    private static final String PACKAGE = Log.class.getPackage().getName();
+
     /**
      * Default SPI implementation should all attempts to load the custom logger
      * fail.
      */
-    private static final String LOGSPI_DEFAULT = PACKAGE + ".impl.StdOutLogger";
+    private static Class<?> DEFAULT_SPI = StdOutLogger.class;
+
+    private static final String PACKAGE = Log.class.getPackage().getName();
+
     /**
      * System property to set the logger class that is most appropriate.
      */
     public static final String LOGSPI_PROP = PACKAGE + ".class";
+
     /**
      * Filename 'connectors.properties' used to for SPI class in the
      * '$(java.home)/lib/' directory.
      */
     public static final String LOGSPI_PROPS_FILE = "connectors.properties";
+
     /**
      * Cache the SPI class so we one search for it once.
      */
@@ -288,7 +293,7 @@ public final class Log {
             return forName(clazz.trim());
         }
         // return the default..
-        return forName(LOGSPI_DEFAULT);
+        return DEFAULT_SPI;
     }
 
     /**
