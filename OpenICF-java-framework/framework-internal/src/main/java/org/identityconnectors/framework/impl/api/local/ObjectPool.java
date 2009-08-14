@@ -101,10 +101,6 @@ public class ObjectPool<T> {
             return _object;
         }
         
-        public boolean isActive() {
-            return _isActive;
-        }
-        
         public boolean isNew() {
             return _isNew;
         }

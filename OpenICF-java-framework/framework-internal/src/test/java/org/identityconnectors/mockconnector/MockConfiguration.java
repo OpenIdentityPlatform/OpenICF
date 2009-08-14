@@ -24,7 +24,6 @@ package org.identityconnectors.mockconnector;
 
 import org.identityconnectors.framework.spi.AbstractConfiguration;
 
-@SuppressWarnings("serial")
 public class MockConfiguration extends AbstractConfiguration {
 
     boolean fail;

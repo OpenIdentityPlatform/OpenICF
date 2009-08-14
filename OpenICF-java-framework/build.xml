@@ -94,7 +94,9 @@
        Presets
     -->
     <presetdef name="javac" uri="internal:tasks">
-        <javac target="1.5" source="1.5" nowarn="true" debug="${debug}" deprecation="${deprecation}" />
+        <javac target="1.5" source="1.5" nowarn="true" debug="${debug}" deprecation="${deprecation}">
+            <compilerarg line="-Xlint -Xlint:-serial"/>
+        </javac>
     </presetdef>
     <presetdef name="javadoc" uri="internal:tasks">
         <javadoc author="true" version="true" source="1.5"/>

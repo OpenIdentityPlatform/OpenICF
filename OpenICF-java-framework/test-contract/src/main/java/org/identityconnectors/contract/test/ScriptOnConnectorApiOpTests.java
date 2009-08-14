@@ -81,6 +81,7 @@ public class ScriptOnConnectorApiOpTests extends ContractTestBase {
                         LANGUAGE_PROP_PREFIX, TEST_NAME);
                 String script = (String) getDataProvider().getTestSuiteAttribute(
                         SCRIPT_PROP_PREFIX, TEST_NAME);
+                @SuppressWarnings("unchecked")
                 Map<String, Object> arguments = (Map<String, Object>) getDataProvider()
                         .getTestSuiteAttribute(ARGUMENTS_PROP_PREFIX, TEST_NAME);
                 Object expResult = getDataProvider().getTestSuiteAttribute(RESULT_PROP_PREFIX,

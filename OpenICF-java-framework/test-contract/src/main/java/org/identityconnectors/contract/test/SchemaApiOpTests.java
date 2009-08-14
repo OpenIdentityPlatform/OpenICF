@@ -173,6 +173,7 @@ public class SchemaApiOpTests extends ContractTestBase {
         Boolean strictCheck = getStrictCheckProperty();
 
         // list of expected object classes
+        @SuppressWarnings("unchecked")
         List<String> expOClasses = (List<String>) getTestPropertyOrFail(List.class.getName(),
                 SUPPORTED_OBJECT_CLASSES_PROPERTY_PREFIX, true);
 
@@ -183,6 +184,7 @@ public class SchemaApiOpTests extends ContractTestBase {
             assertTrue(String.format(msg, ocInfo.getType()), expOClasses.contains(ocInfo.getType()));
 
             // list of expected attributes for the object class
+            @SuppressWarnings("unchecked")
             List<String> expAttrs = (List<String>) getTestPropertyOrFail(List.class.getName(),
                     "attributes." + ocInfo.getType() + "."
                             + SUPPORTED_OBJECT_CLASSES_PROPERTY_PREFIX, strictCheck);
@@ -196,6 +198,7 @@ public class SchemaApiOpTests extends ContractTestBase {
                 }
 
                 // expected attribute values
+                @SuppressWarnings("unchecked")
                 Map<String, Object> expAttrValues = (Map<String, Object>) getTestPropertyOrFail(
                         Map.class.getName(), attr.getName() + ".attribute." + ocInfo.getType()
                                 + "." + SUPPORTED_OBJECT_CLASSES_PROPERTY_PREFIX, strictCheck);
@@ -222,6 +225,7 @@ public class SchemaApiOpTests extends ContractTestBase {
                 expOClasses.size() == schema.getObjectClassInfo().size());
 
         // expected object classes supported by operations
+        @SuppressWarnings("unchecked")
         Map<String, List<String>> expOperations = (Map<String, List<String>>) getTestPropertyOrFail(
                 Map.class.getName(), SUPPORTED_OPERATIONS_PROPERTY_PREFIX, true);
         Map<Class<? extends APIOperation>, Set<ObjectClassInfo>> supportedOperations = schema

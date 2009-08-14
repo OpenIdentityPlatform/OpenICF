@@ -87,7 +87,7 @@ public abstract class ConnectorServer {
      * uses JVM defaults. Ignored for non-SSL.
      */
     private List<KeyManager> _keyManagers =
-        CollectionUtil.newReadOnlyList();
+        CollectionUtil.<KeyManager>newReadOnlyList();
         
     /**
      * Get the singleton instance of the {@link ConnectorServer}.

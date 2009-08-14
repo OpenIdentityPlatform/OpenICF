@@ -228,6 +228,7 @@ public class GroovyDataProvider implements DataProvider {
             return;
         }
         if (o instanceof Map) {
+            @SuppressWarnings("unchecked")
             Map<String, String> map = (Map<String , String>) o;
             for (Map.Entry<String , String> entry : map.entrySet()) {
                 try {
@@ -618,9 +619,9 @@ public class GroovyDataProvider implements DataProvider {
      * @return
      */
     private Map resolveMap(Map map) {
-        Map localMap = map;
-        for (Iterator it = localMap.entrySet().iterator(); it.hasNext();) {
-            Map.Entry pairKV = (Map.Entry) it.next();
+        @SuppressWarnings("unchecked")
+        Map<?, Object> localMap = map;
+        for (Map.Entry<?, Object> pairKV : localMap.entrySet()) {
             /** value */
             Object object = pairKV.getValue();
             
@@ -646,7 +647,7 @@ public class GroovyDataProvider implements DataProvider {
      * @return the list with resolved values
      */
     private List resolveList(List list) {
-        List result = new ArrayList();
+        List<Object> result = new ArrayList<Object>();
         for (Object object : list) {
             if (object instanceof Lazy) {
                 Lazy lazyO = (Lazy) object;
@@ -1131,13 +1132,10 @@ public class GroovyDataProvider implements DataProvider {
         String svalue = null;
         StringBuilder sb = new StringBuilder();
         boolean first = false;
-        Collection collection = ((Map<Object, Object>) obj).entrySet();
+        @SuppressWarnings("unchecked")
+        Map<Object, Object> objMap = (Map<Object, Object>) obj;
 
-        for (Iterator iterator = collection.iterator(); iterator.hasNext();) {
-            // pick an _entry_ for further flattening
-            Map.Entry<Object, Object> entry = (Map.Entry<Object, Object>) iterator
-                    .next();
-
+        for (Map.Entry<Object, Object> entry : objMap.entrySet()) {
             /*
              * entry is made of _key_ and _value_ pair
              */
@@ -1249,8 +1247,9 @@ public class GroovyDataProvider implements DataProvider {
         StringBuilder sb = new StringBuilder();
         boolean first = true;
         
-        for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) obj)
-                .entrySet()) {
+        @SuppressWarnings("unchecked")
+        Map<Object, Object> objMap = (Map<Object, Object>) obj;
+        for (Map.Entry<Object, Object> entry : objMap.entrySet()) {
             String key = flatten(entry.getKey());
             String value = flatten(entry.getValue());
             if (!first) {
