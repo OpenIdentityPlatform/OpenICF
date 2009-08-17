@@ -64,7 +64,7 @@ public class GroovyDataProviderTest {
 
     @Before
     public void setUp() {
-        gdp = new GroovyDataProvider(getConfigFileUrl(), null, null);
+        gdp = new GroovyDataProvider(getConfigFileUrl());
     }
 
     @After

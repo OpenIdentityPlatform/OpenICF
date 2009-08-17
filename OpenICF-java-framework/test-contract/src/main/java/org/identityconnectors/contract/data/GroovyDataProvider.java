@@ -281,7 +281,7 @@ public class GroovyDataProvider implements DataProvider {
     /**
      * Constructor for JUnit Testing purposes only. Do not use it normally.
      */
-    public GroovyDataProvider(URL configURL, String nullStr2, String null3) {
+    GroovyDataProvider(URL configURL) {
         configObject = doBootstrap();
 
         // parse the configuration file once
