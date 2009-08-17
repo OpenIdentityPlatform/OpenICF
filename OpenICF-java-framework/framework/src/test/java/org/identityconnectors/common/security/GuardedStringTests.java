@@ -24,13 +24,21 @@ package org.identityconnectors.common.security;
 
 import junit.framework.Assert;
 
-import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.common.security.SecurityUtil;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-
-
 public class GuardedStringTests {
+    
+    @Before
+    public void setUp() {
+        GuardedString.setEncryptor(new SimpleEncryptor());
+    }
+    
+    @After
+    public void tearDown() {
+        GuardedString.setEncryptor(null);
+    }
     
     @Test
     public void testBasics() {

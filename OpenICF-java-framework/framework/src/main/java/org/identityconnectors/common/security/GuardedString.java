@@ -63,7 +63,7 @@ public final class GuardedString {
         public void access(char [] clearChars);
     }
     
-    private static Encryptor _encryptor;
+    static Encryptor _encryptor;
     
     private boolean _readOnly;
     private boolean _disposed;
@@ -237,6 +237,10 @@ public final class GuardedString {
             _encryptor = EncryptorFactory.getInstance().newRandomEncryptor();
         }
         return _encryptor;
+    }
+    
+    static synchronized void setEncryptor(Encryptor encryptor) {
+        _encryptor = encryptor;
     }
     
     private byte [] decryptBytes()

@@ -211,6 +211,10 @@ public final class GuardedByteArray {
         return _encryptor;
     }
     
+    static synchronized void setEncryptor(Encryptor encryptor) {
+        _encryptor = encryptor;
+    }
+    
     private byte [] decryptBytes()
     {
         Encryptor encryptor = getEncryptor();

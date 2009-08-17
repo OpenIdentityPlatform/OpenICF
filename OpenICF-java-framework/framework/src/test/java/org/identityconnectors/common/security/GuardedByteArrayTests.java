@@ -27,13 +27,21 @@ import java.util.Arrays;
 
 import junit.framework.Assert;
 
-import org.identityconnectors.common.security.GuardedByteArray;
-import org.identityconnectors.common.security.SecurityUtil;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-
-
 public class GuardedByteArrayTests {
+    
+    @Before
+    public void setUp() {
+        GuardedByteArray.setEncryptor(new SimpleEncryptor());
+    }
+    
+    @After
+    public void tearDown() {
+        GuardedByteArray.setEncryptor(null);
+    }
     
     @Test
     public void testBasics() {
