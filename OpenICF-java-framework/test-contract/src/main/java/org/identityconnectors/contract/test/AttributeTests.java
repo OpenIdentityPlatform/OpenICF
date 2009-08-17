@@ -222,7 +222,7 @@ public class AttributeTests extends ObjectClassRunner {
                 // create an object to update
                 uid = ConnectorHelper.createObject(getConnectorFacade(),
                         getDataProvider(), getObjectClassInfo(), getTestName(),
-                        0, getOperationOptionsByOp(CreateApiOp.class));
+                        1, getOperationOptionsByOp(CreateApiOp.class));
                 assertNotNull("Create returned null Uid.", uid);
 
                 // get by uid
@@ -379,7 +379,7 @@ public class AttributeTests extends ObjectClassRunner {
 
                 // create a new user
                 Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(
-                        getDataProvider(), oci, getTestName(), 0, true, false);
+                        getDataProvider(), oci, getTestName(), 2, true, false);
                 // should throw UnsupportedObjectClass if not supported
                 uid = getConnectorFacade().create(getSupportedObjectClass(),
                         attrs, getOperationOptionsByOp(CreateApiOp.class));
@@ -450,7 +450,7 @@ public class AttributeTests extends ObjectClassRunner {
                  * CREATE a new user
                  */ 
                 Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(
-                        getDataProvider(), oci, getTestName(), 0, true, false);
+                        getDataProvider(), oci, getTestName(), 3, true, false);
                 // should throw UnsupportedObjectClass if not supported
                 uid = getConnectorFacade().create(getObjectClass(), attrs,
                         null);
