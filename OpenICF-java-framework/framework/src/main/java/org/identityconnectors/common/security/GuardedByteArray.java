@@ -189,23 +189,20 @@ public final class GuardedByteArray {
         return _base64SHA1Hash.equals(hash);
     }
     
-    private void checkWriteable()
-    {
+    private void checkWriteable() {
         if (_readOnly) {
             throw new IllegalStateException("Byte array is read-only");
         }
     }
-    private void checkNotDisposed()
-    {
+
+    private void checkNotDisposed() {
         if (_disposed) {
             throw new IllegalStateException("Byte array is disposed");
         }
     }
     
-    private static synchronized Encryptor getEncryptor()
-    {
-        if (_encryptor == null) 
-        {
+    private static synchronized Encryptor getEncryptor() {
+        if (_encryptor == null) {
             _encryptor = EncryptorFactory.getInstance().newRandomEncryptor();
         }
         return _encryptor;
@@ -215,14 +212,12 @@ public final class GuardedByteArray {
         _encryptor = encryptor;
     }
     
-    private byte [] decryptBytes()
-    {
+    private byte [] decryptBytes() {
         Encryptor encryptor = getEncryptor();
         return encryptor.decrypt(_encryptedBytes);
     }
     
-    private void encryptBytes(byte [] bytes)
-    {
+    private void encryptBytes(byte [] bytes) {
         Encryptor encryptor = getEncryptor();
         byte [] newBytes = encryptor.encrypt(bytes);
         SecurityUtil.clear(_encryptedBytes);
