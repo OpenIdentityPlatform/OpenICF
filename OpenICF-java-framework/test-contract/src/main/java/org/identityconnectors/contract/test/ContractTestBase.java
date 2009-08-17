@@ -46,7 +46,6 @@ public abstract class ContractTestBase {
     private static void disposeDataProvider() {
     	if(_dataProvider != null) {
 	        _dataProvider.dispose();       
-	        _dataProvider = null;      
     	}
     }
     

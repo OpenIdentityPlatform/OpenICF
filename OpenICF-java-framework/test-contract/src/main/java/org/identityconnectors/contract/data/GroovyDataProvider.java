@@ -1259,6 +1259,7 @@ public class GroovyDataProvider implements DataProvider {
     public void dispose() {
         writeDataToFile();
         writeQueriedDumpToFile();
+        cache.clear();
     }
 }
 
