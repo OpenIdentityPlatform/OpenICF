@@ -89,12 +89,6 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
         requiredOps.add(GetApiOp.class);
         return requiredOps;
     }
-
-    @Override
-    public void dispose() {
-    	super.disposeOnce();
-        super.dispose();
-    }
     
     /**
      * {@inheritDoc}     

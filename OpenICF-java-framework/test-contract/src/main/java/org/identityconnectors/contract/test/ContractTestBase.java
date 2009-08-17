@@ -29,7 +29,6 @@ import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
 
 
@@ -44,12 +43,7 @@ public abstract class ContractTestBase {
     
     protected ConnectorFacade _connFacade;
 
-    /**
-     * Dispose the test environment, do the cleanup.
-     * Disposal done once after all test methods in a class are invoked.
-     */
-    @AfterClass
-    public static void disposeOnce() {
+    private static void disposeDataProvider() {
     	if(_dataProvider != null) {
 	        _dataProvider.dispose();       
 	        _dataProvider = null;      
@@ -57,7 +51,7 @@ public abstract class ContractTestBase {
     }
     
     /**
-     * Initialize the environment needed to run the test
+     * Initialize the environment needed to run the test. Called once per test method (@Before).
      */
     @Before
     public void init() {        
@@ -65,11 +59,12 @@ public abstract class ContractTestBase {
     }
 
     /**
-     * Dispose the test environment, do the cleanup
+     * Dispose the test environment, do the cleanup. Called once per test method (@After).
      */
     @After
     public void dispose() {
         _connFacade = null;
+        disposeDataProvider();
     }
     
     /**
