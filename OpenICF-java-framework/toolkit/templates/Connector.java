@@ -187,7 +187,7 @@ public class <%= resourceName %>Connector implements PoolableConnector, <%= inte
        throw new UnsupportedOperationException();
     } <% } %>
      
-    <% if(interfaces.contains("UpdateOp")) { %>
+    <% if(interfaces.contains("UpdateOp") || interfaces.contains("UpdateAttributeValuesOp")) { %>
     /**
      * {@inheritDoc}
      */

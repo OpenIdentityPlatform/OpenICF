@@ -62,8 +62,8 @@ operations.each {
     interfaces.add(iName)
 }
 if(interfaces.contains("UpdateAttributeValuesOp") && interfaces.contains("UpdateOp")) {
-	interfaces.remove("UpdateAttributeValuesOp")
-	ant.echo "Omitting 'UpdateAttributeValuesOp' because 'UpdateOp' was selected..."
+	interfaces.remove("UpdateOp")
+	ant.echo "Omitting 'UpdateOp' because 'UpdateAttributeValuesOp' was selected..."
 }
 
 baseDir = properties["basedir"]
