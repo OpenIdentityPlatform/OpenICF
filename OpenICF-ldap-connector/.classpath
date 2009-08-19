@@ -3,12 +3,12 @@
 	<classpathentry excluding="**/.svn/*" kind="src" path="src/main/java"/>
 	<classpathentry excluding="**/.svn/*" kind="src" path="src/test/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/ConnectorFramework-HEAD"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/ConnectorFramework-Internal-HEAD"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Connector Framework"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Connector Framework - Internal"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="var" path="USER_HOME/.connectors/connector-ldap/lib/ldapbp.jar"/>
 	<classpathentry kind="var" path="USER_HOME/.connectors/connector-ldap/lib/OpenDS.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/ConnectorTestCommon-HEAD"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Connector Common Test Library"/>
 	<classpathentry kind="lib" path="lib/test/aspectjrt.jar"/>
 	<classpathentry kind="lib" path="lib/test/je.jar"/>
 	<classpathentry kind="output" path="build"/>

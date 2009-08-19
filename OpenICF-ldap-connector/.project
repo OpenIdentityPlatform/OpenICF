@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>ConnectorLDAP</name>
+	<name>LDAP Connector</name>
 	<comment></comment>
 	<projects>
 	</projects>
