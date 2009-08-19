@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>ConnectorDatabaseCommon</name>
+	<name>Common Database Library</name>
 	<comment></comment>
 	<projects>
-		<project>ConnectorFramework-HEAD</project>
-		<project>ConnectorFramework-Internal-HEAD</project>
+		<project>Connector Framework</project>
+		<project>Connector Framework - Internal</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
