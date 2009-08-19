@@ -242,7 +242,6 @@ public final class AttributeInfoBuilder {
      * </code>
      * @param name The name of the attribute
      * @param type The type of the attribute
-     * @param flags The flags for the attribute
      * @return The attribute info 
      */
     public static AttributeInfo build(String name, Class<?> type) {
