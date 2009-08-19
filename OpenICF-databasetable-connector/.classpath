@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry combineaccessrules="false" kind="src" path="/ConnectorFramework-HEAD"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/ConnectorFramework-Internal-HEAD"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/ConnectorDatabaseCommon"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Connector Framework"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Connector Framework - Internal"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Common Database Library"/>
 	<classpathentry excluding="**/.svn/*" kind="src" path="src/main/java"/>
 	<classpathentry excluding="**/.svn/*" kind="src" path="src/test/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/ConnectorTestCommon-HEAD"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Connector Common Test Library"/>
 	<classpathentry kind="lib" path="lib/test/derby.jar"/>
 	<classpathentry kind="lib" path="lib/test/derbyclient.jar"/>
 	<classpathentry kind="lib" path="lib/test/derbynet.jar"/>
 	<classpathentry kind="lib" path="lib/test/derbyrun.jar"/>
 	<classpathentry kind="lib" path="lib/test/derbytools.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/ConnectorContractTests"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Connector Contract Tests"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
