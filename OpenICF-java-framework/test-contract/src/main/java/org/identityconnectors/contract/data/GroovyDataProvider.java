@@ -36,7 +36,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -311,58 +310,11 @@ public class GroovyDataProvider implements DataProvider {
      * 
      */
     private ConfigObject loadProjectConfigurations() {
-        /*
-         * main config object, that will contain the merged result form 2
-         * configuration files.
-         */        
-        final char FS = File.separatorChar;
-        ConfigObject co = null;
-
-        String prjName = System.getProperty("project.name");
-        File projectPath = new File(".");
-        File userHome = new File(System.getProperty("user.home"));
-        // list of filePaths to configuration files
-        List<String> configurations = new LinkedList<String>();
-        
-        // #1: ${bundle.dir}/build.groovy
-        configurations.add(projectPath.getAbsolutePath() + FS + CONFIG + FS + BUILD_GROOVY);
-
-        // determine the configuration property
-        String cfg = System.getProperty("testConfig", null);        
-        
-        if (StringUtil.isNotBlank(cfg)) {
-            // #2: ${bundle.dir}/${configuration}/build.groovy
-            configurations.add(projectPath.getAbsolutePath() + FS + CONFIG + FS + cfg + FS + BUILD_GROOVY);
-        }        
-        
-        if (StringUtil.isNotBlank(prjName)) {
-            
-            // #3: user-home/.connectors/connector-name/build.groovy
-            String directoryPath = userHome.getAbsolutePath() + FS + CONNECTORS_DIR + FS + prjName;
-            configurations.add(directoryPath + FS + BUILD_GROOVY);
-            
-
-            if (StringUtil.isNotBlank(cfg)) {
-                // #4: user-home/.connectors/connector-name/${configuration}/build.groovy
-                configurations.add(directoryPath + FS + cfg + FS + BUILD_GROOVY);
-            }
-        }
-
-        for (String configFile : configurations) {
-            // read the config file's contents and merge it:
-            File cnfg = new File(configFile);
-            if (cnfg.exists()) {
-                ConfigObject lowPriorityCObj = parseConfigFile(cnfg);
-                if (co != null) {
-                    co = mergeConfigObjects(co, lowPriorityCObj);
-                } else {
-                    co = lowPriorityCObj;
-                }
-            }
-        }
-
-
-        return co;
+    	String connectorName = System.getProperty("connectorName");
+    	if(StringUtil.isNotBlank(connectorName)){
+    		return GroovyConfigReader.loadResourceConfiguration(connectorName, GroovyDataProvider.class.getClassLoader());
+    	}
+    	return GroovyConfigReader.loadFSConfiguration();
     }
 
     /**
