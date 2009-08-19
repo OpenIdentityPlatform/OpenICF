@@ -4,9 +4,9 @@
 	<classpathentry excluding="**/.svn/*" kind="src" path="src/test/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/ConnectorFramework-HEAD"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/ConnectorFramework-Internal-HEAD"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/ConnectorTestCommon-HEAD"/>
-	<classpathentry kind="lib" path="/ConnectorFramework-Internal-HEAD/lib/groovy-all.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Connector Framework"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Connector Framework - Internal"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Connector Common Test Library"/>
+	<classpathentry kind="lib" path="/Connector Framework - Internal/lib/groovy-all.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
