@@ -71,7 +71,7 @@ jarVersion = "1.0"
 
 //map that the template engine will use
 values = ["userName":properties["user.name"], "packageName":PACKAGE_NAME, "resourceName":RESOURCE_NAME, "frameworkDir":baseDir, "bundleDir":BUNDLE_DIR, "interfaces":interfaces, "jarVersion":jarVersion]
-templates = new File(baseDir, "templates").listFiles().toList()
+templates = new File(baseDir, "templates").listFiles({ return !it.isDirectory() } as FileFilter).toList()
 print templates
 
 packagePath = PACKAGE_NAME.replaceAll("\\.", "/") + "/"
