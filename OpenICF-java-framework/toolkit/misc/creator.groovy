@@ -87,6 +87,9 @@ templates.each {
     result = engine.createTemplate(it).make(values)
     fName = it.getName()
     File f = null
+    if(fName.endsWith(".template")) {
+        fName = fName.substring(0, fName.length() - ".template".length());
+    }
     if(fName.endsWith(".java")) {
         f = new File(srcPath, RESOURCE_NAME + fName)
     }else if(fName.startsWith("Messages")) {
