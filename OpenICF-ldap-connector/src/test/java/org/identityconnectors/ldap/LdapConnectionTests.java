@@ -145,8 +145,9 @@ public class LdapConnectionTests extends LdapConnectorTestBase {
 
     @Test
     public void testCheckAlive() {
-        LdapConfiguration config = newConfiguration();
-        config.setReadSchema(true); // Since we are calling createNativeSchema() below.
+        // Set readSchema to true since we are calling createNativeSchema() below, and we
+        // want to get the server schema, not the static one.
+        LdapConfiguration config = newConfiguration(true);
         LdapConnection conn = new LdapConnection(config);
         conn.checkAlive();
         // Ensure the connection is really connected to the server.

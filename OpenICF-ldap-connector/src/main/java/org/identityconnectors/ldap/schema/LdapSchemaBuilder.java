@@ -22,9 +22,9 @@
  */
 package org.identityconnectors.ldap.schema;
 
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
@@ -73,7 +73,7 @@ class LdapSchemaBuilder {
             ObjectClassInfoBuilder objClassBld = new ObjectClassInfoBuilder();
             objClassBld.setType(oclass.getObjectClassValue());
             objClassBld.setContainer(oclassConfig.isContainer());
-            objClassBld.addAllAttributeInfo(createAttributeInfos(oclassConfig));
+            objClassBld.addAllAttributeInfo(createAttributeInfos(oclassConfig.getLdapClasses()));
             objClassBld.addAllAttributeInfo(oclassConfig.getOperationalAttributes());
 
             ObjectClassInfo oci = objClassBld.build();
@@ -89,13 +89,27 @@ class LdapSchemaBuilder {
             }
         }
 
+        for (String ldapClass : nativeSchema.getStructuralObjectClasses()) {
+            ObjectClassInfoBuilder objClassBld = new ObjectClassInfoBuilder();
+            objClassBld.setType(ldapClass);
+            objClassBld.setContainer(true); // Any LDAP object class can contain sub-entries.
+            objClassBld.addAllAttributeInfo(createAttributeInfos(nativeSchema.getEffectiveObjectClasses(ldapClass)));
+
+            ObjectClassInfo oci = objClassBld.build();
+            schemaBld.defineObjectClass(oci);
+
+            schemaBld.removeSupportedObjectClass(AuthenticateOp.class, oci);
+            // Since we are not sure we can detect Sun DSEE correctly, only disable sync() for servers known not to support it.
+            if (conn.getServerType() == ServerType.OPENDS) {
+                schemaBld.removeSupportedObjectClass(SyncOp.class, oci);
+            }
+        }
+
         schema = schemaBld.build();
     }
 
-    private Set<AttributeInfo> createAttributeInfos(ObjectClassMappingConfig oclassConfig) {
+    private Set<AttributeInfo> createAttributeInfos(Collection<String> ldapClasses) {
         Set<AttributeInfo> result = new HashSet<AttributeInfo>();
-
-        List<String> ldapClasses = oclassConfig.getLdapClasses();
 
         Set<String> requiredAttrs = getRequiredAttributes(ldapClasses);
         Set<String> optionalAttrs = getOptionalAttributes(ldapClasses);
@@ -108,7 +122,7 @@ class LdapSchemaBuilder {
         return result;
     }
 
-    private Set<String> getRequiredAttributes(List<String> ldapClasses) {
+    private Set<String> getRequiredAttributes(Collection<String> ldapClasses) {
         Set<String> result = new HashSet<String>();
         for (String ldapClass : ldapClasses) {
             result.addAll(nativeSchema.getRequiredAttributes(ldapClass));
@@ -116,7 +130,7 @@ class LdapSchemaBuilder {
         return result;
     }
 
-    private Set<String> getOptionalAttributes(List<String> ldapClasses) {
+    private Set<String> getOptionalAttributes(Collection<String> ldapClasses) {
         Set<String> result = new HashSet<String>();
         for (String ldapClass : ldapClasses) {
             result.addAll(nativeSchema.getOptionalAttributes(ldapClass));
@@ -124,13 +138,13 @@ class LdapSchemaBuilder {
         return result;
     }
 
-    private void addAttributeInfos(List<String> ldapClasses, Set<String> attrs, Set<Flags> add, Set<Flags> remove, Set<AttributeInfo> toSet) {
+    private void addAttributeInfos(Collection<String> ldapClasses, Set<String> attrs, Set<Flags> add, Set<Flags> remove, Set<AttributeInfo> toSet) {
         for (String attr : attrs) {
             addAttributeInfo(ldapClasses, attr, attr, add, remove, toSet);
         }
     }
 
-    private void addAttributeInfo(List<String> ldapClasses, String ldapAttrName, String realName, Set<Flags> add, Set<Flags> remove, Set<AttributeInfo> toSet) {
+    private void addAttributeInfo(Collection<String> ldapClasses, String ldapAttrName, String realName, Set<Flags> add, Set<Flags> remove, Set<AttributeInfo> toSet) {
         LdapAttributeType attrDesc = nativeSchema.getAttributeDescription(ldapAttrName);
         if (attrDesc != null) {
             toSet.add(attrDesc.createAttributeInfo(realName, add, remove));

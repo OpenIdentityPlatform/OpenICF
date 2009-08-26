@@ -145,6 +145,48 @@ public class LdapCreateTests extends LdapConnectorTestBase{
     }
 
     @Test
+    public void testCreateArbitrary() {
+        LdapConfiguration config = newConfiguration();
+        config.setBaseContexts(SMALL_COMPANY_DN);
+        ConnectorFacade facade = newFacade(config);
+
+        doCreateArbitrary(facade);
+    }
+
+    @Test
+    public void testCreateArbitraryWhenReadingSchema() {
+        LdapConfiguration config = newConfiguration(true);
+        config.setBaseContexts(SMALL_COMPANY_DN);
+        ConnectorFacade facade = newFacade(config);
+
+        doCreateArbitrary(facade);
+    }
+
+    @Test
+    public void testCreateArbitraryWhenUidNotDefault() {
+        LdapConfiguration config = newConfiguration();
+        assertFalse(config.getUidAttribute().equalsIgnoreCase("entryDN"));
+        config.setUidAttribute("entryDN");
+        config.setBaseContexts(SMALL_COMPANY_DN);
+        ConnectorFacade facade = newFacade(config);
+
+        doCreateArbitrary(facade);
+    }
+
+    private void doCreateArbitrary(ConnectorFacade facade) {
+        // Let the arbitrary object class be organization.
+        Set<Attribute> attributes = new HashSet<Attribute>();
+        Name name = new Name("o=Smallest," + SMALL_COMPANY_DN);
+        attributes.add(name);
+        attributes.add(AttributeBuilder.build("o", "Smallest"));
+        ObjectClass oclass = new ObjectClass("organization");
+        Uid uid = facade.create(oclass, attributes, null);
+
+        ConnectorObject newObject = facade.getObject(oclass, uid, null);
+        assertEquals(name, newObject.getName());
+    }
+
+    @Test
     public void testCreateBinaryAttributes() throws IOException {
         ConnectorFacade facade = newFacade();
 

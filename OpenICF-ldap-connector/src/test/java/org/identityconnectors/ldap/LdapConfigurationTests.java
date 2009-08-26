@@ -155,15 +155,6 @@ public class LdapConfigurationTests {
     }
 
     @Test(expected = ConfigurationException.class)
-    public void testReadSchemaMustBeTrueWhenUsingExtendedObjectClasses() {
-        config.setBaseContexts(LdapConnectorTestBase.ACME_DN);
-        config.setExtendedObjectClasses("dNSDomain");
-        config.setReadSchema(false);
-        // Fails because readSchema is false.
-        config.validate();
-    }
-
-    @Test(expected = ConfigurationException.class)
     public void testBaseContextsToSynchronizeItemNotNull() {
         config.setBaseContextsToSynchronize((String) null);
         config.validate();
@@ -322,7 +313,6 @@ public class LdapConfigurationTests {
         assertEquals("uid", config.getVlvSortAttribute());
         assertEquals("entryUUID", config.getUidAttribute());
         assertTrue(config.isReadSchema());
-        assertEquals(0, config.getExtendedObjectClasses().length);
         assertEquals(0, config.getBaseContextsToSynchronize().length);
         assertTrue(Arrays.equals(new String[] { "inetOrgPerson" }, config.getObjectClassesToSynchronize()));
         assertEquals(0, config.getAttributesToSynchronize().length);

@@ -22,6 +22,7 @@
  */
 package org.identityconnectors.ldap;
 
+import static java.util.Collections.unmodifiableSet;
 import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveMap;
 import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
 import static org.identityconnectors.ldap.LdapUtil.addStringAttrValues;
@@ -54,6 +55,7 @@ public class ServerNativeSchema implements LdapNativeSchema {
     private final LdapConnection conn;
     private final DirContext schemaCtx;
 
+    private final Set<String> structuralLdapClasses = newCaseInsensitiveSet();
     private final Map<String, Set<String>> ldapClass2MustAttrs = newCaseInsensitiveMap();
     private final Map<String, Set<String>> ldapClass2MayAttrs = newCaseInsensitiveMap();
     private final Map<String, Set<String>> ldapClass2Sup = newCaseInsensitiveMap();
@@ -78,6 +80,10 @@ public class ServerNativeSchema implements LdapNativeSchema {
         } finally {
             schemaCtx.close();
         }
+    }
+
+    public Set<String> getStructuralObjectClasses() {
+        return unmodifiableSet(structuralLdapClasses);
     }
 
     public Set<String> getRequiredAttributes(String ldapClass) {
@@ -112,16 +118,15 @@ public class ServerNativeSchema implements LdapNativeSchema {
         return result;
     }
 
-    public Set<String> getSuperiorObjectClasses(String ldapClass) {
+    public Set<String> getEffectiveObjectClasses(String ldapClass) {
         Set<String> result = newCaseInsensitiveSet();
         Queue<String> classQueue = new LinkedList<String>();
-        Set<String> visitedClasses = new HashSet<String>();
         classQueue.add(ldapClass);
 
         while (!classQueue.isEmpty()) {
             String classToVisit = classQueue.remove();
-            if (!visitedClasses.contains(classToVisit)) {
-                visitedClasses.add(classToVisit);
+            if (!result.contains(classToVisit)) {
+                result.add(classToVisit);
                 Set<String> supClasses = ldapClass2Sup.get(classToVisit);
                 if (supClasses != null) {
                     classQueue.addAll(supClasses);
@@ -143,20 +148,34 @@ public class ServerNativeSchema implements LdapNativeSchema {
             String objClassName = objClassEnum.next().getName();
             Attributes attrs = objClassCtx.getAttributes(objClassName);
 
+            boolean abstractAttr = "true".equals(getStringAttrValue(attrs, "ABSTRACT"));
+            boolean structuralAttr = "true".equals(getStringAttrValue(attrs, "STRUCTURAL"));
+            boolean auxiliaryAttr = "true".equals(getStringAttrValue(attrs, "AUXILIARY"));
+            boolean structural = structuralAttr || !(abstractAttr || auxiliaryAttr);
+
             Set<String> mustAttrs = newCaseInsensitiveSet();
             addStringAttrValues(attrs, "MUST", mustAttrs);
             Set<String> mayAttrs = newCaseInsensitiveSet();
             addStringAttrValues(attrs, "MAY", mayAttrs);
+
             // The objectClass attribute must not be required, since it is handled internally by the connector.
             if (mustAttrs.remove("objectClass")) {
                 mayAttrs.add("objectClass");
             }
+
             Set<String> supClasses = newCaseInsensitiveSet();
             addStringAttrValues(attrs, "SUP", supClasses);
+            if (structural && supClasses.isEmpty()) {
+                // Hack for OpenDS, whose "referral" object class does not specify SUP.
+                supClasses.add("top");
+            }
 
             Set<String> names = newCaseInsensitiveSet();
             addStringAttrValues(attrs, "NAME", names);
             for (String name : names) {
+                if (structural) {
+                    structuralLdapClasses.addAll(names);
+                }
                 ldapClass2MustAttrs.put(name, mustAttrs);
                 ldapClass2MayAttrs.put(name, mayAttrs);
                 ldapClass2Sup.put(name, supClasses);

@@ -22,7 +22,6 @@
  */
 package org.identityconnectors.ldap;
 
-import static java.util.Collections.singletonList;
 import static org.identityconnectors.common.CollectionUtil.newList;
 import static org.identityconnectors.common.StringUtil.isBlank;
 import static org.identityconnectors.ldap.LdapUtil.nullAsEmpty;
@@ -41,7 +40,6 @@ import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 
 import org.identityconnectors.common.EqualsHashCodeBuilder;
-import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedByteArray;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.common.security.GuardedByteArray.Accessor;
@@ -60,8 +58,6 @@ public class LdapConfiguration extends AbstractConfiguration {
 
     // XXX should try to connect to the resource.
     // XXX add @ConfigurationProperty.
-
-    private static final Log log = Log.getLog(LdapConfiguration.class);
 
     static final int DEFAULT_PORT = 389;
 
@@ -172,12 +168,6 @@ public class LdapConfiguration extends AbstractConfiguration {
      */
     private boolean readSchema = true;
 
-    /**
-     * The set of object classes to return in the schema
-     * (apart from those returned by default).
-     */
-    private String[] extendedObjectClasses = { };
-
     // Sync configuration properties.
 
     private String[] baseContextsToSynchronize = { };
@@ -257,15 +247,6 @@ public class LdapConfiguration extends AbstractConfiguration {
         checkNotBlank(vlvSortAttribute, "vlvSortAttribute.notBlank");
 
         checkNotBlank(uidAttribute, "uidAttribute.notBlank");
-
-        if (extendedObjectClasses != null) {
-            checkNoBlankValues(extendedObjectClasses, "extendedObjectClasses.noBlankValues");
-            if (extendedObjectClasses.length > 0) {
-                if (!readSchema) {
-                    failValidation("readSchema.mustBeTrueWithExtendedObjectClasses");
-                }
-            }
-        }
 
         if (baseContextsToSynchronize != null) {
             checkNoBlankValues(baseContextsToSynchronize, "baseContextsToSynchronize.noBlankValues");
@@ -539,14 +520,6 @@ public class LdapConfiguration extends AbstractConfiguration {
         this.readSchema = readSchema;
     }
 
-    public String[] getExtendedObjectClasses() {
-        return extendedObjectClasses.clone();
-    }
-
-    public void setExtendedObjectClasses(String... extendedObjectClasses) {
-        this.extendedObjectClasses = (String[]) extendedObjectClasses.clone();
-    }
-
     // Sync properties getters and setters.
 
     @ConfigurationProperty(operations = { SyncOp.class })
@@ -719,19 +692,6 @@ public class LdapConfiguration extends AbstractConfiguration {
         HashMap<ObjectClass, ObjectClassMappingConfig> result = new HashMap<ObjectClass, ObjectClassMappingConfig>();
         result.put(accountConfig.getObjectClass(), accountConfig);
         result.put(groupConfig.getObjectClass(), groupConfig);
-
-        if (extendedObjectClasses != null) {
-            for (int i = 0; i < extendedObjectClasses.length; i++) {
-                String extendedObjectClass = extendedObjectClasses[i];
-                ObjectClassMappingConfig config = new ObjectClassMappingConfig(new ObjectClass(extendedObjectClass),
-                        singletonList(extendedObjectClass), false, Collections.<String>emptyList());
-                if (!result.containsKey(config.getObjectClass())) {
-                    result.put(config.getObjectClass(), config);
-                } else {
-                    log.warn("Ignoring mapping configuration for object class {0} because it is already mapped", config.getObjectClass().getObjectClassValue());
-                }
-            }
-        }
         return result;
     }
 
@@ -760,9 +720,6 @@ public class LdapConfiguration extends AbstractConfiguration {
         builder.append(vlvSortAttribute);
         builder.append(uidAttribute);
         builder.append(readSchema);
-        for (String extendedObjectClass : extendedObjectClasses) {
-            builder.append(extendedObjectClass);
-        }
         // Sync configuration properties.
         for (String baseContextToSynchronize : baseContextsToSynchronize) {
             builder.append(baseContextToSynchronize);

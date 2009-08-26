@@ -252,8 +252,7 @@ public class LdapSearchTests extends LdapConnectorTestBase {
 
     @Test
     public void testAttributesReturnedByDefaultWithNoValueAreNotReturned() {
-        LdapConfiguration config = newConfiguration();
-        config.setReadSchema(true);
+        LdapConfiguration config = newConfiguration(true);
         ConnectorFacade facade = newFacade(config);
         AttributeInfo attr = AttributeInfoUtil.find("givenName", facade.schema().findObjectClassInfo(ObjectClass.ACCOUNT_NAME).getAttributeInfo());
         assertTrue(attr.isReturnedByDefault());
@@ -366,15 +365,14 @@ public class LdapSearchTests extends LdapConnectorTestBase {
     }
 
     @Test
-    public void testSearchObjectClassNotInSchema() {
+    public void testSearchArbitraryObjectClass() {
         ConnectorFacade facade = newFacade();
 
         // Simplest: try w/o filter.
         List<ConnectorObject> objects = TestHelpers.searchToList(facade, new ObjectClass("country"), null, null);
         ConnectorObject czechRep = getObjectByName(objects, CZECH_REPUBLIC_DN);
 
-        // Try with a name filter. Filtering will be done by the framework, because the LDAP attribute for Name is not known.
-        // Also try with options.
+        // Try with a name filter and options.
         Filter filter = FilterBuilder.equalTo(AttributeBuilder.build(Name.NAME, CZECH_REPUBLIC_DN));
         OperationOptionsBuilder builder = new OperationOptionsBuilder();
         builder.setAttributesToGet("c");

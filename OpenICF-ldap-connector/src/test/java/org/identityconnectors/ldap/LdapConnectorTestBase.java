@@ -150,7 +150,12 @@ public abstract class LdapConnectorTestBase {
 
     protected abstract boolean restartServerAfterEachTest();
 
-    public static LdapConfiguration newConfiguration(String... extendedObjectClasses) {
+    public static LdapConfiguration newConfiguration() {
+        // IdM will not read the schema, so prefer to test with that setting.
+        return newConfiguration(false);
+    }
+
+    public static LdapConfiguration newConfiguration(boolean readSchema) {
         LdapConfiguration config = new LdapConfiguration();
         // Cf. opends/config.ldif.
         config.setHost("localhost");
@@ -158,11 +163,7 @@ public abstract class LdapConnectorTestBase {
         config.setBaseContexts(ACME_DN, BIG_COMPANY_DN);
         config.setPrincipal(ADMIN_DN);
         config.setCredentials(ADMIN_PASSWORD);
-        // Set the group member attribute to the IdM default.
-        // IdM will not read the schema. So prefer to test with that setting, unless we are testing
-        // extended object classes, in which case we do need to read the schema.
-        config.setReadSchema(extendedObjectClasses.length > 0);
-        config.setExtendedObjectClasses(extendedObjectClasses);
+        config.setReadSchema(readSchema);
         return config;
     }
 

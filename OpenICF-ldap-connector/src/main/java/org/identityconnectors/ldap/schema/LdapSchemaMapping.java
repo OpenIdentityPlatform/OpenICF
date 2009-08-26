@@ -94,7 +94,7 @@ public class LdapSchemaMapping {
     static final String DEFAULT_LDAP_NAME_ATTR = "entryDN";
 
     private final LdapConnection conn;
-    private final Map<String, Set<String>> ldapClass2Sup = newCaseInsensitiveMap();
+    private final Map<String, Set<String>> ldapClass2Effective = newCaseInsensitiveMap();
 
     private Schema schema;
 
@@ -109,11 +109,11 @@ public class LdapSchemaMapping {
         return schema;
     }
 
-    private Set<String> getLdapClassSuperiors(String ldapClass) {
-        Set<String> result = ldapClass2Sup.get(ldapClass);
+    private Set<String> getEffectiveLdapClasses(String ldapClass) {
+        Set<String> result = ldapClass2Effective.get(ldapClass);
         if (result == null) {
-            result = conn.createNativeSchema().getSuperiorObjectClasses(ldapClass);
-            ldapClass2Sup.put(ldapClass, result);
+            result = conn.createNativeSchema().getEffectiveObjectClasses(ldapClass);
+            ldapClass2Effective.put(ldapClass, result);
         }
         return result;
     }
@@ -141,11 +141,10 @@ public class LdapSchemaMapping {
      * class is mapped in a transitive manner, i.e., together with any superior
      * object classes, any superiors thereof, etc..
      */
-    public Set<String> getLdapClassesTransitively(ObjectClass oclass) {
+    public Set<String> getEffectiveLdapClasses(ObjectClass oclass) {
         Set<String> result = newCaseInsensitiveSet();
         for (String ldapClass : getLdapClasses(oclass)) {
-            result.add(ldapClass);
-            result.addAll(getLdapClassSuperiors(ldapClass));
+            result.addAll(getEffectiveLdapClasses(ldapClass));
         }
         return unmodifiableSet(result);
     }
@@ -305,7 +304,7 @@ public class LdapSchemaMapping {
             ldapAttrs.put(initialAttrEnum.nextElement());
         }
         BasicAttribute objectClass = new BasicAttribute("objectClass");
-        for (String ldapClass : conn.getSchemaMapping().getLdapClassesTransitively(oclass)) {
+        for (String ldapClass : conn.getSchemaMapping().getEffectiveLdapClasses(oclass)) {
             objectClass.add(ldapClass);
         }
         ldapAttrs.put(objectClass);

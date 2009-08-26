@@ -24,6 +24,8 @@ package org.identityconnectors.ldap.schema;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.EnumSet;
@@ -58,8 +60,7 @@ public class LdapSchemaMappingTests extends LdapConnectorTestBase {
 
     @Test
     public void testObjectClassAttrIsReadOnly() {
-        LdapConfiguration config = newConfiguration();
-        config.setReadSchema(true);
+        LdapConfiguration config = newConfiguration(true);
         Schema schema = newFacade(config).schema();
         for (ObjectClassInfo oci : schema.getObjectClassInfo()) {
             AttributeInfo attrInfo = AttributeInfoUtil.find("objectClass", oci.getAttributeInfo());
@@ -71,8 +72,7 @@ public class LdapSchemaMappingTests extends LdapConnectorTestBase {
 
     @Test
     public void testAccountSchema() {
-        LdapConfiguration config = newConfiguration();
-        config.setReadSchema(true);
+        LdapConfiguration config = newConfiguration(true);
         Schema schema = newFacade(config).schema();
 
         ObjectClassInfo oci = schema.findObjectClassInfo(ObjectClass.ACCOUNT_NAME);
@@ -96,8 +96,7 @@ public class LdapSchemaMappingTests extends LdapConnectorTestBase {
 
     @Test
     public void testGroupSchema() {
-        LdapConfiguration config = newConfiguration();
-        config.setReadSchema(true);
+        LdapConfiguration config = newConfiguration(true);
         Schema schema = newFacade(config).schema();
 
         ObjectClassInfo oci = schema.findObjectClassInfo(ObjectClass.GROUP_NAME);
@@ -111,8 +110,7 @@ public class LdapSchemaMappingTests extends LdapConnectorTestBase {
 
     @Test
     public void testAuthenticationOnlyForAccounts() {
-        LdapConfiguration config = newConfiguration();
-        config.setReadSchema(true);
+        LdapConfiguration config = newConfiguration(true);
         Schema schema = newFacade(config).schema();
         Set<ObjectClassInfo> ocis = schema.getSupportedObjectClassesByOperation().get(AuthenticationApiOp.class);
         assertEquals(1, ocis.size());
@@ -120,11 +118,24 @@ public class LdapSchemaMappingTests extends LdapConnectorTestBase {
     }
 
     @Test
-    public void testExtendedObjectClasses() {
-        Schema schema = newFacade(newConfiguration("dNSDomain")).schema();
+    public void testAllObjectClassesInSchema() {
+        Schema schema = newFacade(newConfiguration(true)).schema();
+        // Well, at least some of the most well-known.
+        assertNotNull(schema.findObjectClassInfo("organization"));
+        assertNotNull(schema.findObjectClassInfo("groupOfNames"));
+        assertNotNull(schema.findObjectClassInfo("dNSDomain"));
+        // top is abstract, so it shouldn't be in the schema.
+        assertNull(schema.findObjectClassInfo("top"));
+        // extensibleObject is auxiliary, so it shouldn't be in the schema.
+        assertNull(schema.findObjectClassInfo("extensibleObject"));
+    }
+
+    @Test
+    public void testArbitraryObjectClass() {
+        Schema schema = newFacade(newConfiguration(true)).schema();
 
         ObjectClassInfo dnsDomainInfo = schema.findObjectClassInfo("dNSDomain");
-        assertFalse(dnsDomainInfo.isContainer());
+        assertTrue(dnsDomainInfo.isContainer());
 
         Set<AttributeInfo> dnsDomainAttrInfos = dnsDomainInfo .getAttributeInfo();
         // Inherited from domain.
@@ -139,8 +150,7 @@ public class LdapSchemaMappingTests extends LdapConnectorTestBase {
 
     @Test
     public void testAttributeTypes() {
-        LdapConfiguration config = newConfiguration();
-        config.setReadSchema(true);
+        LdapConfiguration config = newConfiguration(true);
         Schema schema = newFacade(config).schema();
         ObjectClassInfo accountInfo = schema.findObjectClassInfo(ObjectClass.ACCOUNT_NAME);
         Set<AttributeInfo> accountAttrInfos = accountInfo.getAttributeInfo();

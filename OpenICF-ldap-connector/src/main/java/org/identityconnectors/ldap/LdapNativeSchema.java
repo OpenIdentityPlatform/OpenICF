@@ -29,11 +29,18 @@ import java.util.Set;
  */
 public interface LdapNativeSchema {
 
+    Set<String> getStructuralObjectClasses();
+
     Set<String> getRequiredAttributes(String ldapClass);
 
     Set<String> getOptionalAttributes(String ldapClass);
 
-    Set<String> getSuperiorObjectClasses(String ldapClass);
+    /**
+     * Returns the effective LDAP object classes that an entry of a given
+     * object class would have, that is, including any superior object classes,
+     * any superiors thereof, etc.
+     */
+    Set<String> getEffectiveObjectClasses(String ldapClass);
 
     LdapAttributeType getAttributeDescription(String ldapAttrName);
 }
