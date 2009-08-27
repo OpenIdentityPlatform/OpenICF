@@ -37,12 +37,7 @@
 <!--<property file="${user.home}/.connectors/${ant.project.name}.groovy" /> -->
     <!-- load user global properties -->
     <property file="${user.home}/.connectors/connectors.properties" />
-    <!-- testConfig based directory for user libs -->
-    <condition property="userlib"
-        value="${user.home}/.connectors/${ant.project.name}/lib"
-        else="${user.home}/.connectors/${ant.project.name}/${testConfig}/lib">
-        <equals arg1="${testConfig}" arg2="default" trim="true"/>
-    </condition>
+
     <!-- load local properties -->
     <property file="build.properties" />
     <!-- calculate the version from various properties -->
@@ -135,9 +130,22 @@
     <!--
         User Libraries
     -->
-    <fileset id="user.libs" dir="${userlib}" includes="*.jar"/>
-    <!-- must exist or there will be errors -->
-    <mkdir dir="${userlib}"/>
+    
+    <condition property="user.common.libs" value="${user.home}/.connectors/${ant.project.name}/lib" else="">
+	<available file="${user.home}/.connectors/${ant.project.name}/lib" type="dir"/>
+    </condition>	
+    <condition property="user.config.libs" value="${user.home}/.connectors/${ant.project.name}/${testConfig}/lib" else="">
+	<available file="${user.home}/.connectors/${ant.project.name}/${testConfig}/lib" type="dir"/>
+    </condition>	
+	
+    <path id="user.libs" >
+	<fileset dir="${user.config.libs}">
+		<include name="*.jar"/>
+	</fileset>	
+	<fileset dir="${user.common.libs}">
+		<include name="*.jar"/>
+	</fileset>	
+    </path>	
 
     <!--
         Classpath to build the Connector.
@@ -161,7 +169,7 @@
         <fileset refid="build.libs"/>
         <fileset refid="test.libs"/>
         <fileset refid="dist.libs"/>
-        <fileset refid="user.libs"/>
+        <path refid="user.libs"/>
         <fileset file="${jar.file}"/>
     </path>
     
@@ -198,7 +206,7 @@
             target="${java.target}" source="${java.source}">
             <classpath>
                 <path refid="build.path"/>
-                <fileset refid="user.libs"/>
+                <path refid="user.libs"/>
             </classpath>
         </javac>
 	<!-- We support resources also in src/main/java, so copy to build -->
@@ -240,7 +248,7 @@
             <classpath>
                 <path refid="build.path"/>
 		<pathelement path="${build.main}"/>
-                <fileset refid="user.libs"/>
+                <path refid="user.libs"/>
             </classpath>
         </javac>
 	<!-- Copy resources from src/test/java -->
@@ -336,7 +344,7 @@
             outputFile="${reports}/findbugs/report.${findbugs.report.type}">
             <auxClassPath>
                 <path refid="build.path" />
-                <fileset refid="user.libs"/>
+                <path refid="user.libs"/>
             </auxClassPath>
             <sourcePath>
                 <pathelement location="${src.main.java}"/>
@@ -421,7 +429,7 @@
             <!-- reference the test classpath -->
             <classpath>
                 <path refid="test-classpath" />
-                <fileset refid="user.libs" />
+                <path refid="user.libs" />
             </classpath>
             <!-- output for Netbeans JUnit window -->
             <formatter usefile="false" type="brief"/>
@@ -450,7 +458,7 @@
             <isset property="useExternalReporting" />
         </condition>
         <cobertura-report format="${cobertura-format}" 
-            destdir="${reports}${cobertura-directory}" srcdir="${src.test.java}" />
+            destdir="${reports}${cobertura-directory}" srcdir="${src.main.java}" />
     </target>
 
     <target name="report-junits" unless="useExternalReporting"> 
@@ -488,7 +496,7 @@
         <unjar src="${jar.file}" dest="${reports}/rejar"/>
         <!-- copy the user libs -->
         <copy todir="${reports}/rejar/lib">
-            <fileset refid="user.libs"/>
+            <path refid="user.libs"/>
         </copy>
         <!-- create a new jar -->
         <jar jarfile="${contract.jar.file}" manifest="${reports}/rejar/META-INF/MANIFEST.MF">
