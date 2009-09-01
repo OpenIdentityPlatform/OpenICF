@@ -41,6 +41,7 @@ import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.ldap.search.DefaultSearchStrategy;
 import org.identityconnectors.ldap.search.LdapInternalSearch;
 import org.identityconnectors.ldap.search.SearchResultsHandler;
+import org.identityconnectors.test.common.PropertyBag;
 import org.identityconnectors.test.common.TestHelpers;
 
 public class SunDSTestBase {
@@ -48,11 +49,12 @@ public class SunDSTestBase {
     public static LdapConfiguration newConfiguration() {
         LdapConfiguration config = new LdapConfiguration();
         config.setConnectorMessages(TestHelpers.createDummyMessages());
-        config.setHost(TestHelpers.getProperty("sunds.host", null));
-        config.setPort(Integer.parseInt(TestHelpers.getProperty("sunds.port", "389")));
-        config.setPrincipal(TestHelpers.getProperty("sunds.principal", null));
-        config.setCredentials(new GuardedString(TestHelpers.getProperty("sunds.credentials", "").toCharArray()));
-        config.setBaseContexts(TestHelpers.getProperty("sunds.baseContext", null));
+        PropertyBag testProps = TestHelpers.getProperties(LdapConnector.class);
+        config.setHost(testProps.getStringProperty("sunds.host"));
+        config.setPort(testProps.getProperty("sunds.port", Integer.class, 389));
+        config.setPrincipal(testProps.getStringProperty("sunds.principal"));
+        config.setCredentials(new GuardedString(testProps.getProperty("sunds.credentials", String.class, "").toCharArray()));
+        config.setBaseContexts(testProps.getStringProperty("sunds.baseContext"));
         config.setUidAttribute("entryDN");
         config.setReadSchema(false); // To be compatible with IdM.
         config.validate();
