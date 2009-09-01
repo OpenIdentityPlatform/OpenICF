@@ -99,24 +99,24 @@ public class TestHelpersTest {
         @Override
         public URL getResource(String name) {
             String prefix = DummyConnector.class.getName();
-            if ((prefix + "/public/build.groovy").equals(name)) {
+            if ((prefix + "/config/config.groovy").equals(name)) {
                 Properties properties = new Properties();
                 properties.setProperty("publickey", "\"value\"");
                 properties.setProperty("override1", "\"foo1\"");
                 properties.setProperty("override2", "\"foo2\"");
                 properties.setProperty("override3", "\"foo3\"");
                 return map2URL(properties);
-            } else if ((prefix + "/public/myconfig/build.groovy").equals(name)) {
+            } else if ((prefix + "/config/myconfig/config.groovy").equals(name)) {
                 Properties properties = new Properties();
                 properties.setProperty("myconfig.publickey", "\"value\"");
                 properties.setProperty("override1", "\"bar1\"");
                 return map2URL(properties);
-            } else if ((prefix + "/private/build.groovy").equals(name)) {
+            } else if ((prefix + "/config-private/config.groovy").equals(name)) {
                 Properties properties = new Properties();
                 properties.setProperty("privatekey", "\"value\"");
                 properties.setProperty("override2", "\"bar2\"");
                 return map2URL(properties);
-            } else if ((prefix + "/private/myconfig/build.groovy").equals(name)) {
+            } else if ((prefix + "/config-private/myconfig/config.groovy").equals(name)) {
                 Properties properties = new Properties();
                 properties.setProperty("myconfig.privatekey", "\"value\"");
                 properties.setProperty("override3", "\"bar3\"");

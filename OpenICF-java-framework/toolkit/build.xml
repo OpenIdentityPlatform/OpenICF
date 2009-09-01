@@ -101,7 +101,8 @@
             <arg value="${resource.name}" />
         </groovy>
         
-        <copy file="misc/build.groovy" todir="${user.home}/.connectors/connector-${resource.name.lower}" />
+        
+	<copy file="misc/build.groovy" tofile="${user.home}/.connectors/connector-${resource.name.lower}/config/${package.name}.${resource.name}Connector/private-config/config.groovy"/>
 
         <echo />
         <echo message="Finished. Switch to ${bundle.dir} and run &quot;ant&quot; to build this connector." />

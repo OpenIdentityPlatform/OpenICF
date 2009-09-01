@@ -70,7 +70,7 @@ baseDir = properties["basedir"]
 jarVersion = "1.0"
 
 //map that the template engine will use
-values = ["userName":properties["user.name"], "packageName":PACKAGE_NAME, "resourceName":RESOURCE_NAME, "frameworkDir":baseDir, "bundleDir":BUNDLE_DIR, "interfaces":interfaces, "jarVersion":jarVersion]
+values = ["userName":properties["user.name"], "packageName":PACKAGE_NAME, "resourceName":RESOURCE_NAME, "frameworkDir":baseDir, "bundleDir":BUNDLE_DIR, "interfaces":interfaces, "jarVersion":jarVersion, "resourceNameLower":RESOURCE_NAME.toLowerCase()]
 templates = new File(baseDir, "templates").listFiles({ return !it.isDirectory() } as FileFilter).toList()
 print templates
 
@@ -81,7 +81,8 @@ testPath = BUNDLE_DIR + "/src/test/java/" + packagePath
 //create directories
 ant.mkdir(dir:srcPath)
 ant.mkdir(dir:testPath)
-ant.mkdir(dir:BUNDLE_DIR + "/config")
+ant.mkdir(dir:BUNDLE_DIR + "/src/test/config")
+ant.mkdir(dir:BUNDLE_DIR + "/src/test/config/" + PACKAGE_NAME + "." + RESOURCE_NAME + "/config")
 ant.mkdir(dir:BUNDLE_DIR + "/lib/build")
 ant.mkdir(dir:BUNDLE_DIR + "/lib/test")
 
@@ -100,7 +101,7 @@ templates.each {
     }else if(fName.startsWith("Messages")) {
         f = new File(srcPath, fName)
     }else if(fName.startsWith("build.groovy")) {
-        f = new File(BUNDLE_DIR + "/config", fName)
+        f = new File(BUNDLE_DIR + "/src/test/config/" + PACKAGE_NAME + "." + RESOURCE_NAME + "/config", "config.groovy")
     }else {
         f = new File(BUNDLE_DIR, fName)
     }    

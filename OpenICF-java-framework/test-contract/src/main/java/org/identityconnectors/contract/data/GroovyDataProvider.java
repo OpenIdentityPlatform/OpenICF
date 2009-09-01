@@ -181,17 +181,26 @@ public class GroovyDataProvider implements DataProvider {
      * default constructor
      */
     public GroovyDataProvider() {
-        
+        this(System.getProperty("connectorName"));
+    }
+    
+    public GroovyDataProvider(String connectorName){
+        if (StringUtil.isBlank(connectorName)) {
+            throw new IllegalArgumentException(
+                    "To run contract tests, you must specify valid [connectorName] system property with the value equal to FQN of your connector class, or use GroovyDataProvider(String connectorName) constructor");
+
+        }
         initSnapshot();
         initQueriedPropsDump();
         
         // init
         configObject = doBootstrap();
-        ConfigObject projectConfig = loadProjectConfigurations();
+        ConfigObject projectConfig = GroovyConfigReader.loadResourceConfiguration(connectorName, getClass().getClassLoader());
         configObject = mergeConfigObjects(configObject, projectConfig);
         
         checkJarDependencies(this, this.getClass().getClassLoader());
     }
+
 
     /**
      * check the presence of expected JAR's on the classpath
@@ -297,25 +306,6 @@ public class GroovyDataProvider implements DataProvider {
         return cs.parse(url);
     }
 
-    /**
-     * load properties in the following order (latter overrides previous):
-     * <ul>
-     * <li>1) ${bundle.dir}/build.groovy
-     * <li>2) ${bundle.dir}/${configuration}/build.groovy<br />
-     * in case ${configuration} is specified
-     * <li>3) user-home/.connectors/bundle-name/build.groovy
-     * <li>4)user-home/.connectors/bundle-name/${configuration}/build.groovy<br />
-     * in case ${configuration} is specified
-     * </ul>
-     * 
-     */
-    private ConfigObject loadProjectConfigurations() {
-    	String connectorName = System.getProperty("connectorName");
-    	if(StringUtil.isNotBlank(connectorName)){
-    		return GroovyConfigReader.loadResourceConfiguration(connectorName, GroovyDataProvider.class.getClassLoader());
-    	}
-    	return GroovyConfigReader.loadFSConfiguration();
-    }
 
     /**
      * merge two config objects. If both of config objects contian the same 

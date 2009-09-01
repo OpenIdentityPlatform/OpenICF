@@ -32,6 +32,7 @@ import org.identityconnectors.framework.common.exceptions.*;
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.objects.filter.*;
 import org.identityconnectors.test.common.TestHelpers;
+import org.identityconnectors.test.common.PropertyBag;
 
 /**
  * Attempts to test the {@link <%= resourceName %>Connector} with the framework.
@@ -46,9 +47,10 @@ public class <%= resourceName %>ConnectorTests {
      * Example test properties. On your computer, these are defined in: 
      * <%= System.getProperty("user.home") + "/.connector-" + resourceName.toLowerCase() %>.properties (your "user.home" directory). 
      */
-    private static final String HOST = TestHelpers.getProperty("HOST", null);
-    private static final String LOGIN = TestHelpers.getProperty("LOGIN", null);
-    private static final String PASSWORD = TestHelpers.getProperty("PASSWORD", null);
+    private static final PropertyBag properties = TestHelpers.getProperties(<%= resourceName %>Connector.class);
+    private static final String HOST = properties.getStringProperty("HOST");
+    private static final String LOGIN = properties.getStringProperty("LOGIN");
+    private static final String PASSWORD = properties.getStringProperty("PASSWORD");
 
     //set up logging
     private static final Log log = Log.getLog(<%= resourceName %>ConnectorTests.class);

@@ -32,7 +32,7 @@
     <property name="testConfig" value="default"/>
 <!-- the following two imports should not be necessary -->
 <!--load user project-testConfig properties -->
-<!--<property file="${user.home}/.connectors/${ant.project.name}/${testConfig}/build.groovy" /> -->
+<!--<property file="${user.home}/.connectors/${ant.project.name}/${testConfig}/config.groovy" /> -->
 <!--load user project properties -->
 <!--<property file="${user.home}/.connectors/${ant.project.name}.groovy" /> -->
     <!-- load user global properties -->
@@ -55,6 +55,7 @@
     <property name="build" value="build" />
     <property name="build.main" value="build/classes" />
     <property name="build.test" value="build/test-classes" />
+    <property name="build.test.config" value="build/test-config" />
     <property name="reports" value="reports" />
     <property name="instrumented" value="instrumented" />
     <property name="java.debug" value="true" />
@@ -134,8 +135,8 @@
     <condition property="user.common.libs" value="${user.home}/.connectors/${ant.project.name}/lib" else="">
 	<available file="${user.home}/.connectors/${ant.project.name}/lib" type="dir"/>
     </condition>	
-    <condition property="user.config.libs" value="${user.home}/.connectors/${ant.project.name}/${testConfig}/lib" else="">
-	<available file="${user.home}/.connectors/${ant.project.name}/${testConfig}/lib" type="dir"/>
+    <condition property="user.config.libs" value="${user.home}/.connectors/${ant.project.name}/lib/${testConfig}" else="">
+	<available file="${user.home}/.connectors/${ant.project.name}/lib/${testConfig}" type="dir"/>
     </condition>	
 	
     <path id="user.libs" >
@@ -237,6 +238,21 @@
 	    </condition>
 	    <antcall target="compile-test-internal" inheritRefs="true" inheritAll="true"/>
             <antcall target="copy-test-resources" inheritRefs="true" inheritAll="true"/>
+	    <mkdir dir="${build.test.config}"/>
+	    <!-- Copy public config to build -->
+	    <condition property="copy.public.config">
+		<and>
+			<available type="dir" file="${basedir}/src/test/config"/>
+		</and>
+	    </condition>
+	    <antcall target="copy-public-config" inheritRefs="true" inheritAll="true"/>
+	    <!-- Copy private config to build -->
+	    <condition property="copy.private.config">
+		<and>
+			<available type="dir" file="${user.home}/.connectors/${ant.project.name}/config"/>
+		</and>
+	    </condition>
+	    <antcall target="copy-private-config" inheritRefs="true" inheritAll="true"/>
     </target>	
 
     <target name="compile-test-internal" depends="-pre-compile-extra-test" if="src.test.java.exists"
@@ -263,7 +279,24 @@
 	<copy todir="${build.test}">
 		<fileset dir="${src.test.resources}"/>
 	</copy>
-    </target>		    	    		
+    </target>
+
+    <target name="copy-public-config" if="copy.public.config">
+	<copy todir="${build.test.config}">
+		<fileset dir="${basedir}/src/test/config">
+			<include name="**/config.groovy"/>
+		</fileset>
+	</copy>
+    </target>
+
+    <target name="copy-private-config" if="copy.private.config">
+	<copy todir="${build.test.config}">
+		<fileset dir="${user.home}/.connectors/${ant.project.name}/config">
+			<include name="**/config.groovy"/>
+		</fileset>
+	</copy>
+    </target>
+		    	    		
 
 
     <!--
@@ -391,8 +424,9 @@
         depends="build-testclasspath-with-coverage">
         <path id="test-classpath">
             <path refid="test.path" />
+	    <pathelement location="${build.test.config}" />
             <pathelement location="${build.test}" />
-            <pathelement location="${build.main}" />
+	    <pathelement location="${build.main}" />
         </path>
     </target>
     <target name="build-testclasspath-with-coverage" if="useCobertura">
@@ -407,11 +441,13 @@
             <path refid="cobertura.classpath" />
             <pathelement location="${instrumented}" />
             <path refid="test.path" />
+	    <pathelement location="${build.test.config}" />
             <pathelement location="${build.test}" />
             <pathelement location="${build.main}" />
         </path>
     </target>
     <target name="run-unit-tests" depends="test-init, instrument, build-testclasspath" if="src.test.java.exists">
+	<echo message="Running junit tests with testConfig=[${testConfig}]"/>
         <!-- run all the junits -->
         <junit fork="yes" forkmode="once" dir="${basedir}" showoutput="true"
             failureProperty="test.failed" printsummary="true">
@@ -503,9 +539,11 @@
             <fileset dir="${reports}/rejar"/>
         </jar>
     </target>
-    <target name="contract-tests" if="do.contracts.run" depends="contract-check">        
+    <target name="contract-tests" if="do.contracts.run" depends="contract-check">
+	<fail unless="connectorName" message="To run contract tests, you must specify [connectorName] property with the value equal to FQN of your connector class"/>
         <property name="test.parameters.outFile" value=""/>
         <!-- run all the contract tests -->
+	<echo message="Running contract tests with testConfig=[${testConfig}]"/>
         <junit fork="yes" printsummary="yes" forkmode="once"
             failureproperty="test.failure" errorproperty="test.error" maxmemory="512M">
             <!-- local connector properties -->
@@ -521,6 +559,7 @@
             <sysproperty key="data-provider" value="${data.provider}"/>            
             <sysproperty key="project.name" value="${ant.project.name}"/>
             <sysproperty key="testConfig" value="${testConfig}"/>
+	    <sysproperty key="connectorName" value="${connectorName}"/>
             <sysproperty key="test.parameters.outFile" value="${test.parameters.outFile}"/>
             <sysproperty key="org.identityconnectors.common.logging.class" value="org.identityconnectors.common.logging.impl.JDKLogger"/>
             
@@ -530,6 +569,7 @@
             <formatter type="plain" usefile="false" />
             <classpath>
                 <fileset dir="${framework.dir}/dist" includes="*.jar"/>
+	    	<pathelement location="${build.test.config}"/>
             </classpath>
         </junit>
     </target>
