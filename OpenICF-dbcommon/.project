@@ -16,4 +16,11 @@
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>config-private</name>
+			<type>2</type>
+			<locationURI>USER_HOME/.connectors/connector-dbcommon/config</locationURI>
+		</link>
+	</linkedResources>
 </projectDescription>

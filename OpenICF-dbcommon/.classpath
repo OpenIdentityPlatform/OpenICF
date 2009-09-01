@@ -2,6 +2,7 @@
 <classpath>
 	<classpathentry excluding="**/.svn/*" kind="src" path="src/main/java"/>
 	<classpathentry excluding="**/.svn/*" kind="src" path="src/test/java"/>
+	<classpathentry excluding="**/.svn/*" kind="src" path="config-private"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Connector Framework"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Connector Framework - Internal"/>
