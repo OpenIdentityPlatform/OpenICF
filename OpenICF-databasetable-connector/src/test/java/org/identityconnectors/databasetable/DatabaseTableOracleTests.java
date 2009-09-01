@@ -54,7 +54,7 @@ import org.junit.Test;
 public class DatabaseTableOracleTests extends DatabaseTableTestBase{
 
     static final String ORACLE_CONFIGURATINON = "configurations.oracle";
-    static final DataProvider dp = new GroovyDataProvider();
+    static final DataProvider dp = new GroovyDataProvider(DatabaseTableConnector.class.getName());
     private static final String TMS = "TMS";   
     
     

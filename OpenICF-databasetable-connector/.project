@@ -14,4 +14,11 @@
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>config-private</name>
+			<type>2</type>
+			<locationURI>USER_HOME/.connectors/connector-database/config</locationURI>
+		</link>
+	</linkedResources>
 </projectDescription>

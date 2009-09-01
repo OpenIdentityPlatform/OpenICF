@@ -5,6 +5,8 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/Common Database Library"/>
 	<classpathentry excluding="**/.svn/*" kind="src" path="src/main/java"/>
 	<classpathentry excluding="**/.svn/*" kind="src" path="src/test/java"/>
+	<classpathentry excluding="**/.svn/*" kind="src" path="src/test/config"/>
+	<classpathentry excluding="**/.svn/*" kind="src" path="config-private"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Connector Common Test Library"/>
