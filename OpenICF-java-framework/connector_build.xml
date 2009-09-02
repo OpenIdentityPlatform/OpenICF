@@ -308,7 +308,7 @@
         <move file="${zip.file}" todir="${dist}"/>
     </target>
 
-    <target name="jar" depends="compile-main, compile-test">
+    <target name="jar" depends="compile-main">
         <!-- Create the distribution directory -->
         <mkdir dir="${dist}" />
         <jar jarfile="${jar.file}" index="true">
@@ -390,7 +390,7 @@
         Test Targets 
     -->
     <target  name="-pre-test-extra" description="Override this to execute tasks before the unit tests run"/>
-    <target name="test" depends="jar, -pre-test-extra, run-unit-tests, run-contract-tests, report-tests" />
+    <target name="test" depends="jar, compile-test, -pre-test-extra, run-unit-tests, run-contract-tests, report-tests" />
     <target name="test-init">
         <!-- clear out previous test results -->
         <delete dir="${reports}/junit" />
