@@ -24,17 +24,13 @@
     <property name="framework.dir" value="../../framework"/>
     <import file="${framework.dir}/connector_build.xml"/>
 
-    <target name="-pre-compile-extra">
-        <copy file="${user.home}/.connectors/connector-ldap/lib/ldapbp.jar" todir="${lib}"/>
-        <copy file="${user.home}/.connectors/connector-ldap/lib/OpenDS.jar" todir="${lib}/build"/>
-    </target>
-
     <target name="-pre-clean-extra" depends="opends-clean">
-        <delete file="${lib}/ldapbp.jar"/>
-        <delete dir="${lib}/build"/>
+        <delete dir="${lib}/test"/>
     </target>
 
-    <target name="-pre-test-extra" depends="opends-setup"/>
+    <target name="-pre-compile-test-extra" depends="opends-setup">
+        <copy file="${user.home}/.connectors/connector-ldap/lib/OpenDS.jar" todir="${lib}/test"/>
+    </target>
 
     <target name="opends-setup" depends="opends-do-setup,opends-setup-clean"/>
 
