@@ -183,7 +183,7 @@
     </echo>
 
     <target name="-pre-compile-extra" description="Override this for pre-compile."/>
-    <target name="-pre-compile-extra-test" description="Override this for pre-compile-test."/>
+    <target name="-pre-compile-test-extra" description="Override this for pre-compile-test."/>
 
     <!--
        Base Compile Target
@@ -255,7 +255,7 @@
 	    <antcall target="copy-private-config" inheritRefs="true" inheritAll="true"/>
     </target>	
 
-    <target name="compile-test-internal" depends="-pre-compile-extra-test" if="src.test.java.exists"
+    <target name="compile-test-internal" depends="-pre-compile-test-extra" if="src.test.java.exists"
         description="compile all test files">
         <javac
             debug="${java.debug}" 
