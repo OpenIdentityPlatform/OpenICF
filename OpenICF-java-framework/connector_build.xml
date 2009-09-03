@@ -50,6 +50,8 @@
     <property name="src.test.java" value="src/test/java" />
     <property name="src.main.resources" value="src/main/resources" />
     <property name="src.test.resources" value="src/test/resources" />
+    <property name="config.public" value="src/test/config" />
+    <property name="config.private" value="${user.home}/.connectors/${ant.project.name}/config" />
     <property name="lib" value="lib" />
     <property name="dist" value="dist" />
     <property name="build" value="build" />
@@ -68,6 +70,27 @@
         value="${ConnectorBundle-Name}-${ConnectorBundle-Version}.zip" />
     <property name="license.file" value="${framework.dir}/license.txt" />
     <property name="thirdpartyreadme.file" value="${framework.dir}/THIRDPARTYREADME.txt" />
+    <!--
+        Check if source directories exist.
+    -->
+        <condition property="src.main.java.exists">
+            <available type="dir" file="${src.main.java}"/>
+        </condition>
+        <condition property="src.main.resources.exists">
+            <available type="dir" file="${src.main.resources}"/>
+        </condition>
+        <condition property="src.test.java.exists">
+            <available type="dir" file="${src.test.java}"/>
+        </condition>
+        <condition property="src.test.resources.exists">
+            <available type="dir" file="${src.test.resources}"/>
+        </condition>
+        <condition property="config.public.exists">
+            <available type="dir" file="${config.public}"/>
+        </condition>
+        <condition property="config.private.exists">
+            <available type="dir" file="${config.private}"/>
+        </condition>
     <!--
         Determine if this a coverage build.
     -->
@@ -189,14 +212,13 @@
        Base Compile Target
     -->
 
+    <target name="compile-main" depends="compile-check, -pre-compile-extra, compile-main-internal, copy-main-resources" description="compile all main files"/>
+
     <target name="compile-check">
-        <condition property="src.main.java.exists">
-            <available type="dir" file="${src.main.java}"/>
-        </condition>
         <fail unless="src.main.java.exists" message="Source folder ${src.main.java} does not exist. You may be using the old source layout, in which the Java source files are in a directory named src. In that case, import the toolkit's connector_build_old.xml and consider modifying your source layout according to http://identityconnectors.dev.java.net/issues/show_bug.cgi?id=395."/>
     </target>                
 
-    <target name="compile-main" depends="compile-check,-pre-compile-extra" description="compile all main files">
+    <target name="compile-main-internal">
         <mkdir dir="${build.main}" />
         <javac
             debug="${java.debug}" 
@@ -213,47 +235,20 @@
                 <patternset refid="exclude.javasrc" />
             </fileset>
         </copy>
-        <condition property="src.main.resources.exists">
-            <available type="dir" file="${src.main.resources}"/>
-        </condition>
-        <antcall target="copy-main-resources" inheritRefs="true" inheritAll="true"/>
     </target>
 
     <target name="copy-main-resources" if="src.main.resources.exists">
+        <mkdir dir="${build.main}" />
         <copy todir="${build.main}">
             <fileset dir="${src.main.resources}"/>
         </copy>
     </target>                                                
 
-    <target name="compile-test">
-        <mkdir dir="${build.test}" />                
-        <condition property="src.test.java.exists">
-            <available type="dir" file="${src.test.java}"/>
-        </condition>
-        <condition property="src.test.resources.exists">
-            <available type="dir" file="${src.test.resources}"/>
-        </condition>
-        <antcall target="compile-test-internal" inheritRefs="true" inheritAll="true"/>
-        <antcall target="copy-test-resources" inheritRefs="true" inheritAll="true"/>
-        <mkdir dir="${build.test.config}"/>
-        <!-- Copy public config to build -->
-        <condition property="copy.public.config">
-            <and>
-                <available type="dir" file="${basedir}/src/test/config"/>
-            </and>
-        </condition>
-        <antcall target="copy-public-config" inheritRefs="true" inheritAll="true"/>
-        <!-- Copy private config to build -->
-        <condition property="copy.private.config">
-            <and>
-                <available type="dir" file="${user.home}/.connectors/${ant.project.name}/config"/>
-            </and>
-        </condition>
-        <antcall target="copy-private-config" inheritRefs="true" inheritAll="true"/>
-    </target>        
+    <target name="compile-test" depends="-pre-compile-test-extra, compile-test-internal, copy-test-resources, copy-public-config, copy-private-config" description="compile all test files"/>
 
     <target name="compile-test-internal" depends="-pre-compile-test-extra" if="src.test.java.exists"
         description="compile all test files">
+        <mkdir dir="${build.test}" />
         <javac
             debug="${java.debug}" 
             srcdir="${src.test.java}" destdir="${build.test}" 
@@ -273,22 +268,25 @@
     </target>
 
     <target name="copy-test-resources" if="src.test.resources.exists">
+        <mkdir dir="${build.test}" />
         <copy todir="${build.test}">
             <fileset dir="${src.test.resources}"/>
         </copy>
     </target>
 
-    <target name="copy-public-config" if="copy.public.config">
+    <target name="copy-public-config" if="config.public.exists">
+        <mkdir dir="${build.test.config}"/>
         <copy todir="${build.test.config}">
-            <fileset dir="${basedir}/src/test/config">
+            <fileset dir="${config.public}">
                 <include name="**/config.groovy"/>
             </fileset>
         </copy>
     </target>
 
-    <target name="copy-private-config" if="copy.private.config">
+    <target name="copy-private-config" if="config.private.exists">
+        <mkdir dir="${build.test.config}"/>
         <copy todir="${build.test.config}">
-            <fileset dir="${user.home}/.connectors/${ant.project.name}/config">
+            <fileset dir="${config.private}">
                 <include name="**/config.groovy"/>
             </fileset>
         </copy>
@@ -565,7 +563,7 @@
             <formatter type="plain" usefile="false" />
             <classpath>
                 <fileset dir="${framework.dir}/dist" includes="*.jar"/>
-                    <pathelement location="${build.test.config}"/>
+                <pathelement location="${build.test.config}"/>
             </classpath>
         </junit>
     </target>
