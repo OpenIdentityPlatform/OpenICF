@@ -63,6 +63,7 @@
     <property name="java.debug" value="true" />
     <property name="java.source" value="1.5" />
     <property name="java.target" value="1.5" />
+    <property name="java.compilerargs" value="" />
     <property name="javadoc.author" value="true" />
     <property name="jar.file" 
         value="${dist}/${ConnectorBundle-Name}-${ConnectorBundle-Version}.jar" />
@@ -228,6 +229,7 @@
                 <path refid="build.path"/>
                 <path refid="user.libs"/>
             </classpath>
+            <compilerarg line="${java.compilerargs}"/>
         </javac>
         <!-- We support resources also in src/main/java, so copy to build -->
         <copy todir="${build.main}">
@@ -258,6 +260,7 @@
                 <pathelement path="${build.main}"/>
                 <path refid="user.libs"/>
             </classpath>
+            <compilerarg line="${java.compilerargs}"/>
         </javac>
         <!-- Copy resources from src/test/java -->
         <copy todir="${build.test}">
