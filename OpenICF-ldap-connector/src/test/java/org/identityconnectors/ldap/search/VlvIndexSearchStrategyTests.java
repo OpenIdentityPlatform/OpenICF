@@ -22,11 +22,11 @@
  */
 package org.identityconnectors.ldap.search;
 
-import static org.identityconnectors.common.CollectionUtil.newSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Method;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
@@ -84,7 +84,7 @@ public class VlvIndexSearchStrategyTests extends SunDSTestBase {
         String baseContext = config.getBaseContexts()[0];
         for (int i = 0; i < COUNT; i++) {
             String userName = "user." + i;
-            Set<Attribute> attrs = newSet();
+            Set<Attribute> attrs = new HashSet<Attribute>();
             attrs.add(new Name("uid=" + userName + "," + baseContext));
             attrs.add(AttributeBuilder.build("uid", userName));
             attrs.add(AttributeBuilder.build("cn", userName));

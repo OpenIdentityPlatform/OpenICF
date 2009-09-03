@@ -22,9 +22,8 @@
  */
 package org.identityconnectors.ldap;
 
-import static org.identityconnectors.common.CollectionUtil.newSet;
-
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -107,7 +106,7 @@ public class LdapUtil {
      * ldapAttrName} parameter cast to a String.
      */
     public static Set<String> getStringAttrValues(Attributes ldapAttrs, String ldapAttrName) {
-        Set<String> result = newSet();
+        Set<String> result = new HashSet<String>();
         addStringAttrValues(ldapAttrs, ldapAttrName, result);
         return result;
     }
