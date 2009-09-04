@@ -570,7 +570,7 @@
 
     <target name="run-contract-tests" depends="contract-init, contract-dist, contract-tests"/>
     
-    <target name="run-cs-contract-tests" depends="contract-init-cs, contract-init, contract-tests"/>
+    <target name="run-cs-contract-tests" depends="contract-init-cs, contract-init, copy-public-config, copy-private-config, contract-tests"/>
     
     <target name="contract-init-cs">
         <property name="useConnectorServer" value="true"/>
