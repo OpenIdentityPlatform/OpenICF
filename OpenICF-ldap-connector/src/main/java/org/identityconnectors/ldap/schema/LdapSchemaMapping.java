@@ -42,9 +42,7 @@ import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.BasicAttribute;
 import javax.naming.directory.BasicAttributes;
-import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.LdapName;
-import javax.naming.ldap.Rdn;
 
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
@@ -295,8 +293,6 @@ public class LdapSchemaMapping {
 
     public String create(ObjectClass oclass, Name name, javax.naming.directory.Attributes initialAttrs) {
         LdapName entryName = quietCreateLdapName(getEntryDN(oclass, name));
-        Rdn rdn = entryName.getRdn(entryName.size() - 1);
-        String containerDN = entryName.getPrefix(entryName.size() - 1).toString();
 
         BasicAttributes ldapAttrs = new BasicAttributes();
         NamingEnumeration<? extends javax.naming.directory.Attribute> initialAttrEnum = initialAttrs.getAll();
@@ -309,11 +305,10 @@ public class LdapSchemaMapping {
         }
         ldapAttrs.put(objectClass);
 
-        log.ok("Creating LDAP subcontext {0} in {1} with attributes {2}", rdn, containerDN, ldapAttrs);
+        log.ok("Creating LDAP subcontext {0} with attributes {1}", entryName, ldapAttrs);
         try {
-            LdapContext parentCtx = (LdapContext) conn.getInitialContext().lookup(containerDN);
-            LdapContext newCtx = (LdapContext) parentCtx.createSubcontext(rdn.toString(), ldapAttrs);
-            return newCtx.getNameInNamespace();
+            conn.getInitialContext().createSubcontext(entryName, ldapAttrs).close();
+            return entryName.toString();
         } catch (NamingException e) {
             throw new ConnectorException(e);
         }
