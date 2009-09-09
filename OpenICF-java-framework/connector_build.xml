@@ -42,9 +42,6 @@
     <property file="build.properties" />
     <!-- calculate the version from various properties -->
     <property name="BUILD_NUMBER" value="x" />
-    <property name="SVN_REVISION" value="x" />
-    <property name="ConnectorBundle-Version" 
-        value="${MAJOR}.${MINOR}.${SVN_REVISION}"/>
     <!-- set default properties for this build -->
     <property name="src.main.java" value="src/main/java" />
     <property name="src.test.java" value="src/test/java" />
@@ -65,14 +62,10 @@
     <property name="java.target" value="1.5" />
     <property name="java.compilerargs" value="" />
     <property name="javadoc.author" value="true" />
-    <property name="jar.file" 
-        value="${dist}/${ConnectorBundle-Name}-${ConnectorBundle-Version}.jar" />
-    <property name="zip.file" 
-        value="${ConnectorBundle-Name}-${ConnectorBundle-Version}.zip" />
     <property name="license.file" value="${framework.dir}/license.txt" />
     <property name="thirdpartyreadme.file" value="${framework.dir}/THIRDPARTYREADME.txt" />
     <!--
-        Check if source directories exist.
+        Check if directories exist.
     -->
         <condition property="src.main.java.exists">
             <available type="dir" file="${src.main.java}"/>
@@ -92,6 +85,10 @@
         <condition property="config.private.exists">
             <available type="dir" file="${config.private}"/>
         </condition>
+        <condition property="is.svn.working.directory">
+                <available file=".svn" type="dir"/>
+        </condition>
+        
     <!--
         Determine if this a coverage build.
     -->
@@ -200,7 +197,6 @@
     -->
     <echo>
         Building Project:  ${ant.project.name}
-        Connector Version: ${ConnectorBundle-Name}-${ConnectorBundle-Version}
     </echo>
 
     <target name="-pre-compile-extra" description="Override this for pre-compile."/>
@@ -298,13 +294,35 @@
 
     <target name="dist" depends="jar, javadoc"
         description="generates the distribution (excludes test classes)">
+        <property name="zip.file" value="${ConnectorBundle-Name}-${ConnectorBundle-Version}.zip" />
         <zip destfile="${zip.file}" basedir="${dist}"/>
         <move file="${zip.file}" todir="${dist}"/>
     </target>
+    
+    <target name="set-revision" if="is.svn.working.directory">
+        <tempfile property="svn.info.tmp" prefix="svn-info" suffix=".tmp"/>
+        <exec executable="svn" output="${svn.info.tmp}" failifexecutionfails="false">
+                <arg line="info --xml"/>
+        </exec>
+        <xmlproperty file="${svn.info.tmp}" prefix="svn" collapseAttributes="true"/>
+        <delete file="${svn.info.tmp}" failonerror="false"/>
+    </target>
+    
 
-    <target name="jar" depends="compile-main">
+    <target name="jar" depends="compile-main,set-revision">
         <!-- Create the distribution directory -->
         <mkdir dir="${dist}" />
+        <condition property="SVN_REVISION" value="${svn.info.entry.revision}" else="x">
+                <isset property="svn.info.entry.revision"/>
+        </condition>
+        <property name="ConnectorBundle-Version" value="${MAJOR}.${MINOR}.${SVN_REVISION}"/>
+        <property name="jar.file" value="${dist}/${ConnectorBundle-Name}-${ConnectorBundle-Version}.jar" />
+        
+        <echo>
+               Building jar:  ${jar.file}
+        </echo>
+        
+        
         <jar jarfile="${jar.file}" index="true">
             <!-- include all compiled classes -->
             <fileset dir="${build.main}">
