@@ -30,11 +30,6 @@
     </description>
     <!-- set a default for testConfig -->
     <property name="testConfig" value="default"/>
-<!-- the following two imports should not be necessary -->
-<!--load user project-testConfig properties -->
-<!--<property file="${user.home}/.connectors/${ant.project.name}/${testConfig}/config.groovy" /> -->
-<!--load user project properties -->
-<!--<property file="${user.home}/.connectors/${ant.project.name}.groovy" /> -->
     <!-- load user global properties -->
     <property file="${user.home}/.connectors/connectors.properties" />
 
@@ -47,8 +42,10 @@
     <property name="src.test.java" value="src/test/java" />
     <property name="src.main.resources" value="src/main/resources" />
     <property name="src.test.resources" value="src/test/resources" />
+    <!-- Path to optional configuration and libraries needed for connector compilation or tests -->
+    <property name="dependencies.private" value="${user.home}/.connectors/${ant.project.name}"/>
     <property name="config.public" value="src/test/config" />
-    <property name="config.private" value="${user.home}/.connectors/${ant.project.name}/config" />
+    <property name="config.private" value="${dependencies.private}/config" />
     <property name="lib" value="lib" />
     <property name="dist" value="dist" />
     <property name="build" value="build" />
@@ -150,11 +147,11 @@
         User Libraries
     -->
     
-    <condition property="user.common.libs" value="${user.home}/.connectors/${ant.project.name}/lib" else="">
-        <available file="${user.home}/.connectors/${ant.project.name}/lib" type="dir"/>
+    <condition property="user.common.libs" value="${dependencies.private}/lib" else="">
+        <available file="${dependencies.private}/lib" type="dir"/>
     </condition>        
-    <condition property="user.config.libs" value="${user.home}/.connectors/${ant.project.name}/lib/${testConfig}" else="">
-        <available file="${user.home}/.connectors/${ant.project.name}/lib/${testConfig}" type="dir"/>
+    <condition property="user.config.libs" value="${dependencies.private}/lib/${testConfig}" else="">
+        <available file="${dependencies.private}/lib/${testConfig}" type="dir"/>
     </condition>        
         
     <path id="user.libs" >
