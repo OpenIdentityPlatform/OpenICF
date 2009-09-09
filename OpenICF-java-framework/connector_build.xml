@@ -289,7 +289,7 @@
        Bundle Building Target
     -->
 
-    <target name="dist" depends="jar, javadoc"
+    <target name="dist" depends="jar, javadoc, set-version"
         description="generates the distribution (excludes test classes)">
         <property name="zip.file" value="${ConnectorBundle-Name}-${ConnectorBundle-Version}.zip" />
         <zip destfile="${zip.file}" basedir="${dist}"/>
@@ -305,14 +305,17 @@
         <delete file="${svn.info.tmp}" failonerror="false"/>
     </target>
     
-
-    <target name="jar" depends="compile-main,set-revision">
-        <!-- Create the distribution directory -->
-        <mkdir dir="${dist}" />
+    <target name="set-version" depends="set-revision">
         <condition property="SVN_REVISION" value="${svn.info.entry.revision}" else="x">
                 <isset property="svn.info.entry.revision"/>
         </condition>
         <property name="ConnectorBundle-Version" value="${MAJOR}.${MINOR}.${SVN_REVISION}"/>
+    </target>
+    
+
+    <target name="jar" depends="compile-main, set-version">
+        <!-- Create the distribution directory -->
+        <mkdir dir="${dist}" />
         <property name="jar.file" value="${dist}/${ConnectorBundle-Name}-${ConnectorBundle-Version}.jar" />
         
         <echo>
@@ -331,16 +334,11 @@
             <fileset file="${license.file}"/>
             <fileset file="${thirdpartyreadme.file}"/>
             <manifest>
-                <attribute name="ConnectorBundle-FrameworkVersion"
-                    value="${ConnectorBundle-FrameworkVersion}" />
-                <attribute name="ConnectorBundle-Name"
-                    value="${ConnectorBundle-Name}" />
-                <attribute name="ConnectorBundle-Version"
-                    value="${ConnectorBundle-Version}" />
-                <attribute name="Build-Number"
-                    value="${BUILD_NUMBER}" />
-                <attribute name="Subversion-Revision"
-                    value="${SVN_REVISION}" />
+                <attribute name="ConnectorBundle-FrameworkVersion" value="${ConnectorBundle-FrameworkVersion}" />
+                <attribute name="ConnectorBundle-Name" value="${ConnectorBundle-Name}" />
+                <attribute name="ConnectorBundle-Version" value="${ConnectorBundle-Version}" />
+                <attribute name="Build-Number" value="${BUILD_NUMBER}" />
+                <attribute name="Subversion-Revision" value="${SVN_REVISION}" />
             </manifest>
         </jar>
     </target>
@@ -548,7 +546,7 @@
             <fileset dir="${reports}/rejar"/>
         </jar>
     </target>
-    <target name="contract-tests" if="do.contracts.run" depends="contract-check">
+    <target name="contract-tests" if="do.contracts.run" depends="contract-check, set-version">
         <fail unless="connectorName" message="To run contract tests, you must specify [connectorName] property with the value equal to FQN of your connector class"/>
         <property name="test.parameters.outFile" value=""/>
         <!-- run all the contract tests -->
