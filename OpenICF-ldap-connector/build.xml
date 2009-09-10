@@ -29,7 +29,7 @@
     </target>
 
     <target name="-pre-compile-test-extra" depends="opends-setup">
-        <copy file="${user.home}/.connectors/connector-ldap/lib/OpenDS.jar" todir="${lib}/test"/>
+        <copy file="${dependencies.private}/lib/OpenDS.jar" todir="${lib}/test"/>
     </target>
 
     <target name="opends-setup" depends="opends-do-setup,opends-setup-clean"/>
