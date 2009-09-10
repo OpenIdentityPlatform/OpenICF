@@ -35,7 +35,7 @@
     <target name="opends-setup" depends="opends-do-setup,opends-setup-clean"/>
 
     <target name="opends-init">
-        <property name="opends.zip.default.dir" value="${user.home}/.connectors/connector-ldap"/>
+        <property name="opends.zip.default.dir" value="${dependencies.private}"/>
         <property name="opends.zip.default" value="${opends.zip.default.dir}/OpenDS-1.0.0.zip"/>
         <property name="opends.ldif" location="opends"/>
         <property name="opends.dest.dir" location="${src.test.java}/org/identityconnectors/ldap/opends"/>
