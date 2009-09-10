@@ -546,7 +546,7 @@
             <fileset dir="${reports}/rejar"/>
         </jar>
     </target>
-    <target name="contract-tests" if="do.contracts.run" depends="contract-check, set-version">
+    <target name="contract-tests" if="do.contracts.run" depends="contract-check, set-version, copy-public-config, copy-private-config">
         <fail unless="connectorName" message="To run contract tests, you must specify [connectorName] property with the value equal to FQN of your connector class"/>
         <property name="test.parameters.outFile" value=""/>
         <!-- run all the contract tests -->
@@ -583,7 +583,7 @@
 
     <target name="run-contract-tests" depends="contract-init, contract-dist, contract-tests"/>
     
-    <target name="run-cs-contract-tests" depends="contract-init-cs, contract-init, copy-public-config, copy-private-config, contract-tests"/>
+    <target name="run-cs-contract-tests" depends="contract-init-cs, contract-init, contract-tests"/>
     
     <target name="contract-init-cs">
         <property name="useConnectorServer" value="true"/>
