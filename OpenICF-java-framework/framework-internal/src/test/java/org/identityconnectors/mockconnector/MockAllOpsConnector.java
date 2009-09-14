@@ -36,6 +36,7 @@ import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
 import org.identityconnectors.framework.spi.operations.CreateOp;
 import org.identityconnectors.framework.spi.operations.DeleteOp;
+import org.identityconnectors.framework.spi.operations.ResolveUsernameOp;
 import org.identityconnectors.framework.spi.operations.ScriptOnConnectorOp;
 import org.identityconnectors.framework.spi.operations.ScriptOnResourceOp;
 import org.identityconnectors.framework.spi.operations.SearchOp;
@@ -45,8 +46,8 @@ import org.identityconnectors.framework.spi.operations.UpdateOp;
 
 
 public class MockAllOpsConnector extends MockConnector implements CreateOp,
-        DeleteOp, UpdateOp, SearchOp<String>, UpdateAttributeValuesOp, AuthenticateOp,
-        TestOp, ScriptOnConnectorOp, ScriptOnResourceOp {
+        DeleteOp, UpdateOp, SearchOp<String>, UpdateAttributeValuesOp, AuthenticateOp, 
+        ResolveUsernameOp, TestOp, ScriptOnConnectorOp, ScriptOnResourceOp {
 
     public Object runScriptOnConnector(ScriptContext request,
             OperationOptions options) {
@@ -122,6 +123,12 @@ public class MockAllOpsConnector extends MockConnector implements CreateOp,
         return null;
     }
 
+    public Uid resolveUsername(ObjectClass objectClass, String username, OperationOptions options) {
+        assert username != null;
+        addCall(username);
+        return null;
+    }
+    
     public void test() {
         addCall();
     }

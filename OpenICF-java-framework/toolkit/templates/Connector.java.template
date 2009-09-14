@@ -109,6 +109,14 @@ public class <%= resourceName %>Connector implements PoolableConnector, <%= inte
        throw new UnsupportedOperationException();
     } <% } %>
     
+    <% if(interfaces.contains("ResolveUsernameOp")) { %>       
+    /**
+     * {@inheritDoc}
+     */
+    public Uid resolveUsername(final ObjectClass objectClass, final String username, final OperationOptions options) { 
+       throw new UnsupportedOperationException();
+    } <% } %>
+    
     <% if(interfaces.contains("CreateOp")) { %>
     /**
      * {@inheritDoc}

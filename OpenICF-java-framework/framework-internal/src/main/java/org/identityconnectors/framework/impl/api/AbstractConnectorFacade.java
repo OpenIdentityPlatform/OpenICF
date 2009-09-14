@@ -35,6 +35,7 @@ import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
 import org.identityconnectors.framework.api.operations.GetApiOp;
+import org.identityconnectors.framework.api.operations.ResolveUsernameApiOp;
 import org.identityconnectors.framework.api.operations.SchemaApiOp;
 import org.identityconnectors.framework.api.operations.ScriptOnConnectorApiOp;
 import org.identityconnectors.framework.api.operations.ScriptOnResourceApiOp;
@@ -187,6 +188,16 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
         return ((AuthenticationApiOp) this
                 .getOperationCheckSupported(AuthenticationApiOp.class)).authenticate(
                         objectClass, username, password, options);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public final Uid resolveUsername(final ObjectClass objectClass, final String username, 
+            final OperationOptions options) {
+        return ((ResolveUsernameApiOp) this
+                .getOperationCheckSupported(ResolveUsernameApiOp.class)).resolveUsername(
+                        objectClass, username, options);
     }
 
     /**

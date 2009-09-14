@@ -52,6 +52,7 @@ import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
 import org.identityconnectors.framework.api.operations.GetApiOp;
+import org.identityconnectors.framework.api.operations.ResolveUsernameApiOp;
 import org.identityconnectors.framework.api.operations.SchemaApiOp;
 import org.identityconnectors.framework.api.operations.ScriptOnConnectorApiOp;
 import org.identityconnectors.framework.api.operations.ScriptOnResourceApiOp;
@@ -68,6 +69,7 @@ import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
 import org.identityconnectors.framework.spi.operations.CreateOp;
 import org.identityconnectors.framework.spi.operations.DeleteOp;
+import org.identityconnectors.framework.spi.operations.ResolveUsernameOp;
 import org.identityconnectors.framework.spi.operations.SPIOperation;
 import org.identityconnectors.framework.spi.operations.SchemaOp;
 import org.identityconnectors.framework.spi.operations.ScriptOnConnectorOp;
@@ -100,6 +102,7 @@ public final class FrameworkUtil {
     static {
         SPI_TO_API = new HashMap<Class<? extends SPIOperation>, Class<? extends APIOperation>>();
         SPI_TO_API.put(AuthenticateOp.class, AuthenticationApiOp.class);
+        SPI_TO_API.put(ResolveUsernameOp.class, ResolveUsernameApiOp.class);
         SPI_TO_API.put(CreateOp.class, CreateApiOp.class);
         SPI_TO_API.put(DeleteOp.class, DeleteApiOp.class);
         SPI_TO_API.put(SearchOp.class, SearchApiOp.class);

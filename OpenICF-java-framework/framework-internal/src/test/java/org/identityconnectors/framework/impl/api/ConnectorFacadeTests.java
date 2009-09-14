@@ -195,6 +195,19 @@ public class ConnectorFacadeTests {
     }
 
     @Test
+    public void resolveUsernameCallPattern() {
+        testCallPattern(new TestOperationPattern() {
+            public void makeCall(ConnectorFacade facade) {
+                facade.resolveUsername(ObjectClass.ACCOUNT, "dfadf", null);
+            }
+
+            public void checkCalls(List<Call> calls) {
+                assertEquals("resolveUsername", calls.remove(0).getMethodName());
+            }
+        });
+    }
+
+    @Test
     public void createCallPattern() {
         testCallPattern(new TestOperationPattern() {
             public void makeCall(ConnectorFacade facade) {

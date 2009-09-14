@@ -29,6 +29,7 @@ import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
 import org.identityconnectors.framework.api.operations.GetApiOp;
+import org.identityconnectors.framework.api.operations.ResolveUsernameApiOp;
 import org.identityconnectors.framework.api.operations.SchemaApiOp;
 import org.identityconnectors.framework.api.operations.ScriptOnConnectorApiOp;
 import org.identityconnectors.framework.api.operations.ScriptOnResourceApiOp;
@@ -47,6 +48,8 @@ class OperationMappings {
     static {
         MAPPINGS.add(new ObjectTypeMapperImpl(AuthenticationApiOp.class,
                 "AuthenticationApiOp"));
+        MAPPINGS.add(new ObjectTypeMapperImpl(ResolveUsernameApiOp.class,
+                "ResolveUsernameApiOp"));
         MAPPINGS.add(new ObjectTypeMapperImpl(SearchApiOp.class,
                 "SearchApiOp"));
         MAPPINGS.add(new ObjectTypeMapperImpl(ValidateApiOp.class,
