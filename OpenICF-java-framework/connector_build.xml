@@ -456,7 +456,7 @@
     <target name="run-unit-tests" depends="test-init, instrument, build-testclasspath" if="src.test.java.exists">
         <echo message="Running junit tests with testConfig=[${testConfig}]"/>
         <!-- run all the junits -->
-        <junit fork="yes" forkmode="once" dir="${basedir}" showoutput="true"
+        <junit fork="yes" forkmode="once" dir="${basedir}"
             failureProperty="test.failed" printsummary="true">
             <!--
                 Specify the name of the coverage data file to use.
@@ -474,10 +474,10 @@
                 <path refid="test-classpath" />
                 <path refid="user.libs" />
             </classpath>
-            <!-- output for Netbeans JUnit window -->
-            <formatter usefile="false" type="brief"/>
+
+            <formatter type="brief" usefile="false" unless="useExternalReporting"/>
             <!-- output in xml for build automation -->
-            <formatter type="xml" />
+            <formatter type="xml" if="useExternalReporting" />
             <!-- turn full assertions -->
             <assertions enableSystemAssertions="true" />
             <batchtest todir="${reports}/junit">
@@ -574,8 +574,8 @@
             
             <test todir="${reports}/contracts" outfile="TEST-${contract-package}.test.ContractTestSuite-${testConfig}"
                 name="${contract.suite.classname}"/>
-            <formatter type="xml" usefile="yes" />
-            <formatter type="plain" usefile="false" />
+            <formatter type="xml" if="useExternalReporting" />
+            <formatter type="brief" usefile="false" unless="useExternalReporting" />
             <classpath>
                 <fileset dir="${framework.dir}/dist" includes="*.jar"/>
                 <pathelement location="${build.test.config}"/>
