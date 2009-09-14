@@ -206,7 +206,7 @@
     <target name="compile-main" depends="compile-check, -pre-compile-extra, compile-main-internal, copy-main-resources" description="compile all main files"/>
 
     <target name="compile-check">
-        <fail unless="src.main.java.exists" message="Source folder ${src.main.java} does not exist. You may be using the old source layout, in which the Java source files are in a directory named src. In that case, import the toolkit's connector_build_old.xml and consider modifying your source layout according to http://identityconnectors.dev.java.net/issues/show_bug.cgi?id=395."/>
+        <fail unless="src.main.java.exists" message="Source folder ${src.main.java} does not exist. You may be using the old source layout, which we do not support anymore. Please modify your source layout according to http://identityconnectors.dev.java.net/issues/show_bug.cgi?id=395."/>
     </target>                
 
     <target name="compile-main-internal">
@@ -465,7 +465,6 @@
             <sysproperty key="net.sourceforge.cobertura.datafile" file="${basedir}/cobertura.ser" />
             
             <!-- Set the key for TestHelpers to use -->
-            <sysproperty key="project.name" value="${ant.project.name}"/>
             <sysproperty key="testConfig" value="${testConfig}"/>
             <sysproperty key="dependencies.private" value="${dependencies.private}"/>
 
@@ -564,7 +563,6 @@
             <sysproperty key="useConnectorServer" value="${useConnectorServer}"/>            
             <!-- common properties -->            
             <sysproperty key="data-provider" value="${data.provider}"/>            
-            <sysproperty key="project.name" value="${ant.project.name}"/>
             <sysproperty key="testConfig" value="${testConfig}"/>
             <sysproperty key="connectorName" value="${connectorName}"/>
             <sysproperty key="test.parameters.outFile" value="${test.parameters.outFile}"/>

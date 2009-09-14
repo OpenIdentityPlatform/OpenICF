@@ -639,7 +639,6 @@
         </oc:copy>
         <!-- copy in the connector build -->
         <oc:copy todir="${build-toolkit}" file="connector_build.xml"/>
-	<oc:copy todir="${build-toolkit}" file="connector_build_old.xml"/>              
         <!-- build and copy in the netbeans module (conditionally) -->
         <antcall target="nbm"/> 
         <!-- package it -->
