@@ -143,9 +143,15 @@ public class IOUtil {
     public static String getResourcePath(Class<?> c, String res) {
         assert c != null && StringUtil.isNotBlank(res);
         String classname = c.getName();
-        String pkg = classname.substring(0, classname.lastIndexOf('.'));
-        String fqres = pkg.replace('.', '/') + '/' + res;
-        return fqres;
+        String result;
+        int dot = classname.lastIndexOf('.');
+        if (dot >= 0) {
+            String pkg = classname.substring(0, dot);
+            result = pkg.replace('.', '/') + '/' + res;
+        } else {
+            result = res;
+        }
+        return result;
     }
 
     /**
@@ -447,7 +453,7 @@ public class IOUtil {
         }
     }
     /**
-     * Loads the given resource as a properties object.
+     * Extracts the resource to a file.
      * 
      * @param clazz
      *            The class, relative to which path is resolved
@@ -461,7 +467,7 @@ public class IOUtil {
     public static void extractResourceToFile(Class<?> clazz,
             String path,
             File file) throws IOException {
-        InputStream in = clazz.getResourceAsStream(path);
+        InputStream in = getResourceAsStream(clazz, path);
         if ( in == null ) {
             throw new IOException("Missing resource: "+path);
         }
