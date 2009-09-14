@@ -22,57 +22,54 @@
  */
 package org.identityconnectors.framework.impl.api;
 
+import static org.junit.Assert.fail;
 
-import java.net.InetAddress;
 import java.net.URL;
 import java.util.List;
 
-import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.common.security.SecurityUtil;
+import org.identityconnectors.common.Version;
+import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.api.ConnectorInfoManager;
 import org.identityconnectors.framework.api.ConnectorInfoManagerFactory;
-import org.identityconnectors.framework.api.RemoteFrameworkConnectionInfo;
-import org.identityconnectors.framework.server.ConnectorServer;
+import org.identityconnectors.framework.common.FrameworkUtilTestHelpers;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
+import org.junit.Test;
 
 
-public class RemoteConnectorInfoManagerClearTests extends ConnectorInfoManagerTestBase {
+public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase {
 
-    private static ConnectorServer _server;
-    
+    /**
+     * Tests that the framework refuses to load a bundle that requests
+     * a framework version newer than the one present.
+     */
+    @Test
+    public void testCheckVersion() throws Exception {
+        // The test bundles require framework 1.0, so pretend the framework is older.
+        FrameworkUtilTestHelpers.setFrameworkVersion(Version.parse("0.5"));
+        try {
+            getConnectorInfoManager();
+            fail();
+        } catch (ConfigurationException e) {
+            if (!e.getMessage().contains("unrecognized framework version")) {
+                fail();
+            }
+        }
+    }
+
     /**
      * To be overridden by subclasses to get different ConnectorInfoManagers
      * @return
      * @throws Exception
      */
-    @Override
     protected ConnectorInfoManager getConnectorInfoManager() throws Exception {
         List<URL> urls = getTestBundles();
-        
-        final int PORT = 8759;
-        
-        _server = ConnectorServer.newInstance();
-        _server.setKeyHash(SecurityUtil.computeBase64SHA1Hash("changeit".toCharArray()));
-        _server.setBundleURLs(urls);
-        _server.setPort(PORT);
-        _server.setIfAddress(InetAddress.getByName("127.0.0.1"));
-        _server.start();
         ConnectorInfoManagerFactory fact = ConnectorInfoManagerFactory.getInstance();
-        
-        RemoteFrameworkConnectionInfo connInfo = new
-        RemoteFrameworkConnectionInfo("127.0.0.1",PORT,new GuardedString("changeit".toCharArray()));
-        
-        ConnectorInfoManager manager = fact.getRemoteManager(connInfo);
-        
+        ConnectorInfoManager manager = fact.getLocalManager(urls.toArray(new URL[0]));
         return manager;
     }
-    
-    @Override
+
     protected void shutdownConnnectorInfoManager() {
-        if (_server != null) {
-            _server.stop();
-            _server = null;
-        }
+        ConnectorFacadeFactory.getInstance().dispose();
+        ConnectorInfoManagerFactory.getInstance().clearLocalCache();
     }
-    
-    
 }

@@ -23,18 +23,28 @@
 package org.identityconnectors.framework.common;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
+import java.net.URL;
 import java.text.MessageFormat;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
+import java.util.jar.Attributes.Name;
 
 import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.ReflectionUtil;
+import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.common.Version;
 import org.identityconnectors.common.security.GuardedByteArray;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.operations.APIOperation;
@@ -50,6 +60,7 @@ import org.identityconnectors.framework.api.operations.SyncApiOp;
 import org.identityconnectors.framework.api.operations.TestApiOp;
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.api.operations.ValidateApiOp;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.QualifiedUid;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -69,6 +80,9 @@ import org.identityconnectors.framework.spi.operations.UpdateOp;
 
 
 public final class FrameworkUtil {
+
+    private static Version frameworkVersion;
+
     /**
      * Never allow this to be instantiated.
      */
@@ -345,5 +359,50 @@ public final class FrameworkUtil {
         if ( value != null ) {
             checkOperationOptionType(value.getClass());
         }
+    }
+
+    /**
+     * Returns the version of the framework.
+     *
+     * @return the framework version; never null.
+     */
+    public static Version getFrameworkVersion() {
+        synchronized (FrameworkUtil.class) {
+            try {
+                if (frameworkVersion == null) {
+                    frameworkVersion = getFrameworkVersion(FrameworkUtil.class.getClassLoader());
+                }
+                return frameworkVersion;
+            } catch (IOException e) {
+                throw new ConnectorException(e);
+            }
+        }
+    }
+
+    static Version getFrameworkVersion(ClassLoader loader) throws IOException {
+        Enumeration<URL> urls = loader.getResources("META-INF/MANIFEST.MF");
+        while (urls.hasMoreElements()) {
+            URL url = urls.nextElement();
+            InputStream stream = url.openStream();
+            try {
+                Manifest manifest = new Manifest(stream);
+                Attributes attrs = manifest.getAttributes("Connectors Framework");
+                if (attrs != null) {
+                    String version = attrs.getValue(Name.SPECIFICATION_VERSION);
+                    if (StringUtil.isBlank(version)) {
+                        throw new IllegalStateException("The framework manifest specifies a blank version");
+                    }
+                    return Version.parse(version);
+                }
+            } finally {
+                IOUtil.quietClose(stream);
+            }
+        }
+        throw new IllegalStateException("Unable to retrieve the framework version");
+    }
+
+    // For tests only!
+    static synchronized void setFrameworkVersion(Version version) {
+        frameworkVersion = version;
     }
 }

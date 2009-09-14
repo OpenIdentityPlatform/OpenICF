@@ -32,8 +32,6 @@
     <property file="${user.home}/.connectors/connectors.properties" />
     <!-- load build properties -->
     <property file="build.properties" />
-    <!-- calculate the version from various properties -->
-    <property name="version" value="${MAJOR}.${MINOR}.${SVN_REVISION}"/>
     <!-- set defaults if they are not already set -->
     <property name="debug" value="true" />
     <property name="src-framework" location="framework/src/main/java" />
@@ -63,8 +61,26 @@
     <property name="jar.file-internal" value="${dist}/${ant.project.name}-internal.jar" />
     <property name="jar.file-test-common" value="${dist}/connector-test-common.jar" />
     <property name="jar.file-contract" value="${dist}/${ant.project.name}-contract.jar" />
+    <loadproperties srcFile="${src-framework}/META-INF/MANIFEST.MF">
+        <filterchain>
+            <linecontains>
+                <contains value="Specification-Version"/>
+            </linecontains>
+        </filterchain>
+    </loadproperties>
+    <property name="version.display" value="${Specification-Version}.${SVN_REVISION}"/>
+    <!--
+        The version number for the framework's MANIFEST.MF must be parsable
+        by the framework's Version class, so it cannot be of the form "1.1.x".
+    -->
+    <condition property="version" value="${Specification-Version}-NOREVISION" else="${Specification-Version}.${SVN_REVISION}">
+        <or>
+            <equals arg1="${SVN_REVISION}" arg2=""/>
+            <equals arg1="${SVN_REVISION}" arg2="x"/>
+        </or>
+    </condition>
     <property name="testbundles.dir" value="testbundles"/>
-    <property name="toolkit.name" value="connector_toolkit-${version}" />
+    <property name="toolkit.name" value="connector_toolkit-${version.display}" />
     <property name="toolkit.file" value="${dist}/${toolkit.name}.zip"/>
     <property name="build-toolkit" location="build/${toolkit.name}"/>
     <property name="nbm-name" value="IdentityConnectors-Plugin.nbm" />
@@ -218,6 +234,7 @@
         <attribute name="file"/>
         <attribute name="title"/>
         <element name="filesets"/>
+        <element name="attributes" optional="true"/>
         <sequential>
             <jar jarfile="@{file}" index="yes">
                 <!-- add all the filesets -->
@@ -225,9 +242,10 @@
                 <manifest>
                     <attribute name="Built-By" value="${user.name}"/>
                     <section name="@{title}">
+                        <attributes/>
                         <attribute name="Build-Date" value="${DSTAMP}-${TSTAMP}"/>
                         <attribute name="Implementation-Title" value="@{title}"/>
-                        <attribute name="Implementation-Version" value="${version} ${BUILD_ID}"/> 
+                        <attribute name="Implementation-Version" value="${version.display} ${BUILD_ID}"/>
                         <attribute name="Build-Number" value="${BUILD_ID}"/> 
                         <attribute name="SVN-Revision" value="${SVN_REVISION}"/> 
                     </section>
@@ -241,11 +259,16 @@
         <tstamp/>
         <!-- Create the distribution directory -->
         <mkdir dir="${dist}" />
+        <!-- Do not change the "Connectors Framework" title! It is used
+                by the framework to find its version. -->
         <jarframework file="${jar.file}"
             title="Connectors Framework">
             <filesets>
                 <fileset dir="${build-framework}"/>
             </filesets>
+            <attributes>
+                <attribute name="Specification-Version" value="${version}"/>
+            </attributes>
         </jarframework>
         <jarframework file="${jar.file-internal}"
             title="Connectors Framework - Internal">
@@ -398,6 +421,8 @@
             <oc:pathelement location='${build-framework}'/>
             <oc:pathelement location='${build-test-common}'/>
             <oc:pathelement location='${build-framework-internal}'/>
+            <!-- framework-internal tests depend on framework tests -->
+            <oc:pathelement location='${build-test-framework}'/>
           </oc:classpath>
         </oc:javac>
         <copy todir="${build-test-framework-internal}">

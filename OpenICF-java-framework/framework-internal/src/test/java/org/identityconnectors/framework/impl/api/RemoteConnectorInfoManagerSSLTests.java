@@ -51,7 +51,7 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.server.ConnectorServer;
 
 
-public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTests {
+public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTestBase {
 
     private KeyStore loadKeyStoreResource(String name) {
         try {

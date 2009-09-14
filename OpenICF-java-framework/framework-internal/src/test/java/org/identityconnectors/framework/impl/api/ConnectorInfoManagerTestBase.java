@@ -35,6 +35,7 @@ import java.util.Set;
 import junit.framework.Assert;
 
 import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.common.Version;
 import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConfigurationProperties;
@@ -43,12 +44,12 @@ import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.api.ConnectorInfoManager;
-import org.identityconnectors.framework.api.ConnectorInfoManagerFactory;
 import org.identityconnectors.framework.api.ConnectorKey;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
 import org.identityconnectors.framework.api.operations.SyncApiOp;
+import org.identityconnectors.framework.common.FrameworkUtilTestHelpers;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.OperationTimeoutException;
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -65,10 +66,10 @@ import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.impl.api.ConfigurationPropertyImpl;
 import org.identityconnectors.framework.impl.api.local.ConnectorPoolManager;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-
-public class ConnectorInfoManagerTests {
+public abstract class ConnectorInfoManagerTestBase {
 
     private static ConnectorInfo findConnectorInfo
         (ConnectorInfoManager manager,
@@ -86,9 +87,19 @@ public class ConnectorInfoManagerTests {
         return null;
     }
 
+    @Before
+    public void before() {
+        // LocalConnectorInfoManagerImpl needs to know the framework version.
+        // In case the framework doesn't know its version (for instance, because
+        // we are running against the classes, not a JAR file, so META-INF/MANIFEST.MF
+        // is not available), fake the version here.
+        FrameworkUtilTestHelpers.setFrameworkVersion(Version.parse("2.0"));
+    }
+
     @After
     public void after() {
         shutdownConnnectorInfoManager();
+        FrameworkUtilTestHelpers.setFrameworkVersion(null);
     }
 
     @Test
@@ -651,15 +662,7 @@ public class ConnectorInfoManagerTests {
      * @return
      * @throws Exception
      */
-    protected ConnectorInfoManager getConnectorInfoManager() throws Exception {
-        List<URL> urls = getTestBundles();
-        ConnectorInfoManagerFactory fact = ConnectorInfoManagerFactory.getInstance();
-        ConnectorInfoManager manager = fact.getLocalManager(urls.toArray(new URL[0]));
-        return manager;
-    }
+    protected abstract ConnectorInfoManager getConnectorInfoManager() throws Exception;
     
-    protected void shutdownConnnectorInfoManager() {
-        ConnectorFacadeFactory.getInstance().dispose();
-        ConnectorInfoManagerFactory.getInstance().clearLocalCache();
-    }
+    protected abstract void shutdownConnnectorInfoManager();
 }

@@ -31,6 +31,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.jar.Manifest;
 
+import org.identityconnectors.common.Version;
+import org.identityconnectors.framework.common.FrameworkUtil;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 
 
@@ -108,10 +110,11 @@ public final class ConnectorBundleManifestParser {
             bundleVersion = getAttribute(ATT_BUNDLE_VERSION);
         }
         
-        if (!"1.0".equals(frameworkVersion) ) {
+        if (FrameworkUtil.getFrameworkVersion().compareTo(Version.parse(frameworkVersion)) < 0) {
             String message = 
-                "Bundle "+_fileName+" contains an unrecognized "+
-                "framework version: "+frameworkVersion;
+                "Bundle "+_fileName+" requests an unrecognized "+
+                "framework version "+ frameworkVersion + " but available is "+
+                FrameworkUtil.getFrameworkVersion().getVersion();
             throw new ConfigurationException(message);
         }
 
