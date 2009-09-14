@@ -298,9 +298,10 @@
         <delete dir="${dist}/javadoc" />
         <mkdir dir="${dist}/javadoc" />
         <oc:javadoc overview="${src-framework}/overview.html" 
-            classpathref="class.path" destdir="${dist}/javadoc">
+            classpathref="class.path" destdir="${dist}/javadoc" failonerror="true">
             <oc:fileset dir="${src-framework}">
                 <oc:patternset refid="ignore"/>
+                <oc:exclude name="META-INF/MANIFEST.MF"/>
                 <oc:exclude name="**/package.html"/>
                 <oc:exclude name="**/overview.html"/>
             </oc:fileset>
