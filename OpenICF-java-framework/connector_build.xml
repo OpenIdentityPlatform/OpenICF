@@ -270,18 +270,14 @@
     <target name="copy-public-config" if="config.public.exists">
         <mkdir dir="${build.test.config}"/>
         <copy todir="${build.test.config}">
-            <fileset dir="${config.public}">
-                <include name="**/config.groovy"/>
-            </fileset>
+            <fileset dir="${config.public}"/>
         </copy>
     </target>
 
     <target name="copy-private-config" if="config.private.exists">
         <mkdir dir="${build.test.config}"/>
         <copy todir="${build.test.config}">
-            <fileset dir="${config.private}">
-                <include name="**/config.groovy"/>
-            </fileset>
+            <fileset dir="${config.private}"/>
         </copy>
     </target>
 
