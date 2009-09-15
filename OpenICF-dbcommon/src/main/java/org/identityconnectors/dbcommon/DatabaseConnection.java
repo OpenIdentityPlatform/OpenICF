@@ -139,13 +139,12 @@ public class DatabaseConnection  {
      * @throws SQLException an exception in statement
      */
     public PreparedStatement prepareStatement(final String sql, final List<SQLParam> params) throws SQLException {
-        log.ok("normalize statement {0}", sql);
+        log.ok("prepareStatement: statement {0}", sql);
         final List<SQLParam> out = new ArrayList<SQLParam>();
         final String nomalized = SQLUtil.normalizeNullValues(sql, params, out);
-        log.ok("prepare statement {0}", nomalized);
         final PreparedStatement prepareStatement = getConnection().prepareStatement(nomalized);
         SQLUtil.setParams(prepareStatement, out);
-        log.ok("statement {0} prepared", nomalized);
+        log.ok("prepareStatement: normalizzed statement {0} prepared", nomalized);
         return prepareStatement;
     }
 
