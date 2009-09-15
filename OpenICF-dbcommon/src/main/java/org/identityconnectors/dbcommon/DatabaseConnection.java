@@ -102,7 +102,7 @@ public class DatabaseConnection  {
             getConnection().setAutoCommit(!getConnection().getAutoCommit());
             getConnection().setAutoCommit(!getConnection().getAutoCommit());
             commit();
-            log.info("connection tested");
+            log.ok("connection tested");
         } catch (Exception e) {
             // anything, not just SQLException
             // if the connection is not valid anymore,
@@ -139,10 +139,10 @@ public class DatabaseConnection  {
      * @throws SQLException an exception in statement
      */
     public PreparedStatement prepareStatement(final String sql, final List<SQLParam> params) throws SQLException {
-        log.info("normalize statement {0}", sql);
+        log.ok("normalize statement {0}", sql);
         final List<SQLParam> out = new ArrayList<SQLParam>();
         final String nomalized = SQLUtil.normalizeNullValues(sql, params, out);
-        log.info("prepare statement {0}", nomalized);
+        log.ok("prepare statement {0}", nomalized);
         final PreparedStatement prepareStatement = getConnection().prepareStatement(nomalized);
         SQLUtil.setParams(prepareStatement, out);
         log.ok("statement {0} prepared", nomalized);
@@ -157,7 +157,7 @@ public class DatabaseConnection  {
      */
     public PreparedStatement prepareStatement(DatabaseQueryBuilder query) throws SQLException {
         final String sql = query.getSQL();
-        log.info("prepareStatement {0}", sql);
+        log.ok("prepareStatement {0}", sql);
         return prepareStatement(sql, query.getParams());
     }
 
@@ -170,7 +170,7 @@ public class DatabaseConnection  {
      * @throws SQLException an exception in statement
      */
     public CallableStatement prepareCall(final String sql, final List<SQLParam> params) throws SQLException {
-        log.info("normalize call statement {0}", sql);
+        log.ok("normalize call statement {0}", sql);
         final List<SQLParam> out = new ArrayList<SQLParam>();
         final String nomalized = SQLUtil.normalizeNullValues(sql, params, out);
         final CallableStatement prepareCall = getConnection().prepareCall(nomalized);
