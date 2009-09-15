@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorSecurityException;
@@ -57,6 +56,35 @@ public class LdapAuthenticate {
     }
 
     public Uid authenticate(GuardedString password) {
+        ConnectorObject authnObject = getObjectToAuthenticate();
+        AuthenticationResult authnResult = null;
+        if (authnObject != null) {
+            String entryDN = authnObject.getAttributeByName("entryDN").getValue().get(0).toString();
+            authnResult = conn.authenticate(entryDN, password);
+        }
+
+        if (authnResult == null || !isSuccess(authnResult)) {
+            throw new InvalidCredentialException(conn.format("authenticationFailed", null, username));
+        }
+        try {
+            authnResult.propagate();
+        } catch (PasswordExpiredException e) {
+            e.initUid(authnObject.getUid());
+            throw e;
+        }
+        // AuthenticationResult did not throw an exception, so this authentication was successful.
+        return authnObject.getUid();
+    }
+
+    public Uid resolveUsername() {
+        ConnectorObject authnObject = getObjectToAuthenticate();
+        if (authnObject == null) {
+            throw new InvalidCredentialException(conn.format("cannotResolveUsername", null, username));
+        }
+        return authnObject.getUid();
+    }
+
+    private ConnectorObject getObjectToAuthenticate() {
         List<String> userNameAttrs = getUserNameAttributes();
         Map<String, ConnectorObject> entryDN2Object = new HashMap<String, ConnectorObject>();
         for (String baseContext : conn.getConfiguration().getBaseContexts()) {
@@ -72,27 +100,10 @@ public class LdapAuthenticate {
                 }
             }
         }
-
-        Uid authnUid = null;
-        AuthenticationResult authnResult = null;
         if (!entryDN2Object.isEmpty()) {
-            Entry<String, ConnectorObject> entryDN2ObjectEntry = entryDN2Object.entrySet().iterator().next();
-            String entryDN = entryDN2ObjectEntry.getKey();
-            authnUid = entryDN2ObjectEntry.getValue().getUid();
-            authnResult = conn.authenticate(entryDN, password);
+            return entryDN2Object.values().iterator().next();
         }
-
-        if (authnResult == null || !isSuccess(authnResult)) {
-            throw new InvalidCredentialException(conn.format("authenticationFailed", null, username));
-        }
-        try {
-            authnResult.propagate();
-        } catch (PasswordExpiredException e) {
-            e.initUid(authnUid);
-            throw e;
-        }
-        // AuthenticationResult did not throw an exception, so this authentication was successful.
-        return authnUid;
+        return null;
     }
 
     private List<String> getUserNameAttributes() {

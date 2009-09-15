@@ -40,6 +40,7 @@ import org.identityconnectors.framework.spi.PoolableConnector;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
 import org.identityconnectors.framework.spi.operations.CreateOp;
 import org.identityconnectors.framework.spi.operations.DeleteOp;
+import org.identityconnectors.framework.spi.operations.ResolveUsernameOp;
 import org.identityconnectors.framework.spi.operations.SchemaOp;
 import org.identityconnectors.framework.spi.operations.SearchOp;
 import org.identityconnectors.framework.spi.operations.SyncOp;
@@ -54,7 +55,7 @@ import org.identityconnectors.ldap.search.LdapSearch;
 import org.identityconnectors.ldap.sync.sunds.SunDSChangeLogSyncStrategy;
 
 @ConnectorClass(configurationClass = LdapConfiguration.class, displayNameKey = "LdapConnector")
-public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, SearchOp<LdapFilter>, AuthenticateOp, CreateOp, DeleteOp,
+public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, SearchOp<LdapFilter>, AuthenticateOp, ResolveUsernameOp, CreateOp, DeleteOp,
         UpdateAttributeValuesOp, SyncOp {
 
     // XXX groups.
@@ -99,6 +100,10 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
 
     public Uid authenticate(ObjectClass objectClass, String username, GuardedString password, OperationOptions options) {
         return new LdapAuthenticate(conn, objectClass, username, options).authenticate(password);
+    }
+
+    public Uid resolveUsername(ObjectClass objectClass, String username, OperationOptions options) {
+        return new LdapAuthenticate(conn, objectClass, username, options).resolveUsername();
     }
 
     public FilterTranslator<LdapFilter> createFilterTranslator(ObjectClass oclass, OperationOptions options) {

@@ -50,8 +50,12 @@ public class LdapAuthenticateTests extends LdapConnectorTestBase {
         ConnectorObject bugs = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
         Uid uid = facade.authenticate(ObjectClass.ACCOUNT, BUGS_BUNNY_CN, new GuardedString("carrot".toCharArray()), null);
         assertEquals(bugs.getUid(), uid);
+        uid = facade.resolveUsername(ObjectClass.ACCOUNT, BUGS_BUNNY_CN, null);
+        assertEquals(bugs.getUid(), uid);
 
         uid = facade.authenticate(ObjectClass.ACCOUNT, BUGS_BUNNY_UID, new GuardedString("carrot".toCharArray()), null);
+        assertEquals(bugs.getUid(), uid);
+        uid = facade.resolveUsername(ObjectClass.ACCOUNT, BUGS_BUNNY_UID, null);
         assertEquals(bugs.getUid(), uid);
     }
 
@@ -64,15 +68,26 @@ public class LdapAuthenticateTests extends LdapConnectorTestBase {
         OperationOptions options = builder.build();
         Uid uid = facade.authenticate(ObjectClass.ACCOUNT, BUGS_BUNNY_SN, new GuardedString("carrot".toCharArray()), options);
         assertEquals(bugs.getUid(), uid);
+        uid = facade.resolveUsername(ObjectClass.ACCOUNT, BUGS_BUNNY_SN, options);
+        assertEquals(bugs.getUid(), uid);
 
-        // Should not be possible to authenticate with the attributes from the default configuration ("cn" and "uid").
+        // Should not be possible to authenticate with the attributes from the default configuration ("cn"...
         try {
             facade.authenticate(ObjectClass.ACCOUNT, BUGS_BUNNY_CN, new GuardedString("carrot".toCharArray()), options);
             fail();
         } catch (ConnectorSecurityException e) { }
+        try {
+            facade.resolveUsername(ObjectClass.ACCOUNT, BUGS_BUNNY_CN, options);
+            fail();
+        } catch (ConnectorSecurityException e) { }
 
+        // ... and "uid").
         try {
             uid = facade.authenticate(ObjectClass.ACCOUNT, BUGS_BUNNY_UID, new GuardedString("carrot".toCharArray()), options);
+            fail();
+        } catch (ConnectorSecurityException e) { }
+        try {
+            uid = facade.resolveUsername(ObjectClass.ACCOUNT, BUGS_BUNNY_UID, options);
             fail();
         } catch (ConnectorSecurityException e) { }
     }
@@ -85,6 +100,8 @@ public class LdapAuthenticateTests extends LdapConnectorTestBase {
         ConnectorObject bugs = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(BUGS_BUNNY_DN));
         Uid uid = facade.authenticate(ObjectClass.ACCOUNT, BUGS_BUNNY_DN, new GuardedString("carrot".toCharArray()), null);
         assertEquals(bugs.getUid(), uid);
+        uid = facade.resolveUsername(ObjectClass.ACCOUNT, BUGS_BUNNY_DN, null);
+        assertEquals(bugs.getUid(), uid);
     }
 
     @Test(expected = ConnectorSecurityException.class)
@@ -93,10 +110,17 @@ public class LdapAuthenticateTests extends LdapConnectorTestBase {
         facade.authenticate(ObjectClass.ACCOUNT, BUGS_BUNNY_CN, new GuardedString("rabbithole".toCharArray()), null);
     }
 
-    @Test(expected = ConnectorSecurityException.class)
+    @Test
     public void testAuthenticateUnknownAccount() {
         ConnectorFacade facade = newFacade();
-        facade.authenticate(ObjectClass.ACCOUNT, "hopefully.inexisting.user", new GuardedString("none".toCharArray()), null);
+        try {
+            facade.authenticate(ObjectClass.ACCOUNT, "hopefully.inexisting.user", new GuardedString("none".toCharArray()), null);
+            fail();
+        } catch (ConnectorSecurityException e) { }
+        try {
+            facade.resolveUsername(ObjectClass.ACCOUNT, "hopefully.inexisting.user", null);
+            fail();
+        } catch (ConnectorSecurityException e) { }
     }
 
     @Test
