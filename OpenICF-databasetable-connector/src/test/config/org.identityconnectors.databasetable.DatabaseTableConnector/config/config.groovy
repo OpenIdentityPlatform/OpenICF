@@ -233,6 +233,7 @@ testsuite {
         UpdateApiOp: ['__ACCOUNT__'],
         AuthenticationApiOp: ['__ACCOUNT__'],
         TestApiOp: ['__ACCOUNT__'],
+        ResolveUsernameOp: ['__ACCOUNT__'],
         SyncApiOp: [] // sync column is missing in the tables.
    ]
   
