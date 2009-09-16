@@ -463,7 +463,6 @@
             <!-- Set the key for TestHelpers to use -->
             <sysproperty key="project.name" value="${ant.project.name}"/>
             <sysproperty key="testConfig" value="${testConfig}"/>
-            <sysproperty key="dependencies.private" value="${dependencies.private}"/>
 
             <!-- reference the test classpath -->
             <classpath>
@@ -565,8 +564,6 @@
             <sysproperty key="connectorName" value="${connectorName}"/>
             <sysproperty key="test.parameters.outFile" value="${test.parameters.outFile}"/>
             <sysproperty key="org.identityconnectors.common.logging.class" value="org.identityconnectors.common.logging.impl.JDKLogger"/>
-            <sysproperty key="dependencies.private" value="${dependencies.private}"/>
-            
             
             <test todir="${reports}/contracts" outfile="TEST-${contract-package}.test.ContractTestSuite-${testConfig}"
                 name="${contract.suite.classname}"/>
