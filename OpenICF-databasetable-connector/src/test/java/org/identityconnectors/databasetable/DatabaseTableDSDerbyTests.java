@@ -467,7 +467,7 @@ public class DatabaseTableDSDerbyTests extends DatabaseTableTestBase {
 
     /**
      * The dir acces method
-     * @return
+     * @return the file see {@link File}
      */
     static File getDBDirectory() {
         return new File(System.getProperty("java.io.tmpdir"), DB_DIR);

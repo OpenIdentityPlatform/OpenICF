@@ -50,11 +50,30 @@ import org.identityconnectors.dbcommon.SQLParam;
 import org.identityconnectors.dbcommon.SQLUtil;
 import org.identityconnectors.dbcommon.UpdateSetBuilder;
 import org.identityconnectors.dbcommon.DatabaseQueryBuilder.OrderBy;
-import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
-import org.identityconnectors.framework.common.objects.*;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.AttributeInfo;
+import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
+import org.identityconnectors.framework.common.objects.AttributeUtil;
+import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
+import org.identityconnectors.framework.common.objects.Name;
+import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.ObjectClassInfo;
+import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
+import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.OperationalAttributeInfos;
+import org.identityconnectors.framework.common.objects.OperationalAttributes;
+import org.identityconnectors.framework.common.objects.ResultsHandler;
+import org.identityconnectors.framework.common.objects.Schema;
+import org.identityconnectors.framework.common.objects.SchemaBuilder;
+import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
+import org.identityconnectors.framework.common.objects.SyncDeltaType;
+import org.identityconnectors.framework.common.objects.SyncResultsHandler;
+import org.identityconnectors.framework.common.objects.SyncToken;
+import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.ConnectorClass;
@@ -62,6 +81,7 @@ import org.identityconnectors.framework.spi.PoolableConnector;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
 import org.identityconnectors.framework.spi.operations.CreateOp;
 import org.identityconnectors.framework.spi.operations.DeleteOp;
+import org.identityconnectors.framework.spi.operations.ResolveUsernameOp;
 import org.identityconnectors.framework.spi.operations.SchemaOp;
 import org.identityconnectors.framework.spi.operations.SearchOp;
 import org.identityconnectors.framework.spi.operations.SyncOp;
@@ -92,7 +112,7 @@ import org.identityconnectors.framework.spi.operations.UpdateOp;
         displayNameKey = "DBTABLE_CONNECTOR",
         configurationClass = DatabaseTableConfiguration.class)
 public class DatabaseTableConnector implements PoolableConnector, CreateOp, SearchOp<FilterWhereBuilder>,
-        DeleteOp, UpdateOp, SchemaOp, TestOp, AuthenticateOp, SyncOp {
+        DeleteOp, UpdateOp, SchemaOp, TestOp, AuthenticateOp, SyncOp, ResolveUsernameOp {
 
     /**
      * Setup logging for the {@link DatabaseTableConnector}.
@@ -136,28 +156,28 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
     // =======================================================================
     // Initialize/dispose methods..
     // =======================================================================
-
+    /**
+     * {@inheritDoc}
+     */
     public Configuration getConfiguration() {
         return this.config;
     }
 
     /**
-     * Callback method to receive the {@link Configuration}.
-     * 
-     * @see org.identityconnectors.framework.spi.Connector#init(Configuration)
+     * Init the connector
+     * {@inheritDoc}
      */
     public void init(Configuration cfg) {
         log.info("init DatabaseTable connector");                
         this.config = (DatabaseTableConfiguration) cfg;
-        this.conn = DatabaseTableConnection.createDBTableConnection(this.config);
         this.schema = null;
         this.defaultAttributesToGet = null;
-        this.columnSQLTypes = null;
+        this.columnSQLTypes = null;            
         log.ok("init DatabaseTable connector ok, connection is valid");                
     }
 
     /**
-     * @see org.identityconnectors.framework.spi.PoolableConnector#init(Configuration)
+     * {@inheritDoc}
      */
     public void checkAlive() {
         log.info("checkAlive DatabaseTable connector");
@@ -179,16 +199,20 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
     /**
      * The connector connection access method
      * @return connection
-     * @throws SQLException 
      */
     DatabaseTableConnection getConn() {
+        //Lazy initialize the connection
+        if ( conn == null ) {
+            this.config.validate();
+            //Validate first to minimize wrong resource access
+            this.conn = DatabaseTableConnection.createDBTableConnection(this.config);
+        }
         return conn;
     }    
 
     /**
      * Disposes of the {@link DatabaseTableConnector}'s resources.
-     * 
-     * @see rg.identityconnectors.framework.spi.PoolableConnector#dispose()
+     * {@inheritDoc}
      */
     public void dispose() {
         log.info("dispose DatabaseTable connector");                
@@ -203,16 +227,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
 
     /**
      * Creates a row in the database representing an account.
-     * 
-     * @param obj the {@link ObjectClass} type (must be ACCOUNT )
-     * @param attrs attributes to associate with required columns in the row.
-     * @param options additional options. Additional options are not supported for this operation. 
-     * @return the value that represents the account id for the row. The key
-     *         column is used to determine the {@link Uid}.
-     * @throws AlreadyExistsException if the account already exists on the target resource
-     * @throws ConnectorException if an invalid attribute is specified
-     *         
-     * @see org.identityconnectors.framework.spi.operations.CreateOp#create(ObjectClass, Set, OperationOptions)
+     * {@inheritDoc}
      */
     public Uid create(ObjectClass oclass, Set<Attribute> attrs, OperationOptions options) {
         log.info("create account, check the ObjectClass");        
@@ -322,13 +337,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
     
     /**
      * Deletes a row from the table.
-     * @param oclass the type of object to delete. Only ACCOUNT is supported.
-     * @param uid the {@link Uid} of the account to delete
-     * @param options additional options. Additional options are not supported for this operation. 
-     * @throws UnknownUidException if the specified Uid does not exist on the target resource
-     * @throws ConnectorException if a problem occurs with the connection     
-     * 
-     * @see DeleteOp#delete(ObjectClass, Uid, OperationOptions)
+     * {@inheritDoc}
      */
     public void delete(final ObjectClass oclass, final Uid uid, final OperationOptions options) {
         log.info("delete account, check the ObjectClass");        
@@ -386,14 +395,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
     }
 
     /**
-     * Update the database row w/ the data provided.
-     * 
-     * @param oclass the {@link ObjectClass} type (must be ACCOUNT )
-     * @param attrs attributes. Attributes to associate with writable columns in the row.
-     *              All Attributes must be valid according to the schema for this connector.    
-     * @param options additional options. Additional options are not supported for this operation. 
-     *              
-     * @see UpdateOp#update(ObjectClass, Set, OperationOptions)
+     * Update the database row with the data provided.
+     * {@inheritDoc}
      */
     public Uid update(ObjectClass oclass, Uid uid, Set<Attribute> attrs, OperationOptions options) {
         log.info("update account, check the ObjectClass");        
@@ -480,11 +483,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
     
     /**
      * Creates a Database Table filter translator.
-     * 
-     * @param objClass the type of object to delete. Only ACCOUNT is supported.
-     * @param options additional options. 
-     * 
-     * @see FilterTranslator#createFilterTranslator(ObjectClass, OperationOptions )
+     * {@inheritDoc}
      */
     public FilterTranslator<FilterWhereBuilder> createFilterTranslator(ObjectClass oclass, OperationOptions options) {
         log.info("check the ObjectClass");        
@@ -497,13 +496,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
 
     /**
      * Search for rows 
-     * 
-     * @param objClass the type of object to delete. Only ACCOUNT is supported.
-     * @param where the SQL query where builder {@link FilterWhereBuilder}. Could be null for all rows.
-     * @param handler the SQL query result handler {@link ResultsHandler}. Should not be null
-     * @param options additional options. The attributeToGet are supported.  
-     * 
-     * @see SearchOp#executeQuery(ObjectClass, Object, ResultsHandler, OperationOptions)
+     * {@inheritDoc}
      */
     public void executeQuery(ObjectClass oclass, FilterWhereBuilder where, ResultsHandler handler,
             OperationOptions options) {
@@ -561,8 +554,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
     }
 
 
-    /* (non-Javadoc)
-     * @see org.identityconnectors.framework.spi.operations.SyncOp#sync(org.identityconnectors.framework.common.objects.ObjectClass, org.identityconnectors.framework.common.objects.SyncToken, org.identityconnectors.framework.common.objects.SyncResultsHandler, org.identityconnectors.framework.common.objects.OperationOptions)
+    /**
+     * {@inheritDoc}
      */
     public void sync(ObjectClass oclass, SyncToken token, SyncResultsHandler handler, OperationOptions options) {
         log.info("check the ObjectClass and result handler");        
@@ -642,6 +635,9 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         log.ok("Sync Account commited");        
     }
     
+    /**
+     * {@inheritDoc}
+     */
     public SyncToken getLatestSyncToken(ObjectClass oclass) {
         log.info("check the ObjectClass");        
         final String SQL_SELECT = "SELECT MAX( {0} ) FROM {1}";
@@ -704,8 +700,6 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
     // =======================================================================
     /**
      * {@inheritDoc}
-     * 
-     * @see SchemaOp#schema()
      */
     public Schema schema() {
         try {
@@ -729,7 +723,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
    
     /**
      * Test the configuration and connection
-     * @see org.identityconnectors.framework.spi.operations.TestOp#test()
+     * {@inheritDoc}
      */
     public void test() {
         log.info("test");
@@ -768,32 +762,33 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
     }
         
     /**
-     * Attempts to authenticate the given account/password combination.
+     * Attempts to authenticate the given username combination
+     * {@inheritDoc}
      */
     public Uid authenticate(ObjectClass oclass, String username, GuardedString password,
             OperationOptions options) {
 
         final String SQL_AUTH_QUERY = "SELECT {0} FROM {1} WHERE ( {0} = ? ) AND ( {2} = ? )";
         
-        log.info("check the ObjectClass");               
+        log.info("check the ObjectClass");
         if(oclass == null || (!oclass.equals(ObjectClass.ACCOUNT))) {
             throw new IllegalArgumentException(config.getMessage(MSG_ACCOUNT_OBJECT_CLASS_REQUIRED)); 
         }              
-        log.ok("The object class is ok");        
+        log.ok("The object class is ok");
         if(StringUtil.isBlank(config.getPasswordColumn())) {
             throw new UnsupportedOperationException(config.getMessage(MSG_AUTHENTICATE_OP_NOT_SUPPORTED));
         }
-        log.ok("The Password Column is ok");        
+        log.ok("The Password Column is ok");
        // determine if you can get a connection to the database..
         if (StringUtil.isBlank(username)) {
             throw new IllegalArgumentException(config.getMessage(MSG_USER_BLANK));
          }
-        log.ok("The username is ok");        
+        log.ok("The username is ok");
         // check that there is a pwd to query..
         if (password == null) {
             throw new IllegalArgumentException(config.getMessage(MSG_PASSWORD_BLANK));
          }        
-        log.ok("The password is ok");        
+        log.ok("The password is ok");
             
         final String keyColumnName = quoteName(config.getKeyColumn());
         final String passwordColumnName = quoteName(config.getPasswordColumn());
@@ -837,7 +832,71 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         log.info("Account: {0} authenticated ", username);
         return uid;
     }
+    
+    /**
+     * Attempts to resolve the given username
+     * {@inheritDoc}
+     */
+    public Uid resolveUsername(ObjectClass oclass, String username, OperationOptions options) {
+        final String SQL_AUTH_QUERY = "SELECT {0} FROM {1} WHERE ( {0} = ? )";
+        
+        log.info("check the ObjectClass");
+        if(oclass == null || (!oclass.equals(ObjectClass.ACCOUNT))) {
+            throw new IllegalArgumentException(config.getMessage(MSG_ACCOUNT_OBJECT_CLASS_REQUIRED)); 
+        }              
+        log.ok("The object class is ok");
+        if(StringUtil.isBlank(config.getPasswordColumn())) {
+            throw new UnsupportedOperationException(config.getMessage(MSG_AUTHENTICATE_OP_NOT_SUPPORTED));
+        }
+        log.ok("The Password Column is ok");
+       // determine if you can get a connection to the database..
+        if (StringUtil.isBlank(username)) {
+            throw new IllegalArgumentException(config.getMessage(MSG_USER_BLANK));
+         }
+        log.ok("The username is ok");
+            
+        final String keyColumnName = quoteName(config.getKeyColumn());
+        final String passwordColumnName = quoteName(config.getPasswordColumn());
+        String sql = MessageFormat.format(SQL_AUTH_QUERY, keyColumnName, config.getTable(), passwordColumnName);
 
+        final List<SQLParam> values = new ArrayList<SQLParam>();
+        values.add( new SQLParam(keyColumnName, username, getColumnType(config.getKeyColumn()))); // real username
+
+        PreparedStatement stmt = null;
+        ResultSet result = null;
+        Uid uid = null;
+        //No passwordExpired capability
+        try {
+            // replace the ? in the SQL_AUTH statement with real data
+            log.info("authenticate Account: {0}", username);
+            openConnection();
+            
+            stmt = getConn().prepareStatement(sql, values);
+            result = stmt.executeQuery();
+            log.ok("authenticate query for account {0} executed ", username);
+            //No PasswordExpired capability
+            if (!result.next()) {
+                log.error("authenticate query for account {0} has no result ", username);
+                throw new InvalidCredentialException(config.getMessage(MSG_AUTH_FAILED, username)); 
+            }
+            uid = new Uid( result.getString(1));
+            // commit changes
+            log.info("commit authenticate");
+            commit();
+        } catch (SQLException e) {
+            log.error(e, "Account: {0} authentication failed ", username);
+            SQLUtil.rollbackQuietly(getConn());
+            throw new ConnectorException(config.getMessage(MSG_CAN_NOT_READ, config.getTable()), e);
+        } finally {
+            SQLUtil.closeQuietly(result);
+            SQLUtil.closeQuietly(stmt);
+            
+            closeConnection();
+        }
+        log.info("Account: {0} authenticated ", username);
+        return uid;
+    }         
+    
     /**
      * Used to escape the table or column name.
      * @param value Value to be quoted
@@ -850,8 +909,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
     
     /**
      * The required type is cached
-     * @param columnName
-     * @return the className of the column
+     * @param columnName the column name
+     * @return the cached column type
      */
     public int getColumnType(String columnName) {
         if (columnSQLTypes == null) {
@@ -1181,6 +1240,5 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         }
         assert stringColumnRequired != null;
         return stringColumnRequired;
-    }       
-    
+    }
 }

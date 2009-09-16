@@ -51,9 +51,8 @@ public class DatabaseTableConfigurationTests {
     static final String URLTEMPLATE = "jdbc:derby:@%h:%p:%d";
 
     /**
-    * 
-    * @return
-    * @throws Exception
+    * The configuration
+     * @return see {@link DatabaseTableConfiguration}
     */
     protected DatabaseTableConfiguration getConfiguration() {
         DatabaseTableConfiguration config = new DatabaseTableConfiguration();
@@ -74,7 +73,6 @@ public class DatabaseTableConfigurationTests {
 
     /**
      * test method
-     * @throws Exception 
      */
     @Test
     public void testConfiguration() {
@@ -86,7 +84,6 @@ public class DatabaseTableConfigurationTests {
     
     /**
      * test method
-     * @throws Exception 
      */
     @Test
     public void testFormatUrl() {
@@ -99,7 +96,6 @@ public class DatabaseTableConfigurationTests {
     
     /**
      * test method
-     * @throws Exception 
      */
     @Test
     public void testGetSetTheProperties() {
@@ -144,8 +140,6 @@ public class DatabaseTableConfigurationTests {
 
     /**
      * test method
-     * 
-     * @throws Exception
      */
     @Test(expected = IllegalArgumentException.class)
     public void testConfigurationEmptyHost() {
@@ -158,8 +152,6 @@ public class DatabaseTableConfigurationTests {
 
     /**
      * test method
-     * 
-     * @throws Exception
      */
     @Test(expected = IllegalArgumentException.class)
     public void testConfigurationEmptyPort() {
@@ -171,8 +163,6 @@ public class DatabaseTableConfigurationTests {
         
     /**
      * test method
-     * 
-     * @throws Exception
      */
     @Test(expected = IllegalArgumentException.class)
     public void testConfigurationEmptyDatabase() {
@@ -185,8 +175,6 @@ public class DatabaseTableConfigurationTests {
     
     /**
      * test method
-     * 
-     * @throws Exception
      */
     @Test(expected = IllegalArgumentException.class)
     public void testConfigurationKeyEQPassword() {
@@ -200,8 +188,6 @@ public class DatabaseTableConfigurationTests {
 
     /**
      * test method
-     * 
-     * @throws Exception
      */
     @Test(expected = IllegalArgumentException.class)
     public void testConfigurationKeyEQChange() {
@@ -214,8 +200,6 @@ public class DatabaseTableConfigurationTests {
     } 
     /**
      * test method
-     * 
-     * @throws Exception
      */
     @Test(expected = IllegalArgumentException.class)
     public void testConfigurationPasswdEQChange() {
@@ -229,7 +213,6 @@ public class DatabaseTableConfigurationTests {
     
     /**
      * test method
-     * @throws Exception 
      */
     @Test
     public void testConfigurationDataSource() {
@@ -242,7 +225,6 @@ public class DatabaseTableConfigurationTests {
     
     /**
      * test method
-     * @throws Exception 
      */
     @Test
     public void testConfigurationJndi() {

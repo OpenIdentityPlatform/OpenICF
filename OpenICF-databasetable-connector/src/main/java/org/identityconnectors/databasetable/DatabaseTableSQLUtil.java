@@ -69,7 +69,6 @@ public final class DatabaseTableSQLUtil {
      * @param sms 
      * @param statement
      * @param params a <CODE>List</CODE> of the object arguments
-     * @param sqlTypes 
      * @throws SQLException an exception in statement
      */
     public static void setParams(final MappingStrategy sms, final PreparedStatement statement, final List<SQLParam> params) throws SQLException {
@@ -102,8 +101,7 @@ public final class DatabaseTableSQLUtil {
     /**
      * Set the statement parameter
      * <p> It is ready for overloading if necessary</p>
-     * @param sms 
-     * @param scs 
+     * @param sms  a mapping strategy
      * @param stmt a <CODE>PreparedStatement</CODE> to set the params
      * @param idx an index of the parameter
      * @param parm a parameter Value
@@ -120,8 +118,7 @@ public final class DatabaseTableSQLUtil {
 
     /**
      * Read one row from database result set and convert it to columnValues map.  
-     * @param sms 
-     * @param scs 
+     * @param sms a mapping strategy
      * @param resultSet database data
      * @return The transformed column values map
      * @throws SQLException 

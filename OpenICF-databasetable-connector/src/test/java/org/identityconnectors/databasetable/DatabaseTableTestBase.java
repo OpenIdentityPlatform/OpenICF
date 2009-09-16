@@ -109,18 +109,23 @@ public abstract class DatabaseTableTestBase {
     /**
      * Create the test configuration
      * @return the initialized configuration 
+     * @throws Exception  anything wrong
      */
     protected abstract DatabaseTableConfiguration getConfiguration() throws Exception;
  
     /**
      * Create the test attribute sets
+     * @param cfg 
      * @return the initialized attribute set
+     * @throws Exception anything wrong 
      */
     protected abstract Set<Attribute>  getCreateAttributeSet(DatabaseTableConfiguration cfg) throws Exception;
 
     /**
      * Create the test modify attribute set
+     * @param cfg the configuration
      * @return the initialized attribute set
+     * @throws Exception anything wrong
      */
     protected abstract  Set<Attribute>  getModifyAttributeSet(DatabaseTableConfiguration cfg) throws Exception;
    
@@ -457,7 +462,6 @@ public abstract class DatabaseTableTestBase {
     
     /**
      * Test method for
-     * {@link org.identityconnectors.databasetable.DatabaseTableConnector#authenticate(username, password, options)}.
      * Test creating of the connector object, searching using UID and update
      * @throws Exception 
      */
@@ -490,13 +494,43 @@ public abstract class DatabaseTableTestBase {
         // cleanup (should not throw any exception.)
         con.delete(ObjectClass.ACCOUNT, uid, null);
     }
+    
+    /**
+     * Test method for
+     * Test creating of the connector object, searching using UID and update
+     * @throws Exception 
+     */
+    @Test
+    public void testResolveUsernameOriginal() throws Exception {
+        log.ok("testAuthenticateOriginal");
+        final DatabaseTableConfiguration cfg = getConfiguration();
+        con = getConnector(cfg);
+        final Set<Attribute> expected = getCreateAttributeSet(cfg);
+
+        // create the object
+        final Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
+        assertNotNull(uid);
+
+        // retrieve the object
+        List<ConnectorObject> list = TestHelpers.searchToList(con, ObjectClass.ACCOUNT, new EqualsFilter(uid));
+        assertTrue(list.size() == 1);
+
+        // check if authenticate operation is present (it should)
+        Schema schema = con.schema();
+        Set<ObjectClassInfo> oci = schema.getSupportedObjectClassesByOperation(AuthenticationApiOp.class);
+        assertTrue(oci.size() >= 1);
+
+        // this should not throw any RuntimeException, on invalid authentication
+        final Name name = AttributeUtil.getNameFromAttributes(expected);
+        final Uid auid = con.resolveUsername(ObjectClass.ACCOUNT, name.getNameValue(), null);
+        assertEquals(uid, auid);
+
+        // cleanup (should not throw any exception.)
+        con.delete(ObjectClass.ACCOUNT, uid, null);
+    }    
 
     /**
      * Test method for
-     * {@link org.identityconnectors.databasetable.DatabaseTableConnector#authenticate(username, password, options)}.
-     * Test creating of the connector object, searching using UID and update
-     * 
-     * In this case the user that we query is not in the database at all.
      * @throws Exception 
      */
     @Test(expected = InvalidCredentialException.class)
@@ -509,9 +543,23 @@ public abstract class DatabaseTableTestBase {
         con.authenticate(ObjectClass.ACCOUNT, "NON", new GuardedString("MOM".toCharArray()), null);
     }
 
+    
     /**
      * Test method for
-     * {@link org.identityconnectors.databasetable.DatabaseTableConnector#authenticate(username, password, options)}.
+     * @throws Exception 
+     */
+    @Test(expected = InvalidCredentialException.class)
+    public void testResolveUsernameWrongOriginal() throws Exception {
+        log.ok("testAuthenticateOriginal");
+        final DatabaseTableConfiguration cfg = getConfiguration();
+        con = getConnector(cfg);
+        // this should throw InvalidCredentials exception, as we query a
+        // non-existing user
+        con.resolveUsername(ObjectClass.ACCOUNT, "WRONG", null);
+    }
+    
+    /**
+     * Test method for
      * @throws Exception 
      */
     @Test(expected = UnsupportedOperationException.class)
@@ -887,7 +935,7 @@ public abstract class DatabaseTableTestBase {
 
     /**
      * @param cfg
-     * @return
+     * @return the connector
      */
     protected DatabaseTableConnector getConnector(DatabaseTableConfiguration cfg) {
         con = new DatabaseTableConnector();
@@ -898,16 +946,20 @@ public abstract class DatabaseTableTestBase {
     
     
     /**
-     * @param expected
-     * @param actual
+     * @param schema a schema
+     * @param expected an expected value
+     * @param actual an actual value
+     * @param ignore ignore list
      */
     protected void attributeSetsEquals(final Schema schema, Set<Attribute> expected, Set<Attribute> actual, String ... ignore) {
         attributeSetsEquals(schema, AttributeUtil.toMap(expected), AttributeUtil.toMap(actual), ignore);              
     }    
     
      /**
-     * @param expected
-     * @param actual
+     * @param schema a schema
+     * @param expMap an expected value map
+     * @param actMap an actual value map
+     * @param ignore ignore list
      */
     protected void attributeSetsEquals(final Schema schema, final Map<String, Attribute> expMap, final Map<String, Attribute> actMap, String ... ignore) {
         log.ok("attributeSetsEquals");
