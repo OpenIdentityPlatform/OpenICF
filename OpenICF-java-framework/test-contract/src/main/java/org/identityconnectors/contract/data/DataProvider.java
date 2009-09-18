@@ -28,7 +28,6 @@ import java.util.Set;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.spi.Configuration;
-import org.identityconnectors.framework.spi.Connector;
 
 /**
  * DataProvider is a facility used for getting (reading/generating) data for
@@ -49,7 +48,7 @@ public interface DataProvider {
      * @return 
      * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
      */
-    public Object get(Class dataTypeName, String name,
+    public Object get(Class<?> dataTypeName, String name,
             String componentName, int sequenceNumber, boolean isMultivalue) throws ObjectNotFoundException;
     
     /**
@@ -61,7 +60,7 @@ public interface DataProvider {
      * @return
      * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
      */
-    public Object get(Class dataTypeName, String name,
+    public Object get(Class<?> dataTypeName, String name,
             String componentName) throws ObjectNotFoundException;
 
     /**
@@ -159,7 +158,7 @@ public interface DataProvider {
      * @param clazz the type of returned random object
      * @return randomly generated object with content based on given type. 
      */
-    public Object generate(String pattern, Class clazz);
+    public Object generate(String pattern, Class<?> clazz);
     
     /**
      * generates a random string dynamically.

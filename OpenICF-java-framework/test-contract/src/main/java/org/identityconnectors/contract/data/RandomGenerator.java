@@ -91,7 +91,6 @@ public class RandomGenerator {
      * @return object initialized with random string
      */
     public static Object generate(String pattern, Class<?> clazz) {
-        Constructor<?> c;
         String generatedStr = createRandomString(pattern,
                 getDefaultCharacterSetMap());
 
@@ -104,18 +103,18 @@ public class RandomGenerator {
             return arr[0];
         }
 
+        // Among others, this handles the conversion to a GuardedString,
+        // whose constructor takes a char[].
         try {
-            Constructor<?> method = clazz.getConstructor(char[].class);
-            return method.newInstance(generatedStr.toCharArray());
+            Constructor<?> constructor = clazz.getConstructor(char[].class);
+            return constructor.newInstance(generatedStr.toCharArray());
         } catch (Exception e) {
             // OK
         }
 
-        // Among others, this handles the conversion to a GuardedString,
-        // whose constructor takes a char[]. 
         try {
-            c = clazz.getConstructor(String.class);
-            return c.newInstance(generatedStr);
+            Constructor<?> constructor = clazz.getConstructor(String.class);
+            return constructor.newInstance(generatedStr);
         } catch (Exception e) {
             // ok
         }

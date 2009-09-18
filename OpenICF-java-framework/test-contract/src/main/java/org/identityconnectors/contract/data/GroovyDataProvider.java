@@ -46,7 +46,6 @@ import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.contract.data.groovy.Get;
 import org.identityconnectors.contract.data.groovy.Lazy;
 import org.identityconnectors.contract.data.groovy.Random;
-import org.identityconnectors.contract.exceptions.ContractException;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
@@ -133,12 +132,9 @@ public class GroovyDataProvider implements DataProvider {
     private static final int SINGLE_VALUE_MARKER = -1;
     private static final String ARRAY_MARKER = "array";
     static final String PROPERTY_SEPARATOR = ".";
-    private static final String BUILD_GROOVY = "build.groovy";
-    private static final String CONFIG = "config";
     
     /** boostrap.groovy contains default values that are returned when the property is not found */
     private static final String BOOTSTRAP_FILE_NAME = "bootstrap.groovy";
-    private static final String CONNECTORS_DIR = ".connectors";
      
     /** prefix of default values that are multi */
     public static final String MULTI_VALUE_TYPE_PREFIX = "multi";
@@ -319,24 +315,6 @@ public class GroovyDataProvider implements DataProvider {
             ConfigObject highPriorityCO) {
         return (ConfigObject) lowPriorityCO.merge(highPriorityCO);
     }
-
-    /**
-     * parse the groovy config file
-     * 
-     * @param path
-     * @return
-     */
-    private ConfigObject parseConfigFile(File file) {
-        try {
-            // parse the configuration file once
-            URL url = file.toURL();
-            return cs.parse(url);
-        } catch (Exception e) {
-            LOG.error("Exception thrown during parsing of config file: " + e);
-            throw ContractException.wrap(e);
-        }
-    }
-
 
     /**
      * 
@@ -537,10 +515,12 @@ public class GroovyDataProvider implements DataProvider {
 
             resolved = resolveLazy(lazy);
         } else if (o instanceof List) {
-            List list = (List) o;
+            @SuppressWarnings("unchecked")
+            List<Object> list = (List<Object>) o;
             resolved = resolveList(list);
         } else if (o instanceof Map) {
-            Map map = (Map) o;
+            @SuppressWarnings("unchecked")
+            Map<?,Object> map = (Map<?,Object>) o;
             resolved = resolveMap(map);
         }
         return resolved;
@@ -552,8 +532,7 @@ public class GroovyDataProvider implements DataProvider {
      * @param map
      * @return
      */
-    private Map resolveMap(Map map) {
-        @SuppressWarnings("unchecked")
+    private Map<?, Object> resolveMap(Map<?, Object> map) {
         Map<?, Object> localMap = map;
         for (Map.Entry<?, Object> pairKV : localMap.entrySet()) {
             /** value */
@@ -565,8 +544,9 @@ public class GroovyDataProvider implements DataProvider {
                 pairKV.setValue(resolvedObj);
             } else if (object instanceof Map) {
                 // recursively resolve attributes in nested lists
-                Map arg = (Map) object;
-                Map resolvedMap = resolveMap(arg);
+                @SuppressWarnings("unchecked")
+                Map<?, Object> arg = (Map<?, Object>) object;
+                Map<?, Object> resolvedMap = resolveMap(arg);
                 pairKV.setValue(resolvedMap);
             }
         }// for list
@@ -580,7 +560,7 @@ public class GroovyDataProvider implements DataProvider {
      * @param list
      * @return the list with resolved values
      */
-    private List resolveList(List list) {
+    private List<Object> resolveList(List<Object> list) {
         List<Object> result = new ArrayList<Object>();
         for (Object object : list) {
             if (object instanceof Lazy) {
@@ -589,8 +569,9 @@ public class GroovyDataProvider implements DataProvider {
                 result.add(resolvedObj);
             } else if (object instanceof List) {
                 // recursively resolve attributes in nested lists
-                List arg = (List) object;
-                List resolvedList = resolveList(arg);
+                @SuppressWarnings("unchecked") // because of list type cast
+                List<Object> arg = (List<Object>) object;
+                List<Object> resolvedList = resolveList(arg);
                 result.add(resolvedList);
             } else {
                 result.add(object);
@@ -650,7 +631,7 @@ public class GroovyDataProvider implements DataProvider {
     /**
      * {@inheritDoc}
      */
-    public Object get(Class dataTypeName, String name, String componentName,
+    public Object get(Class<?> dataTypeName, String name, String componentName,
             int sequenceNumber, boolean isMultivalue) throws ObjectNotFoundException {
         // put the parameters in the Map ... this will fail if called
         // recursively
@@ -718,7 +699,7 @@ public class GroovyDataProvider implements DataProvider {
     /**
      * {@inheritDoc}
      */
-    public Object get(Class dataTypeName, String name, String componentName)
+    public Object get(Class<?> dataTypeName, String name, String componentName)
             throws ObjectNotFoundException {
 
         return get(dataTypeName, name, componentName, SINGLE_VALUE_MARKER, false);
@@ -772,7 +753,8 @@ public class GroovyDataProvider implements DataProvider {
     public Object get(String name) {
         Object result = get(name, null, false);
         if (result instanceof Map) {
-            Map map = (Map) result;
+            @SuppressWarnings("unchecked")
+            Map<?, Object> map = (Map<?, Object>) result;
             result = resolveMap(map);
         }
         return result;
@@ -781,7 +763,7 @@ public class GroovyDataProvider implements DataProvider {
     /**
      * {@inheritDoc}
      */
-    public Object generate(String pattern, Class clazz) {
+    public Object generate(String pattern, Class<?> clazz) {
         return RandomGenerator.generate(pattern, clazz);
     }
 
@@ -858,7 +840,7 @@ public class GroovyDataProvider implements DataProvider {
      *            Name
      * @return Short Name
      */
-    static String getShortTypeName(Class dataType) {
+    static String getShortTypeName(Class<?> dataType) {
         /*
          * in case of arrays "datatype[]" is returned
          */
@@ -1158,7 +1140,9 @@ public class GroovyDataProvider implements DataProvider {
         StringBuilder sb = new StringBuilder();
         boolean first = true;
         
-        for (Object item : ((List) obj)) {
+        @SuppressWarnings("unchecked")
+        List<Object> list = (List<Object>) obj;
+        for (Object item : list) {
             if (!first) {
                 sb.append(", ");
             }

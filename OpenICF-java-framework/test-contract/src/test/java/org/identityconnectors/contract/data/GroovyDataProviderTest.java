@@ -76,8 +76,9 @@ public class GroovyDataProviderTest {
         Object o = getProperty(gdp, "sampleFooBarList");
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof List);
-        Assert.assertTrue(((List) o).size() == 3);
-        List l = (List) o;
+        Assert.assertTrue(((List<?>) o).size() == 3);
+        @SuppressWarnings("unchecked") // because of list retyping to List<Object>
+        List<Object> l = (List<Object>) o;
         int iter = 0;
         for (Object object : l) {
             switch(iter) {
@@ -94,8 +95,9 @@ public class GroovyDataProviderTest {
         Object o = getProperty(gdp, "sampleFooBarListWithLazy");
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof List);
-        Assert.assertTrue(((List) o).size() == 3);
-        List l = (List) o;
+        Assert.assertTrue(((List<?>) o).size() == 3);
+        @SuppressWarnings("unchecked") // collection retyping
+        List<Object> l = (List<Object>) o;
         int iter = 0;
         for (Object object : l) {
             switch(iter) {
@@ -159,17 +161,18 @@ public class GroovyDataProviderTest {
         return gdp.get(String.class, string, "foocomponent");
     }
     
+    @SuppressWarnings("unchecked") // collection retyping
     @Test 
     public void testProperDefaultingMulti() {
         Object o = getMulti("nonexistingAttribute");
         Assert.assertNotNull(o);
-        Assert.assertTrue(o instanceof List && ((List) o).get(0) instanceof String);
-        List nonExistingAttribute = (List) o;
+        Assert.assertTrue(o instanceof List && ((List<Object>) o).get(0) instanceof String);
+        List<Object> nonExistingAttribute = (List<Object>) o;
 
         Object o2 = getMulti("nonexistingAttribute");
         Assert.assertNotNull(o2);
-        Assert.assertTrue(o2 instanceof List && ((List) o2).get(0) instanceof String);
-        List nonExistingAttribute2 = (List) o2;
+        Assert.assertTrue(o2 instanceof List && ((List<Object>) o2).get(0) instanceof String);
+        List<Object> nonExistingAttribute2 = (List<Object>) o2;
 
         final String message = "if we query the same attribute twice, it should return the same default value";
         Assert.assertTrue(message, nonExistingAttribute
@@ -177,8 +180,8 @@ public class GroovyDataProviderTest {
 
         Object o3 = getMulti("anotherNonExistingAttribute");
         Assert.assertNotNull(o3);
-        Assert.assertTrue(o3 instanceof List && ((List) o3).get(0) instanceof String);
-        List anotherNonExistingAttribute = (List) o3;
+        Assert.assertTrue(o3 instanceof List && ((List<Object>) o3).get(0) instanceof String);
+        List<Object> anotherNonExistingAttribute = (List<Object>) o3;
 
         //TODO fix problem with uniform unique values.
         Assert.assertTrue(
@@ -187,8 +190,8 @@ public class GroovyDataProviderTest {
 
         Object o4 = getMulti("anotherNonExistingAttribute");
         Assert.assertNotNull(o4);
-        Assert.assertTrue(o4 instanceof List && ((List) o4).get(0) instanceof String);
-        List anotherNonExistingAttribute2 = (List) o4;
+        Assert.assertTrue(o4 instanceof List && ((List<Object>) o4).get(0) instanceof String);
+        List<Object> anotherNonExistingAttribute2 = (List<Object>) o4;
 
         Assert.assertTrue(message, anotherNonExistingAttribute
                 .equals(anotherNonExistingAttribute2));
@@ -359,7 +362,8 @@ public class GroovyDataProviderTest {
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof List);
         if (o instanceof List) {
-            List l = (List) o;
+            @SuppressWarnings("unchecked")
+            List<Object> l = (List<Object>) o;
             printList(l);
             System.out.println();
             Object previous = null; 
@@ -384,7 +388,8 @@ public class GroovyDataProviderTest {
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof List);
         if (o instanceof List) {
-            List l = (List) o;
+            @SuppressWarnings("unchecked") // collection retyping
+            List<Object> l = (List<Object>) o;
 
             boolean recursiveListPresent = false;
             boolean recursiveListPresent2 = false;
@@ -392,7 +397,8 @@ public class GroovyDataProviderTest {
                 if (object instanceof List) {
                     recursiveListPresent = true;
 
-                    List lRec = (List) object;
+                    @SuppressWarnings("unchecked") // collection retyping
+                    List<Object> lRec = (List<Object>) object;
                     for (Object object2 : lRec) {
                         if (object2 instanceof List) {
                             recursiveListPresent2 = true;
@@ -433,7 +439,7 @@ public class GroovyDataProviderTest {
     @Test(expected = ObjectNotFoundException.class)
     public void testNonExistingDefault() throws Exception {
         // should not return default vale
-        Object o = getProperty(gdp, "connector.login");
+        getProperty(gdp, "connector.login");
     }
 
     @Test
@@ -479,12 +485,13 @@ public class GroovyDataProviderTest {
      * and expects a List to return based on one defined in multi.Tstring.
      * (resides in bootsrap.groovy)
      */
+    @SuppressWarnings("unchecked") // collection retyping
     public void testDefaultValues() {
         DataProvider dp = (DataProvider) gdp;
         Object o = dp.get(String.class, "bar", "foo", -1, true);
         Assert.assertNotNull(o);
-        Assert.assertTrue(o instanceof List && ((List) o).size() > 0);
-        List l = (List) o;
+        Assert.assertTrue(o instanceof List && ((List<Object>) o).size() > 0);
+        List<Object> l = (List<Object>) o;
         Assert.assertTrue(l.get(0) instanceof String);
     }
     
@@ -496,10 +503,11 @@ public class GroovyDataProviderTest {
         Object o = ((DataProvider) gdp).get("mapWithLazyCalls");
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof Map);
-        Map m = (Map) o;
+        @SuppressWarnings("unchecked") // collection retyping
+        Map<Object, Object> m = (Map<Object, Object>) o;
         int cntr = 0;
-        for (Iterator iterator = m.entrySet().iterator(); iterator.hasNext();) {
-            Map.Entry current = (Map.Entry) iterator.next();
+        for (Iterator<Map.Entry<Object, Object>> iterator = m.entrySet().iterator(); iterator.hasNext();) {
+            Map.Entry<Object, Object> current = (Map.Entry<Object, Object>) iterator.next();
             if (cntr == 0 || cntr == 1) {
                 Assert.assertTrue(current.getValue() instanceof String);
                 //System.out.println("k: " + current.getKey().toString() + " v: " + current.getValue().toString());
@@ -517,7 +525,8 @@ public class GroovyDataProviderTest {
         Object o = ((DataProvider) gdp).get("abcAccount.all");
         Assert.assertNotNull(o);
         Assert.assertTrue(o instanceof Map);
-        Map m = (Map) o;
+        @SuppressWarnings("unchecked") // collection retyping
+        Map<Object, Object> m = (Map<Object, Object>) o;
         Assert.assertTrue(m.get("__NAME__") instanceof String);
         Assert.assertTrue(((String) m.get("__NAME__")).startsWith("CONUSR-"));
         Assert.assertTrue(m.get("__PASSWORD__") instanceof String);
@@ -528,11 +537,12 @@ public class GroovyDataProviderTest {
     /**
      * recursively print a list
      */
-    private void printList(List l) {
+    private <T> void printList(List<T> l) {
         System.out.print(" [ ");
         for (Object object : l) {
             if (object instanceof List) {
-                List newL = (List) object;
+                @SuppressWarnings("unchecked") // collection retyping
+                List<T> newL = (List<T>) object;
                 printList(newL);
             } else {
                 System.out.print(object.toString() + ", ");
@@ -543,8 +553,8 @@ public class GroovyDataProviderTest {
 
     private void printMap(Object o) {
         if (o instanceof Map) {
-            Map m = (Map) o;
-            Set tmpSet = m.entrySet();
+            Map<?, ?> m = (Map<?, ?>) o;
+            Set<?> tmpSet = m.entrySet();
             for (Object object : tmpSet) {
                 System.out.print(object + " ");
             }
@@ -577,7 +587,7 @@ public class GroovyDataProviderTest {
 
         // just informational output
         if (o instanceof Map) {
-            Map m = (Map) o;
+            Map<?,?> m = (Map<?,?>) o;
             String s = (m.size() > 0) ? "is present" : "is missing";
             if (printOut) {
                 System.out.println("property " + propertyName + " " + s);
@@ -606,7 +616,7 @@ public class GroovyDataProviderTest {
     /** Test of left sides for the snapshot output */
     @Test
     public void testSnapshotGenerating() throws IOException {
-        Object o = gdp.writeDataToFile();
+        gdp.writeDataToFile();
 
         // read the file line by line
         List<String> lines = readLines(getConfigFileUrl());
@@ -689,6 +699,17 @@ public class GroovyDataProviderTest {
             }
         });
     }
+    
+    @Test
+    public void testGuardedStringUniqueness() {
+        Object defaultedValue1 = ((DataProvider) gdp).get(GuardedString.class, "nonexistingAttributeFooBarBaz_123", "");
+        Object defaultedValue2 = ((DataProvider) gdp).get(GuardedString.class, "nonexistingAttributeFooBarBaz_456", "");
+        // second query should return the same value
+        Assert.assertEquals(defaultedValue1, ((DataProvider) gdp).get(GuardedString.class, "nonexistingAttributeFooBarBaz_123", ""));
+        Assert.assertEquals(defaultedValue2, ((DataProvider) gdp).get(GuardedString.class, "nonexistingAttributeFooBarBaz_456", ""));
+        // the two passwords should be unique
+        Assert.assertFalse(defaultedValue1.equals(defaultedValue2));
+    }
 
     /**
      * method controls, if single parameters are correctly quoted, and multi
@@ -701,25 +722,25 @@ public class GroovyDataProviderTest {
     private void parseAndControl(List<String> lines) {
         for (String currentLine : lines) {
             // divide the line based on "=" delimiter
-            if (currentLine.contains(gdp.ASSIGNMENT_MARK)) {
-                String[] arr = currentLine.split(gdp.ASSIGNMENT_MARK);
+            if (currentLine.contains(GroovyDataProvider.ASSIGNMENT_MARK)) {
+                String[] arr = currentLine.split(GroovyDataProvider.ASSIGNMENT_MARK);
                 if (arr.length == 2) {
                     String leftPart = arr[0];
                     Assert.assertTrue(!leftPart.equals(""));
 
                     // split the left side based on "." separators
-                    String[] subparts = leftPart.split(gdp.PROPERTY_SEPARATOR);
+                    String[] subparts = leftPart.split(GroovyDataProvider.PROPERTY_SEPARATOR);
                     for (int i = 0; i < subparts.length; i++) {
                         if (i == 0) {
                             Assert.assertTrue(!subparts[i]
-                                    .startsWith(gdp.PROPERTY_SEPARATOR));
+                                    .startsWith(GroovyDataProvider.PROPERTY_SEPARATOR));
                             Assert.assertTrue(!subparts[i]
-                                    .endsWith(gdp.PROPERTY_SEPARATOR));
+                                    .endsWith(GroovyDataProvider.PROPERTY_SEPARATOR));
                         } else {
                             Assert.assertTrue(subparts[i]
-                                    .startsWith(gdp.PROPERTY_SEPARATOR));
+                                    .startsWith(GroovyDataProvider.PROPERTY_SEPARATOR));
                             Assert.assertTrue(subparts[i]
-                                    .endsWith(gdp.PROPERTY_SEPARATOR));
+                                    .endsWith(GroovyDataProvider.PROPERTY_SEPARATOR));
                         }
                     }
                 }
