@@ -165,17 +165,17 @@ public class ScriptOnResourceApiOpTests extends ContractTestBase {
             OperationOptionsBuilder builder = new OperationOptionsBuilder();
             
             // OperationOptions RUN_AS_USER
-            final String user = getStringProperty(OperationOptions.OP_RUN_AS_USER);
+            final String user = (String) getProperty(OperationOptions.OP_RUN_AS_USER);
             if (user != null) {
                 LOG.info("Using OperationOptions: ''{0}'' value: ''{1}''.", OperationOptions.OP_RUN_AS_USER, user);
                 builder.setRunAsUser(user);
             }
 
             // OperationOptions RUN_WITH_PASSWORD
-            final String password = getStringProperty(OperationOptions.OP_RUN_WITH_PASSWORD);
+            final GuardedString password = (GuardedString) getProperty(OperationOptions.OP_RUN_WITH_PASSWORD);
             if (password != null) {
                 LOG.info("Using OperationOptions: ''{0}'' value: ''{1}''.", OperationOptions.OP_RUN_WITH_PASSWORD, password);
-                builder.setRunWithPassword(new GuardedString(password.toCharArray()));
+                builder.setRunWithPassword(password);
             }
 
             return builder.build();
@@ -189,10 +189,10 @@ public class ScriptOnResourceApiOpTests extends ContractTestBase {
      * @param name Property name.
      * @return null in case property definition not found.
      */
-    private String getStringProperty(String name) {
-        String value = null;
+    private Object getProperty(String name) {
+        Object value = null;
         try {
-            value = (String) getDataProvider().getTestSuiteAttribute(name, TEST_NAME);
+            value = getDataProvider().getTestSuiteAttribute(name, TEST_NAME);
             LOG.info("Property ''{0}'' value ''{1}''.", name, value);
         } catch (ObjectNotFoundException ex) {
             // ok
@@ -200,8 +200,5 @@ public class ScriptOnResourceApiOpTests extends ContractTestBase {
 
         return value;
     }
-
-
-
 
 }

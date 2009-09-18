@@ -132,7 +132,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
             boolean authenticateFailed = false;
 
             // get wrong password
-            String wrongPassword = (String) getDataProvider().getTestSuiteAttribute(getObjectClass().getObjectClassValue() + "." + WRONG_PASSWORD_PROP,
+            GuardedString wrongPassword = (GuardedString) getDataProvider().getTestSuiteAttribute(getObjectClass().getObjectClassValue() + "." + WRONG_PASSWORD_PROP,
                     TEST_NAME);
 
             authenticateFailed = authenticateExpectingInvalidCredentials(name, wrongPassword);
@@ -546,12 +546,12 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
     	return authenticateFailed;
     }
     
-    private boolean authenticateExpectingInvalidCredentials(String name, String password) {
+    private boolean authenticateExpectingInvalidCredentials(String name, GuardedString password) {
     	boolean authenticateFailed = false;
     	
     	for(int i=0;i<getLongTestParam(MAX_ITERATIONS, 1);i++) {
             try {
-                getConnectorFacade().authenticate(ObjectClass.ACCOUNT, name,new GuardedString(password.toCharArray()),
+                getConnectorFacade().authenticate(ObjectClass.ACCOUNT, name, password,
                         getOperationOptionsByOp(AuthenticationApiOp.class));
             } catch (InvalidCredentialException e) {
                 // it failed as it should have

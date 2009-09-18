@@ -51,7 +51,7 @@ import org.identityconnectors.common.security.GuardedString
 // Connector WRONG configuration for ValidateApiOpTests
 connector.i1.wrong.host=""
 connector.i2.wrong.login=""
-connector.i3.wrong.password=""
+connector.i3.wrong.password=new GuardedString("".toCharArray())
 
 testsuite {
     // path to bundle jar - property is set by ant - leave it as it is
@@ -65,5 +65,5 @@ testsuite {
 
     // AuthenticationApiOpTests:
     Authentication.__ACCOUNT__.username=Lazy.get("i0.Authentication.__ACCOUNT__.__NAME__")
-    Authentication.__ACCOUNT__.wrong.password="bogus"  
+    Authentication.__ACCOUNT__.wrong.password=new GuardedString("bogus".toCharArray())  
 } // testsuite
