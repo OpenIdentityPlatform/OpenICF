@@ -61,6 +61,7 @@
     <property name="javadoc.author" value="true" />
     <property name="license.file" value="${framework.dir}/license.txt" />
     <property name="thirdpartyreadme.file" value="${framework.dir}/THIRDPARTYREADME.txt" />
+    <property name="failontestfailure" value="false"/>
     <!--
         Check if directories exist.
     -->
@@ -452,8 +453,7 @@
     <target name="run-unit-tests" depends="test-init, instrument, build-testclasspath" if="src.test.java.exists">
         <echo message="Running junit tests with testConfig=[${testConfig}]"/>
         <!-- run all the junits -->
-        <junit fork="yes" forkmode="once" dir="${basedir}"
-            failureProperty="test.failed" printsummary="true">
+        <junit fork="yes" forkmode="once" dir="${basedir}" failureProperty="test.failed" printsummary="true" haltonfailure="${failontestfailure}">
             <!--
                 Specify the name of the coverage data file to use.
                 The value specified below is the default.
@@ -546,8 +546,7 @@
         <property name="test.parameters.outFile" value=""/>
         <!-- run all the contract tests -->
         <echo message="Running contract tests with testConfig=[${testConfig}]"/>
-        <junit fork="yes" printsummary="yes" forkmode="once"
-            failureproperty="test.failure" errorproperty="test.error" maxmemory="512M">
+        <junit fork="yes" printsummary="yes" forkmode="once" failureproperty="test.failure" errorproperty="test.error" maxmemory="512M" haltonfailure="${failontestfailure}">
             <!-- local connector properties -->
             <sysproperty key="bundleJar" value="${basedir}/${contract.jar.file}"/>
             <sysproperty key="bundleVersion" value="${ConnectorBundle-Version}"/>
