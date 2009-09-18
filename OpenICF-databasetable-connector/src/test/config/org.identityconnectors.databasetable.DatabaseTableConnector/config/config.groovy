@@ -76,7 +76,7 @@ testsuite {
 
     // AuthenticationApiOpTests:
     Authentication.__ACCOUNT__.username=Lazy.get("i0.Authentication.__ACCOUNT__.__NAME__")
-    Authentication.__ACCOUNT__.wrong.password="bogus"
+    Authentication.__ACCOUNT__.wrong.password=new GuardedString("bogus".toCharArray())
 
     // Connector WRONG configuration for ValidateApiOpTests    
     Test.invalidConfig = [
