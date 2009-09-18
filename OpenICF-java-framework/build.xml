@@ -87,6 +87,7 @@
     <property name="coverage.file" location="${basedir}/cobertura.ser"/>
     <property name="license.file" value="license.txt" />
     <property name="thirdpartyreadme.file" value="THIRDPARTYREADME.txt" />
+    <property name="failontestfailure" value="false"/>
 
     <!--
         Determine if this a coverage build.
@@ -525,7 +526,7 @@
         <oc:ant dir="${testbundles.dir}/testbundlev2" />
         <!-- run all the junits -->
         <junit fork="yes" forkmode="once" dir="${basedir}" showoutput="true"
-            failureProperty="test.failed" printsummary="true">
+            failureProperty="test.failed" printsummary="true" haltonfailure="${failontestfailure}">
             <!--
                 Specify the name of the coverage data file to use.
                 The value specified below is the default.
@@ -536,8 +537,9 @@
                 value="${testbundles.dir}" />
             <!-- reference the test classpath -->
             <classpath refid="test-classpath" />
+            <formatter type="brief" usefile="false" unless="useExternalReporting"/>
             <!-- output in xml for build automation -->
-            <formatter type="xml" />
+            <formatter type="xml" if="useExternalReporting" />
             <!-- turn full assertions -->
             <assertions enableSystemAssertions="true" />
             <batchtest todir="${reports}/junit">
