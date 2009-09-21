@@ -470,9 +470,9 @@
                 <path refid="user.libs" />
             </classpath>
 
-            <formatter type="brief" usefile="false" unless="useExternalReporting"/>
             <!-- output in xml for build automation -->
-            <formatter type="xml" if="useExternalReporting" />
+            <formatter type="xml" />
+            <formatter type="brief" usefile="false" unless="useExternalReporting" />
             <!-- turn full assertions -->
             <assertions enableSystemAssertions="true" />
             <batchtest todir="${reports}/junit">
@@ -566,7 +566,7 @@
             
             <test todir="${reports}/contracts" outfile="TEST-${contract-package}.test.ContractTestSuite-${testConfig}"
                 name="${contract.suite.classname}"/>
-            <formatter type="xml" if="useExternalReporting" />
+            <formatter type="xml" />
             <formatter type="brief" usefile="false" unless="useExternalReporting" />
             <classpath>
                 <fileset dir="${framework.dir}/dist" includes="*.jar"/>
