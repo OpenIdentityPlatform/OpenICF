@@ -22,11 +22,19 @@
  */
 package org.identityconnectors.common.script;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.framework.api.operations.ScriptOnConnectorApiOp;
 import org.identityconnectors.framework.spi.operations.ScriptOnConnectorOp;
@@ -48,44 +56,80 @@ import org.identityconnectors.framework.spi.operations.ScriptOnResourceOp;
  */
 public abstract class ScriptExecutorFactory {
 
-    private static final Map<String,String> REGISTRY = new HashMap<String,String>();
-    
     private static Map<String, Class<?>> _factoryCache;
 
-    static {
-        // attempt to register
-        // TODO: need a distributed way to register more languages
-        register("GROOVY",
-                "org.identityconnectors.common.script.groovy.GroovyScriptExecutorFactory");
-    }
-
-    private static void register(String lang, String className) {
-        REGISTRY.put(lang.toUpperCase(), className);
-    }
-    
     private static synchronized Map<String, Class<?>> 
     getFactoryCache() {
-        if ( _factoryCache == null ) {
-            _factoryCache = new HashMap<String,Class<?>>();
-            for (Map.Entry<String, String> entry : REGISTRY.entrySet()) {
+        if (_factoryCache == null) {
+            _factoryCache = CollectionUtil.newCaseInsensitiveMap();
+            List<String> factories = getRegisteredFactories();
+            for (String factory : factories) {
                 try {
-                    String lang = entry.getKey();
-                    String className = entry.getValue();
-                    // attempt to get the factory..
-                    Class<?> clazz = Class.forName(className);
-                    // try to create a new instance..
-                    clazz.newInstance();
-                    // if we've made it this far it should have its deps..
-                    _factoryCache.put(lang.toUpperCase(), clazz);
+                    Class<?> clazz = Class.forName(factory);
+                    // Create an instance in order to get the supported language.
+                    ScriptExecutorFactory instance = (ScriptExecutorFactory) clazz.newInstance();
+                    String language = instance.getLanguageName();
+                    // Do not override a factory earlier in the classpath.
+                    if (!_factoryCache.containsKey(language)) {
+                        _factoryCache.put(language, clazz);
+                    }
                 }
                 catch (Exception e) {
-                    
+                    // Do not report.
                 }
             }
         }
         return _factoryCache;
     }
-    
+
+    /**
+     * Returns the factories registered through META-INF/services.
+     * 
+     * @return a non-null list of factory class names.
+     */
+    private static List<String> getRegisteredFactories() {
+        // Would be nice to move this method to IOUtil when external registrations for another SPI
+        // are supported. Currently it would have two clients (ScriptExecutorFactory and Log).
+        // Better to have three before it is turned into an API.
+        List<String> result = new ArrayList<String>();
+        String path = "META-INF/services/" + ScriptExecutorFactory.class.getName();
+        try {
+            Enumeration<URL> configFiles = ScriptExecutorFactory.class.getClassLoader().getResources(path);
+            while (configFiles.hasMoreElements()) {
+                URL configFile = configFiles.nextElement();
+                addFactories(configFile, result);
+            }
+            return result;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void addFactories(URL configFile, List<String> result) throws IOException {
+        InputStream input = configFile.openStream();
+        try {
+            // Encoding as per JAR file spec.
+            BufferedReader reader = new BufferedReader(new InputStreamReader(input, "UTF-8"));
+            try {
+                String line = reader.readLine();
+                while (line != null) {
+                    int comment = line.indexOf('#');
+                    if (comment >= 0) {
+                        line = line.substring(0, comment);
+                    }
+                    line = line.trim();
+                    if (StringUtil.isNotBlank(line)) {
+                        result.add(line);
+                    }
+                    line = reader.readLine();
+                }
+            } finally {
+                reader.close();
+            }
+        } finally {
+            input.close();
+        }
+    }
 
     /**
      * Returns the set of supported languages.
@@ -110,8 +154,7 @@ public abstract class ScriptExecutorFactory {
         if (StringUtil.isBlank(language)) {
             throw new IllegalArgumentException("Language must be specified");
         }
-        String lang = language.toUpperCase();
-        Class<?> clazz = getFactoryCache().get(lang);
+        Class<?> clazz = getFactoryCache().get(language);
         if (clazz == null) {
             String MSG = String.format("Language not supported: %s", language);
             throw new IllegalArgumentException(MSG);
@@ -146,4 +189,11 @@ public abstract class ScriptExecutorFactory {
     public abstract ScriptExecutor newScriptExecutor(ClassLoader loader,
             String script, boolean compile);
 
+    /**
+     * Returns the name of the language supported by this factory.
+     * 
+     * @return the name of the language.
+
+     */
+    public abstract String getLanguageName();
 }

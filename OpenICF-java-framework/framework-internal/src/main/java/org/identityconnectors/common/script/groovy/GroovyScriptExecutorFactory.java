@@ -71,4 +71,12 @@ public class GroovyScriptExecutorFactory extends ScriptExecutorFactory {
             return _groovyScript.run();
         }
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getLanguageName() {
+        return "Groovy";
+    }
 }
