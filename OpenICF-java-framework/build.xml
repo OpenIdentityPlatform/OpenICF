@@ -378,7 +378,7 @@
     <!-- Test Targets                                              -->
     <!-- ********************************************************* -->
     <!-- ********************************************************* -->
-    <target name="test" depends="dist, test-toolkit, run-tests, report-tests" />
+    <target name="test" depends="dist, test-toolkit, build-testbundles, run-tests, report-tests" />
 
     <target name="compile-tests">
         <mkdir dir="${build-test-framework}" />
@@ -515,15 +515,18 @@
         </path>
     </target>
 
-    <target name="run-tests" depends="compile-tests, instrument, build-testclasspath">
-        <!-- clear out previous test results -->
-        <delete dir="${reports}/junit" />
-        <mkdir dir="${reports}/junit" />
+    <target name="build-testbundles">
         <!-- build out the test bundles -->
         <oc:ant dir="${testbundles.dir}/testcommonv1" />
         <oc:ant dir="${testbundles.dir}/testcommonv2" />
         <oc:ant dir="${testbundles.dir}/testbundlev1" />
         <oc:ant dir="${testbundles.dir}/testbundlev2" />
+    </target>
+
+    <target name="run-tests" depends="compile-tests, instrument, build-testclasspath">
+        <!-- clear out previous test results -->
+        <delete dir="${reports}/junit" />
+        <mkdir dir="${reports}/junit" />
         <!-- run all the junits -->
         <junit fork="yes" forkmode="once" dir="${basedir}"
             failureProperty="test.failed" printsummary="true" haltonfailure="${failontestfailure}">
