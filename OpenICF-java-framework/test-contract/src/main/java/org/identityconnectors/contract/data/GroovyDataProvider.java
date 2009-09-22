@@ -56,25 +56,14 @@ import org.junit.Assert;
  * <p>
  * Default implementation of {@link DataProvider}. It uses ConfigSlurper from
  * Groovy to parse the property file.
- * </p>
- * <p>
- * Order of lookup for the property files follows (latter overrides previous):
- * </p>
- * <ul>
- * <li> PUBLIC</li>
- *   <ul>
- *      <li>1) ${bundle.dir}/config/build.groovy
- *      <li>2) ${bundle.dir}/config/${configuration}/build.groovy<br />
- * in case ${configuration} is specified
- *   </ul>
- * <li> PRIVATE</li>
- *   <ul>
- *     <li>3) user-home/.connectors/bundle-name/build.groovy
- *     <li>4) user-home/.connectors/bundle-name/${configuration}/build.groovy<br />
- * in case ${configuration} is specified
- *   </ul>
- * </ul>
- * <p>
+ * The groovy files are read as classpath resources using following paths : 
+     * <ul>
+     *  <li><code>loader.getResource(prefix + "/public/build.groovy")</code></li>
+     *  <li><code>loader.getResource(prefix + "/public/" + cfg + "/build.groovy") </code> optionally where cfg is passed configuration</li>
+     *  <li> <code> loader.getResource(prefix + "/private/build.groovy") </<code> </li>
+     *  <li> <code >loader.getResource(prefix + "/private/" + cfg + "/build.groovy") </code> optionally where cfg is passed configuration</li>
+     * </ul>
+   where prefix is FQN of your connector set as "connectorName" system property.
  * Note: If two property files contain the same property name, the value from
  * the latter file the list <b>overrides</b> the others. I.e. the last file
  * from the list has the greatest chance to propagate its values to the final
