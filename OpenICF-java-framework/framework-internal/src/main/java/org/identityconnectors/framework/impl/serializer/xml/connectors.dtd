@@ -49,7 +49,7 @@
 ObjectPoolConfiguration | ConfigurationProperty | ConfigurationProperties |
 APIConfiguration | ConnectorMessages | ConnectorKey | ConnectorInfo |
 UpdateApiOpType | AttributeInfo | ConnectorObject | ObjectClass |
-ObjectClassInfo | Schema | ScriptContext | OperationOptions | 
+ObjectClassInfo | Schema | Script | ScriptContext | OperationOptions | 
 OperationOptionInfo | SyncDeltaType | SyncToken | SyncDelta | QualifiedUid
 ">
   
@@ -290,12 +290,18 @@ OperationOptionInfo | SyncDeltaType | SyncToken | SyncDelta | QualifiedUid
 <!ELEMENT objectClassesByOperation (Map)>
 <!ELEMENT optionsByOperation (Map)>
 
+<!ELEMENT scriptText (#PCDATA)>
+<!ELEMENT scriptArguments (Map)>
+
+<!ELEMENT Script (scriptText)>
+<!ATTLIST Script
+   scriptLanguage CDATA #REQUIRED
+>
+
 <!ELEMENT ScriptContext (scriptArguments,scriptText)>
 <!ATTLIST ScriptContext  
    scriptLanguage CDATA #REQUIRED
 >
-<!ELEMENT scriptText (#PCDATA)>
-<!ELEMENT scriptArguments (Map)>
 
 <!ELEMENT OperationOptions (options)>
 <!ELEMENT options (Map)>

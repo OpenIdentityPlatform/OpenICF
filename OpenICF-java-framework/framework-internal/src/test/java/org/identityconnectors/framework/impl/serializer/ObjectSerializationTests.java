@@ -42,6 +42,8 @@ import junit.framework.Assert;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.pooling.ObjectPoolConfiguration;
+import org.identityconnectors.common.script.Script;
+import org.identityconnectors.common.script.ScriptBuilder;
 import org.identityconnectors.common.security.GuardedByteArray;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.ConnectorKey;
@@ -980,6 +982,17 @@ public class ObjectSerializationTests {
         Assert.assertEquals(2,v2.getOptions().size());
         Assert.assertEquals("bar",v2.getOptions().get("foo"));
         Assert.assertEquals("bar2",v2.getOptions().get("foo2"));
+    }
+    
+    @Test
+    public void testScript() {
+        ScriptBuilder builder = new ScriptBuilder();
+        builder.setScriptLanguage("language");
+        builder.setScriptText("text");
+        Script v1 = builder.build();
+        Script v2 = (Script)cloneObject(v1);
+        Assert.assertEquals("language",v2.getScriptLanguage());
+        Assert.assertEquals("text",v2.getScriptText());
     }
     
     @Test

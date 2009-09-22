@@ -45,6 +45,7 @@ import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.ReflectionUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.Version;
+import org.identityconnectors.common.script.Script;
 import org.identityconnectors.common.security.GuardedByteArray;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.operations.APIOperation;
@@ -207,6 +208,7 @@ public final class FrameworkUtil {
         CONFIG_SUPPORTED_TYPES.add(File.class);
         CONFIG_SUPPORTED_TYPES.add(GuardedByteArray.class);
         CONFIG_SUPPORTED_TYPES.add(GuardedString.class);
+        CONFIG_SUPPORTED_TYPES.add(Script.class);
     }
     
     public static Set<Class<? extends Object>> getAllSupportedConfigTypes() {

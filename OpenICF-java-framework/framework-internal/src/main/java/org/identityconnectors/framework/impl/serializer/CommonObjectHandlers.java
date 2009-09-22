@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.identityconnectors.common.script.Script;
+import org.identityconnectors.common.script.ScriptBuilder;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
@@ -537,6 +539,26 @@ class CommonObjectHandlers {
                     encoder.writeStringContents(val.getUidValue());
                 }
         });
+        HANDLERS.add(
+                
+                new AbstractObjectSerializationHandler(Script.class,"Script") {
+                
+                public Object deserialize(ObjectDecoder decoder)  {
+                    ScriptBuilder builder = new ScriptBuilder();
+                    builder.setScriptLanguage(decoder.readStringField("scriptLanguage",null));
+                    //don't used string field - don't want it to be an attribute
+                    builder.setScriptText((String)decoder.readObjectField("scriptText",String.class,null));
+                    return builder.build();
+                }
+                
+                public void serialize(Object object, ObjectEncoder encoder)
+                {
+                    Script val = (Script)object;
+                    encoder.writeStringField("scriptLanguage", val.getScriptLanguage());
+                    encoder.writeObjectField("scriptText", val.getScriptText(),true);
+                }
+                
+                });
         HANDLERS.add(
                 
             new AbstractObjectSerializationHandler(ScriptContext.class,"ScriptContext") {
