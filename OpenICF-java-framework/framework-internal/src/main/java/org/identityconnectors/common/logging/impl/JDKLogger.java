@@ -22,32 +22,32 @@
  */
 package org.identityconnectors.common.logging.impl;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Logger;
 
 import org.identityconnectors.common.logging.LogSpi;
 import org.identityconnectors.common.logging.Log.Level;
 
-
 /**
  * Provider to integrate with the JDK logger.
- * 
  * @author Will Droste
  * @version $Revision $
  * @since 1.0
  */
 public class JDKLogger implements LogSpi {
 
-    final Logger logger = Logger.getAnonymousLogger();
+    private volatile ConcurrentMap<String, Logger> map = new ConcurrentHashMap<String, Logger>(1);
 
     /**
      * Uses the JDK logger to log the message.
-     * 
      * @see LogSpi#log(Class, Level, String, Throwable)
      */
     public void log(Class<?> clazz, String methodName, Level level, String message, Throwable ex) {
         // uses different call if the exception is not null..
         String clazzName = clazz.getName();
         java.util.logging.Level jdkLevel = getJDKLevel(level);
+        Logger logger = getJDKLogger(clazzName);
         if (ex == null) {
             logger.logp(jdkLevel, clazzName, methodName, message);
         } else {
@@ -59,7 +59,7 @@ public class JDKLogger implements LogSpi {
      * Use the internal JDK logger to determine if the level is worthy of logging.
      */
     public boolean isLoggable(Class<?> clazz, Level level) {
-        return logger.isLoggable(getJDKLevel(level));
+        return getJDKLogger(clazz.getName()).isLoggable(getJDKLevel(level));
     }
 
     /**
@@ -75,5 +75,21 @@ public class JDKLogger implements LogSpi {
             ret = java.util.logging.Level.WARNING;
         }
         return ret;
-    }    
+    }
+
+    Logger getJDKLogger(String key) {
+        Logger aLogger = map.get(key);
+        if (aLogger == null) {
+            aLogger = Logger.getLogger(key);
+            Logger old = map.putIfAbsent(key, aLogger);
+            aLogger = old != null ? old : aLogger;
+        }
+        return aLogger;
+    }
+
+    // Method for tests
+    ConcurrentMap<String, Logger> getMap() {
+        return map;
+    }
+
 }
