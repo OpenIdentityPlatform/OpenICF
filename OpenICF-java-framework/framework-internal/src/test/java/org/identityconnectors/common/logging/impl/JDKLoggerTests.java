@@ -127,7 +127,6 @@ public class JDKLoggerTests {
             this.key = key;
         }
 
-        @Override
         public void run() {
             try {
                 barier.await();
