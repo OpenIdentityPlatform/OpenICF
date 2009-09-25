@@ -103,6 +103,7 @@ public class ResolveUsernameApiOpTests extends ObjectClassRunner {
 
         String wrongUsername = null;
         try {
+            // retrieves testsuite.ResolveUsername.wrong.username attribute (optional)
             wrongUsername = (String) getDataProvider().getTestSuiteAttribute(WRONG_USERNAME, TEST_NAME);
         } catch (Exception ex) {
             wrongUsername = "unresolvableUsername";
