@@ -66,8 +66,8 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
      * Logging..
      */
     private static final Log LOG = Log.getLog(AuthenticationApiOpTests.class);
-    private static final String TEST_NAME = "Authentication";
-    private static final String USERNAME_PROP = "username";
+    static final String TEST_NAME = "Authentication";
+    static final String USERNAME_PROP = "username";
     private static final String WRONG_PASSWORD_PROP = "wrong.password";
     
     private static final String MAX_ITERATIONS = "maxIterations";
