@@ -22,7 +22,7 @@
  */
 package org.identityconnectors.framework.spi.operations;
 
-import org.identityconnectors.framework.common.exceptions.InvalidPasswordException;
+import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -33,12 +33,15 @@ import org.identityconnectors.framework.common.objects.Uid;
 public interface ResolveUsernameOp extends SPIOperation {
 
     /**
-     * This is a companion to the simple {@link AuthenticateOp authentication} with two parameters 
-     * presumed to be user name and password. The difference is that this
-     * method does not try to authenticate the credentials; instead, it 
-     * return the {@link Uid} of the username that would be authenticated.
+     * Resolve an object to its {@link Uid} based on its username.
+     * This is a companion to the simple {@link AuthenticateOp authentication}.
+     * The difference is that this method does not have a password parameter and 
+     * does not try to authenticate the credentials; instead, it 
+     * returns the {@link Uid} corresponding to the username.
+     * Implementations method must, however, validate the username (i.e., they must throw
+     * and exception if the username does not correspond to an existing object).
      * <p>  
-     * If the authentication fails the
+     * If the username validation fails, the
      * developer should throw a type of {@link RuntimeException} either
      * {@link IllegalArgumentException} or if a native exception is available
      * and if its of type {@link RuntimeException} simple throw it. If the
@@ -49,21 +52,21 @@ public interface ResolveUsernameOp extends SPIOperation {
      * The developer is of course encourage to try and throw the most
      * informative exception as possible. In that regards there are several
      * exceptions provided in the exceptions package. For instance one of the
-     * most common is {@link InvalidPasswordException}.
+     * most common is {@link UnknownUidException}.
      * 
-     * @param objectClass The object class to use for authenticate.
+     * @param objectClass The object class to resolve the username for.
      *            Will typically be an account. Will not be null.
      * @param username
-     *            the username that would be authenticated. Will not be null.
+     *            the username to resolve. Will not be null.
      * @param options
      *            additional options that impact the way this operation is run.
      *            If the caller passes null, the framework will convert this into
      *            an empty set of options, so SPI need not worry
      *            about this ever being null.
-     * @return Uid The uid of the account that would be authenticated.
+     * @return Uid The uid of the object corresponding to the username.
      * @throws RuntimeException
-     *             iff native authentication fails. If a native exception is
-     *             available attempt to throw it.
+     *            iff the username cannot be resolved. If a native exception is
+     *            available attempt to throw it.
      * @since 1.1
      */
     Uid resolveUsername(ObjectClass objectClass, final String username, final OperationOptions options);
