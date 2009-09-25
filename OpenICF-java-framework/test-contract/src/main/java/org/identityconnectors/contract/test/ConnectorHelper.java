@@ -364,7 +364,7 @@ public class ConnectorHelper {
             // at present javadoc for delete is not clear about what
             // happens if delete fails, so I'll verify it's gone by searching
             ConnectorObject obj = connectorFacade.getObject(objClass, uid, opOptions);            
-            Assert.assertNull(obj);
+            Assert.assertNull("The deleted object was found. It should be no longer on the resource.", obj);
             deleted = true;
         }
         
