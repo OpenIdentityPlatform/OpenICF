@@ -70,29 +70,38 @@ public class ResolveUsernameApiOpTests extends ObjectClassRunner {
             return;
         }
 
-        /*
-         * create a new user
-         */
-        Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
-                getObjectClassInfo(), AuthenticationApiOpTests.TEST_NAME, 0, true, false);
-        Uid uid = getConnectorFacade().create(getObjectClass(), attrs,
-                getOperationOptionsByOp(CreateApiOp.class));
+        Uid uid = null;
+        try {
+            /*
+             * create a new user
+             */
+            Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
+                    getObjectClassInfo(), AuthenticationApiOpTests.TEST_NAME, 0, true, false);
+            uid = getConnectorFacade().create(getObjectClass(), attrs,
+                    getOperationOptionsByOp(CreateApiOp.class));
 
-        // get the user to make sure it exists now
-        ConnectorObject obj = getConnectorFacade().getObject(getObjectClass(), uid,
-                getOperationOptionsByOp(GetApiOp.class));
-        Assert.assertNotNull("Unable to retrieve newly created object", obj);
+            // get the user to make sure it exists now
+            ConnectorObject obj = getConnectorFacade().getObject(getObjectClass(), uid,
+                    getOperationOptionsByOp(GetApiOp.class));
+            Assert.assertNotNull("Unable to retrieve newly created object", obj);
         
-        // compare requested attributes to retrieved attributes
-        ConnectorHelper.checkObject(getObjectClassInfo(), obj, attrs);
+            // compare requested attributes to retrieved attributes
+            ConnectorHelper.checkObject(getObjectClassInfo(), obj, attrs);
         
-        /*
-         * try resolving the new user
-         */
-        // get username
-        String username = (String) getDataProvider().getTestSuiteAttribute(getObjectClass().getObjectClassValue() + "." + AuthenticationApiOpTests.USERNAME_PROP, AuthenticationApiOpTests.TEST_NAME);
-        Uid result = getConnectorFacade().resolveUsername(getObjectClass(), username, null);
-        Assert.assertEquals(uid, result);
+            /*
+             * try resolving the new user
+             */
+            // get username
+            String username = (String) getDataProvider().getTestSuiteAttribute(getObjectClass().getObjectClassValue() + "." + AuthenticationApiOpTests.USERNAME_PROP, AuthenticationApiOpTests.TEST_NAME);
+            Uid result = getConnectorFacade().resolveUsername(getObjectClass(), username, null);
+            Assert.assertEquals(uid, result);
+        } finally {
+            if (uid != null) {
+                // delete the object
+                getConnectorFacade().delete(getSupportedObjectClass(), uid,
+                        getOperationOptionsByOp(DeleteApiOp.class));
+            }
+        }
     }
 
     @Test
