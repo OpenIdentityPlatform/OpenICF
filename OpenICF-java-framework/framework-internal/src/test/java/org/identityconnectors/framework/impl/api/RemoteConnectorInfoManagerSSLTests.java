@@ -44,6 +44,7 @@ import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.common.security.SecurityUtil;
+import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.api.ConnectorInfoManager;
 import org.identityconnectors.framework.api.ConnectorInfoManagerFactory;
 import org.identityconnectors.framework.api.RemoteFrameworkConnectionInfo;
@@ -218,7 +219,9 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
             _server.stop();
             _server = null;
         }
+        // These are initialized by the connector server.    
+        ConnectorFacadeFactory.getInstance().dispose();
+        ConnectorInfoManagerFactory.getInstance().clearLocalCache();
     }
-    
     
 }
