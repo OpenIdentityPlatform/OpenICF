@@ -24,37 +24,33 @@ package org.identityconnectors.framework.impl.api.local;
 
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.List;
 
 import org.identityconnectors.framework.api.ConnectorInfoManagerFactory;
 
 
 class BundleClassLoader extends URLClassLoader {
     
-    /**
-     * The set of packages a connector is allowed to access from the
-     * parent class loader
-     */
-    private static final String FRAMEWORK_PACKAGE =
-        "org.identityconnectors.framework";
+    private static final String FRAMEWORK_PACKAGE = "org.identityconnectors.framework";
     
-    private static final String [] ALLOWED_FRAMEWORK_PACKAGES =
-    {
+    // The set of packages a connector is allowed to access from the
+    // parent class loader.
+    private static final String [] ALLOWED_FRAMEWORK_PACKAGES = {
         FRAMEWORK_PACKAGE+".api",
         FRAMEWORK_PACKAGE+".common",
         FRAMEWORK_PACKAGE+".spi"
     };
     
-    public BundleClassLoader(URL [] urls) {
-        super(urls,ConnectorInfoManagerFactory.class.getClassLoader());
+    public BundleClassLoader(List<URL> urls) {
+        super(urls.toArray(new URL[urls.size()]), ConnectorInfoManagerFactory.class.getClassLoader());
     }
     
     /**
-     * Overrides super.loadClass, to change loading model to
-     * child-first and to restrict access to certain classes
+     * Overrides <code>super.loadClass()</code>, to change loading model to
+     * child-first and to restrict access to certain classes.
      */
     @Override
-    public Class<?> loadClass(String name, boolean resolve)
-        throws ClassNotFoundException {
+    public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         Class<?> c = findLoadedClass(name);
         if (c == null) {
             try {
@@ -62,7 +58,7 @@ class BundleClassLoader extends URLClassLoader {
                 //anything there is considered accessible
                 c = findClass(name);     
             }
-            catch(ClassNotFoundException ex) {
+            catch (ClassNotFoundException ex) {
                 //check parents class loader
                 c = getParent().loadClass(name);
                 //make sure it's only in set of allowed packages
@@ -75,26 +71,19 @@ class BundleClassLoader extends URLClassLoader {
         return c;
     }
 
-    
-    
-    private void checkAccessAllowed(Class<?> c) 
-        throws ClassNotFoundException {
+    private void checkAccessAllowed(Class<?> c) throws ClassNotFoundException {
         String name = c.getName();
-        boolean ok = true;
-        if ( name.startsWith(FRAMEWORK_PACKAGE+".") ) {
-            ok = false;
-            for (String pack : ALLOWED_FRAMEWORK_PACKAGES) {
-                if ( name.startsWith(pack+".") ) {
-                    ok = true;
-                    break;
-                }
+        if ( !name.startsWith(FRAMEWORK_PACKAGE+".") ) {
+            return;
+        }
+        for (String pack : ALLOWED_FRAMEWORK_PACKAGES) {
+            if ( name.startsWith(pack+".") ) {
+                return;
             }
         }
-        if (!ok) {
-            String message =
-                "Connector may not reference class '"+name+"', "+
-                "it is an internal framework class.";
-            throw new ClassNotFoundException(message);
-        }
+        String message =
+            "Connector may not reference class '"+name+"', "+
+            "it is an internal framework class.";
+        throw new ClassNotFoundException(message);
     }
 }

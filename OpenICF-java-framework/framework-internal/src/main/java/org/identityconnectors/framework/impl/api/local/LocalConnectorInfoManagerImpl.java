@@ -68,12 +68,8 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
     
     private List<ConnectorInfo> _connectorInfo;
     
-    public LocalConnectorInfoManagerImpl(URL [] bundleURLs) 
-        throws ConfigurationException {
-        
-        List<WorkingBundleInfo> workingInfo =
-        expandBundles(bundleURLs);
-        
+    public LocalConnectorInfoManagerImpl(URL [] bundleURLs) throws ConfigurationException {
+        List<WorkingBundleInfo> workingInfo = expandBundles(bundleURLs);
         WorkingBundleInfo.resolve(workingInfo);
         
         _connectorInfo = createConnectorInfo(workingInfo);
@@ -83,8 +79,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
      * First pass - expand bundles as needed. populates
      * originalURL, parsedManifest, libContents, and topLevelContents
      */
-    private List<WorkingBundleInfo> expandBundles (URL [] bundleURLs)
-        throws ConfigurationException {
+    private List<WorkingBundleInfo> expandBundles (URL [] bundleURLs) throws ConfigurationException {
         List<WorkingBundleInfo> rv = new ArrayList<WorkingBundleInfo>();
         for (URL url : bundleURLs) {
             WorkingBundleInfo info;
@@ -102,10 +97,8 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         return rv;
     }
     
-    private WorkingBundleInfo processDirectory(File dir) 
-        throws ConfigurationException {
-        WorkingBundleInfo info
-            = new WorkingBundleInfo(dir.getAbsolutePath());
+    private WorkingBundleInfo processDirectory(File dir) throws ConfigurationException {
+        WorkingBundleInfo info = new WorkingBundleInfo(dir.getAbsolutePath());
         try {
             //easy case - nothing needs to be copied
             File manifest = new File(dir,"META-INF/MANIFEST.MF");
@@ -113,11 +106,9 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
             try {
                 in = new FileInputStream(manifest);
                 Manifest rawManifest = new Manifest(in);
-                ConnectorBundleManifestParser parser
-                = new ConnectorBundleManifestParser(info.getOriginalLocation(),
-                        rawManifest);
+                ConnectorBundleManifestParser parser = new ConnectorBundleManifestParser(
+                        info.getOriginalLocation(), rawManifest);
                 info.setManifest(parser.parse());
-                
             }
             finally {
                 IOUtil.quietClose(in);
@@ -150,8 +141,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         return rv;
     }
     
-    private static void listBundleContents2(String prefix, File file,
-            List<String> result) {
+    private static void listBundleContents2(String prefix, File file, List<String> result) {
         result.add(prefix+file.getName());
         if ( file.isDirectory() ) {
             for (File sub : file.listFiles()) {
@@ -160,11 +150,8 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         }
     }
     
-    private WorkingBundleInfo processURL(URL url, boolean topLevel) 
-        throws ConfigurationException {
-        WorkingBundleInfo info
-        = new WorkingBundleInfo(url.toString());
-
+    private WorkingBundleInfo processURL(URL url, boolean topLevel) throws ConfigurationException {
+        WorkingBundleInfo info = new WorkingBundleInfo(url.toString());
 
         try {
             JarInputStream stream = null;
@@ -191,9 +178,8 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
                 //jars instead
                 if ( topLevel ) {
                     Manifest rawManifest = stream.getManifest();
-                    ConnectorBundleManifestParser parser
-                        = new ConnectorBundleManifestParser(info.getOriginalLocation(),
-                            rawManifest);
+                    ConnectorBundleManifestParser parser = new ConnectorBundleManifestParser(
+                            info.getOriginalLocation(), rawManifest);
                     info.setManifest(parser.parse());
                 }
                 
@@ -201,13 +187,12 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
                 while ( ( entry = stream.getNextJarEntry()) != null ) {
                     String name = entry.getName();
                     info.getImmediateBundleContents().add(name);
-                    if ( name.startsWith("lib/") ) {
+                    if ( name.startsWith("lib/") && !entry.isDirectory() ) {
                         String localName = name.substring("lib/".length());
                         URL tempurl = copyStreamToTempFile(stream);
                         libURLs.put(localName, tempurl);
                     }
                 }
-                
             }
             finally {
                 IOUtil.quietClose(stream);
@@ -223,8 +208,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         return info;
     }
     
-    private URL copyStreamToTempFile(InputStream in) 
-        throws IOException {
+    private URL copyStreamToTempFile(InputStream in) throws IOException {
         File tempFile = File.createTempFile("bundle-temp", "tmp");
         tempFile.deleteOnExit();
         FileOutputStream out = new FileOutputStream(tempFile);
@@ -237,18 +221,14 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         return tempFile.toURL();
     }
     
-
-    
     /**
      * Final pass - create connector infos
      */
-    private List<ConnectorInfo> createConnectorInfo(
-            Collection<WorkingBundleInfo> parsed) 
-        throws ConfigurationException {
+    private List<ConnectorInfo> createConnectorInfo(Collection<WorkingBundleInfo> parsed) throws ConfigurationException {
         List<ConnectorInfo> rv = new ArrayList<ConnectorInfo>();
         for (WorkingBundleInfo bundleInfo : parsed ) {
             ClassLoader loader = 
-                new BundleClassLoader(bundleInfo.getResolvedClassPath());
+                new BundleClassLoader(bundleInfo.getEffectiveClassPath());
             for (String name : bundleInfo.getImmediateBundleContents()) {
                 Class<?> connectorClass = null;
                 ConnectorClass options = null;
@@ -292,7 +272,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
                                     bundleInfo.getManifest().getBundleVersion(),
                                     connectorClass.getName()));
                     ConnectorMessagesImpl messages = 
-                        loadMessageCatalog(bundleInfo.getResolvedContents(),
+                        loadMessageCatalog(bundleInfo.getEffectiveContents(),
                                 loader,
                                 info.getConnectorClass());
                     info.setMessages(messages);

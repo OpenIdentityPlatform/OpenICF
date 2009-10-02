@@ -24,50 +24,36 @@ package org.identityconnectors.framework.impl.api.local;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 
 
 public class WorkingBundleInfo {
-    /**
-     * The original location for this bundle (for error reporting)
-     */
+    
+    // The original location for this bundle (for error reporting).
     private String _originalLocation;
-    /**
-     * The manifest for this bundle
-     */
+    
+    // The manifest for this bundle.
     private ConnectorBundleManifest _manifest;
     
-    /**
-     * Immediate contents of the bundle
-     */
+    // Immediate contents of the bundle.
     private Set<String> _immediateBundleContents = new HashSet<String>();
     
-    /**
-     * The URLs of the bundle itself and the libs in it
-     */
+    // The immediate classpath of the bundle. Normally this only contains the bundle JAR.
+    // It does not include the embedded bundles (which are in _effectiveClassPath).
     private List<URL> _immediateClassPath = new ArrayList<URL>();
     
-    /**
-     * List of included bundles
-     */
+    // List of included bundles.
     private List<WorkingBundleInfo> _embeddedBundles = new ArrayList<WorkingBundleInfo>();
     
-    /**
-     * Full classpath that includes the includes
-     */
-    private URL [] _resolvedClassPath;
+    // Effective classpath (includes the classpaths of embedded bundles).
+    private List<URL> _effectiveClassPath;
     
-    /**
-     * Resolved contents of the bundle and all includes.
-     */
-    public Set<String> _resolvedContents;
+    // Effective contents (included the contents of embedded bundles).
+    private Set<String> _effectiveContents;
     
     public WorkingBundleInfo(String originalLocation) {
         _originalLocation = originalLocation;
@@ -97,73 +83,57 @@ public class WorkingBundleInfo {
         return _embeddedBundles;
     }
     
-    public URL [] getResolvedClassPath() {
-        return _resolvedClassPath;
+    public List<URL> getEffectiveClassPath() {
+        return _effectiveClassPath;
     }
     
-    public Set<String> getResolvedContents() {
-        return _resolvedContents;
+    public Set<String> getEffectiveContents() {
+        return _effectiveContents;
     }
     
     /**
-     * Resolves resolvedClassPath and resolvedContents
+     * Populates the effective properties (<code>effectiveClassPath</code>, <code>effectiveContents</code>, etc.)
+     * while taking into account any embedded bundles. 
      */
-    public static void resolve(List<? extends WorkingBundleInfo> infos)
-        throws ConfigurationException
-    {
-        for ( WorkingBundleInfo info : infos ) {
-            info._resolvedClassPath = null;
-            info._resolvedContents = null;
+    public static void resolve(List<? extends WorkingBundleInfo> infos) throws ConfigurationException {
+        for (WorkingBundleInfo info : infos) {
+            info._effectiveClassPath = null;
+            info._effectiveContents = null;
         }
-        //keep this around since it still verifies uniqueness
-        //of bundles. just don't need the mapping anymore
-        buildBundleMapping(infos);
-        resolveClassPath(infos);
+        ensureBundlesAreUnique(infos);
+        resolveEffectiveProperties(infos);
     }
     
-    /**
-     * Second pass - ensure bundle keys are unique
-     */
-    private static Map<BundleKey,? extends WorkingBundleInfo> 
-    buildBundleMapping(List<? extends WorkingBundleInfo> working)
-        throws ConfigurationException {
-        Map<BundleKey,WorkingBundleInfo> parsed =
-            new HashMap<BundleKey,WorkingBundleInfo>();
+    private static void ensureBundlesAreUnique(List<? extends WorkingBundleInfo> working) throws ConfigurationException {
+        Set<BundleKey> bundleKeys = new HashSet<BundleKey>();
         for (WorkingBundleInfo info : working) {
-            
             BundleKey key = new BundleKey(info._manifest.getBundleName(),
                     info._manifest.getBundleVersion());
-            if ( parsed.containsKey(key) ) {
-                String message = 
-                    "There is more than one bundle with the same name+version"+
-                    ": "+key;
-                throw new ConfigurationException(message);
+            if (bundleKeys.contains(key)) {
+                String format = "There is more than one bundle with the same name+version: %s";
+                throw new ConfigurationException(String.format(format, key));
             }
-            parsed.put(key, info);
+            bundleKeys.add(key);
         }
-        return parsed;
     }
     
     /**
-     * Third pass - populate resolvedClassPath and resolvedContents
+     * Recursively populates the effective properties.
      */
-    private static void resolveClassPath(List<? extends WorkingBundleInfo> infos) 
-    throws ConfigurationException {
+    private static void resolveEffectiveProperties(List<? extends WorkingBundleInfo> infos) throws ConfigurationException {
         for (WorkingBundleInfo info : infos) {
-            List<URL> urls = new ArrayList<URL>();
+            List<URL> classPath = new ArrayList<URL>();
             Set<String> contents = new HashSet<String>();
-            //this must go first, before the embedded bundles classpaths
-            urls.addAll(info.getImmediateClassPath());
+            // This bundle's classpath must go first, before the embedded bundles' classpaths.
+            classPath.addAll(info.getImmediateClassPath());
             contents.addAll(info.getImmediateBundleContents());
-            resolveClassPath(info.getEmbeddedBundles());
+            resolveEffectiveProperties(info.getEmbeddedBundles());
             for (WorkingBundleInfo embedded : info.getEmbeddedBundles()) {
-                urls.addAll(Arrays.asList(embedded.getResolvedClassPath()));
-                contents.addAll(embedded.getResolvedContents());
+                classPath.addAll(embedded.getEffectiveClassPath());
+                contents.addAll(embedded.getEffectiveContents());
             }
-            info._resolvedClassPath = urls.toArray(new URL[urls.size()]);
-            info._resolvedContents = contents;
+            info._effectiveClassPath = classPath;
+            info._effectiveContents = contents;
         }
     }
-
-
 }
