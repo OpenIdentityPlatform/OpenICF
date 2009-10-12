@@ -24,6 +24,7 @@ package org.identityconnectors.testconnector;
 
 import java.util.Set;
 
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
@@ -33,18 +34,25 @@ import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.ConnectorClass;
+import org.identityconnectors.framework.spi.operations.AuthenticateOp;
 import org.identityconnectors.framework.spi.operations.CreateOp;
 import org.identityconnectors.testcommon.TstCommon;
 
 @ConnectorClass(configurationClass=TstConnectorConfig.class,
         displayNameKey="TestConnector")
-public class TstConnector implements CreateOp, Connector {
+public class TstConnector implements CreateOp, AuthenticateOp, Connector {
 
     private Configuration _config;
 
     public Uid create(ObjectClass oclass, Set<Attribute> attrs, OperationOptions options) {
         String version = TstCommon.getVersion();
         return new Uid(version);
+    }
+    
+    public Uid authenticate(ObjectClass oclass, String username, GuardedString password, OperationOptions options) {
+        // The native library is an empty file, so this should fail (and tests expect it).
+        System.loadLibrary("native");
+        throw new AssertionError("The loadLibrary call did not fail");
     }
     
     public void init(Configuration cfg) {

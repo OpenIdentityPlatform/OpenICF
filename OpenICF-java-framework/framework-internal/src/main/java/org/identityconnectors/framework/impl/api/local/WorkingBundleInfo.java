@@ -24,9 +24,13 @@ package org.identityconnectors.framework.impl.api.local;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 
@@ -46,12 +50,20 @@ public class WorkingBundleInfo {
     // It does not include the embedded bundles (which are in _effectiveClassPath).
     private List<URL> _immediateClassPath = new ArrayList<URL>();
     
+    // The immediate native libraries in the bundle.
+    // The key is the short library name (passed to System.loadLibrary()), and
+    // the value is the library location on the file system. 
+    private Map<String, String> _immediateNativeLibraries = new HashMap<String, String>();
+    
     // List of included bundles.
     private List<WorkingBundleInfo> _embeddedBundles = new ArrayList<WorkingBundleInfo>();
     
     // Effective classpath (includes the classpaths of embedded bundles).
     private List<URL> _effectiveClassPath;
     
+    // Effective native libraries (includes the native libraries of embedded bundles).
+    private Map<String, String> _effectiveNativeLibraries;
+
     // Effective contents (included the contents of embedded bundles).
     private Set<String> _effectiveContents;
     
@@ -79,6 +91,10 @@ public class WorkingBundleInfo {
         return _immediateClassPath;
     }
     
+    public Map<String, String> getImmediateNativeLibraries() {
+        return _immediateNativeLibraries;
+    }
+
     public List<WorkingBundleInfo> getEmbeddedBundles() {
         return _embeddedBundles;
     }
@@ -87,6 +103,10 @@ public class WorkingBundleInfo {
         return _effectiveClassPath;
     }
     
+    public Map<String, String> getEffectiveNativeLibraries() {
+        return _effectiveNativeLibraries;
+    }
+
     public Set<String> getEffectiveContents() {
         return _effectiveContents;
     }
@@ -123,16 +143,25 @@ public class WorkingBundleInfo {
     private static void resolveEffectiveProperties(List<? extends WorkingBundleInfo> infos) throws ConfigurationException {
         for (WorkingBundleInfo info : infos) {
             List<URL> classPath = new ArrayList<URL>();
+            Map<String, String> nativeLibraries = new LinkedHashMap<String, String>();
             Set<String> contents = new HashSet<String>();
             // This bundle's classpath must go first, before the embedded bundles' classpaths.
             classPath.addAll(info.getImmediateClassPath());
+            nativeLibraries.putAll(info.getImmediateNativeLibraries());
             contents.addAll(info.getImmediateBundleContents());
             resolveEffectiveProperties(info.getEmbeddedBundles());
             for (WorkingBundleInfo embedded : info.getEmbeddedBundles()) {
                 classPath.addAll(embedded.getEffectiveClassPath());
+                // Do now allow native libraries from embedded bundles to override this bundle's libraries.
+                for (Entry<String, String> entry : embedded.getEffectiveNativeLibraries().entrySet()) {
+                    if (!nativeLibraries.containsKey(entry.getKey())) {
+                        nativeLibraries.put(entry.getKey(), entry.getValue());
+                    }
+                }
                 contents.addAll(embedded.getEffectiveContents());
             }
             info._effectiveClassPath = classPath;
+            info._effectiveNativeLibraries = nativeLibraries;
             info._effectiveContents = contents;
         }
     }

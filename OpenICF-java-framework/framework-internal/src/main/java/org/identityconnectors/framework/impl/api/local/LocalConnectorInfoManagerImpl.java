@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
@@ -116,10 +117,22 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
             info.getImmediateClassPath().add(dir.toURL());
             List<String> bundleContents = listBundleContents(dir);
             info.getImmediateBundleContents().addAll(bundleContents);
-            List<URL> libURLs = BundleLibSorter.getSortedURLs(dir);
-            for (URL lib : libURLs) {
-                WorkingBundleInfo embedded = processURL(lib,false);
-                info.getEmbeddedBundles().add(embedded);
+            File libDir = new File(dir, "lib");
+            if ( libDir.exists() ) {
+                List<URL> libURLs = BundleLibSorter.getSortedURLs(libDir);
+                for (URL lib : libURLs) {
+                    WorkingBundleInfo embedded = processURL(lib,false);
+                    info.getEmbeddedBundles().add(embedded);
+                }
+            }
+            File nativeDir = new File(dir, "native");
+            if ( nativeDir.exists() ) {
+                for (File file : BundleLibSorter.getSortedFiles(nativeDir)) {
+                    if ( file.isFile() ) {
+                        String localName = file.getName();
+                        info.getImmediateNativeLibraries().put(localName, file.getAbsolutePath());
+                    }
+                }
             }
         }
         catch (IOException e) {
@@ -152,6 +165,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
     
     private WorkingBundleInfo processURL(URL url, boolean topLevel) throws ConfigurationException {
         WorkingBundleInfo info = new WorkingBundleInfo(url.toString());
+        BundleTempDirectory tempDir = new BundleTempDirectory();
 
         try {
             JarInputStream stream = null;
@@ -164,7 +178,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
                 InputStream stream2 = null;
                 try {
                     stream2 = url.openStream();
-                    info.getImmediateClassPath().add(copyStreamToTempFile(stream2));
+                    info.getImmediateClassPath().add(tempDir.copyStreamToFile(stream2).toURL());
                 }
                 finally {
                     IOUtil.quietClose(stream2);
@@ -189,8 +203,14 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
                     info.getImmediateBundleContents().add(name);
                     if ( name.startsWith("lib/") && !entry.isDirectory() ) {
                         String localName = name.substring("lib/".length());
-                        URL tempurl = copyStreamToTempFile(stream);
+                        URL tempurl = tempDir.copyStreamToFile(stream, name).toURL();
                         libURLs.put(localName, tempurl);
+                    }
+                    if ( name.startsWith("native/") && !entry.isDirectory() ) {
+                        String localName = name.substring("native/".length());
+                        // It is important that the name of the native library be preserved!
+                        File tempFile = tempDir.copyStreamToFile(stream, name);
+                        info.getImmediateNativeLibraries().put(localName, tempFile.getAbsolutePath());
                     }
                 }
             }
@@ -208,27 +228,14 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         return info;
     }
     
-    private URL copyStreamToTempFile(InputStream in) throws IOException {
-        File tempFile = File.createTempFile("bundle-temp", "tmp");
-        tempFile.deleteOnExit();
-        FileOutputStream out = new FileOutputStream(tempFile);
-        try {
-            IOUtil.copyFile(in, out);
-        }
-        finally {
-            out.close();
-        }
-        return tempFile.toURL();
-    }
-    
     /**
      * Final pass - create connector infos
      */
     private List<ConnectorInfo> createConnectorInfo(Collection<WorkingBundleInfo> parsed) throws ConfigurationException {
         List<ConnectorInfo> rv = new ArrayList<ConnectorInfo>();
         for (WorkingBundleInfo bundleInfo : parsed ) {
-            ClassLoader loader = 
-                new BundleClassLoader(bundleInfo.getEffectiveClassPath());
+            ClassLoader loader = new BundleClassLoader(bundleInfo.getEffectiveClassPath(), 
+                    bundleInfo.getEffectiveNativeLibraries());
             for (String name : bundleInfo.getImmediateBundleContents()) {
                 Class<?> connectorClass = null;
                 ConnectorClass options = null;
@@ -419,4 +426,71 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         return Collections.unmodifiableList(_connectorInfo);
     }
 
+    private static final class BundleTempDirectory {
+
+        private final Random _random = new Random(System.currentTimeMillis());;
+        private File _bundleTempDir;
+        
+        public File copyStreamToFile(InputStream stream) throws IOException {
+            File bundleDir = getBundleTempDir();
+            File candidate;
+            do {
+                candidate = new File(bundleDir, "file-" + nextRandom());
+            } while ( !candidate.createNewFile() );
+            candidate.deleteOnExit();
+            copyStream(stream, candidate);
+            return candidate;
+        }
+        
+        public File copyStreamToFile(InputStream stream, String name) throws IOException {
+            File bundleDir = getBundleTempDir();
+            File newFile = new File(bundleDir, name);
+            if ( newFile.exists() ) {
+                throw new IOException("File " + newFile + " already exists");
+            }
+            File parent = newFile.getParentFile();
+            if ( !parent.exists() && !parent.mkdirs() ) {
+                throw new IOException("Could not create directory " + parent); 
+            }
+            while ( !parent.equals(bundleDir) ) {
+                parent.deleteOnExit();
+                parent = parent.getParentFile();
+            }
+            newFile.deleteOnExit();
+            copyStream(stream, newFile);
+            return newFile;
+        }
+        
+        private void copyStream(InputStream stream, File toFile) throws IOException {
+            FileOutputStream out = new FileOutputStream(toFile);
+            try {
+                IOUtil.copyFile(stream, out);
+            }
+            finally {
+                out.close();
+            }
+        }
+        
+        private File getBundleTempDir() throws IOException {
+            if ( _bundleTempDir != null ) {
+                return _bundleTempDir;
+            }
+            File tempDir = new File(System.getProperty("java.io.tmpdir"));
+            if ( !tempDir.exists() ) {
+                throw new IOException("Temporary directory " + tempDir + " does not exist");
+            }
+            File candidate;
+            do {
+                candidate = new File(tempDir, "bundle-" + nextRandom());
+            }
+            while ( !candidate.mkdir() );
+            candidate.deleteOnExit();
+            _bundleTempDir = candidate;
+            return candidate;
+        }
+        
+        private int nextRandom() {
+            return _random.nextInt() & 0x7fffffff; // Want only positive numbers.
+        }
+    }
 }

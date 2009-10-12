@@ -47,6 +47,7 @@
     <property name="config.public" value="src/test/config" />
     <property name="config.private" value="${dependencies.private}/config" />
     <property name="lib" value="lib" />
+    <property name="native" value="native" />
     <property name="dist" value="dist" />
     <property name="build" value="build" />
     <property name="build.main" value="build/classes" />
@@ -144,6 +145,10 @@
         Libraries that will be used during building.
     -->
     <fileset id="build.libs" dir="${basedir}" includes="${lib}/build/*.jar"/>
+    <!--
+        Native libraries.
+    -->
+    <fileset id="native.libs" dir="${basedir}" includes="${native}/*"/>
     <!--
         User Libraries
     -->
@@ -327,6 +332,8 @@
             </fileset>
             <!-- include all 3rd party deps -->
             <fileset refid="dist.libs" />
+            <!-- include all native libs -->
+            <fileset refid="native.libs" />
             <!-- include license -->
             <fileset file="${license.file}"/>
             <fileset file="${thirdpartyreadme.file}"/>

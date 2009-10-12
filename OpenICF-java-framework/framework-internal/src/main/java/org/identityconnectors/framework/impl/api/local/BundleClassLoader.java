@@ -22,9 +22,12 @@
  */
 package org.identityconnectors.framework.impl.api.local;
 
+import static org.identityconnectors.common.CollectionUtil.newReadOnlyMap;
+
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
+import java.util.Map;
 
 import org.identityconnectors.framework.api.ConnectorInfoManagerFactory;
 
@@ -41,8 +44,11 @@ class BundleClassLoader extends URLClassLoader {
         FRAMEWORK_PACKAGE+".spi"
     };
     
-    public BundleClassLoader(List<URL> urls) {
+    private final Map<String, String> nativeLibs;
+    
+    public BundleClassLoader(List<URL> urls, Map<String, String> nativeLibs) {
         super(urls.toArray(new URL[urls.size()]), ConnectorInfoManagerFactory.class.getClassLoader());
+        this.nativeLibs = newReadOnlyMap(nativeLibs);
     }
     
     /**
@@ -86,4 +92,10 @@ class BundleClassLoader extends URLClassLoader {
             "it is an internal framework class.";
         throw new ClassNotFoundException(message);
     }
+
+    @Override
+    protected String findLibrary(String libname) {
+        return nativeLibs.get(System.mapLibraryName(libname));
+    }
+    
 }

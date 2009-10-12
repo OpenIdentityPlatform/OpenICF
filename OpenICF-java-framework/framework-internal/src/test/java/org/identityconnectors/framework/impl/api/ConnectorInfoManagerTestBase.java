@@ -37,6 +37,7 @@ import junit.framework.Assert;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.Version;
 import org.identityconnectors.common.l10n.CurrentLocale;
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConfigurationProperties;
 import org.identityconnectors.framework.api.ConfigurationProperty;
@@ -63,7 +64,6 @@ import org.identityconnectors.framework.common.objects.ScriptContextBuilder;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
-import org.identityconnectors.framework.impl.api.ConfigurationPropertyImpl;
 import org.identityconnectors.framework.impl.api.local.ConnectorPoolManager;
 import org.junit.After;
 import org.junit.Before;
@@ -149,6 +149,34 @@ public abstract class ConnectorInfoManagerTestBase {
         
         //make sure thread local classloader is restored
         Assert.assertSame(startLocal, Thread.currentThread().getContextClassLoader());
+    }
+    
+    @Test
+    public void testNativeLibraries() throws Exception {
+        ConnectorInfoManager manager = 
+            getConnectorInfoManager();
+        ConnectorInfo info = 
+            findConnectorInfo(manager,
+                    "2.0.0.0",
+                    "org.identityconnectors.testconnector.TstConnector");
+        
+        APIConfiguration api = info.createDefaultAPIConfiguration();
+        ConnectorFacade facade =
+            ConnectorFacadeFactory.getInstance().newInstance(api);
+        
+        try {
+            // The connector will do a System.loadLibrary().
+            facade.authenticate(ObjectClass.ACCOUNT, "username", new GuardedString("password".toCharArray()), null);
+        } catch (UnsatisfiedLinkError e) {
+            // If this particular exception occurs, then the bundle class loader has
+            // correctly pointed to the native library (but the library could not be
+            // loaded, since it is not a valid library--we want to keep our tests
+            // platform-independent).
+            Assert.assertTrue(e.getMessage().contains("file too short"));
+        } catch (RuntimeException e) {
+            // Remote framework serializes UnsatisfiedLinkError as RuntimeException.
+            Assert.assertTrue(e.getMessage().contains("file too short"));
+        }
     }
     
     /**
