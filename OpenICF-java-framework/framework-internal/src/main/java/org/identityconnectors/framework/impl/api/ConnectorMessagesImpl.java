@@ -67,33 +67,20 @@ public class ConnectorMessagesImpl implements ConnectorMessages {
             dflt = key;
         }
         
-        
         //first look for most-specific catalog
-        Map<String,String> catalog =
-            _catalogs.get(locale);
-        //now look for language+country
-        if ( catalog == null ) {
-            locale = new Locale(locale.getLanguage(),
-                    locale.getCountry());
-            catalog =
-                _catalogs.get(locale);
+        String message = getCatalogMessage(locale, key);
+        if ( message == null ) {
+            message = getCatalogMessage(new Locale(locale.getLanguage(), locale.getCountry()), key);
         }
         //now look for language
-        if ( catalog == null ) {
-            locale = new Locale(locale.getLanguage());
-            catalog =
-                _catalogs.get(locale);
+        if ( message == null ) {
+            message = getCatalogMessage(new Locale(locale.getLanguage()), key);
         }
         //otherwise use the default catalog
-        if ( catalog == null ) {
-            locale = new Locale("");
-            catalog =
-                _catalogs.get(locale);
+        if ( message == null ) {
+            message = getCatalogMessage(new Locale(""), key);
         }
-        String message = null;
-        if ( catalog != null ) {
-            message = catalog.get(key);
-        }
+        //and default to framework
         if ( message == null ) {
             message = getFrameworkMessage(locale,key);
         }
@@ -105,6 +92,11 @@ public class ConnectorMessagesImpl implements ConnectorMessages {
                 new MessageFormat(message,locale);
             return formater.format(args,new StringBuffer(),null).toString();
         }
+    }
+    
+    private String getCatalogMessage(Locale locale, String key) {
+        Map<String, String> catalog = _catalogs.get(locale);
+        return catalog != null ? catalog.get(key) : null;
     }
     
     private String getFrameworkMessage(Locale locale, String key) {
