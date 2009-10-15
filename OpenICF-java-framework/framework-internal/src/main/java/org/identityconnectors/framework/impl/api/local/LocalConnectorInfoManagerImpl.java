@@ -72,7 +72,6 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
     public LocalConnectorInfoManagerImpl(URL [] bundleURLs) throws ConfigurationException {
         List<WorkingBundleInfo> workingInfo = expandBundles(bundleURLs);
         WorkingBundleInfo.resolve(workingInfo);
-        
         _connectorInfo = createConnectorInfo(workingInfo);
     }
     
@@ -80,7 +79,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
      * First pass - expand bundles as needed. populates
      * originalURL, parsedManifest, libContents, and topLevelContents
      */
-    private List<WorkingBundleInfo> expandBundles (URL [] bundleURLs) throws ConfigurationException {
+    private static List<WorkingBundleInfo> expandBundles (URL [] bundleURLs) throws ConfigurationException {
         List<WorkingBundleInfo> rv = new ArrayList<WorkingBundleInfo>();
         for (URL url : bundleURLs) {
             WorkingBundleInfo info;
@@ -98,7 +97,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         return rv;
     }
     
-    private WorkingBundleInfo processDirectory(File dir) throws ConfigurationException {
+    private static WorkingBundleInfo processDirectory(File dir) throws ConfigurationException {
         WorkingBundleInfo info = new WorkingBundleInfo(dir.getAbsolutePath());
         try {
             //easy case - nothing needs to be copied
@@ -163,7 +162,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         }
     }
     
-    private WorkingBundleInfo processURL(URL url, boolean topLevel) throws ConfigurationException {
+    private static WorkingBundleInfo processURL(URL url, boolean topLevel) throws ConfigurationException {
         WorkingBundleInfo info = new WorkingBundleInfo(url.toString());
         BundleTempDirectory tempDir = new BundleTempDirectory();
 
@@ -231,7 +230,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
     /**
      * Final pass - create connector infos
      */
-    private List<ConnectorInfo> createConnectorInfo(Collection<WorkingBundleInfo> parsed) throws ConfigurationException {
+    private static List<ConnectorInfo> createConnectorInfo(Collection<WorkingBundleInfo> parsed) throws ConfigurationException {
         List<ConnectorInfo> rv = new ArrayList<ConnectorInfo>();
         for (WorkingBundleInfo bundleInfo : parsed ) {
             ClassLoader loader = new BundleClassLoader(bundleInfo.getEffectiveClassPath(), 
@@ -297,7 +296,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
      * Create an instance of the {@link APIConfiguration} object to setup the
      * framework etc..
      */
-    private APIConfigurationImpl 
+    private static APIConfigurationImpl 
     createDefaultAPIConfiguration(LocalConnectorInfoImpl localInfo) {
         //setup classloader since we are going to construct the
         //config bean
@@ -322,11 +321,9 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         }
     }
         
-    private ConnectorMessagesImpl loadMessageCatalog(Set<String> bundleContents,
-            ClassLoader loader,
-            Class<? extends Connector> connector) 
-        throws ConfigurationException
-    {
+    private static ConnectorMessagesImpl 
+    loadMessageCatalog(Set<String> bundleContents, ClassLoader loader, Class<? extends Connector> connector) 
+    throws ConfigurationException {
         try {
             final String [] prefixes = getBundleNamePrefixes(connector);
             final String suffix = ".properties";
@@ -366,7 +363,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         }
     }
         
-    private Locale parseLocale(String str) {
+    private static Locale parseLocale(String str) {
         String lang = null;
         String country = null;
         String variant = null;

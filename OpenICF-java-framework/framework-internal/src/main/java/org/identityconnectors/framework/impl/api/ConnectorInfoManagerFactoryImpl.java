@@ -36,11 +36,62 @@ import org.identityconnectors.framework.common.exceptions.ConfigurationException
 import org.identityconnectors.framework.impl.api.local.LocalConnectorInfoManagerImpl;
 import org.identityconnectors.framework.impl.api.remote.RemoteConnectorInfoManagerImpl;
 
+public class ConnectorInfoManagerFactoryImpl extends ConnectorInfoManagerFactory {
 
-public class ConnectorInfoManagerFactoryImpl extends
-        ConnectorInfoManagerFactory {
+    private final Map<List<URL>,ConnectorInfoManager>
+            _localManagerCache = new HashMap<List<URL>,ConnectorInfoManager>();
 
-    private class RemoteManagerKey {
+    private final Map<RemoteManagerKey,RemoteConnectorInfoManagerImpl>
+            _remoteManagerCache = new HashMap<RemoteManagerKey,RemoteConnectorInfoManagerImpl>();
+
+    public ConnectorInfoManagerFactoryImpl() {
+    }
+    
+    @Override
+    public void clearLocalCache() {
+        synchronized (_localManagerCache) {
+            _localManagerCache.clear();
+        }
+    }
+    @Override
+    public void clearRemoteCache() {
+        synchronized (_remoteManagerCache) {
+            _remoteManagerCache.clear();
+        }
+    }
+
+    @Override
+    public ConnectorInfoManager getLocalManager(URL... urls) throws ConfigurationException {
+        Assertions.nullCheck(urls, "urls");
+        for (URL url : urls) {
+            Assertions.nullCheck(url, "urls");            
+        }
+        List<URL> key = CollectionUtil.newReadOnlyList(urls);
+        synchronized (_localManagerCache) {
+            ConnectorInfoManager rv = _localManagerCache.get(key);
+            if ( rv == null ) {
+                rv = new LocalConnectorInfoManagerImpl(urls);
+            }
+            _localManagerCache.put(key, rv);
+            return rv;    
+        }
+    }
+    
+    @Override
+    public ConnectorInfoManager getRemoteManager(RemoteFrameworkConnectionInfo info) throws ConfigurationException {
+        RemoteManagerKey key = new RemoteManagerKey(info);
+        synchronized (_remoteManagerCache) {
+            RemoteConnectorInfoManagerImpl rv = _remoteManagerCache.get(key);
+            if ( rv == null ) {
+                rv = new RemoteConnectorInfoManagerImpl(info);
+            }
+            _remoteManagerCache.put(key, rv);
+            return rv.derive(info);
+        }
+    }
+    
+    private static final class RemoteManagerKey {
+        
         private final String _host;
         private final int _port;
         
@@ -68,63 +119,5 @@ public class ConnectorInfoManagerFactoryImpl extends
         public int hashCode() {
             return _host.hashCode()^_port;
         }
-        
     }
-    
-    private Map<List<URL>,ConnectorInfoManager>
-        _localManagerCache = new HashMap<List<URL>,ConnectorInfoManager>();
-
-    private Map<RemoteManagerKey,RemoteConnectorInfoManagerImpl>
-    _remoteManagerCache = new HashMap<RemoteManagerKey,RemoteConnectorInfoManagerImpl>();
-
-    public ConnectorInfoManagerFactoryImpl() {
-        
-    }
-    
-    @Override
-    public void clearLocalCache() {
-        synchronized (_localManagerCache) {
-            _localManagerCache.clear();
-        }
-    }
-    @Override
-    public void clearRemoteCache() {
-        synchronized (_remoteManagerCache) {
-            _remoteManagerCache.clear();
-        }
-    }
-    
-
-    @Override
-    public ConnectorInfoManager getLocalManager(URL... urls)
-            throws ConfigurationException {
-        Assertions.nullCheck(urls, "urls");
-        for (URL url : urls) {
-            Assertions.nullCheck(url, "urls");            
-        }
-        List<URL> key = CollectionUtil.newReadOnlyList(urls);
-        synchronized (_localManagerCache) {
-            ConnectorInfoManager rv = _localManagerCache.get(key);
-            if ( rv == null ) {
-                rv = new LocalConnectorInfoManagerImpl(urls);
-            }
-            _localManagerCache.put(key, rv);
-            return rv;    
-        }
-    }
-    
-    @Override
-    public ConnectorInfoManager getRemoteManager(RemoteFrameworkConnectionInfo info)
-    throws ConfigurationException {
-        RemoteManagerKey key = new RemoteManagerKey(info);
-        synchronized (_remoteManagerCache) {
-            RemoteConnectorInfoManagerImpl rv = _remoteManagerCache.get(key);
-            if ( rv == null ) {
-                rv = new RemoteConnectorInfoManagerImpl(info);
-            }
-            _remoteManagerCache.put(key, rv);
-            return rv.derive(info);
-        }
-    }
-
 }
