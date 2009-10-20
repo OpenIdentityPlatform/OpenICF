@@ -88,6 +88,10 @@
     <property name="license.file" value="license.txt" />
     <property name="thirdpartyreadme.file" value="THIRDPARTYREADME.txt" />
     <property name="failontestfailure" value="false"/>
+    <property name="src-server" location="server"/>
+    <property name="server.name" value="connector_server_java-${version.display}"/>
+    <property name="build-server" location="build/${server.name}"/>
+    <property name="server.file" value="${dist}/${server.name}.zip" />
 
     <!--
         Determine if this a coverage build.
@@ -642,7 +646,9 @@
     <!--  
         Package up all the deliverables.
     -->
-    <target name="dist" depends="jar, javadoc"
+    <target name="dist" depends="jar, javadoc, dist-toolkit, dist-server"/>
+    
+    <target name="dist-toolkit"
         description="creates the toolkit distribution">
         <!-- create staging directory -->
         <delete dir="${build-toolkit}"/>
@@ -677,6 +683,44 @@
             destfile="${toolkit.file}" 
             basedir="${build}" 
             includes="${toolkit.name}/**"/>
+    </target>
+    
+    <!--
+      Package Connector Server
+    -->
+    <target name="dist-server"
+     description="Creates Connector Server distribution">
+        <!-- create staging directory -->
+        <delete dir="${build-server}"/>
+        <mkdir dir="${build-server}"/>
+        <oc:copy todir="${build-server}">
+            <oc:fileset dir="${src-server}"/>
+        </oc:copy>
+        <!-- copy all libs to staging -->
+        <mkdir dir="${build-server}/lib/framework"/>
+        <oc:copy todir="${build-server}/lib/framework">
+            <oc:fileset file="${jar.file}"/>
+            <oc:fileset file="${jar.file-internal}"/>
+        </oc:copy>
+        <!-- copy the dependent libraries -->
+        <oc:copy todir="${build-server}/lib/framework">
+            <oc:fileset dir="${lib-framework-internal}">
+                <oc:include name="groovy*.jar"/>
+            </oc:fileset>
+        </oc:copy>
+        <!-- create the structure -->
+        <mkdir dir="${build-server}/logs"/>
+        <mkdir dir="${build-server}/bundles"/>
+        <!-- add license files -->
+        <copy todir="${build-server}">
+            <fileset file="${license.file}" />
+            <fileset file="${thirdpartyreadme.file}" />
+        </copy>
+        <!-- package it -->
+        <zip 
+            destfile="${server.file}" 
+            basedir="${build}" 
+            includes="${server.name}/**"/>
     </target>
     
     <!--
