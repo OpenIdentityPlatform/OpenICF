@@ -472,12 +472,13 @@
             <sysproperty key="testConfig" value="${testConfig}"/>
 
             <!--
-                Set java.library.path. Normally the framework takes care
-                of loading the bundled native libraries. If the unit tests
+                Add the native libraries directory to java.library.path. Normally the framework takes care
+                of loading the bundled native libraries, so modifying java.library.path
+                would not be necessary. If the unit tests
                 bypass the framework and call the SPI directly, the native
                 libraries will only be searched on java.library.path.
             -->
-            <sysproperty key="java.library.path" value="${native}"/>
+            <sysproperty key="java.library.path" value="${basedir}${file.separator}${native}${path.separator}${java.library.path}"/>
 
             <!-- reference the test classpath -->
             <classpath>
