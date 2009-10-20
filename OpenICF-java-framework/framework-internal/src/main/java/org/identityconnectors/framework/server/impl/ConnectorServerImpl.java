@@ -23,7 +23,7 @@
 package org.identityconnectors.framework.server.impl;
 
 import java.net.ServerSocket;
-import java.net.URL;
+import java.util.concurrent.CountDownLatch;
 
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.KeyManager;
@@ -33,12 +33,14 @@ import javax.net.ssl.SSLServerSocketFactory;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.api.ConnectorInfoManagerFactory;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.impl.api.ConnectorInfoManagerFactoryImpl;
 import org.identityconnectors.framework.server.ConnectorServer;
 
 
 public class ConnectorServerImpl extends ConnectorServer {
 
     private ConnectionListener _listener;
+    private CountDownLatch _stopLatch;
     
     @Override
     public boolean isStarted() {
@@ -53,21 +55,19 @@ public class ConnectorServerImpl extends ConnectorServer {
         if ( getPort() == 0 ) {
             throw new IllegalStateException("Port must be set prior to starting server.");
         }
-        if ( getBundleURLs().size() == 0 ) {
-            throw new IllegalStateException("Bundle URLs must be set prior to starting server.");
-        }
         if ( getKeyHash() == null ) {
             throw new IllegalStateException("Key hash must be set prior to starting server.");            
         }
         //make sure we are configured properly
-        ConnectorInfoManagerFactory.getInstance().getLocalManager(
-                getBundleURLs().toArray(new URL[0]));
+        ConnectorInfoManagerFactoryImpl factory = (ConnectorInfoManagerFactoryImpl) ConnectorInfoManagerFactory.getInstance();
+        factory.getLocalManager(getBundleURLs(), getBundleParentClassLoader());
         
         ServerSocket socket =
             createServerSocket();
         ConnectionListener listener = new ConnectionListener(this,socket);
         listener.setName("ConnectionListener");
         listener.start();
+        _stopLatch = new CountDownLatch(1);
         _listener = listener;
     }
     
@@ -118,10 +118,19 @@ public class ConnectorServerImpl extends ConnectorServer {
     @Override
     public void stop() {
         if (_listener != null) {
-            _listener.shutdown();
+            try {
+                _listener.shutdown();
+            } finally {
+                _stopLatch.countDown();
+            }
+            _stopLatch = null;
             _listener = null;
         }
         ConnectorFacadeFactory.getInstance().dispose();
+    }
+    
+    public void awaitStop() throws InterruptedException {
+        _stopLatch.await();
     }
 
 }

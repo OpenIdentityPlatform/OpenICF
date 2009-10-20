@@ -81,6 +81,12 @@ public abstract class ConnectorServer {
      * The bundle URLs for connectors to be hosted in this server.
      */
     private List<URL> _bundleURLs = null;
+    
+    /**
+     * The class loader that will be used as the parent of the bundle class loaders.
+     * May be null. MUST be able to load framework and framework-internal classes.
+     */
+    private ClassLoader bundleParentClassLoader;
         
     /**
      * The key. managers to use for the connection. If empty,
@@ -262,7 +268,24 @@ public abstract class ConnectorServer {
         assertNotStarted();
         _bundleURLs = CollectionUtil.newReadOnlyList(urls);
     }
-        
+
+    /**
+     * Gets the class loader that will be used as the parent of the bundle class loaders.
+     * @return the class loader that will be used as the parent of the bundle class loaders.
+     */
+    public ClassLoader getBundleParentClassLoader() {
+        return bundleParentClassLoader;
+    }
+
+    /**
+     * Sets the class loader that will be used as the parent of the bundle class loaders.
+     * @param bundleParentClassLoader the class loader that will be used as the parent 
+     *              of the bundle class loaders.
+     */
+    public void setBundleParentClassLoader(ClassLoader bundleParentClassLoader) {
+        this.bundleParentClassLoader = bundleParentClassLoader;
+    }
+
     /**
      * Starts the server. All server settings must be configured prior
      * to calling. The following methods are required to be called:
@@ -287,4 +310,13 @@ public abstract class ConnectorServer {
      * @return true iff the server is started.
      */
     abstract public boolean isStarted();
+    
+    /**
+     * Waits for the server to stop. Similarly to the {@link #isStarted()} method,
+     * this method depends on the server's logical state. The trigger that
+     * wakes up waiting threads is a call to the {@link #stop()} method, not
+     * the health of the server.
+     * @throws InterruptedException if the waiting thread is interrupted.
+     */
+    abstract public void awaitStop() throws InterruptedException;
 }

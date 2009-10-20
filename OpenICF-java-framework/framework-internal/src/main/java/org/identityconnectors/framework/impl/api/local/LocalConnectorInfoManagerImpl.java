@@ -69,17 +69,17 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
     
     private List<ConnectorInfo> _connectorInfo;
     
-    public LocalConnectorInfoManagerImpl(URL [] bundleURLs) throws ConfigurationException {
+    public LocalConnectorInfoManagerImpl(List<URL> bundleURLs, ClassLoader bundleParentClassLoader) throws ConfigurationException {
         List<WorkingBundleInfo> workingInfo = expandBundles(bundleURLs);
         WorkingBundleInfo.resolve(workingInfo);
-        _connectorInfo = createConnectorInfo(workingInfo);
+        _connectorInfo = createConnectorInfo(workingInfo, bundleParentClassLoader);
     }
     
     /**
      * First pass - expand bundles as needed. populates
      * originalURL, parsedManifest, libContents, and topLevelContents
      */
-    private static List<WorkingBundleInfo> expandBundles (URL [] bundleURLs) throws ConfigurationException {
+    private static List<WorkingBundleInfo> expandBundles (List<URL> bundleURLs) throws ConfigurationException {
         List<WorkingBundleInfo> rv = new ArrayList<WorkingBundleInfo>();
         for (URL url : bundleURLs) {
             WorkingBundleInfo info;
@@ -230,11 +230,12 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
     /**
      * Final pass - create connector infos
      */
-    private static List<ConnectorInfo> createConnectorInfo(Collection<WorkingBundleInfo> parsed) throws ConfigurationException {
+    private static List<ConnectorInfo> 
+    createConnectorInfo(Collection<WorkingBundleInfo> parsed, ClassLoader bundleParentClassLoader) throws ConfigurationException {
         List<ConnectorInfo> rv = new ArrayList<ConnectorInfo>();
         for (WorkingBundleInfo bundleInfo : parsed ) {
             ClassLoader loader = new BundleClassLoader(bundleInfo.getEffectiveClassPath(), 
-                    bundleInfo.getEffectiveNativeLibraries());
+                    bundleInfo.getEffectiveNativeLibraries(), bundleParentClassLoader);
             for (String name : bundleInfo.getImmediateBundleContents()) {
                 Class<?> connectorClass = null;
                 ConnectorClass options = null;

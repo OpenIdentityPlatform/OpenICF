@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.Socket;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -47,6 +46,7 @@ import org.identityconnectors.framework.common.exceptions.InvalidCredentialExcep
 import org.identityconnectors.framework.common.serializer.SerializerUtil;
 import org.identityconnectors.framework.impl.api.APIConfigurationImpl;
 import org.identityconnectors.framework.impl.api.AbstractConnectorInfo;
+import org.identityconnectors.framework.impl.api.ConnectorInfoManagerFactoryImpl;
 import org.identityconnectors.framework.impl.api.ObjectStreamHandler;
 import org.identityconnectors.framework.impl.api.StreamHandlerUtil;
 import org.identityconnectors.framework.impl.api.local.LocalConnectorInfoImpl;
@@ -224,8 +224,8 @@ public class ConnectionProcessor implements Runnable {
     }
     
     private ConnectorInfoManager getConnectorInfoManager() {
-        return ConnectorInfoManagerFactory.getInstance().getLocalManager(
-                _server.getBundleURLs().toArray(new URL[0]));
+        ConnectorInfoManagerFactoryImpl factory = (ConnectorInfoManagerFactoryImpl) ConnectorInfoManagerFactory.getInstance();
+        return factory.getLocalManager(_server.getBundleURLs(), _server.getBundleParentClassLoader());
     }
     
     private HelloResponse processHelloRequest(HelloRequest request) {

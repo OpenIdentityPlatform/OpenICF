@@ -29,9 +29,6 @@ import java.net.URLClassLoader;
 import java.util.List;
 import java.util.Map;
 
-import org.identityconnectors.framework.api.ConnectorInfoManagerFactory;
-
-
 class BundleClassLoader extends URLClassLoader {
     
     private static final String FRAMEWORK_PACKAGE = "org.identityconnectors.framework";
@@ -46,8 +43,8 @@ class BundleClassLoader extends URLClassLoader {
     
     private final Map<String, String> nativeLibs;
     
-    public BundleClassLoader(List<URL> urls, Map<String, String> nativeLibs) {
-        super(urls.toArray(new URL[urls.size()]), ConnectorInfoManagerFactory.class.getClassLoader());
+    public BundleClassLoader(List<URL> urls, Map<String, String> nativeLibs, ClassLoader parent) {
+        super(urls.toArray(new URL[urls.size()]), parent);
         this.nativeLibs = newReadOnlyMap(nativeLibs);
     }
     

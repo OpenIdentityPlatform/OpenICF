@@ -23,23 +23,37 @@
 package org.identityconnectors.framework.server;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.LogManager;
 
 import org.identityconnectors.common.IOUtil;
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.SecurityUtil;
+import org.identityconnectors.framework.api.ConnectorInfoManagerFactory;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 
 public final class Main {
+    
     private static final String PROP_PORT = "connectorserver.port";
     private static final String PROP_BUNDLE_DIR = "connectorserver.bundleDir";
+    private static final String PROP_LIB_DIR = "connectorserver.libDir";
     private static final String PROP_SSL  = "connectorserver.usessl";
     private static final String PROP_IFADDRESS = "connectorserver.ifaddress";
     private static final String PROP_KEY = "connectorserver.key";
+    private static final String PROP_LOGGER_CLASS = "connectorserver.loggerClass";
+    
+    private static final String DEFAULT_LOG_SPI = "org.identityconnectors.common.logging.StdOutLogger";
+    
+    private static ConnectorServer _server;
+    private static Log _log; // Initialized lazily to avoid early initialization.
 
     private static void usage() {
         System.out.println("Usage: Main -run -properties <connectorserver.properties>");
@@ -107,15 +121,22 @@ public final class Main {
             return;
         }
     }
-                    
-    private static void run(Properties properties)
-        throws Exception
-    { 
+    
+    private static void run(Properties properties) throws Exception {
+        if ( _server != null ) {
+            // Procrun called main() without calling stop().
+            // Do not use a logging statement here to avoid initializing logging 
+            // too early just because a bug in procrun.
+            System.err.println("Server has already been started");
+        }
+        
         String portStr = properties.getProperty(PROP_PORT);
         String bundleDirStr = properties.getProperty(PROP_BUNDLE_DIR);
+        String libDirStr = properties.getProperty(PROP_LIB_DIR);
         String useSSLStr = properties.getProperty(PROP_SSL);
         String ifAddress = properties.getProperty(PROP_IFADDRESS);
         String keyHash = properties.getProperty(PROP_KEY);
+        String loggerClass = properties.getProperty(PROP_LOGGER_CLASS);
         if ( portStr == null ) {
             throw new ConnectorException("connectorserver.properties is missing "+PROP_PORT);
         }
@@ -126,25 +147,76 @@ public final class Main {
             throw new ConnectorException("connectorserver.properties is missing "+PROP_KEY);
         }
         
+        if ( loggerClass == null ) {
+            loggerClass = DEFAULT_LOG_SPI;
+        }
+        ensureLoggingNotInitialized();
+        System.setProperty(Log.LOGSPI_PROP, loggerClass);
         
         int port = Integer.parseInt(portStr);
         
-        ConnectorServer server = ConnectorServer.newInstance();
-        server.setPort(port);
-        server.setBundleURLs(buildURLs(new File(bundleDirStr)));
-        server.setKeyHash(keyHash);
+        _server = ConnectorServer.newInstance();
+        _server.setPort(port);
+        _server.setBundleURLs(buildBundleURLs(new File(bundleDirStr)));
+        if ( libDirStr != null ) {
+            _server.setBundleParentClassLoader(buildLibClassLoader(new File(libDirStr)));
+        }
+        _server.setKeyHash(keyHash);
         if (useSSLStr != null) {
             boolean useSSL = Boolean.parseBoolean(useSSLStr);
-            server.setUseSSL(useSSL);
+            _server.setUseSSL(useSSL);
         }
         if (ifAddress != null) {
-            server.setIfAddress(InetAddress.getByName(ifAddress));
+            _server.setIfAddress(InetAddress.getByName(ifAddress));
         }
-        server.start();
-        System.out.println("Connector server listening on port "+port);           
+        _server.start();
+        getLog().info("Connector server listening on port "+port);
+        _server.awaitStop();
     }
     
-    private static List<URL> buildURLs(File dir) throws Exception {
+    public static void stop(String [] args) {
+        if ( _server == null ) {
+            // Procrun called stop() without calling main().
+            // Do not use a logging statement here to avoid initializing logging 
+            // too early just because a bug in procrun.
+            System.err.println("Illegal");
+        }
+        _server.stop();
+        // Do not set _server to null, because that way the check in run() fails
+        // and we ensure that the server cannot be started twice in the same JVM.
+        getLog().info("Connector server stopped");
+        // LogManager installs a shutdown hook to reset the handlers (which includes
+        // closing any files opened by FileHandler-s). Procrun does not call 
+        // JNI_DestroyJavaVM(), so shutdown hooks do not run. We reset the LM here. 
+        LogManager.getLogManager().reset();
+    }
+    
+    private static void ensureLoggingNotInitialized() throws Exception {
+        Field field = Log.class.getDeclaredField("_cacheSpi");
+        field.setAccessible(true);
+        if ( field.get(null) != null ) {
+            throw new IllegalStateException("Logging has already been initialized");
+        }
+    }
+
+    private static List<URL> buildBundleURLs(File dir) throws MalformedURLException {
+        List<URL> rv = getJarFiles(dir);
+        if (rv.isEmpty()) {
+            getLog().warn("No bundles found in the bundles directory");
+        }
+        return rv;
+    }
+
+    private static ClassLoader buildLibClassLoader(File dir) throws MalformedURLException {
+        List<URL> jars = getJarFiles(dir);
+        if (!jars.isEmpty()) {
+            return new URLClassLoader(jars.toArray(new URL[jars.size()]), ConnectorInfoManagerFactory.class.getClassLoader());
+        }
+        return null;
+
+    }
+
+    private static List<URL> getJarFiles(File dir) throws MalformedURLException {
         if (!dir.isDirectory()) {
             throw new ConnectorException(dir.getPath()+" does not exist");
         }
@@ -155,5 +227,12 @@ public final class Main {
             }
         }
         return rv;
+    }
+    
+    private synchronized static Log getLog() {
+        if ( _log == null ) {
+            _log = Log.getLog(Main.class);
+        }
+        return _log;
     }
 }

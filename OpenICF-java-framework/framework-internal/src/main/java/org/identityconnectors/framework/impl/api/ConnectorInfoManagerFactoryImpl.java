@@ -23,6 +23,7 @@
 package org.identityconnectors.framework.impl.api;
 
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,8 +39,8 @@ import org.identityconnectors.framework.impl.api.remote.RemoteConnectorInfoManag
 
 public class ConnectorInfoManagerFactoryImpl extends ConnectorInfoManagerFactory {
 
-    private final Map<List<URL>,ConnectorInfoManager>
-            _localManagerCache = new HashMap<List<URL>,ConnectorInfoManager>();
+    private final Map<LocalManagerKey,ConnectorInfoManager>
+            _localManagerCache = new HashMap<LocalManagerKey,ConnectorInfoManager>();
 
     private final Map<RemoteManagerKey,RemoteConnectorInfoManagerImpl>
             _remoteManagerCache = new HashMap<RemoteManagerKey,RemoteConnectorInfoManagerImpl>();
@@ -59,18 +60,25 @@ public class ConnectorInfoManagerFactoryImpl extends ConnectorInfoManagerFactory
             _remoteManagerCache.clear();
         }
     }
-
+    
     @Override
     public ConnectorInfoManager getLocalManager(URL... urls) throws ConfigurationException {
+        return getLocalManager(Arrays.asList(urls), null);
+    }
+    
+    public ConnectorInfoManager getLocalManager(List<URL> urls, ClassLoader bundleParentClassLoader) throws ConfigurationException {
         Assertions.nullCheck(urls, "urls");
         for (URL url : urls) {
             Assertions.nullCheck(url, "urls");            
         }
-        List<URL> key = CollectionUtil.newReadOnlyList(urls);
+        if (bundleParentClassLoader == null) {
+            bundleParentClassLoader = ConnectorInfoManagerFactory.class.getClassLoader();
+        }
+        LocalManagerKey key = new LocalManagerKey(urls, bundleParentClassLoader);
         synchronized (_localManagerCache) {
             ConnectorInfoManager rv = _localManagerCache.get(key);
             if ( rv == null ) {
-                rv = new LocalConnectorInfoManagerImpl(urls);
+                rv = new LocalConnectorInfoManagerImpl(urls, bundleParentClassLoader);
             }
             _localManagerCache.put(key, rv);
             return rv;    
@@ -87,6 +95,37 @@ public class ConnectorInfoManagerFactoryImpl extends ConnectorInfoManagerFactory
             }
             _remoteManagerCache.put(key, rv);
             return rv.derive(info);
+        }
+    }
+
+    private static final class LocalManagerKey {
+        
+        private final List<URL> _urls;
+        private final ClassLoader _bundleParentClassLoader;
+        
+        public LocalManagerKey(List<URL> urls, ClassLoader bundleParentClassLoader) {
+            _urls = CollectionUtil.newReadOnlyList(urls);
+            _bundleParentClassLoader = bundleParentClassLoader;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if ( obj instanceof LocalManagerKey ) {
+                LocalManagerKey other = (LocalManagerKey)obj;
+                if (!_urls.equals(other._urls)) {
+                    return false;
+                }
+                if (!_bundleParentClassLoader.equals(other._bundleParentClassLoader)) {
+                    return false;
+                }
+                return true;
+            }
+            return false;
+        }
+        
+        @Override
+        public int hashCode() {
+            return _urls.hashCode() ^ _bundleParentClassLoader.hashCode();
         }
     }
     
