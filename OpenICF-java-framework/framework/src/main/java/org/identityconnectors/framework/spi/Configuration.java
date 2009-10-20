@@ -22,53 +22,69 @@
  */
 package org.identityconnectors.framework.spi;
 
-import java.net.URI;
-
+import org.identityconnectors.framework.common.FrameworkUtil;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.ConnectorMessages;
-
+import org.identityconnectors.framework.spi.operations.TestOp;
 
 /**
- * All Bean properties are considered configuration for the Connector. The
- * implementation of the Configuration interface must have a default
- * constructor. Each Bean property will correspond to two message fields in a
- * properties file named Messages in the same package as the implementing class.
- * For instance "hostname.help" is the key in the messages files for the
- * 'Hostname' property. The other property "hostname.display" is the message
- * used to display the property in a view. The initial get[Bean] is used as
- * default for display. All Beans properties are considered required. Use the
- * validate method to determine if all necessary configuration information
- * provided is valid.
- * <p>
- * Valid types for use are (array form of the type is also valid):
- * <ul>
- * <li>{@link String}</li>
- * <li>{@link Integer}</li>
- * <li>{@link Long}</li>
- * <li>{@link Boolean}</li>
- * <li>{@link Float}</li>
- * <li>{@link Double}</li>
- * <li>{@link URI}</li>
- * </ul>
+ * Encapsulates the configuration of a connector.
+ * 
+ * <p>Implementations of the <code>Configuration</code> interface must have a default
+ * constructor. All bean properties are considered configuration for the connector.
+ * The initial value of the property getter method is
+ * considered the default value of the property. The types of the bean properties
+ * can be only those returned by {@link FrameworkUtil#getAllSupportedConfigTypes()} and
+ * multi-dimensional arrays thereof. The bean properties are not required by default,
+ * but a property can be marked as required through use of the {@link ConfigurationProperty} annotation.</p>
+ *   
+ * <p>Each bean property corresponds to two keys in a
+ * properties file named <code>Messages</code> in the same package as the implementing class:
+ * <code>${property}.display</code> and <code>${property}.help</code>. For example,
+ * <code>hostname.help</code> and <code>hostname.display</code> would be the keys
+ * corresponding to a <code>hostname</code> property. The <code>display</code> message is the display
+ * name of the property and can be used to display the property in a view. The <code>help</code>
+ * message holds the description of the property. The names of the two keys can be overridden
+ * through the <code>ConfigurationProperty</code> annotation.</p>
  */
 public interface Configuration {
+
     /**
-     * Determine if the configuration is valid based on the values set.
+     * Determines if the configuration is valid.
+     * 
+     * <p>A valid configuration is one that is ready to be used by the connector:
+     * it is complete (all the required properties have been given values) 
+     * and the property values are well-formed (are in the expected range, 
+     * have the expected format, etc.)</p>
+     * 
+     * <p>Implementations of this method <strong>should not</strong> connect to the resource
+     * in an attempt to validate the configuration. For example, implementations
+     * should not attempt to check that a host of the specified name exists
+     * by making a connection to it. Such checks can be performed in the implementation
+     * of the {@link TestOp#test()} method.</p>
+     * 
+     * @throws RuntimeException iff the configuration is not valid. Implementations
+     *             are encouraged to throw the most specific exception available.
+     *             When no specific exception is available, implementations can throw
+     *             {@link ConfigurationException}.
      */
     public void validate();
 
     /**
-     * Should return the ConnectorMessages that is set by {#setConnectorMessages}
-     * @return The locale
+     * Should return the {@link ConnectorMessages message catalog} that is set by
+     * {@link #setConnectorMessages(ConnectorMessages)}.
+     * 
+     * @return the <code>ConnectorMessages</code> instance.
      */
     public ConnectorMessages getConnectorMessages();
         
     /**
-     * Called after the {@link Configuration}'s instance is created to make
-     * sure that the {@link Connector} has the proper ConnectorMessages to create messages
-     * for {@link Exception}s etc. 
+     * Sets the {@link ConnectorMessages message catalog} instance that allows the Connector
+     * to localize messages. This method is called before any bean property setter,
+     * the {@link #validate()} method or the {@link #getConnectorMessages()} method. 
      * 
      * @param messages
-     *            The message catalog for the given connector.
+     *             the message catalog.
      */
     public void setConnectorMessages(ConnectorMessages messages);
 }

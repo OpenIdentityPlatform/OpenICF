@@ -22,13 +22,32 @@
  */
 package org.identityconnectors.framework.spi;
 
+import org.identityconnectors.framework.spi.operations.TestOp;
+
 /**
- * To be implemented by Connectors that wish to be pooled.
+ * To be implemented by connectors that wish to be pooled.
  */
 public interface PoolableConnector extends Connector {
+
     /**
-     * Checks to see if the connector is still alive.
-     * @throws RuntimeException If no longer alive.
+     * Checks if the connector is still alive.
+     * 
+     * <p>A connector can spend a large amount of time in the pool before
+     * being used. This method is intended to check if the connector is
+     * alive and operations can be invoked on it (for instance, an implementation
+     * would check that the connector's physical connection to the resource
+     * has not timed out).</p>
+     * 
+     * <p>The major difference between this method and {@link TestOp#test()} is that
+     * this method must do only the minimum that is necessary to check that the
+     * connector is still alive. <code>TestOp.test()</code> does a more thorough
+     * check of the environment specified in the Configuration, and can therefore
+     * be much slower.</p>
+     * 
+     * <p>This method can be called often. Implementations should do their
+     * best to keep this method fast.</p>
+     * 
+     * @throws RuntimeException if the connector is no longer alive.
      */
     public void checkAlive();
 }

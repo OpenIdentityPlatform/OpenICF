@@ -22,24 +22,31 @@
  */
 package org.identityconnectors.framework.api.operations;
 
-import org.identityconnectors.framework.spi.Configuration;
-import org.identityconnectors.framework.spi.Connector;
+import org.identityconnectors.framework.api.APIConfiguration;
 
 /**
- * Provides a method for the API to call the SPI's test method on the
- * connector. The test method is intended to determine if the {@link Connector}
- * is ready to perform the various operations it supports.
+ * Tests the {@link APIConfiguration configuration} with the connector.
  * 
- * @author Will Droste
- */
+ * <p>Unlike {@link ValidateApiOp#validate() validation}, testing a configuration should
+ * check that any pieces of environment referred by the configuration are available.
+ * For example the connector could make a physical connection to a host specified
+ * in the configuration to check that it exists and that the credentials
+ * specified in the configuration are usable.</p>
+ * 
+ * <p>Since this operation may connect to the resource, it may be slow. Clients are
+ * advised not to invoke this operation often, such as before every provisioning operation.
+ * This operation is <strong>not</strong> intended to check that the connector is alive
+ * (its physical connection to the resource has not timed out).
+ * 
+ * <p>This operation may be invoked before the configuration has been validated.</p>  
+ */ 
 public interface TestApiOp extends APIOperation {
 
     /**
-     * Tests connectivity and validity of the {@link Configuration}.
+     * Tests the {@link APIConfiguration Configuration} with the connector.
      * 
      * @throws RuntimeException
-     *             iff the {@link Configuration} is not valid or a
-     *             Connection to the resource could not be established.
+     *             iff the configuration is not valid or the test failed.
      */
     void test();
 }

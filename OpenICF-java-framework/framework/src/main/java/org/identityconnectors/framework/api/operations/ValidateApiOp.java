@@ -22,22 +22,23 @@
  */
 package org.identityconnectors.framework.api.operations;
 
-import org.identityconnectors.framework.spi.Configuration;
-import org.identityconnectors.framework.spi.Connector;
+import org.identityconnectors.framework.api.APIConfiguration;
 
 /**
- * Validates the {@link Configuration} object within the {@link Connector} context.
+ * Validates the {@link APIConfiguration configuration}.
  * 
- * @author Will Droste
- * 
+ * <p>A valid configuration is one that is ready to be used by the connector:
+ * it is complete (all the required properties have been given values) 
+ * and the property values are well-formed (are in the expected range, 
+ * have the expected format, etc.)</p>
  */
 public interface ValidateApiOp extends APIOperation {
+
     /**
-     * Calls {@link Configuration#validate()}.
+     * Validates the {@link APIConfiguration configuration}.
      * 
      * @throws RuntimeException
-     *             iff the {@link Configuration} is not valid or a
-     *             Connection to the resource could not be established.
+     *             iff the configuration is not valid.
      */
     void validate();
 }
