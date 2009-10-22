@@ -36,7 +36,7 @@ import org.identityconnectors.framework.api.APIConfiguration;
  * <p>Since this operation may connect to the resource, it may be slow. Clients are
  * advised not to invoke this operation often, such as before every provisioning operation.
  * This operation is <strong>not</strong> intended to check that the connector is alive
- * (its physical connection to the resource has not timed out).
+ * (i.e., that its physical connection to the resource has not timed out).
  * 
  * <p>This operation may be invoked before the configuration has been validated.</p>  
  */ 
