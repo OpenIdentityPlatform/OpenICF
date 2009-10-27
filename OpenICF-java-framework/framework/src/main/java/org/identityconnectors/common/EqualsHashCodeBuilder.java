@@ -145,7 +145,7 @@ public final class EqualsHashCodeBuilder {
             try {
                 // so it should be set<Bean>(get's return type){}
                 clazz.getMethod("s" + name.substring(1), m.getReturnType());
-            } catch (Exception e) {
+            } catch (NoSuchMethodException e) {
                 continue;
             }
             try {

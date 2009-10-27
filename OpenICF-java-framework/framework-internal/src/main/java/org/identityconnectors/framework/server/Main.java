@@ -179,7 +179,8 @@ public final class Main {
             // Procrun called stop() without calling main().
             // Do not use a logging statement here to avoid initializing logging 
             // too early just because a bug in procrun.
-            System.err.println("Illegal");
+            System.err.println("Server has not been started yet");
+            return;
         }
         _server.stop();
         // Do not set _server to null, because that way the check in run() fails

@@ -74,7 +74,11 @@ public abstract class ScriptExecutorFactory {
                         _factoryCache.put(language, clazz);
                     }
                 }
+                catch (RuntimeException e) {
+                    throw e;
+                }
                 catch (Exception e) {
+                    // Probably an error loading or instantiating the SEF implementation.
                     // Do not report.
                 }
             }

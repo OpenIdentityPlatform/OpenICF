@@ -26,6 +26,7 @@ import java.util.List;
 
 import javax.net.ssl.TrustManager;
 
+import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.security.GuardedString;
 
@@ -74,15 +75,8 @@ public final class RemoteFrameworkConnectionInfo {
             boolean useSSL,
             List<TrustManager> trustManagers,
             int timeout) {
-        
-        if ( host == null ) {
-            throw new IllegalArgumentException("Parameter 'host' is null.");
-        }
-        
-        if ( key == null ) {
-            throw new IllegalArgumentException("Parameter 'key' is null.");            
-        }
-                
+        Assertions.nullCheck(host, "host");
+        Assertions.nullCheck(key, "key");
         _host = host;
         _port = port;
         _key  = key;
