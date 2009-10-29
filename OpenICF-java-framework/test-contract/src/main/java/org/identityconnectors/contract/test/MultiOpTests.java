@@ -517,10 +517,10 @@ public class MultiOpTests extends ObjectClassRunner {
         if (isObjectClassSupported()
                 && ConnectorHelper.isCRU(getObjectClassInfo(), OperationalAttributes.LOCK_OUT_NAME) && canLockOut()) {
 
-         // check ENABLE for true
+            // check: setting LOCKOUT from true to false
             checkOpAttribute(OperationalAttributes.LOCK_OUT_NAME, true, false, Boolean.class);
 
-            // check ENABLE for false
+            // check: setting LOCKOUT from false for true
             checkOpAttribute(OperationalAttributes.LOCK_OUT_NAME, false, true, Boolean.class);
         }
         else {
