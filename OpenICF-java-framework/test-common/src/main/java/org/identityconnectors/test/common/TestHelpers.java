@@ -203,13 +203,13 @@ public final class TestHelpers {
     /**
      * Loads Property bag for the specified class.
      * The properties are loaded as classpath resources using the class argument as root prefix.
-     * Optional system property testConfig is used to specify another configuration path for properties.
+     * Optional system property 'testConfig' is used to specify another configuration path for properties.
      * The following algorithm is used to load the properties in bag
      * <ul>
-     *  <li><code>loader.getResource(prefix + "/public/build.groovy")</code></li>
-     *  <li><code>loader.getResource(prefix + "/public/" + cfg + "/build.groovy") </code> optionally where cfg is passed configuration</li>
-     *  <li> <code> loader.getResource(prefix + "/private/build.groovy") </<code> </li>
-     *  <li> <code >loader.getResource(prefix + "/private/" + cfg + "/build.groovy") </code> optionally where cfg is passed configuration</li>
+     *  <li><code>loader.getResource(prefix + "/config/config.groovy")</code></li>
+     *  <li><code>loader.getResource(prefix + "/config/" + cfg + "/config.groovy") </code> optionally where cfg is passed configuration</li>
+     *  <li> <code> loader.getResource(prefix + "/config-private/config.groovy") </<code> </li>
+     *  <li> <code >loader.getResource(prefix + "/config-private/" + cfg + "/config.groovy") </code> optionally where cfg is passed configuration</li>
      * </ul>
      * Context classloader is used to load the resources.  
      * @param clazz Class which FQN is used as root prefix for loading of properties 
@@ -254,21 +254,25 @@ public final class TestHelpers {
     static PropertyBag loadConnectorConfigurationAsResource(String prefix, ClassLoader loader) {
         Map<String, Object> ret = new HashMap<String, Object>();
         String cfg = System.getProperty("testConfig", null);
+        //common public config file
         URL url = loader.getResource(prefix + "/config/config.groovy");
         if (url != null) {
             appendProperties(ret, loadGroovyConfigFile(url));
         }
         if (StringUtil.isNotBlank(cfg) && !"default".equals(cfg)) {
+            //public config file specific for one particular configuration 
             url = loader.getResource(prefix + "/config/" + cfg + "/config.groovy");
             if (url != null) {
                 appendProperties(ret, loadGroovyConfigFile(url));
             }
         }
+        //common private config file
         url = loader.getResource(prefix + "/config-private/config.groovy");
         if (url != null) {
             appendProperties(ret, loadGroovyConfigFile(url));
         }
         if (StringUtil.isNotBlank(cfg) && !"default".equals(cfg)) {
+            //private config file specific for one particular configuration 
             url = loader.getResource(prefix + "/config-private/" + cfg + "/config.groovy");
             if (url != null) {
                 appendProperties(ret, loadGroovyConfigFile(url));

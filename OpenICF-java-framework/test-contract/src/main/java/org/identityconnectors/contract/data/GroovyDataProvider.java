@@ -58,10 +58,10 @@ import org.junit.Assert;
  * Groovy to parse the property file.
  * The groovy files are read as classpath resources using following paths : 
      * <ul>
-     *  <li><code>loader.getResource(prefix + "/public/build.groovy")</code></li>
-     *  <li><code>loader.getResource(prefix + "/public/" + cfg + "/build.groovy") </code> optionally where cfg is passed configuration</li>
-     *  <li> <code> loader.getResource(prefix + "/private/build.groovy") </<code> </li>
-     *  <li> <code >loader.getResource(prefix + "/private/" + cfg + "/build.groovy") </code> optionally where cfg is passed configuration</li>
+     *  <li><code>loader.getResource(prefix + "/config/config.groovy")</code></li>
+     *  <li><code>loader.getResource(prefix + "/config/" + cfg + "/config.groovy") </code> optionally where cfg is passed configuration</li>
+     *  <li> <code> loader.getResource(prefix + "/config-private/config.groovy") </<code> </li>
+     *  <li> <code >loader.getResource(prefix + "/config-private/" + cfg + "/config.groovy") </code> optionally where cfg is passed configuration</li>
      * </ul>
    where prefix is FQN of your connector set as "connectorName" system property.
  * Note: If two property files contain the same property name, the value from
