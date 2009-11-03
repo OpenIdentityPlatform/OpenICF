@@ -75,7 +75,7 @@ public class GroovyDataProviderTest {
     public void testListAcquire() throws Exception {
         Object o = getProperty(gdp, "sampleFooBarList");
         Assert.assertNotNull(o);
-        Assert.assertTrue(o instanceof List);
+        Assert.assertTrue(o instanceof List<?>);
         Assert.assertTrue(((List<?>) o).size() == 3);
         @SuppressWarnings("unchecked") // because of list retyping to List<Object>
         List<Object> l = (List<Object>) o;
@@ -94,7 +94,7 @@ public class GroovyDataProviderTest {
     public void testListAcquireWithLazy() throws Exception {
         Object o = getProperty(gdp, "sampleFooBarListWithLazy");
         Assert.assertNotNull(o);
-        Assert.assertTrue(o instanceof List);
+        Assert.assertTrue(o instanceof List<?>);
         Assert.assertTrue(((List<?>) o).size() == 3);
         @SuppressWarnings("unchecked") // collection retyping
         List<Object> l = (List<Object>) o;
@@ -219,7 +219,7 @@ public class GroovyDataProviderTest {
     public void testSimpleMapAcquire() throws Exception {
         Object o = getProperty(gdp, "sampleMap");
         Assert.assertNotNull(o);
-        Assert.assertTrue(o instanceof Map);
+        Assert.assertTrue(o instanceof Map<?,?>);
         printMap(o);
     }
 
@@ -227,7 +227,7 @@ public class GroovyDataProviderTest {
     public void testDotInNameMapAcquire() throws Exception {
         Object o = getProperty(gdp, "sampleMap.foo.bar");
         Assert.assertNotNull(o);
-        Assert.assertTrue(o instanceof Map);
+        Assert.assertTrue(o instanceof Map<?,?>);
         printMap(o);
     }
 
@@ -360,8 +360,8 @@ public class GroovyDataProviderTest {
         // multi.Tstring=[Lazy.random("AAAAA##") , Lazy.random("AAAAA##")]
         Object o = getProperty(gdp, "multi.Tstring");
         Assert.assertNotNull(o);
-        Assert.assertTrue(o instanceof List);
-        if (o instanceof List) {
+        Assert.assertTrue(o instanceof List<?>);
+        if (o instanceof List<?>) {
             @SuppressWarnings("unchecked")
             List<Object> l = (List<Object>) o;
             printList(l);
@@ -386,21 +386,21 @@ public class GroovyDataProviderTest {
 
         Object o = getProperty(gdp, "multi.recursive.Tstring", false);
         Assert.assertNotNull(o);
-        Assert.assertTrue(o instanceof List);
-        if (o instanceof List) {
+        Assert.assertTrue(o instanceof List<?>);
+        if (o instanceof List<?>) {
             @SuppressWarnings("unchecked") // collection retyping
             List<Object> l = (List<Object>) o;
 
             boolean recursiveListPresent = false;
             boolean recursiveListPresent2 = false;
             for (Object object : l) {
-                if (object instanceof List) {
+                if (object instanceof List<?>) {
                     recursiveListPresent = true;
 
                     @SuppressWarnings("unchecked") // collection retyping
                     List<Object> lRec = (List<Object>) object;
                     for (Object object2 : lRec) {
-                        if (object2 instanceof List) {
+                        if (object2 instanceof List<?>) {
                             recursiveListPresent2 = true;
                         }
                     }
@@ -502,7 +502,7 @@ public class GroovyDataProviderTest {
     public void testLazyMap() {
         Object o = ((DataProvider) gdp).get("mapWithLazyCalls");
         Assert.assertNotNull(o);
-        Assert.assertTrue(o instanceof Map);
+        Assert.assertTrue(o instanceof Map<?,?>);
         @SuppressWarnings("unchecked") // collection retyping
         Map<Object, Object> m = (Map<Object, Object>) o;
         int cntr = 0;
@@ -524,7 +524,7 @@ public class GroovyDataProviderTest {
     public void testAcquireMap() {
         Object o = ((DataProvider) gdp).get("abcAccount.all");
         Assert.assertNotNull(o);
-        Assert.assertTrue(o instanceof Map);
+        Assert.assertTrue(o instanceof Map<?,?>);
         @SuppressWarnings("unchecked") // collection retyping
         Map<Object, Object> m = (Map<Object, Object>) o;
         Assert.assertTrue(m.get("__NAME__") instanceof String);
@@ -540,7 +540,7 @@ public class GroovyDataProviderTest {
     private <T> void printList(List<T> l) {
         System.out.print(" [ ");
         for (Object object : l) {
-            if (object instanceof List) {
+            if (object instanceof List<?>) {
                 @SuppressWarnings("unchecked") // collection retyping
                 List<T> newL = (List<T>) object;
                 printList(newL);
@@ -552,7 +552,7 @@ public class GroovyDataProviderTest {
     }
 
     private void printMap(Object o) {
-        if (o instanceof Map) {
+        if (o instanceof Map<?,?>) {
             Map<?, ?> m = (Map<?, ?>) o;
             Set<?> tmpSet = m.entrySet();
             for (Object object : tmpSet) {
@@ -586,7 +586,7 @@ public class GroovyDataProviderTest {
         Object o = gdp2.get(propertyName, "string", true);
 
         // just informational output
-        if (o instanceof Map) {
+        if (o instanceof Map<?,?>) {
             Map<?,?> m = (Map<?,?>) o;
             String s = (m.size() > 0) ? "is present" : "is missing";
             if (printOut) {

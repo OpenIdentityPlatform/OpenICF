@@ -212,7 +212,7 @@ public class GroovyDataProvider implements DataProvider {
             // if property testsuite.requiredClasses is undefined skip checking JARs.
             return;
         }
-        if (o instanceof Map) {
+        if (o instanceof Map<?,?>) {
             @SuppressWarnings("unchecked")
             Map<String, String> map = (Map<String , String>) o;
             for (Map.Entry<String , String> entry : map.entrySet()) {
@@ -503,11 +503,11 @@ public class GroovyDataProvider implements DataProvider {
             Lazy lazy = (Lazy) o;
 
             resolved = resolveLazy(lazy);
-        } else if (o instanceof List) {
+        } else if (o instanceof List<?>) {
             @SuppressWarnings("unchecked")
             List<Object> list = (List<Object>) o;
             resolved = resolveList(list);
-        } else if (o instanceof Map) {
+        } else if (o instanceof Map<?,?>) {
             @SuppressWarnings("unchecked")
             Map<?,Object> map = (Map<?,Object>) o;
             resolved = resolveMap(map);
@@ -531,7 +531,7 @@ public class GroovyDataProvider implements DataProvider {
                 Lazy lazyO = (Lazy) object;
                 Object resolvedObj = resolveLazy(lazyO);
                 pairKV.setValue(resolvedObj);
-            } else if (object instanceof Map) {
+            } else if (object instanceof Map<?,?>) {
                 // recursively resolve attributes in nested lists
                 @SuppressWarnings("unchecked")
                 Map<?, Object> arg = (Map<?, Object>) object;
@@ -556,7 +556,7 @@ public class GroovyDataProvider implements DataProvider {
                 Lazy lazyO = (Lazy) object;
                 Object resolvedObj = resolveLazy(lazyO);
                 result.add(resolvedObj);
-            } else if (object instanceof List) {
+            } else if (object instanceof List<?>) {
                 // recursively resolve attributes in nested lists
                 @SuppressWarnings("unchecked") // because of list type cast
                 List<Object> arg = (List<Object>) object;
@@ -741,7 +741,7 @@ public class GroovyDataProvider implements DataProvider {
      */
     public Object get(String name) {
         Object result = get(name, null, false);
-        if (result instanceof Map) {
+        if (result instanceof Map<?,?>) {
             @SuppressWarnings("unchecked")
             Map<?, Object> map = (Map<?, Object>) result;
             result = resolveMap(map);
@@ -940,11 +940,11 @@ public class GroovyDataProvider implements DataProvider {
 
             svalue = flattenCO(obj, prefix);
 
-        } else if (obj instanceof Map) {
+        } else if (obj instanceof Map<?,?>) {
 
             svalue = flattenMap(obj);
 
-        } else if (obj instanceof List) {
+        } else if (obj instanceof List<?>) {
 
             svalue = flattenList(obj);
 

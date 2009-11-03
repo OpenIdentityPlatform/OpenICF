@@ -635,7 +635,7 @@ public class ConnectorHelper {
                     Object attributeValue = get(dataProvider, testName, attributeInfo.getType()
                             , dataName, objectClassInfo.getType(), sequenceNumber, attributeInfo.isMultiValued());
                     
-                    if(attributeValue instanceof Collection) {
+                    if(attributeValue instanceof Collection<?>) {
                         attributes.add(AttributeBuilder.build(attributeName, (Collection<?>)attributeValue));
                     } else {
                         attributes.add(AttributeBuilder.build(attributeName, attributeValue));
@@ -875,7 +875,7 @@ public class ConnectorHelper {
         Assert.assertTrue("BundleJar does not exist: " + bundleJar.getAbsolutePath(), bundleJar
                 .isFile());
         try {
-            manager = fact.getLocalManager(bundleJar.toURL());
+            manager = fact.getLocalManager(bundleJar.toURI().toURL());
         } catch (MalformedURLException ex) {
             throw ContractException.wrap(ex);
         }

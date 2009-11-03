@@ -27,28 +27,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-import org.identityconnectors.common.CollectionUtil;
-import org.identityconnectors.common.logging.Log;
-import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
-import org.identityconnectors.framework.api.operations.APIOperation;
-import org.identityconnectors.framework.api.operations.SchemaApiOp;
-import org.identityconnectors.framework.api.operations.ScriptOnConnectorApiOp;
-import org.identityconnectors.framework.api.operations.ScriptOnResourceApiOp;
-import org.identityconnectors.framework.api.operations.TestApiOp;
-import org.identityconnectors.framework.api.operations.ValidateApiOp;
-import org.identityconnectors.framework.common.objects.AttributeInfo;
-import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
-import org.identityconnectors.framework.common.objects.Name;
-import org.identityconnectors.framework.common.objects.ObjectClassInfo;
-import org.identityconnectors.framework.common.objects.Schema;
-import org.identityconnectors.framework.common.objects.Uid;
-import org.junit.Test;
+import org.identityconnectors.common.*;
+import org.identityconnectors.contract.exceptions.*;
+import org.identityconnectors.framework.api.operations.*;
+import org.identityconnectors.framework.common.objects.*;
+import org.junit.*;
 
 /**
  * Contract test of {@link SchemaApiOp} operation.
@@ -58,10 +43,6 @@ import org.junit.Test;
  */
 public class SchemaApiOpTests extends ContractTestBase {
 
-    /**
-     * Logging..
-     */
-    private static final Log LOG = Log.getLog(SchemaApiOpTests.class);
     private static final String TEST_NAME = "Schema";
     
     /*

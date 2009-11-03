@@ -71,7 +71,7 @@ public class TestApiOpTests extends ContractTestBase {
                 fail(String.format("Missing test property: '%s'", testPropertyName));
             }
             
-            if (!(o instanceof List)) {
+            if (!(o instanceof List<?>)) {
                 fail(String.format("Test property '%s' should be of type List", testPropertyName));
             }
             
