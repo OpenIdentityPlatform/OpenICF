@@ -42,6 +42,5 @@
  * directory where ${bundle-name} is the project-name as defined in this connector's 
  * build.xml file.
  */
-HOST="0.0.0.0"
 LOGIN="admin"
 PASSWORD="password"

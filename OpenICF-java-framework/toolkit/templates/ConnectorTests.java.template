@@ -44,15 +44,15 @@ import org.identityconnectors.test.common.PropertyBag;
 public class <%= resourceName %>ConnectorTests { 
 
     /*
-     * Example test properties. On your computer, these are defined in: 
-     * <%= System.getProperty("user.home") + "/.connector-" + resourceName.toLowerCase() %>.properties (your "user.home" directory). 
+     * Example test properties.
+     * See the Javadoc of the TestHelpers class for the location of the public and private configuration files.
      */
     private static final PropertyBag properties = TestHelpers.getProperties(<%= resourceName %>Connector.class);
+    // Host is a public property read from public configuration file
     private static final String HOST = properties.getStringProperty("HOST");
+    // Login and password are private properties read from private configuration file 
     private static final String LOGIN = properties.getStringProperty("LOGIN");
     private static final String PASSWORD = properties.getStringProperty("PASSWORD");
-    /** Here we test that we are able to read public property */	
-    private static final String PUBLIC_PROPERTY = properties.getStringProperty("PUBLIC_PROPERTY");
 
     //set up logging
     private static final Log log = Log.getLog(<%= resourceName %>ConnectorTests.class);
