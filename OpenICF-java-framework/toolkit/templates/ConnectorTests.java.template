@@ -51,6 +51,8 @@ public class <%= resourceName %>ConnectorTests {
     private static final String HOST = properties.getStringProperty("HOST");
     private static final String LOGIN = properties.getStringProperty("LOGIN");
     private static final String PASSWORD = properties.getStringProperty("PASSWORD");
+    /** Here we test that we are able to read public property */	
+    private static final String PUBLIC_PROPERTY = properties.getStringProperty("PUBLIC_PROPERTY");
 
     //set up logging
     private static final Log log = Log.getLog(<%= resourceName %>ConnectorTests.class);

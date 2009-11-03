@@ -9,6 +9,7 @@ import groovy.text.*
 BUNDLE_DIR = args[0].replaceAll("\\\\", "/")
 PACKAGE_NAME = args[1]
 RESOURCE_NAME = args[2]
+CONNECTOR_NAME = PACKAGE_NAME + "." + RESOURCE_NAME + "Connector"
 
 /* 
  * Add, update, or remove SPI Operations in this map:
@@ -83,7 +84,7 @@ testPath = BUNDLE_DIR + "/src/test/java/" + packagePath
 ant.mkdir(dir:srcPath)
 ant.mkdir(dir:testPath)
 ant.mkdir(dir:BUNDLE_DIR + "/src/test/config")
-ant.mkdir(dir:BUNDLE_DIR + "/src/test/config/" + PACKAGE_NAME + "." + RESOURCE_NAME + "/config")
+ant.mkdir(dir:BUNDLE_DIR + "/src/test/config/" + CONNECTOR_NAME + "/config")
 ant.mkdir(dir:BUNDLE_DIR + "/lib/build")
 ant.mkdir(dir:BUNDLE_DIR + "/lib/test")
 
@@ -101,8 +102,8 @@ templates.each {
         f = new File(srcPath, RESOURCE_NAME + fName)
     }else if(fName.startsWith("Messages")) {
         f = new File(srcPath, fName)
-    }else if(fName.startsWith("build.groovy")) {
-        f = new File(BUNDLE_DIR + "/src/test/config/" + PACKAGE_NAME + "." + RESOURCE_NAME + "/config", "config.groovy")
+    }else if(fName.startsWith("config.groovy")) {
+        f = new File(BUNDLE_DIR + "/src/test/config/" + CONNECTOR_NAME + "/config", "config.groovy")
     }else {
         f = new File(BUNDLE_DIR, fName)
     }    
