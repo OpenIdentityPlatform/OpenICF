@@ -21,7 +21,7 @@
   ====================
 -->
 <project name="connector-databasetable" default="all"> 
-    <property name="framework.dir" value="../../framework"/>
+    <property name="framework.dir" value="../../framework/java"/>
     <property name="bundles.dir" value="../"/>    
     <import file="${framework.dir}/connector_build.xml"/>
     <property name="databasecommon.dir" value="../dbcommon"/>
