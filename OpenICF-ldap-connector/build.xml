@@ -21,7 +21,7 @@
   ====================
 -->
 <project name="connector-ldap" default="all"> 
-    <property name="framework.dir" value="../../framework"/>
+    <property name="framework.dir" value="../../framework/java"/>
     <import file="${framework.dir}/connector_build.xml"/>
 
     <target name="-pre-clean-extra" depends="opends-clean">
