@@ -60,8 +60,8 @@
     <property name="java.target" value="1.5" />
     <property name="java.compilerargs" value="" />
     <property name="javadoc.author" value="true" />
-    <property name="license.file" value="${framework.dir}/license.txt" />
-    <property name="thirdpartyreadme.file" value="${framework.dir}/THIRDPARTYREADME.txt" />
+    <property name="license.file" value="${framework.dir}/../license.txt" />
+    <property name="thirdpartyreadme.file" value="${framework.dir}/../THIRDPARTYREADME.txt" />
     <property name="failontestfailure" value="false"/>
     <!--
         Check if directories exist.

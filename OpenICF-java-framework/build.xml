@@ -85,8 +85,8 @@
     <property name="build-toolkit" location="build/${toolkit.name}"/>
     <property name="nbm-name" value="IdentityConnectors-Plugin.nbm" />
     <property name="coverage.file" location="${basedir}/cobertura.ser"/>
-    <property name="license.file" value="license.txt" />
-    <property name="thirdpartyreadme.file" value="THIRDPARTYREADME.txt" />
+    <property name="license.file" value="../license.txt" />
+    <property name="thirdpartyreadme.file" value="../THIRDPARTYREADME.txt" />
     <property name="failontestfailure" value="false"/>
     <property name="src-server" location="server"/>
     <property name="server.name" value="connector_server_java-${version.display}"/>
