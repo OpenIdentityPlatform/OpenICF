@@ -22,35 +22,27 @@
  */
 package org.identityconnectors.test.common;
 
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.lang.reflect.*;
+import java.net.*;
+import java.text.*;
+import java.util.*;
+import java.util.Map.*;
 
-import org.identityconnectors.common.StringUtil;
-import org.identityconnectors.common.logging.Log;
-import org.identityconnectors.framework.api.APIConfiguration;
-import org.identityconnectors.framework.api.operations.SearchApiOp;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.objects.ConnectorMessages;
-import org.identityconnectors.framework.common.objects.ConnectorObject;
-import org.identityconnectors.framework.common.objects.ObjectClass;
-import org.identityconnectors.framework.common.objects.OperationOptions;
-import org.identityconnectors.framework.common.objects.ResultsHandler;
-import org.identityconnectors.framework.common.objects.filter.Filter;
-import org.identityconnectors.framework.spi.Configuration;
-import org.identityconnectors.framework.spi.Connector;
-import org.identityconnectors.framework.spi.operations.SearchOp;
-import org.identityconnectors.test.common.spi.TestHelpersSpi;
+import org.identityconnectors.common.*;
+import org.identityconnectors.framework.api.*;
+import org.identityconnectors.framework.api.operations.*;
+import org.identityconnectors.framework.common.exceptions.*;
+import org.identityconnectors.framework.common.objects.*;
+import org.identityconnectors.framework.common.objects.filter.*;
+import org.identityconnectors.framework.spi.*;
+import org.identityconnectors.framework.spi.operations.*;
+import org.identityconnectors.test.common.spi.*;
 
 /**
  * Bag of utility methods useful to connector tests.
  */
 public final class TestHelpers {
 
-    private static final Log LOG = Log.getLog(TestHelpers.class);
     private static final Object LOCK = new Object();
 
     private TestHelpers() {
@@ -235,8 +227,7 @@ public final class TestHelpers {
             Object result = toProps.invoke(config);
             return (Map<?, ?>) result;
         } catch (Exception e) {
-            LOG.error(e, "Could not load Groovy objects: {0}", e.getMessage());
-            return null;
+            throw new ConnectorException(MessageFormat.format("Could not load Groovy config file ''{0}''", url), e);
         }
     }
 
