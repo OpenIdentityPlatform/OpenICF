@@ -22,21 +22,28 @@
  */
 package org.identityconnectors.test.common;
 
-import java.lang.reflect.*;
-import java.net.*;
-import java.text.*;
-import java.util.*;
-import java.util.Map.*;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
-import org.identityconnectors.common.*;
-import org.identityconnectors.framework.api.*;
-import org.identityconnectors.framework.api.operations.*;
-import org.identityconnectors.framework.common.exceptions.*;
-import org.identityconnectors.framework.common.objects.*;
-import org.identityconnectors.framework.common.objects.filter.*;
-import org.identityconnectors.framework.spi.*;
-import org.identityconnectors.framework.spi.operations.*;
-import org.identityconnectors.test.common.spi.*;
+import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.framework.api.APIConfiguration;
+import org.identityconnectors.framework.api.operations.SearchApiOp;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.ConnectorMessages;
+import org.identityconnectors.framework.common.objects.ConnectorObject;
+import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.ResultsHandler;
+import org.identityconnectors.framework.common.objects.filter.Filter;
+import org.identityconnectors.framework.spi.Configuration;
+import org.identityconnectors.framework.spi.Connector;
+import org.identityconnectors.framework.spi.operations.SearchOp;
+import org.identityconnectors.test.common.spi.TestHelpersSpi;
 
 /**
  * Bag of utility methods useful to connector tests.
