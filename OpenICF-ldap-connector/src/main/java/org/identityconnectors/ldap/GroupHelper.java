@@ -185,7 +185,7 @@ public class GroupHelper {
         try {
             conn.getInitialContext().modifyAttributes(groupDN, new ModificationItem[] { item });
         } catch (AttributeInUseException e) {
-            throw new ConnectorException(conn.format("memberAlreadyInGroup", null, memberValue, groupDN));
+            throw new ConnectorException(conn.format("memberAlreadyInGroup", null, memberValue, groupDN), e);
         } catch (NamingException e) {
             throw new ConnectorException(e);
         }
@@ -247,39 +247,57 @@ public class GroupHelper {
 
         private final Set<T> removed = new LinkedHashSet<T>();
         private final Set<T> added = new LinkedHashSet<T>();
+        private Set<T> effectiveAdded;
+        private Set<T> effectiveRemoved;
 
         public void add(T item) {
-            removed.remove(item);
             added.add(item);
+            invalidate();
         }
 
         public void addAll(Collection<? extends T> items) {
             for (T item : items) {
-                add(item);
+                added.add(item);
             }
+            invalidate();
         }
 
         public void clearAdded() {
             added.clear();
+            invalidate();
         }
 
         public Set<T> getAdded() {
-            return added;
+            if (effectiveAdded == null) {
+                effectiveAdded = new LinkedHashSet<T>(added);
+                effectiveAdded.removeAll(removed);
+            }
+            return effectiveAdded;
         }
 
         public void remove(T item) {
             removed.add(item);
-            added.remove(item);
+            invalidate();
         }
 
         public void removeAll(Collection<? extends T> items) {
             for (T item : items) {
-                remove(item);
+                removed.add(item);
             }
+            invalidate();
         }
 
         public Set<T> getRemoved() {
-            return removed;
+            if (effectiveRemoved == null) {
+                effectiveRemoved = new LinkedHashSet<T>(removed);
+                effectiveRemoved.removeAll(added);
+            }
+            return effectiveRemoved;
+        }
+
+        private void invalidate() {
+            effectiveAdded = null;
+            effectiveRemoved = null;
         }
     }
 

@@ -235,6 +235,30 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
     }
 
     @Test
+    public void testUpdateUniqueLdapGroups() {
+        ConnectorFacade facade = newFacade();
+
+        Attribute groupsAttr = AttributeBuilder.build(LdapConstants.LDAP_GROUPS_NAME, UNIQUE_EXTERNAL_PEERS_DN);
+        doTestUpdateGroups(facade, groupsAttr);
+    }
+
+    @Test
+    public void testUpdatePosixGroups() {
+        ConnectorFacade facade = newFacade();
+
+        Attribute groupsAttr = AttributeBuilder.build(LdapConstants.LDAP_GROUPS_NAME, UNIQUE_EXTERNAL_PEERS_DN);
+        doTestUpdateGroups(facade, groupsAttr);
+    }
+
+    private void doTestUpdateGroups(ConnectorFacade facade, Attribute groupsAttr) {
+        ConnectorObject object = searchByAttribute(facade, ObjectClass.ACCOUNT, new Name(SYLVESTER_DN), groupsAttr.getName());
+
+        Uid uid = facade.update(ObjectClass.ACCOUNT, object.getUid(), singleton(groupsAttr), null);
+
+        assertAttributeValue(groupsAttr.getValue(), facade, ObjectClass.ACCOUNT, uid, groupsAttr.getName());
+    }
+
+    @Test
     public void testRemoveUniqueLdapGroups() {
         ConnectorFacade facade = newFacade();
 
