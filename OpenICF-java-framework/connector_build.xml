@@ -308,8 +308,8 @@
     </target>
     
     <target name="set-version" depends="set-revision">
-        <condition property="SVN_REVISION" value="${svn.info.entry.revision}" else="x">
-                <isset property="svn.info.entry.revision"/>
+        <condition property="SVN_REVISION" value="${svn.info.entry.commit.revision}" else="x">
+                <isset property="svn.info.entry.commit.revision"/>
         </condition>
         <property name="ConnectorBundle-Version" value="${MAJOR}.${MINOR}.${SVN_REVISION}"/>
     </target>
