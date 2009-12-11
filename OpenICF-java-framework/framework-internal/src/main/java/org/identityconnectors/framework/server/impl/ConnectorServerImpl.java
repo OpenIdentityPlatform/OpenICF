@@ -65,7 +65,6 @@ public class ConnectorServerImpl extends ConnectorServer {
         ServerSocket socket =
             createServerSocket();
         ConnectionListener listener = new ConnectionListener(this,socket);
-        listener.setName("ConnectionListener");
         listener.start();
         _stopLatch = new CountDownLatch(1);
         _listener = listener;

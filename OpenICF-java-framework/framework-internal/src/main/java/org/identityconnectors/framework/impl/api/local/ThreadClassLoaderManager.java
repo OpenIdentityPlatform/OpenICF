@@ -25,11 +25,16 @@ package org.identityconnectors.framework.impl.api.local;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.identityconnectors.common.logging.Log;
+
 /**
  * Provides a for managing the thread-local class loader
  *
  */
 public class ThreadClassLoaderManager {
+
+    private static final Log _log = Log.getLog(ThreadClassLoaderManager.class);
+
     private static ThreadLocal<ThreadClassLoaderManager> _instance
         = new ThreadLocal<ThreadClassLoaderManager>() {
         public ThreadClassLoaderManager initialValue() {
@@ -57,7 +62,7 @@ public class ThreadClassLoaderManager {
      * @param loader The class loader. May be null.
      */
     public void pushClassLoader(ClassLoader loader) {
-        _loaderStack.add(Thread.currentThread().getContextClassLoader());
+        _loaderStack.add(getCurrentClassLoader());
         Thread.currentThread().setContextClassLoader(loader);
     }
     
@@ -77,7 +82,12 @@ public class ThreadClassLoaderManager {
      * @return the current thread-local class loader
      */
     public ClassLoader getCurrentClassLoader() {
-        return Thread.currentThread().getContextClassLoader();
+        ClassLoader result = Thread.currentThread().getContextClassLoader();
+        // Attempt to provide more information to issue 604.
+        if (result == null) {
+            _log.error(new Throwable(), "The CCL of current thread ''{0}'' is null", Thread.currentThread().getName());
+        }
+        return result;
     }
     
 }

@@ -36,7 +36,7 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.server.ConnectorServer;
 
 
-class ConnectionListener extends Thread {
+class ConnectionListener extends CCLWatchThread {
     
     /**
      * This is the size of our internal queue. For now I have this
@@ -77,6 +77,7 @@ class ConnectionListener extends Thread {
      */
     public ConnectionListener(ConnectorServer server,
             ServerSocket socket) {
+        super("ConnectionListener");
         _server = server;
         _socket = socket;
         _threadPool = 
@@ -87,7 +88,8 @@ class ConnectionListener extends Thread {
              TimeUnit.SECONDS,
              new ArrayBlockingQueue<Runnable>(
                      INTERNAL_QUEUE_SIZE,
-                     true)); //fair
+                     true), //fair
+             new CCLWatchThreadFactory()); 
     }
     
     @Override
