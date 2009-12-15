@@ -155,6 +155,13 @@ public final class Main {
         
         int port = Integer.parseInt(portStr);
         
+        // Work around issue 604. It seems that sometimes procrun will run
+        // the start method in a thread with a null context class loader.
+        if (Thread.currentThread().getContextClassLoader() == null) {
+            getLog().warn("Context class loader is null, working around");
+            Thread.currentThread().setContextClassLoader(Main.class.getClassLoader());
+        }
+        
         _server = ConnectorServer.newInstance();
         _server.setPort(port);
         _server.setBundleURLs(buildBundleURLs(new File(bundleDirStr)));
@@ -182,6 +189,14 @@ public final class Main {
             System.err.println("Server has not been started yet");
             return;
         }
+        
+        // Work around issue 604. It seems that sometimes procrun will run
+        // the start method in a thread with a null context class loader.
+        if (Thread.currentThread().getContextClassLoader() == null) {
+            getLog().warn("Context class loader is null, working around");
+            Thread.currentThread().setContextClassLoader(Main.class.getClassLoader());
+        }
+
         _server.stop();
         // Do not set _server to null, because that way the check in run() fails
         // and we ensure that the server cannot be started twice in the same JVM.
