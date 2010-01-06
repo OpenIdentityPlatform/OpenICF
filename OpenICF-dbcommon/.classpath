@@ -7,6 +7,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/Connector Framework"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Connector Framework - Internal"/>
 	<classpathentry kind="lib" path="lib/test/derby.jar"/>
-	<classpathentry kind="var" path="USER_HOME/.ant/lib/junit-4.5.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
