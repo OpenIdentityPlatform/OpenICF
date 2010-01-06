@@ -301,7 +301,7 @@ public class LdapSearch {
         List<String> result;
         QualifiedUid container = options.getContainer();
         if (container != null) {
-            result = singletonList(LdapSearches.getEntryDN(conn, container.getObjectClass(), container.getUid()));
+            result = singletonList(LdapSearches.findEntryDN(conn, container.getObjectClass(), container.getUid()));
         } else {
             result = Arrays.asList(baseDNs);
         }

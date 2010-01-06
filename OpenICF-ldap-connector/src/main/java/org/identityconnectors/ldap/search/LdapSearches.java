@@ -67,19 +67,49 @@ public class LdapSearches {
     }
 
     /**
-     * Finds the DN of the entry corresponding to the given qualified Uid.
+     * Returns the DN of the entry identified by the given Uid. Throws <code>UnknownUidException</code>
+     * if such an entry does not exists.
      */
     public static String getEntryDN(LdapConnection conn, ObjectClass oclass, Uid uid) {
+        return findEntryDN(conn, oclass, uid, true);
+    }
+
+    /**
+     * Returns the DN of the entry identified by the given Uid. May throw <code>UnknownUidException</code>
+     * if such an entry does not exists, but not necessarily.
+     */
+    public static String findEntryDN(LdapConnection conn, ObjectClass oclass, Uid uid) {
+        return findEntryDN(conn, oclass, uid, false);
+    }
+
+    /**
+     * Finds the DN of the entry corresponding to the given Uid. If the <code>check</code>
+     * parameter is false, the method will take the quickest path to return the DN, but will not necessarily
+     * check that an entry with the returned DN exists. If the <code>check</code> parameter is false,
+     * the method will throw a <code>UnknownUidException</code> if the entry identified
+     * by the Uid does not exist.
+     */
+    private static String findEntryDN(LdapConnection conn, ObjectClass oclass, Uid uid, boolean check) {
         log.ok("Searching for object {0} of class {1}", uid.getUidValue(), oclass.getObjectClassValue());
         
-        // If the Uid actually the entry DN, just return it.
+        LdapFilter ldapFilter = null;
+
+        // If the Uid is actually the entry DN, we do not need to do a search do find the entry DN.
         String uidAttr = conn.getSchemaMapping().getLdapUidAttribute(oclass);
         if (LdapEntry.isDNAttribute(uidAttr)) {
-            return uid.getUidValue();
+            if (check) {
+                // We'll do a search in order to check that the entry with that DN exists.
+                ldapFilter = LdapFilter.forEntryDN(uid.getUidValue());
+            } else {
+                // Short path. The Uid is the entry DN, and we do not need to check it,
+                // so we can return it right away.
+                return uid.getUidValue();
+            }
+        } else {
+            EqualsFilter filter = (EqualsFilter) FilterBuilder.equalTo(uid);
+            ldapFilter = new LdapFilterTranslator(conn.getSchemaMapping(), oclass).createEqualsExpression(filter, false);
         }
-
-        EqualsFilter filter = (EqualsFilter) FilterBuilder.equalTo(uid);
-        LdapFilter ldapFilter = new LdapFilterTranslator(conn.getSchemaMapping(), oclass).createEqualsExpression(filter, false);
+        assert ldapFilter != null;
 
         OperationOptionsBuilder builder = new OperationOptionsBuilder();
         builder.setAttributesToGet("entryDN");

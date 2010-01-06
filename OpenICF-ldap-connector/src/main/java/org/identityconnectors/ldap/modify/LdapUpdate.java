@@ -71,7 +71,7 @@ public class LdapUpdate extends LdapModifyOperation {
     }
 
     public Uid update(Set<Attribute> attrs) {
-        String entryDN = LdapSearches.getEntryDN(conn, oclass, uid);
+        String entryDN = LdapSearches.findEntryDN(conn, oclass, uid);
         PosixGroupMember posixMember = new PosixGroupMember(entryDN);
 
         // Extract the Name attribute if any, to be used to rename the entry later.
@@ -161,7 +161,7 @@ public class LdapUpdate extends LdapModifyOperation {
     }
 
     public Uid addAttributeValues(Set<Attribute> attrs) {
-        String entryDN = LdapSearches.getEntryDN(conn, oclass, uid);
+        String entryDN = LdapSearches.findEntryDN(conn, oclass, uid);
         PosixGroupMember posixMember = new PosixGroupMember(entryDN);
 
         Pair<Attributes, GuardedPasswordAttribute> attrsToModify = getAttributesToModify(attrs);
@@ -183,7 +183,7 @@ public class LdapUpdate extends LdapModifyOperation {
     }
 
     public Uid removeAttributeValues(Set<Attribute> attrs) {
-        String entryDN = LdapSearches.getEntryDN(conn, oclass, uid);
+        String entryDN = LdapSearches.findEntryDN(conn, oclass, uid);
         PosixGroupMember posixMember = new PosixGroupMember(entryDN);
 
         Pair<Attributes, GuardedPasswordAttribute> attrsToModify = getAttributesToModify(attrs);
