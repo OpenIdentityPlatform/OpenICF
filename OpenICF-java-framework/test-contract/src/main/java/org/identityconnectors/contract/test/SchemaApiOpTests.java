@@ -158,11 +158,22 @@ public class SchemaApiOpTests extends ContractTestBase {
         List<String> expOClasses = (List<String>) getTestPropertyOrFail(List.class.getName(),
                 SUPPORTED_OBJECT_CLASSES_PROPERTY_PREFIX, true);
 
+        List<String> testedOClasses = new ArrayList<String>();
+
         // iterate over object classes and check that were expected and check
         // their attributes
         for (ObjectClassInfo ocInfo : schema.getObjectClassInfo()) {
-            msg = "Schema returned object class %s that is not expected to be suported.";
-            assertTrue(String.format(msg, ocInfo.getType()), expOClasses.contains(ocInfo.getType()));
+            boolean expected = expOClasses.contains(ocInfo.getType());
+            if (strictCheck) {
+                msg = "Schema returned object class %s that is not expected to be suported.";
+                assertTrue(String.format(msg, ocInfo.getType()), expected);
+            } else if (!expected) {
+                // this object class was not expected, and we are not checking strictly,
+                // so skip this object class
+                continue;
+            }
+
+            testedOClasses.add(ocInfo.getType());
 
             // list of expected attributes for the object class
             @SuppressWarnings("unchecked")
@@ -201,9 +212,12 @@ public class SchemaApiOpTests extends ContractTestBase {
             
         }
         
-        msg = "Schema returned less supported object classes, expected: %d, returned %d.";
-        assertTrue(String.format(msg, expOClasses.size(), schema.getObjectClassInfo().size()),
-                expOClasses.size() == schema.getObjectClassInfo().size());
+        Set<String> notFoundOClasses = new HashSet<String>(expOClasses);
+        notFoundOClasses.removeAll(testedOClasses);
+        if (!notFoundOClasses.isEmpty()) {
+            msg = "Schema did not contain expected object class %s.";
+            fail(String.format(msg, notFoundOClasses.iterator().next()));
+        }
 
         // expected object classes supported by operations
         @SuppressWarnings("unchecked")
@@ -212,32 +226,57 @@ public class SchemaApiOpTests extends ContractTestBase {
         Map<Class<? extends APIOperation>, Set<ObjectClassInfo>> supportedOperations = schema
                 .getSupportedObjectClassesByOperation();
 
+        List<String> testedOps = new ArrayList<String>();
+
         // iterate over operations
         for (Class<? extends APIOperation> operation : supportedOperations.keySet()) {
-            msg = "Schema returned unexpected operation: %s.";
-            assertTrue(String.format(msg, operation.getSimpleName()),
-                    expOperations.containsKey(operation.getSimpleName()));
+            boolean expectedOp = expOperations.containsKey(operation.getSimpleName());
+            if (strictCheck) {
+                msg = "Schema returned unexpected operation: %s.";
+                assertTrue(String.format(msg, operation.getSimpleName()), expectedOp);
+            } else if (!expectedOp) {
+                // this operation was not expected, and we are not checking strictly,
+                // so skip this operation
+                continue;
+            }
+
+            testedOps.add(operation.getSimpleName());
 
             // expected object classes supported by the operation
-            List<String> expOClassesByOp = expOperations.get(operation.getSimpleName());
-            assertNotNull(expOClassesByOp);
-            
-            // check that all operations are expected
+            List<String> expOClassesForOp = expOperations.get(operation.getSimpleName());
+            assertNotNull(expOClassesForOp);
+
+            List<String> testedOClassesForOp = new ArrayList<String>();
+
             for (ObjectClassInfo ocInfo : supportedOperations.get(operation)) {
-                msg = "Operation %s supports unexpected object class: %s."; 
-                assertTrue(String.format(msg, operation.getSimpleName(), ocInfo.getType()),
-                        expOClassesByOp.contains(ocInfo.getType()));
+                boolean expectedOClassForOp = expOClassesForOp.contains(ocInfo.getType());
+                if (strictCheck) {
+                    msg = "Operation %s supports unexpected object class: %s.";
+                    assertTrue(String.format(msg, operation.getSimpleName(), ocInfo.getType()),
+                            expectedOClassForOp);
+                } else if (!expectedOClassForOp) {
+                    // this object class was not expected for this operation, and we are not checking strictly,
+                    // so skip this object class
+                    continue;
+                }
+
+                testedOClassesForOp.add(ocInfo.getType());
             }
             
-            msg =  "Schema returned less object classes supported by operation %s, expected %d, returned %d.";
-            assertTrue(String.format(msg, operation.getSimpleName(), expOClassesByOp.size(), supportedOperations.get(operation).size()),                    
-                    expOClassesByOp.size() == supportedOperations.get(operation).size());
+            Set<String> notFoundOClassesForOp = new HashSet<String>(expOClassesForOp);
+            notFoundOClassesForOp.removeAll(testedOClassesForOp);
+            if (!notFoundOClassesForOp.isEmpty()) {
+                msg = "Operation %s is not supported by object class %s.";
+                fail(String.format(msg, operation.getSimpleName(), notFoundOClassesForOp.iterator().next()));
+            }
         }
         
-        // check if there shouldn't be more opearations
-        msg = "Schema returned less operations, expected: %s, returned %s.";
-        assertTrue(String.format(msg, expOperations.keySet(), supportedOperations.keySet()),
-                expOperations.size() == supportedOperations.size());
+        Set<String> notFoundOps = new HashSet<String>(expOperations.keySet());
+        notFoundOps.removeAll(testedOps);
+        if (!notFoundOps.isEmpty()) {
+            msg = "Schema did not contain expected operation %s.";
+            fail(String.format(msg, notFoundOps.iterator().next()));
+        }
 
     }
 
