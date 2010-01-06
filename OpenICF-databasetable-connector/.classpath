@@ -20,5 +20,5 @@
 	<classpathentry exported="true" kind="var" path="USER_HOME/.connectors/connector-databasetable/lib/mysql/mysql-connector-java-5.0.8-bin.jar"/>
 	<classpathentry exported="true" kind="var" path="USER_HOME/.connectors/connector-databasetable/lib/db2/db2jcc.jar"/>
 	<classpathentry exported="true" kind="var" path="USER_HOME/.connectors/connector-databasetable/lib/mssql/sqljdbc.jar"/>
-	<classpathentry kind="output" path="build"/>
+	<classpathentry kind="output" path="ide-build"/>
 </classpath>

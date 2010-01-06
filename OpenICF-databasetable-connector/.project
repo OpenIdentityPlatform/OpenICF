@@ -25,10 +25,5 @@
 			<type>2</type>
 			<locationURI>USER_HOME/.connectors/connector-databasetable/config</locationURI>
 		</link>
-		<link>
-			<name>lib-private</name>
-			<type>2</type>
-			<locationURI>USER_HOME/.connectors/connector-databasetable/lib</locationURI>
-		</link>
 	</linkedResources>
 </projectDescription>
