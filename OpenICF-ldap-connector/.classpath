@@ -13,5 +13,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/Connector Common Test Library"/>
 	<classpathentry kind="lib" path="lib/test/aspectjrt.jar"/>
 	<classpathentry kind="lib" path="lib/test/je.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Connector Contract Tests"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>

@@ -53,7 +53,7 @@ public class SunDSTestBase {
         config.setHost(testProps.getStringProperty("sunds.host"));
         config.setPort(testProps.getProperty("sunds.port", Integer.class, 389));
         config.setPrincipal(testProps.getStringProperty("sunds.principal"));
-        config.setCredentials(new GuardedString(testProps.getProperty("sunds.credentials", String.class, "").toCharArray()));
+        config.setCredentials(testProps.getProperty("sunds.credentials", GuardedString.class));
         config.setBaseContexts(testProps.getStringProperty("sunds.baseContext"));
         config.setUidAttribute("entryDN");
         config.setReadSchema(false); // To be compatible with IdM.
