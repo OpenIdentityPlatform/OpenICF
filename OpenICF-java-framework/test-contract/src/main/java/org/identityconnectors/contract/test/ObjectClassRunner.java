@@ -34,6 +34,7 @@ import java.util.Set;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.contract.exceptions.ContractException;
+import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.GetApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
@@ -165,8 +166,8 @@ public abstract class ObjectClassRunner extends ContractTestBase {
     @Parameters
     public static List<Object[]> data() {
         List<Object[]> oclasses = new LinkedList<Object[]>();
-        @SuppressWarnings("unchecked")
-        List<String> objectClasses = (List<String>) getDataProvider().getTestSuiteAttribute("objectClasses");
+        
+        List<String> objectClasses = getObjectClassesProperty();
         if (objectClasses != null) {
             for (String objectClass : objectClasses) {
                 oclasses.add(new Object[] { new ObjectClass(objectClass) });
@@ -188,6 +189,16 @@ public abstract class ObjectClassRunner extends ContractTestBase {
         
         LOG.info("Tested object classes will be: ''{0}''.", sb.toString());
         return oclasses;
+    }
+    
+    private static List<String> getObjectClassesProperty() {
+        try {
+            @SuppressWarnings("unchecked")
+            List<String> objectClasses = (List<String>) getDataProvider().getTestSuiteAttribute("objectClasses");
+            return objectClasses;
+        } catch (ObjectNotFoundException e) {
+            return null;
+        }
     }
 
     /**
