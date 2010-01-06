@@ -164,10 +164,18 @@ public abstract class ObjectClassRunner extends ContractTestBase {
      */
     @Parameters
     public static List<Object[]> data() {
-        Schema schema = ConnectorHelper.createConnectorFacade(getDataProvider()).schema();
         List<Object[]> oclasses = new LinkedList<Object[]>();
-        for (ObjectClassInfo ocInfo : schema.getObjectClassInfo()) {
-            oclasses.add(new Object[] {ConnectorHelper.getObjectClassFromObjectClassInfo(ocInfo)});
+        @SuppressWarnings("unchecked")
+        List<String> objectClasses = (List<String>) getDataProvider().getTestSuiteAttribute("objectClasses");
+        if (objectClasses != null) {
+            for (String objectClass : objectClasses) {
+                oclasses.add(new Object[] { new ObjectClass(objectClass) });
+            }
+        } else {
+            Schema schema = ConnectorHelper.createConnectorFacade(getDataProvider()).schema();
+            for (ObjectClassInfo ocInfo : schema.getObjectClassInfo()) {
+                oclasses.add(new Object[] {ConnectorHelper.getObjectClassFromObjectClassInfo(ocInfo)});
+            }
         }
         
         oclasses.add(new Object[] {new ObjectClass("NONEXISTING")});
