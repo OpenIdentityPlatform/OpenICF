@@ -3,6 +3,11 @@
 	<name>Database Table Connector</name>
 	<comment></comment>
 	<projects>
+		<project>Common Database Library</project>
+		<project>Connector Common Test Library</project>
+		<project>Connector Contract Tests</project>
+		<project>Connector Framework</project>
+		<project>Connector Framework - Internal</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
@@ -19,6 +24,11 @@
 			<name>config-private</name>
 			<type>2</type>
 			<locationURI>USER_HOME/.connectors/connector-databasetable/config</locationURI>
+		</link>
+		<link>
+			<name>lib-private</name>
+			<type>2</type>
+			<locationURI>USER_HOME/.connectors/connector-databasetable/lib</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

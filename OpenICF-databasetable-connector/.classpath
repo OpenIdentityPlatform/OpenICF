@@ -16,5 +16,9 @@
 	<classpathentry kind="lib" path="lib/test/derbyrun.jar"/>
 	<classpathentry kind="lib" path="lib/test/derbytools.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Connector Contract Tests"/>
+	<classpathentry exported="true" kind="var" path="USER_HOME/.connectors/connector-databasetable/lib/oracle/ojdbc14.jar"/>
+	<classpathentry exported="true" kind="var" path="USER_HOME/.connectors/connector-databasetable/lib/mysql/mysql-connector-java-5.0.8-bin.jar"/>
+	<classpathentry exported="true" kind="var" path="USER_HOME/.connectors/connector-databasetable/lib/db2/db2jcc.jar"/>
+	<classpathentry exported="true" kind="var" path="USER_HOME/.connectors/connector-databasetable/lib/mssql/sqljdbc.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
