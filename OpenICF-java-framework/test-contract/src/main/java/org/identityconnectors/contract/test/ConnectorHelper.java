@@ -394,8 +394,11 @@ public class ConnectorHelper {
             if (isReadable(objectClassInfo, attribute)) {
                 if (checkNotReturnedByDefault || isReturnedByDefault(objectClassInfo, attribute)) {
                     Attribute createdAttribute = connectorObj.getAttributeByName(attribute.getName());
-                    Assert.assertEquals("Attribute " + attribute.getName()
-                            + " was not properly created", attribute, createdAttribute);
+                    
+                    List<Object> fetchedValue = createdAttribute.getValue();
+                    List<Object> requestedValue = attribute.getValue();
+                    String msg = String.format("Attribute '%s' was not properly created. Requested values: %s Fetched values: %s", attribute.getName(), requestedValue, fetchedValue);
+                    Assert.assertTrue(msg, checkValue(fetchedValue, requestedValue));
                 }
             }
         }
@@ -403,6 +406,10 @@ public class ConnectorHelper {
         return success;
     }
     
+    static <E> boolean checkValue(List<E> fetchedValue, List<E> requestedValue) {
+        return fetchedValue.containsAll(requestedValue);
+    }
+
     /**
      * Check that passed SyncDelta has exptected values.
      */
