@@ -20,7 +20,7 @@
 		<link>
 			<name>config-private</name>
 			<type>2</type>
-			<locationURI>USER_HOME/.connectors/connector-dbcommon/config</locationURI>
+			<locationURI>USER_HOME/.connectors/connector-databasetable/config</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
