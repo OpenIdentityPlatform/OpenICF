@@ -394,7 +394,9 @@ public class ConnectorHelper {
             if (isReadable(objectClassInfo, attribute)) {
                 if (checkNotReturnedByDefault || isReturnedByDefault(objectClassInfo, attribute)) {
                     Attribute createdAttribute = connectorObj.getAttributeByName(attribute.getName());
-                    
+                    if (createdAttribute == null)
+                        Assert.fail(String.format("Attribute '%s' is missing.", attribute.getName()));
+                        
                     List<Object> fetchedValue = createdAttribute.getValue();
                     List<Object> requestedValue = attribute.getValue();
                     String msg = String.format("Attribute '%s' was not properly created. Requested values: %s Fetched values: %s", attribute.getName(), requestedValue, fetchedValue);
