@@ -422,6 +422,7 @@ public class ConnectorHelper {
                 if (CollectionUtil.equals(expected, f.next())) {
                     f.remove();
                     found = true;
+                    break;
                 }
             }
             

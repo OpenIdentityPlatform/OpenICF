@@ -61,5 +61,10 @@ public class ConnectorHelperTest {
                 CollectionUtil.newList("baz", "bar", "foo"), // fetched 
                 CollectionUtil.newList("foo", "bar") // requested
                 ));
+        
+        // identical lists should pass:
+        List<String> sameList = CollectionUtil.newList("a", "b", "b");
+        Assert.assertTrue(ConnectorHelper.checkValue(sameList, sameList));
+        Assert.assertTrue(ConnectorHelper.checkValue(sameList, CollectionUtil.newList("b", "a", "b")));
     }
 }
