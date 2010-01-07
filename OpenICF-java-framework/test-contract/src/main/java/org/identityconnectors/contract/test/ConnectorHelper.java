@@ -32,12 +32,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import junit.framework.Assert;
 
+import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
@@ -408,10 +410,43 @@ public class ConnectorHelper {
         return success;
     }
     
-    static <E> boolean checkValue(List<E> fetchedValue, List<E> requestedValue) {
-        return fetchedValue.containsAll(requestedValue);
+    static <E> boolean checkValue(List<E> fetchedValues, List<E> requestedValues) {
+        List<E> requestedValuesClone = CollectionUtil.newList(requestedValues);
+        List<E> fetchedValuesClone = CollectionUtil.newList(fetchedValues);
+        Iterator<E> e = requestedValuesClone.iterator();
+        while (e.hasNext()) {
+            E currentE = e.next();
+            if (!contains(fetchedValuesClone, currentE)) {
+                return false;
+            } else {
+                fetchedValuesClone.remove(currentE);
+                e.remove();
+            }
+        }
+        if (!requestedValuesClone.isEmpty()) {
+            return false;
+        }
+        return true;
     }
-
+    
+    private static <E> boolean contains(List<E> rootList, E checkElement) {
+        Iterator<E> e = rootList.iterator();
+        if (checkElement == null) {
+            while (e.hasNext()) {
+                if (e.next() == null) {
+                    return true;
+                }
+            }
+        } else {
+            while (e.hasNext()) {
+                if (CollectionUtil.equals(checkElement, e.next())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
     /**
      * Check that passed SyncDelta has exptected values.
      */

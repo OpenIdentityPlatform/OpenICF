@@ -22,15 +22,44 @@
  */
 package org.identityconnectors.contract.test;
 
+import java.util.List;
+
 import org.identityconnectors.common.CollectionUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class ConnectorHelperTest {
     @Test
-    public void testEquals() {
+    public void testCheckValue() {
         // no exception should be thrown
+        
         Assert.assertTrue(ConnectorHelper.checkValue(CollectionUtil.newList("foo", "bar", "baz"), CollectionUtil.newList("foo", "bar")));
         Assert.assertFalse(ConnectorHelper.checkValue(CollectionUtil.newList("foo", "baz"), CollectionUtil.newList("foo", "bar")));
+        
+        // byte array comparison
+        byte[] barr1 = {10, 11, 12};
+        byte[] barr2 = {10, 10, 12};
+        byte[] barr3 = {10, 10, 10};
+        List<byte[]> fetchedValue = CollectionUtil.newList(barr1, barr2, barr3);
+        List<byte[]> requestedValue = CollectionUtil.newList(barr1, barr3);
+        Assert.assertTrue(ConnectorHelper.checkValue(fetchedValue, requestedValue));
+        
+        // Collections in value with duplicate values shouldn't be equal
+        // For example ['a','a','b'] != ['a','b']
+        Assert.assertFalse(ConnectorHelper.checkValue(
+                CollectionUtil.newList("foo", "bar"), // fetched
+                CollectionUtil.newList("foo", "bar", "bar") // requested
+                ));
+        
+        Assert.assertTrue(ConnectorHelper.checkValue(
+                CollectionUtil.newList("foo", "bar", "bar"), // fetched
+                CollectionUtil.newList("foo", "bar") // requested
+                ));
+        
+        // match should be indifferent for order of values
+        Assert.assertTrue(ConnectorHelper.checkValue(
+                CollectionUtil.newList("baz", "bar", "foo"), // fetched 
+                CollectionUtil.newList("foo", "bar") // requested
+                ));
     }
 }
