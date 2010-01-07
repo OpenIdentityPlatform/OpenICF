@@ -40,8 +40,8 @@ public class ConnectorHelperTest {
         byte[] barr1 = {10, 11, 12};
         byte[] barr2 = {10, 10, 12};
         byte[] barr3 = {10, 10, 10};
-        List<byte[]> fetchedValue = CollectionUtil.newList(barr1, barr2, barr3);
-        List<byte[]> requestedValue = CollectionUtil.newList(barr1, barr3);
+        List<Object> fetchedValue = CollectionUtil.<Object>newList(barr1, barr2, barr3);
+        List<Object> requestedValue = CollectionUtil.<Object>newList(barr1, barr3);
         Assert.assertTrue(ConnectorHelper.checkValue(fetchedValue, requestedValue));
         
         // Collections in value with duplicate values shouldn't be equal

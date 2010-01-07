@@ -410,41 +410,27 @@ public class ConnectorHelper {
         return success;
     }
     
-    static <E> boolean checkValue(List<E> fetchedValues, List<E> requestedValues) {
-        List<E> requestedValuesClone = CollectionUtil.newList(requestedValues);
+    static <E> boolean checkValue(List<E> fetchedValues, List<E> expectedValues) {
+        Iterator<E> e = expectedValues.iterator();
         List<E> fetchedValuesClone = CollectionUtil.newList(fetchedValues);
-        Iterator<E> e = requestedValuesClone.iterator();
         while (e.hasNext()) {
-            E currentE = e.next();
-            if (!contains(fetchedValuesClone, currentE)) {
+            E expected = e.next();
+
+            boolean found = false;
+            Iterator<E> f = fetchedValuesClone.iterator();
+            while (f.hasNext()) {
+                if (CollectionUtil.equals(expected, f.next())) {
+                    f.remove();
+                    found = true;
+                }
+            }
+            
+            if (!found) {
                 return false;
-            } else {
-                fetchedValuesClone.remove(currentE);
-                e.remove();
             }
         }
-        if (!requestedValuesClone.isEmpty()) {
-            return false;
-        }
+        
         return true;
-    }
-    
-    private static <E> boolean contains(List<E> rootList, E checkElement) {
-        Iterator<E> e = rootList.iterator();
-        if (checkElement == null) {
-            while (e.hasNext()) {
-                if (e.next() == null) {
-                    return true;
-                }
-            }
-        } else {
-            while (e.hasNext()) {
-                if (CollectionUtil.equals(checkElement, e.next())) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
     
     /**
