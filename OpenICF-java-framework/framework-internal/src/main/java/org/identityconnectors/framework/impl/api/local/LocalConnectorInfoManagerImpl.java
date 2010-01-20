@@ -240,48 +240,36 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
                 Class<?> connectorClass = null;
                 ConnectorClass options = null;
                 if ( name.endsWith(".class") ) {
-                    String className = name.substring(0,
-                            name.length()-".class".length());
+                    String className = name.substring(0, name.length()-".class".length());
                     className = className.replace('/', '.');
                     try {
-                        connectorClass =
-                            loader.loadClass(className);
-                        options =
-                            connectorClass.getAnnotation(ConnectorClass.class);
+                        connectorClass = loader.loadClass(className);
+                        options = connectorClass.getAnnotation(ConnectorClass.class);
                     }
                     catch (Throwable e) {
-                        //probe for the class. this might not
-                        //be an error since it might be from a bundle
-                        //fragment ( a bundle only included by other
-                        //bundles ). However, we should definitely
-                        //warn
-                        LOG.warn(e, 
-                                "Unable to load class {0} from bundle {1}. Class will be ignored and will not be listed in list of connectors.",
-                                className,
-                                bundleInfo.getOriginalLocation());
+                        //probe for the class. this might not be an error since it might be from a bundle
+                        //fragment ( a bundle only included by other bundles ). However, we should definitely warn
+                        LOG.warn(e, "Unable to load class {0} from bundle {1}. Class will be ignored and will not be listed in list of connectors.",
+                                className, bundleInfo.getOriginalLocation());
                     }
                 }
                 if ( connectorClass != null && options != null ) {
                     if (!Connector.class.isAssignableFrom(connectorClass)) {
-                        String message =
-                            "Class "+connectorClass+" does not implement "+
-                            Connector.class.getName();
+                        String message = "Class " + connectorClass + " does not implement " + Connector.class.getName();
                         throw new ConfigurationException(message);
                     }
                     LocalConnectorInfoImpl info = new LocalConnectorInfoImpl();
                     info.setConnectorClass(connectorClass.asSubclass(Connector.class));
-                    info.setConnectorConfigurationClass(
-                            options.configurationClass());
-                    info.setConnectorDisplayNameKey(
-                            options.displayNameKey());
-                    info.setConnectorKey(
-                            new ConnectorKey(bundleInfo.getManifest().getBundleName(),
-                                    bundleInfo.getManifest().getBundleVersion(),
-                                    connectorClass.getName()));
-                    ConnectorMessagesImpl messages = 
-                        loadMessageCatalog(bundleInfo.getEffectiveContents(),
-                                loader,
-                                info.getConnectorClass());
+                    info.setConnectorConfigurationClass(options.configurationClass());
+                    info.setConnectorDisplayNameKey(options.displayNameKey());
+                    info.setConnectorKey(new ConnectorKey(
+                            bundleInfo.getManifest().getBundleName(),
+                            bundleInfo.getManifest().getBundleVersion(),
+                            connectorClass.getName()));
+                    ConnectorMessagesImpl messages = loadMessageCatalog(
+                            bundleInfo.getEffectiveContents(),
+                            loader,
+                            info.getConnectorClass());
                     info.setMessages(messages);
                     info.setDefaultAPIConfiguration(createDefaultAPIConfiguration(info));
                     rv.add(info);
@@ -290,8 +278,6 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         }
         return rv;
     }
-    
-    
 
     /**
      * Create an instance of the {@link APIConfiguration} object to setup the
@@ -299,15 +285,12 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
      */
     private static APIConfigurationImpl 
     createDefaultAPIConfiguration(LocalConnectorInfoImpl localInfo) {
-        //setup classloader since we are going to construct the
-        //config bean
+        //setup classloader since we are going to construct the config bean
         ThreadClassLoaderManager.getInstance().pushClassLoader(localInfo.getConnectorClass().getClassLoader());
         try {
-            Class<? extends Connector> connectorClass =
-                localInfo.getConnectorClass();
+            Class<? extends Connector> connectorClass = localInfo.getConnectorClass();
             APIConfigurationImpl rv = new APIConfigurationImpl();
-            Configuration config = 
-                localInfo.getConnectorConfigurationClass().newInstance();
+            Configuration config = localInfo.getConnectorConfigurationClass().newInstance();
             boolean pooling = PoolableConnector.class.isAssignableFrom(connectorClass);
             rv.setConnectorPoolingSupported(pooling);
             rv.setConfigurationProperties(JavaClassProperties.createConfigurationProperties(config));
@@ -338,11 +321,9 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
                         if ( localeStr.endsWith(suffix) ) {
                             localeStr = localeStr.substring(0, localeStr.length()-suffix.length());
                             Locale locale = parseLocale(localeStr);
-                            Properties properties = 
-                                IOUtil.getResourceAsProperties(loader, path);
+                            Properties properties = IOUtil.getResourceAsProperties(loader, path);
                             //get or create map
-                            Map<String,String> map =
-                                rv.getCatalogs().get(locale);
+                            Map<String,String> map = rv.getCatalogs().get(locale);
                             if ( map == null ) {
                                 map = new HashMap<String,String>();
                                 rv.getCatalogs().put(locale, map);
@@ -394,8 +375,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
     
     private static String [] getBundleNamePrefixes(Class<? extends Connector> connector) {
         // figure out the message catalog..
-        ConnectorClass configOpts = connector.getAnnotation(
-                ConnectorClass.class);
+        ConnectorClass configOpts = connector.getAnnotation(ConnectorClass.class);
         String [] paths = null;
         if ( configOpts != null ) {
             paths = configOpts.messageCatalogPaths();
