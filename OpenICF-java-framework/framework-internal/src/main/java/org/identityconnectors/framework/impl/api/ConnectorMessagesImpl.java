@@ -33,9 +33,6 @@ import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.framework.common.objects.ConnectorMessages;
 
 
-/**
- * Implementation of ConnectorMessages
- */
 public class ConnectorMessagesImpl implements ConnectorMessages {
 
     /**
@@ -46,11 +43,9 @@ public class ConnectorMessagesImpl implements ConnectorMessages {
      * for both.
      */
     
-    private Map<Locale,Map<String,String>> 
-        _catalogs = new HashMap<Locale,Map<String,String>>();
+    private Map<Locale, Map<String, String>> _catalogs = new HashMap<Locale, Map<String, String>>();
     
     public ConnectorMessagesImpl() {
-        
     }
     
     public String format(String key, String dflt, Object... args) {
@@ -88,9 +83,8 @@ public class ConnectorMessagesImpl implements ConnectorMessages {
             return dflt;
         }
         else {
-            MessageFormat formater =
-                new MessageFormat(message,locale);
-            return formater.format(args,new StringBuffer(),null).toString();
+            MessageFormat formater = new MessageFormat(message, locale);
+            return formater.format(args, new StringBuffer(), null).toString();
         }
     }
     
@@ -100,12 +94,10 @@ public class ConnectorMessagesImpl implements ConnectorMessages {
     }
     
     private String getFrameworkMessage(Locale locale, String key) {
-        final String baseName =
-            ConnectorMessagesImpl.class.getPackage().getName()+".Messages";
+        final String baseName = ConnectorMessagesImpl.class.getPackage().getName() + ".Messages";
         //this will throw if not there, but there should always be
         //at least a bundle
-        final ResourceBundle bundle =
-            ResourceBundle.getBundle(baseName,locale);
+        final ResourceBundle bundle = ResourceBundle.getBundle(baseName, locale);
         try {
             return bundle.getString(key);
         }
@@ -114,15 +106,15 @@ public class ConnectorMessagesImpl implements ConnectorMessages {
         }
     }
         
-    public Map<Locale,Map<String,String>> getCatalogs() {
+    public Map<Locale, Map<String, String>> getCatalogs() {
         return _catalogs;
     }
     
-    public void setCatalogs(Map<Locale,Map<String,String>> catalogs) {
+    public void setCatalogs(Map<Locale, Map<String, String>> catalogs) {
         if ( catalogs == null ) {
-            catalogs = new HashMap<Locale,Map<String,String>>();
+            catalogs = new HashMap<Locale, Map<String, String>>();
         }
-        _catalogs = catalogs;        
+        _catalogs = catalogs;
     }
 
 }
