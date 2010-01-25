@@ -75,7 +75,7 @@ connector {
 Validate.invalidConfig = [
     [ host : '' ],
     [ port : 100000 ],
-    [ baseContexts : [] ]
+    [ baseContexts : [] as String[] ]
 ]
 
 Test.invalidConfig = [
