@@ -14,5 +14,5 @@
 	<classpathentry kind="lib" path="lib/test/aspectjrt.jar"/>
 	<classpathentry kind="lib" path="lib/test/je.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Connector Contract Tests"/>
-	<classpathentry kind="output" path="build"/>
+	<classpathentry kind="output" path="ide-build"/>
 </classpath>
