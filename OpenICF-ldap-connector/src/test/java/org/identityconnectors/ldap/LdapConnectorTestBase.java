@@ -22,6 +22,8 @@
  */
 package org.identityconnectors.ldap;
 
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -246,18 +248,25 @@ public abstract class LdapConnectorTestBase {
 
     protected static void stopServer() {
         EmbeddedUtils.stopServer("org.test.opends.EmbeddedOpenDS", null);
-        // Temporary: trying to find out why the LDAP connector tests fail when starting the server with an
-        // "Address already in use" IOException.
-        Socket socket = null;
-        try {
-            socket = new Socket(InetAddress.getLocalHost(), PORT);
-        } catch (IOException e) {
-            // Okay, server has stopped.
-            return;
+        // It seems that EmbeddedUtils.stopServer() returns before the server has stopped listening on its port,
+        // causing the next test to fail when starting the server.
+        final int WAIT = 200; // ms
+        final int ITERATIONS = 25;
+        for (int i = 1; ; i++) {
+            try {
+                new Socket(InetAddress.getLocalHost(), PORT).close();
+            } catch (IOException e) {
+                // Okay, server has stopped.
+                return;
+            }
+            if (i < ITERATIONS) {
+                try {
+                    Thread.sleep(WAIT);
+                } catch (InterruptedException e) {}
+            } else {
+                break;
+            }
         }
-        try {
-            socket.close();
-        } catch (IOException e) {}
-        throw new RuntimeException("OpenDS failed to stop");
+        fail("OpenDS failed to stop");
     }
 }
