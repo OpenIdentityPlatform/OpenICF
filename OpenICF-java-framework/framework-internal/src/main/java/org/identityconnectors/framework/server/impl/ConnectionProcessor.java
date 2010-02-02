@@ -65,9 +65,7 @@ import org.identityconnectors.framework.server.ConnectorServer;
 
 public class ConnectionProcessor implements Runnable {
 
-    private static final Log LOG = 
-        Log.getLog(ConnectionListener.class);
-
+    private static final Log _log = Log.getLog(ConnectionListener.class);
 
     private static class RemoteResultsHandler 
     implements ObjectStreamHandler {
@@ -131,12 +129,12 @@ public class ConnectionProcessor implements Runnable {
                     _connection.close();
                 }
                 catch (Exception e) {
-                    LOG.error(e, null);
+                    _log.error(e, null);
                 }
             }
         }
         catch (Throwable e) {
-            LOG.error(e, null);
+            _log.error(e, null);
         }
     }
     
@@ -312,7 +310,7 @@ public class ConnectionProcessor implements Runnable {
             throw w.getIOException();
         }
         catch (Throwable e) {
-            LOG.error(e, null);
+            _log.error(e, null);
             exception = e;
             result = null;
         }

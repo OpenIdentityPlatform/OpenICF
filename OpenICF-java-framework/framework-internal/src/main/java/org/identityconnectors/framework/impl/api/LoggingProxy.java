@@ -35,8 +35,10 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
  * Proxy responsible for logging operations from the API.
  */
 public class LoggingProxy implements InvocationHandler {
-    private static final Log.Level LEVEL = Log.Level.OK;
-    private static final Log LOG = Log.getLog(LoggingProxy.class);
+
+    private static final Log.Level LOG_LEVEL = Log.Level.OK;
+
+    private static final Log _log = Log.getLog(LoggingProxy.class);
 
     private final Object _target;
     private final Class<? extends APIOperation> _op;
@@ -56,7 +58,7 @@ public class LoggingProxy implements InvocationHandler {
             return method.invoke(_target, args);
         }
         final String methodName = method.getName();
-        if (LOG.isLoggable(LEVEL)) {
+        if (_log.isLoggable(LOG_LEVEL)) {
             StringBuilder bld = new StringBuilder();
             bld.append("Enter: ").append(method.getName()).append('(');
             for (int i=0; args != null && i<args.length; i++) {
@@ -67,20 +69,20 @@ public class LoggingProxy implements InvocationHandler {
             }
             bld.append(')');
             final String msg = bld.toString();
-            LOG.log(_op, methodName, LEVEL, msg, null);
+            _log.log(_op, methodName, LOG_LEVEL, msg, null);
         }
         // invoke the method
         try {
             Object ret = method.invoke(_target, args);
-            if (LOG.isLoggable(LEVEL)) {
-                LOG.log(_op, methodName, LEVEL, "Return: " + ret, null);
+            if (_log.isLoggable(LOG_LEVEL)) {
+                _log.log(_op, methodName, LOG_LEVEL, "Return: " + ret, null);
             }
             return ret;
         } catch (InvocationTargetException e) {
             Throwable root = e.getCause();
             
             try {
-                LOG.log(_op, methodName, LEVEL, "Exception: ", root);
+                _log.log(_op, methodName, LOG_LEVEL, "Exception: ", root);
             }
             catch (Throwable t) {
                 // Ignore.  Don't let a failed log prevent this from completing.

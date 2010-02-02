@@ -35,7 +35,7 @@ import org.identityconnectors.framework.common.serializer.SerializerUtil;
 
 public class ObjectPool<T> {
 
-    private static final Log LOG = Log.getLog(ObjectPool.class);
+    private static final Log _log = Log.getLog(ObjectPool.class);
     
     /**
      * Statistics bean
@@ -389,7 +389,7 @@ public class ObjectPool<T> {
             _handler.disposeObject(object);
         }
         catch (Exception e) {
-            LOG.warn(e, "disposeObject() is not supposed to throw");
+            _log.warn(e, "disposeObject() is not supposed to throw");
         }
     }
 }

@@ -37,7 +37,7 @@ import org.identityconnectors.framework.common.exceptions.OperationTimeoutExcept
 
 public class BufferedResultsProxy implements InvocationHandler {
 
-    private final static Log LOG = Log.getLog(BufferedResultsProxy.class);
+    private final static Log _log = Log.getLog(BufferedResultsProxy.class);
     
     private final Object _target;
     private final int _bufferSize;
@@ -176,7 +176,7 @@ public class BufferedResultsProxy implements InvocationHandler {
                 }
             }
             catch (InterruptedException e) {
-                LOG.error(e,null);
+                _log.error(e,null);
             }
         }
         /**
@@ -280,7 +280,7 @@ public class BufferedResultsProxy implements InvocationHandler {
                     catch (RuntimeException e2) {
                         //log timeout if it happens, but don't mask
                         //original exception
-                        LOG.error(e2, null);
+                        _log.error(e2, null);
                     }
                     //throw the exception the handler threw
                     throw e;

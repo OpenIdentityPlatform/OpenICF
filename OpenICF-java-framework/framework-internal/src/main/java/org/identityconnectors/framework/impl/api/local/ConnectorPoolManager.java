@@ -36,8 +36,7 @@ import org.identityconnectors.framework.spi.PoolableConnector;
 
 
 public class ConnectorPoolManager {
-        
-    
+
     private static class ConnectorPoolKey {
         private final ConnectorKey _connectorKey;
         private final ConfigurationPropertiesImpl _configProperties;
@@ -126,10 +125,7 @@ public class ConnectorPoolManager {
     private static final Map<ConnectorPoolKey, ObjectPool<PoolableConnector>>
         _pools = new HashMap<ConnectorPoolKey, ObjectPool<PoolableConnector>>();
 
-    /**
-     * Logging..
-     */
-    private static Log log = Log.getLog(ConnectorPoolManager.class);
+    private static Log _log = Log.getLog(ConnectorPoolManager.class);
     
     /**
      * Get a object pool for this connector if it supports connector pooling.
@@ -159,7 +155,7 @@ public class ConnectorPoolManager {
                 pool = _pools.get(key);
                 // create a new pool if it doesn't exist..
                 if (pool == null) {
-                    log.info("Creating new pool: {0}", 
+                    _log.info("Creating new pool: {0}",
                             impl.getConnectorInfo().getConnectorKey());
                     // this instance is strictly used for the pool..
                     pool = new ObjectPool<PoolableConnector>(
@@ -180,7 +176,7 @@ public class ConnectorPoolManager {
                 try {
                     pool.shutdown();
                 } catch (Exception e) {
-                    log.warn(e, "Failed to close pool: {0}", pool);
+                    _log.warn(e, "Failed to close pool: {0}", pool);
                 }
             }
             // clear the map of all _pools..

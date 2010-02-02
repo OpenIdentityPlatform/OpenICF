@@ -50,7 +50,7 @@ import org.identityconnectors.test.common.spi.TestHelpersSpi;
 
 public class TestHelpersImpl implements TestHelpersSpi {
 
-    private static final Log log = Log.getLog(TestHelpersImpl.class);
+    private static final Log _log = Log.getLog(TestHelpersImpl.class);
     
     /**
      * Method for convenient testing of local connectors. 
@@ -98,7 +98,7 @@ public class TestHelpersImpl implements TestHelpersSpi {
         }
         // The config map now contains entries that were not assigned to a config property.
         for (String propName : configDataCopy.keySet()) {
-            log.warn("Configuration property {0} does not exist!", propName);
+            _log.warn("Configuration property {0} does not exist!", propName);
         }
         JavaClassProperties.mergeIntoBean(configProps, config);
     }

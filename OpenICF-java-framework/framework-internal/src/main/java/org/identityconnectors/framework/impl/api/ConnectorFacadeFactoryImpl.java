@@ -34,13 +34,8 @@ import org.identityconnectors.framework.impl.api.remote.RemoteConnectorFacadeImp
 
 
 public class ConnectorFacadeFactoryImpl extends ConnectorFacadeFactory {
-    /**
-     * Logging..
-     */
-    private static Log log = Log.getLog(ConnectorFacadeFactoryImpl.class);
 
-
-
+    private static final Log _log = Log.getLog(ConnectorFacadeFactoryImpl.class);
 
     /**
      * {@inheritDoc}
@@ -58,7 +53,7 @@ public class ConnectorFacadeFactoryImpl extends ConnectorFacadeFactory {
                 
             } catch (Exception ex) {
                 String connector = impl.getConnectorInfo().getConnectorKey().toString();
-                log.error(ex, "Failed to create new connector facade: {0}, {1}",
+                _log.error(ex, "Failed to create new connector facade: {0}, {1}",
                         connector, config);
                 throw ConnectorException.wrap(ex);
             }

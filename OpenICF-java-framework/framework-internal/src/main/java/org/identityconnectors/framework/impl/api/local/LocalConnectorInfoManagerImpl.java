@@ -64,8 +64,7 @@ import org.identityconnectors.framework.spi.PoolableConnector;
 
 public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
 
-    private static final Log LOG = 
-        Log.getLog(LocalConnectorInfoManagerImpl.class);
+    private static final Log _log = Log.getLog(LocalConnectorInfoManagerImpl.class);
     
     private List<ConnectorInfo> _connectorInfo;
     
@@ -249,7 +248,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
                     catch (Throwable e) {
                         //probe for the class. this might not be an error since it might be from a bundle
                         //fragment ( a bundle only included by other bundles ). However, we should definitely warn
-                        LOG.warn(e, "Unable to load class {0} from bundle {1}. Class will be ignored and will not be listed in list of connectors.",
+                        _log.warn(e, "Unable to load class {0} from bundle {1}. Class will be ignored and will not be listed in list of connectors.",
                                 className, bundleInfo.getOriginalLocation());
                     }
                 }

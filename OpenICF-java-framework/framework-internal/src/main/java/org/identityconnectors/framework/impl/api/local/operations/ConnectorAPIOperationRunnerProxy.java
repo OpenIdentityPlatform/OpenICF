@@ -41,7 +41,7 @@ import org.identityconnectors.framework.spi.PoolableConnector;
  */
 public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
 
-    private static final Log LOG = Log.getLog(ConnectorAPIOperationRunnerProxy.class);
+    private static final Log _log = Log.getLog(ConnectorAPIOperationRunnerProxy.class);
     
     /**
      * The operational context
@@ -112,7 +112,7 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
                     } catch (Exception e) {
                         //don't let pool exceptions propogate or mask
                         //other exceptions. do log it though.
-                        LOG.error(e, null);
+                        _log.error(e, null);
                     }
                 }
                 //not pooled - just dispose
@@ -125,7 +125,7 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
                         connector.dispose();
                     } catch (Exception e) {
                         //log this though
-                        LOG.error(e, null);
+                        _log.error(e, null);
                     }                    
                 }
             }

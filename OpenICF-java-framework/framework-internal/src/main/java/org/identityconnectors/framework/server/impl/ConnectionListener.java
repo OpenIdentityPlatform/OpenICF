@@ -46,8 +46,7 @@ class ConnectionListener extends CCLWatchThread {
      */
     private final static int INTERNAL_QUEUE_SIZE = 2;
     
-    private static final Log LOG = 
-        Log.getLog(ConnectionListener.class);
+    private static final Log _log = Log.getLog(ConnectionListener.class);
     
     /**
      * The server object that we are using
@@ -117,7 +116,7 @@ class ConnectionListener extends CCLWatchThread {
             catch (Throwable e) {
                 //log the error unless it's because we've stopped
                 if (!isStopped() || !(e instanceof SocketException)) {
-                    LOG.error(e, "Error processing request");
+                    _log.error(e, "Error processing request");
                 }
                 //wait a second before trying again
                 if (!isStopped()) {
