@@ -179,11 +179,15 @@
             includes="*.jar" 
             excludes="connector-framework-internal*.jar" />
     </path>
-    <path id="test.path">
+    <path id="test.build.path">
+        <pathelement path="${build.main}"/>
         <fileset refid="test.libs" />
+        <path refid="build.path" />
+    </path>
+    <path id="test.run.path">
         <fileset dir="${framework.dir}/dist" 
             includes="connector-framework-internal*.jar" />
-        <path refid="build.path" />
+        <path refid="test.build.path" />
     </path>
     <!-- Libraries available to use from the Groovy console -->
     <path id="console.path">
@@ -252,8 +256,7 @@
             srcdir="${src.test.java}" destdir="${build.test}" 
             target="${java.target}" source="${java.source}">
             <classpath>
-                <path refid="build.path"/>
-                <pathelement path="${build.main}"/>
+                <path refid="test.build.path"/>
                 <path refid="user.libs"/>
             </classpath>
             <compilerarg line="${java.compilerargs}"/>
@@ -434,7 +437,7 @@
         unless="useCobertura"
         depends="build-testclasspath-with-coverage">
         <path id="test-classpath">
-            <path refid="test.path" />
+            <path refid="test.run.path" />
             <pathelement location="${build.test.config}" />
             <pathelement location="${build.test}" />
             <pathelement location="${build.main}" />
@@ -451,7 +454,7 @@
         <path id="test-classpath">
             <path refid="cobertura.classpath" />
             <pathelement location="${instrumented}" />
-            <path refid="test.path" />
+            <path refid="test.run.path" />
             <pathelement location="${build.test.config}" />
             <pathelement location="${build.test}" />
             <pathelement location="${build.main}" />
