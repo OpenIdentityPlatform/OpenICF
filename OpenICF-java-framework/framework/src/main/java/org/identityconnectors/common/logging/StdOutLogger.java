@@ -23,7 +23,9 @@
 package org.identityconnectors.common.logging;
 
 import java.io.PrintStream;
+import java.text.DateFormat;
 import java.text.MessageFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.identityconnectors.common.StringPrintWriter;
@@ -52,6 +54,14 @@ class StdOutLogger implements LogSpi {
             return new MessageFormat(PATTERN);
         }
     };
+    
+    private static final String DATE_PATTERN = "yyyy-MM-dd HH:mm:ss.SSS";
+    private static final ThreadLocal<DateFormat> _dateFormatHandler = new ThreadLocal<DateFormat>(){
+        @Override
+        protected DateFormat initialValue() {
+            return new SimpleDateFormat(DATE_PATTERN);
+        }
+    };
 
     /**
      * Logs the thread id, date, class, level, message, and optionally exception
@@ -62,7 +72,7 @@ class StdOutLogger implements LogSpi {
     public void log(Class<?> clazz, String methodName, Level level,
             String message, Throwable ex) {
         Object[] args = new Object[] { Thread.currentThread().getId(),
-                new Date(), clazz.getName(), methodName, level, message };
+                _dateFormatHandler.get().format(new Date()), clazz.getName(), methodName, level, message };
         PrintStream out = Level.ERROR.equals(level) ? System.err : System.out;
         String msg = _messageFormatHandler.get().format(args);
         out.println(msg);
