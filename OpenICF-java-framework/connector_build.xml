@@ -297,7 +297,7 @@
     <target name="dist" depends="jar, jar-test, javadoc, set-version"
         description="generates the distribution (excludes test classes)">
         <property name="zip.file" value="${ConnectorBundle-Name}-${ConnectorBundle-Version}.zip" />
-        <zip destfile="${zip.file}" basedir="${dist}" excludes="*tests.jar"/>
+        <zip destfile="${zip.file}" basedir="${dist}" excludes="test/**"/>
         <move file="${zip.file}" todir="${dist}"/>
     </target>
     
@@ -351,8 +351,8 @@
     </target>
 
     <target name="jar-test" depends="compile-test, set-version">
-        <mkdir dir="${dist}" />
-        <property name="jar.test.file" value="${dist}/${ConnectorBundle-Name}-${ConnectorBundle-Version}-tests.jar" />
+        <mkdir dir="${dist}/test" />
+        <property name="jar.test.file" value="${dist}/test/${ConnectorBundle-Name}-${ConnectorBundle-Version}-tests.jar" />
         
         <echo>
                Building test jar:  ${jar.test.file}
