@@ -71,19 +71,40 @@
             <!-- Remove the "OpenDS-1.x.y" prefix. -->
     		<regexpmapper from="[^/\\]+[/\\](.*)" to="\1"/>
 		</unzip>
+
+        <condition property="tool.import-ldif" value="bat/import-ldif.bat" else="bin/import-ldif">
+            <os family="windows"/>
+        </condition>
+        <condition property="tool.ldapmodify" value="bat/ldapmodify.bat" else="bin/ldapmodify">
+            <os family="windows"/>
+        </condition>
+        <condition property="tool.make-ldif" value="bat/make-ldif.bat" else="bin/make-ldif">
+            <os family="windows"/>
+        </condition>
+        <condition property="tool.rebuild-index" value="bat/rebuild-index.bat" else="bin/rebuild-index">
+            <os family="windows"/>
+        </condition>
+        <condition property="tool.start-ds" value="bat/start-ds.bat" else="bin/start-ds">
+            <os family="windows"/>
+        </condition>
+        <condition property="tool.stop-ds" value="bat/stop-ds.bat" else="bin/stop-ds">
+            <os family="windows"/>
+        </condition>
+
         <chmod perm="+x">
             <fileset dir="${opends.setup.dir}">
-                <include name="bin/import-ldif"/>
-                <include name="bin/ldapmodify"/>
-                <include name="bin/make-ldif"/>
-                <include name="bin/rebuild-index"/>
-                <include name="bin/start-ds"/>
-                <include name="bin/stop-ds"/>
+                <include name="${tool.import-ldif}"/>
+                <include name="${tool.ldapmodify}"/>
+                <include name="${tool.make-ldif}"/>
+                <include name="${tool.rebuild-index}"/>
+                <include name="${tool.start-ds}"/>
+                <include name="${tool.stop-ds}"/>
                 <include name="lib/_client-script.sh"/>
                 <include name="lib/_mixed-script.sh"/>
                 <include name="lib/_server-script.sh"/>
             </fileset>
         </chmod>
+
     	<copy tofile="${opends.setup.dir}/config/config.ldif" file="${opends.ldif}/config.ldif"/>
     	<copy tofile="${opends.setup.dir}/config/keystore.pin" file="${opends.ldif}/keystore.pin"/>
 
@@ -97,27 +118,27 @@
         </genkey>
 
         <!-- Generate and import data. -->
-        <exec executable="${opends.setup.dir}/bin/make-ldif" dir="${opends.setup.dir}">
+        <exec executable="${opends.setup.dir}/${tool.make-ldif}" dir="${opends.setup.dir}">
             <arg value="-t"/>
             <arg value="${opends.ldif}/bigcompany.template"/>
             <arg value="-o"/>
             <arg value="${opends.setup.dir}/bigcompany.ldif"/>
         </exec>
-        <exec executable="${opends.setup.dir}/bin/import-ldif" dir="${opends.setup.dir}">
+        <exec executable="${opends.setup.dir}/${tool.import-ldif}" dir="${opends.setup.dir}">
             <arg value="--clearBackend"/>
             <arg value="--ldifFile"/>
             <arg value="${opends.ldif}/data.ldif"/>
             <arg value="--backendID"/>
             <arg value="userRoot"/>
         </exec>
-        <exec executable="${opends.setup.dir}/bin/import-ldif" dir="${opends.setup.dir}">
+        <exec executable="${opends.setup.dir}/${tool.import-ldif}" dir="${opends.setup.dir}">
             <arg value="--append"/>
             <arg value="--ldifFile"/>
             <arg value="${opends.setup.dir}/bigcompany.ldif"/>
             <arg value="--backendID"/>
             <arg value="userRoot"/>
         </exec>
-        <exec executable="${opends.setup.dir}/bin/rebuild-index" dir="${opends.setup.dir}">
+        <exec executable="${opends.setup.dir}/${tool.rebuild-index}" dir="${opends.setup.dir}">
             <arg value="--baseDN"/>
             <arg value="dc=example,dc=com"/>
             <arg value="--index"/>
@@ -125,8 +146,8 @@
         </exec>
 
         <!-- Set up an admin user. -->
-        <exec executable="${opends.setup.dir}/bin/start-ds" dir="${opends.setup.dir}"/>
-        <exec executable="${opends.setup.dir}/bin/ldapmodify" dir="${opends.setup.dir}">
+        <exec executable="${opends.setup.dir}/${tool.start-ds}" dir="${opends.setup.dir}"/>
+        <exec executable="${opends.setup.dir}/${tool.ldapmodify}" dir="${opends.setup.dir}">
             <arg value="-h"/>
             <arg value="localhost"/>
             <arg value="-p"/>
@@ -139,7 +160,7 @@
             <arg value="-f"/>
             <arg value="${opends.ldif}/admin.ldif"/>
         </exec>
-        <exec executable="${opends.setup.dir}/bin/stop-ds" dir="${opends.setup.dir}"/>
+        <exec executable="${opends.setup.dir}/${tool.stop-ds}" dir="${opends.setup.dir}"/>
 
         <copy todir="${lib.dir}/test" flatten="true">
             <fileset dir="${opends.setup.dir}/lib">
