@@ -125,10 +125,6 @@
         <patternset refid='ignore'/>
         <exclude name="**/*.java" />
     </patternset>
-    <patternset id="exclude.test">
-        <patternset refid="ignore" />
-        <exclude name="**/*Test*" />
-    </patternset>
     <!--
         Path to add additional bundle dependencies.
     -->
@@ -331,7 +327,7 @@
         <jar jarfile="${jar.file}" index="true">
             <!-- include all compiled classes -->
             <fileset dir="${build.main}">
-                <patternset refid="exclude.test" />
+                <patternset refid="ignore" />
             </fileset>
             <!-- include all 3rd party deps -->
             <fileset refid="dist.libs" />
@@ -446,7 +442,7 @@
         <mkdir dir="${instrumented}" />
         <cobertura-instrument todir="${instrumented}">
             <fileset dir="${build.main}">
-                <patternset refid="exclude.test"/>
+                <patternset refid="ignore"/>
             </fileset>
         </cobertura-instrument>
     </target>
