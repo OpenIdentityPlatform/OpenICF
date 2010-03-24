@@ -310,8 +310,7 @@ public class GroovyDataProvider implements DataProvider {
      * Main get method. Property lookup starts here.
      * 
      */
-    public Object get(String name, String type, boolean useDefault)
-            throws ObjectNotFoundException {
+    public Object get(String name, String type, boolean useDefault) {
         Object o = null;
         /** indicates if default value used */
         boolean isDefaultValue = false;
@@ -380,7 +379,7 @@ public class GroovyDataProvider implements DataProvider {
      * @param name
      * @return
      */
-    private Object propertyRecursiveGet(String name) throws ObjectNotFoundException {
+    private Object propertyRecursiveGet(String name)  {
         Object response = null;
         
         if (!cache.containsKey(name)) {
@@ -427,8 +426,7 @@ public class GroovyDataProvider implements DataProvider {
      * @return
      * @throws ObjectNotFoundException
      */
-    private Object configObjectRecursiveGet(String name, ConfigObject co)
-            throws ObjectNotFoundException {
+    private Object configObjectRecursiveGet(String name, ConfigObject co) {
         int dotIndex = name.indexOf(PROPERTY_SEPARATOR);
         if (dotIndex >= 0) {
             String currentNamePart = name.substring(0, dotIndex);
@@ -465,8 +463,7 @@ public class GroovyDataProvider implements DataProvider {
      * @return the value for given property name
      * @throws ObjectNotFoundException
      */
-    private Object configObjectGet(ConfigObject co, String currentNamePart)
-            throws ObjectNotFoundException {
+    private Object configObjectGet(ConfigObject co, String currentNamePart) {
 
         /*
          * get the property value
@@ -621,7 +618,7 @@ public class GroovyDataProvider implements DataProvider {
      * {@inheritDoc}
      */
     public Object get(Class<?> dataTypeName, String name, String componentName,
-            int sequenceNumber, boolean isMultivalue) throws ObjectNotFoundException {
+            int sequenceNumber, boolean isMultivalue)  {
         // put the parameters in the Map ... this will fail if called
         // recursively
 
@@ -688,8 +685,7 @@ public class GroovyDataProvider implements DataProvider {
     /**
      * {@inheritDoc}
      */
-    public Object get(Class<?> dataTypeName, String name, String componentName)
-            throws ObjectNotFoundException {
+    public Object get(Class<?> dataTypeName, String name, String componentName) {
 
         return get(dataTypeName, name, componentName, SINGLE_VALUE_MARKER, false);
     }
@@ -698,7 +694,7 @@ public class GroovyDataProvider implements DataProvider {
      * {@inheritDoc}
      */
     public String getString(String name, String componentName,
-            int sequenceNumber) throws ObjectNotFoundException {
+            int sequenceNumber)  {
         return (String) get(String.class, name, componentName,
                 sequenceNumber, false);
     }
@@ -706,16 +702,14 @@ public class GroovyDataProvider implements DataProvider {
     /**
      * {@inheritDoc}
      */
-    public String getString(String name, String componentName)
-            throws ObjectNotFoundException {
+    public String getString(String name, String componentName) {
         return (String) get(String.class, name, componentName);
     }
 
     /**
      * {@inheritDoc}
      */
-    public Object getTestSuiteAttribute(String propName)
-            throws ObjectNotFoundException {
+    public Object getTestSuiteAttribute(String propName) {
 
         return get("testsuite." + propName, null, false);
     }
@@ -723,15 +717,14 @@ public class GroovyDataProvider implements DataProvider {
     /**
      * {@inheritDoc}
      */
-    public Object getTestSuiteAttribute(String propName, String testName) throws ObjectNotFoundException {
+    public Object getTestSuiteAttribute(String propName, String testName)  {
         return get("testsuite." + testName + "." + propName, null, false);
     }
 
     /**
      * {@inheritDoc}
      */
-    public Object getConnectorAttribute(String propName)
-            throws ObjectNotFoundException {
+    public Object getConnectorAttribute(String propName) {
 
         return get("connector." + propName, null, false);
     }

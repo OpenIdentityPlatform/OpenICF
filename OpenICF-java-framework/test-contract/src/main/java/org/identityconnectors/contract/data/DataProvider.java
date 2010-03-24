@@ -25,7 +25,6 @@ package org.identityconnectors.contract.data;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Set;
 
-import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.spi.Configuration;
 
@@ -49,7 +48,7 @@ public interface DataProvider {
      * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
      */
     public Object get(Class<?> dataTypeName, String name,
-            String componentName, int sequenceNumber, boolean isMultivalue) throws ObjectNotFoundException;
+            String componentName, int sequenceNumber, boolean isMultivalue);
     
     /**
      * Gets data value by the specified parameters
@@ -61,7 +60,7 @@ public interface DataProvider {
      * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
      */
     public Object get(Class<?> dataTypeName, String name,
-            String componentName) throws ObjectNotFoundException;
+            String componentName);
 
     /**
      * Gets data value by the specified parameters
@@ -73,7 +72,7 @@ public interface DataProvider {
      * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
      */
     public String getString(String name,
-            String componentName, int sequenceNumber) throws ObjectNotFoundException;
+            String componentName, int sequenceNumber);
     
     /**
      * Gets data value by the specified parameters
@@ -84,7 +83,7 @@ public interface DataProvider {
      * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
      */
     public String getString(String name,
-            String componentName) throws ObjectNotFoundException;
+            String componentName);
     
     /**
      * Gets data value by the specified parameters
@@ -93,7 +92,7 @@ public interface DataProvider {
      * @return
      * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
      */
-    public Object getConnectorAttribute(String propName) throws ObjectNotFoundException;
+    public Object getConnectorAttribute(String propName);
     
     /**
      * Gets test suite attribute
@@ -102,7 +101,7 @@ public interface DataProvider {
      * @return
      * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
      */
-    public Object getTestSuiteAttribute(String propName) throws ObjectNotFoundException;
+    public Object getTestSuiteAttribute(String propName);
     
     /**
      * Gets test suite attribute
@@ -112,7 +111,7 @@ public interface DataProvider {
      * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
      */
     public Object getTestSuiteAttribute(String propName, 
-            String testName) throws ObjectNotFoundException;
+            String testName);
     
     /* *********** METHODS FOR UNIT TESTS ************** */
     
