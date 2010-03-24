@@ -31,7 +31,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -70,7 +69,6 @@ public class UpdateApiOpTests extends ObjectClassRunner {
     private static final String TEST_NAME = "Update";
 
     private static final String NON_EXISTING_PROP_NAME = "unsupportedAttributeName";
-    private static final String UPDATE_TO_NULL_VALUE = "updateToNullValue";
 
     public UpdateApiOpTests(ObjectClass objectClass) {
         super(objectClass);
@@ -487,17 +485,17 @@ public class UpdateApiOpTests extends ObjectClassRunner {
     protected static Collection<String> getSkippedAttributesForUpdateToNullValue(){
         Object skippedAttributes = null;
         try{
-            skippedAttributes = getDataProvider().getTestSuiteAttribute(UPDATE_TO_NULL_VALUE + ".skippedAttributes",TEST_NAME);
+            skippedAttributes = getDataProvider().getTestSuiteAttribute("updateToNullValue.skippedAttributes",TEST_NAME);
         }
         catch(ObjectNotFoundException e){
         }
         if(skippedAttributes == null){
             return Collections.emptyList();
         }
-        if(!(skippedAttributes instanceof List<?>)){
+        if(!(skippedAttributes instanceof Collection<?>)){
             throw new RuntimeException(MessageFormat.format(
-                    "Testsuite Property '{0}' must be of type List , but was of type {1}", "testsuite." + TEST_NAME
-                            + "." + UPDATE_TO_NULL_VALUE + ".skippedAttributes", skippedAttributes.getClass()));
+                    "Testsuite Property '{0}' must be of type Collection , but was of type {1}", "testsuite." + TEST_NAME
+                            + "." + "updateToNullValue.skippedAttributes", skippedAttributes.getClass()));
         }
         return (Collection<String>)(skippedAttributes);
     }
