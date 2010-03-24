@@ -555,11 +555,19 @@
             <istrue value="${contracts.run}"/>
         </condition>
     </target>
-    <target name="contract-init" depends="contract-check" if="do.contracts.run">
+    <target name="contract-init" depends="contract-check, contract-custompath" if="do.contracts.run">
         <!-- clear out previous test results -->
         <delete dir="${reports}/contracts" />
         <mkdir dir="${reports}/contracts" />
+        <path id="contract.classpath">
+                <path refid="contract.custompath"/>
+                <fileset dir="${framework.dir}/dist" includes="*.jar"/>
+                <pathelement location="${build.test.config}"/>
+        </path>
     </target>
+    <target name="contract-custompath">
+        <path id="contract.custompath"/>
+    </target>            
     <target name="contract-dist" if="do.contracts.run" depends="contract-check, jar"> 
         <!-- creates a temparary jar for contract testing -->
         <delete dir="${reports}/rejar"/>
@@ -602,8 +610,7 @@
             <formatter type="xml" />
             <formatter type="brief" usefile="false" unless="useExternalReporting" />
             <classpath>
-                <fileset dir="${framework.dir}/dist" includes="*.jar"/>
-                <pathelement location="${build.test.config}"/>
+                <path refid="contract.classpath"/>
             </classpath>
         </junit>
     </target>
