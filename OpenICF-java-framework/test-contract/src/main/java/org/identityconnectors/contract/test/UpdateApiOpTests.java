@@ -26,8 +26,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.text.MessageFormat;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -66,6 +70,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
     private static final String TEST_NAME = "Update";
 
     private static final String NON_EXISTING_PROP_NAME = "unsupportedAttributeName";
+    private static final String UPDATE_TO_NULL_VALUE = "updateToNullValue";
 
     public UpdateApiOpTests(ObjectClass objectClass) {
         super(objectClass);
@@ -196,7 +201,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
     @Test
     public void testUpdateToNull() {
         if (ConnectorHelper.operationsSupported(getConnectorFacade(), getObjectClass(),
-                getAPIOperations())) {
+                getAPIOperations()) ) {
             ConnectorObject obj = null;
             Uid uid = null;
 
@@ -206,8 +211,13 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                         getObjectClassInfo(), getTestName(), 2, getOperationOptionsByOp(CreateApiOp.class));
                 assertNotNull("Create returned null Uid.", uid);
                 
+                Collection<String> skippedAttributesForUpdateToNullValue = getSkippedAttributesForUpdateToNullValue();
                 for (AttributeInfo attInfo : getObjectClassInfo().getAttributeInfo()) {
                     if (attInfo.isUpdateable() && !attInfo.isRequired() && !AttributeUtil.isSpecial(attInfo) && !attInfo.getType().isPrimitive()) {
+                        if(skippedAttributesForUpdateToNullValue.contains(attInfo.getName())){
+                            LOG.info("Attribute '{0}' was skipped in testUpdateToNull", attInfo.getName());
+                            continue;
+                        }
                         Set<Attribute> nullAttributes = new HashSet<Attribute>();
                         Attribute attr = AttributeBuilder.build(attInfo.getName());
                         nullAttributes.add(attr);
@@ -471,6 +481,24 @@ public class UpdateApiOpTests extends ObjectClassRunner {
 
         return attrs;
     }
-
-
+    
+    
+    @SuppressWarnings("unchecked")
+    protected static Collection<String> getSkippedAttributesForUpdateToNullValue(){
+        Object skippedAttributes = null;
+        try{
+            skippedAttributes = getDataProvider().getTestSuiteAttribute(UPDATE_TO_NULL_VALUE + ".skippedAttributes",TEST_NAME);
+        }
+        catch(ObjectNotFoundException e){
+        }
+        if(skippedAttributes == null){
+            return Collections.emptyList();
+        }
+        if(!(skippedAttributes instanceof List<?>)){
+            throw new RuntimeException(MessageFormat.format(
+                    "Testsuite Property '{0}' must be of type List , but was of type {1}", "testsuite." + TEST_NAME
+                            + "." + UPDATE_TO_NULL_VALUE + ".skippedAttributes", skippedAttributes.getClass()));
+        }
+        return (Collection<String>)(skippedAttributes);
+    }
 }
