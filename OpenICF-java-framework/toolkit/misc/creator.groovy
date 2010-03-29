@@ -4,6 +4,7 @@
  */
  
 import groovy.text.*
+import java.io.File
 
 //Arguments from Ant:
 BUNDLE_DIR = args[0].replaceAll("\\\\", "/")
@@ -72,7 +73,7 @@ baseDir = properties["basedir"]
 jarVersion = "1.0"
 
 //map that the template engine will use
-values = ["userName":properties["user.name"], "packageName":PACKAGE_NAME, "resourceName":RESOURCE_NAME, "frameworkDir":baseDir, "bundleDir":BUNDLE_DIR, "interfaces":interfaces, "jarVersion":jarVersion, "resourceNameLower":RESOURCE_NAME.toLowerCase()]
+values = ["userName":properties["user.name"], "packageName":PACKAGE_NAME, "resourceName":RESOURCE_NAME, "frameworkDir":baseDir, "bundleDir":new File(BUNDLE_DIR).getAbsolutePath(), "interfaces":interfaces, "jarVersion":jarVersion, "resourceNameLower":RESOURCE_NAME.toLowerCase()]
 templates = new File(baseDir, "templates").listFiles({ return !it.isDirectory() } as FileFilter).toList()
 print templates
 
