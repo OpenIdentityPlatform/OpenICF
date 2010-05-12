@@ -62,16 +62,42 @@ class BundleClassLoader extends URLClassLoader {
                 c = findClass(name);     
             }
             catch (ClassNotFoundException ex) {
-                //check parents class loader
-                c = getParent().loadClass(name);
-                //make sure it's only in set of allowed packages
-                checkAccessAllowed(c);
+                // Hack for OIM: the framework is loaded by OIM's tcADPClassLoader, whose
+                // delegation strategy (parent first) is to first try to load
+                // the class through Thread.currentThread().getContextClassLoader(). When the
+                // framework is running a connector operation, the thread context class loader is
+                // BundleClassLoader. Without the hack, BundleClassLoader would delegate to its parent
+                // (i.e., tcADPClassLoader), which would again delegate to the thread context class loader
+                // (i.e., BundleClassLoader), resulting in an infinite loop reported by the JVM through a ClassCircularityError.
+                // The hack sets the thread context class loader to its initial value when
+                // BundleClassLoader delegates to its parent.
+                if (runningInOIM()) {
+                    List<ClassLoader> loaders = ThreadClassLoaderManager.getInstance().popAll();
+                    try {
+                        // check parents class loader
+                        c = getParent().loadClass(name);
+                        // We cannot check the allowed packages; because of the OIM bug,
+                        // BundleClassLoader may be asked to load framework-internal classes too.
+                    } finally {
+                        ThreadClassLoaderManager.getInstance().pushAll(loaders);
+                    }
+                } else {
+                    // check parents class loader
+                    c = getParent().loadClass(name);
+                    //make sure it's only in set of allowed packages
+                    checkAccessAllowed(c);
+                }
             }
         }
         if (resolve) {
             resolveClass(c);
         }        
         return c;
+    }
+
+    private boolean runningInOIM() {
+        ClassLoader loader = this.getClass().getClassLoader();
+        return loader != null && loader.getClass().getName().contains("tcADPClassLoader");
     }
 
     private void checkAccessAllowed(Class<?> c) throws ClassNotFoundException {

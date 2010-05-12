@@ -78,6 +78,30 @@ public class ThreadClassLoaderManager {
     }
     
     /**
+     * Hack for OIM. See BundleClassLoader. Pops and returns all class loaders
+     * previously pushed, therefore effectively setting the thread's current
+     * context class loader to the initial class loader.
+     */
+    public List<ClassLoader> popAll() {
+        List<ClassLoader> rv = new ArrayList<ClassLoader>(_loaderStack);
+        while (!_loaderStack.isEmpty()) {
+            popClassLoader();
+        }
+        return rv;
+    }
+
+    /**
+     * Hack for OIM. See BundleClassLoader. Pushes all class loaders in
+     * the list as the context class loader.
+     * @param loaders the loaders to push; never null.
+     */
+    public void pushAll(List<ClassLoader> loaders) {
+        for (ClassLoader loader : loaders) {
+            pushClassLoader(loader);
+        }
+    }
+
+    /**
      * Returns the current thread-local class loader
      * @return the current thread-local class loader
      */

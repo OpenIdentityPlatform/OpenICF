@@ -32,10 +32,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
-import java.util.Enumeration;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
-import java.util.jar.Attributes.Name;
+import java.util.Properties;
 
 import org.identityconnectors.common.Version;
 import org.junit.Test;
@@ -68,45 +65,32 @@ public class FrameworkUtilTests {
         }
 
         @Override
-        public Enumeration<URL> getResources(String name) throws IOException {
-            final Enumeration<URL> sup = getParent().getResources(name);
-            if (!"META-INF/MANIFEST.MF".equals(name)) {
-                return sup;
+        public URL getResource(String name) {
+            if (!"connectors-framework.properties".equals(name)) {
+                return getParent().getResource(name);
             }
-            Manifest manifest = new Manifest();
-            Attributes attrs = new Attributes();
-            attrs.put(Name.SPECIFICATION_VERSION, version);
-            manifest.getEntries().put("Connectors Framework", attrs);
-            final ByteArrayOutputStream manifestOut = new ByteArrayOutputStream();
-            manifest.write(manifestOut);
-            final URL url = new URL("fakejar", null, 0, "META-INF/MANIFEST-MF", new URLStreamHandler() {
-                @Override
-                protected URLConnection openConnection(URL u) throws IOException {
-                    return new URLConnection(u) {
-                        @Override
-                        public void connect() throws IOException {
-                        }
-                        @Override
-                        public InputStream getInputStream() throws IOException {
-                            return new ByteArrayInputStream(manifestOut.toByteArray());
-                        }
-                    };
-                }
-            });
-            return new Enumeration<URL>() {
-                private boolean parent = false;
-                public boolean hasMoreElements() {
-                    return !parent || sup.hasMoreElements();
-                }
-                public URL nextElement() {
-                    if (parent) {
-                        return sup.nextElement();
-                    } else {
-                        parent = true;
-                        return url;
+            Properties props = new Properties();
+            props.put("framework.version", version);
+            final ByteArrayOutputStream output = new ByteArrayOutputStream();
+            try {
+                props.store(output, null);
+                return new URL("fakejar", null, 0, "connectors-framework.properties", new URLStreamHandler() {
+                    @Override
+                    protected URLConnection openConnection(URL u) throws IOException {
+                        return new URLConnection(u) {
+                            @Override
+                            public void connect() throws IOException {
+                            }
+                            @Override
+                            public InputStream getInputStream() throws IOException {
+                                return new ByteArrayInputStream(output.toByteArray());
+                            }
+                        };
                     }
-                }
-            };
+                });
+            } catch (IOException e) {
+                throw new AssertionError(e);
+            }
         }
     }
 }

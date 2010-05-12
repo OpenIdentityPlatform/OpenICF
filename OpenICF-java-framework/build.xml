@@ -61,19 +61,19 @@
     <property name="jar.file-internal" value="${dist}/${ant.project.name}-internal.jar" />
     <property name="jar.file-test-common" value="${dist}/connector-test-common.jar" />
     <property name="jar.file-contract" value="${dist}/${ant.project.name}-contract.jar" />
-    <loadproperties srcFile="${src-framework}/META-INF/MANIFEST.MF">
+    <loadproperties srcFile="${src-framework}/connectors-framework.properties">
         <filterchain>
             <linecontains>
-                <contains value="Specification-Version"/>
+                <contains value="framework.version"/>
             </linecontains>
         </filterchain>
     </loadproperties>
-    <property name="version.display" value="${Specification-Version}.${SVN_REVISION}"/>
+    <property name="version.display" value="${framework.version}.${SVN_REVISION}"/>
     <!--
         The version number for the framework's MANIFEST.MF must be parsable
         by the framework's Version class, so it cannot be of the form "1.1.x".
     -->
-    <condition property="version" value="${Specification-Version}-NOREVISION" else="${Specification-Version}.${SVN_REVISION}">
+    <condition property="version" value="${framework.version}-NOREVISION" else="${framework.version}.${SVN_REVISION}">
         <or>
             <equals arg1="${SVN_REVISION}" arg2=""/>
             <equals arg1="${SVN_REVISION}" arg2="x"/>
@@ -259,7 +259,18 @@
         </sequential>
     </macrodef>
 
-    <target name="jar" depends="compile" description="generate the framework jar">
+    <target name="generate-version">
+        <!--
+            Must first copy the file because the copy task in the compile target does not ovewrite newer files,
+            and the file might be newer because modified by a previous build.
+        -->
+        <copy todir="${build-framework}" file="${src-framework}/connectors-framework.properties" overwrite="true"/>
+        <replace file="${build-framework}/connectors-framework.properties" encoding="utf-8">
+            <replacefilter token="framework.version=${framework.version}" value="framework.version=${version}"/>
+        </replace>
+    </target>
+
+    <target name="jar" depends="compile,generate-version" description="generate the framework jar">
         <!-- get the current time stamp -->
         <tstamp/>
         <!-- Create the distribution directory -->
@@ -306,7 +317,7 @@
             classpathref="class.path" destdir="${dist}/javadoc" failonerror="true">
             <oc:fileset dir="${src-framework}">
                 <oc:patternset refid="ignore"/>
-                <oc:exclude name="META-INF/MANIFEST.MF"/>
+                <oc:exclude name="connectors-framework.properties"/>
                 <oc:exclude name="**/package.html"/>
                 <oc:exclude name="**/overview.html"/>
             </oc:fileset>

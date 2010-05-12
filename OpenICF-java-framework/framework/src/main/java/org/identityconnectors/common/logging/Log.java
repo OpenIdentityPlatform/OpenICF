@@ -44,7 +44,10 @@ public final class Log {
      */
     private static Class<?> DEFAULT_SPI = StdOutLogger.class;
 
-    private static final String PACKAGE = Log.class.getPackage().getName();
+    // Hack for OIM: this ought to be Log.class.getPackage().getName(). However, OIM's
+    // tcADPClassLoader does not use ClassLoader.definePackage(), and so Log.class.getPackage()
+    // returns null.
+    private static final String PACKAGE = ReflectionUtil.getPackage(Log.class);
 
     /**
      * System property to set the logger class that is most appropriate.

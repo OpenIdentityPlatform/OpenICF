@@ -28,17 +28,13 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
-import java.net.URL;
 import java.text.MessageFormat;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
-import java.util.jar.Attributes.Name;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.IOUtil;
@@ -83,6 +79,8 @@ import org.identityconnectors.framework.spi.operations.UpdateOp;
 
 
 public final class FrameworkUtil {
+
+    private static final String PROP_FRAMEWORK_VERSION = "framework.version";
 
     private static Version frameworkVersion;
 
@@ -385,25 +383,21 @@ public final class FrameworkUtil {
     }
 
     static Version getFrameworkVersion(ClassLoader loader) throws IOException {
-        Enumeration<URL> urls = loader.getResources("META-INF/MANIFEST.MF");
-        while (urls.hasMoreElements()) {
-            URL url = urls.nextElement();
-            InputStream stream = url.openStream();
-            try {
-                Manifest manifest = new Manifest(stream);
-                Attributes attrs = manifest.getAttributes("Connectors Framework");
-                if (attrs != null) {
-                    String version = attrs.getValue(Name.SPECIFICATION_VERSION);
-                    if (StringUtil.isBlank(version)) {
-                        throw new IllegalStateException("The framework manifest specifies a blank version");
-                    }
-                    return Version.parse(version);
-                }
-            } finally {
-                IOUtil.quietClose(stream);
+        InputStream stream = loader.getResourceAsStream("connectors-framework.properties");
+        try {
+            Properties props = new Properties();
+            props.load(stream);
+            String version = props.getProperty(PROP_FRAMEWORK_VERSION);
+            if (version == null) {
+                throw new IllegalStateException("connectors-framework.properties does not contain a " + PROP_FRAMEWORK_VERSION + " property");
             }
+            if (StringUtil.isBlank(version)) {
+                throw new IllegalStateException("connectors-framework.properties specifies a blank version");
+            }
+            return Version.parse(version);
+        } finally {
+            IOUtil.quietClose(stream);
         }
-        throw new IllegalStateException("Unable to retrieve the framework version");
     }
 
     // For tests only!
