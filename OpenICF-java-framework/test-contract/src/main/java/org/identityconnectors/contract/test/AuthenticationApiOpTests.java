@@ -176,7 +176,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                     // LAST_PASSWORD_CHANGE_DATE must be readable, we suppose it is
                     // add LAST_PASSWORD_CHANGE_DATE to ATTRS_TO_GET
                     OperationOptionsBuilder builder = new OperationOptionsBuilder();
-                    builder.setAttributesToGet(PredefinedAttributes.LAST_LOGIN_DATE_NAME);
+                    builder.setAttributesToGet(PredefinedAttributes.LAST_PASSWORD_CHANGE_DATE_NAME);
 
                     ConnectorObject lastPasswordChange = getConnectorFacade().getObject(
                             getObjectClass(), uid, builder.build());
