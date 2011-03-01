@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.forgerock.openicf.bundles</groupId>
+        <artifactId>bundles-parent</artifactId>
+        <version>1.1.0-SNAPSHOT</version>
+        <relativePath>../../maven/bundles-parent</relativePath>
+    </parent>
+    <artifactId>ldap</artifactId>
+    <packaging>jar</packaging>
+    <name>OpenDJ and Sun DSEE Connector (Generic LDAP Connector)</name>
+    <description>Connector for Sun DSEE and OpenDJ and Generic LDAP</description>
+
+    <properties>
+        <skipTests>true</skipTests>
+        <embedded.dependencies>jndi</embedded.dependencies>
+        <connectorName>org.identityconnectors.ldap.LdapConnector</connectorName>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.sun</groupId>
+            <artifactId>jndi</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/ldapbp.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>org.forgerock.openidm</groupId>
+            <artifactId>opendj</artifactId>
+            <version>2.4-BETA1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <!--compilerArgument>-Xlint -Xlint:-serial</compilerArgument-->
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    
+</project>
