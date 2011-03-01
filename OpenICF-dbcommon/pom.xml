@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.forgerock.openicf.bundles</groupId>
+        <artifactId>bundles-parent</artifactId>
+        <version>1.1.0-SNAPSHOT</version>
+        <relativePath>../../maven/bundles-parent</relativePath>
+    </parent>
+    <artifactId>dbcommon</artifactId>
+    <packaging>jar</packaging>
+    <name>Database Common</name>
+    <description>This is a generic bundle that contains many of the utilities needed for any sort of database connector, such as query builders, connection wrappers, and other SQL utilities.</description>
+
+    <properties>
+        <skipTests>false</skipTests>
+        <contracts.skip>true</contracts.skip>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derby</artifactId>
+            <version>10.7.1.1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>
