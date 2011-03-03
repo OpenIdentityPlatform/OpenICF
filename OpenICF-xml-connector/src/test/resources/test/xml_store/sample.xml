@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<icf:OpenICFContainer 
+xmlns:ri="http://openidm.forgerock.com/xml/ns/public/resource/instances/ef2bc95b-76e0-48e2-86d6-4d4f44d4e4a4"
+xmlns:icf="http://openidm.forgerock.com/xml/ns/public/resource/openicf/resource-schema-1.xsd"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation='http://openidm.forgerock.com/xml/ns/public/resource/instances/ef2bc95b-76e0-48e2-86d6-4d4f44d4e4a4 ef2bc95b-76e0-48e2-86d6-4d4f44d4e4a4.xsd
+http://openidm.forgerock.com/xml/ns/public/resource/openicf/resource-schema-1.xsd resource-schema-1.xsd'>
+
+    <ri:__ACCOUNT__>
+        <icf:__UID__></icf:__UID__>
+        <icf:__NAME__></icf:__NAME__>
+        <firstname></firstname>
+        <lastname></lastname>
+        <icf:__PASSWORD__></icf:__PASSWORD__>
+    </ri:__ACCOUNT__>
+    <ri:OrganizationUnit>
+        <icf:__NAME__></icf:__NAME__>
+        <icf:__DESCRIPTION__></icf:__DESCRIPTION__>
+        <icf:__SHORT_NAME__></icf:__SHORT_NAME__>
+        <icf:OpenICFContainer>
+            <ri:__ACCOUNT__>
+                <icf:__UID__></icf:__UID__>
+                <icf:__NAME__></icf:__NAME__>
+                <firstname></firstname>
+                <lastname></lastname>
+                <icf:__PASSWORD__></icf:__PASSWORD__>
+            </ri:__ACCOUNT__>
+        </icf:OpenICFContainer>
+    </ri:OrganizationUnit>
+</icf:OpenICFContainer>

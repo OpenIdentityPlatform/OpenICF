@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.forgerock.openicf.bundles</groupId>
+        <artifactId>bundles-parent</artifactId>
+        <version>1.1.0-SNAPSHOT</version>
+        <relativePath>../../maven/bundles-parent</relativePath>
+    </parent>
+    <artifactId>xml</artifactId>
+    <packaging>jar</packaging>
+    <name>Simulated XML Connector</name>
+    <description>Connector can simulate almost any kind of resource.</description>
+
+    <properties>
+        <skipTests>false</skipTests>
+        <contracts.skip>true</contracts.skip>
+        <embedded.dependencies>jaxen,saxonhe,xsom</embedded.dependencies>
+        <connectorName>com.forgerock.openicf.xml.XMLConnector</connectorName>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>JavaNet</id>
+            <name>JavaNet Repository</name>
+            <url>http://download.java.net/maven/2</url>
+        </repository>
+        <repository>
+            <id>ForgeRock</id>
+            <name>ForgeRock Repository</name>
+            <url>http://repo.forgerock.org</url>
+        </repository>
+    </repositories>
+  
+    <dependencies>
+        <dependency>
+            <groupId>jaxen</groupId>
+            <artifactId>jaxen</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.saxon</groupId>
+            <artifactId>saxonhe</artifactId>
+            <version>9.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xsom</groupId>
+            <artifactId>xsom</artifactId>
+            <version>20070407</version>
+        </dependency>
+    </dependencies>
+</project>
+

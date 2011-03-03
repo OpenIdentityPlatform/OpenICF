@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<icf:OpenICFContainer xmlns:icf="http://openidm.forgerock.com/xml/ns/public/resource/openicf/resource-schema-1.xsd"
+                      xmlns:ri="http://openidm.forgerock.com/xml/ns/public/resource/instances/ef2bc95b-76e0-48e2-86d6-4d4f44d4e4a4"
+                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <ri:__ACCOUNT__>
+      <ri:ms-employed>999999</ri:ms-employed>
+      <icf:__DESCRIPTION__/>
+      <ri:has-sixth-sense>true</ri:has-sixth-sense>
+      <ri:overtime-commission/>
+      <ri:last-logoff/>
+      <icf:__ENABLE__/>
+      <ri:account-created-timestamp/>
+      <ri:hourly-wage/>
+      <ri:firstname>Jan Eirik</ri:firstname>
+      <icf:__DISABLE_DATE__/>
+      <icf:__GROUPS__/>
+      <ri:permanent-employee/>
+      <ri:lastname-first-letter>H</ri:lastname-first-letter>
+      <ri:email>jan@hotmail.com</ri:email>
+      <ri:email>jan@gmail.com</ri:email>
+      <ri:secret-pin>123</ri:secret-pin>
+      <icf:__PASSWORD__/>
+      <ri:years-employed/>
+      <ri:is-deleted/>
+      <ri:jpegPhoto/>
+      <ri:age/>
+      <ri:userCertificate/>
+      <ri:address/>
+      <icf:__ENABLE_DATE__/>
+      <ri:max-storage/>
+  	  <ri:yearly-wage/>
+      <ri:password-secret-answer/>
+      <icf:__UID__>JANEIRIK</icf:__UID__>
+      <ri:employee-number/>
+      <ri:gender/>
+      <icf:__NAME__>JANEIRIK</icf:__NAME__>
+      <ri:office-square-feet/>
+      <icf:__LAST_LOGIN_DATE__/>
+      <ri:lastname>Hallstensen</ri:lastname>
+      <ri:avg-wage>100.0</ri:avg-wage>	   	  
+   	  
+      
+      
+      
+      
+      
+      <ri:employee-type/>
+   </ri:__ACCOUNT__>
+   <ri:__ACCOUNT__>
+      <ri:ms-employed>999999</ri:ms-employed>
+      <icf:__DESCRIPTION__/>
+      <ri:has-sixth-sense>true</ri:has-sixth-sense>
+      <ri:overtime-commission>20.20</ri:overtime-commission>
+      <ri:last-logoff/>
+      <icf:__ENABLE__/>
+      <ri:account-created-timestamp/>
+      <ri:hourly-wage/>
+      <ri:firstname>Jørgen</ri:firstname>
+      <icf:__DISABLE_DATE__/>
+      <icf:__GROUPS__/>
+      <ri:permanent-employee>true</ri:permanent-employee>
+      <ri:lastname-first-letter>H</ri:lastname-first-letter>
+      <ri:email>jorgen@gmail.com</ri:email>
+      <ri:email>jorgen@forgerock.com</ri:email>
+      <ri:email>jorgen@yahoo.com</ri:email>
+	     <ri:secret-pin>123</ri:secret-pin>
+      <icf:__PASSWORD__>ABCD</icf:__PASSWORD__>
+      <ri:years-employed>200</ri:years-employed>
+      <ri:is-deleted>true</ri:is-deleted>
+      <ri:jpegPhoto/>
+      <ri:age/>
+      <ri:userCertificate/>
+      <ri:address/>
+      <icf:__ENABLE_DATE__/>
+      <ri:max-storage/>
+      <ri:employee-type/>
+      <ri:yearly-wage/>
+      <ri:avg-wage/>
+      <ri:password-secret-answer/>
+      <icf:__UID__>jorgenUID</icf:__UID__>
+      <ri:employee-number/>
+      <ri:gender/>
+      <icf:__NAME__>jorgenNAME</icf:__NAME__>
+      <ri:office-square-feet/>
+      <icf:__LAST_LOGIN_DATE__/>
+      <ri:lastname>Ringen</ri:lastname>
+  </ri:__ACCOUNT__>
+</icf:OpenICFContainer>
