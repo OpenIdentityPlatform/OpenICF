@@ -3,11 +3,11 @@
 	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.forgerock.openicf.bundles</groupId>
-        <artifactId>bundles-parent</artifactId>
-        <version>1.1.0-SNAPSHOT</version>
-        <relativePath>../../maven/bundles-parent</relativePath>
-    </parent>
+	        <groupId>com.forgerock.openicf.bundles</groupId>
+	        <artifactId>bundles-parent</artifactId>
+	        <version>${CI_framework.version}</version>
+	        <relativePath>../../../openicf/bundles-parent</relativePath>
+	    </parent>
     <artifactId>ldap</artifactId>
     <packaging>jar</packaging>
     <name>OpenDJ and Sun DSEE Connector (Generic LDAP Connector)</name>
