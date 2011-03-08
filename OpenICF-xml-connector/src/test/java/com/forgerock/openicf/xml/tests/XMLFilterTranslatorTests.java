@@ -61,7 +61,6 @@ import static org.junit.Assert.*;
 
 public class XMLFilterTranslatorTests {
 
-    private static final String XML_FILEPATH = "test/xml_store/test.xml";
     private static final String LOCAL_ATTR_ACCOUNT_VALUE_LAST_NAME = "Maul";
     private static final String LOCAL_ATTR_ACCOUNT_VALUE_FIRST_NAME = "Lighter";
 

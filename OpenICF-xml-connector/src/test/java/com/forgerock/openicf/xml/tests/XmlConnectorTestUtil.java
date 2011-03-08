@@ -23,9 +23,10 @@
  *
  * $Id$
  */
-
 package com.forgerock.openicf.xml.tests;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,14 +42,13 @@ import org.identityconnectors.framework.common.objects.Uid;
 
 public class XmlConnectorTestUtil {
 
-    public final static String XSD_SCHEMA_FILEPATH = "test/xml_store/ef2bc95b-76e0-48e2-86d6-4d4f44d4e4a4.xsd";
-    public final static String ICF_SCHEMA_FILEPATH = "test/xml_store/resource-schema-1.xsd";
-
+    public final static String XSD_SCHEMA_FILEPATH;
+    public final static String ICF_SCHEMA_FILEPATH;
+    public final static String XML_FILEPATH;
     // Object types
     public static final String ACCOUNT_TYPE = "__ACCOUNT__";
     public static final String GROUP_TYPE = "__GROUP__";
     public static final String OPEN_ICF_CONTAINER_TYPE = "OpenICFContainer";
-
     // ICF attribute fields
     public static final String ATTR_UID = Uid.NAME;
     public static final String ATTR_NAME = Name.NAME;
@@ -60,7 +60,6 @@ public class XmlConnectorTestUtil {
     public static final String ATTR_ENABLE = "__ENABLE__";
     public static final String ATTR_GROUPS = "__GROUPS__";
     public static final String ATTR_SHORT_NAME = "__SHORT_NAME__";
-
     // Account attribute fields
     public static final String ATTR_ACCOUNT_FIRST_NAME = "firstname";
     public static final String ATTR_ACCOUNT_LAST_NAME = "lastname";
@@ -88,7 +87,6 @@ public class XmlConnectorTestUtil {
     public static final String ATTR_ACCOUNT_MAX_STORAGE = "max-storage";
     public static final String ATTR_ACCOUNT_USER_CERTIFICATE = "userCertificate";
     public static final String ATTR_ACCOUNT_SECRET_PIN = "secret-pin";
-    
     //Attribute values for test account
     public static final String ATTR_ACCOUNT_VALUE_NAME = "vaderUID";
     public static final String ATTR_ACCOUNT_VALUE_PASSWORD = "secret";
@@ -105,11 +103,27 @@ public class XmlConnectorTestUtil {
     public static final boolean ATTR_ACCOUNT_VALUE_IS_DLETED = true;
     public static final Long ATTR_ACCOUNT_VALUE_MS_EMPLOYED = new Long(999999);
     public static final boolean ATTR_ACCOUNT_VALUE_SIXTH_SENSE = true;
-    
     // Attribute values for test group
     public static final String ATTR_GROUP_VALUE_NAME = "The Empire";
     public static final String ATTR_GROUP_VALUE_DESCRIPTION = "The cool guys";
     public static final String ATTR_GROUP_VALUE_SHORT_NAME = "TE";
+
+    static {
+        String xsd = "test/xml_store/ef2bc95b-76e0-48e2-86d6-4d4f44d4e4a4.xsd";
+        String icf = "test/xml_store/resource-schema-1.xsd";
+        String xml = "test/xml_store/test.xsd";
+        try {
+            URL root = XmlConnectorTestUtil.class.getResource("/");
+            xsd = new URL(root, xsd).getPath();
+            icf = new URL(root, icf).getPath();
+            xml = new URL(root, xml).getPath();
+        } catch (MalformedURLException ex) {
+        } finally {
+            XSD_SCHEMA_FILEPATH = xsd;
+            ICF_SCHEMA_FILEPATH = icf;
+            XML_FILEPATH = xml;
+        }
+    }
 
     public static Set<Attribute> getRequiredAccountAttributes() {
         Set<Attribute> requiredAttrSet = new HashSet<Attribute>();

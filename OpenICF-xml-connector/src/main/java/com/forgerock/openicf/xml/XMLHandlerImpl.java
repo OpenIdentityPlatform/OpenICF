@@ -23,7 +23,6 @@
  *
  * $Id$
  */
-
 package com.forgerock.openicf.xml;
 
 import com.forgerock.openicf.xml.util.AttributeTypeUtil;
@@ -88,20 +87,15 @@ public class XMLHandlerImpl implements XMLHandler {
      * Setup logging for the {@link XMLHandlerImpl}.
      */
     private static final Log log = Log.getLog(XMLHandlerImpl.class);
-
     private XMLConfiguration config;
     private Document document;
     private Schema connSchema;
-
     private XSSchema icfSchema;
     private XSSchema riSchema;
-
     public static final String XSI_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance";
-
     public static final String ICF_NAMESPACE_PREFIX = "icf";
     public static final String RI_NAMESPACE_PREFIX = "ri";
     public static final String XSI_NAMESPACE_PREFIX = "xsi";
-
     public static final String ICF_CONTAINER_TAG = "OpenICFContainer";
 
     public XMLHandlerImpl(XMLConfiguration config, Schema connSchema, XSSchemaSet xsdSchemas) {
@@ -146,8 +140,8 @@ public class XMLHandlerImpl implements XMLHandler {
 
         // Check if entry already exists
         if (entryExists(objClass, new Uid(name.getNameValue()), ElementIdentifierFieldType.BY_NAME)) {
-            throw new AlreadyExistsException("Could not create entry. An entry with the " + Uid.NAME + " of " +
-                    name.getNameValue() + " already exists.");
+            throw new AlreadyExistsException("Could not create entry. An entry with the " + Uid.NAME + " of "
+                    + name.getNameValue() + " already exists.");
         }
 
         // Create or get UID
@@ -174,22 +168,21 @@ public class XMLHandlerImpl implements XMLHandler {
                     for (String value : values) {
                         Assertions.blankCheck(value, attributeName);
                     }
-                }
-                else {
+                } else {
                     throw new IllegalArgumentException("Missing required field: " + attributeName);
                 }
             }
 
-            if(!attributeInfo.isMultiValued() && values.size() > 1){
+            if (!attributeInfo.isMultiValued() && values.size() > 1) {
                 throw new IllegalArgumentException("Attribute field: " + attributeName + " is not multivalued and can not contain more than one value");
             }
 
             if (!supportedAttributeInfoMap.containsKey(attributeName)) {
-               continue;
+                continue;
             }
 
-            if(!attributeInfo.isCreateable() && providedAttributesMap.containsKey(attributeName)){
-                throw  new IllegalArgumentException(attributeName + " is not a creatable field.");
+            if (!attributeInfo.isCreateable() && providedAttributesMap.containsKey(attributeName)) {
+                throw new IllegalArgumentException(attributeName + " is not a creatable field.");
             }
 
             Element childElement = null;
@@ -197,8 +190,7 @@ public class XMLHandlerImpl implements XMLHandler {
             if (attributeName.equals(Uid.NAME)) {
                 childElement = createDomElement(attributeName, uidValue);
                 objElement.appendChild(childElement);
-            }
-            else if (providedAttributesMap.containsKey(attributeName)) {
+            } else if (providedAttributesMap.containsKey(attributeName)) {
                 // Check if provided value is instance of the class defined in schema
                 Class expectedClass = attributeInfo.getType();
                 if (!valuesAreExpectedClass(expectedClass, providedAttributesMap.get(attributeName).getValue())) {
@@ -209,8 +201,7 @@ public class XMLHandlerImpl implements XMLHandler {
                     childElement = createDomElement(attributeName, value);
                     objElement.appendChild(childElement);
                 }
-            }
-            // Create empty element if not provided
+            } // Create empty element if not provided
             else {
                 childElement = createDomElement(attributeName, "");
                 objElement.appendChild(childElement);
@@ -251,7 +242,7 @@ public class XMLHandlerImpl implements XMLHandler {
                 AttributeInfo attributeInfo = objAttributes.get(attribute.getName());
                 String attributeName = attribute.getName();
 
-                if(!attributeInfo.isUpdateable()){
+                if (!attributeInfo.isUpdateable()) {
                     throw new IllegalArgumentException(attributeName + " is not updatable.");
                 }
 
@@ -281,14 +272,14 @@ public class XMLHandlerImpl implements XMLHandler {
                 // Add updated nodes to entry
                 List<String> values = AttributeTypeUtil.findAttributeValue(attribute, attributeInfo);
 
-                if(!attributeInfo.isMultiValued() && values.size() > 1){
+                if (!attributeInfo.isMultiValued() && values.size() > 1) {
                     throw new IllegalArgumentException("Data field: " + attributeName + " is not multivalued  can not have more than one value");
                 }
 
                 // Append empty element if no values is provided
                 if (values.isEmpty()) {
-                        Element updatedElement = createDomElement(attributeName, "");
-                        entry.appendChild(updatedElement);
+                    Element updatedElement = createDomElement(attributeName, "");
+                    entry.appendChild(updatedElement);
                 } else {
                     for (String value : values) {
                         Element updatedElement = createDomElement(attributeName, value);
@@ -296,8 +287,7 @@ public class XMLHandlerImpl implements XMLHandler {
                     }
                 }
             }
-        }
-        else {
+        } else {
             throw new UnknownUidException("Could not update entry. No entry of type " + objClass.getObjectClassValue() + " with the id " + uid.getUidValue() + " found.");
         }
 
@@ -319,8 +309,7 @@ public class XMLHandlerImpl implements XMLHandler {
             Element elementToRemove = getEntry(objClass, uid, ElementIdentifierFieldType.AUTO);
             document.getDocumentElement().removeChild(elementToRemove);
             log.info("Deleting entry: " + elementToRemove.toString());
-        }
-        else {
+        } else {
             throw new UnknownUidException("Deleting entry failed. Could not find an entry of type " + objClass.getObjectClassValue() + " with the uid " + uid.getUidValue());
         }
 
@@ -358,7 +347,7 @@ public class XMLHandlerImpl implements XMLHandler {
 
 
                 ConnectorObjectCreator conObjCreator =
-                    new ConnectorObjectCreator(attributeClassMap, attributeInfoMap, objClass);
+                        new ConnectorObjectCreator(attributeClassMap, attributeInfoMap, objClass);
 
                 while (queryResult.next()) {
 
@@ -369,12 +358,10 @@ public class XMLHandlerImpl implements XMLHandler {
                     ConnectorObject conObj = conObjCreator.createConnectorObject(nodes);
                     results.add(conObj);
                 }
-            }
-            catch (XQException ex) {
+            } catch (XQException ex) {
                 log.error("Error while searching: {0}", ex);
                 throw new ConnectorException(ex);
-            }
-            finally {
+            } finally {
                 xqHandler.close();
             }
         }
@@ -393,15 +380,16 @@ public class XMLHandlerImpl implements XMLHandler {
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
             Transformer transformer = transformerFactory.newTransformer();
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        
+            transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+
             DOMSource source = new DOMSource(document);
-            StreamResult result = new StreamResult(new File(config.getXmlFilePath()));
+            StreamResult result = new StreamResult(config.getXmlFilePath());
 
             transformer.transform(source, result);
 
             log.info("Saving changes to xml file");
-        }
-        catch (TransformerException ex) {
+        } catch (TransformerException ex) {
             log.error("Failed saving changes to xml file: {0}", ex);
             throw ConnectorException.wrap(ex);
         }
@@ -435,10 +423,9 @@ public class XMLHandlerImpl implements XMLHandler {
             if (xmlPassword.equals(userPassword)) {
                 NodeList uidElements = entry.getElementsByTagName(ICF_NAMESPACE_PREFIX + ":" + Uid.NAME);
 
-                if(uidElements.getLength() >= 1) {
+                if (uidElements.getLength() >= 1) {
                     uid = new Uid(uidElements.item(0).getTextContent());
-                }
-                else {
+                } else {
                     NodeList nameElements = entry.getElementsByTagName(ICF_NAMESPACE_PREFIX + ":" + Name.NAME);
                     uid = new Uid(nameElements.item(0).getTextContent());
                 }
@@ -461,8 +448,7 @@ public class XMLHandlerImpl implements XMLHandler {
         try {
             builder = builderFactory.newDocumentBuilder();
             log.info("Creating new xml storage file: {0}", config.getXmlFilePath());
-        }
-        catch (ParserConfigurationException ex) {
+        } catch (ParserConfigurationException ex) {
             log.error("Filed creating XML document: {0}", ex);
             throw ConnectorException.wrap(ex);
         }
@@ -471,18 +457,17 @@ public class XMLHandlerImpl implements XMLHandler {
         document = implementation.createDocument(icfSchema.getTargetNamespace(), ICF_CONTAINER_TAG, null);
 
         Element root = document.getDocumentElement();
-        root.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:" + XSI_NAMESPACE_PREFIX , XSI_NAMESPACE);
+        root.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:" + XSI_NAMESPACE_PREFIX, XSI_NAMESPACE);
         root.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:" + RI_NAMESPACE_PREFIX, riSchema.getTargetNamespace());
         root.setPrefix(ICF_NAMESPACE_PREFIX);
 
-        if(config.getXsdIcfFilePath() == null) {
+        if (config.getXsdIcfFilePath() == null) {
             root.setAttribute(XSI_NAMESPACE_PREFIX + ":schemaLocation",
                     riSchema.getTargetNamespace() + " " + config.getXsdFilePath());
-        }
-        else {
-            root.setAttribute(XSI_NAMESPACE_PREFIX + ":schemaLocation", 
-                    riSchema.getTargetNamespace() + " " + config.getXsdFilePath()  + " " +
-                    icfSchema.getTargetNamespace()  + " " + config.getXsdIcfFilePath());
+        } else {
+            root.setAttribute(XSI_NAMESPACE_PREFIX + ":schemaLocation",
+                    riSchema.getTargetNamespace() + " " + config.getXsdFilePath() + " "
+                    + icfSchema.getTargetNamespace() + " " + config.getXsdIcfFilePath());
         }
 
         log.info("Exit {0}", method);
@@ -498,17 +483,14 @@ public class XMLHandlerImpl implements XMLHandler {
 
         try {
             docBuilder = docBuilderFactory.newDocumentBuilder();
-            document = docBuilder.parse (xmlFile);
+            document = docBuilder.parse(xmlFile);
 
             log.info("Loading XML document from: {0}", xmlFile.getPath());
-        } 
-        catch (ParserConfigurationException ex) {
+        } catch (ParserConfigurationException ex) {
             throw ConnectorException.wrap(ex);
-        } 
-        catch (SAXException ex) {
+        } catch (SAXException ex) {
             throw ConnectorException.wrap(ex);
-        } 
-        catch (IOException ex) {
+        } catch (IOException ex) {
             throw ConnectorException.wrap(ex);
         }
 
@@ -537,8 +519,7 @@ public class XMLHandlerImpl implements XMLHandler {
         if (icfSchema.getElementDecls().containsKey(elementName)) {
             element = document.createElementNS(icfSchema.getTargetNamespace(), elementName);
             element.setPrefix(ICF_NAMESPACE_PREFIX);
-        }
-        else {
+        } else {
             element = document.createElementNS(riSchema.getTargetNamespace(), elementName);
             element.setPrefix(RI_NAMESPACE_PREFIX);
         }
@@ -572,13 +553,12 @@ public class XMLHandlerImpl implements XMLHandler {
             XQResultSequence results = xqHandler.getResultSequence();
 
             if (results.next()) {
-                result = (Element)results.getItem().getNode();
+                result = (Element) results.getItem().getNode();
                 log.info("Entry found: ", result.toString());
             }
         } catch (XQException ex) {
             throw ConnectorException.wrap(ex);
-        }
-        finally {
+        } finally {
             xqHandler.close();
         }
 
@@ -598,27 +578,29 @@ public class XMLHandlerImpl implements XMLHandler {
     private String getElementIdentifierField(ObjectClass objClass, ElementIdentifierFieldType identifierField) {
         String elementField = "";
 
-        if (identifierField == ElementIdentifierFieldType.BY_NAME)
+        if (identifierField == ElementIdentifierFieldType.BY_NAME) {
             elementField = Name.NAME;
-        else if (identifierField == ElementIdentifierFieldType.BY_UID)
+        } else if (identifierField == ElementIdentifierFieldType.BY_UID) {
             elementField = Uid.NAME;
-        else {
+        } else {
             ObjectClassInfo objInfo = connSchema.findObjectClassInfo(objClass.getObjectClassValue());
             Set<AttributeInfo> objAttrSet = objInfo.getAttributeInfo();
             Map<String, AttributeInfo> attrInfoMap = AttributeInfoUtil.toMap(objAttrSet);
 
-            if (attrInfoMap.containsKey(Uid.NAME))
+            if (attrInfoMap.containsKey(Uid.NAME)) {
                 elementField = Uid.NAME;
-            else
+            } else {
                 elementField = Name.NAME;
+            }
         }
 
         return elementField;
     }
 
     private boolean valuesAreExpectedClass(Class expectedClass, List<Object> values) {
-        if (expectedClass.isPrimitive())
+        if (expectedClass.isPrimitive()) {
             expectedClass = AttributeTypeUtil.convertPrimitiveToWrapper(expectedClass.getName());
+        }
 
         for (Object obj : values) {
             if (expectedClass != obj.getClass()) {
@@ -647,9 +629,8 @@ public class XMLHandlerImpl implements XMLHandler {
 
         if (icfSchema.getElementDecls().containsKey(attrName)) {
             prefix = ICF_NAMESPACE_PREFIX + ":" + attrName;
-        }
-        else {
-            prefix =  RI_NAMESPACE_PREFIX + ":" + attrName;
+        } else {
+            prefix = RI_NAMESPACE_PREFIX + ":" + attrName;
         }
 
         return prefix;

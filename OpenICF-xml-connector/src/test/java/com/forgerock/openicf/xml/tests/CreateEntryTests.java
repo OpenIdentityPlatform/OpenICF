@@ -54,7 +54,7 @@ public class CreateEntryTests {
     public ExpectedException thrown = ExpectedException.none();
 
     // Test filepaths
-    private static final String XML_FILE_PATH = "test/xml_store/test.xml";
+    //private static final String XML_FILEPATH = "test/xml_store/test.xml";
 
     private static XMLHandler handler;
 
@@ -62,7 +62,7 @@ public class CreateEntryTests {
     public void init() {
         XMLConfiguration config = new XMLConfiguration();
 
-        config.setXmlFilePath(XML_FILE_PATH);
+        config.setXmlFilePath(XML_FILEPATH);
         config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
 
         SchemaParser parser = new SchemaParser(XMLConnector.class, config.getXsdFilePath());
@@ -71,7 +71,7 @@ public class CreateEntryTests {
 
     @After
     public void destroy() {
-        File xmlFile = new File(XML_FILE_PATH);
+        File xmlFile = new File(XML_FILEPATH);
 
         if (xmlFile.exists())
             xmlFile.delete();

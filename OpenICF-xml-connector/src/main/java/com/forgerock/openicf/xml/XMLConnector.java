@@ -54,9 +54,8 @@ public class XMLConnector implements PoolableConnector, AuthenticateOp, CreateOp
     private XMLHandler xmlHandler;
     private XMLConfiguration config;
     private SchemaParser schemaParser;
-
     //@TODO - Use cache while more than one client is alive
-    //private static volatile int invokers = 0;
+    private static volatile int invokers = 0;
 
     /*
      * (non-Javadoc)
@@ -76,10 +75,13 @@ public class XMLConnector implements PoolableConnector, AuthenticateOp, CreateOp
 
         Assertions.nullCheck(configuration, "config");
 
-        this.config = (XMLConfiguration) configuration;
-        this.schemaParser = new SchemaParser(XMLConnector.class, config.getXsdFilePath());
-        this.xmlHandler = new XMLHandlerImpl(config, schema(), schemaParser.getXsdSchema());
-
+        synchronized (XMLConnector.class) {
+            this.config = (XMLConfiguration) configuration;
+            this.schemaParser = new SchemaParser(XMLConnector.class, config.getXsdFilePath());
+            this.xmlHandler = new XMLHandlerImpl(config, schema(), schemaParser.getXsdSchema());
+            //Increase the number of actual threads that are using this connector form the pool.
+            invokers++;
+        }
         log.info("XMLConnector initialized");
         log.info("Exit {0}", method);
     }
@@ -89,6 +91,12 @@ public class XMLConnector implements PoolableConnector, AuthenticateOp, CreateOp
      * @see org.identityconnectors.framework.spi.Connector#dispose()
      */
     public void dispose() {
+        synchronized (XMLConnector.class) {
+            invokers--;
+            if (invokers == 0) {
+                xmlHandler.serialize();
+            }
+        }
     }
 
     /*

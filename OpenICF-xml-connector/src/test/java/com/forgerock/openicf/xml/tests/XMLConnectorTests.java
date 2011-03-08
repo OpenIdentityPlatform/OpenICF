@@ -53,7 +53,7 @@ public class XMLConnectorTests {
     private XMLConnector connector;
     private XMLConfiguration config;
 
-    private final static String XML_FILEPATH = "test/xml_store/test.xml";
+    //private final static String XML_FILEPATH = "test/xml_store/test.xml";
 
     @Before
     public void init() {
@@ -88,7 +88,7 @@ public class XMLConnectorTests {
 
     @Test
     public void testMethodShouldThrowExceptionWhenGivenInvalidXsdFilePaths() {
-        final String icfSchemaLocation = "test/xml_store/404.xsd";
+        final String icfSchemaLocation = "target/test-classes/test/xml_store/404.xsd";
         final String expectedErrorMessage = "File does not exist at filepath " + icfSchemaLocation;
 
         XMLConfiguration conf = new XMLConfiguration();

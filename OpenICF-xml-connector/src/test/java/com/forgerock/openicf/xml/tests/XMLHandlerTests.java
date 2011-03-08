@@ -56,14 +56,14 @@ import static org.junit.Assert.*;
 public class XMLHandlerTests {
 
     private static XMLHandler handler;
-    private static final String XML_FILE_PATH = "test/xml_store/test.xml";
+    //private static final String XML_FILE_PATH = "test/xml_store/test.xml";
     private static ConnectorObject existingUsrConObj;
 
     @BeforeClass
     public static void setUp() {
 
         XMLConfiguration config = new XMLConfiguration();
-        config.setXmlFilePath(XML_FILE_PATH);
+        config.setXmlFilePath(XML_FILEPATH);
         config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
         SchemaParser parser = new SchemaParser(XMLConnector.class, config.getXsdFilePath());
 
@@ -95,7 +95,7 @@ public class XMLHandlerTests {
 
     @AfterClass
     public static void tearDown(){
-        File xmlFile = new File(XML_FILE_PATH);
+        File xmlFile = new File(XML_FILEPATH);
 
         if(xmlFile.exists()){
             xmlFile.delete();
