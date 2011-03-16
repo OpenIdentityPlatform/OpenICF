@@ -48,10 +48,7 @@
         </dependency>
     </dependencies>
 
-    <!-- Tests are hardcoded to read the bundles from following directory by following final name -->
     <build>
-        <!--directory>${project.basedir}/dist</directory-->
-        <finalName>org.identityconnectors.testbundle-2.0.0.0</finalName>
         <plugins>
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>

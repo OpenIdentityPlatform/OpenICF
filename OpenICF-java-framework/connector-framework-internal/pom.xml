@@ -64,4 +64,35 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <!-- Copy bundle JARs -->
+                    <execution>
+                        <id>copy-contractclasses</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.forgerock.openicf.framework</groupId>
+                                    <artifactId>testbundlev1</artifactId>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.forgerock.openicf.framework</groupId>
+                                    <artifactId>testbundlev2</artifactId>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
+                            <stripVersion>true</stripVersion>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

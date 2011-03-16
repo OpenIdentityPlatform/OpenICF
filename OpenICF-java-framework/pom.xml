@@ -131,10 +131,10 @@
         <module>connector-test-common</module>
         <module>connector-framework-internal</module>
         <module>connector-framework-contract</module>
-        <module>testbundles/testcommonv1</module>
-        <module>testbundles/testcommonv2</module>
-        <module>testbundles/testbundlev1</module>
-        <module>testbundles/testbundlev2</module>
+        <module>testcommonv1</module>
+        <module>testcommonv2</module>
+        <module>testbundlev1</module>
+        <module>testbundlev2</module>
         <module>compatibility-tests-parent</module>
         <module>bundles-parent</module>
     </modules>
