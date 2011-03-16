@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry excluding="**/.svn/*" kind="src" path="src/main/java"/>
+	<classpathentry excluding="**/.svn/*" kind="src" path="src/test/java"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Connector Framework"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Connector Framework - Internal"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Connector Common Test Library"/>
+	<classpathentry kind="lib" path="/Connector Framework - Internal/lib/groovy-all.jar"/>
+	<classpathentry kind="output" path="build"/>
+</classpath>
