@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+ Copyright (c) 2011 ForgeRock Inc. All Rights Reserved
+
+ The contents of this file are subject to the terms
+ of the Common Development and Distribution License
+ (the License). You may not use this file except in
+ compliance with the License.
+
+ You can obtain a copy of the License at
+ http://www.opensource.org/licenses/cddl1.php or
+ OpenIDM/legal/CDDLv1.0.txt
+ See the License for the specific language governing
+ permission and limitations under the License.
+
+ When distributing Covered Code, include this CDDL
+ Header Notice in each file and include the License file
+ at OpenIDM/legal/CDDLv1.0.txt.
+ If applicable, add the following below the CDDL Header,
+ with the fields enclosed by brackets [] replaced by
+ your own identifying information:
+ "Portions Copyrighted 2011 [name of copyright owner]"
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.forgerock.openicf</groupId>
+        <artifactId>openicf</artifactId>
+        <version>1</version>
+    </parent>
+    <groupId>com.forgerock.openicf</groupId>
+    <artifactId>compatibility-tests-parent</artifactId>
+    <version>1.1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>OpenICF Compatibility Tests parent</name>
+
+    <properties>
+        <contract.suiteName>org.identityconnectors.contract.test.ContractTestSuite</contract.suiteName>
+        <connectorTestsVersion>${connectorVersion}</connectorTestsVersion>
+        <connectorConfigurationVersion>${connectorVersion}</connectorConfigurationVersion>
+        <junits.skip>${skipTests}</junits.skip>
+        <contracts.skip>${skipTests}</contracts.skip>
+    </properties>
+
+    <profiles>
+        <profile>
+            <id>test-compat</id>
+            <activation>
+                <file>
+                    <missing>./compatibility-tests-parent</missing>
+                </file>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>com.forgerock.openicf.framework</groupId>
+                    <artifactId>connector-framework</artifactId>
+                    <version>${framework.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.forgerock.openicf.framework</groupId>
+                    <artifactId>connector-test-common</artifactId>
+                    <version>${framework.version}</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.forgerock.openicf.framework</groupId>
+                    <artifactId>connector-framework-internal</artifactId>
+                    <version>${framework.version}</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.forgerock.openicf.framework</groupId>
+                    <artifactId>connector-framework-contract</artifactId>
+                    <version>${framework.version}</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>junit</groupId>
+                    <artifactId>junit</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>${connectorGroupId}</groupId>
+                    <artifactId>${connectorArtifactId}</artifactId>
+                    <version>${connectorVersion}</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>${connectorGroupId}</groupId>
+                    <artifactId>${connectorArtifactId}</artifactId>
+                    <version>${connectorTestsVersion}</version>
+                    <classifier>tests</classifier>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>${connectorGroupId}</groupId>
+                    <artifactId>${connectorArtifactId}</artifactId>
+                    <version>${connectorConfigurationVersion}</version>
+                    <classifier>privatetestconfig</classifier>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>${connectorGroupId}</groupId>
+                    <artifactId>${connectorArtifactId}</artifactId>
+                    <version>${connectorConfigurationVersion}</version>
+                    <classifier>publictestconfig</classifier>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <executions>
+                            <!-- Copy classes from connector tests jar -->
+                            <execution>
+                                <id>copy-testclasses</id>
+                                <phase>generate-test-sources</phase>
+                                <goals>
+                                    <goal>unpack</goal>
+                                </goals>
+                                <configuration>
+                                    <artifactItems>
+                                        <artifactItem>
+                                            <groupId>${connectorGroupId}</groupId>
+                                            <artifactId>${connectorArtifactId}</artifactId>
+                                            <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
+                                            <classifier>tests</classifier>
+                                        </artifactItem>
+                                    </artifactItems>
+                                </configuration>
+                            </execution>
+                            <!-- Copy classes from contract tests -->
+                            <execution>
+                                <id>copy-contractclasses</id>
+                                <phase>generate-test-sources</phase>
+                                <goals>
+                                    <goal>unpack</goal>
+                                </goals>
+                                <configuration>
+                                    <artifactItems>
+                                        <artifactItem>
+                                            <groupId>com.forgerock.openicf.framework</groupId>
+                                            <artifactId>connector-framework-contract</artifactId>
+                                            <outputDirectory>${project.build.directory}/contractClasses</outputDirectory>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>com.forgerock.openicf.framework</groupId>
+                                            <artifactId>connector-framework-contract</artifactId>
+                                            <classifier>sources</classifier>
+                                            <outputDirectory>${project.build.directory}/contractSources</outputDirectory>
+                                        </artifactItem>
+                                    </artifactItems>
+                                </configuration>
+                            </execution>
+                            <!-- Copy bundle jar to some location -->
+                            <execution>
+                                <id>copy-bundleJar</id>
+                                <phase>generate-test-sources</phase>
+                                <goals>
+                                    <goal>copy</goal>
+                                </goals>
+                                <configuration>
+                                    <artifactItems>
+                                        <artifactItem>
+                                            <groupId>${connectorGroupId}</groupId>
+                                            <artifactId>${connectorArtifactId}</artifactId>
+                                            <outputDirectory>${project.build.directory}</outputDirectory>
+                                            <classifier></classifier>
+                                        </artifactItem>
+                                    </artifactItems>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Run surefire-execs plugin -->
+                    <plugin>
+                        <groupId>com.forgerock.openicf</groupId>
+                        <artifactId>maven-surefire-execs-plugin</artifactId>
+                        <executions>
+                            <!-- Run junits with configuration -->
+                            <execution>
+                                <id>test-junits</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <configuration>
+                                    <skipTests>${junits.skip}</skipTests>
+                                    <testExecutionsPropertyValues>
+                                        <propertyName>testConfig</propertyName>
+                                        <propertyValues>${junitsConfigurations}</propertyValues>
+                                    </testExecutionsPropertyValues>
+                                </configuration>
+                            </execution>
+                            <!-- Run contract tests -->
+                            <execution>
+                                <id>test-contracts</id>
+                                <phase>integration-test</phase>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <configuration>
+                                    <skipTests>${contracts.skip}</skipTests>
+                                    <testSourceDirectory>${project.build.directory}/contractSources</testSourceDirectory>
+                                    <testClassesDirectory>${project.build.directory}/contractClasses</testClassesDirectory>
+                                    <additionalClasspathElements>
+                                        <additionalClasspathElement>${project.build.testOutputDirectory}</additionalClasspathElement>
+                                    </additionalClasspathElements>
+                                    <test>${contract.suiteName}</test>
+                                    <systemProperties>
+                                        <property>
+                                            <name>connectorName</name>
+                                            <value>${connectorName}</value>
+                                        </property>
+                                        <property>
+                                            <name>bundleJar</name>
+                                            <value>${project.build.directory}/${connectorArtifactId}-${connectorVersion}.jar</value>
+                                        </property>
+                                        <property>
+                                            <name>bundleName</name>
+                                            <value>${connectorArtifactId}</value>
+                                        </property>
+                                        <property>
+                                            <name>bundleVersion</name>
+                                            <value>${connectorVersion}</value>
+                                        </property>
+                                    </systemProperties>
+                                    <testExecutionsPropertyValues>
+                                        <propertyName>testConfig</propertyName>
+                                        <propertyValues>${contractsConfigurations}</propertyValues>
+                                    </testExecutionsPropertyValues>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>
+

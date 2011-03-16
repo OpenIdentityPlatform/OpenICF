@@ -1,0 +1,473 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+ Copyright (c) 2011 ForgeRock Inc. All Rights Reserved
+
+ The contents of this file are subject to the terms
+ of the Common Development and Distribution License
+ (the License). You may not use this file except in
+ compliance with the License.
+
+ You can obtain a copy of the License at
+ http://www.opensource.org/licenses/cddl1.php or
+ OpenIDM/legal/CDDLv1.0.txt
+ See the License for the specific language governing
+ permission and limitations under the License.
+
+ When distributing Covered Code, include this CDDL
+ Header Notice in each file and include the License file
+ at OpenIDM/legal/CDDLv1.0.txt.
+ If applicable, add the following below the CDDL Header,
+ with the fields enclosed by brackets [] replaced by
+ your own identifying information:
+ "Portions Copyrighted 2011 [name of copyright owner]"
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.forgerock.openicf.framework</groupId>
+        <artifactId>framework</artifactId>
+        <version>1.1.0.0-SNAPSHOT</version>
+    </parent>
+    <groupId>com.forgerock.openicf.bundles</groupId>
+    <artifactId>bundles-parent</artifactId>
+    <version>1.1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>OpenICF Bundles parent</name>
+    
+    <description>
+        This pom module is the parent for all connector bundles. It defines the dependencies on framework, building the connector bundle and common reporting for connectors.
+        This is not multimodule project, it does not aggregate the connectors, it is just common parent.
+    </description>
+
+    <scm>
+        <!--connection>scm:svn:https://svn.forgerock.org/openicf/trunk/java/bundles-parent</connection>
+        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/java/bundles-parent</developerConnection-->
+        <url>http://sources.forgerock.org/browse/openicf/trunk/java/bundles-parent</url>
+        <connection>scm:svn:http://localhost/svn/openicf/trunk/java/bundles-parent</connection>
+        <developerConnection>scm:svn:http://localhost/svn/openicf/trunk/java/bundles-parent</developerConnection>
+    </scm>
+
+    <!-- mvn help:effective-pom
+         mvn archetype:create-from-project
+         mvn help:active-profiles
+     -->
+    <properties>
+        <framework.compatibilityVersion>1.1</framework.compatibilityVersion>
+        <framework.releaseVersion>0.0-SNAPSHOT</framework.releaseVersion>
+        <framework.version>${framework.compatibilityVersion}.${framework.releaseVersion}</framework.version>
+        <licenseResourceBundle>com.forgerock.openicf:openicf-license:1.0</licenseResourceBundle>
+
+        <defaultConnectorFamily>misc</defaultConnectorFamily>
+        <defaultConnectorGroupId>com.forgerock.openicf.bundles.${defaultConnectorFamily}</defaultConnectorGroupId>
+        <defaultConnectorVersion>${framework.compatibilityVersion}.${framework.releaseVersion}</defaultConnectorVersion>
+        <!--
+            These are the properties needed in manifest file of the bundle,
+            but now hardcoded in tests
+        -->
+        <ConnectorBundle-FrameworkVersion>${framework.compatibilityVersion}</ConnectorBundle-FrameworkVersion>
+        <ConnectorBundle-Name>${project.groupId}.${project.artifactId}</ConnectorBundle-Name>
+        <ConnectorBundle-Version>${project.version}</ConnectorBundle-Version>
+        <!-- 
+            These are the variables needs to define in order to a proper test coverage.
+        -->
+        <connectorGroupId>${project.groupId}</connectorGroupId>
+        <connectorArtifactId>${project.artifactId}</connectorArtifactId>
+        <connectorVersion>${project.version}</connectorVersion>
+        <connectorName>${connectorPackage}.${connectorClass}</connectorName>
+        <junitsConfigurations>default</junitsConfigurations>
+        <contractsConfigurations>default</contractsConfigurations>
+        <contract.suiteName>org.identityconnectors.contract.test.ContractTestSuite</contract.suiteName>
+        <junits.skip>${skipTests}</junits.skip>
+        <contracts.skip>${skipTests}</contracts.skip>
+    </properties>
+
+    <profiles>
+        <profile>
+            <id>forgerock-release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>replace-pom-placeholder</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <resources>
+                                        <resource>
+                                            <directory>${basedir}</directory>
+                                            <includes>
+                                                <include>releases-pom.xml</include>
+                                            </includes>
+                                            <filtering>true</filtering>
+                                        </resource>
+                                    </resources>
+                                    <outputDirectory>${project.build.directory}/pom-install-deploy-fix</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <artifactId>maven-install-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>overwrite-pom</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>install-file</goal>
+                                </goals>
+                                <configuration>
+                                    <packaging>pom</packaging>
+                                    <file>target/pom-install-deploy-fix/releases-pom.xml</file>
+                                    <pomFile>target/pom-install-deploy-fix/releases-pom.xml</pomFile>
+                                    <version>${project.version}</version>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <artifactId>maven-deploy-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>overwrite-pom</id>
+                                <phase>deploy</phase>
+                                <goals>
+                                    <goal>deploy-file</goal>
+                                </goals>
+                                <configuration>
+                                    <packaging>pom</packaging>
+                                    <file>target/pom-install-deploy-fix/releases-pom.xml</file>
+                                    <pomFile>target/pom-install-deploy-fix/releases-pom.xml</pomFile>
+                                    <url>${project.distributionManagement.repository.url}</url>
+                                    <version>${project.version}</version>
+                                    <updateReleaseInfo>true</updateReleaseInfo>
+                                    <uniqueVersion>false</uniqueVersion>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- We want to sign the artifact, the POM, and all attached artifacts
+                         Only the patched version http://jira.codehaus.org/browse/MGPG-34
+                         signs the correct POM
+                    -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.2-SNAPSHOT</version>
+                        <configuration>
+                            <passphrase>${gpg.passphrase}</passphrase>
+                            <useAgent>true</useAgent>
+                            <pomFile>target/pom-install-deploy-fix/releases-pom.xml</pomFile>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>bundle-impl</id>
+            <activation>
+                <file>
+                    <missing>./bundles-parent</missing>
+                </file>
+            </activation>
+
+            <dependencies>
+                <dependency>
+                    <groupId>com.forgerock.openicf</groupId>
+                    <artifactId>OpenICF-license</artifactId>
+                    <version>1.0</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.forgerock.openicf.framework</groupId>
+                    <artifactId>connector-framework</artifactId>
+                    <!--version>${framework.version}</version-->
+                </dependency>
+                <dependency>
+                    <groupId>com.forgerock.openicf.framework</groupId>
+                    <artifactId>connector-test-common</artifactId>
+                    <!--version>${framework.version}</version-->
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.forgerock.openicf.framework</groupId>
+                    <artifactId>connector-framework-internal</artifactId>
+                    <!--version>${framework.version}</version-->
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.forgerock.openicf.framework</groupId>
+                    <artifactId>connector-framework-contract</artifactId>
+                    <!--version>${framework.version}</version-->
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>junit</groupId>
+                    <artifactId>junit</artifactId>
+                    <scope>test</scope>
+                </dependency>
+
+            </dependencies>
+
+            <build>
+                <testResources>
+                    <testResource>
+                        <directory>${project.basedir}/src/test/config</directory>
+                    </testResource>
+                    <testResource>
+                        <directory>${privateConfigPath}</directory>
+                        <excludes>
+                            <exclude>lib/**</exclude>
+                            <exclude>**/target/**</exclude>
+                        </excludes>
+                    </testResource>
+                    <testResource>
+                        <directory>src/test/java</directory>
+                        <excludes>
+                            <exclude>**/*.java</exclude>
+                        </excludes>
+                    </testResource>
+                    <testResource>
+                        <directory>src/test/resources</directory>
+                    </testResource>
+                </testResources>
+
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.felix</groupId>
+                        <artifactId>maven-bundle-plugin</artifactId>
+                        <version>2.3.4</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <instructions>
+                                <Embed-Dependency>${embedded.dependencies}</Embed-Dependency>
+                                <Embed-Directory>lib</Embed-Directory>
+                                <Embed-Transitive>true</Embed-Transitive>
+                                <Export-Package>
+                                    ${connectorPackage}
+                                </Export-Package>
+                                <Import-Package>
+                                *
+                                </Import-Package>
+                                <Bundle-SymbolicName>${ConnectorBundle-Name}</Bundle-SymbolicName>
+                                <ConnectorBundle-FrameworkVersion>${ConnectorBundle-FrameworkVersion}</ConnectorBundle-FrameworkVersion>
+                                <ConnectorBundle-Name>${ConnectorBundle-Name}</ConnectorBundle-Name>
+                                <ConnectorBundle-Version>${ConnectorBundle-Version}</ConnectorBundle-Version>
+                                <Subversion-Revision>${Subversion-Revision}</Subversion-Revision>
+                            </instructions>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <executions>
+                            <!-- Copy classes from contract tests -->
+                            <execution>
+                                <id>copy-contractclasses</id>
+                                <phase>generate-test-sources</phase>
+                                <goals>
+                                    <goal>unpack</goal>
+                                </goals>
+                                <configuration>
+                                    <artifactItems>
+                                        <artifactItem>
+                                            <groupId>com.forgerock.openicf.framework</groupId>
+                                            <artifactId>connector-framework-contract</artifactId>
+                                            <outputDirectory>${project.build.directory}/contractClasses</outputDirectory>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>com.forgerock.openicf.framework</groupId>
+                                            <artifactId>connector-framework-contract</artifactId>
+                                            <classifier>sources</classifier>
+                                            <outputDirectory>${project.build.directory}/contractSources</outputDirectory>
+                                        </artifactItem>
+                                    </artifactItems>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- We want to package up license resources in the JARs produced -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-remote-resources-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>process</goal>
+                                </goals>
+                                <configuration>
+                                    <resourceBundles>
+                                        <resourceBundle>${licenseResourceBundle}</resourceBundle>
+                                    </resourceBundles>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <executions>
+
+                            <!-- Attach also test-jar -->
+                            <execution>
+                                <id>package-test</id>
+                                <configuration>
+                                    <excludes>
+                                        <exclude>${connectorName}/**</exclude>
+                                    </excludes>
+                                </configuration>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>test-jar</goal>
+                                </goals>
+                            </execution>
+
+                            <!-- Attach public test config -->
+                            <execution>
+                                <id>package-publictestconfig</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <classesDirectory>${project.build.testOutputDirectory}</classesDirectory>
+                                    <classifier>publictestconfig</classifier>
+                                    <includes>
+                                        <include>${connectorName}/**</include>
+                                    </includes>
+                                    <excludes>
+                                        <exclude>**/config-private/**</exclude>
+                                    </excludes>
+                                </configuration>
+                            </execution>
+
+                            <!-- Attach private test config -->
+                            <execution>
+                                <id>package-privatetestconfig</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <classesDirectory>${project.build.testOutputDirectory}</classesDirectory>
+                                    <classifier>privatetestconfig</classifier>
+                                    <includes>
+                                        <include>${connectorName}/config-private/**</include>
+                                    </includes>
+                                </configuration>
+                            </execution>
+
+                        </executions>
+
+                    </plugin>
+
+                    <!-- And attach  sources -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Skip default test execution -->
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>default-test</id>
+                                <configuration>
+                                    <skipTests>true</skipTests>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- Instead run surefire-execs plugin -->
+                    <plugin>
+                        <groupId>com.forgerock.openicf</groupId>
+                        <artifactId>maven-surefire-execs-plugin</artifactId>
+                        <executions>
+                            <!-- Run junits with configuration -->
+                            <execution>
+                                <id>test-junits</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <configuration>
+                                    <skipTests>${junits.skip}</skipTests>
+                                    <testExecutionsPropertyValues>
+                                        <propertyName>testConfig</propertyName>
+                                        <propertyValues>${junitsConfigurations}</propertyValues>
+                                    </testExecutionsPropertyValues>
+                                </configuration>
+                            </execution>
+                            <!-- Run contract tests -->
+                            <execution>
+                                <id>test-contracts</id>
+                                <phase>integration-test</phase>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <configuration>
+                                    <bundleJar>${project.build.directory}/${project.build.finalName}.jar</bundleJar>
+                                    <skipTests>${contracts.skip}</skipTests>
+                                    <testSourceDirectory>${project.build.directory}/contractSources</testSourceDirectory>
+                                    <testClassesDirectory>${project.build.directory}/contractClasses</testClassesDirectory>
+                                    <additionalClasspathElements>
+                                        <additionalClasspathElement>${project.build.testOutputDirectory}</additionalClasspathElement>
+                                    </additionalClasspathElements>
+                                    <test>${contract.suiteName}</test>
+                                    <systemProperties>
+                                        <property>
+                                            <name>connectorName</name>
+                                            <value>${connectorName}</value>
+                                        </property>
+                                        <property>
+                                            <name>bundleJar</name>
+                                            <value>${project.build.directory}/${project.build.finalName}.jar</value>
+                                        </property>
+                                        <property>
+                                            <name>bundleName</name>
+                                            <!--value>${project.artifactId}</value-->
+                                            <value>${ConnectorBundle-Name}</value>
+                                        </property>
+                                        <property>
+                                            <name>bundleVersion</name>
+                                            <!--value>${project.version}</value-->
+                                            <value>${ConnectorBundle-Version}</value>
+                                        </property>
+                                    </systemProperties>
+                                    <testExecutionsPropertyValues>
+                                        <propertyName>testConfig</propertyName>
+                                        <propertyValues>${contractsConfigurations}</propertyValues>
+                                    </testExecutionsPropertyValues>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>
