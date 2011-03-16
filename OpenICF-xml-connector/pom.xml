@@ -1,25 +1,50 @@
-<?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+ Copyright (c) 2011 ForgeRock Inc. All Rights Reserved
+
+ The contents of this file are subject to the terms
+ of the Common Development and Distribution License
+ (the License). You may not use this file except in
+ compliance with the License.
+
+ You can obtain a copy of the License at
+ http://www.opensource.org/licenses/cddl1.php or
+ OpenIDM/legal/CDDLv1.0.txt
+ See the License for the specific language governing
+ permission and limitations under the License.
+
+ When distributing Covered Code, include this CDDL
+ Header Notice in each file and include the License file
+ at OpenIDM/legal/CDDLv1.0.txt.
+ If applicable, add the following below the CDDL Header,
+ with the fields enclosed by brackets [] replaced by
+ your own identifying information:
+ "Portions Copyrighted 2011 [name of copyright owner]"
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.forgerock.openicf.bundles</groupId>
         <artifactId>bundles-parent</artifactId>
-        <version>${CI_framework.version}</version>
-        <relativePath>../../../openicf/bundles-parent</relativePath>
+        <version>1.1.0.0-SNAPSHOT</version>
     </parent>
     <groupId>${defaultConnectorGroupId}</groupId>
+    <version>${defaultConnectorVersion}</version>
     <artifactId>xml</artifactId>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
     <name>Simulated XML Connector</name>
     <description>Connector can simulate almost any kind of resource.</description>
 
     <properties>
-        <connectorFamily>files</connectorFamily>
-        <skipTests>true</skipTests>
+        <defaultConnectorFamily>file</defaultConnectorFamily>
+        <skipTests>false</skipTests>
         <contracts.skip>true</contracts.skip>
+        <privateConfigPath>${user.home}/.connectors/connector-xml/config</privateConfigPath>
         <embedded.dependencies>jaxen,saxonhe,xsom</embedded.dependencies>
-        <connectorName>com.forgerock.openicf.xml.XMLConnector</connectorName>
+        <connectorPackage>com.forgerock.openicf.xml</connectorPackage>
+        <connectorClass>XMLConnector</connectorClass>
     </properties>
 
     <repositories>
@@ -52,5 +77,6 @@
             <version>20070407</version>
         </dependency>
     </dependencies>
+
 </project>
 
