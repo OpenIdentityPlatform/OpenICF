@@ -52,7 +52,7 @@
         <site>
             <id>website</id>
             <!--url>scp://www.forgerock.org/openicf/www/docs/project/</url-->
-            <url>dav:http://www.forgerock.org/openicf/www/docs/project/</url>
+            <url>dav:http://www.forgerock.org/openicf/www/docs/project/${project.version}/</url>
         </site>
     </distributionManagement>
     <mailingLists>

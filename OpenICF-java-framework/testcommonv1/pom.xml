@@ -33,9 +33,4 @@
     <artifactId>testcommonv1</artifactId>
     <name>testcommonv1</name>
     <packaging>jar</packaging>
-
-    <build>
-        <!--directory>${project.basedir}/dist</directory-->
-        <finalName>com.forgerock.openicf.testcommon-1.0.0.0</finalName>
-    </build>
 </project>

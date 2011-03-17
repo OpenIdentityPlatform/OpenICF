@@ -33,9 +33,4 @@
     <artifactId>testcommonv2</artifactId>
     <name>testcommonv2</name>
     <packaging>jar</packaging>
-
-    <build>
-        <!--directory>${project.basedir}/dist</directory-->
-        <finalName>org.identityconnectors.testcommon-2.0.0.0</finalName>
-    </build>
 </project>

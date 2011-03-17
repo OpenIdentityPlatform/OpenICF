@@ -197,24 +197,20 @@
                 <dependency>
                     <groupId>com.forgerock.openicf.framework</groupId>
                     <artifactId>connector-framework</artifactId>
-                    <!--version>${framework.version}</version-->
                 </dependency>
                 <dependency>
                     <groupId>com.forgerock.openicf.framework</groupId>
                     <artifactId>connector-test-common</artifactId>
-                    <!--version>${framework.version}</version-->
                     <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>com.forgerock.openicf.framework</groupId>
                     <artifactId>connector-framework-internal</artifactId>
-                    <!--version>${framework.version}</version-->
                     <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>com.forgerock.openicf.framework</groupId>
                     <artifactId>connector-framework-contract</artifactId>
-                    <!--version>${framework.version}</version-->
                     <scope>test</scope>
                 </dependency>
                 <dependency>
@@ -276,6 +272,7 @@
                     <plugin>
                         <artifactId>maven-dependency-plugin</artifactId>
                         <executions>
+
                             <!-- Copy classes from contract tests -->
                             <execution>
                                 <id>copy-contractclasses</id>
@@ -301,6 +298,7 @@
                             </execution>
                         </executions>
                     </plugin>
+
                     <!-- We want to package up license resources in the JARs produced -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -370,9 +368,7 @@
                                     </includes>
                                 </configuration>
                             </execution>
-
                         </executions>
-
                     </plugin>
 
                     <!-- And attach  sources -->
@@ -402,11 +398,13 @@
                             </execution>
                         </executions>
                     </plugin>
+
                     <!-- Instead run surefire-execs plugin -->
                     <plugin>
                         <groupId>com.forgerock.openicf</groupId>
                         <artifactId>maven-surefire-execs-plugin</artifactId>
                         <executions>
+
                             <!-- Run junits with configuration -->
                             <execution>
                                 <id>test-junits</id>
@@ -422,6 +420,7 @@
                                     </testExecutionsPropertyValues>
                                 </configuration>
                             </execution>
+
                             <!-- Run contract tests -->
                             <execution>
                                 <id>test-contracts</id>
@@ -465,6 +464,14 @@
                                 </configuration>
                             </execution>
                         </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-scm-plugin</artifactId>
+                        <configuration>
+                            <tag>${project.groupId}.${project.artifactId}-${project.version}</tag>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>

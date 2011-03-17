@@ -56,24 +56,20 @@
                 <dependency>
                     <groupId>com.forgerock.openicf.framework</groupId>
                     <artifactId>connector-framework</artifactId>
-                    <version>${framework.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>com.forgerock.openicf.framework</groupId>
                     <artifactId>connector-test-common</artifactId>
-                    <version>${framework.version}</version>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>com.forgerock.openicf.framework</groupId>
                     <artifactId>connector-framework-internal</artifactId>
-                    <version>${framework.version}</version>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>com.forgerock.openicf.framework</groupId>
                     <artifactId>connector-framework-contract</artifactId>
-                    <version>${framework.version}</version>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
