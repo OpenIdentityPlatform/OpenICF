@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<faqs xmlns="http://maven.apache.org/FML/1.0.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/FML/1.0.1 http://maven.apache.org/xsd/fml-1.0.1.xsd"
+  id="FAQ"
+  title="Frequently Asked Questions"
+  toplink="false">
+    <part id="General">
+        <title>Frequently Asked Questions</title>
+        <faq id="jrebel">
+            <question>What are Connectors?</question>
+            <answer>
+                <p>Connectors provide applications with a way to
+                    <a href="/design.html">decouple</a> from the resources that they connect to. The Identity
+                    Connectors Framework is aimed at user provisioning and identity management, but is generalized enough to support
+                    several different kinds of applications. For example, in addition to basic CRUD operations, the API supports Search,
+                    Sync, Authenticate, and Scripting operations, as well as others.
+                </p>
+                <p>Connectors themselves are self-contained
+                    <a href="/connector_bundles.html">bundles</a> that ride on top of the Connectors Framework.
+                    Applications are completely separated from the bundles, so that different implementations can be swapped in and out without affecting
+                    the app or its dependencies.
+                </p>
+            </answer>
+        </faq>
+    </part>
+</faqs>

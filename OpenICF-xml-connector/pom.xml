@@ -37,6 +37,15 @@
     <name>Simulated XML Connector</name>
     <description>Connector can simulate almost any kind of resource.</description>
 
+    <scm>
+        <!--connection>scm:svn:https://svn.forgerock.org/openicf/trunk/java/bundles/file/xml</connection>
+        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/java/bundles/file/xml</developerConnection-->
+        <url>http://sources.forgerock.org/browse/openicf/trunk/java/bundles/file/xml</url>
+        <connection>scm:svn:http://localhost/svn/openicf/trunk/java/bundles/file/xml</connection>
+        <developerConnection>scm:svn:http://localhost/svn/openicf/trunk/java/bundles/file/xml</developerConnection>
+    </scm>
+
+
     <properties>
         <defaultConnectorFamily>file</defaultConnectorFamily>
         <skipTests>false</skipTests>
