@@ -33,4 +33,16 @@
     <artifactId>testcommonv1</artifactId>
     <name>testcommonv1</name>
     <packaging>jar</packaging>
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <configuration>
+                        <generateReports>false</generateReports>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>

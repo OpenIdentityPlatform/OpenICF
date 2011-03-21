@@ -35,20 +35,20 @@
     <version>1.1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>OpenICF Bundles parent</name>
-    
+    <url>https://wikis.forgerock.org/confluence/display/openicf/Home/bundles/${ConnectorBundle-Name}/${project.version}</url>
+
     <description>
         This pom module is the parent for all connector bundles. It defines the dependencies on framework, building the connector bundle and common reporting for connectors.
         This is not multimodule project, it does not aggregate the connectors, it is just common parent.
     </description>
 
-    <scm>
-        <!--connection>scm:svn:https://svn.forgerock.org/openicf/trunk/java/bundles-parent</connection>
-        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/java/bundles-parent</developerConnection-->
+    <!--scm>
+        <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/java/bundles-parent</connection>
+        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/java/bundles-parent</developerConnection- ->
         <url>http://sources.forgerock.org/browse/openicf/trunk/java/bundles-parent</url>
         <connection>scm:svn:http://localhost/svn/openicf/trunk/java/bundles-parent</connection>
         <developerConnection>scm:svn:http://localhost/svn/openicf/trunk/java/bundles-parent</developerConnection>
-    </scm>
-
+    </scm-->
     <!-- mvn help:effective-pom
          mvn archetype:create-from-project
          mvn help:active-profiles
@@ -85,7 +85,7 @@
 
     <profiles>
         <profile>
-            <id>forgerock-release</id>
+            <id>forgerock-bundle-release</id>
             <build>
                 <plugins>
                     <plugin>
@@ -190,8 +190,7 @@
             <dependencies>
                 <dependency>
                     <groupId>com.forgerock.openicf</groupId>
-                    <artifactId>OpenICF-license</artifactId>
-                    <version>1.0</version>
+                    <artifactId>openicf-license</artifactId>
                     <scope>provided</scope>
                 </dependency>
                 <dependency>
@@ -243,6 +242,30 @@
                         <directory>src/test/resources</directory>
                     </testResource>
                 </testResources>
+                
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-release-plugin</artifactId>
+                            <version>2.1</version>
+                            <configuration>
+                                <mavenExecutorId>forked-path</mavenExecutorId>
+                                <useReleaseProfile>false</useReleaseProfile>
+                                <goals>deploy</goals>
+                                <arguments>-Pforgerock-release,forgerock-bundle-release</arguments>
+                            </configuration>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-scm-plugin</artifactId>
+                            <configuration>
+                                <tag>${project.groupId}.${project.artifactId}-${project.version}</tag>
+                                <message>[ForgeRock Connector Release] ${project.name} </message>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
 
                 <plugins>
                     <plugin>

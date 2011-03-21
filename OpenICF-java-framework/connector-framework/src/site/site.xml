@@ -25,25 +25,21 @@
 
 <project xmlns="http://maven.apache.org/DECORATION/1.0.1"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/DECORATION/1.0.1 http://maven.apache.org/xsd/decoration-1.0.1.xsd">
-    <skin>
-        <groupId>com.forgerock.openicf</groupId>
-        <artifactId>maven-openicf-skin</artifactId>
-        <version>1.0-SNAPSHOT</version>
-    </skin>
-    <publishDate position="right" format="yyyy.MM.dd"/>
-    <version position="right"/>
-    <bannerLeft>
+    xsi:schemaLocation="http://maven.apache.org/DECORATION/1.0.1 http://maven.apache.org/xsd/decoration-1.0.1.xsd">  
+    <!--bannerRight>
         <name>OpenICF</name>
-        <src>https://wikis.forgerock.org/confluence/plugins/servlet/builder/resource/OPENIDM/OpenIDM-tagline-200x65.png</src>
+        <src>images/OpenIDM-web-transparent.png</src>
         <alt>OpenICF</alt>
         <href>https://wikis.forgerock.org/confluence/display/openicf/Home</href>
-    </bannerLeft>
+    </bannerRight-->
+    
     <body>
-        <breadcrumbs>
-            <item name="OpenICF" href="https://wikis.forgerock.org/confluence/display/openicf/Home"/>
-        </breadcrumbs>
-        <menu ref="modules"/>
+        <menu ref="parent"/>
+        <menu name="Overview" img="images/arrow_right.png" inherit="top" inheritAsRef="true">
+            <item name="Introduction" href="index.html"/>
+            <item name="Usage" href="usage.html"/>
+            <item name="FAQ" href="faq.html"/>
+        </menu> 
         <menu ref="reports"/>
     </body>
 </project>
