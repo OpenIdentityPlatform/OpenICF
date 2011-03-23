@@ -1,22 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+<!--
+ Copyright (c) 2011 ForgeRock Inc. All Rights Reserved
+
+ The contents of this file are subject to the terms
+ of the Common Development and Distribution License
+ (the License). You may not use this file except in
+ compliance with the License.
+
+ You can obtain a copy of the License at
+ http://www.opensource.org/licenses/cddl1.php or
+ OpenIDM/legal/CDDLv1.0.txt
+ See the License for the specific language governing
+ permission and limitations under the License.
+
+ When distributing Covered Code, include this CDDL
+ Header Notice in each file and include the License file
+ at OpenIDM/legal/CDDLv1.0.txt.
+ If applicable, add the following below the CDDL Header,
+ with the fields enclosed by brackets [] replaced by
+ your own identifying information:
+ "Portions Copyrighted 2011 [name of copyright owner]"
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-	        <groupId>com.forgerock.openicf.bundles</groupId>
-	        <artifactId>bundles-parent</artifactId>
-	        <version>${CI_framework.version}</version>
-	        <relativePath>../../../openicf/bundles-parent</relativePath>
-	    </parent>
+        <groupId>com.forgerock.openicf.bundles</groupId>
+        <artifactId>bundles-parent</artifactId>
+        <version>1.1.0.0-SNAPSHOT</version>
+    </parent>
+    <groupId>com.forgerock.openicf.bundles.ldap</groupId>
     <artifactId>ldap</artifactId>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
     <name>OpenDJ and Sun DSEE Connector (Generic LDAP Connector)</name>
     <description>Connector for Sun DSEE and OpenDJ and Generic LDAP</description>
 
     <properties>
+        <defaultConnectorFamily>ldap</defaultConnectorFamily>
         <skipTests>true</skipTests>
+        <contracts.skip>true</contracts.skip>
+        <privateConfigPath>${user.home}/.connectors/connector-${project.artifactId}/config</privateConfigPath>
         <embedded.dependencies>jndi</embedded.dependencies>
-        <connectorName>org.identityconnectors.ldap.LdapConnector</connectorName>
+        <connectorPackage>org.identityconnectors.ldap</connectorPackage>
+        <connectorClass>LdapConnector</connectorClass>
     </properties>
 
     <dependencies>
