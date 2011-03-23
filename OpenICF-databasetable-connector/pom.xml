@@ -1,30 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+<!--
+ Copyright (c) 2011 ForgeRock Inc. All Rights Reserved
+
+ The contents of this file are subject to the terms
+ of the Common Development and Distribution License
+ (the License). You may not use this file except in
+ compliance with the License.
+
+ You can obtain a copy of the License at
+ http://www.opensource.org/licenses/cddl1.php or
+ OpenIDM/legal/CDDLv1.0.txt
+ See the License for the specific language governing
+ permission and limitations under the License.
+
+ When distributing Covered Code, include this CDDL
+ Header Notice in each file and include the License file
+ at OpenIDM/legal/CDDLv1.0.txt.
+ If applicable, add the following below the CDDL Header,
+ with the fields enclosed by brackets [] replaced by
+ your own identifying information:
+ "Portions Copyrighted 2011 [name of copyright owner]"
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.forgerock.openicf.bundles</groupId>
         <artifactId>bundles-parent</artifactId>
-        <version>1.1.0-SNAPSHOT</version>
-        <relativePath>../../maven/bundles-parent</relativePath>
+        <version>1.1.0.0-SNAPSHOT</version>
     </parent>
+    <groupId>com.forgerock.openicf.bundles.db</groupId>
     <artifactId>databasetable</artifactId>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
     <name>Database Table Connector</name>
     <description>Database table connector use a single database table to store the Account attributes.</description>
 
     <properties>
+        <defaultConnectorFamily>db</defaultConnectorFamily>
         <skipTests>true</skipTests>
         <contracts.skip>true</contracts.skip>
+        <privateConfigPath>${user.home}/.connectors/connector-${project.artifactId}/config</privateConfigPath>
         <embedded.dependencies>dbcommon</embedded.dependencies>
-        <connectorName>org.identityconnectors.databasetable.DatabaseTableConnector</connectorName>
+        <connectorPackage>org.identityconnectors.databasetable</connectorPackage>
+        <connectorClass>DatabaseTableConnector</connectorClass>
     </properties>
 
     <dependencies>
         <dependency>
-            <groupId>com.forgerock.openicf.bundles</groupId>
+            <groupId>com.forgerock.openicf.bundles.misc</groupId>
             <artifactId>dbcommon</artifactId>
-            <version>1.1.0-SNAPSHOT</version>
+            <version>1.1.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.derby</groupId>
