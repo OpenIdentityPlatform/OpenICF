@@ -22,11 +22,11 @@
  */
 package org.identityconnectors.framework.common.objects;
 
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
 import static org.identityconnectors.framework.common.objects.AttributeInfoBuilder.build;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -35,7 +35,6 @@ import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
-import org.junit.Test;
 
 public class AttributeInfoUtilTests {
 
@@ -56,12 +55,12 @@ public class AttributeInfoUtilTests {
         assertTrue(AttributeInfoUtil.find("Daffff", attrs) == null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void testPasswordBuild() {
         AttributeInfoBuilder.build(OperationalAttributes.PASSWORD_NAME);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void testCurrentPasswordBuild() {
         AttributeInfoBuilder.build(OperationalAttributes.CURRENT_PASSWORD_NAME);
     }

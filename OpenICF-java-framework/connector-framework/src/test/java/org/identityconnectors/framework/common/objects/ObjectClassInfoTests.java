@@ -22,11 +22,12 @@
  */
 package org.identityconnectors.framework.common.objects;
 
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
+import org.testng.annotations.BeforeMethod;
 import static org.identityconnectors.framework.common.objects.LocaleTestUtil.resetLocaleCache;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
@@ -39,19 +40,16 @@ import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
 
 
 public class ObjectClassInfoTests {
 
-    @Before
-    public void before() {
+    @BeforeMethod
+	public void before() {
         resetLocaleCache();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void testNoName() {
         new ObjectClassInfo(ObjectClass.ACCOUNT_NAME, new HashSet<AttributeInfo>(),false);
     }
@@ -60,17 +58,17 @@ public class ObjectClassInfoTests {
     public void testBuilderAddsName() {
         ObjectClassInfo o = new ObjectClassInfoBuilder().build();
         Map<String, AttributeInfo> map = AttributeInfoUtil.toMap(o.getAttributeInfo());
-        Assert.assertTrue(map.containsKey(Name.NAME));
+        assertTrue(map.containsKey(Name.NAME));
     }
     
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void testDuplicate() {
         ObjectClassInfoBuilder bld = new ObjectClassInfoBuilder();
         bld.addAttributeInfo(AttributeInfoBuilder.build("bob"));
         bld.addAttributeInfo(AttributeInfoBuilder.build("bob"));
     }
     
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void testAllDuplicate() {
         ObjectClassInfoBuilder bld = new ObjectClassInfoBuilder();
         Set<AttributeInfo> set = new HashSet<AttributeInfo>();

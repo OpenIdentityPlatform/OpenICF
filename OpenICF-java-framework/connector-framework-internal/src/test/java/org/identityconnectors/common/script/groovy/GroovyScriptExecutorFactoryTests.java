@@ -22,11 +22,11 @@
  */
 package org.identityconnectors.common.script.groovy;
 
+import org.testng.annotations.Test;
+import org.testng.AssertJUnit;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.script.ScriptExecutor;
 import org.identityconnectors.common.script.ScriptExecutorFactory;
-import org.junit.Assert;
-import org.junit.Test;
 
 
 public class GroovyScriptExecutorFactoryTests {
@@ -45,9 +45,9 @@ public class GroovyScriptExecutorFactoryTests {
         Object actual;
         ScriptExecutor ex = getScriptExecutor("return x;");
         actual = ex.execute(CollectionUtil.<String, Object>newMap("x", 1));
-        Assert.assertEquals(1, actual);
+        AssertJUnit.assertEquals(1, actual);
         actual = ex.execute(CollectionUtil.<String, Object>newMap("x", 2));
-        Assert.assertEquals(2, actual);
+        AssertJUnit.assertEquals(2, actual);
     }
     
     private ScriptExecutor getScriptExecutor(String script) {

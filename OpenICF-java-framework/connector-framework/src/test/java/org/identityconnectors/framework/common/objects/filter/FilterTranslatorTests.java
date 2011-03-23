@@ -22,6 +22,8 @@
  */
 package org.identityconnectors.framework.common.objects.filter;
 
+import org.testng.annotations.Test;
+import org.testng.AssertJUnit;
 import java.util.List;
 
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -38,8 +40,6 @@ import org.identityconnectors.framework.common.objects.filter.GreaterThanOrEqual
 import org.identityconnectors.framework.common.objects.filter.LessThanFilter;
 import org.identityconnectors.framework.common.objects.filter.LessThanOrEqualFilter;
 import org.identityconnectors.framework.common.objects.filter.StartsWithFilter;
-import org.junit.Assert;
-import org.junit.Test;
 
 
 
@@ -222,13 +222,13 @@ public class FilterTranslatorTests {
             String expected = "( CONTAINS att-name att-value )";
             String actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
             
             filter = FilterBuilder.not(filter);
             expected = "( ! "+expected+" )";
             actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
         }
         
         {
@@ -237,13 +237,13 @@ public class FilterTranslatorTests {
             String expected = "( ENDS-WITH att-name att-value )";
             String actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
             
             filter = FilterBuilder.not(filter);
             expected = "( ! "+expected+" )";
             actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
         }
         
         {
@@ -252,13 +252,13 @@ public class FilterTranslatorTests {
             String expected = "( = att-name [att-value] )";
             String actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
             
             filter = FilterBuilder.not(filter);
             expected = "( ! "+expected+" )";
             actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
         }
         
         {
@@ -267,13 +267,13 @@ public class FilterTranslatorTests {
             String expected = "( > att-name att-value )";
             String actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
             
             filter = FilterBuilder.not(filter);
             expected = "( ! "+expected+" )";
             actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
         }
         
         {
@@ -282,13 +282,13 @@ public class FilterTranslatorTests {
             String expected = "( >= att-name att-value )";
             String actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
             
             filter = FilterBuilder.not(filter);
             expected = "( ! "+expected+" )";
             actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
         }
         
         {
@@ -297,13 +297,13 @@ public class FilterTranslatorTests {
             String expected = "( < att-name att-value )";
             String actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
             
             filter = FilterBuilder.not(filter);
             expected = "( ! "+expected+" )";
             actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
         }
         
         {
@@ -312,13 +312,13 @@ public class FilterTranslatorTests {
             String expected = "( <= att-name att-value )";
             String actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
             
             filter = FilterBuilder.not(filter);
             expected = "( ! "+expected+" )";
             actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
         }
         
         {
@@ -327,13 +327,13 @@ public class FilterTranslatorTests {
             String expected = "( STARTS-WITH att-name att-value )";
             String actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
             
             filter = FilterBuilder.not(filter);
             expected = "( ! "+expected+" )";
             actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
         }
         
         {
@@ -342,13 +342,13 @@ public class FilterTranslatorTests {
             String expected = "( CONTAINS-ALL-VALUES "+attribute+" )";
             String actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
             
             filter = FilterBuilder.not(filter);
             expected = "( ! "+expected+" )";
             actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
         }        
         //and
         {
@@ -364,7 +364,7 @@ public class FilterTranslatorTests {
                 "( & "+expectedLeft+" "+expectedRight+" )";
             String actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
             
             filter = FilterBuilder.not(filter);
             expectedLeft = "( ! "+expectedLeft+" )";
@@ -373,7 +373,7 @@ public class FilterTranslatorTests {
                 "( | "+expectedLeft+" "+expectedRight+" )";
             actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
             
         }
         
@@ -391,7 +391,7 @@ public class FilterTranslatorTests {
                 "( | "+expectedLeft+" "+expectedRight+" )";
             String actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
             
             filter = FilterBuilder.not(filter);
             expectedLeft = "( ! "+expectedLeft+" )";
@@ -400,7 +400,7 @@ public class FilterTranslatorTests {
                 "( & "+expectedLeft+" "+expectedRight+" )";
             actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);            
+            AssertJUnit.assertEquals(expected, actual);            
         }
         
         //double-negative
@@ -412,7 +412,7 @@ public class FilterTranslatorTests {
             String expected = "( CONTAINS att-name att-value )";
             String actual =
                 translateSingle(translator, filter);
-            Assert.assertEquals(expected, actual);
+            AssertJUnit.assertEquals(expected, actual);
         }
 
     }
@@ -443,19 +443,19 @@ public class FilterTranslatorTests {
         String actual =
             translateSingle(new AllFiltersTranslator(),filter);
         
-        Assert.assertEquals(expected, actual);
+        AssertJUnit.assertEquals(expected, actual);
         
         List<String> results =
             new NoOrTranslator().translate(filter);
-        Assert.assertEquals(4, results.size());
+        AssertJUnit.assertEquals(4, results.size());
 
-        Assert.assertEquals("( & ( CONTAINS a a ) ( CONTAINS c c ) )", 
+        AssertJUnit.assertEquals("( & ( CONTAINS a a ) ( CONTAINS c c ) )", 
                 results.get(0));
-        Assert.assertEquals("( & ( CONTAINS a a ) ( CONTAINS d d ) )", 
+        AssertJUnit.assertEquals("( & ( CONTAINS a a ) ( CONTAINS d d ) )", 
                 results.get(1));
-        Assert.assertEquals("( & ( CONTAINS b b ) ( CONTAINS c c ) )", 
+        AssertJUnit.assertEquals("( & ( CONTAINS b b ) ( CONTAINS c c ) )", 
                 results.get(2));
-        Assert.assertEquals("( & ( CONTAINS b b ) ( CONTAINS d d ) )", 
+        AssertJUnit.assertEquals("( & ( CONTAINS b b ) ( CONTAINS d d ) )", 
                 results.get(3));
     }
     
@@ -479,7 +479,7 @@ public class FilterTranslatorTests {
         String expected = "( | ( CONTAINS a a ) ( CONTAINS b b ) )";
         String actual =
             translateSingle(new NoEndsWithTranslator(),filter);
-        Assert.assertEquals(expected, actual);
+        AssertJUnit.assertEquals(expected, actual);
         
     }
     //-no leaf + no or
@@ -500,10 +500,10 @@ public class FilterTranslatorTests {
                     FilterBuilder.or(c, d));
         List<String> results =
             new NoEndsWithNoOrTranslator().translate(filter);
-        Assert.assertEquals(2, results.size());
-        Assert.assertEquals("( CONTAINS a a )", 
+        AssertJUnit.assertEquals(2, results.size());
+        AssertJUnit.assertEquals("( CONTAINS a a )", 
                 results.get(0));
-        Assert.assertEquals("( CONTAINS b b )", 
+        AssertJUnit.assertEquals("( CONTAINS b b )", 
                 results.get(1));
 
     }
@@ -527,7 +527,7 @@ public class FilterTranslatorTests {
         String expected = "( | ( CONTAINS a a ) ( CONTAINS b b ) )";
         String actual =
             translateSingle(new NoAndTranslator(),filter);
-        Assert.assertEquals(expected, actual);        
+        AssertJUnit.assertEquals(expected, actual);        
     }
     
     //-no and+no leaf
@@ -549,7 +549,7 @@ public class FilterTranslatorTests {
         String expected = "( | ( CONTAINS a a ) ( CONTAINS b b ) )";
         String actual =
             translateSingle(new NoAndNoEndsWithTranslator(),filter);
-        Assert.assertEquals(expected, actual);                
+        AssertJUnit.assertEquals(expected, actual);                
         
         a =
             FilterBuilder.contains(AttributeBuilder.build("a", "a"));
@@ -567,7 +567,7 @@ public class FilterTranslatorTests {
         expected = "( | ( CONTAINS c c ) ( CONTAINS d d ) )";
         actual =
             translateSingle(new NoAndNoEndsWithTranslator(),filter);
-        Assert.assertEquals(expected, actual);                
+        AssertJUnit.assertEquals(expected, actual);                
         
         a =
             FilterBuilder.contains(AttributeBuilder.build("a", "a"));
@@ -584,7 +584,7 @@ public class FilterTranslatorTests {
                     FilterBuilder.or(c, d));
         List<String> results = 
             new NoAndNoEndsWithTranslator().translate(filter);
-        Assert.assertEquals(0, results.size());                
+        AssertJUnit.assertEquals(0, results.size());                
     }
     
     //-no and, no or, no leaf
@@ -605,10 +605,10 @@ public class FilterTranslatorTests {
                     FilterBuilder.or(c, d));
         List<String> results =
             new NoAndNoOrNoEndsWithTranslator().translate(filter);
-        Assert.assertEquals(2, results.size());
-        Assert.assertEquals("( CONTAINS a a )", 
+        AssertJUnit.assertEquals(2, results.size());
+        AssertJUnit.assertEquals("( CONTAINS a a )", 
                 results.get(0));
-        Assert.assertEquals("( CONTAINS b b )", 
+        AssertJUnit.assertEquals("( CONTAINS b b )", 
                 results.get(1));
         
         a =
@@ -625,10 +625,10 @@ public class FilterTranslatorTests {
                     FilterBuilder.or(c, d));
         results =
             new NoAndNoOrNoEndsWithTranslator().translate(filter);
-        Assert.assertEquals(2, results.size());
-        Assert.assertEquals("( CONTAINS c c )", 
+        AssertJUnit.assertEquals(2, results.size());
+        AssertJUnit.assertEquals("( CONTAINS c c )", 
                 results.get(0));
-        Assert.assertEquals("( CONTAINS d d )", 
+        AssertJUnit.assertEquals("( CONTAINS d d )", 
                 results.get(1));
         
     }
@@ -637,7 +637,7 @@ public class FilterTranslatorTests {
             Filter filter) {
         List<String> translated =
             translator.translate(filter);
-        Assert.assertEquals(1, translated.size());
+        AssertJUnit.assertEquals(1, translated.size());
         return translated.get(0);
     }
 }

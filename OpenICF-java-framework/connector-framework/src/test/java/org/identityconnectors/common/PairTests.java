@@ -22,12 +22,12 @@
  */
 package org.identityconnectors.common;
 
+import org.testng.annotations.Test;
+import org.testng.AssertJUnit;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.identityconnectors.common.Pair;
-import org.junit.Assert;
-import org.junit.Test;
 
 
 /**
@@ -39,10 +39,10 @@ public class PairTests {
     public void equals() {
         Pair<String, String> a = new Pair<String, String>("a", "b");
         Pair<String, String> b = new Pair<String, String>("a", "b");
-        Assert.assertTrue(a.equals(b));
-        Assert.assertFalse(a.equals(null));
-        Assert.assertFalse(b.equals(null));
-        Assert.assertFalse(a.equals("f"));
+        AssertJUnit.assertTrue(a.equals(b));
+        AssertJUnit.assertFalse(a.equals(null));
+        AssertJUnit.assertFalse(b.equals(null));
+        AssertJUnit.assertFalse(a.equals("f"));
     }
 
     @Test
@@ -52,9 +52,9 @@ public class PairTests {
             Pair<Integer, Integer> pair = new Pair<Integer, Integer>(i, i+1);
             Pair<Integer, Integer> tst = new Pair<Integer, Integer>(i, i+1);
             set.add(pair);
-            Assert.assertTrue(set.contains(tst));
+            AssertJUnit.assertTrue(set.contains(tst));
         }
         // check that each pair is unique..
-        Assert.assertEquals(20, set.size());
+        AssertJUnit.assertEquals(20, set.size());
     }
 }

@@ -22,63 +22,62 @@
  */
 package org.identityconnectors.common.security;
 
-import junit.framework.Assert;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.Test;
+import org.testng.annotations.BeforeMethod;
+import org.testng.AssertJUnit;
 
 public class GuardedStringTests {
     
-    @Before
-    public void setUp() {
+    @BeforeMethod
+	public void setUp() {
         GuardedString.setEncryptor(new SimpleEncryptor());
     }
     
-    @After
-    public void tearDown() {
+    @AfterMethod
+	public void tearDown() {
         GuardedString.setEncryptor(null);
     }
     
     @Test
     public void testBasics() {
         GuardedString str = new GuardedString("foo".toCharArray());
-        Assert.assertEquals("foo", decryptToString(str));
+        AssertJUnit.assertEquals("foo", decryptToString(str));
         str.appendChar('2');
-        Assert.assertEquals("foo2", decryptToString(str));
-        Assert.assertFalse(str.verifyBase64SHA1Hash(SecurityUtil.computeBase64SHA1Hash("foo".toCharArray())));
-        Assert.assertTrue(str.verifyBase64SHA1Hash(SecurityUtil.computeBase64SHA1Hash("foo2".toCharArray())));
+        AssertJUnit.assertEquals("foo2", decryptToString(str));
+        AssertJUnit.assertFalse(str.verifyBase64SHA1Hash(SecurityUtil.computeBase64SHA1Hash("foo".toCharArray())));
+        AssertJUnit.assertTrue(str.verifyBase64SHA1Hash(SecurityUtil.computeBase64SHA1Hash("foo2".toCharArray())));
     }
     
     @Test
     public void testEquals() {
         GuardedString str1 = new GuardedString();
         GuardedString str2 = new GuardedString();
-        Assert.assertEquals(str1, str2);
+        AssertJUnit.assertEquals(str1, str2);
         str2.appendChar('2');
-        Assert.assertFalse(str1.equals(str2));
+        AssertJUnit.assertFalse(str1.equals(str2));
         str1.appendChar('2');
-        Assert.assertEquals(str1, str2);
+        AssertJUnit.assertEquals(str1, str2);
     }
     
     @Test
     public void testReadOnly() {
         GuardedString str = new GuardedString("foo".toCharArray());
-        Assert.assertEquals(false, str.isReadOnly());
+        AssertJUnit.assertEquals(false, str.isReadOnly());
         str.makeReadOnly();
-        Assert.assertEquals(true, str.isReadOnly());
-        Assert.assertEquals("foo", decryptToString(str));
+        AssertJUnit.assertEquals(true, str.isReadOnly());
+        AssertJUnit.assertEquals("foo", decryptToString(str));
         try {
             str.appendChar('2');
-            Assert.fail("expected exception");
+            AssertJUnit.fail("expected exception");
         }
         catch (IllegalStateException e) {
             
         }
         str = str.copy();
-        Assert.assertEquals("foo", decryptToString(str));
+        AssertJUnit.assertEquals("foo", decryptToString(str));
         str.appendChar('2');
-        Assert.assertEquals("foo2", decryptToString(str));
+        AssertJUnit.assertEquals("foo2", decryptToString(str));
     }
     
     @Test
@@ -87,35 +86,35 @@ public class GuardedStringTests {
         str.dispose();
         try {
             decryptToString(str);
-            Assert.fail("expected exception");
+            AssertJUnit.fail("expected exception");
         }
         catch (IllegalStateException e) {
             
         }
         try {
             str.isReadOnly();
-            Assert.fail("expected exception");
+            AssertJUnit.fail("expected exception");
         }
         catch (IllegalStateException e) {
             
         }
         try {
             str.appendChar('c');
-            Assert.fail("expected exception");
+            AssertJUnit.fail("expected exception");
         }
         catch (IllegalStateException e) {
             
         }
         try {
             str.copy();
-            Assert.fail("expected exception");
+            AssertJUnit.fail("expected exception");
         }
         catch (IllegalStateException e) {
             
         }
         try {
             str.verifyBase64SHA1Hash("foo");
-            Assert.fail("expected exception");
+            AssertJUnit.fail("expected exception");
         }
         catch (IllegalStateException e) {
             
@@ -132,7 +131,7 @@ public class GuardedStringTests {
             gs.access(new GuardedString.Accessor() {
                 public void access(char[] clearChars) {
                     int v = (int)clearChars[0];
-                    Assert.assertEquals(expected, v);
+                    AssertJUnit.assertEquals(expected, v);
                 }
     
             });

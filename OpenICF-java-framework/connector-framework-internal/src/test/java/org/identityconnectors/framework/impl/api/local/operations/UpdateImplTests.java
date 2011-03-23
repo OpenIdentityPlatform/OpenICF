@@ -22,6 +22,8 @@
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
+import org.testng.annotations.Test;
+import org.testng.AssertJUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -35,8 +37,6 @@ import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.impl.api.local.operations.UpdateImpl;
-import org.junit.Assert;
-import org.junit.Test;
 
 
 /**
@@ -44,36 +44,36 @@ import org.junit.Test;
  */
 public class UpdateImplTests {
 
-    @Test(expected=NullPointerException.class)
+    @Test(expectedExceptions=NullPointerException.class)
     public void validateUidArg() {
         UpdateImpl.validateInput(ObjectClass.ACCOUNT, null, new HashSet<Attribute>(),true);
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expectedExceptions=NullPointerException.class)
     public void validateObjectClassArg() {
         UpdateImpl.validateInput(null, new Uid("foo"), new HashSet<Attribute>(),true);
     }
     
-    @Test(expected=NullPointerException.class)
+    @Test(expectedExceptions=NullPointerException.class)
     public void validateAttrsArg() {
         UpdateImpl.validateInput(ObjectClass.ACCOUNT, new Uid("foo"),null,true);
     }
     
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void validateUidAttribute() {
         Set<Attribute> attrs=new HashSet<Attribute>();
         attrs.add(new Uid("foo"));
         UpdateImpl.validateInput(ObjectClass.ACCOUNT, new Uid("foo"),attrs,true);
     }
     
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void validateAddWithNullAttribute() {
         Set<Attribute> attrs = new HashSet<Attribute>();
         attrs.add(AttributeBuilder.build("something"));
         UpdateImpl.validateInput(ObjectClass.ACCOUNT, new Uid("foo"), attrs, true);        
     }
     
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void validateAttemptToAddName() {
         Set<Attribute> attrs = new HashSet<Attribute>();
         attrs.add(new Name("fadf"));
@@ -94,7 +94,7 @@ public class UpdateImplTests {
             attrs.add(attr);
             try {
                 UpdateImpl.validateInput(ObjectClass.ACCOUNT, new Uid("1"), attrs,true);
-                Assert.fail("Failed: " + attr.getName());
+                AssertJUnit.fail("Failed: " + attr.getName());
             } catch (IllegalArgumentException e) {
                 // this is a good thing..
             }
@@ -113,7 +113,7 @@ public class UpdateImplTests {
         changeset.add(cattr);
         expected.add(AttributeBuilder.build("abc", 2));        
         actual = up.merge(changeset, base, true);
-        Assert.assertEquals(expected, actual);
+        AssertJUnit.assertEquals(expected, actual);
     }
 
     @Test
@@ -130,7 +130,7 @@ public class UpdateImplTests {
         changeset.add(cattr);
         expected.add(AttributeBuilder.build("abc", 1, 2));        
         actual = up.merge(changeset, base,true);
-        Assert.assertEquals(expected, actual);
+        AssertJUnit.assertEquals(expected, actual);
     }
     
     @Test
@@ -144,7 +144,7 @@ public class UpdateImplTests {
         Attribute cattr = AttributeBuilder.build("abc", 2);
         changeset.add(cattr);
         actual = up.merge(changeset, base, false);
-        Assert.assertEquals(expected, actual);
+        AssertJUnit.assertEquals(expected, actual);
     }
 
     @Test
@@ -161,7 +161,7 @@ public class UpdateImplTests {
         changeset.add(cattr);
         expected.add(AttributeBuilder.build("abc", 1));
         actual = up.merge(changeset, base, false);
-        Assert.assertEquals(expected, actual);
+        AssertJUnit.assertEquals(expected, actual);
     }
 
     @Test
@@ -178,7 +178,7 @@ public class UpdateImplTests {
         changeset.add(cattr);
         expected.add(AttributeBuilder.build("abc"));
         actual = up.merge(changeset, base, false);
-        Assert.assertEquals(expected, actual);
+        AssertJUnit.assertEquals(expected, actual);
     }
 
     

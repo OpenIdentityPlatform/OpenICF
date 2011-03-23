@@ -22,66 +22,64 @@
  */
 package org.identityconnectors.common.security;
 
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.Test;
+import org.testng.annotations.BeforeMethod;
+import org.testng.AssertJUnit;
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 
-import junit.framework.Assert;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 public class GuardedByteArrayTests {
     
-    @Before
-    public void setUp() {
+    @BeforeMethod
+	public void setUp() {
         GuardedByteArray.setEncryptor(new SimpleEncryptor());
     }
     
-    @After
-    public void tearDown() {
+    @AfterMethod
+	public void tearDown() {
         GuardedByteArray.setEncryptor(null);
     }
     
     @Test
     public void testBasics() {
         GuardedByteArray bytes = new GuardedByteArray(new byte[] { 0x00, 0x01, 0x02 });
-        Assert.assertTrue(Arrays.equals(new byte[] { 0x00, 0x01, 0x02 }, decryptToBytes(bytes)));
+        AssertJUnit.assertTrue(Arrays.equals(new byte[] { 0x00, 0x01, 0x02 }, decryptToBytes(bytes)));
         bytes.appendByte((byte) 0x03);
-        Assert.assertTrue(Arrays.equals(new byte[] { 0x00, 0x01, 0x02, 0x03 }, decryptToBytes(bytes)));
-        Assert.assertFalse(bytes.verifyBase64SHA1Hash(SecurityUtil.computeBase64SHA1Hash(new byte[] { 0x00, 0x01, 0x02 })));
-        Assert.assertTrue(bytes.verifyBase64SHA1Hash(SecurityUtil.computeBase64SHA1Hash(new byte[] { 0x00, 0x01, 0x02, 0x03 })));
+        AssertJUnit.assertTrue(Arrays.equals(new byte[] { 0x00, 0x01, 0x02, 0x03 }, decryptToBytes(bytes)));
+        AssertJUnit.assertFalse(bytes.verifyBase64SHA1Hash(SecurityUtil.computeBase64SHA1Hash(new byte[] { 0x00, 0x01, 0x02 })));
+        AssertJUnit.assertTrue(bytes.verifyBase64SHA1Hash(SecurityUtil.computeBase64SHA1Hash(new byte[] { 0x00, 0x01, 0x02, 0x03 })));
     }
     
     @Test
     public void testEquals() {
         GuardedByteArray bytes1 = new GuardedByteArray();
         GuardedByteArray bytes2 = new GuardedByteArray();
-        Assert.assertEquals(bytes1, bytes2);
+        AssertJUnit.assertEquals(bytes1, bytes2);
         bytes2.appendByte((byte) 0x03);
-        Assert.assertFalse(bytes1.equals(bytes2));
+        AssertJUnit.assertFalse(bytes1.equals(bytes2));
         bytes1.appendByte((byte) 0x03);
-        Assert.assertEquals(bytes1, bytes2);
+        AssertJUnit.assertEquals(bytes1, bytes2);
     }
     
     @Test
     public void testReadOnly() {
         GuardedByteArray bytes = new GuardedByteArray(new byte[] { 0x00, 0x01, 0x02 });
-        Assert.assertEquals(false, bytes.isReadOnly());
+        AssertJUnit.assertEquals(false, bytes.isReadOnly());
         bytes.makeReadOnly();
-        Assert.assertEquals(true, bytes.isReadOnly());
-        Assert.assertTrue(Arrays.equals(new byte[] { 0x00, 0x01, 0x02 }, decryptToBytes(bytes)));
+        AssertJUnit.assertEquals(true, bytes.isReadOnly());
+        AssertJUnit.assertTrue(Arrays.equals(new byte[] { 0x00, 0x01, 0x02 }, decryptToBytes(bytes)));
         try {
             bytes.appendByte((byte) 0x03);
-            Assert.fail("expected exception");
+            AssertJUnit.fail("expected exception");
         }
         catch (IllegalStateException e) {
             
         }
         bytes = bytes.copy();
-        Assert.assertTrue(Arrays.equals(new byte[] { 0x00, 0x01, 0x02 }, decryptToBytes(bytes)));
+        AssertJUnit.assertTrue(Arrays.equals(new byte[] { 0x00, 0x01, 0x02 }, decryptToBytes(bytes)));
         bytes.appendByte((byte) 0x03);
-        Assert.assertTrue(Arrays.equals(new byte[] { 0x00, 0x01, 0x02, 0x03 }, decryptToBytes(bytes)));
+        AssertJUnit.assertTrue(Arrays.equals(new byte[] { 0x00, 0x01, 0x02, 0x03 }, decryptToBytes(bytes)));
     }
     
     @Test
@@ -90,35 +88,35 @@ public class GuardedByteArrayTests {
         str.dispose();
         try {
             decryptToBytes(str);
-            Assert.fail("expected exception");
+            AssertJUnit.fail("expected exception");
         }
         catch (IllegalStateException e) {
             
         }
         try {
             str.isReadOnly();
-            Assert.fail("expected exception");
+            AssertJUnit.fail("expected exception");
         }
         catch (IllegalStateException e) {
             
         }
         try {
             str.appendByte((byte) 0x03);
-            Assert.fail("expected exception");
+            AssertJUnit.fail("expected exception");
         }
         catch (IllegalStateException e) {
             
         }
         try {
             str.copy();
-            Assert.fail("expected exception");
+            AssertJUnit.fail("expected exception");
         }
         catch (IllegalStateException e) {
             
         }
         try {
             str.verifyBase64SHA1Hash("foo");
-            Assert.fail("expected exception");
+            AssertJUnit.fail("expected exception");
         }
         catch (IllegalStateException e) {
             
@@ -133,7 +131,7 @@ public class GuardedByteArrayTests {
             bytes.access(new GuardedByteArray.Accessor() {
                 public void access(byte[] clearBytes) {
                     byte v = clearBytes[0];
-                    Assert.assertEquals(expected, v);
+                    AssertJUnit.assertEquals(expected, v);
                 }
     
             });

@@ -22,14 +22,13 @@
  */
 package org.identityconnectors.framework.impl.api.local;
 
-import junit.framework.Assert;
-
+import org.testng.annotations.Test;
+import org.testng.AssertJUnit;
 import org.identityconnectors.common.pooling.ObjectPoolConfiguration;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.impl.api.local.ObjectPool;
 import org.identityconnectors.framework.impl.api.local.ObjectPoolHandler;
 import org.identityconnectors.framework.impl.api.local.ObjectPool.Statistics;
-import org.junit.Test;
 
 
 public class ObjectPoolTests {
@@ -38,7 +37,8 @@ public class ObjectPoolTests {
         
         private boolean _isGood = true;
         
-        public void test() {
+        @Test
+		public void test() {
             if (!_isGood) {
                 throw new ConnectorException("Connection is bad");
             }
@@ -65,7 +65,8 @@ public class ObjectPoolTests {
             }
             return rv;
         }
-        public void testObject(MyTestConnection object) {
+        @Test
+		public void testObject(MyTestConnection object) {
             object.test();
         }
         public void disposeObject(MyTestConnection object) {
@@ -143,15 +144,15 @@ public class ObjectPoolTests {
         
         //these should be the same since we never 
         //should have disposed anything
-        Assert.assertEquals(MAX_CONNECTIONS, fact.getTotalCreatedConnections());
+        AssertJUnit.assertEquals(MAX_CONNECTIONS, fact.getTotalCreatedConnections());
         Statistics stats = pool.getStatistics();
-        Assert.assertEquals(0, stats.getNumActive());
-        Assert.assertEquals(MAX_CONNECTIONS, stats.getNumIdle());
+        AssertJUnit.assertEquals(0, stats.getNumActive());
+        AssertJUnit.assertEquals(MAX_CONNECTIONS, stats.getNumIdle());
         
         pool.shutdown();
         stats = pool.getStatistics();
-        Assert.assertEquals(0, stats.getNumActive());
-        Assert.assertEquals(0, stats.getNumIdle());        
+        AssertJUnit.assertEquals(0, stats.getNumActive());
+        AssertJUnit.assertEquals(0, stats.getNumIdle());        
         
     }
     
@@ -171,22 +172,22 @@ public class ObjectPoolTests {
         
         //borrow first connection and return
         MyTestConnection conn = pool.borrowObject();
-        Assert.assertEquals(1, fact.getTotalCreatedConnections());
+        AssertJUnit.assertEquals(1, fact.getTotalCreatedConnections());
         pool.returnObject(conn);
-        Assert.assertEquals(1, fact.getTotalCreatedConnections());
+        AssertJUnit.assertEquals(1, fact.getTotalCreatedConnections());
         
         //re-borrow same connection and return
         conn = pool.borrowObject();
-        Assert.assertEquals(1, fact.getTotalCreatedConnections());
+        AssertJUnit.assertEquals(1, fact.getTotalCreatedConnections());
         pool.returnObject(conn);
-        Assert.assertEquals(1, fact.getTotalCreatedConnections());
+        AssertJUnit.assertEquals(1, fact.getTotalCreatedConnections());
         
         //dispose and make sure we get a new connection
         conn.dispose(); 
         conn = pool.borrowObject();
-        Assert.assertEquals(2, fact.getTotalCreatedConnections());
+        AssertJUnit.assertEquals(2, fact.getTotalCreatedConnections());
         pool.returnObject(conn);
-        Assert.assertEquals(2, fact.getTotalCreatedConnections());
+        AssertJUnit.assertEquals(2, fact.getTotalCreatedConnections());
     }
     
     @Test
@@ -207,23 +208,23 @@ public class ObjectPoolTests {
         MyTestConnection conn2 = (MyTestConnection)pool.borrowObject();
         MyTestConnection conn3 = (MyTestConnection)pool.borrowObject();
         
-        Assert.assertEquals(3, fact.getTotalCreatedConnections());
+        AssertJUnit.assertEquals(3, fact.getTotalCreatedConnections());
         pool.returnObject(conn1);
-        Assert.assertEquals(1, pool.getStatistics().getNumIdle());
+        AssertJUnit.assertEquals(1, pool.getStatistics().getNumIdle());
         pool.returnObject(conn2);
-        Assert.assertEquals(2, pool.getStatistics().getNumIdle());
+        AssertJUnit.assertEquals(2, pool.getStatistics().getNumIdle());
         pool.returnObject(conn3);
-        Assert.assertEquals(2, pool.getStatistics().getNumIdle());
-        Assert.assertEquals(false, conn1.isGood());
-        Assert.assertEquals(true, conn2.isGood());
-        Assert.assertEquals(true, conn3.isGood());
+        AssertJUnit.assertEquals(2, pool.getStatistics().getNumIdle());
+        AssertJUnit.assertEquals(false, conn1.isGood());
+        AssertJUnit.assertEquals(true, conn2.isGood());
+        AssertJUnit.assertEquals(true, conn3.isGood());
         Thread.sleep(config.getMinEvictableIdleTimeMillis()+1000);
         MyTestConnection conn4 = (MyTestConnection)pool.borrowObject();
-        Assert.assertSame(conn3, conn4);
-        Assert.assertEquals(false, conn1.isGood());
-        Assert.assertEquals(false, conn2.isGood());
-        Assert.assertEquals(true, conn3.isGood());
-        Assert.assertEquals(true, conn4.isGood());
+        AssertJUnit.assertSame(conn3, conn4);
+        AssertJUnit.assertEquals(false, conn1.isGood());
+        AssertJUnit.assertEquals(false, conn2.isGood());
+        AssertJUnit.assertEquals(true, conn3.isGood());
+        AssertJUnit.assertEquals(true, conn4.isGood());
     }
     
     @Test
@@ -236,10 +237,10 @@ public class ObjectPoolTests {
         ObjectPool<MyTestConnection> pool = new ObjectPool<MyTestConnection>(fact,new ObjectPoolConfiguration());
         try {
             pool.borrowObject();
-            Assert.fail("expected exception");
+            AssertJUnit.fail("expected exception");
         }
         catch (ConnectorException e) {
-            Assert.assertEquals("Connection is bad", e.getMessage());
+            AssertJUnit.assertEquals("Connection is bad", e.getMessage());
         }
     }
     

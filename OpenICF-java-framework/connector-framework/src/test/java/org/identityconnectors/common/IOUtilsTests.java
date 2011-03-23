@@ -22,8 +22,8 @@
  */
 package org.identityconnectors.common;
 
-import static org.junit.Assert.assertTrue;
-
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -31,7 +31,6 @@ import java.io.Reader;
 import java.io.Writer;
 
 import org.identityconnectors.common.IOUtil;
-import org.junit.Test;
 
 
 

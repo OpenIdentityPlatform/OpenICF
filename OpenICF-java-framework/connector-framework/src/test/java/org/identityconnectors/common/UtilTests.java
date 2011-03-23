@@ -22,10 +22,10 @@
  */
 package org.identityconnectors.common;
 
+import org.testng.annotations.Test;
+import org.testng.AssertJUnit;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.ReflectionUtil;
-import org.junit.Assert;
-import org.junit.Test;
 
 
 public class UtilTests {
@@ -34,7 +34,7 @@ public class UtilTests {
     public void testForceCompare() {
         Integer i1 = 1, i2 = 2;
         int cmp = CollectionUtil.forceCompare(i1, i2);
-        Assert.assertEquals(-1, cmp);
+        AssertJUnit.assertEquals(-1, cmp);
     }
     
    
@@ -42,6 +42,6 @@ public class UtilTests {
     @Test
     public void testGetMethodName() {
         String expected = ReflectionUtil.getMethodName(1);
-        Assert.assertEquals(expected, "testGetMethodName");
+        AssertJUnit.assertEquals(expected, "testGetMethodName");
     }
 }

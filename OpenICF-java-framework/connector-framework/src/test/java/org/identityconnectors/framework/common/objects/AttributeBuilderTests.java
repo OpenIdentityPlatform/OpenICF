@@ -22,11 +22,11 @@
  */
 package org.identityconnectors.framework.common.objects;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
+import static org.testng.AssertJUnit.assertNull;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -36,7 +36,6 @@ import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.junit.Test;
 
 
 public class AttributeBuilderTests {
@@ -67,7 +66,8 @@ public class AttributeBuilderTests {
         testAttributes(attr1, attr2, attr3);
     }
 
-    void testAttributes(Attribute attr1, Attribute attr2, Attribute attr3) {
+    @Test
+	void testAttributes(Attribute attr1, Attribute attr2, Attribute attr3) {
         assertEquals(attr1, attr2);
         assertEquals(attr1, attr1);
         assertFalse(attr1.equals(null));
@@ -79,20 +79,20 @@ public class AttributeBuilderTests {
         assertTrue(set.size() == 2);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void uidFromBuilderInteger() {
         AttributeBuilder.build(Uid.NAME, 1);
     }
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void uidFromBuilderLong() {
         AttributeBuilder.build(Uid.NAME, 1l);
     }
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void uidFromBuilderDouble() {
         AttributeBuilder.build(Uid.NAME, 1.0);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void nameFromBuilder() {
         // basic name tests..
         Name actual = (Name) AttributeBuilder.build(Name.NAME, "daf");

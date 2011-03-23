@@ -22,6 +22,8 @@
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
+import org.testng.annotations.Test;
+import org.testng.AssertJUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -42,8 +44,6 @@ import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.operations.SearchOp;
 import org.identityconnectors.test.common.TestHelpers;
-import org.junit.Assert;
-import org.junit.Test;
 
 /**
  * Attempt to test Search.
@@ -81,7 +81,7 @@ public class SearchImplTests {
                 new DuplicateProvider(), ObjectClass.ACCOUNT, new MockFilter(
                         main), null);
         List<ConnectorObject> expecteList = CollectionUtil.newList(expected);
-        Assert.assertEquals(expecteList, actual);
+        AssertJUnit.assertEquals(expecteList, actual);
     }
 
     @Test
@@ -110,7 +110,7 @@ public class SearchImplTests {
         List<ConnectorObject> actual = TestHelpers.searchToList(
                 search, ObjectClass.ACCOUNT, filter, options);
         List<ConnectorObject> expecteList = CollectionUtil.newList(expected);
-        Assert.assertEquals(expecteList, actual);
+        AssertJUnit.assertEquals(expecteList, actual);
     }
 
     ConnectorObject createObject(int uid) {

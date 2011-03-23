@@ -22,20 +22,19 @@
  */
 package org.identityconnectors.framework.common.objects;
 
+import org.testng.annotations.Test;
+import org.testng.annotations.BeforeMethod;
+import org.testng.AssertJUnit;
 import static org.identityconnectors.framework.common.objects.AttributeInfoBuilder.build;
 import static org.identityconnectors.framework.common.objects.LocaleTestUtil.resetLocaleCache;
-import static org.junit.Assert.*;
-
 import java.util.Locale;
 
 import org.identityconnectors.framework.common.objects.AttributeInfo;
-import org.junit.Before;
-import org.junit.Test;
 
 public class AttributeInfoTests {
 
-    @Before
-    public void before() {
+    @BeforeMethod
+	public void before() {
         resetLocaleCache();
     }
 
@@ -46,7 +45,7 @@ public class AttributeInfoTests {
             Locale.setDefault(new Locale("tr"));
             AttributeInfo attribute1 = build("i");
             AttributeInfo attribute2 = build("I");
-            assertFalse(attribute1.equals(attribute2));
+            AssertJUnit.assertFalse(attribute1.equals(attribute2));
         } finally {
             Locale.setDefault(defLocale);
         }
@@ -61,7 +60,7 @@ public class AttributeInfoTests {
             final int hash1 = attribute.hashCode();
             Locale.setDefault(new Locale("tr"));
             int hash2 = attribute.hashCode();
-            assertEquals(hash1, hash2);
+            AssertJUnit.assertEquals(hash1, hash2);
         } finally {
             Locale.setDefault(defLocale);
         }

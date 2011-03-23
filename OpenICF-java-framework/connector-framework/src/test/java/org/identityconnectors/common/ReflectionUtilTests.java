@@ -22,14 +22,12 @@
  */
 package org.identityconnectors.common;
 
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
 import static org.identityconnectors.common.ReflectionUtil.containsInterface;
 import static org.identityconnectors.common.ReflectionUtil.getAllInterfaces;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Set;
-
-import org.junit.Test;
 
 public class ReflectionUtilTests {
 

@@ -22,13 +22,12 @@
  */
 package org.identityconnectors.framework.common.objects;
 
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
 import static org.identityconnectors.framework.common.objects.ObjectClassUtil.isSpecial;
 import static org.identityconnectors.framework.common.objects.ObjectClassUtil.namesEqual;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import org.identityconnectors.framework.common.objects.ObjectClass;
-import org.junit.Test;
 
 public class ObjectClassUtilTests {
 

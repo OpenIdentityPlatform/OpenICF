@@ -22,15 +22,14 @@
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
-import static org.junit.Assert.assertEquals;
-
+import static org.testng.AssertJUnit.assertEquals;
+import org.testng.annotations.Test;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.impl.api.Searches.ConnectorObjectSearch;
 import org.identityconnectors.test.common.ToListResultsHandler;
-import org.junit.Test;
 
 
 public class FilteredResultsHandlerTests {
@@ -102,7 +101,7 @@ public class FilteredResultsHandlerTests {
 
     
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void nullProducer() {
         new FilteredResultsHandler(null, new RangeFilter(0, 100));
         

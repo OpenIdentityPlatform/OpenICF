@@ -22,10 +22,10 @@
  */
 package org.identityconnectors.common;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +37,6 @@ import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.StringPrintWriter;
 import org.identityconnectors.common.StringUtil;
-import org.junit.Test;
 
 
 public class StringUtilTests {

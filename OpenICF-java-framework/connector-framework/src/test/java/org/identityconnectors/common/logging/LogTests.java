@@ -22,15 +22,14 @@
  */
 package org.identityconnectors.common.logging;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
+import static org.testng.AssertJUnit.assertNull;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.logging.LogSpi;
 import org.identityconnectors.common.logging.Log.Level;
-import org.junit.Test;
 
 
 public class LogTests {
@@ -292,7 +291,7 @@ public class LogTests {
         }
     }
     
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void checkGetLog() {
         Log.getLog(MockLogSpi.class);
     }

@@ -22,8 +22,9 @@
  */
 package org.identityconnectors.test.common;
 
-import static org.junit.Assert.assertEquals;
-
+import static org.testng.AssertJUnit.assertEquals;
+import org.testng.annotations.Test;
+import org.testng.AssertJUnit;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -39,11 +40,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
-import junit.framework.Assert;
-
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
-import org.junit.Test;
 
 public class TestHelpersTest {
 
@@ -61,7 +59,7 @@ public class TestHelpersTest {
             PropertyBag properties1 = TestHelpers.getProperties(DummyConnector.class, new ConfigClassLoader());
             checkProperties(properties1);
             PropertyBag properties2 = TestHelpers.getProperties(DummyConnector.class, new ConfigClassLoader());
-            Assert.assertSame("TestHepers must create same PropertyBag for same connector", properties1, properties2);
+            AssertJUnit.assertSame("TestHepers must create same PropertyBag for same connector", properties1, properties2);
         } finally {
             if (oldTestConfig == null) {
                 System.getProperties().remove("testConfig");

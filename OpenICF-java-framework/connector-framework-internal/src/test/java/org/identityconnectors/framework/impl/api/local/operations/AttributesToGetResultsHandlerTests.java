@@ -22,9 +22,9 @@
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
+import static org.testng.AssertJUnit.assertEquals;
+import org.testng.annotations.Test;
 import static org.identityconnectors.framework.common.objects.AttributeBuilder.build;
-import static org.junit.Assert.assertEquals;
-
 import java.util.Set;
 
 import org.identityconnectors.common.CollectionUtil;
@@ -33,12 +33,11 @@ import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.impl.api.local.operations.AttributesToGetResultsHandler;
-import org.junit.Test;
 
 
 public class AttributesToGetResultsHandlerTests {
     
-    @Test(expected=NullPointerException.class)
+    @Test(expectedExceptions=NullPointerException.class)
     public void testAttrsToGet() throws Exception {
         new TestHandler((String[])null);
     }

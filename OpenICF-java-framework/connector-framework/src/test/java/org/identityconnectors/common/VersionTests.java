@@ -22,13 +22,12 @@
  */
 package org.identityconnectors.common;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
+import static org.testng.AssertJUnit.assertNull;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
+import org.testng.Assert;
 import org.identityconnectors.common.Version;
-import org.junit.Test;
 
 public class VersionTests {
 
@@ -101,21 +100,21 @@ public class VersionTests {
 
         try {
             new Version();
-            fail();
+            Assert.fail();
         } catch (IllegalArgumentException e) {
             // OK.
         }
 
         try {
             Version.parse(" ");
-            fail();
+            Assert.fail();
         } catch (IllegalArgumentException e) {
             // OK.
         }
 
         try {
             Version.parse("foo");
-            fail();
+            Assert.fail();
         } catch (IllegalArgumentException e) {
             // OK.
         }

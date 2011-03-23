@@ -22,10 +22,10 @@
  */
 package org.identityconnectors.common;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
+import org.testng.Assert;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,7 +38,6 @@ import java.util.Set;
 
 import org.identityconnectors.common.EqualsHashCodeBuilder;
 import org.identityconnectors.common.StringUtil;
-import org.junit.Test;
 
 
 public class EqualsHashCodeBuilderTests {
@@ -726,7 +725,7 @@ public class EqualsHashCodeBuilderTests {
 		try {
 			eq.append(Collections
 					.unmodifiableCollection(new ArrayList<String>()));
-			fail("Should fail because Collections are not supported!");
+			Assert.fail("Should fail because Collections are not supported!");
 		} catch (IllegalArgumentException e) {
 			// success
 		}

@@ -22,15 +22,14 @@
  */
 package org.identityconnectors.framework.impl.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
+import static org.testng.AssertJUnit.assertEquals;
+import org.testng.annotations.Test;
+import org.testng.Assert;
 import java.util.Map;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.framework.common.objects.ConnectorMessages;
 import org.identityconnectors.framework.spi.Configuration;
-import org.junit.Test;
 
 public class TestHelpersImplTests {
 
@@ -55,11 +54,11 @@ public class TestHelpersImplTests {
             return null;
         }
         public void setConnectorMessages(ConnectorMessages messages) {
-            fail("Should not call setConnectorMessages()");
+            Assert.fail("Should not call setConnectorMessages()");
         }
 
         public void validate() {
-            fail("Should not call validate()");
+            Assert.fail("Should not call validate()");
         }
 
         public String getHost() {

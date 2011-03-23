@@ -1,33 +1,32 @@
 package org.identityconnectors.test.common;
 
-import static org.junit.Assert.*;
-
+import org.testng.annotations.Test;
+import org.testng.Assert;
+import org.testng.AssertJUnit;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.junit.Test;
 
 public class PropertyBagTests {
     private PropertyBag bag = createBag();
 
     @Test
     public void testGetProperty() {
-        assertEquals("value1", bag.getProperty("key1", String.class));
-        assertNull(bag.getProperty("key2", String.class));
-        assertEquals(new Integer(1), bag.getProperty("key3", Integer.class));
-        assertEquals(new Long(1), bag.getProperty("key5", Long.class));
+        AssertJUnit.assertEquals("value1", bag.getProperty("key1", String.class));
+        AssertJUnit.assertNull(bag.getProperty("key2", String.class));
+        AssertJUnit.assertEquals(new Integer(1), bag.getProperty("key3", Integer.class));
+        AssertJUnit.assertEquals(new Long(1), bag.getProperty("key5", Long.class));
 
         // try not existing
         try {
             bag.getProperty("key4", String.class);
-            fail("Get Property must fail for unexisting property");
+            Assert.fail("Get Property must fail for unexisting property");
         } catch (IllegalArgumentException e) {
         }
 
         // Try cast
         try {
             bag.getProperty("key3", Long.class);
-            fail("Get Property with incompatible type must fail on ClassCastException");
+            Assert.fail("Get Property with incompatible type must fail on ClassCastException");
         } catch (ClassCastException e) {
         }
 
@@ -35,20 +34,20 @@ public class PropertyBagTests {
 
     @Test
     public void testGetPropertyWithDef() {
-        assertEquals("value1", bag.getProperty("key1", String.class, "def"));
-        assertNull(bag.getProperty("key2", String.class, "def"));
-        assertEquals("def", bag.getProperty("key4", String.class, "def"));
-        assertNull(bag.getProperty("key4", String.class, null));
+        AssertJUnit.assertEquals("value1", bag.getProperty("key1", String.class, "def"));
+        AssertJUnit.assertNull(bag.getProperty("key2", String.class, "def"));
+        AssertJUnit.assertEquals("def", bag.getProperty("key4", String.class, "def"));
+        AssertJUnit.assertNull(bag.getProperty("key4", String.class, null));
     }
 
     @Test
     public void testGetStringProperty() {
-        assertEquals("value1", bag.getStringProperty("key1"));
-        assertNull(bag.getStringProperty("key2"));
+        AssertJUnit.assertEquals("value1", bag.getStringProperty("key1"));
+        AssertJUnit.assertNull(bag.getStringProperty("key2"));
         // Try cast
         try {
             bag.getStringProperty("key3");
-            fail("Get Property with incompatible type must fail on ClassCastException");
+            Assert.fail("Get Property with incompatible type must fail on ClassCastException");
         } catch (ClassCastException e) {
         }
 

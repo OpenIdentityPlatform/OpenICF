@@ -22,6 +22,7 @@
  */
 package org.identityconnectors.mockconnector;
 
+import org.testng.annotations.Test;
 import java.util.Set;
 
 import org.identityconnectors.common.security.GuardedString;
@@ -129,7 +130,8 @@ public class MockAllOpsConnector extends MockConnector implements CreateOp,
         return null;
     }
     
-    public void test() {
+    @Test
+	public void test() {
         addCall();
     }
 }

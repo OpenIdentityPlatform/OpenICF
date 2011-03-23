@@ -22,9 +22,9 @@
  */
 package org.identityconnectors.framework.common;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
+import static org.testng.AssertJUnit.assertEquals;
+import org.testng.annotations.Test;
+import org.testng.Assert;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -35,7 +35,6 @@ import java.net.URLStreamHandler;
 import java.util.Properties;
 
 import org.identityconnectors.common.Version;
-import org.junit.Test;
 
 public class FrameworkUtilTests {
 
@@ -49,7 +48,7 @@ public class FrameworkUtilTests {
     public void testFrameworkVersionCannotBeBlank() throws Exception {
         try {
             FrameworkUtil.getFrameworkVersion(new VersionClassLoader(this.getClass().getClassLoader(), " "));
-            fail();
+            Assert.fail();
         } catch (IllegalStateException e) {
             // OK.
         }

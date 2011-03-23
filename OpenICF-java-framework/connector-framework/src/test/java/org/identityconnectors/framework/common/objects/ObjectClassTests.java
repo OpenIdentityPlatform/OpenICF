@@ -22,23 +22,21 @@
  */
 package org.identityconnectors.framework.common.objects;
 
+import org.testng.annotations.Test;
+import org.testng.annotations.BeforeMethod;
+import org.testng.AssertJUnit;
 import static org.identityconnectors.framework.common.objects.LocaleTestUtil.resetLocaleCache;
-import static org.junit.Assert.*;
-
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
-
-import org.junit.Before;
-import org.junit.Test;
 
 /**
  * Make sure to test various methods of the object class.
  */
 public class ObjectClassTests {
 
-    @Before
-    public void before() {
+    @BeforeMethod
+	public void before() {
         resetLocaleCache();
     }
 
@@ -46,24 +44,24 @@ public class ObjectClassTests {
     public void testIs() {
         ObjectClass actual = new ObjectClass("group");
         
-        assertTrue(actual.is("group"));
-        assertTrue(actual.is("Group"));
-        assertFalse(actual.is("admin"));
+        AssertJUnit.assertTrue(actual.is("group"));
+        AssertJUnit.assertTrue(actual.is("Group"));
+        AssertJUnit.assertFalse(actual.is("admin"));
     }
     
 	@Test
 	public void testEquals() {
 		Object actual = new ObjectClass(ObjectClass.ACCOUNT_NAME);
-		assertEquals(ObjectClass.ACCOUNT, actual);
+		AssertJUnit.assertEquals(ObjectClass.ACCOUNT, actual);
 		actual = new ObjectClass("babbo");
-		assertFalse(actual.equals(ObjectClass.ACCOUNT));
+		AssertJUnit.assertFalse(actual.equals(ObjectClass.ACCOUNT));
 		ObjectClass expected = new ObjectClass("babbo");
-		assertEquals(expected, actual);
+		AssertJUnit.assertEquals(expected, actual);
 		
 		// Test case-insensitivity
 		ObjectClass lower = new ObjectClass("group");
 		ObjectClass mixed = new ObjectClass("Group");
-		assertEquals(lower, mixed);
+		AssertJUnit.assertEquals(lower, mixed);
 	}
 
 	@Test
@@ -72,15 +70,15 @@ public class ObjectClassTests {
 		set.add(ObjectClass.ACCOUNT);
 		set.add(ObjectClass.GROUP);
 		set.add(ObjectClass.ACCOUNT);
-		assertTrue(set.contains(ObjectClass.ACCOUNT));
-		assertTrue(set.contains(ObjectClass.GROUP));
-		assertTrue(2 == set.size());
+		AssertJUnit.assertTrue(set.contains(ObjectClass.ACCOUNT));
+		AssertJUnit.assertTrue(set.contains(ObjectClass.GROUP));
+		AssertJUnit.assertTrue(2 == set.size());
 		
 		// Test case-insensitivity
 		set = new HashSet<ObjectClass>();
 		set.add(new ObjectClass("group"));
 		set.add(new ObjectClass("Group"));
-		assertTrue(1 == set.size());
+		AssertJUnit.assertTrue(1 == set.size());
 	}
 
     @Test
@@ -90,7 +88,7 @@ public class ObjectClassTests {
             Locale.setDefault(new Locale("tr"));
             ObjectClass oc1 = new ObjectClass("i");
             ObjectClass oc2 = new ObjectClass("I");
-            assertFalse(oc1.equals(oc2));
+            AssertJUnit.assertFalse(oc1.equals(oc2));
         } finally {
             Locale.setDefault(defLocale);
         }
@@ -105,7 +103,7 @@ public class ObjectClassTests {
             final int hash1 = attribute.hashCode();
             Locale.setDefault(new Locale("tr"));
             int hash2 = attribute.hashCode();
-            assertEquals(hash1, hash2);
+            AssertJUnit.assertEquals(hash1, hash2);
         } finally {
             Locale.setDefault(defLocale);
         }

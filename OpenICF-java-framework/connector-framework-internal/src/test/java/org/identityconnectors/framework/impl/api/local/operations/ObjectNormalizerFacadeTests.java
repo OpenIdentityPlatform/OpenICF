@@ -22,8 +22,8 @@
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
-import junit.framework.Assert;
-
+import org.testng.annotations.Test;
+import org.testng.AssertJUnit;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
@@ -39,7 +39,6 @@ import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.framework.common.serializer.SerializerUtil;
 import org.identityconnectors.framework.impl.api.local.operations.ObjectNormalizerFacade;
 import org.identityconnectors.framework.spi.AttributeNormalizer;
-import org.junit.Test;
 
 
 public class ObjectNormalizerFacadeTests {
@@ -80,7 +79,7 @@ public class ObjectNormalizerFacadeTests {
         filter = facade.normalizeFilter(filter);
         String expectedXml = SerializerUtil.serializeXmlObject(expectedNormalizedFilter, false);
         String actualXml = SerializerUtil.serializeXmlObject(filter, false);
-        Assert.assertEquals(expectedXml, actualXml);
+        AssertJUnit.assertEquals(expectedXml, actualXml);
     }
     
     
@@ -213,8 +212,8 @@ public class ObjectNormalizerFacadeTests {
         builder.setUid("myuid");
         builder.addAttribute(createNormalizedTestAttribute());
         ConnectorObject expected = builder.build();
-        Assert.assertEquals(expected, v2);
-        Assert.assertFalse(expected.equals(v1));
+        AssertJUnit.assertEquals(expected, v2);
+        AssertJUnit.assertFalse(expected.equals(v1));
     }
     
     @Test
@@ -245,8 +244,8 @@ public class ObjectNormalizerFacadeTests {
          objbuilder.addAttribute(createNormalizedTestAttribute());         
          builder.setObject(objbuilder.build());
          SyncDelta expected = builder.build();
-         Assert.assertEquals(expected, v2);
-         Assert.assertFalse(expected.equals(v1));
+         AssertJUnit.assertEquals(expected, v2);
+         AssertJUnit.assertFalse(expected.equals(v1));
         
     }
     

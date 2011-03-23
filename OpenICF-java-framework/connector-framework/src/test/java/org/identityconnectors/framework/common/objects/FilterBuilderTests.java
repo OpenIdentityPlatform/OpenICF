@@ -22,16 +22,15 @@
  */
 package org.identityconnectors.framework.common.objects;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
-import org.junit.Test;
 
 
 
@@ -219,7 +218,7 @@ public class FilterBuilderTests {
         assertTrue(filter.accept(null));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void illegalArgument() {
         FilterBuilder.lessThan((Attribute)null);
     }

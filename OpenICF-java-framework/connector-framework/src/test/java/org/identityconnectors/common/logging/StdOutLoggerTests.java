@@ -22,8 +22,9 @@
  */
 package org.identityconnectors.common.logging;
 
-import static org.junit.Assert.assertEquals;
-
+import static org.testng.AssertJUnit.assertEquals;
+import org.testng.annotations.Test;
+import org.testng.AssertJUnit;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -34,8 +35,6 @@ import java.util.Map;
 import org.identityconnectors.common.StringPrintWriter;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.logging.LogSpi;
-import org.junit.Assert;
-import org.junit.Test;
 
 /**
  * Simple tests of {@link StdOutLogger}.
@@ -46,7 +45,7 @@ public class StdOutLoggerTests {
     public void checkIsLogger() {
         LogSpi logSpi = new StdOutLogger();
         for (Log.Level level : Log.Level.values()) {
-            Assert.assertTrue(logSpi.isLoggable(String.class, level));
+            AssertJUnit.assertTrue(logSpi.isLoggable(String.class, level));
         }
     }
     

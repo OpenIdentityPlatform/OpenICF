@@ -22,8 +22,8 @@
  */
 package org.identityconnectors.framework.impl.api;
 
-import static org.junit.Assert.fail;
-
+import org.testng.annotations.Test;
+import org.testng.Assert;
 import java.net.URL;
 import java.util.List;
 
@@ -33,7 +33,6 @@ import org.identityconnectors.framework.api.ConnectorInfoManager;
 import org.identityconnectors.framework.api.ConnectorInfoManagerFactory;
 import org.identityconnectors.framework.common.FrameworkUtilTestHelpers;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
-import org.junit.Test;
 
 
 public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase {
@@ -48,10 +47,10 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
         FrameworkUtilTestHelpers.setFrameworkVersion(Version.parse("0.5"));
         try {
             getConnectorInfoManager();
-            fail();
+            Assert.fail();
         } catch (ConfigurationException e) {
             if (!e.getMessage().contains("unrecognized framework version")) {
-                fail();
+                Assert.fail();
             }
         }
     }

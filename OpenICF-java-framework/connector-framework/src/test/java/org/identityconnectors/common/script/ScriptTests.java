@@ -22,10 +22,9 @@
  */
 package org.identityconnectors.common.script;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
-import org.junit.Test;
+import static org.testng.AssertJUnit.assertEquals;
+import org.testng.annotations.Test;
+import org.testng.Assert;
 
 public class ScriptTests {
 
@@ -43,21 +42,21 @@ public class ScriptTests {
     public void testLanguageNotBlank() {
         try {
             new ScriptBuilder().setScriptText("print 'foo'").build();
-            fail();
+            Assert.fail();
         } catch (IllegalArgumentException e) {
             // OK.
         }
 
         try {
             new ScriptBuilder().setScriptText("print 'foo'").setScriptLanguage("").build();
-            fail();
+            Assert.fail();
         } catch (IllegalArgumentException e) {
             // OK.
         }
 
         try {
             new ScriptBuilder().setScriptText("print 'foo'").setScriptLanguage(" ").build();
-            fail();
+            Assert.fail();
         } catch (IllegalArgumentException e) {
             // OK.
         }
@@ -67,7 +66,7 @@ public class ScriptTests {
     public void testTextNotNull() {
         try {
             new ScriptBuilder().setScriptLanguage("Groovy").build();
-            fail();
+            Assert.fail();
         } catch (NullPointerException e) {
             // OK.
         }

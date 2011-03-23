@@ -22,18 +22,18 @@
  */
 package org.identityconnectors.framework.common.objects;
 
+import static org.testng.AssertJUnit.assertNull;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
 import static org.identityconnectors.framework.common.objects.AttributeBuilder.build;
 import static org.identityconnectors.framework.common.objects.AttributeUtil.getAsStringValue;
 import static org.identityconnectors.framework.common.objects.AttributeUtil.getIntegerValue;
 import static org.identityconnectors.framework.common.objects.AttributeUtil.getStringValue;
 import static org.identityconnectors.framework.common.objects.AttributeUtil.isSpecial;
 import static org.identityconnectors.framework.common.objects.AttributeUtil.namesEqual;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Date;
@@ -46,8 +46,6 @@ import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.junit.Assert;
-import org.junit.Test;
 
 
 /**
@@ -55,7 +53,7 @@ import org.junit.Test;
  */
 public class AttributeUtilTests {
 
-    @Test(expected = ClassCastException.class)
+    @Test(expectedExceptions = ClassCastException.class)
     public void testGetStringValue() {
         final String TEST_VALUE = "test value";
         // test normal..
@@ -88,7 +86,7 @@ public class AttributeUtilTests {
         assertEquals("1", value);
     }
 
-    @Test(expected = ClassCastException.class)
+    @Test(expectedExceptions = ClassCastException.class)
     public void testGetIntegerValue() {
         final Integer TEST_VALUE = 1;
         // test normal
@@ -104,53 +102,53 @@ public class AttributeUtilTests {
         value = getIntegerValue(attr);
     }
 
-    @Test(expected = ClassCastException.class)
+    @Test(expectedExceptions = ClassCastException.class)
     public void testGetLongValue() {
         final Long TEST_VALUE = 1L;
         // test normal
         Attribute attr = AttributeBuilder.build("long", TEST_VALUE);
         Long value = AttributeUtil.getLongValue(attr);
-        Assert.assertEquals(TEST_VALUE, value);
+        assertEquals(TEST_VALUE, value);
         // test null
         attr = AttributeBuilder.build("long");
         value = AttributeUtil.getLongValue(attr);
-        Assert.assertNull(value);
+        assertNull(value);
         // test class cast exception
         attr = AttributeBuilder.build("long", "1");
         value = AttributeUtil.getLongValue(attr);
     }
 
-    @Test(expected = ClassCastException.class)
+    @Test(expectedExceptions = ClassCastException.class)
     public void testBigDecimalValue() {
         final BigDecimal TEST_VALUE = BigDecimal.ONE;
         // test normal
         Attribute attr = AttributeBuilder.build("big", TEST_VALUE);
         BigDecimal value = AttributeUtil.getBigDecimalValue(attr);
-        Assert.assertEquals(TEST_VALUE, value);
+        assertEquals(TEST_VALUE, value);
         // test null
         attr = AttributeBuilder.build("big");
         value = AttributeUtil.getBigDecimalValue(attr);
-        Assert.assertNull(value);
+        assertNull(value);
         // test class cast exception
         attr = AttributeBuilder.build("big", "1");
         value = AttributeUtil.getBigDecimalValue(attr);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void testGetSingleValue() {
         final Object TEST_VALUE = 1L;
         // test normal
         Attribute attr = AttributeBuilder.build("long", TEST_VALUE);
         Object value = AttributeUtil.getSingleValue(attr);
-        Assert.assertEquals(TEST_VALUE, value);
+        assertEquals(TEST_VALUE, value);
         // test null
         attr = AttributeBuilder.build("long");
         value = AttributeUtil.getSingleValue(attr);
-        Assert.assertNull(value);
+        assertNull(value);
         // test empty
         attr = AttributeBuilder.build("long", Collections.emptyList());
         value = AttributeUtil.getSingleValue(attr);
-        Assert.assertNull(value);
+        assertNull(value);
         // test illegal argument exception
         AttributeUtil.getSingleValue(AttributeBuilder.build("bob", 1, 2, 3));
     }
@@ -175,7 +173,7 @@ public class AttributeUtilTests {
         Attribute attr = AttributeBuilder.build("bob");
         attrs.add(attr);
         Uid actual = AttributeUtil.getUidAttribute(attrs);
-        Assert.assertEquals(expected, actual);
+        assertEquals(expected, actual);
     }
 
     @Test
@@ -187,7 +185,7 @@ public class AttributeUtilTests {
         Set<Attribute> actual = AttributeUtil.getBasicAttributes(set);
         Set<Attribute> expected = new HashSet<Attribute>();
         expected.add(attr);
-        Assert.assertEquals(expected, actual);
+        assertEquals(expected, actual);
     }
 
     @Test

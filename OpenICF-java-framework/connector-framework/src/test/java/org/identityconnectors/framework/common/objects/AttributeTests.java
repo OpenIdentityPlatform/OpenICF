@@ -22,25 +22,24 @@
  */
 package org.identityconnectors.framework.common.objects;
 
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
+import org.testng.annotations.BeforeMethod;
 import static org.identityconnectors.framework.common.objects.AttributeBuilder.build;
 import static org.identityconnectors.framework.common.objects.LocaleTestUtil.resetLocaleCache;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 import org.identityconnectors.framework.common.objects.Attribute;
-import org.junit.Before;
-import org.junit.Test;
 
 
 public class AttributeTests {
 
-    @Before
-    public void before() {
+    @BeforeMethod
+	public void before() {
         resetLocaleCache();
     }
 

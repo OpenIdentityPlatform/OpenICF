@@ -22,6 +22,8 @@
  */
 package org.identityconnectors.framework.impl.api;
 
+import org.testng.annotations.Test;
+import org.testng.AssertJUnit;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,8 +34,6 @@ import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.impl.api.BufferedResultsProxy;
-import org.junit.Assert;
-import org.junit.Test;
 
 
 public class BufferedSearchProxyTests {
@@ -59,14 +59,14 @@ public class BufferedSearchProxyTests {
 
         public boolean handle(ConnectorObject object) {
             if (_count >= _resultsHandlers.size()) {
-                Assert.fail("Unpextected number of results: "+_count);
+                AssertJUnit.fail("Unpextected number of results: "+_count);
             }
             boolean rv = _resultsHandlers.get(_count).handle(object);
             _count++;
             return rv;
         }
         public void assertFinished() {
-            Assert.assertEquals(_resultsHandlers.size(),_count);
+            AssertJUnit.assertEquals(_resultsHandlers.size(),_count);
         }
     }
     
@@ -89,7 +89,7 @@ public class BufferedSearchProxyTests {
             _expectedCount = expectedCount;
         }
         public boolean handle(ConnectorObject object) {
-            Assert.assertEquals(_expectedCount, object.getAttributeByName("count").getValue().get(0));
+            AssertJUnit.assertEquals(_expectedCount, object.getAttributeByName("count").getValue().get(0));
             return true;
         }
     }
@@ -111,7 +111,7 @@ public class BufferedSearchProxyTests {
         }
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void testInvalidSearch() {
         new BufferedResultsProxy(null, 1, 2);
     }
@@ -124,7 +124,7 @@ public class BufferedSearchProxyTests {
         
         try {
             proxy.search(ObjectClass.ACCOUNT, null, expected,null);
-            Assert.fail("Should throw a IllegalState/TimeoutException??");
+            AssertJUnit.fail("Should throw a IllegalState/TimeoutException??");
         } catch (OperationTimeoutException e) {
         }
         expected.assertFinished();
@@ -152,7 +152,7 @@ public class BufferedSearchProxyTests {
         SearchApiOp proxy = createSearchProxy(search,10+1,20000);
         try {
             proxy.search(ObjectClass.ACCOUNT, null, expected,null);
-            Assert.fail("expected exception");
+            AssertJUnit.fail("expected exception");
         }
         catch (IllegalArgumentException e) {
             

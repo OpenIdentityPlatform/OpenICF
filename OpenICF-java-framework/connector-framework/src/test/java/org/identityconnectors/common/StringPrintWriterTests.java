@@ -22,15 +22,13 @@
  */
 package org.identityconnectors.common;
 
+import org.testng.annotations.Test;
+import org.testng.AssertJUnit;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.StringPrintWriter;
-import org.junit.Test;
-
-
-import static org.junit.Assert.*;
 
 /**
  * Simple tests to check that its functioning.
@@ -49,9 +47,9 @@ public class StringPrintWriterTests {
             wrt.print(data);
         }
         // check that it works..
-        assertEquals(bld.toString(), wrt.getString());
+        AssertJUnit.assertEquals(bld.toString(), wrt.getString());
         wrt.clear();
-        assertEquals(wrt.getString(), "");
+        AssertJUnit.assertEquals(wrt.getString(), "");
     }
 
     @Test
@@ -64,7 +62,7 @@ public class StringPrintWriterTests {
         }
         // get the string of the reader..
         String actual = IOUtil.readerToString(pwrt.getReader());
-        assertEquals(wrt.toString(), actual);
+        AssertJUnit.assertEquals(wrt.toString(), actual);
     }
 
     @Test
@@ -76,7 +74,7 @@ public class StringPrintWriterTests {
             wrt.println(data);
             pwrt.println(data);
         }
-        assertEquals(swrt.toString(), pwrt.getString());
+        AssertJUnit.assertEquals(swrt.toString(), pwrt.getString());
     }
     
     public void printlnArray() {
@@ -87,7 +85,7 @@ public class StringPrintWriterTests {
             wrt.println(data);
         }
         pwrt.println(DATA);
-        assertEquals(swrt.toString(), pwrt.getString());
+        AssertJUnit.assertEquals(swrt.toString(), pwrt.getString());
     }
 
     @Test
@@ -99,7 +97,7 @@ public class StringPrintWriterTests {
             wrt.print(data);
         }
         pwrt.print(DATA);
-        assertEquals(swrt.toString(), pwrt.getString());
+        AssertJUnit.assertEquals(swrt.toString(), pwrt.getString());
     }
 
     

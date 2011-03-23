@@ -22,10 +22,12 @@
  */
 package org.identityconnectors.framework.impl.api;
 
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
+import org.testng.annotations.BeforeMethod;
+import org.testng.AssertJUnit;
 import static org.identityconnectors.framework.common.objects.ObjectClass.ACCOUNT;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -56,9 +58,6 @@ import org.identityconnectors.mockconnector.MockConnector;
 import org.identityconnectors.mockconnector.MockUpdateConnector;
 import org.identityconnectors.mockconnector.MockConnector.Call;
 import org.identityconnectors.test.common.TestHelpers;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
 
 
 public class ConnectorFacadeTests {
@@ -66,8 +65,8 @@ public class ConnectorFacadeTests {
     // =======================================================================
     // Setup/Tear down
     // =======================================================================
-    @Before
-    public void setup() {
+    @BeforeMethod
+	public void setup() {
         // always reset the call patterns..
         MockConnector.reset();
     }
@@ -93,11 +92,13 @@ public class ConnectorFacadeTests {
      * 
      * @throws ClassNotFoundException
      */
-    private void testCallPattern(TestOperationPattern pattern) {
+    @Test(enabled = false)
+	private void testCallPattern(TestOperationPattern pattern) {
         testCallPattern(pattern, MockAllOpsConnector.class);
     }
 
-    private void testCallPattern(TestOperationPattern pattern,
+    @Test(enabled = false)
+	private void testCallPattern(TestOperationPattern pattern,
             Class<? extends Connector> clazz) {
         Configuration config = new MockConfiguration(false);
         ConnectorFacadeFactory factory = ConnectorFacadeFactory.getInstance();
@@ -123,7 +124,7 @@ public class ConnectorFacadeTests {
      * Tests that if an SPI operation is not implemented that the API will throw
      * an {@link UnsupportedOperationException}.
      */
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expectedExceptions = UnsupportedOperationException.class)
     public void unsupportedOperationTest() {
         Configuration config = new MockConfiguration(false);
         Class<? extends Connector> clazz = MockConnector.class;
@@ -221,7 +222,7 @@ public class ConnectorFacadeTests {
         });
     }
     
-    @Test( expected = NullPointerException.class )
+    @Test( expectedExceptions = NullPointerException.class )
     public void createWithOutObjectClassPattern() {
         testCallPattern(new TestOperationPattern() {
             public void makeCall(ConnectorFacade facade) {
@@ -229,12 +230,12 @@ public class ConnectorFacadeTests {
                 facade.create(null,attrs,null);
             }
             public void checkCalls(List<Call> calls) {
-                Assert.fail("Should not get here..");
+                AssertJUnit.fail("Should not get here..");
             }
         });
     }
     
-    @Test( expected = IllegalArgumentException.class )
+    @Test( expectedExceptions = IllegalArgumentException.class )
     public void createDuplicatAttributesPattern() {
         testCallPattern(new TestOperationPattern() {
             public void makeCall(ConnectorFacade facade) {
@@ -244,7 +245,7 @@ public class ConnectorFacadeTests {
                 facade.create(ObjectClass.ACCOUNT,attrs,null);
             }
             public void checkCalls(List<Call> calls) {
-                Assert.fail("Should not get here..");
+                AssertJUnit.fail("Should not get here..");
             }
         });
     }

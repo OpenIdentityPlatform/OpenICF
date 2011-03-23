@@ -22,10 +22,9 @@
  */
 package org.identityconnectors.contract.data;
 
-import junit.framework.Assert;
-
+import org.testng.annotations.Test;
+import org.testng.AssertJUnit;
 import org.identityconnectors.common.security.GuardedString;
-import org.junit.Test;
 
 /**
  * JUnit test class for RandomGenerator
@@ -39,8 +38,8 @@ public class RandomGeneratorTest {
     public void testRandomLongGenerator() {
         {
             Object o = RandomGenerator.generate("#####", Long.class);
-            Assert.assertNotNull(o);
-            Assert.assertTrue(o instanceof Long);
+            AssertJUnit.assertNotNull(o);
+            AssertJUnit.assertTrue(o instanceof Long);
             System.out.println(o.toString());
         }
 
@@ -50,8 +49,8 @@ public class RandomGeneratorTest {
     public void testRgen2() {
         {
             Object o = RandomGenerator.generate("###X##");
-            Assert.assertNotNull(o);
-            Assert.assertTrue(o.toString().contains("X"));
+            AssertJUnit.assertNotNull(o);
+            AssertJUnit.assertTrue(o.toString().contains("X"));
             System.out.println(o.toString());
         }
     }
@@ -61,9 +60,9 @@ public class RandomGeneratorTest {
         {
             Object o = RandomGenerator.generate("###\\.##", Float.class); // this means
                                                                 // ###\.##
-            Assert.assertNotNull(o);
-            Assert.assertTrue(o instanceof Float);
-            Assert.assertTrue(o.toString().contains("."));
+            AssertJUnit.assertNotNull(o);
+            AssertJUnit.assertTrue(o instanceof Float);
+            AssertJUnit.assertTrue(o.toString().contains("."));
             System.out.println(o.toString());
         }
     }
@@ -73,11 +72,11 @@ public class RandomGeneratorTest {
         {
             Object o = RandomGenerator.generate("###X##");
             Object o2 = RandomGenerator.generate("###X##");
-            Assert.assertNotNull(o);
-            Assert.assertNotNull(o2);
-            Assert.assertTrue(o.toString().contains("X"));
-            Assert.assertTrue(o2.toString().contains("X"));
-            Assert.assertTrue(!o2.equals(o));
+            AssertJUnit.assertNotNull(o);
+            AssertJUnit.assertNotNull(o2);
+            AssertJUnit.assertTrue(o.toString().contains("X"));
+            AssertJUnit.assertTrue(o2.toString().contains("X"));
+            AssertJUnit.assertTrue(!o2.equals(o));
             System.out.println(o.toString() + "\n" + o2.toString());
         }
     }
@@ -85,13 +84,13 @@ public class RandomGeneratorTest {
     @Test
     public void testGuardedStr() {
         Object o = RandomGenerator.generate("\\a\\h###\\s\\h", GuardedString.class);
-        Assert.assertTrue(o instanceof GuardedString);
+        AssertJUnit.assertTrue(o instanceof GuardedString);
         GuardedString pass = (GuardedString) o;
         pass.access(new GuardedString.Accessor() {
             public void access(char[] clearChars) {
                 final String result = new String(clearChars);
-                Assert.assertTrue(result.startsWith("ah"));
-                Assert.assertTrue(result.endsWith("sh"));
+                AssertJUnit.assertTrue(result.startsWith("ah"));
+                AssertJUnit.assertTrue(result.endsWith("sh"));
             }
         });
     }
@@ -99,8 +98,8 @@ public class RandomGeneratorTest {
     @Test
     public void testChar() {
         Object o = RandomGenerator.generate("A", Character.class);
-        Assert.assertNotNull(o);
-        Assert.assertTrue(o instanceof Character);
+        AssertJUnit.assertNotNull(o);
+        AssertJUnit.assertTrue(o instanceof Character);
     }
 
 }
