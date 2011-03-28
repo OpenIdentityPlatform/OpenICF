@@ -46,13 +46,8 @@ import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
-import org.junit.*;
-import org.junit.rules.ExpectedException;
 
 public class DeleteEntryTests {
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     // Test filepaths
     //private static final String XML_FILEPATH = "test/xml_store/test.xml";
@@ -77,25 +72,23 @@ public class DeleteEntryTests {
             xmlFile.delete();
     }
 
-    @Test
+    @Test(expectedExceptions=UnknownUidException.class)
     public void withNonExistingUidShouldThrowException() {
         final String uid = "nonexistingUID";
         final String expectedErrorMessage = "Deleting entry failed. Could not find an entry of type " + ObjectClass.ACCOUNT_NAME + " with the uid " + uid;
 
-        thrown.expect(UnknownUidException.class);
-        thrown.expectMessage(expectedErrorMessage);
+        //thrown.expectMessage(expectedErrorMessage);
 
         handler.delete(ObjectClass.ACCOUNT, new Uid(uid));
     }
 
-    @Test
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void withNotSupportedObjectTypeShouldThrowException() {
         ObjectClass objClass = new ObjectClass("nonExistingObject");
         Uid uid = new Uid("nonexistingUID");
         final String expectedErrorMessage = "Object type: " + objClass.getObjectClassValue() + " is not supported.";
 
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(expectedErrorMessage);
+        //thrown.expectMessage(expectedErrorMessage);
 
         handler.delete(objClass, uid);
     }

@@ -50,8 +50,7 @@ import org.junit.rules.ExpectedException;
 
 public class XMLConnectorTests {
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
+    
 
     private XMLConnector connector;
     private XMLConfiguration config;
@@ -89,7 +88,7 @@ public class XMLConnectorTests {
         xmlCon.test();
     }
 
-    @Test
+    @Test(expectedExceptions=IllegalArgumentException.class,expectedExceptionsMessageRegExp="File does not exist at filepath target/test-classes/test/xml_store/404.xsd")
     public void testMethodShouldThrowExceptionWhenGivenInvalidXsdFilePaths() {
         final String icfSchemaLocation = "target/test-classes/test/xml_store/404.xsd";
         final String expectedErrorMessage = "File does not exist at filepath " + icfSchemaLocation;
@@ -101,10 +100,6 @@ public class XMLConnectorTests {
         conf.setXsdIcfFilePath(icfSchemaLocation);
 
         connector.init(conf);
-        
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(expectedErrorMessage);
-
         connector.test();
     }
 
@@ -245,12 +240,11 @@ public class XMLConnectorTests {
         AssertJUnit.assertEquals(insertedUid.getUidValue(), authenticatedUid.getUidValue());
     }
 
-    @Test
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void authenticateShouldThrowExceptionWhenObjectClassIsNotOfTypeAccount() {
         final String expectedErrorMessage = "Authentication failed. Can only authenticate against " + ObjectClass.ACCOUNT_NAME + " resources.";
         
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(expectedErrorMessage);
+        //thrown.expectMessage(expectedErrorMessage);
 
         connector.authenticate(
                 ObjectClass.GROUP, "username", new GuardedString(ATTR_ACCOUNT_VALUE_PASSWORD.toCharArray()), null);

@@ -48,13 +48,9 @@ import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.junit.*;
-import org.junit.rules.ExpectedException;
 
 public class CreateEntryTests {
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
     // Test filepaths
     //private static final String XML_FILEPATH = "test/xml_store/test.xml";
     private static XMLHandler handler;
@@ -79,56 +75,52 @@ public class CreateEntryTests {
         }
     }
 
-    @Test
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void withNonSupportedObjectTypeShouldThrowException() {
         final String objectType = "NonExistingObject";
         final String expectedErrorMessage = objectType + " is not supported.";
 
         ObjectClass objClass = new ObjectClass(objectType);
 
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(expectedErrorMessage);
+        //thrown.expectMessage(expectedErrorMessage);
 
         handler.create(objClass, null);
     }
 
-    @Test
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void withoutNameAttributeDefinedShouldThrowException() {
         final String expectedErrorMessage = Name.NAME + " must be defined.";
 
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(expectedErrorMessage);
+        //thrown.expectMessage(expectedErrorMessage);
 
         handler.create(ObjectClass.ACCOUNT, null);
     }
 
-    @Test
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void containingAttributesFlaggedAsNonCreateableShouldThrowException() {
         final String expectedErrorMessage = ATTR_ACCOUNT_IS_DELETED + " is not a creatable field.";
 
         Set<Attribute> attrSet = getRequiredAccountAttributes();
         attrSet.add(AttributeBuilder.build(ATTR_ACCOUNT_IS_DELETED, true));
 
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(expectedErrorMessage);
+        //thrown.expectMessage(expectedErrorMessage);
 
         handler.create(ObjectClass.ACCOUNT, attrSet);
     }
 
-    @Test
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void withMissingRequiredFieldShouldThrowException() {
         final String expectedErrorMessage = "Missing required field: " + ATTR_PASSWORD;
 
         Map<String, Attribute> requiredMap = convertToAttributeMap(getRequiredAccountAttributes());
         requiredMap.remove(ATTR_PASSWORD);
 
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(expectedErrorMessage);
+        //thrown.expectMessage(expectedErrorMessage);
 
         handler.create(ObjectClass.ACCOUNT, convertToAttributeSet(requiredMap));
     }
 
-    @Test
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void withBlankRequiredFieldShouldThrowException() {
         final String expectedErrorMessage = "Parameter '" + ATTR_PASSWORD + "' must not be blank.";
 
@@ -136,13 +128,12 @@ public class CreateEntryTests {
         requiredMap.remove(ATTR_PASSWORD);
         requiredMap.put(ATTR_PASSWORD, AttributeBuilder.build(ATTR_PASSWORD, new GuardedString(new String("").toCharArray())));
 
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(expectedErrorMessage);
+        //thrown.expectMessage(expectedErrorMessage);
 
         handler.create(ObjectClass.ACCOUNT, convertToAttributeSet(requiredMap));
     }
 
-    @Test
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void withIllegalAttributeTypeShouldThrowException() {
         final String expectedErrorMessage = ATTR_ACCOUNT_FIRST_NAME + " contains invalid type. Value(s) should be of type java.lang.String";
 
@@ -151,8 +142,7 @@ public class CreateEntryTests {
         // Expected type is String
         attrSet.add(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, 20.0));
 
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(expectedErrorMessage);
+        //thrown.expectMessage(expectedErrorMessage);
 
         handler.create(ObjectClass.ACCOUNT, attrSet);
     }
@@ -184,15 +174,14 @@ public class CreateEntryTests {
         AssertJUnit.assertNotSame(uid, name.getNameValue());
     }
 
-    @Test
+    @Test(expectedExceptions=AlreadyExistsException.class)
     public void withExistingIdShouldThrowException() {
         final String uid = AttributeUtil.getNameFromAttributes(getRequiredAccountAttributes()).getNameValue();
         final String expectedErrorMessage = "Could not create entry. An entry with the " + Uid.NAME + " of " + uid + " already exists.";
 
         handler.create(ObjectClass.ACCOUNT, getRequiredAccountAttributes());
 
-        thrown.expect(AlreadyExistsException.class);
-        thrown.expectMessage(expectedErrorMessage);
+        //thrown.expectMessage(expectedErrorMessage);
 
         handler.create(ObjectClass.ACCOUNT, getRequiredAccountAttributes());
     }

@@ -52,13 +52,8 @@ import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
-import org.junit.Rule;
-import org.junit.rules.ExpectedException;
 
 public class UpdateEntryTests {
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     //private static final String XML_FILEPATH = "test/xml_store/test.xml";
 
@@ -83,20 +78,19 @@ public class UpdateEntryTests {
         }
     }
 
-    @Test
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void withNonSupportedObjectTypeShouldThrowException() {
         final String objectType = "NonExistingObject";
         final String expectedErrorMessage = objectType + " is not supported.";
 
         ObjectClass objClass = new ObjectClass(objectType);
 
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(expectedErrorMessage);
+        //thrown.expectMessage(expectedErrorMessage);
 
         handler.create(objClass, null);
     }
 
-    @Test
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void withNotSupportedAttributeShouldThrowException() {
         final String notSupportedAttribute = "notSupported";
         final String expectedErrorMessage = "Data field: " + notSupportedAttribute + " is not supported.";
@@ -104,8 +98,7 @@ public class UpdateEntryTests {
         // Setup account
         Uid insertedUid = createTestAccount();
 
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(expectedErrorMessage);
+        //thrown.expectMessage(expectedErrorMessage);
 
         Set<Attribute> newAttributes = new HashSet();
         newAttributes.add(AttributeBuilder.build(notSupportedAttribute, "arg"));
@@ -113,15 +106,14 @@ public class UpdateEntryTests {
         handler.update(ObjectClass.ACCOUNT, insertedUid, newAttributes);
     }
 
-    @Test
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void containingAttributesFlaggedAsNonUpdateableShouldThrowException() {
         final String expectedErrorMessage = ATTR_ACCOUNT_IS_DELETED + " is not updatable.";
 
         // Setup account
         Uid insertedUid = createTestAccount();
 
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(expectedErrorMessage);
+        //thrown.expectMessage(expectedErrorMessage);
 
         Set<Attribute> newAttributes = new HashSet();
         newAttributes.add(AttributeBuilder.build(ATTR_ACCOUNT_IS_DELETED, "true"));
@@ -129,15 +121,14 @@ public class UpdateEntryTests {
         handler.update(ObjectClass.ACCOUNT, insertedUid, newAttributes);
     }
 
-    @Test
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void withBlankValueForRequiredFieldShouldThrowException() {
         final String expectedErrorMessage = "Parameter '" + ATTR_ACCOUNT_LAST_NAME + "' must not be blank.";
 
         // Setup account
         Uid insertedUid = createTestAccount();
 
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(expectedErrorMessage);
+        //thrown.expectMessage(expectedErrorMessage);
 
         Set<Attribute> newAttributes = new HashSet();
         newAttributes.add(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, ""));
@@ -145,15 +136,14 @@ public class UpdateEntryTests {
         handler.update(ObjectClass.ACCOUNT, insertedUid, newAttributes);
     }
 
-    @Test
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void withNullValueForRequiredFieldShouldThrowException() {
         final String expectedErrorMessage = "No values provided for required attribute: " + ATTR_ACCOUNT_LAST_NAME;
 
         // Setup account
         Uid insertedUid = createTestAccount();
 
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(expectedErrorMessage);
+        //thrown.expectMessage(expectedErrorMessage);
 
         Set<Attribute> newAttributes = new HashSet();
         newAttributes.add(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME));
@@ -182,15 +172,14 @@ public class UpdateEntryTests {
         AssertJUnit.assertNull(connectorObject.getAttributeByName(ATTR_ACCOUNT_EMPLOYEE_TYPE));
     }
 
-    @Test
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void withAttributeContainingValuesOfIllegalTypeShouldThrowException() {
         final String expectedErrorMessage = ATTR_ACCOUNT_MS_EMPLOYED + " contains values of illegal type";
 
         // Setup account
         Uid insertedUid = createTestAccount();
 
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(expectedErrorMessage);
+        //thrown.expectMessage(expectedErrorMessage);
 
         Set<Attribute> newAttributes = new HashSet();
         newAttributes.add(AttributeBuilder.build(ATTR_ACCOUNT_MS_EMPLOYED, "1234"));
@@ -198,15 +187,14 @@ public class UpdateEntryTests {
         handler.update(ObjectClass.ACCOUNT, insertedUid, newAttributes);
     }
 
-    @Test
+    @Test(expectedExceptions=UnknownUidException.class)
     public void withNonExistingUidShouldThrowException() {
         final ObjectClass objClass = ObjectClass.ACCOUNT;
         final String uid = "nonexisting";
         final String expectedErrorMessage = "Could not update entry. No entry of type " +
                 objClass.getObjectClassValue() + " with the id " + uid + " found.";
 
-        thrown.expect(UnknownUidException.class);
-        thrown.expectMessage(expectedErrorMessage);
+        //thrown.expectMessage(expectedErrorMessage);
 
         Set<Attribute> newAttributes = new HashSet();
         handler.update(objClass, new Uid("nonexisting"), newAttributes);

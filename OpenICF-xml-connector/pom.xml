@@ -26,12 +26,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.forgerock.openicf.bundles</groupId>
+        <groupId>org.forgerock.openicf.bundles</groupId>
         <artifactId>bundles-parent</artifactId>
         <version>1.1.0.0-SNAPSHOT</version>
     </parent>
-    <groupId>${defaultConnectorGroupId}</groupId>
-    <version>${defaultConnectorVersion}</version>
+    <groupId>org.forgerock.openicf.bundles.file</groupId>
+    <version>1.1.0.0-SNAPSHOT</version>
     <artifactId>xml</artifactId>
     <packaging>bundle</packaging>
     <name>Simulated XML Connector</name>
@@ -52,7 +52,7 @@
         <contracts.skip>true</contracts.skip>
         <privateConfigPath>${user.home}/.connectors/connector-xml/config</privateConfigPath>
         <embedded.dependencies>jaxen,saxonhe,xsom</embedded.dependencies>
-        <connectorPackage>com.forgerock.openicf.xml</connectorPackage>
+        <connectorPackage>org.forgerock.openicf.xml</connectorPackage>
         <connectorClass>XMLConnector</connectorClass>
     </properties>
 
