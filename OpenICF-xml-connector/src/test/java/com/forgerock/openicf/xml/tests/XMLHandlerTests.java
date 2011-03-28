@@ -26,6 +26,10 @@
 
 package com.forgerock.openicf.xml.tests;
 
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.Test;
+import org.testng.annotations.BeforeClass;
+import org.testng.AssertJUnit;
 import com.forgerock.openicf.xml.XMLConfiguration;
 import com.forgerock.openicf.xml.XMLConnector;
 import com.forgerock.openicf.xml.XMLFilterTranslator;
@@ -47,10 +51,6 @@ import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import static org.junit.Assert.*;
 
 
 public class XMLHandlerTests {
@@ -59,7 +59,7 @@ public class XMLHandlerTests {
     //private static final String XML_FILE_PATH = "test/xml_store/test.xml";
     private static ConnectorObject existingUsrConObj;
 
-    @BeforeClass
+	@BeforeClass
     public static void setUp() {
 
         XMLConfiguration config = new XMLConfiguration();
@@ -93,7 +93,7 @@ public class XMLHandlerTests {
         existingUsrConObj = hits.get(0);
     }
 
-    @AfterClass
+	@AfterClass
     public static void tearDown(){
         File xmlFile = new File(XML_FILEPATH);
 
@@ -106,7 +106,7 @@ public class XMLHandlerTests {
     public void searchWithEmptyQueryShouldReturnSizeZero() {
         Collection<ConnectorObject> hits = handler.search("", null);
 
-        assertEquals(0, hits.size());
+        AssertJUnit.assertEquals(0, hits.size());
     }
 
     @Test
@@ -115,7 +115,7 @@ public class XMLHandlerTests {
         List<Object> values = attribute.getValue();
         Object val = values.get(0);
 
-        assertTrue(val instanceof String);
+        AssertJUnit.assertTrue(val instanceof String);
     }
 
     @Test
@@ -124,7 +124,7 @@ public class XMLHandlerTests {
         List<Object> values = attribute.getValue();
         Object val = values.get(0);
 
-        assertTrue(val instanceof Integer);
+        AssertJUnit.assertTrue(val instanceof Integer);
     }
 
     @Test
@@ -133,7 +133,7 @@ public class XMLHandlerTests {
         List<Object> values = attribute.getValue();
         Object val = values.get(0);
 
-        assertTrue(val instanceof Double);
+        AssertJUnit.assertTrue(val instanceof Double);
     }
 
     @Test
@@ -142,17 +142,17 @@ public class XMLHandlerTests {
         List<Object> values = attribute.getValue();
         Object val = values.get(0);
 
-        assertTrue(val instanceof Boolean);
+        AssertJUnit.assertTrue(val instanceof Boolean);
     }
 
     @Test
     public void accessingNotReadableFieldShouldReturnNull() {
         Attribute attribute = existingUsrConObj.getAttributeByName(ATTR_ACCOUNT_SECRET_PIN);
-        assertNull(attribute);
+        AssertJUnit.assertNull(attribute);
 
         // testing readable field
         attribute = existingUsrConObj.getAttributeByName(ATTR_ACCOUNT_YEARS_EMPLOYED);
-        assertNotNull(attribute);
+        AssertJUnit.assertNotNull(attribute);
     }
 
     @Test
@@ -160,6 +160,6 @@ public class XMLHandlerTests {
         Attribute attribute = existingUsrConObj.getAttributeByName(ATTR_ACCOUNT_EMAIL);
         int values = attribute.getValue().size();
 
-        assertEquals(3, values);
+        AssertJUnit.assertEquals(3, values);
     }
 }

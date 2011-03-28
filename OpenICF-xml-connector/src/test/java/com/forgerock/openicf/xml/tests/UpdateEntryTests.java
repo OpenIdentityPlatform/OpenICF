@@ -26,6 +26,10 @@
 
 package com.forgerock.openicf.xml.tests;
 
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.Test;
+import org.testng.annotations.BeforeMethod;
+import org.testng.AssertJUnit;
 import com.forgerock.openicf.xml.XMLConfiguration;
 import com.forgerock.openicf.xml.XMLConnector;
 import com.forgerock.openicf.xml.XMLFilterTranslator;
@@ -48,12 +52,8 @@ import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import static org.junit.Assert.*;
 
 public class UpdateEntryTests {
 
@@ -64,8 +64,8 @@ public class UpdateEntryTests {
 
     private static XMLHandler handler;
 
-    @Before
-    public void init() {
+    @BeforeMethod
+	public void init() {
         XMLConfiguration config = new XMLConfiguration();
         config.setXmlFilePath(XML_FILEPATH);
         config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
@@ -74,8 +74,8 @@ public class UpdateEntryTests {
         handler = new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
     }
 
-    @After
-    public void destroy(){
+    @AfterMethod
+	public void destroy(){
         File xmlFile = new File(XML_FILEPATH);
 
         if(xmlFile.exists()){
@@ -179,7 +179,7 @@ public class UpdateEntryTests {
         List<ConnectorObject> results = (List) handler.search(queryBuilder.toString(), ObjectClass.ACCOUNT);
         ConnectorObject connectorObject = results.get(0);
 
-        assertNull(connectorObject.getAttributeByName(ATTR_ACCOUNT_EMPLOYEE_TYPE));
+        AssertJUnit.assertNull(connectorObject.getAttributeByName(ATTR_ACCOUNT_EMPLOYEE_TYPE));
     }
 
     @Test
@@ -222,7 +222,7 @@ public class UpdateEntryTests {
 
         Uid updatedUid = handler.update(ObjectClass.ACCOUNT, insertedUid, attrSet);
 
-        assertEquals(insertedUid.getUidValue(), updatedUid.getUidValue());
+        AssertJUnit.assertEquals(insertedUid.getUidValue(), updatedUid.getUidValue());
     }
     
     @Test
@@ -259,8 +259,8 @@ public class UpdateEntryTests {
         // Check account values
        ConnectorObject connObjAccount = results.get(0);
 
-       assertEquals(firstName, AttributeUtil.getStringValue(connObjAccount.getAttributeByName(ATTR_ACCOUNT_FIRST_NAME)));
-       assertEquals(lastName, AttributeUtil.getStringValue(connObjAccount.getAttributeByName(ATTR_ACCOUNT_LAST_NAME)));
+       AssertJUnit.assertEquals(firstName, AttributeUtil.getStringValue(connObjAccount.getAttributeByName(ATTR_ACCOUNT_FIRST_NAME)));
+       AssertJUnit.assertEquals(lastName, AttributeUtil.getStringValue(connObjAccount.getAttributeByName(ATTR_ACCOUNT_LAST_NAME)));
     }
 
     private Uid createTestAccount() {

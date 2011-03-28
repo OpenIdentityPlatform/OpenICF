@@ -26,6 +26,10 @@
 
 package com.forgerock.openicf.xml.tests;
 
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.Test;
+import org.testng.annotations.BeforeMethod;
+import org.testng.AssertJUnit;
 import com.forgerock.openicf.xml.XMLConfiguration;
 import com.forgerock.openicf.xml.XMLConnector;
 import com.forgerock.openicf.xml.XMLFilterTranslator;
@@ -44,7 +48,6 @@ import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
-import static org.junit.Assert.*;
 
 public class DeleteEntryTests {
 
@@ -56,8 +59,8 @@ public class DeleteEntryTests {
 
     private static XMLHandlerImpl handler;
 
-    @Before
-    public void init() {
+    @BeforeMethod
+	public void init() {
         XMLConfiguration config = new XMLConfiguration();
         config.setXmlFilePath(XML_FILEPATH);
         config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
@@ -66,8 +69,8 @@ public class DeleteEntryTests {
         handler = new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
     }
 
-    @After
-    public void destroy() {
+    @AfterMethod
+	public void destroy() {
         File xmlFile = new File(XML_FILEPATH);
 
         if (xmlFile.exists())
@@ -120,7 +123,7 @@ public class DeleteEntryTests {
         resultsHandler.setResults(searchResults);
 
         // Check if the account exist in the document
-        assertEquals(1, resultsHandler.getResultSize());
+        AssertJUnit.assertEquals(1, resultsHandler.getResultSize());
 
         // Delete account
         handler.delete(objClass, insertedUid);
@@ -129,6 +132,6 @@ public class DeleteEntryTests {
         resultsHandler.setResults(searchResults);
 
         // Check if account got deleted
-        assertEquals(0, resultsHandler.getResultSize());
+        AssertJUnit.assertEquals(0, resultsHandler.getResultSize());
     }
 }

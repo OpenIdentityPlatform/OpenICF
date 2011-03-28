@@ -23,9 +23,13 @@
  *
  * $Id$
  */
-
 package com.forgerock.openicf.xml.tests;
 
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.Test;
+import org.testng.annotations.BeforeMethod;
+import org.testng.AssertJUnit;
+import org.testng.Assert;
 import com.forgerock.openicf.xml.XMLConfiguration;
 import com.forgerock.openicf.xml.XMLConnector;
 import com.forgerock.openicf.xml.XMLHandler;
@@ -45,20 +49,17 @@ import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.junit.*;
-import static org.junit.Assert.*;
 import org.junit.rules.ExpectedException;
 
 public class CreateEntryTests {
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
-
     // Test filepaths
     //private static final String XML_FILEPATH = "test/xml_store/test.xml";
-
     private static XMLHandler handler;
 
-    @Before
+    @BeforeMethod
     public void init() {
         XMLConfiguration config = new XMLConfiguration();
 
@@ -69,12 +70,13 @@ public class CreateEntryTests {
         handler = new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
     }
 
-    @After
+    @AfterMethod
     public void destroy() {
         File xmlFile = new File(XML_FILEPATH);
 
-        if (xmlFile.exists())
+        if (xmlFile.exists()) {
             xmlFile.delete();
+        }
     }
 
     @Test
@@ -158,7 +160,7 @@ public class CreateEntryTests {
     @Test
     public void shouldReturnUid() {
         Uid insertedUid = handler.create(ObjectClass.ACCOUNT, getRequiredAccountAttributes());
-        assertNotNull(insertedUid.getUidValue());
+        Assert.assertNotNull(insertedUid.getUidValue());
     }
 
     @Test
@@ -170,7 +172,7 @@ public class CreateEntryTests {
         attrSet.add(AttributeBuilder.build(ATTR_SHORT_NAME, ATTR_GROUP_VALUE_SHORT_NAME));
 
         Uid insertedUid = handler.create(ObjectClass.GROUP, attrSet);
-        assertEquals(insertedUid.getUidValue(), AttributeUtil.getNameFromAttributes(attrSet).getNameValue());
+        AssertJUnit.assertEquals(insertedUid.getUidValue(), AttributeUtil.getNameFromAttributes(attrSet).getNameValue());
     }
 
     @Test
@@ -179,7 +181,7 @@ public class CreateEntryTests {
         Set<Attribute> attrSet = getRequiredAccountAttributes();
 
         Uid uid = handler.create(ObjectClass.ACCOUNT, attrSet);
-        assertNotSame(uid, name.getNameValue());
+        AssertJUnit.assertNotSame(uid, name.getNameValue());
     }
 
     @Test

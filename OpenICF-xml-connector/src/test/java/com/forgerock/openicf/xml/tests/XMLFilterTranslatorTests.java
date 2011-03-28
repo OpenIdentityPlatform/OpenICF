@@ -25,6 +25,10 @@
 
 package com.forgerock.openicf.xml.tests;
 
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.Test;
+import org.testng.annotations.BeforeClass;
+import org.testng.AssertJUnit;
 import com.forgerock.openicf.xml.XMLConfiguration;
 import com.forgerock.openicf.xml.XMLConnector;
 import com.forgerock.openicf.xml.XMLFilterTranslator;
@@ -54,10 +58,6 @@ import org.identityconnectors.framework.common.objects.filter.GreaterThanOrEqual
 import org.identityconnectors.framework.common.objects.filter.LessThanFilter;
 import org.identityconnectors.framework.common.objects.filter.LessThanOrEqualFilter;
 import org.identityconnectors.framework.common.objects.filter.StartsWithFilter;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import static org.junit.Assert.*;
 
 public class XMLFilterTranslatorTests {
 
@@ -182,7 +182,7 @@ public class XMLFilterTranslatorTests {
         QueryBuilder queryBuilder = new QueryBuilder(equalsQueryFnVader, ObjectClass.ACCOUNT);
         Collection<ConnectorObject> hits = xmlHandler.search(queryBuilder.toString(), ObjectClass.ACCOUNT);
 
-        assertEquals(1, hits.size());
+        AssertJUnit.assertEquals(1, hits.size());
     }
 
     @Test
@@ -191,7 +191,7 @@ public class XMLFilterTranslatorTests {
         QueryBuilder queryBuilder = new QueryBuilder(andQuery, ObjectClass.ACCOUNT);
         Collection<ConnectorObject> hits = xmlHandler.search(queryBuilder.toString(), ObjectClass.ACCOUNT);
 
-        assertEquals(1, hits.size());
+        AssertJUnit.assertEquals(1, hits.size());
     }
 
     @Test
@@ -199,7 +199,7 @@ public class XMLFilterTranslatorTests {
         QueryBuilder queryBuilder = new QueryBuilder(equalsQueryNonExisting, ObjectClass.ACCOUNT);
         Collection<ConnectorObject> hits = xmlHandler.search(queryBuilder.toString(), ObjectClass.ACCOUNT);
 
-        assertEquals(0, hits.size());
+        AssertJUnit.assertEquals(0, hits.size());
     }
 
     @Test
@@ -208,7 +208,7 @@ public class XMLFilterTranslatorTests {
         QueryBuilder queryBuilder = new QueryBuilder(andQuery, ObjectClass.ACCOUNT);
         Collection<ConnectorObject> hits = xmlHandler.search(queryBuilder.toString(), ObjectClass.ACCOUNT);
 
-        assertEquals(1, hits.size());
+        AssertJUnit.assertEquals(1, hits.size());
     }
 
     @Test
@@ -217,7 +217,7 @@ public class XMLFilterTranslatorTests {
         QueryBuilder queryBuilder = new QueryBuilder(orQuery, ObjectClass.ACCOUNT);
         Collection<ConnectorObject> hits = xmlHandler.search(queryBuilder.toString(), ObjectClass.ACCOUNT);
 
-        assertEquals(2, hits.size());
+        AssertJUnit.assertEquals(2, hits.size());
     }
 
     @Test
@@ -227,7 +227,7 @@ public class XMLFilterTranslatorTests {
         String [] args = {"$x/firstname", "'123'"};
         FunctionQuery functionQuery = new FunctionQuery(args, fn, true);
 
-        assertEquals(expected, functionQuery.getExpression());
+        AssertJUnit.assertEquals(expected, functionQuery.getExpression());
     }
 
     @Test
@@ -237,7 +237,7 @@ public class XMLFilterTranslatorTests {
         String expected = "fn:matches($x/firstname, '123')";
         FunctionQuery functionQuery = new FunctionQuery(args, fn, false);
 
-        assertEquals(expected, functionQuery.getExpression());
+        AssertJUnit.assertEquals(expected, functionQuery.getExpression());
     }
 
     @Test
@@ -246,7 +246,7 @@ public class XMLFilterTranslatorTests {
         Query query = filterTranslator.createContainsExpression(filter, false);
         List<ConnectorObject> hits = getResultsFromQuery(query);
 
-        assertEquals(1, hits.size());
+        AssertJUnit.assertEquals(1, hits.size());
     }
 
     @Test
@@ -256,7 +256,7 @@ public class XMLFilterTranslatorTests {
         List<ConnectorObject> hits = getResultsFromQuery(query);
 
 
-        assertEquals(2, hits.size());
+        AssertJUnit.assertEquals(2, hits.size());
     }
 
     @Test
@@ -265,7 +265,7 @@ public class XMLFilterTranslatorTests {
         Query query = filterTranslator.createStartsWithExpression(filter, false);
         List<ConnectorObject> hits = getResultsFromQuery(query);
 
-        assertEquals(1, hits.size());
+        AssertJUnit.assertEquals(1, hits.size());
     }
 
     @Test
@@ -274,7 +274,7 @@ public class XMLFilterTranslatorTests {
         Query query = filterTranslator.createStartsWithExpression(filter, true);
         List<ConnectorObject> hits = getResultsFromQuery(query);
 
-        assertEquals(2, hits.size());
+        AssertJUnit.assertEquals(2, hits.size());
     }
 
     @Test
@@ -283,7 +283,7 @@ public class XMLFilterTranslatorTests {
         Query query = filterTranslator.createEndsWithExpression(filter, false);
         List<ConnectorObject> hits = getResultsFromQuery(query);
 
-        assertEquals(1, hits.size());
+        AssertJUnit.assertEquals(1, hits.size());
     }
 
     @Test
@@ -292,7 +292,7 @@ public class XMLFilterTranslatorTests {
         List<ConnectorObject> hits = new ArrayList<ConnectorObject>(
                 xmlHandler.search(queryBuilder.toString(), ObjectClass.ACCOUNT));
 
-        assertTrue(hits.size() > 0);
+        AssertJUnit.assertTrue(hits.size() > 0);
     }
 
     @Test
@@ -300,7 +300,7 @@ public class XMLFilterTranslatorTests {
         Query andQuery = filterTranslator.createAndExpression(gtQueryMs, ltQueryMs);
         List<ConnectorObject> hits = getResultsFromQuery(andQuery);
 
-        assertEquals(1, hits.size());
+        AssertJUnit.assertEquals(1, hits.size());
     }
 
     @Test
@@ -308,7 +308,7 @@ public class XMLFilterTranslatorTests {
         Query andQuery = filterTranslator.createAndExpression(gtoreqQueryYearsEmployed, ltoreqQueryYearsEmployed);
         List<ConnectorObject> hits = getResultsFromQuery(andQuery);
 
-        assertEquals(1, hits.size());
+        AssertJUnit.assertEquals(1, hits.size());
     }
 
     @Test
@@ -316,14 +316,14 @@ public class XMLFilterTranslatorTests {
         Query vaderAndQuery = filterTranslator.createAndExpression(equalsQueryFnVader, equalsQueryLnVader);
         Query maulAndQuery = filterTranslator.createAndExpression(equalsQueryFnMaul, equalsQueryLnMaul);
         List<ConnectorObject> results = getResultsFromQuery(vaderAndQuery);
-        assertEquals(1, results.size());
+        AssertJUnit.assertEquals(1, results.size());
 
         results = getResultsFromQuery(maulAndQuery);
-        assertEquals(1, results.size());
+        AssertJUnit.assertEquals(1, results.size());
 
         Query orQuery = filterTranslator.createOrExpression(vaderAndQuery, maulAndQuery);
         results = getResultsFromQuery(orQuery);
-        assertEquals(2, results.size());
+        AssertJUnit.assertEquals(2, results.size());
     }
 
     @Test
@@ -333,7 +333,7 @@ public class XMLFilterTranslatorTests {
         Query query = filterTranslator.createContainsAllValuesExpression(filter, false);
         List<ConnectorObject> results = getResultsFromQuery(query);
 
-        assertEquals(2, results.size());
+        AssertJUnit.assertEquals(2, results.size());
     }
 
     @Test
@@ -343,7 +343,7 @@ public class XMLFilterTranslatorTests {
         Query query = filterTranslator.createContainsAllValuesExpression(filter, false);
         List<ConnectorObject> results = getResultsFromQuery(query);
 
-        assertEquals(1, results.size());
+        AssertJUnit.assertEquals(1, results.size());
     }
 
     @Test
@@ -357,7 +357,7 @@ public class XMLFilterTranslatorTests {
 
         List<ConnectorObject> results = getResultsFromQuery(andQuery);
 
-        assertEquals(1, results.size());
+        AssertJUnit.assertEquals(1, results.size());
     }
 
     private List<ConnectorObject> getResultsFromQuery(Query query) {

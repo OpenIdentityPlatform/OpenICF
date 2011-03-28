@@ -26,17 +26,17 @@
 
 package com.forgerock.openicf.xml.tests;
 
+import org.testng.annotations.Test;
+import org.testng.annotations.BeforeMethod;
+import org.testng.AssertJUnit;
 import com.forgerock.openicf.xml.XMLConfiguration;
-import static org.junit.Assert.*;
-import org.junit.Before;
-import org.junit.Test;
 
 public class XMLConfigurationTests {
 
     private XMLConfiguration config;
 
-    @Before
-    public void init() {
+    @BeforeMethod
+	public void init() {
        config = new XMLConfiguration();
     }
 
@@ -45,7 +45,7 @@ public class XMLConfigurationTests {
         final String filePath = "users.xml";
 
         config.setXmlFilePath(filePath);
-        assertEquals(filePath, config.getXmlFilePath());
+        AssertJUnit.assertEquals(filePath, config.getXmlFilePath());
     }
 
     @Test
@@ -53,7 +53,7 @@ public class XMLConfigurationTests {
         final String xsdPath = "xsdRi.xsd";
 
         config.setXsdIcfFilePath(xsdPath);
-        assertEquals(xsdPath, config.getXsdIcfFilePath());
+        AssertJUnit.assertEquals(xsdPath, config.getXsdIcfFilePath());
     }
 
     @Test
@@ -61,16 +61,16 @@ public class XMLConfigurationTests {
         final String xsdPath = "xsdTest.xsd";
 
         config.setXsdFilePath(xsdPath);
-        assertEquals(xsdPath, config.getXsdFilePath());
+        AssertJUnit.assertEquals(xsdPath, config.getXsdFilePath());
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionWhenValidatingWithNullFilepath() {
         config.setXmlFilePath(null);
         config.validate();
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionWhenValidatingWithBlankFilepath() {
         config.setXmlFilePath("");
         config.validate();

@@ -26,6 +26,10 @@
 
 package com.forgerock.openicf.xml.tests;
 
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.Test;
+import org.testng.annotations.BeforeMethod;
+import org.testng.AssertJUnit;
 import com.forgerock.openicf.xml.XMLConfiguration;
 import com.forgerock.openicf.xml.XMLConnector;
 import com.forgerock.openicf.xml.XMLFilterTranslator;
@@ -42,7 +46,6 @@ import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
-import static org.junit.Assert.*;
 
 
 public class XMLConnectorTests {
@@ -55,8 +58,8 @@ public class XMLConnectorTests {
 
     //private final static String XML_FILEPATH = "test/xml_store/test.xml";
 
-    @Before
-    public void init() {
+    @BeforeMethod
+	public void init() {
         config = new XMLConfiguration();
         config.setXmlFilePath(XML_FILEPATH);
         config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
@@ -65,8 +68,8 @@ public class XMLConnectorTests {
         connector.init(config);
     }
 
-    @After
-    public void destroy() {
+    @AfterMethod
+	public void destroy() {
         File xmlFile = new File(XML_FILEPATH);
 
         if(xmlFile.exists()){
@@ -74,13 +77,13 @@ public class XMLConnectorTests {
         }
     }
     
-    @Test(expected=NullPointerException.class)
+    @Test(expectedExceptions=NullPointerException.class)
     public void initMethodShouldCastNullPointerExceptionWhenInitializedWithNull(){
         XMLConnector xMLConnector = new XMLConnector();
         xMLConnector.init(null);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test(expectedExceptions = NullPointerException.class)
     public void testMethodShouldThrowExceptionWhenMissingRequiredFields() {
         XMLConnector xmlCon = new XMLConnector();
         xmlCon.test();
@@ -113,23 +116,23 @@ public class XMLConnectorTests {
     @Test
     public void schemaMethodShouldReturnFrameworkSchemaObject() {
         Schema schema = connector.schema();
-        assertNotNull(schema);
+        AssertJUnit.assertNotNull(schema);
     }
 
     @Test
     public void frameworkSchemaObjectShouldIncludeAccountObjectInformation() {
         Schema schema = connector.schema();
-        assertNotNull(schema.findObjectClassInfo(ACCOUNT_TYPE));
+        AssertJUnit.assertNotNull(schema.findObjectClassInfo(ACCOUNT_TYPE));
     }
 
     @Test
     public void createFilterTranslatorShouldReturnInitializedFilterTranslatorWhenGivenValidParameters() {
-        assertNotNull(connector.createFilterTranslator(ObjectClass.ACCOUNT, null));
+        AssertJUnit.assertNotNull(connector.createFilterTranslator(ObjectClass.ACCOUNT, null));
     }
 
     @Test
     public void getConfigurationShouldReturnInitializedConfigurationObject() {
-        assertNotNull(connector.getConfiguration());
+        AssertJUnit.assertNotNull(connector.getConfiguration());
     }
 
     @Test
@@ -145,7 +148,7 @@ public class XMLConnectorTests {
         
         TestResultsHandler resultsHandler = new TestResultsHandler();
         connector.executeQuery(ObjectClass.ACCOUNT, null, resultsHandler, null);
-        assertEquals(2, resultsHandler.getResultSize());
+        AssertJUnit.assertEquals(2, resultsHandler.getResultSize());
     }
 
     @Test
@@ -162,10 +165,10 @@ public class XMLConnectorTests {
         connector.executeQuery(
                 ObjectClass.ACCOUNT, filterTranslator.createEqualsExpression(equalsFilter, false), resultsHandler, null);
 
-        assertEquals(1, resultsHandler.getResultSize());
+        AssertJUnit.assertEquals(1, resultsHandler.getResultSize());
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expectedExceptions=NullPointerException.class)
     public void executeQueryWithNullAsObjectTypeShouldThrowException(){
         connector.executeQuery(null, null, null, null);
     }
@@ -174,15 +177,15 @@ public class XMLConnectorTests {
     public void createShouldReturnUidWhenGivenValidParameters() {
         Uid uid = connector.create(ObjectClass.ACCOUNT, getRequiredAccountAttributes(), null);
 
-        assertNotNull(uid);
+        AssertJUnit.assertNotNull(uid);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test(expectedExceptions = NullPointerException.class)
     public void createWithNullAsObjectTypeShouldThrowException() {
         connector.create(null, getRequiredAccountAttributes(), null);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test(expectedExceptions = NullPointerException.class)
     public void createWithAttributesSetToNullShouldThrowException() {
         connector.create(ObjectClass.ACCOUNT, null, null);
     }
@@ -197,15 +200,15 @@ public class XMLConnectorTests {
 
         Uid updatedUid = connector.update(ObjectClass.ACCOUNT, insertedUid, attributes, null);
 
-        assertEquals(insertedUid.getUidValue(), updatedUid.getUidValue());
+        AssertJUnit.assertEquals(insertedUid.getUidValue(), updatedUid.getUidValue());
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test(expectedExceptions = NullPointerException.class)
     public void updateWithNullAsObjectTypeShouldThrowException() {
         connector.update(null, null, null, null);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test(expectedExceptions = NullPointerException.class)
     public void updateWithAttributesSetToNullShouldThrowException() {
         connector.update(ObjectClass.ACCOUNT, null, null, null);
     }
@@ -218,15 +221,15 @@ public class XMLConnectorTests {
 
         TestResultsHandler resultsHandler = new TestResultsHandler();
         connector.executeQuery(ObjectClass.ACCOUNT, null, resultsHandler, null);
-        assertEquals(0, resultsHandler.getResultSize());
+        AssertJUnit.assertEquals(0, resultsHandler.getResultSize());
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test(expectedExceptions = NullPointerException.class)
     public void deleteWithNullAsObjectTypeShouldThrowException() {
         connector.delete(null, null, null);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test(expectedExceptions = NullPointerException.class)
     public void deleteWithNullAsUidShouldThrowException() {
         connector.delete(ObjectClass.ACCOUNT, null, null);
     }
@@ -239,7 +242,7 @@ public class XMLConnectorTests {
         Uid authenticatedUid = connector.authenticate(ObjectClass.ACCOUNT, ATTR_ACCOUNT_VALUE_NAME ,
                 new GuardedString(ATTR_ACCOUNT_VALUE_PASSWORD.toCharArray()), null);
 
-        assertEquals(insertedUid.getUidValue(), authenticatedUid.getUidValue());
+        AssertJUnit.assertEquals(insertedUid.getUidValue(), authenticatedUid.getUidValue());
     }
 
     @Test
@@ -253,13 +256,13 @@ public class XMLConnectorTests {
                 ObjectClass.GROUP, "username", new GuardedString(ATTR_ACCOUNT_VALUE_PASSWORD.toCharArray()), null);
     }
     
-    @Test(expected=NullPointerException.class)
+    @Test(expectedExceptions=NullPointerException.class)
     public void authenticateShouldThrowExceptionWhenUsernameIsNull() {
         connector.authenticate(
                 ObjectClass.ACCOUNT, null, new GuardedString(ATTR_ACCOUNT_VALUE_PASSWORD.toCharArray()), null);
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void authenticateShouldThrowExceptionWhenUsernameIsBlank() {
         connector.authenticate(
                 ObjectClass.ACCOUNT, "", new GuardedString(ATTR_ACCOUNT_VALUE_PASSWORD.toCharArray()), null);
