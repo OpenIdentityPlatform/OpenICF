@@ -22,8 +22,9 @@
  */
 package org.identityconnectors.dbcommon;
 
-import static org.junit.Assert.*;
-
+import org.testng.annotations.Test;
+import org.testng.Assert;
+import org.testng.AssertJUnit;
 import java.util.*;
 
 import org.junit.*;
@@ -42,7 +43,7 @@ public class JNDIUtilTest {
 		String[] entries1 = {"a=A","b=B"};
 		Map<String,String> res1 = new HashMap<String,String>();
 		res1.put("a","A");res1.put("b","B");
-		Assert.assertEquals(res1,JNDIUtil.arrayToHashtable(entries1,null));
+		AssertJUnit.assertEquals(res1,JNDIUtil.arrayToHashtable(entries1,null));
 	}
 	
 	/**
@@ -53,21 +54,21 @@ public class JNDIUtilTest {
 		try {
             String[] entries2 = { "a=A", "b=" };
             JNDIUtil.arrayToHashtable(entries2, null);
-            fail();
+            Assert.fail();
         } catch (RuntimeException e) {
             //expected
         }
         try {
             String[] entries2 = { "a=A", "=" };
             JNDIUtil.arrayToHashtable(entries2, null);
-            fail();
+            Assert.fail();
         } catch (RuntimeException e) {
             //expected
         }
         try {
             String[] entries2 = { "a=A", "=B" };
             JNDIUtil.arrayToHashtable(entries2, null);
-            fail();
+            Assert.fail();
         } catch (RuntimeException e) {
             //expected
         }

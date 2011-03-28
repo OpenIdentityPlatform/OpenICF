@@ -22,19 +22,17 @@
  */
 package org.identityconnectors.dbcommon;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-
+import static org.testng.AssertJUnit.assertSame;
+import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.Test;
+import org.testng.annotations.BeforeMethod;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 /**
  * DatabaseConnection test class
@@ -53,8 +51,8 @@ public class DatabaseConnectionTest {
     /**
      * @throws java.lang.Exception
      */
-    @Before
-    public void setUp() throws Exception {
+    @BeforeMethod
+	public void setUp() throws Exception {
         values = new ArrayList<SQLParam>();
         values.add(new SQLParam(LOGIN, LOGIN)); 
         values.add(new SQLParam(NAME, NAME)); 
@@ -63,8 +61,8 @@ public class DatabaseConnectionTest {
     /**
      * @throws java.lang.Exception
      */
-    @After
-    public void tearDown() throws Exception {
+    @AfterMethod
+	public void tearDown() throws Exception {
         // not used yet 
     }
 

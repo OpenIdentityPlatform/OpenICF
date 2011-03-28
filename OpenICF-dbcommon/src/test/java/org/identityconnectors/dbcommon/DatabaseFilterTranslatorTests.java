@@ -22,10 +22,10 @@
  */
 package org.identityconnectors.dbcommon;
 
+import static org.testng.AssertJUnit.assertEquals;
+import org.testng.annotations.Test;
 import static org.identityconnectors.framework.common.objects.AttributeBuilder.build;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.*;
-import static org.junit.Assert.assertEquals;
-
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +36,6 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
-import org.junit.Test;
 
 
 /**

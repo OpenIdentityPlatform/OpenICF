@@ -22,11 +22,9 @@
  */
 package org.identityconnectors.dbcommon;
 
-import static org.junit.Assert.assertEquals;
-
+import static org.testng.AssertJUnit.assertEquals;
+import org.testng.annotations.Test;
 import java.sql.Types;
-
-import org.junit.Test;
 
 /**
  * The SQL util tests

@@ -22,16 +22,15 @@
  */
 package org.identityconnectors.dbcommon;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
+import org.testng.annotations.Test;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.identityconnectors.dbcommon.DatabaseQueryBuilder.OrderBy;
-import org.junit.Test;
 
 /**
  * DatabaseQueryBuilder test Class
@@ -50,7 +49,7 @@ public class DatabaseQueryBuilderTest {
     /**
      * Test method for {@link DatabaseQueryBuilder#DatabaseQueryBuilder(String, Set)}.
      */
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void testFilterQueryBuilderTableMissing() {
         new DatabaseQueryBuilder("", null).getSQL();
     }
@@ -58,7 +57,7 @@ public class DatabaseQueryBuilderTest {
     /**
      * Test method for {@link DatabaseQueryBuilder#DatabaseQueryBuilder(String, Set)}.
      */
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void testFilterQueryBuilderColumnMissing() {
         new DatabaseQueryBuilder("table", null).getSQL();
     }
@@ -66,14 +65,14 @@ public class DatabaseQueryBuilderTest {
     /**
      * Test method for {@link DatabaseQueryBuilder#DatabaseQueryBuilder(String, Set)}.
      */
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void testFilterQueryBuilderColumnEmpty() {
         new DatabaseQueryBuilder("table", new HashSet<String>()).getSQL();
     }    
     /**
      * Test method for {@link DatabaseQueryBuilder#DatabaseQueryBuilder(String)}.
      */
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void testFilterQueryBuilderSelectMissing() {
         new DatabaseQueryBuilder("").getSQL();
     }
@@ -82,7 +81,7 @@ public class DatabaseQueryBuilderTest {
     /**
      * Test method for {@link DatabaseQueryBuilder#DatabaseQueryBuilder(String)}.
      */
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void testFilterQueryBuilderWhereMissing() {
         new DatabaseQueryBuilder(SELECT.substring(0, 7), null).getSQL();
     }

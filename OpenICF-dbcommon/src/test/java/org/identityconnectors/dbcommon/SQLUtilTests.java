@@ -23,11 +23,11 @@
 package org.identityconnectors.dbcommon;
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
+import org.testng.Assert;
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.sql.Blob;
@@ -50,9 +50,6 @@ import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.spi.InitialContextFactory;
 import javax.sql.DataSource;
-
-import org.junit.Assert;
-import org.junit.Test;
 
 
 /**
@@ -154,7 +151,7 @@ public class SQLUtilTests {
      * Test method
      * @throws SQLException 
      */
-    @Test(expected=NullPointerException.class)
+    @Test(expectedExceptions=NullPointerException.class)
     public void testBuildConnectorObjectBuilderNull() throws SQLException {
         SQLUtil.getColumnValues(null);
     }
@@ -320,7 +317,7 @@ public class SQLUtilTests {
         final List<SQLParam> out = new ArrayList<SQLParam>();
         try {
             SQLUtil.normalizeNullValues(sql, params, out);
-            fail("IllegalStateException expected");
+            Assert.fail("IllegalStateException expected");
         } catch (IllegalStateException expected) {
             // expected
         }
@@ -328,7 +325,7 @@ public class SQLUtilTests {
         params.add(new SQLParam("test4", 3)); 
         try {
             SQLUtil.normalizeNullValues(sql, params, out);
-            fail("IllegalStateException expected");
+            Assert.fail("IllegalStateException expected");
         } catch (IllegalStateException expected) {
             // expected
         }

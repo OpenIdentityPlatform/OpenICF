@@ -1,7 +1,9 @@
 package org.identityconnectors.dbcommon;
 
-import static org.junit.Assert.*;
-
+import org.testng.annotations.Test;
+import org.testng.annotations.BeforeClass;
+import org.testng.Assert;
+import org.testng.AssertJUnit;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Properties;
@@ -21,9 +23,9 @@ public class LocalizedAssertTest {
                         .getClassLoader(), LocalizedAssertTest.class
                         .getPackage().getName().replace('.', '/')
                         + "/Messages.properties");
-                assertNotNull("Cannot load Messages.properties", properties);
+                AssertJUnit.assertNotNull("Cannot load Messages.properties", properties);
             } catch (IOException e) {
-                fail("Cannot load Messages.properties" + e.getMessage());
+                Assert.fail("Cannot load Messages.properties" + e.getMessage());
             }
         }
         public String format(String key, String dflt, Object... args) {
@@ -53,14 +55,14 @@ public class LocalizedAssertTest {
      */
     @Test
     public final void testAssertNotNull() {
-       Integer i = testee.assertNotNull(new Integer(1), "i");
-       assertEquals(new Integer(1),i);
+       Integer i = AssertJUnit.assertNotNull(new Integer(1), "i");
+       AssertJUnit.assertEquals(new Integer(1),i);
        try{
-           i = testee.assertNotNull(null, "i");
-           fail("Must fail for null argument");
+           i = AssertJUnit.assertNotNull(null, "i");
+           Assert.fail("Must fail for null argument");
        }
        catch(RuntimeException e){
-           assertEquals("Argument [i] cannot be null",e.getMessage());
+           AssertJUnit.assertEquals("Argument [i] cannot be null",e.getMessage());
        }
     }
 
@@ -69,14 +71,14 @@ public class LocalizedAssertTest {
      */
     @Test
     public final void testAssertNull() {
-        Integer i = testee.assertNull(null, "i");
+        Integer i = AssertJUnit.assertNull(null, "i");
         assertNull(i);
         try{
-            i = testee.assertNull(new Integer(1),"i");
-            fail("Must fail for not null argument");
+            i = AssertJUnit.assertNull(new Integer(1),"i");
+            Assert.fail("Must fail for not null argument");
         }
         catch(RuntimeException e){
-            assertEquals("Argument [i] must be null",e.getMessage());
+            AssertJUnit.assertEquals("Argument [i] must be null",e.getMessage());
         }
         
     }
@@ -87,20 +89,20 @@ public class LocalizedAssertTest {
     @Test
     public final void testAssertNotBlank() {
         String os = testee.assertNotBlank("Linux", "os");
-        assertEquals("Linux",os);
+        AssertJUnit.assertEquals("Linux",os);
         try{
             os = testee.assertNotBlank(null,"os");
-            fail("Must fail for null argument");
+            Assert.fail("Must fail for null argument");
         }
         catch(RuntimeException e){
-            assertEquals("Argument [os] cannot be blank",e.getMessage());
+            AssertJUnit.assertEquals("Argument [os] cannot be blank",e.getMessage());
         }
         try{
             os = testee.assertNotBlank("","os");
-            fail("Must fail for blank argument");
+            Assert.fail("Must fail for blank argument");
         }
         catch(RuntimeException e){
-            assertEquals("Argument [os] cannot be blank",e.getMessage());
+            AssertJUnit.assertEquals("Argument [os] cannot be blank",e.getMessage());
         }
         
     }
@@ -113,13 +115,13 @@ public class LocalizedAssertTest {
         String os = testee.assertBlank(null, "os");
         assertNull(os);
         os = testee.assertBlank("", "os");
-        assertEquals("",os);
+        AssertJUnit.assertEquals("",os);
         try{
             os = testee.assertBlank("Some os","os");
-            fail("Must fail for non blank argument");
+            Assert.fail("Must fail for non blank argument");
         }
         catch(RuntimeException e){
-            assertEquals("Argument [os] must be blank",e.getMessage());
+            AssertJUnit.assertEquals("Argument [os] must be blank",e.getMessage());
         }
     }
     
@@ -129,7 +131,7 @@ public class LocalizedAssertTest {
         new LocalizedAssert(new TestConnectorMessages());
         try{
             new LocalizedAssert(null);
-            fail("Must fail for null ConnectorMessages");
+            Assert.fail("Must fail for null ConnectorMessages");
         }
         catch(RuntimeException e){
             //emptyS
@@ -145,10 +147,10 @@ public class LocalizedAssertTest {
     	try{
     		//Small hack, we do not create new TestMessages with dummy argument name, use assert.blank as argument name
     		la.assertNotBlank("", "assert.blank");
-    		fail("Must fail for blank String");
+    		Assert.fail("Must fail for blank String");
     	}
     	catch(RuntimeException e){
-    		assertEquals("Argument [Argument [{0}] must be blank] cannot be blank",e.getMessage());
+    		AssertJUnit.assertEquals("Argument [Argument [{0}] must be blank] cannot be blank",e.getMessage());
     	}
     	
     }
