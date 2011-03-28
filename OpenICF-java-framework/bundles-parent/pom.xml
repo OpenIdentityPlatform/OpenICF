@@ -26,11 +26,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.forgerock.openicf.framework</groupId>
+        <groupId>org.forgerock.openicf.framework</groupId>
         <artifactId>framework</artifactId>
         <version>1.1.0.0-SNAPSHOT</version>
     </parent>
-    <groupId>com.forgerock.openicf.bundles</groupId>
+    <groupId>org.forgerock.openicf.bundles</groupId>
     <artifactId>bundles-parent</artifactId>
     <version>1.1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
@@ -57,10 +57,10 @@
         <framework.compatibilityVersion>1.1</framework.compatibilityVersion>
         <framework.releaseVersion>0.0-SNAPSHOT</framework.releaseVersion>
         <framework.version>${framework.compatibilityVersion}.${framework.releaseVersion}</framework.version>
-        <licenseResourceBundle>com.forgerock.openicf:openicf-license:1.0</licenseResourceBundle>
+        <licenseResourceBundle>org.forgerock.openicf:openicf-license:1.0</licenseResourceBundle>
 
         <defaultConnectorFamily>misc</defaultConnectorFamily>
-        <defaultConnectorGroupId>com.forgerock.openicf.bundles.${defaultConnectorFamily}</defaultConnectorGroupId>
+        <defaultConnectorGroupId>org.forgerock.openicf.bundles.${defaultConnectorFamily}</defaultConnectorGroupId>
         <defaultConnectorVersion>${framework.compatibilityVersion}.${framework.releaseVersion}</defaultConnectorVersion>
         <!--
             These are the properties needed in manifest file of the bundle,
@@ -189,26 +189,26 @@
 
             <dependencies>
                 <dependency>
-                    <groupId>com.forgerock.openicf</groupId>
+                    <groupId>org.forgerock.openicf</groupId>
                     <artifactId>openicf-license</artifactId>
                     <scope>provided</scope>
                 </dependency>
                 <dependency>
-                    <groupId>com.forgerock.openicf.framework</groupId>
+                    <groupId>org.forgerock.openicf.framework</groupId>
                     <artifactId>connector-framework</artifactId>
                 </dependency>
                 <dependency>
-                    <groupId>com.forgerock.openicf.framework</groupId>
+                    <groupId>org.forgerock.openicf.framework</groupId>
                     <artifactId>connector-test-common</artifactId>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
-                    <groupId>com.forgerock.openicf.framework</groupId>
+                    <groupId>org.forgerock.openicf.framework</groupId>
                     <artifactId>connector-framework-internal</artifactId>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
-                    <groupId>com.forgerock.openicf.framework</groupId>
+                    <groupId>org.forgerock.openicf.framework</groupId>
                     <artifactId>connector-framework-contract</artifactId>
                     <scope>test</scope>
                 </dependency>
@@ -306,12 +306,12 @@
                                 <configuration>
                                     <artifactItems>
                                         <artifactItem>
-                                            <groupId>com.forgerock.openicf.framework</groupId>
+                                            <groupId>org.forgerock.openicf.framework</groupId>
                                             <artifactId>connector-framework-contract</artifactId>
                                             <outputDirectory>${project.build.directory}/contractClasses</outputDirectory>
                                         </artifactItem>
                                         <artifactItem>
-                                            <groupId>com.forgerock.openicf.framework</groupId>
+                                            <groupId>org.forgerock.openicf.framework</groupId>
                                             <artifactId>connector-framework-contract</artifactId>
                                             <classifier>sources</classifier>
                                             <outputDirectory>${project.build.directory}/contractSources</outputDirectory>
@@ -424,7 +424,7 @@
 
                     <!-- Instead run surefire-execs plugin -->
                     <plugin>
-                        <groupId>com.forgerock.openicf</groupId>
+                        <groupId>org.forgerock.openicf</groupId>
                         <artifactId>maven-surefire-execs-plugin</artifactId>
                         <executions>
 

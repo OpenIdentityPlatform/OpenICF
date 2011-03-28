@@ -27,7 +27,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/DECORATION/1.0.1 http://maven.apache.org/xsd/decoration-1.0.1.xsd">
     <skin>
-        <groupId>com.forgerock.openicf</groupId>
+        <groupId>org.forgerock.openicf</groupId>
         <artifactId>maven-openicf-skin</artifactId>
         <version>1.0-SNAPSHOT</version>
     </skin>
