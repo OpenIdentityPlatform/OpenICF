@@ -71,14 +71,14 @@ public class SQLUtilTests {
         Connection c = tp.getProxy(Connection.class);
         DatabaseConnection dbc = new DatabaseConnection(c);
         SQLUtil.closeQuietly(dbc);
-        Assert.assertTrue("close not called", tp.isDone());
+        Assert.assertTrue(tp.isDone(),"close not called");
         
         tp = new ExpectProxy<Connection>();
         tp.expectAndReturn("isClosed",Boolean.TRUE); 
         c = tp.getProxy(Connection.class);
         dbc = new DatabaseConnection(c);
         SQLUtil.closeQuietly(dbc);
-        Assert.assertTrue("isClosed not called", tp.isDone());
+        Assert.assertTrue(tp.isDone(),"isClosed not called");
         
         //null tests
         dbc = null;
@@ -97,7 +97,7 @@ public class SQLUtilTests {
         Connection s = tp.getProxy(Connection.class);
         DatabaseConnection dbc = new DatabaseConnection(s);
         SQLUtil.rollbackQuietly(dbc);
-        Assert.assertTrue("rollback not called", tp.isDone());
+        Assert.assertTrue(tp.isDone(),"rollback not called");
         
         tp = new ExpectProxy<Connection>();
         tp.expectAndReturn("isClosed",Boolean.TRUE); 
