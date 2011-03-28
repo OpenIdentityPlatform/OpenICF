@@ -22,8 +22,10 @@
  */
 package org.identityconnectors.ldap;
 
-import static org.junit.Assert.fail;
-
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.Assert;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -43,9 +45,6 @@ import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.test.common.TestHelpers;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
 import org.opends.server.config.ConfigException;
 import org.opends.server.types.DirectoryEnvironmentConfig;
 import org.opends.server.types.InitializationException;
@@ -138,15 +137,15 @@ public abstract class LdapConnectorTestBase {
         }
     }
 
-    @Before
-    public void before() throws Exception {
+    @BeforeMethod
+	public void before() throws Exception {
         if (!EmbeddedUtils.isRunning()) {
             startServer();
         }
     }
 
-    @After
-    public void after() throws Exception {
+    @AfterMethod
+	public void after() throws Exception {
         if (restartServerAfterEachTest()) {
             stopServer();
         }
@@ -267,6 +266,6 @@ public abstract class LdapConnectorTestBase {
                 break;
             }
         }
-        fail("OpenDS failed to stop");
+        Assert.fail("OpenDS failed to stop");
     }
 }

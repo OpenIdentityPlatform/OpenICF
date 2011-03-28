@@ -22,9 +22,9 @@
  */
 package org.identityconnectors.ldap.search;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
@@ -45,7 +45,6 @@ import org.identityconnectors.ldap.LdapConnector;
 import org.identityconnectors.ldap.SunDSTestBase;
 import org.identityconnectors.test.common.TestHelpers;
 import org.identityconnectors.test.common.ToListResultsHandler;
-import org.junit.Test;
 
 public class VlvIndexSearchStrategyTests extends SunDSTestBase {
 

@@ -22,15 +22,15 @@
  */
 package org.identityconnectors.ldap;
 
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
 import static org.identityconnectors.common.CollectionUtil.newList;
 import static org.identityconnectors.common.CollectionUtil.newSet;
 import static org.identityconnectors.ldap.LdapUtil.checkedListByFilter;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
 import java.util.List;
@@ -55,7 +55,6 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.ldap.schema.LdapSchemaMapping;
 import org.identityconnectors.test.common.TestHelpers;
-import org.junit.Test;
 
 public class AdapterCompatibilityTests extends LdapConnectorTestBase {
 
@@ -284,7 +283,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
         assertAttributeValue(oldGroups, facade, ObjectClass.ACCOUNT, uid, groupsAttr.getName());
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test(expectedExceptions = ConnectorException.class)
     public void testCannotRemoveUidWhenInPosixGroups() {
         ConnectorFacade facade = newFacade();
 
@@ -293,7 +292,7 @@ public class AdapterCompatibilityTests extends LdapConnectorTestBase {
         facade.removeAttributeValues(ObjectClass.ACCOUNT, object.getUid(), singleton(uidAttr), null);
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test(expectedExceptions = ConnectorException.class)
     public void testCannotUpdateUidToNoneWhenInPosixGroups() {
         LdapConfiguration config = newConfiguration();
         config.setBaseContexts(ACME_DN, SMALL_COMPANY_DN);

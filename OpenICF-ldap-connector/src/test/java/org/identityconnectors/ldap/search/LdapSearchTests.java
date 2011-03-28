@@ -22,14 +22,14 @@
  */
 package org.identityconnectors.ldap.search;
 
+import static org.testng.AssertJUnit.assertNull;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
 import static java.util.Collections.singleton;
 import static org.identityconnectors.common.CollectionUtil.newSet;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -59,7 +59,6 @@ import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapConnectorTestBase;
 import org.identityconnectors.test.common.TestHelpers;
 import org.identityconnectors.test.common.ToListResultsHandler;
-import org.junit.Test;
 
 public class LdapSearchTests extends LdapConnectorTestBase {
 
@@ -206,7 +205,7 @@ public class LdapSearchTests extends LdapConnectorTestBase {
         assertTrue(debugsearch.contains("vlv"));
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test(expectedExceptions = ConnectorException.class)
     public void testNoUseBlocks() {
         LdapConfiguration config = newConfiguration();
         config.setUseBlocks(false);

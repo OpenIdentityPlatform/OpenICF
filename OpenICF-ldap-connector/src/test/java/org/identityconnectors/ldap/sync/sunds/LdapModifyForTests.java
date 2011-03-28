@@ -22,6 +22,7 @@
  */
 package org.identityconnectors.ldap.sync.sunds;
 
+import org.testng.annotations.Test;
 import static org.identityconnectors.ldap.LdapUtil.quietCreateLdapName;
 
 import java.util.ArrayList;
@@ -48,7 +49,6 @@ import org.identityconnectors.ldap.sync.sunds.LdifParser.ChangeSeparator;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.Line;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.NameValue;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.Separator;
-import org.junit.Test;
 
 /**
  * A simple, and in no way complete, way to modify an LDAP server

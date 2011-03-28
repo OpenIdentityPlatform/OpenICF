@@ -22,10 +22,10 @@
  */
 package org.identityconnectors.ldap.sync.sunds;
 
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
 import static java.util.Collections.emptyList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +51,6 @@ import org.identityconnectors.ldap.LdapConfiguration;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.SunDSTestBase;
 import org.identityconnectors.ldap.LdapConnection.ServerType;
-import org.junit.Test;
 
 public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
 
@@ -276,7 +275,8 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
         testExpectingNoDelta(conn);
     }
 
-    private void testExpectingNoDelta(LdapConnection conn) throws NamingException {
+    @Test(enabled = false)
+	private void testExpectingNoDelta(LdapConnection conn) throws NamingException {
         String baseContext = conn.getConfiguration().getBaseContexts()[0];
         String entryDN = "uid=foobar," + baseContext;
         List<SyncDelta> result = doTest(conn,

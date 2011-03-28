@@ -22,15 +22,14 @@
  */
 package org.identityconnectors.ldap.modify;
 
-import static org.junit.Assert.assertNull;
-
+import static org.testng.AssertJUnit.assertNull;
+import org.testng.annotations.Test;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.ldap.LdapConnectorTestBase;
-import org.junit.Test;
 
 public class LdapDeleteTests extends LdapConnectorTestBase{
 
@@ -39,7 +38,7 @@ public class LdapDeleteTests extends LdapConnectorTestBase{
         return false;
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test(expectedExceptions = ConnectorException.class)
     public void testCannotDeleteExistingUidButWrongObjectClass() {
         ConnectorFacade facade = newFacade();
         ConnectorObject organization = searchByAttribute(facade, new ObjectClass("organization"), new Name(BIG_COMPANY_DN));
@@ -47,7 +46,7 @@ public class LdapDeleteTests extends LdapConnectorTestBase{
         facade.delete(ObjectClass.ACCOUNT, organization.getUid(), null);
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test(expectedExceptions = ConnectorException.class)
     public void testCannotDeleteNonEmptyDN() {
         // TODO: not sure this is the right behavior. Perhaps should instead
         // recursively delete everything under the deleted entry.

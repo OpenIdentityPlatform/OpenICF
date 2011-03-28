@@ -22,9 +22,9 @@
  */
 package org.identityconnectors.ldap.search;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
+import static org.testng.AssertJUnit.assertNull;
+import static org.testng.AssertJUnit.assertEquals;
+import org.testng.annotations.Test;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.filter.ContainsAllValuesFilter;
@@ -41,7 +41,6 @@ import org.identityconnectors.ldap.LdapConfiguration;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapConnectorTestBase;
 import org.identityconnectors.ldap.schema.LdapSchemaMapping;
-import org.junit.Test;
 
 public class LdapFilterTranslatorTests {
 

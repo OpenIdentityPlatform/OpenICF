@@ -22,12 +22,12 @@
  */
 package org.identityconnectors.ldap.schema;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
+import static org.testng.AssertJUnit.assertNull;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -46,7 +46,6 @@ import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapConnectorTestBase;
 import org.identityconnectors.ldap.LdapConstants;
 import org.identityconnectors.ldap.LdapConnection.ServerType;
-import org.junit.Test;
 
 public class LdapSchemaMappingTests extends LdapConnectorTestBase {
 

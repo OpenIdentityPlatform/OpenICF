@@ -22,9 +22,9 @@
  */
 package org.identityconnectors.ldap;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
+import static org.testng.AssertJUnit.assertEquals;
+import org.testng.annotations.Test;
+import org.testng.Assert;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.common.exceptions.ConnectorSecurityException;
@@ -35,7 +35,6 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.junit.Test;
 
 public class LdapAuthenticateTests extends LdapConnectorTestBase {
 
@@ -74,21 +73,21 @@ public class LdapAuthenticateTests extends LdapConnectorTestBase {
         // Should not be possible to authenticate with the attributes from the default configuration ("cn"...
         try {
             facade.authenticate(ObjectClass.ACCOUNT, BUGS_BUNNY_CN, new GuardedString("carrot".toCharArray()), options);
-            fail();
+            Assert.fail();
         } catch (ConnectorSecurityException e) { }
         try {
             facade.resolveUsername(ObjectClass.ACCOUNT, BUGS_BUNNY_CN, options);
-            fail();
+            Assert.fail();
         } catch (ConnectorSecurityException e) { }
 
         // ... and "uid").
         try {
             uid = facade.authenticate(ObjectClass.ACCOUNT, BUGS_BUNNY_UID, new GuardedString("carrot".toCharArray()), options);
-            fail();
+            Assert.fail();
         } catch (ConnectorSecurityException e) { }
         try {
             uid = facade.resolveUsername(ObjectClass.ACCOUNT, BUGS_BUNNY_UID, options);
-            fail();
+            Assert.fail();
         } catch (ConnectorSecurityException e) { }
     }
 
@@ -104,7 +103,7 @@ public class LdapAuthenticateTests extends LdapConnectorTestBase {
         assertEquals(bugs.getUid(), uid);
     }
 
-    @Test(expected = ConnectorSecurityException.class)
+    @Test(expectedExceptions = ConnectorSecurityException.class)
     public void testAuthenticateInvalidPassword() {
         ConnectorFacade facade = newFacade();
         facade.authenticate(ObjectClass.ACCOUNT, BUGS_BUNNY_CN, new GuardedString("rabbithole".toCharArray()), null);
@@ -115,11 +114,11 @@ public class LdapAuthenticateTests extends LdapConnectorTestBase {
         ConnectorFacade facade = newFacade();
         try {
             facade.authenticate(ObjectClass.ACCOUNT, "hopefully.inexisting.user", new GuardedString("none".toCharArray()), null);
-            fail();
+            Assert.fail();
         } catch (ConnectorSecurityException e) { }
         try {
             facade.resolveUsername(ObjectClass.ACCOUNT, "hopefully.inexisting.user", null);
-            fail();
+            Assert.fail();
         } catch (ConnectorSecurityException e) { }
     }
 
@@ -135,7 +134,7 @@ public class LdapAuthenticateTests extends LdapConnectorTestBase {
         facade = newFacade(config);
         try {
             facade.authenticate(ObjectClass.ACCOUNT, EXPIRED_UID, new GuardedString("password".toCharArray()), null);
-            fail();
+            Assert.fail();
         } catch (PasswordExpiredException e) {
             // OK.
         }

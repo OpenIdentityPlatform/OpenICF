@@ -22,16 +22,15 @@
  */
 package org.identityconnectors.ldap.sync.sunds;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
 import java.util.Iterator;
 
 import org.identityconnectors.ldap.sync.sunds.LdifParser.ChangeSeparator;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.Line;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.NameValue;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.Separator;
-import org.junit.Test;
 
 public class LdifParserTests {
 

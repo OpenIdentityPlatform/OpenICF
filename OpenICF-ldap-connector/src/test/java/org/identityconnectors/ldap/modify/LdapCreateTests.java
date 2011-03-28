@@ -22,10 +22,10 @@
  */
 package org.identityconnectors.ldap.modify;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -43,7 +43,6 @@ import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.LdapConfiguration;
 import org.identityconnectors.ldap.LdapConnectorTestBase;
-import org.junit.Test;
 
 public class LdapCreateTests extends LdapConnectorTestBase{
 

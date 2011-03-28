@@ -22,8 +22,8 @@
  */
 package org.identityconnectors.ldap.schema;
 
-import static org.junit.Assert.assertEquals;
-
+import static org.testng.AssertJUnit.assertEquals;
+import org.testng.annotations.Test;
 import java.io.UnsupportedEncodingException;
 
 import javax.naming.NamingException;
@@ -31,7 +31,6 @@ import javax.naming.directory.Attribute;
 
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.ldap.schema.GuardedPasswordAttribute.Accessor;
-import org.junit.Test;
 
 public class GuardedPasswordAttributeTests {
 

@@ -22,12 +22,10 @@
  */
 package org.identityconnectors.ldap;
 
-import static org.junit.Assert.assertEquals;
-
+import static org.testng.AssertJUnit.assertEquals;
+import org.testng.annotations.Test;
 import javax.naming.directory.BasicAttribute;
 import javax.naming.directory.BasicAttributes;
-
-import org.junit.Test;
 
 public class LdapEntryTests {
 

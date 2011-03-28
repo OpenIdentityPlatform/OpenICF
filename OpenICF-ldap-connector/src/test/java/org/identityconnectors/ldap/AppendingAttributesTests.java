@@ -22,8 +22,10 @@
  */
 package org.identityconnectors.ldap;
 
-import static org.junit.Assert.*;
-
+import org.testng.annotations.Test;
+import org.testng.annotations.BeforeMethod;
+import org.testng.AssertJUnit;
+import org.testng.Assert;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -34,16 +36,13 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.BasicAttribute;
 import javax.naming.directory.BasicAttributes;
 
-import org.junit.Before;
-import org.junit.Test;
-
 public class AppendingAttributesTests {
 
     private Attribute foo, existingFoo, existingCapitalFoo;
     private Attribute bar, existingBar;
 
-    @Before
-    public void before() {
+    @BeforeMethod
+	public void before() {
         foo = new BasicAttribute("foo", "Foo");
         existingFoo = new BasicAttribute("foo", "Existing Foo");
         existingCapitalFoo = new BasicAttribute("FOO", "EXISTING FOO");
@@ -55,11 +54,11 @@ public class AppendingAttributesTests {
     public void testAppending() throws Exception {
         BasicAttributes existingAttrs = new BasicAttributes(true);
         AppendingAttrImpl appendingAttrs = new AppendingAttrImpl(existingAttrs, foo, bar);
-        assertEquals(2, appendingAttrs.size());
+        AssertJUnit.assertEquals(2, appendingAttrs.size());
         assertHasAttribute(foo, "foo", appendingAttrs);
         assertHasAttribute(bar, "bar", appendingAttrs);
-        assertEquals(foo, appendingAttrs.get("FOO"));
-        assertNull(existingAttrs.get("inexistent"));
+        AssertJUnit.assertEquals(foo, appendingAttrs.get("FOO"));
+        Assert.assertNull(existingAttrs.get("inexistent"));
     }
 
     @Test
@@ -67,11 +66,11 @@ public class AppendingAttributesTests {
         BasicAttributes existingAttrs = new BasicAttributes(true);
         existingAttrs.put(existingCapitalFoo);
         AppendingAttrImpl appendingAttrs = new AppendingAttrImpl(existingAttrs, foo, bar);
-        assertEquals(2, appendingAttrs.size());
+        AssertJUnit.assertEquals(2, appendingAttrs.size());
         assertHasAttribute(foo, "foo", appendingAttrs);
         assertHasAttribute(bar, "bar", appendingAttrs);
-        assertEquals(foo, appendingAttrs.get("FOO"));
-        assertNull(existingAttrs.get("inexistent"));
+        AssertJUnit.assertEquals(foo, appendingAttrs.get("FOO"));
+        Assert.assertNull(existingAttrs.get("inexistent"));
     }
 
     @Test
@@ -79,11 +78,11 @@ public class AppendingAttributesTests {
         BasicAttributes existingAttrs = new BasicAttributes(false);
         existingAttrs.put(existingCapitalFoo);
         AppendingAttrImpl appendingAttrs = new AppendingAttrImpl(existingAttrs, foo, bar);
-        assertEquals(3, appendingAttrs.size());
+        AssertJUnit.assertEquals(3, appendingAttrs.size());
         assertHasAttribute(foo, "foo", appendingAttrs);
         assertHasAttribute(existingCapitalFoo, "FOO", appendingAttrs);
         assertHasAttribute(bar, "bar", appendingAttrs);
-        assertNull(existingAttrs.get("inexistent"));
+        Assert.assertNull(existingAttrs.get("inexistent"));
     }
 
     @Test
@@ -92,19 +91,19 @@ public class AppendingAttributesTests {
         existingAttrs.put(existingFoo);
         existingAttrs.put(existingBar);
         AppendingAttrImpl appendingAttrs = new AppendingAttrImpl(existingAttrs, foo, bar);
-        assertEquals(2, appendingAttrs.size());
+        AssertJUnit.assertEquals(2, appendingAttrs.size());
         assertHasAttribute(foo, "foo", appendingAttrs);
         assertHasAttribute(bar, "bar", appendingAttrs);
-        assertNull(existingAttrs.get("inexistent"));
+        Assert.assertNull(existingAttrs.get("inexistent"));
     }
 
     private void assertHasAttribute(Attribute expected, String attrID, Attributes attrs) throws NamingException {
-        assertEquals(expected, attrs.get(attrID));
+        AssertJUnit.assertEquals(expected, attrs.get(attrID));
 
-        assertEquals(expected, findAttrUsingEnumMore(attrs.getAll(), attrID));
-        assertEquals(expected, findAttrUsingEnumMoreElements(attrs.getAll(), attrID));
-        assertEquals(attrID, findAttrIDUsingEnumMore(attrs.getIDs(), attrID));
-        assertEquals(attrID, findAttrIDUsingEnumMoreElements(attrs.getIDs(), attrID));
+        AssertJUnit.assertEquals(expected, findAttrUsingEnumMore(attrs.getAll(), attrID));
+        AssertJUnit.assertEquals(expected, findAttrUsingEnumMoreElements(attrs.getAll(), attrID));
+        AssertJUnit.assertEquals(attrID, findAttrIDUsingEnumMore(attrs.getIDs(), attrID));
+        AssertJUnit.assertEquals(attrID, findAttrIDUsingEnumMoreElements(attrs.getIDs(), attrID));
     }
 
     private static Attribute findAttrUsingEnumMore(NamingEnumeration<? extends Attribute> attrEnum, String attrID) throws NamingException {
@@ -117,7 +116,7 @@ public class AppendingAttributesTests {
                 found++;
             }
         }
-        assertEquals(1, found);
+        AssertJUnit.assertEquals(1, found);
         return attr;
     }
 
@@ -131,7 +130,7 @@ public class AppendingAttributesTests {
                 found++;
             }
         }
-        assertEquals(1, found);
+        AssertJUnit.assertEquals(1, found);
         return attr;
     }
 
@@ -145,7 +144,7 @@ public class AppendingAttributesTests {
                 found++;
             }
         }
-        assertEquals(1, found);
+        AssertJUnit.assertEquals(1, found);
         return id;
     }
 
@@ -159,7 +158,7 @@ public class AppendingAttributesTests {
                 found++;
             }
         }
-        assertEquals(1, found);
+        AssertJUnit.assertEquals(1, found);
         return id;
     }
 

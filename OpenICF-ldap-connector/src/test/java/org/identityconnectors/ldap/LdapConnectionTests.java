@@ -22,11 +22,11 @@
  */
 package org.identityconnectors.ldap;
 
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
+import org.testng.Assert;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
@@ -34,8 +34,6 @@ import javax.naming.directory.Attributes;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.ldap.LdapConnection.ServerType;
-import org.junit.Test;
-
 import com.sun.jndi.ldap.ctl.PagedResultsControl;
 import com.sun.jndi.ldap.ctl.VirtualListViewControl;
 
@@ -76,7 +74,8 @@ public class LdapConnectionTests extends LdapConnectorTestBase {
         testConnection(config);
     }
 
-    private void testConnection(LdapConfiguration config) throws NamingException {
+    @Test(enabled = false)
+	private void testConnection(LdapConfiguration config) throws NamingException {
         LdapConnection conn = new LdapConnection(config);
         Attributes attrs = conn.getInitialContext().getAttributes(BUGS_BUNNY_DN);
         assertEquals(BUGS_BUNNY_CN, getStringAttrValue(attrs, "cn"));
@@ -103,7 +102,7 @@ public class LdapConnectionTests extends LdapConnectorTestBase {
         LdapConnection conn = new LdapConnection(config);
         try {
             conn.test();
-            fail();
+            Assert.fail();
         } catch (RuntimeException e) {
             // Expected.
         }
@@ -113,7 +112,7 @@ public class LdapConnectionTests extends LdapConnectorTestBase {
         conn = new LdapConnection(config);
         try {
             conn.test();
-            fail();
+            Assert.fail();
         } catch (RuntimeException e) {
             // Expected.
         }
@@ -123,7 +122,7 @@ public class LdapConnectionTests extends LdapConnectorTestBase {
         conn = new LdapConnection(config);
         try {
             conn.test();
-            fail();
+            Assert.fail();
         } catch (RuntimeException e) {
             // Expected.
         }
@@ -133,7 +132,7 @@ public class LdapConnectionTests extends LdapConnectorTestBase {
         conn = new LdapConnection(config);
         try {
             conn.test();
-            fail();
+            Assert.fail();
         } catch (RuntimeException e) {
             // Expected.
         }
@@ -157,7 +156,7 @@ public class LdapConnectionTests extends LdapConnectorTestBase {
         try {
             // This should throw RuntimeException.
             conn.checkAlive();
-            fail();
+            Assert.fail();
         } catch (RuntimeException e) {
             // OK.
         }
