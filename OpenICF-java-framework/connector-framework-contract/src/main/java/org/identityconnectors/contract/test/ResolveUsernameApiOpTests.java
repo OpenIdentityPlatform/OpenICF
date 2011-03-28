@@ -34,17 +34,15 @@ import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 /**
  * tests for {@link ResolveUsernameApiOp}
  * 
  * @author David Adam
  */
-@RunWith(Parameterized.class)
+//@RunWith(Parameterized.class)
 public class ResolveUsernameApiOpTests extends ObjectClassRunner {
 
     private static final String TEST_NAME = "ResolveUsername";
@@ -83,7 +81,7 @@ public class ResolveUsernameApiOpTests extends ObjectClassRunner {
             // get the user to make sure it exists now
             ConnectorObject obj = getConnectorFacade().getObject(getObjectClass(), uid,
                     getOperationOptionsByOp(GetApiOp.class));
-            Assert.assertNotNull("Unable to retrieve newly created object", obj);
+            Assert.assertNotNull(obj,"Unable to retrieve newly created object");
         
             // compare requested attributes to retrieved attributes
             ConnectorHelper.checkObject(getObjectClassInfo(), obj, attrs);

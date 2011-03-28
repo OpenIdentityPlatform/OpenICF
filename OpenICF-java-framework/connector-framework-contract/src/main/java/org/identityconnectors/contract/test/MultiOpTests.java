@@ -22,9 +22,9 @@
  */
 package org.identityconnectors.contract.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -62,10 +62,8 @@ import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 /**
  * Tests which use many APIOperations to do the test scenario
@@ -73,7 +71,7 @@ import org.junit.runners.Parameterized;
  * @author Tomas Knappek
  * @author Zdenek Louzensky
  */
-@RunWith(Parameterized.class)
+//@RunWith(Parameterized.class)
 public class MultiOpTests extends ObjectClassRunner {
 
     /**
@@ -139,7 +137,7 @@ public class MultiOpTests extends ObjectClassRunner {
                 Set<Attribute> attr = ConnectorHelper.getCreateableAttributes(getDataProvider(),
                         getObjectClassInfo(), getTestName(), i, true, false);
                 Uid luid = getConnectorFacade().create(getObjectClass(), attr, getOperationOptionsByOp(CreateApiOp.class));
-                assertNotNull("Create returned null uid.", luid);
+                assertNotNull(luid,"Create returned null uid.");
                 attrs.add(attr);
                 uids.add(luid);
             }            
@@ -149,7 +147,7 @@ public class MultiOpTests extends ObjectClassRunner {
                 for (int i = 0; i < recordCount; i++) {
                     ConnectorObject obj = getConnectorFacade().getObject(getObjectClass(),
                             uids.get(i), getOperationOptionsByOp(GetApiOp.class));
-                    assertNotNull("Unable to retrieve newly created object", obj);
+                    assertNotNull(obj,"Unable to retrieve newly created object");
 
                     ConnectorHelper.checkObject(getObjectClassInfo(), obj, attrs.get(i));
                 }
@@ -169,8 +167,7 @@ public class MultiOpTests extends ObjectClassRunner {
                             getOperationOptionsByOp(SyncApiOp.class));
 
                     msg = "Sync after %d creates returned %d deltas.";
-                    assertTrue(String.format(msg, recordCount, deltas.size()),
-                            deltas.size() == recordCount);
+                    assertTrue(deltas.size() == recordCount,String.format(msg, recordCount, deltas.size()));
 
                     // check all deltas
                     for (int i = 0; i < recordCount; i++) {
@@ -194,11 +191,10 @@ public class MultiOpTests extends ObjectClassRunner {
             if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), SearchApiOp.class)) {
                 List<ConnectorObject> coFound = ConnectorHelper.search(getConnectorFacade(),
                         getObjectClass(), null, getOperationOptionsByOp(SearchApiOp.class));
-                assertTrue(
+                assertTrue(coFound.size() == uids.size() + coBeforeTest.size(),
                         "Search with null filter returned different count of results. Expected: "
                                 + uids.size() + coBeforeTest.size() + ", but returned: "
-                                + coFound.size(), coFound.size() == uids.size()
-                                + coBeforeTest.size());
+                                + coFound.size());
                 // check all objects
                 for (ConnectorObject obj : coFound) {
                     if (uids.contains((obj.getUid()))) {
@@ -206,12 +202,12 @@ public class MultiOpTests extends ObjectClassRunner {
                         ConnectorHelper.checkObject(getObjectClassInfo(), obj, attrs.get(index));
                     } else {
                         if (SearchApiOpTests.compareExistingObjectsByUidOnly()) {
-                            assertTrue("Search with null filter returned unexpected object " + obj + ", objects were compared by Uid.",
-                                    coBeforeTest.containsKey(obj.getUid()));
+                            assertTrue(coBeforeTest.containsKey(obj.getUid()),
+                                    "Search with null filter returned unexpected object " + obj + ", objects were compared by Uid.");
                         }
                         else {
-                            assertTrue("Search with null filter returned unexpected object " + obj + ", objects were compared by Uid.",
-                                    coBeforeTest.containsValue(obj));
+                            assertTrue(coBeforeTest.containsValue(obj),
+                                    "Search with null filter returned unexpected object " + obj + ", objects were compared by Uid.");
                         }                        
                     }
                 }
@@ -250,8 +246,8 @@ public class MultiOpTests extends ObjectClassRunner {
                     Filter fltUid = FilterBuilder.equalTo(updateUid);
                     List<ConnectorObject> coFound = ConnectorHelper.search(getConnectorFacade(), getObjectClass(),
                             fltUid, getOperationOptionsByOp(SearchApiOp.class));
-                    assertTrue("Search with Uid filter returned unexpected number of objects. Expected: 1, but returned: "
-                                    + coFound.size(), coFound.size() == 1);
+                    assertTrue(coFound.size() == 1,"Search with Uid filter returned unexpected number of objects. Expected: 1, but returned: "
+                                    + coFound.size());
                     ConnectorHelper.checkObject(getObjectClassInfo(), coFound.get(0),
                             replaceAttributes);
                 }                
@@ -266,8 +262,8 @@ public class MultiOpTests extends ObjectClassRunner {
                             token, getOperationOptionsByOp(SyncApiOp.class));
                     // one deleted, one updated (if existed attributes to
                     // update)
-                    assertTrue("Sync returned unexpected number of deltas. Exptected: max 2, but returned: "
-                                    + deltas.size(), ((deltas.size() <= 2) && (deltas.size() > 0)));
+                    assertTrue(((deltas.size() <= 2) && (deltas.size() > 0)),"Sync returned unexpected number of deltas. Exptected: max 2, but returned: "
+                                    + deltas.size());
 
                     for (int i = 0; i < deltas.size(); i++) {
                         SyncDelta delta = deltas.get(i);
@@ -299,14 +295,14 @@ public class MultiOpTests extends ObjectClassRunner {
             Uid createUid = getConnectorFacade().create(getObjectClass(), attrs11, getOperationOptionsByOp(CreateApiOp.class));
             uids.add(createUid);
             attrs.add(attrs11);
-            assertNotNull("Create returned null Uid.", createUid);
+            assertNotNull(createUid,"Create returned null Uid.");
 
             /* GetApiOp */
             if (ConnectorHelper.operationSupported(getConnectorFacade(), getObjectClass(), GetApiOp.class)) {
                 // get the object to make sure it exist now
                 ConnectorObject obj = getConnectorFacade().getObject(getObjectClass(), createUid,
                         getOperationOptionsByOp(GetApiOp.class));
-                assertNotNull("Unable to retrieve newly created object", obj);
+                assertNotNull(obj,"Unable to retrieve newly created object");
     
                 // compare requested attributes to retrieved attributes
                 ConnectorHelper.checkObject(getObjectClassInfo(), obj, attrs11);
@@ -326,8 +322,8 @@ public class MultiOpTests extends ObjectClassRunner {
                     deltas = ConnectorHelper.sync(getConnectorFacade(), getObjectClass(), token,
                             getOperationOptionsByOp(SyncApiOp.class));
                     // one deleted, one created
-                    assertTrue("Sync returned unexpected number of deltas. Exptected: max 2, but returned: "
-                                    + deltas.size(), deltas.size() <= 2);
+                    assertTrue(deltas.size() <= 2,"Sync returned unexpected number of deltas. Exptected: max 2, but returned: "
+                                    + deltas.size());
 
                     for (int i = 0; i < deltas.size(); i++) {
                         SyncDelta delta = deltas.get(i);
@@ -360,8 +356,7 @@ public class MultiOpTests extends ObjectClassRunner {
                         getOperationOptionsByOp(SyncApiOp.class))
                         ;
                 msg = "Sync returned unexpected number of deltas. Exptected: %d, but returned: %d";
-                assertTrue(String.format(msg, uids.size(), deltas.size()), deltas.size() == uids
-                        .size());
+                assertTrue(deltas.size() == uids.size(),String.format(msg, uids.size(), deltas.size()));
 
                 for (int i = 0; i < uids.size(); i++) {
                     ConnectorHelper.checkSyncDelta(getObjectClassInfo(), deltas.get(i),
@@ -675,15 +670,15 @@ public class MultiOpTests extends ObjectClassRunner {
         for (Attribute attribute : obj.getAttributes()) {
             if (attribute.is(attrName)) {
                 List<Object> vals = attribute.getValue();
-                assertTrue(String.format("Operational attribute %s must contain exactly one value.",
-                        attrName), vals.size() == 1);
+                assertTrue(vals.size() == 1,String.format("Operational attribute %s must contain exactly one value.",
+                        attrName));
                 Object val = vals.get(0);
-                assertEquals(String.format(
+                assertEquals(type, val.getClass(),String.format(
                         "Operational attribute %s value type must be %s, but is %s.", attrName,
-                        type.getSimpleName(), val.getClass().getSimpleName()), type, val.getClass());
+                        type.getSimpleName(), val.getClass().getSimpleName()));
                 
-                assertEquals(String.format("Operational attribute %s value is different, expected: %s, returned: %s",
-                        attrName, expValue, val), expValue, val);
+                assertEquals(expValue, val,String.format("Operational attribute %s value is different, expected: %s, returned: %s",
+                        attrName, expValue, val));
             }
         }
     }

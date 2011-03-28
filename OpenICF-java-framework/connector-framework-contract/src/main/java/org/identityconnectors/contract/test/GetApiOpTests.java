@@ -22,7 +22,7 @@
  */
 package org.identityconnectors.contract.test;
 
-import static org.junit.Assert.assertNotNull;
+import static org.testng.Assert.assertNotNull;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -38,14 +38,13 @@ import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+
 
 
 /**
  * Contract test of {@link GetApiOp} 
  */
-@RunWith(Parameterized.class)
+//@RunWith(Parameterized.class)
 public class GetApiOpTests extends ObjectClassRunner {
     /**
      * Logging..
@@ -87,13 +86,12 @@ public class GetApiOpTests extends ObjectClassRunner {
             // object class is always supported
             uid = getConnectorFacade().create(getSupportedObjectClass(),
                     requestedAttributes, getOperationOptionsByOp(CreateApiOp.class));
-            assertNotNull(
-                    "Unable to perform get test because object to be get cannot be created",
-                    uid);
+            assertNotNull(uid,
+                    "Unable to perform get test because object to be get cannot be created");
 
             // retrieve by uid
             obj = getConnectorFacade().getObject(getObjectClass(), uid, getOperationOptionsByOp(GetApiOp.class));
-            assertNotNull("Unable to get object by uid", obj);
+            assertNotNull(obj,"Unable to get object by uid");
 
             ConnectorHelper.checkObject(getObjectClassInfo(), obj, requestedAttributes);
 
@@ -101,7 +99,7 @@ public class GetApiOpTests extends ObjectClassRunner {
             Name name = obj.getName();
             obj = ConnectorHelper.findObjectByName(getConnectorFacade(), getObjectClass(),
                     name.getNameValue(), getOperationOptionsByOp(SearchApiOp.class));
-            assertNotNull("Unable to get object by name", obj);
+            assertNotNull(obj,"Unable to get object by name");
 
             ConnectorHelper.checkObject(getObjectClassInfo(), obj, requestedAttributes);
 

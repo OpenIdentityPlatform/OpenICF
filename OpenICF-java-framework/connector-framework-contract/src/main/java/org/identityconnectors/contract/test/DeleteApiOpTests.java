@@ -23,9 +23,9 @@
 package org.identityconnectors.contract.test;
 
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.fail;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -39,14 +39,12 @@ import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.testng.annotations.Test;
 
 /**
  * Contract test of {@link DeleteApiOp}
  */
-@RunWith(Parameterized.class)
+//@RunWith(Parameterized.class)
 public class DeleteApiOpTests extends ObjectClassRunner {
     /**
      * Logging..
@@ -86,14 +84,14 @@ public class DeleteApiOpTests extends ObjectClassRunner {
             
             // The object should exist now
             obj = getConnectorFacade().getObject(getSupportedObjectClass(), uid, getOperationOptionsByOp(GetApiOp.class));
-            assertNotNull("Unable to perform delete test because object to be deleted cannot be created", obj);
+            assertNotNull(obj,"Unable to perform delete test because object to be deleted cannot be created");
 
             // try to delete object
             getConnectorFacade().delete(getObjectClass(), uid, getOperationOptionsByOp(DeleteApiOp.class));
 
             // Try to find it now, it should be deleted
             obj = getConnectorFacade().getObject(getSupportedObjectClass(), uid, getOperationOptionsByOp(GetApiOp.class));
-            assertNull("Object wasn't deleted by delete.", obj);
+            assertNull(obj,"Object wasn't deleted by delete.");
             
         } finally {
             // try to delete if previous deletes failed

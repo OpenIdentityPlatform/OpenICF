@@ -23,7 +23,7 @@
 package org.identityconnectors.contract.test;
 
 
-import static org.junit.Assert.fail;
+import static org.testng.Assert.fail;
 
 import java.util.HashSet;
 import java.util.List;
@@ -34,7 +34,7 @@ import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.TestApiOp;
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 
 /**

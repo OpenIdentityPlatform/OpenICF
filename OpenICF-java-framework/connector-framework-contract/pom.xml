@@ -50,12 +50,17 @@
             <artifactId>groovy-all</artifactId>
         </dependency>
         
-	<!-- We need here compile dependency for junits -->	
+	<!-- We need here compile dependency for testng -->
         <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <!--dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>compile</scope>
-        </dependency>
+        </dependency-->
 
         <dependency>
             <groupId>com.forgerock.openicf.framework</groupId>

@@ -22,9 +22,9 @@
  */
 package org.identityconnectors.contract.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -440,7 +440,7 @@ public class ConnectorHelper {
     public static void checkSyncDelta(ObjectClassInfo ocInfo, SyncDelta delta, Uid uid, Set<Attribute> attributes, SyncDeltaType deltaType, boolean checkNotReturnedByDefault) {
         // check that Uid is correct
         String msg = "Sync returned wrong Uid, expected: %s, returned: %s.";
-        assertEquals(String.format(msg, uid, delta.getUid()), delta.getUid(), uid);
+        assertEquals(delta.getUid(), uid,String.format(msg, uid, delta.getUid()));
 
         if (deltaType != SyncDeltaType.DELETE) {
             // check that attributes are correct
@@ -449,7 +449,7 @@ public class ConnectorHelper {
 
         // check that delta type is expected
         msg = "Sync delta type should be %s, but returned: %s.";
-        assertTrue(String.format(msg, deltaType, delta.getDeltaType()), delta.getDeltaType() == deltaType);
+        assertTrue(delta.getDeltaType() == deltaType,String.format(msg, deltaType, delta.getDeltaType()));
     }         
     
     /**
@@ -885,7 +885,7 @@ public class ConnectorHelper {
             manager = getLocalManager(dataProvider, fact);
         }
         
-        assertNotNull("Manager wasn't created - check *MANDATORY* properties.", manager);
+        assertNotNull(manager,"Manager wasn't created - check *MANDATORY* properties.");
         
         return manager;
     }

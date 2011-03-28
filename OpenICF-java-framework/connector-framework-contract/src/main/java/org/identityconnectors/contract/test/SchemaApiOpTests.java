@@ -22,10 +22,10 @@
  */
 package org.identityconnectors.contract.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 import java.util.*;
 
@@ -33,7 +33,8 @@ import org.identityconnectors.common.*;
 import org.identityconnectors.contract.exceptions.*;
 import org.identityconnectors.framework.api.operations.*;
 import org.identityconnectors.framework.common.objects.*;
-import org.junit.*;
+import org.testng.annotations.Test;
+
 
 /**
  * Contract test of {@link SchemaApiOp} operation.
@@ -86,7 +87,7 @@ public class SchemaApiOpTests extends ContractTestBase {
             Set<AttributeInfo> attInfos = ocInfo.getAttributeInfo();
             for (AttributeInfo attInfo : attInfos) {
                 //ensure there is not Uid present
-                assertTrue("Uid can't be present in connector Schema!", !attInfo.is(Uid.NAME));
+                assertTrue(!attInfo.is(Uid.NAME),"Uid can't be present in connector Schema!");
             }
         }
     }
@@ -106,7 +107,7 @@ public class SchemaApiOpTests extends ContractTestBase {
                 if (attInfo.is(Name.NAME)) found = true;
             }
             final String MSG = "Name is not present among attributes of object class '%s'.";
-            assertTrue(String.format(MSG, ocInfo.getType()), found);
+            assertTrue(found,String.format(MSG, ocInfo.getType()));
         }
     }
         
@@ -137,7 +138,7 @@ public class SchemaApiOpTests extends ContractTestBase {
                 // operation is supported for at least one object class
                 // then it must be supported for all object classes
                 final String MSG = "Operation %s must be in the schema supported by all object classes which supports connector.";
-                assertTrue(String.format(MSG, apiOp), CollectionUtil.equals(suppOClasses, ocInfos));
+                assertTrue(CollectionUtil.equals(suppOClasses, ocInfos),String.format(MSG, apiOp));
             }
         }
     }
@@ -166,7 +167,7 @@ public class SchemaApiOpTests extends ContractTestBase {
             boolean expected = expOClasses.contains(ocInfo.getType());
             if (strictCheck) {
                 msg = "Schema returned object class %s that is not expected to be suported.";
-                assertTrue(String.format(msg, ocInfo.getType()), expected);
+                assertTrue(expected,String.format(msg, ocInfo.getType()));
             } else if (!expected) {
                 // this object class was not expected, and we are not checking strictly,
                 // so skip this object class
@@ -185,8 +186,8 @@ public class SchemaApiOpTests extends ContractTestBase {
             for (AttributeInfo attr : ocInfo.getAttributeInfo()) {
                 if (strictCheck) {
                     msg = "Object class %s contains unexpected attribute: %s.";
-                    assertTrue(String.format(msg, ocInfo.getType(), attr.getName()), expAttrs
-                            .contains(attr.getName()));
+                    assertTrue(expAttrs.contains(attr.getName()),String.format(
+                            msg, ocInfo.getType(), attr.getName()));
                 }
 
                 // expected attribute values
@@ -206,8 +207,8 @@ public class SchemaApiOpTests extends ContractTestBase {
             // check that all expected attributes are in schema
             for (String expAttr : expAttrs) {
                 msg = "Schema doesn't contain expected attribute '%s' in object class '%s'.";
-                assertNotNull(String.format(msg, expAttr, ocInfo.getType()), AttributeInfoUtil
-                        .find(expAttr, ocInfo.getAttributeInfo()));
+                assertNotNull(AttributeInfoUtil.find(expAttr, ocInfo.getAttributeInfo()),
+                        String.format(msg, expAttr, ocInfo.getType()));
             }
             
         }
@@ -233,7 +234,7 @@ public class SchemaApiOpTests extends ContractTestBase {
             boolean expectedOp = expOperations.containsKey(operation.getSimpleName());
             if (strictCheck) {
                 msg = "Schema returned unexpected operation: %s.";
-                assertTrue(String.format(msg, operation.getSimpleName()), expectedOp);
+                assertTrue(expectedOp,String.format(msg, operation.getSimpleName()));
             } else if (!expectedOp) {
                 // this operation was not expected, and we are not checking strictly,
                 // so skip this operation
@@ -252,8 +253,7 @@ public class SchemaApiOpTests extends ContractTestBase {
                 boolean expectedOClassForOp = expOClassesForOp.contains(ocInfo.getType());
                 if (strictCheck) {
                     msg = "Operation %s supports unexpected object class: %s.";
-                    assertTrue(String.format(msg, operation.getSimpleName(), ocInfo.getType()),
-                            expectedOClassForOp);
+                    assertTrue(expectedOClassForOp,String.format(msg, operation.getSimpleName(), ocInfo.getType()));
                 } else if (!expectedOClassForOp) {
                     // this object class was not expected for this operation, and we are not checking strictly,
                     // so skip this object class
@@ -288,44 +288,30 @@ public class SchemaApiOpTests extends ContractTestBase {
         // check that all attributes are provided
         String msg = "Missing property definition for field '%s' of attribute '" + attribute.getName()
                         + "' in object class " + ocInfo.getType();
-        assertNotNull(String.format(msg, ATTRIBUTE_FIELD_TYPE), 
-                expectedValues.get(ATTRIBUTE_FIELD_TYPE));
-        assertNotNull(String.format(msg, ATTRIBUTE_FILED_READABLE), 
-                expectedValues.get(ATTRIBUTE_FILED_READABLE));
-        assertNotNull(String.format(msg, ATTRIBUTE_FIELD_CREATEABLE), 
-                expectedValues.get(ATTRIBUTE_FIELD_CREATEABLE));
-        assertNotNull(String.format(msg, ATTRIBUTE_FIELD_UPDATEABLE), 
-                expectedValues.get(ATTRIBUTE_FIELD_UPDATEABLE));
-        assertNotNull(String.format(msg, ATTRIBUTE_FIELD_REQUIRED), 
-                expectedValues.get(ATTRIBUTE_FIELD_REQUIRED));
-        assertNotNull(String.format(msg, ATTRIBUTE_FIELD_MULTI_VALUE), 
-                expectedValues.get(ATTRIBUTE_FIELD_MULTI_VALUE));
-        assertNotNull(String.format(msg, ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT), 
-                expectedValues.get(ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT));
+        assertNotNull(expectedValues.get(ATTRIBUTE_FIELD_TYPE),String.format(msg, ATTRIBUTE_FIELD_TYPE));
+        assertNotNull(expectedValues.get(ATTRIBUTE_FILED_READABLE),String.format(msg, ATTRIBUTE_FILED_READABLE));
+        assertNotNull(expectedValues.get(ATTRIBUTE_FIELD_CREATEABLE),String.format(msg, ATTRIBUTE_FIELD_CREATEABLE));
+        assertNotNull(expectedValues.get(ATTRIBUTE_FIELD_UPDATEABLE),String.format(msg, ATTRIBUTE_FIELD_UPDATEABLE));
+        assertNotNull(expectedValues.get(ATTRIBUTE_FIELD_REQUIRED),String.format(msg, ATTRIBUTE_FIELD_REQUIRED));
+        assertNotNull(expectedValues.get(ATTRIBUTE_FIELD_MULTI_VALUE),String.format(msg, ATTRIBUTE_FIELD_MULTI_VALUE));
+        assertNotNull(expectedValues.get(ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT),String.format(msg, ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT));
 
         msg = "Object class '" + ocInfo.getType() + "', attribute '" + attribute.getName()
                 + "': field '%s' expected value is '%s', but returned '%s'.";        
-        assertEquals(String.format(msg, ATTRIBUTE_FIELD_TYPE, expectedValues
-                .get(ATTRIBUTE_FIELD_TYPE), attribute.getType().getName()), 
-                expectedValues.get(ATTRIBUTE_FIELD_TYPE), attribute.getType());
-        assertEquals(String.format(msg, ATTRIBUTE_FILED_READABLE, expectedValues
-                .get(ATTRIBUTE_FILED_READABLE), attribute.isReadable()), 
-                expectedValues.get(ATTRIBUTE_FILED_READABLE), attribute.isReadable());
-        assertEquals(String.format(msg, ATTRIBUTE_FIELD_CREATEABLE, expectedValues
-                .get(ATTRIBUTE_FIELD_CREATEABLE), attribute.isCreateable()), 
-                expectedValues.get(ATTRIBUTE_FIELD_CREATEABLE), attribute.isCreateable());
-        assertEquals(String.format(msg, ATTRIBUTE_FIELD_UPDATEABLE, expectedValues
-                .get(ATTRIBUTE_FIELD_UPDATEABLE), attribute.isUpdateable()), 
-                expectedValues.get(ATTRIBUTE_FIELD_UPDATEABLE), attribute.isUpdateable());
-        assertEquals(String.format(msg, ATTRIBUTE_FIELD_REQUIRED, expectedValues
-                .get(ATTRIBUTE_FIELD_REQUIRED), attribute.isRequired()), 
-                expectedValues.get(ATTRIBUTE_FIELD_REQUIRED), attribute.isRequired());
-        assertEquals(String.format(msg, ATTRIBUTE_FIELD_MULTI_VALUE, expectedValues
-                .get(ATTRIBUTE_FIELD_MULTI_VALUE), attribute.isMultiValued()), 
-                expectedValues.get(ATTRIBUTE_FIELD_MULTI_VALUE), attribute.isMultiValued());
-        assertEquals(String.format(msg, ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT, 
-                expectedValues.get(ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT), attribute.isReturnedByDefault()), 
-                expectedValues.get(ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT), attribute.isReturnedByDefault());
+        assertEquals(expectedValues.get(ATTRIBUTE_FIELD_TYPE), attribute.getType(),String.format(msg, ATTRIBUTE_FIELD_TYPE, expectedValues
+                .get(ATTRIBUTE_FIELD_TYPE), attribute.getType().getName()));
+        assertEquals(expectedValues.get(ATTRIBUTE_FILED_READABLE), attribute.isReadable(),String.format(msg, ATTRIBUTE_FILED_READABLE, expectedValues
+                .get(ATTRIBUTE_FILED_READABLE), attribute.isReadable()));
+        assertEquals(expectedValues.get(ATTRIBUTE_FIELD_CREATEABLE), attribute.isCreateable(),String.format(msg, ATTRIBUTE_FIELD_CREATEABLE, expectedValues
+                .get(ATTRIBUTE_FIELD_CREATEABLE), attribute.isCreateable()));
+        assertEquals(expectedValues.get(ATTRIBUTE_FIELD_UPDATEABLE), attribute.isUpdateable(),String.format(msg, ATTRIBUTE_FIELD_UPDATEABLE, expectedValues
+                .get(ATTRIBUTE_FIELD_UPDATEABLE), attribute.isUpdateable()));
+        assertEquals(expectedValues.get(ATTRIBUTE_FIELD_REQUIRED), attribute.isRequired(),String.format(msg, ATTRIBUTE_FIELD_REQUIRED, expectedValues
+                .get(ATTRIBUTE_FIELD_REQUIRED), attribute.isRequired()));
+        assertEquals(expectedValues.get(ATTRIBUTE_FIELD_MULTI_VALUE), attribute.isMultiValued(),String.format(msg, ATTRIBUTE_FIELD_MULTI_VALUE, expectedValues
+                .get(ATTRIBUTE_FIELD_MULTI_VALUE), attribute.isMultiValued()));
+        assertEquals(expectedValues.get(ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT), attribute.isReturnedByDefault(),String.format(msg, ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT,
+                expectedValues.get(ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT), attribute.isReturnedByDefault()));
     }
     
     /**

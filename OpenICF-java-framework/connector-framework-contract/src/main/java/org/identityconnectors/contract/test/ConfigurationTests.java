@@ -30,11 +30,11 @@ import org.identityconnectors.framework.api.ConfigurationProperties;
 import org.identityconnectors.framework.api.ConfigurationProperty;
 import org.identityconnectors.framework.common.FrameworkUtil;
 import org.identityconnectors.framework.spi.Configuration;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.testng.annotations.Test;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 
-import static org.junit.Assert.*;
+import static org.testng.Assert.*;
 
 /**
  * Tests for {@link Configuration} of the Connector Under Test
@@ -49,7 +49,7 @@ public final class ConfigurationTests {
     /**
      * Initialize the unit test
      */
-    @Before
+    @BeforeMethod
     public void init() {        
         DataProvider dataProvider = ConnectorHelper.createDataProvider();
         _configProperties = ConnectorHelper.getConfigurationProperties(dataProvider);                
@@ -58,7 +58,7 @@ public final class ConfigurationTests {
     /**
      * Free up the resources
      */
-    @After
+    @AfterMethod
     public void dispose() {
         _configProperties = null;
     }
@@ -81,8 +81,8 @@ public final class ConfigurationTests {
                         
             String typeName = property.getType().getName();
             LOG.ok("Property: ''{0}'' type ''{1}''", property.getName(), typeName);
-            assertTrue("Type " + typeName + " not allowed in configuration!", FrameworkUtil
-                    .isSupportedConfigurationType(property.getType()));
+            assertTrue(FrameworkUtil.isSupportedConfigurationType(property.getType()),
+                    "Type " + typeName + " not allowed in configuration!");
         }
     }
 }

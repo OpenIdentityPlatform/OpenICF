@@ -179,7 +179,7 @@
                         <configuration>
                             <outputEncoding>${project.build.sourceEncoding}</outputEncoding>
                             <stagingDirectory>${user.dir}/target/OpenICF/stage</stagingDirectory>
-                            <reportPlugins>                                
+                            <reportPlugins>
                                 <plugin>
                                     <groupId>org.apache.maven.plugins</groupId>
                                     <artifactId>maven-checkstyle-plugin</artifactId>
@@ -272,10 +272,10 @@
                 <version>4.8.2</version>
             </dependency>
             <dependency>
-            	<groupId>org.testng</groupId>
-            	<artifactId>testng</artifactId>
-            	<version>6.0</version>
-        	</dependency>
+                <groupId>org.testng</groupId>
+                <artifactId>testng</artifactId>
+                <version>6.0</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <dependencies>
@@ -288,11 +288,11 @@
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-all</artifactId>
         </dependency>
-        <dependency>
+        <!--dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
-        </dependency>
+        </dependency-->
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>

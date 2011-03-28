@@ -22,9 +22,9 @@
  */
 package org.identityconnectors.contract.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -52,14 +52,12 @@ import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.PredefinedAttributes;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.testng.annotations.Test;
 
 /**
  * Contract test of {@link AuthenticationApiOp}
  */
-@RunWith(Parameterized.class)
+//@RunWith(Parameterized.class)
 public class AuthenticationApiOpTests extends ObjectClassRunner {
 
     /**
@@ -122,7 +120,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
             // get the user to make sure it exists now
             ConnectorObject obj = getConnectorFacade().getObject(getObjectClass(), uid,
                     getOperationOptionsByOp(GetApiOp.class));
-            assertNotNull("Unable to retrieve newly created object", obj);
+            assertNotNull(obj,"Unable to retrieve newly created object");
 
             // get username
             String name = (String) getDataProvider().getTestSuiteAttribute(getObjectClass().getObjectClassValue() + "." + USERNAME_PROP,
@@ -137,8 +135,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
 
             authenticateFailed = authenticateExpectingInvalidCredentials(name, wrongPassword);
 
-            assertTrue("Negative test case for Authentication failed, should throw InvalidCredentialException",
-                    authenticateFailed);
+            assertTrue(authenticateFailed,"Negative test case for Authentication failed, should throw InvalidCredentialException");
 
             // now try with the right password
             GuardedString password = (GuardedString) ConnectorHelper.get(getDataProvider(), getTestName(), GuardedString.class, OperationalAttributes.PASSWORD_NAME, getObjectClass().getObjectClassValue(), 0, false);
@@ -146,7 +143,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
             Uid authenticatedUid = authenticateExpectingSuccess(name, password);
 
             String MSG = "Authenticate returned wrong Uid, expected: %s, returned: %s.";
-            assertEquals(String.format(MSG, uid, authenticatedUid), uid, authenticatedUid);
+            assertEquals(uid, authenticatedUid,String.format(MSG, uid, authenticatedUid));
             
             // test that PASSWORD change works, CURRENT_PASSWORD should be set
             // to old password value if supported
@@ -167,7 +164,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                 // authenticate with new password
                 authenticatedUid = authenticateExpectingSuccess(name, newpassword);
 
-                assertEquals(String.format(MSG, uid, authenticatedUid), uid, authenticatedUid);
+                assertEquals(uid, authenticatedUid,String.format(MSG, uid, authenticatedUid));
 
                 // LAST_PASSWORD_CHANGE_DATE
                 if (ConnectorHelper.isAttrSupported(getObjectClassInfo(),
@@ -182,8 +179,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                             getObjectClass(), uid, builder.build());
 
                     // check that LAST_PASSWORD_CHANGE_DATE was set to a value
-                    assertNotNull("LAST_PASSWORD_CHANGE_DATE attribute is null.",
-                            lastPasswordChange.getAttributeByName(PredefinedAttributes.LAST_PASSWORD_CHANGE_DATE_NAME));
+                    assertNotNull(lastPasswordChange.getAttributeByName(PredefinedAttributes.LAST_PASSWORD_CHANGE_DATE_NAME),"LAST_PASSWORD_CHANGE_DATE attribute is null.");
                 } else {
                     LOG.info("Skipping LAST_PASSWORD_CHANGE_DATE test.");
                 }
@@ -201,7 +197,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                         builder.build());
                 
                 // check that LAST_LOGIN_DATE was set to some value
-                assertNotNull("LAST_LOGIN_DATE attribute is null.", lastLogin.getAttributeByName(PredefinedAttributes.LAST_LOGIN_DATE_NAME));
+                assertNotNull(lastLogin.getAttributeByName(PredefinedAttributes.LAST_LOGIN_DATE_NAME),"LAST_LOGIN_DATE attribute is null.");
             }
             else {
                 LOG.info("Skipping LAST_LOGIN_DATE test.");
@@ -266,8 +262,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                 GuardedString password = (GuardedString) ConnectorHelper.get(getDataProvider(), getTestName(), GuardedString.class, OperationalAttributes.PASSWORD_NAME, getObjectClassInfo().getType(), 0, false); 
 
                 // and now authenticate   
-                assertTrue("Authenticate must throw for disabled account", 
-                		authenticateExpectingRuntimeException(name, password));
+                assertTrue(authenticateExpectingRuntimeException(name, password),"Authenticate must throw for disabled account");
 
             } finally {
                 // delete the object
@@ -329,11 +324,10 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
 
                 // and now authenticate
                 PasswordExpiredException pwe = authenticateExpectingPasswordExpired(name, password);
-                assertNotNull("Authenticate should throw PasswordExpiredException.",
-                        pwe);
+                assertNotNull(pwe,"Authenticate should throw PasswordExpiredException.");
                 
                 final String MSG = "PasswordExpiredException contains wrong Uid, expected: %s, returned: %s";
-                assertEquals(String.format(MSG, uid, pwe.getUid()), uid, pwe.getUid());
+                assertEquals(uid, pwe.getUid(),String.format(MSG, uid, pwe.getUid()));
 
 
             } finally {
@@ -396,10 +390,9 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
 
                 // and now authenticate
                 PasswordExpiredException pwe = authenticateExpectingPasswordExpired(name, password);
-                assertNotNull("Authenticate should throw PasswordExpiredException.",
-                        pwe);
+                assertNotNull(pwe,"Authenticate should throw PasswordExpiredException.");
                 final String MSG = "PasswordExpiredException contains wrong Uid, expected: %s, returned: %s";
-                assertEquals(String.format(MSG, uid, pwe.getUid()), uid, pwe.getUid());               
+                assertEquals(uid, pwe.getUid(),String.format(MSG, uid, pwe.getUid()));
 
             } finally {
                 // delete the object
@@ -469,7 +462,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
 
                 PasswordExpiredException pwe = authenticateExpectingPasswordExpired(name, newpassword);
                 
-                assertNotNull("Authenticate should throw PasswordExpiredException.", pwe);
+                assertNotNull(pwe,"Authenticate should throw PasswordExpiredException.");
                 
             } finally {
                 // delete the object

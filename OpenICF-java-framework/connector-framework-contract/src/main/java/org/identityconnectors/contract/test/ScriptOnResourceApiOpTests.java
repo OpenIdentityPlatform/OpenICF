@@ -22,8 +22,8 @@
  */
 package org.identityconnectors.contract.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,7 +38,7 @@ import org.identityconnectors.framework.api.operations.ScriptOnResourceApiOp;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.ScriptContext;
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 
 /**
@@ -98,7 +98,7 @@ public class ScriptOnResourceApiOpTests extends ContractTestBase {
 
                 // check that returned result was expected
                 final String MSG = "Script result was unexpected, expected: '%s', returned: '%s'.";
-                assertEquals(String.format(MSG, expResult, result), expResult, result);
+                assertEquals(expResult, result,String.format(MSG, expResult, result));
             } catch (ObjectNotFoundException ex) {
                 // ok - properties were not provided - test is skipped
                 LOG.info("Test properties not set, skipping the test " + TEST_NAME);

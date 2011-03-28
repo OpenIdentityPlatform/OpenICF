@@ -28,8 +28,8 @@ import org.identityconnectors.contract.data.DataProvider;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.common.objects.OperationOptions;
-import org.junit.After;
-import org.junit.Before;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 
 
 /**
@@ -52,7 +52,7 @@ public abstract class ContractTestBase {
     /**
      * Initialize the environment needed to run the test. Called once per test method (@Before).
      */
-    @Before
+    @BeforeMethod
     public void init() {        
         _connFacade = ConnectorHelper.createConnectorFacade(getDataProvider());       
     }
@@ -60,7 +60,7 @@ public abstract class ContractTestBase {
     /**
      * Dispose the test environment, do the cleanup. Called once per test method (@After).
      */
-    @After
+    @AfterMethod
     public void dispose() {
         _connFacade = null;
         disposeDataProvider();

@@ -22,9 +22,9 @@
  */
 package org.identityconnectors.contract.test;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 import java.util.HashSet;
 import java.util.List;
@@ -55,9 +55,7 @@ import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.testng.annotations.Test;
 
 /**
  * <p>
@@ -75,7 +73,7 @@ import org.junit.runners.Parameterized;
  * 
  * @author David Adam
  */
-@RunWith(Parameterized.class)
+//@RunWith(Parameterized.class)
 public class AttributeTests extends ObjectClassRunner {
 
     /**
@@ -144,7 +142,7 @@ public class AttributeTests extends ObjectClassRunner {
                         getObjectClass(), uid,
                         null/* GET returned by default attributes*/);
 
-                assertNotNull("Unable to retrieve newly created object", obj);
+                assertNotNull(obj,"Unable to retrieve newly created object");
 
                 // check: non readable attributes should not be returned by
                 // default
@@ -154,8 +152,8 @@ public class AttributeTests extends ObjectClassRunner {
                                 .format(
                                         "Non-readable attribute should not be returned by default: %s",
                                         attr.getName());
-                        assertTrue(msg, !ConnectorHelper.isReturnedByDefault(
-                                oci, attr));
+                        assertTrue( !ConnectorHelper.isReturnedByDefault(
+                                oci, attr),msg);
                     }
                 }
             } finally {
@@ -223,12 +221,12 @@ public class AttributeTests extends ObjectClassRunner {
                 uid = ConnectorHelper.createObject(getConnectorFacade(),
                         getDataProvider(), getObjectClassInfo(), getTestName(),
                         1, getOperationOptionsByOp(CreateApiOp.class));
-                assertNotNull("Create returned null Uid.", uid);
+                assertNotNull( uid,"Create returned null Uid.");
 
                 // get by uid
                 obj = getConnectorFacade().getObject(getSupportedObjectClass(),
                         uid, getOperationOptionsByOp(GetApiOp.class));
-                assertNotNull("Cannot retrieve created object.", obj);
+                assertNotNull(obj,"Cannot retrieve created object.");
 
                 // ******************************
                 // Acquire updateable attributes
@@ -242,8 +240,7 @@ public class AttributeTests extends ObjectClassRunner {
                     //keep logging info
                     logInfo = new LogInfo(getObjectClass(), nonUpdateableAttrs);
 
-                    assertTrue("no update attributes were found",
-                            (nonUpdateableAttrs.size() > 0));
+                    assertTrue((nonUpdateableAttrs.size() > 0),"no update attributes were found");
                     Uid newUid = getConnectorFacade().update(
                             getObjectClass(),
                             uid,
@@ -263,7 +260,7 @@ public class AttributeTests extends ObjectClassRunner {
                     obj = getConnectorFacade().getObject(
                             getSupportedObjectClass(), uid,
                             getOperationOptionsByOp(GetApiOp.class));
-                    assertNotNull("Cannot retrieve updated object.", obj);
+                    assertNotNull( obj,"Cannot retrieve updated object.");
                     ConnectorHelper.checkObject(getObjectClassInfo(), obj,
                             nonUpdateableAttrs);
                 } else {
@@ -389,7 +386,7 @@ public class AttributeTests extends ObjectClassRunner {
                         getObjectClass(), uid,
                         getOperationOptionsByOp(GetApiOp.class));
 
-                assertNotNull("Unable to retrieve newly created object", obj);
+                assertNotNull(obj,"Unable to retrieve newly created object");
 
                 // check: Required attributes must be createable.
                 for (Attribute attr : obj.getAttributes()) {
@@ -454,7 +451,7 @@ public class AttributeTests extends ObjectClassRunner {
                 // should throw UnsupportedObjectClass if not supported
                 uid = getConnectorFacade().create(getObjectClass(), attrs,
                         null);
-                assertNotNull(testMarkMsg + " Create returned null uid.", uid);
+                assertNotNull(uid,testMarkMsg + " Create returned null uid.");
 
                 /*
                  * ************ GetApiOp ************
@@ -471,18 +468,17 @@ public class AttributeTests extends ObjectClassRunner {
                     Filter fltUid = FilterBuilder.equalTo(AttributeBuilder
                             .build(Uid.NAME, uid.getUidValue()));
 
-                    assertTrue(testMarkMsg + " filterUid is null", fltUid != null);
+                    assertTrue(fltUid != null,testMarkMsg + " filterUid is null");
 
                     List<ConnectorObject> coObjects = ConnectorHelper.search(
                             getConnectorFacade(), getSupportedObjectClass(),
                             fltUid, null);
 
-                    assertTrue(testMarkMsg + 
+                    assertTrue(coObjects.size() == 1,testMarkMsg +
                             " Search filter by uid with no OperationOptions failed, expected to return one object, but returned "
-                                    + coObjects.size(), coObjects.size() == 1);
+                                    + coObjects.size());
 
-                    assertNotNull(testMarkMsg + " Unable to retrieve newly created object",
-                            coObjects.get(0));
+                    assertNotNull(coObjects.get(0),testMarkMsg + " Unable to retrieve newly created object");
 
                     obj = coObjects.get(0);
                     break;// SEARCH
@@ -497,7 +493,7 @@ public class AttributeTests extends ObjectClassRunner {
                  * Attributes. This is specific for AttributeTests
                  */
                 if (!apiOp.equals(ApiOperations.SYNC)) {
-                    assertNotNull("Unable to retrieve newly created object", obj);
+                    assertNotNull(obj,"Unable to retrieve newly created object");
                     // obj is null for sync tests
                     checkAttributes(obj, oci, apiOp);
                 }
@@ -539,7 +535,7 @@ public class AttributeTests extends ObjectClassRunner {
              * future TODO: after joining UID to schema, erase the condition.
              */
             if (!attr.getName().equals(Uid.NAME)) {
-                assertTrue(msg, ConnectorHelper.isReturnedByDefault(oci, attr));
+                assertTrue(ConnectorHelper.isReturnedByDefault(oci, attr),msg);
             }
         }
     }
@@ -576,7 +572,7 @@ public class AttributeTests extends ObjectClassRunner {
 
             // check that returned one delta
             msg = "%s Sync should have returned one sync delta after creation of one object, but returned: %d";
-            assertTrue(String.format(msg, testMarkMsg, deltas.size()), deltas.size() == 1);
+            assertTrue(deltas.size() == 1,String.format(msg, testMarkMsg, deltas.size()));
 
             // check delta
             ConnectorHelper.checkSyncDelta(getObjectClassInfo(), deltas.get(0),
@@ -607,8 +603,7 @@ public class AttributeTests extends ObjectClassRunner {
             if (replaceAttributes.size() > 0) {
                 replaceAttributes.add(uid);
 
-                assertTrue(testMarkMsg + " no update attributes were found",
-                        (replaceAttributes.size() > 0));
+                assertTrue((replaceAttributes.size() > 0),testMarkMsg + " no update attributes were found");
                 Uid newUid = getConnectorFacade().update(
                         getSupportedObjectClass(),
                         uid,
@@ -630,8 +625,7 @@ public class AttributeTests extends ObjectClassRunner {
 
                 // check that returned one delta
                 msg = "%s Sync should have returned one sync delta after update of one object, but returned: %d";
-                assertTrue(String.format(msg, testMarkMsg, deltas.size()),
-                        deltas.size() == 1);
+                assertTrue(deltas.size() == 1,String.format(msg, testMarkMsg, deltas.size()));
 
                 // check delta
                 ConnectorHelper.checkSyncDelta(getObjectClassInfo(), deltas
@@ -663,7 +657,7 @@ public class AttributeTests extends ObjectClassRunner {
 
             // check that returned one delta
             msg = "%s Sync should have returned one sync delta after delete of one object, but returned: %d";
-            assertTrue(String.format(msg, testMarkMsg, deltas.size()), deltas.size() == 1);
+            assertTrue(deltas.size() == 1,String.format(msg, testMarkMsg, deltas.size()));
 
             // check delta
             ConnectorHelper.checkSyncDelta(getObjectClassInfo(), deltas.get(0),

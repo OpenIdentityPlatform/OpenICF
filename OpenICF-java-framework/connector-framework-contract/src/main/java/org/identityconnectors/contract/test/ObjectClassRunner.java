@@ -22,19 +22,16 @@
  */
 package org.identityconnectors.contract.test;
 
-import static org.junit.Assert.fail;
+import static org.testng.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.contract.exceptions.ContractException;
-import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.GetApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
@@ -45,10 +42,9 @@ import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Schema;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runners.Parameterized.Parameters;
+import org.testng.annotations.Test;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 
 /**
  * Simple base class that will run through all the {@link ObjectClass}s.
@@ -76,7 +72,7 @@ public abstract class ObjectClassRunner extends ContractTestBase {
     /**
      * Initialize the environment needed to run the test
      */
-    @Before
+    @BeforeMethod
     public void init() {
         super.init();
 
@@ -115,7 +111,7 @@ public abstract class ObjectClassRunner extends ContractTestBase {
     /**
      * Dispose the test environment, do the cleanup
      */
-    @After
+    @AfterMethod
     public void dispose() {        
         _objectClassInfo = null;
         super.dispose();
@@ -160,46 +156,6 @@ public abstract class ObjectClassRunner extends ContractTestBase {
      */
     public abstract void testRun();
     
-    /**
-     * Return all the base {@link ObjectClass}s.
-     */
-    @Parameters
-    public static List<Object[]> data() {
-        List<Object[]> oclasses = new LinkedList<Object[]>();
-        
-        List<String> objectClasses = getObjectClassesProperty();
-        if (objectClasses != null) {
-            for (String objectClass : objectClasses) {
-                oclasses.add(new Object[] { new ObjectClass(objectClass) });
-            }
-        } else {
-            Schema schema = ConnectorHelper.createConnectorFacade(getDataProvider()).schema();
-            for (ObjectClassInfo ocInfo : schema.getObjectClassInfo()) {
-                oclasses.add(new Object[] {ConnectorHelper.getObjectClassFromObjectClassInfo(ocInfo)});
-            }
-        }
-        
-        oclasses.add(new Object[] {new ObjectClass("NONEXISTING")});
-        
-        StringBuilder sb = new StringBuilder();
-        for (Object[] oc : oclasses) {
-            sb.append(oc[0].toString());
-            sb.append(",");
-        }
-        
-        LOG.info("Tested object classes will be: ''{0}''.", sb.toString());
-        return oclasses;
-    }
-    
-    private static List<String> getObjectClassesProperty() {
-        try {
-            @SuppressWarnings("unchecked")
-            List<String> objectClasses = (List<String>) getDataProvider().getTestSuiteAttribute("objectClasses");
-            return objectClasses;
-        } catch (ObjectNotFoundException e) {
-            return null;
-        }
-    }
 
     /**
      * Returns object class which is currently tested.

@@ -22,7 +22,7 @@
  */
 package org.identityconnectors.contract.data;
 
-import static org.junit.Assert.assertNotNull;
+import static org.testng.Assert.assertNotNull;
 import groovy.util.ConfigObject;
 import groovy.util.ConfigSlurper;
 
@@ -51,7 +51,7 @@ import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.test.common.TestHelpers;
-import org.junit.Assert;
+import org.testng.Assert;
 /**
  * <p>
  * Default implementation of {@link DataProvider}. It uses ConfigSlurper from
@@ -287,7 +287,7 @@ public class GroovyDataProvider implements DataProvider {
         URL url = getClass().getClassLoader().getResource(BOOTSTRAP_FILE_NAME);
         String msg = String.format("Missing bootstrap file: %s. (Hint: copy " +
         		"framework/test-contract/src/bootstrap.groovy to folder framework/test-contract/build)", BOOTSTRAP_FILE_NAME);
-        Assert.assertNotNull(msg, url);
+        Assert.assertNotNull(url,msg);
         return cs.parse(url);
     }
 

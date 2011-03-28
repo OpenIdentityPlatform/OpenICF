@@ -22,8 +22,8 @@
  */
 package org.identityconnectors.contract.test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -39,15 +39,13 @@ import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 /**
  * Contract test of {@link CreateApiOp} operation.
  */
-@RunWith(Parameterized.class)
+//@RunWith(Parameterized.class)
 public class CreateApiOpTests extends ObjectClassRunner {
     /**
      * Logging..
@@ -92,7 +90,7 @@ public class CreateApiOpTests extends ObjectClassRunner {
             ConnectorObject obj = getConnectorFacade().getObject(getObjectClass(), uid,
                     getOperationOptionsByOp(GetApiOp.class));
 
-            assertNotNull("Unable to retrieve newly created object", obj);
+            assertNotNull(obj,"Unable to retrieve newly created object");
 
             // compare requested attributes to retrieved attributes
             ConnectorHelper.checkObject(getObjectClassInfo(), obj, attrs);
@@ -175,7 +173,7 @@ public class CreateApiOpTests extends ObjectClassRunner {
                 // get the object to make sure it exist now
                 ConnectorObject obj1 = getConnectorFacade().getObject(getSupportedObjectClass(),
                         uid1, getOperationOptionsByOp(GetApiOp.class));
-                assertNotNull("Unable to retrieve newly created object", obj1);
+                assertNotNull(obj1,"Unable to retrieve newly created object");
 
                 // compare requested attributes to retrieved attributes
                 ConnectorHelper.checkObject(getObjectClassInfo(), obj1, attrs);
@@ -184,13 +182,13 @@ public class CreateApiOpTests extends ObjectClassRunner {
 
                 // should return different uid or throw
                 uid2 = getConnectorFacade().create(getSupportedObjectClass(), attrs, getOperationOptionsByOp(CreateApiOp.class));
-                assertFalse("Create returned the same Uid as by previous create.", uid1
-                        .equals(uid2));
+                assertFalse(uid1
+                        .equals(uid2),"Create returned the same Uid as by previous create.");
 
                 // get the object to make sure it exists now
                 ConnectorObject obj2 = getConnectorFacade().getObject(getSupportedObjectClass(),
                         uid2, getOperationOptionsByOp(GetApiOp.class));
-                assertNotNull("Unable to retrieve newly created object", obj2);
+                assertNotNull(obj2,"Unable to retrieve newly created object");
 
                 // compare requested attributes to retrieved attributes
                 ConnectorHelper.checkObject(getObjectClassInfo(), obj2, attrs);
