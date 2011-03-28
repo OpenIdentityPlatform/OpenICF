@@ -22,12 +22,14 @@
  */
 package org.identityconnectors.databasetable;
 
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.Test;
+import org.testng.annotations.BeforeClass;
 import static org.identityconnectors.common.ByteUtil.randomBytes;
 import static org.identityconnectors.common.StringUtil.randomString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -72,9 +74,6 @@ import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.test.common.TestHelpers;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 /**
  * Attempts to test the Connector with the framework.
@@ -278,7 +277,7 @@ public class DatabaseTableDSDerbyTests extends DatabaseTableTestBase {
      * For testing purposes we creating connection an not the framework.
      * @throws Exception 
      */
-    @Test(expected = ConnectorException.class)
+    @Test(expectedExceptions = ConnectorException.class)
     public void testNonZeroSQLExceptions() throws Exception {
         DatabaseTableConfiguration cfg = getConfiguration();
         cfg.setRethrowAllSQLExceptions(false);
@@ -300,7 +299,7 @@ public class DatabaseTableDSDerbyTests extends DatabaseTableTestBase {
      * For testing purposes we creating connection an not the framework.
      * @throws Exception 
      */
-    @Test(expected = ConnectorException.class)
+    @Test(expectedExceptions = ConnectorException.class)
     public void testRethrowAllSQLExceptions() throws Exception {
         DatabaseTableConfiguration cfg = getConfiguration();
         cfg.setRethrowAllSQLExceptions(true);

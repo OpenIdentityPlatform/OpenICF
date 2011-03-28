@@ -23,9 +23,10 @@
 package org.identityconnectors.databasetable;
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
+import org.testng.AssertJUnit;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -37,15 +38,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.Assert;
-
 import org.identityconnectors.common.Pair;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.databasetable.mapping.DefaultStrategy;
 import org.identityconnectors.databasetable.mapping.MappingStrategy;
 import org.identityconnectors.dbcommon.ExpectProxy;
 import org.identityconnectors.dbcommon.SQLParam;
-import org.junit.Test;
 
 
 /**
@@ -89,10 +87,10 @@ public class DatabaseTableSQLUtilTests {
         assertTrue("getColumnType not called", trsmd.isDone());
         assertEquals(2, actual.size());
         final SQLParam tv1 =  actual.get(TEST1);
-        Assert.assertNotNull(tv1);
+        AssertJUnit.assertNotNull(tv1);
         assertEquals(TEST_VAL1, tv1.getValue()); 
         final SQLParam tv2 =  actual.get(TEST2);
-        Assert.assertNotNull(tv2);
+        AssertJUnit.assertNotNull(tv2);
         assertEquals(TEST_VAL2, tv2.getValue()); 
      }   
     

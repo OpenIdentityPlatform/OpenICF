@@ -22,10 +22,10 @@
  */
 package org.identityconnectors.databasetable;
 
+import org.testng.annotations.Test;
+import org.testng.Assert;
+import org.testng.AssertJUnit;
 import static org.identityconnectors.common.ByteUtil.randomBytes;
-import static org.junit.Assert.*;
-
-
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.util.HashSet;
@@ -46,7 +46,6 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.test.common.TestHelpers;
-import org.junit.Test;
 
 /**
  * Attempts to test the Connector with the framework.
@@ -150,15 +149,15 @@ public class DatabaseTableOracleTests extends DatabaseTableTestBase{
         Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
         // attempt to get the record back..
         List<ConnectorObject> results = TestHelpers.searchToList(con, ObjectClass.ACCOUNT, FilterBuilder.equalTo(uid));
-        assertTrue("expect 1 connector object", results.size() == 1);
+        AssertJUnit.assertTrue("expect 1 connector object", results.size() == 1);
         final ConnectorObject co = results.get(0);
-        assertNotNull(co);
+        AssertJUnit.assertNotNull(co);
         final Set<Attribute> actual = co.getAttributes();
-        assertNotNull(actual);
+        AssertJUnit.assertNotNull(actual);
         Attribute tmsAtr = AttributeUtil.find(TMS, actual);
         String timestampTest = AttributeUtil.getStringValue(tmsAtr);
         if (timestampTest == null || timestampTest.indexOf("00005") == -1) {
-            fail("    testTimestampColumn1 testcase for bug#17551 failed, expected 00005 in the milli-seconds part, but got timestamp "
+            Assert.fail("    testTimestampColumn1 testcase for bug#17551 failed, expected 00005 in the milli-seconds part, but got timestamp "
                     + timestampTest);
         }
     }
@@ -179,15 +178,15 @@ public class DatabaseTableOracleTests extends DatabaseTableTestBase{
         Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
         // attempt to get the record back..
         List<ConnectorObject> results = TestHelpers.searchToList(con, ObjectClass.ACCOUNT, FilterBuilder.equalTo(uid));
-        assertTrue("expect 1 connector object", results.size() == 1);
+        AssertJUnit.assertTrue("expect 1 connector object", results.size() == 1);
         final ConnectorObject co = results.get(0);
-        assertNotNull(co);
+        AssertJUnit.assertNotNull(co);
         final Set<Attribute> actual = co.getAttributes();
-        assertNotNull(actual);
+        AssertJUnit.assertNotNull(actual);
         Attribute tmsAtr = AttributeUtil.find(TMS, actual);
         String timestampTest = AttributeUtil.getStringValue(tmsAtr);
         if (timestampTest != null && timestampTest.indexOf(". 50000") == -1) {
-            fail("    expected JDBC driver problem, fixed through bug# 17551");
+            Assert.fail("    expected JDBC driver problem, fixed through bug# 17551");
         }
     }
     

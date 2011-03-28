@@ -22,12 +22,11 @@
  */
 package org.identityconnectors.databasetable;
 
-import static org.junit.Assert.assertEquals;
-import junit.framework.Assert;
-
+import static org.testng.AssertJUnit.assertEquals;
+import org.testng.annotations.Test;
+import org.testng.AssertJUnit;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.test.common.TestHelpers;
-import org.junit.Test;
 
 /**
  * Attempts to test the Connector with the framework.
@@ -141,7 +140,7 @@ public class DatabaseTableConfigurationTests {
     /**
      * test method
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void testConfigurationEmptyHost() {
         // attempt to test driver info..
         DatabaseTableConfiguration config = getConfiguration();
@@ -153,7 +152,7 @@ public class DatabaseTableConfigurationTests {
     /**
      * test method
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void testConfigurationEmptyPort() {
         DatabaseTableConfiguration config = getConfiguration();
         config.setPort("");
@@ -164,51 +163,51 @@ public class DatabaseTableConfigurationTests {
     /**
      * test method
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void testConfigurationEmptyDatabase() {
         DatabaseTableConfiguration config = getConfiguration();
         config.setDatabase("");
         // check defaults..
         config.validate();
-        Assert.fail("empty database");
+        AssertJUnit.fail("empty database");
     }   
     
     /**
      * test method
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void testConfigurationKeyEQPassword() {
         DatabaseTableConfiguration config = getConfiguration();
         config.setKeyColumn("a");
         config.setPasswordColumn("a");
         // check defaults..
         config.validate();
-        Assert.fail("testConfigurationKeyEQPassword");
+        AssertJUnit.fail("testConfigurationKeyEQPassword");
     }  
 
     /**
      * test method
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void testConfigurationKeyEQChange() {
         DatabaseTableConfiguration config = getConfiguration();
         config.setKeyColumn("a");
         config.setChangeLogColumn("a");
         // check defaults..
         config.validate();
-        Assert.fail("testConfigurationKeyEQChange");
+        AssertJUnit.fail("testConfigurationKeyEQChange");
     } 
     /**
      * test method
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void testConfigurationPasswdEQChange() {
         DatabaseTableConfiguration config = getConfiguration();
         config.setPasswordColumn("a");
         config.setChangeLogColumn("a");
         // check defaults..
         config.validate();
-        Assert.fail("testConfigurationPasswdEQChange");
+        AssertJUnit.fail("testConfigurationPasswdEQChange");
     }      
     
     /**
@@ -246,7 +245,7 @@ public class DatabaseTableConfigurationTests {
     /**
      * test method
      */
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expectedExceptions=IllegalArgumentException.class)
     public void testConfigurationInvalidJndi() {
         // attempt to test driver info..
         DatabaseTableConfiguration config = getConfiguration();
