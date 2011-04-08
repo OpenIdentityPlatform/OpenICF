@@ -38,11 +38,9 @@
     <description>Connector can simulate almost any kind of resource.</description>
 
     <scm>
-        <!--connection>scm:svn:https://svn.forgerock.org/openicf/trunk/java/bundles/file/xml</connection>
-        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/java/bundles/file/xml</developerConnection-->
+        <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/bundles/file/xml</connection>
+        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/bundles/file/xml</developerConnection>
         <url>http://sources.forgerock.org/browse/openicf/trunk/java/bundles/file/xml</url>
-        <connection>scm:svn:http://localhost/svn/openicf/trunk/java/bundles/file/xml</connection>
-        <developerConnection>scm:svn:http://localhost/svn/openicf/trunk/java/bundles/file/xml</developerConnection>
     </scm>
 
 
@@ -61,11 +59,6 @@
             <id>JavaNet</id>
             <name>JavaNet Repository</name>
             <url>http://download.java.net/maven/2</url>
-        </repository>
-        <repository>
-            <id>ForgeRock</id>
-            <name>ForgeRock Repository</name>
-            <url>http://repo.forgerock.org</url>
         </repository>
     </repositories>
   
