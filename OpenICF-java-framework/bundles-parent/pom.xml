@@ -57,7 +57,7 @@
         <framework.compatibilityVersion>1.1</framework.compatibilityVersion>
         <framework.releaseVersion>0.0-SNAPSHOT</framework.releaseVersion>
         <framework.version>${framework.compatibilityVersion}.${framework.releaseVersion}</framework.version>
-        <licenseResourceBundle>org.forgerock.openicf:openicf-license:1.0</licenseResourceBundle>
+        <licenseResourceBundle>org.forgerock.openicf:openicf-license:1.0.0</licenseResourceBundle>
 
         <defaultConnectorFamily>misc</defaultConnectorFamily>
         <defaultConnectorGroupId>org.forgerock.openicf.bundles.${defaultConnectorFamily}</defaultConnectorGroupId>
@@ -232,12 +232,12 @@
                             <exclude>**/target/**</exclude>
                         </excludes>
                     </testResource>
-                    <testResource>
+                    <!--testResource>
                         <directory>src/test/java</directory>
                         <excludes>
                             <exclude>**/*.java</exclude>
                         </excludes>
-                    </testResource>
+                    </testResource-->
                     <testResource>
                         <directory>src/test/resources</directory>
                     </testResource>
@@ -248,7 +248,6 @@
                         <plugin>
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-release-plugin</artifactId>
-                            <version>2.1</version>
                             <configuration>
                                 <mavenExecutorId>forked-path</mavenExecutorId>
                                 <useReleaseProfile>false</useReleaseProfile>
@@ -271,7 +270,6 @@
                     <plugin>
                         <groupId>org.apache.felix</groupId>
                         <artifactId>maven-bundle-plugin</artifactId>
-                        <version>2.3.4</version>
                         <extensions>true</extensions>
                         <configuration>
                             <instructions>

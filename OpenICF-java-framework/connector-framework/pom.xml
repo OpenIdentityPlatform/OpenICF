@@ -32,15 +32,25 @@
     </parent>
     <artifactId>connector-framework</artifactId>
     <name>OpenICF Framework</name>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Export-Package>org.identityconnectors.*</Export-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
             <!-- We need to bundle commited manifest file -->
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
+                <!--configuration>
                     <useDefaultManifestFile>true</useDefaultManifestFile>
-                </configuration>
+                </configuration-->
             </plugin>
         </plugins>
     </build>

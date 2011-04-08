@@ -152,9 +152,7 @@ public abstract class ConnectorInfoManagerTestBase {
         AssertJUnit.assertSame(startLocal, Thread.currentThread().getContextClassLoader());
     }
     
-    @Test(enabled=false)
-    @Ignore
-    //HACK I couldn't fix the test so it's ignored now.
+    @Test(groups = {"broken"})
     public void testNativeLibraries() throws Exception {
         ConnectorInfoManager manager = 
             getConnectorInfoManager();
@@ -386,9 +384,9 @@ public abstract class ConnectorInfoManagerTestBase {
         long end = System.currentTimeMillis();
         System.out.println("Test took: "+(end-start)/1000);
     }
-    //@Test 
-    @Test(enabled=false)
-    //HACK TestNG failes with java.lang.OutOfMemoryError: Java heap space
+
+        @Test(groups = {"broken"} )
+        //HACK TestNG failes with java.lang.OutOfMemoryError: Java heap space
 	public void testSchemaStress() throws Exception {
         ConnectorInfoManager manager = 
             getConnectorInfoManager();
