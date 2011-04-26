@@ -42,15 +42,21 @@
                 <configuration>
                     <instructions>
                         <Export-Package>org.identityconnectors.*</Export-Package>
+                        <!--Include-Resource>
+                            {maven-resources}
+                        </Include-Resource-->
                     </instructions>
                 </configuration>
             </plugin>
-            <!-- We need to bundle commited manifest file -->
+            <!--
+                We need to create the test JARS but he jar plugin
+                conflicts with the bundle
+            -->
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
-                <!--configuration>
+                <configuration>
                     <useDefaultManifestFile>true</useDefaultManifestFile>
-                </configuration-->
+                </configuration>
             </plugin>
         </plugins>
     </build>

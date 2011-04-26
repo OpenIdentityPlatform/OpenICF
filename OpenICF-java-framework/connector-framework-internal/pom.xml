@@ -40,12 +40,12 @@
             <artifactId>connector-framework</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
-            <artifactId>connector-test-common</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-all</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.forgerock.openicf.framework</groupId>
+            <artifactId>connector-test-common</artifactId>
         </dependency>
         <dependency>
             <groupId>org.forgerock.openicf.framework</groupId>
@@ -63,6 +63,8 @@
                 <configuration>
                     <instructions>
                         <Export-Package>org.identityconnectors.*</Export-Package>
+                        <Main-Class>org.identityconnectors.framework.server.Main</Main-Class>
+                        <Fragment-Host>org.forgerock.openicf.framework.connector-framework</Fragment-Host>
                     </instructions>
                 </configuration>
             </plugin>
@@ -70,7 +72,7 @@
     </build>
     <profiles>
         <profile>
-            <id>framework-test</id>
+            <id>framework-build</id>
             <activation>
                 <file>
                     <exists>./connector-framework-internal</exists>
