@@ -104,7 +104,7 @@ public class XMLConnector implements PoolableConnector, AuthenticateOp, CreateOp
      * @see org.identityconnectors.framework.spi.PoolableConnector#checkAlive()
      */
     public void checkAlive() {
-        throw new UnsupportedOperationException();
+        //TODO: implement this method
     }
 
     @Override
