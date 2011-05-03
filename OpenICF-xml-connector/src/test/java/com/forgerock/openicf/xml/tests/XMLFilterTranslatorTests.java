@@ -251,10 +251,9 @@ public class XMLFilterTranslatorTests {
 
     @Test
     public void searchForFirstnameNotContainingOShouldReturnTwoHits() {
-        ContainsFilter filter = new ContainsFilter(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "o"));
+        ContainsFilter filter = new ContainsFilter(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "r"));
         Query query = filterTranslator.createContainsExpression(filter, true);
         List<ConnectorObject> hits = getResultsFromQuery(query);
-
 
         AssertJUnit.assertEquals(2, hits.size());
     }
@@ -361,6 +360,7 @@ public class XMLFilterTranslatorTests {
     }
 
     private List<ConnectorObject> getResultsFromQuery(Query query) {
+
         return new ArrayList<ConnectorObject>(
             xmlHandler.search(new QueryBuilder(query, ObjectClass.ACCOUNT).toString(), ObjectClass.ACCOUNT));
     }
