@@ -250,12 +250,12 @@ public class XMLFilterTranslatorTests {
     }
 
     @Test
-    public void searchForFirstnameNotContainingOShouldReturnTwoHits() {
-        ContainsFilter filter = new ContainsFilter(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "r"));
+    public void searchForFirstnameNotContainingAShouldReturnOneHit() {
+        ContainsFilter filter = new ContainsFilter(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "a"));
         Query query = filterTranslator.createContainsExpression(filter, true);
         List<ConnectorObject> hits = getResultsFromQuery(query);
 
-        AssertJUnit.assertEquals(2, hits.size());
+        AssertJUnit.assertEquals(1, hits.size());
     }
 
     @Test

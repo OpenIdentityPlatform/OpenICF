@@ -120,7 +120,7 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
 
         // contains uses a different format than the other functions
         Query query = new QueryImpl();
-        query.set(new ContainsQuery(prefixedName, value));
+        query.set(new ContainsQuery(prefixedName, value, not));
 
         return query;
     }
