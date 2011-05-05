@@ -231,7 +231,6 @@ public class XMLConnector implements PoolableConnector, AuthenticateOp, CreateOp
      */
     @Override
     public void test() {
-        final String startErrorMessage = "File does not exist at filepath ";
         final String method = "test";
         log.info("Entry {0}", method);
 
@@ -239,17 +238,7 @@ public class XMLConnector implements PoolableConnector, AuthenticateOp, CreateOp
         Assertions.nullCheck(xmlHandler, "xmlHandler");
         Assertions.nullCheck(schemaParser, "schemaParser");
 
-        File fileXsd = new File(config.getXsdFilePath());
-        if (!fileXsd.exists()) {
-            throw new IllegalArgumentException(startErrorMessage + config.getXsdFilePath());
-        }
-
-        if (config.getXsdIcfFilePath() != null) {
-            File fileXsdIcf = new File(config.getXsdIcfFilePath());
-            if (!fileXsdIcf.exists()) {
-                throw new IllegalArgumentException(startErrorMessage + config.getXsdIcfFilePath());
-            }
-        }
+        config.validate();
 
         log.info("Exit {0}", method);
     }

@@ -23,7 +23,6 @@
  *
  * $Id$
  */
-
 package com.forgerock.openicf.xml.tests;
 
 import org.testng.annotations.AfterClass;
@@ -52,14 +51,13 @@ import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
 
-
 public class XMLHandlerTests {
 
     private static XMLHandler handler;
     //private static final String XML_FILE_PATH = "test/xml_store/test.xml";
     private static ConnectorObject existingUsrConObj;
 
-	@BeforeClass
+    @BeforeClass
     public static void setUp() {
 
         XMLConfiguration config = new XMLConfiguration();
@@ -93,12 +91,10 @@ public class XMLHandlerTests {
         existingUsrConObj = hits.get(0);
     }
 
-	@AfterClass
-    public static void tearDown(){
-        File xmlFile = new File(XML_FILEPATH);
-
-        if(xmlFile.exists()){
-            xmlFile.delete();
+    @AfterClass
+    public static void tearDown() {
+        if (XML_FILEPATH.exists()) {
+            XML_FILEPATH.delete();
         }
     }
 

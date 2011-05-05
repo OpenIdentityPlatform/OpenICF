@@ -36,7 +36,11 @@ import com.forgerock.openicf.xml.query.XQueryHandler;
 import com.sun.xml.xsom.XSSchema;
 import com.sun.xml.xsom.XSSchemaSet;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -44,6 +48,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -100,7 +106,6 @@ public class XMLHandlerImpl implements XMLHandler {
 
     public XMLHandlerImpl(XMLConfiguration config, Schema connSchema, XSSchemaSet xsdSchemas) {
         Assertions.nullCheck(config.getXmlFilePath(), "filePath");
-        Assertions.blankCheck(config.getXmlFilePath(), "filePath");
         this.config = config;
 
         this.connSchema = connSchema;
@@ -384,12 +389,29 @@ public class XMLHandlerImpl implements XMLHandler {
             transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
 
             DOMSource source = new DOMSource(document);
+            /* Running this code in java 5 we had to change
             StreamResult result = new StreamResult(config.getXmlFilePath());
+            into
+            StreamResult result = new StreamResult(config.getXmlFilePath().getPath());
+            Otherwise you get the following error:
+            javax.xml.transform.TransformerException: java.io.FileNotFoundException:
+             */
+            /*
+             * If the safePath is not escaped then it throws
+             * net.sf.saxon.trans.XPathException: java.net.URISyntaxException:
+             * Illegal character in safePath at index 9: /temp/XML Connector/test.xml
+             * String safePath = config.getXmlFilePath().getPath().replaceAll(" ", "%20");
+             */
+            FileOutputStream fos = new FileOutputStream(config.getXmlFilePath());
+            StreamResult result = new StreamResult(fos);
 
             transformer.transform(source, result);
 
             log.info("Saving changes to xml file");
         } catch (TransformerException ex) {
+            log.error("Failed saving changes to xml file: {0}", ex);
+            throw ConnectorException.wrap(ex);
+        } catch (FileNotFoundException ex) {
             log.error("Failed saving changes to xml file: {0}", ex);
             throw ConnectorException.wrap(ex);
         }
@@ -501,7 +523,7 @@ public class XMLHandlerImpl implements XMLHandler {
         final String method = "buildDocument";
         log.info("Entry {0}", method);
 
-        File xmlFile = new File(config.getXmlFilePath());
+        File xmlFile = config.getXmlFilePath();
 
         if (!xmlFile.exists()) {
             createDocument();

@@ -31,7 +31,7 @@ import com.sun.xml.xsom.XSSchemaSet;
 import com.sun.xml.xsom.parser.XSOMParser;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -60,28 +60,26 @@ public class SchemaParserUtil {
      */
     private static final Log log = Log.getLog(SchemaParserUtil.class);
 
-    public static XSSchemaSet parseXSDSchema(String filePath) {
+    public static XSSchemaSet parseXSDSchema(File file) {
         XSOMParser parser = new XSOMParser();
 
         try {
-            File file = new File(filePath);
-
             parser.setAnnotationParser(new XSDAnnotationFactory());
             parser.parse(file);
 
             return parser.getResult();
 
         } catch (SAXException e) {
-            String eMessage = "Failed to parse XSD-schema from file: " + filePath;
+            String eMessage = "Failed to parse XSD-schema from file: " + file.getAbsolutePath();
 
             log.error(e, eMessage);
-            throw new ConnectorIOException(filePath, e);
+            throw new ConnectorIOException(eMessage, e);
 
         } catch (IOException e) {
-            String eMessage = "Failed to read from file: " + filePath;
+            String eMessage = "Failed to read from file: " + file.getAbsolutePath();
 
             log.error(e, eMessage);
-            throw new ConnectorIOException(filePath, e);
+            throw new ConnectorIOException(eMessage, e);
         }
     }
 
@@ -181,7 +179,7 @@ public class SchemaParserUtil {
     }
 
     public static Set<Flags> getFlags(List<String> list) {
-        Set<Flags> flags = new HashSet<Flags>();
+        Set<Flags> flags = EnumSet.noneOf(Flags.class);
 
         for (String s : list) {
             if (s.equals(XmlHandlerUtil.NOT_CREATABLE)) {

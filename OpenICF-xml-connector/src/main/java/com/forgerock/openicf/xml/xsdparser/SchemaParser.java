@@ -55,6 +55,7 @@ import com.sun.xml.xsom.XSSchema;
 import com.sun.xml.xsom.XSSchemaSet;
 import com.sun.xml.xsom.XSTerm;
 import com.sun.xml.xsom.XSType;
+import java.io.File;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.FrameworkUtil;
@@ -67,13 +68,12 @@ public class SchemaParser {
     private static final Log log = Log.getLog(SchemaParser.class);
     
     private Class< ? extends Connector> connectorClass;
-    private String filePath;
+    private File filePath;
     private XSSchemaSet schemaSet;
     
-    public SchemaParser(Class< ? extends Connector> connectorClass, String filePath){
-
+    public SchemaParser(Class< ? extends Connector> connectorClass, File filePath){
         Assertions.nullCheck(connectorClass, "connectorClass");
-        Assertions.blankCheck(filePath, "filePath");
+        Assertions.nullCheck(filePath, "filePath");
         
         this.connectorClass = connectorClass;
         this.filePath = filePath;

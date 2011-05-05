@@ -23,9 +23,9 @@
  *
  * $Id$
  */
-
 package com.forgerock.openicf.xml.tests;
 
+import java.io.File;
 import org.testng.annotations.Test;
 import org.testng.annotations.BeforeMethod;
 import org.testng.AssertJUnit;
@@ -35,30 +35,32 @@ import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 import static com.forgerock.openicf.xml.tests.XmlConnectorTestUtil.*;
 
 public class SchemaParserTests {
+
     SchemaParser parser;
 
     @BeforeMethod
-	public void setUp(){
+    public void setUp() {
         parser = new SchemaParser(XMLConnector.class, XSD_SCHEMA_FILEPATH);
     }
 
     @Test
-    public void instanceShouldNotBeNull(){
+    public void instanceShouldNotBeNull() {
         AssertJUnit.assertNotNull(parser);
     }
 
-    @Test(expectedExceptions= ConnectorIOException.class)
-    public void withInvalidFilePathShouldThrowException(){
-        SchemaParser parserTest = new SchemaParser(XMLConnector.class, "test/xml_store/404");
+    @Test(expectedExceptions = ConnectorIOException.class)
+    public void withInvalidFilePathShouldThrowException() {
+        SchemaParser parserTest = new SchemaParser(XMLConnector.class, new File("test/xml_store/404"));
     }
 
-    @Test(expectedExceptions= IllegalArgumentException.class)
-    public void withEmptyFilePathShouldThrowException(){
-        SchemaParser parserTest = new SchemaParser(XMLConnector.class, "");
+    @Test(expectedExceptions = NullPointerException.class)
+    public void withEmptyFilePathShouldThrowException() {
+        SchemaParser parserTest = new SchemaParser(XMLConnector.class, null);
+
     }
 
-    @Test(expectedExceptions= NullPointerException.class)
-    public void withNullShouldThrowException(){
+    @Test(expectedExceptions = NullPointerException.class)
+    public void withNullShouldThrowException() {
         SchemaParser parserTest = new SchemaParser(null, null);
     }
 

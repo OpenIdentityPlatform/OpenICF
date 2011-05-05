@@ -23,7 +23,6 @@
  *
  * $Id$
  */
-
 package com.forgerock.openicf.xml.tests;
 
 import org.testng.annotations.AfterMethod;
@@ -51,11 +50,10 @@ public class DeleteEntryTests {
 
     // Test filepaths
     //private static final String XML_FILEPATH = "test/xml_store/test.xml";
-
     private static XMLHandlerImpl handler;
 
     @BeforeMethod
-	public void init() {
+    public void init() {
         XMLConfiguration config = new XMLConfiguration();
         config.setXmlFilePath(XML_FILEPATH);
         config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
@@ -65,14 +63,13 @@ public class DeleteEntryTests {
     }
 
     @AfterMethod
-	public void destroy() {
-        File xmlFile = new File(XML_FILEPATH);
-
-        if (xmlFile.exists())
-            xmlFile.delete();
+    public void destroy() {
+        if (XML_FILEPATH.exists()) {
+            XML_FILEPATH.delete();
+        }
     }
 
-    @Test(expectedExceptions=UnknownUidException.class)
+    @Test(expectedExceptions = UnknownUidException.class)
     public void withNonExistingUidShouldThrowException() {
         final String uid = "nonexistingUID";
         final String expectedErrorMessage = "Deleting entry failed. Could not find an entry of type " + ObjectClass.ACCOUNT_NAME + " with the uid " + uid;
@@ -82,7 +79,7 @@ public class DeleteEntryTests {
         handler.delete(ObjectClass.ACCOUNT, new Uid(uid));
     }
 
-    @Test(expectedExceptions=IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void withNotSupportedObjectTypeShouldThrowException() {
         ObjectClass objClass = new ObjectClass("nonExistingObject");
         Uid uid = new Uid("nonexistingUID");

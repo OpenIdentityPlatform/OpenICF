@@ -23,26 +23,26 @@
  *
  * $Id$
  */
-
 package com.forgerock.openicf.xml.tests;
 
 import org.testng.annotations.Test;
 import org.testng.annotations.BeforeMethod;
 import org.testng.AssertJUnit;
 import com.forgerock.openicf.xml.XMLConfiguration;
+import java.io.File;
 
 public class XMLConfigurationTests {
 
     private XMLConfiguration config;
 
     @BeforeMethod
-	public void init() {
-       config = new XMLConfiguration();
+    public void init() {
+        config = new XMLConfiguration();
     }
 
     @Test
     public void shouldGetXmlFilepathFromConfiguration() {
-        final String filePath = "users.xml";
+        final File filePath = new File("users.xml");
 
         config.setXmlFilePath(filePath);
         AssertJUnit.assertEquals(filePath, config.getXmlFilePath());
@@ -50,7 +50,7 @@ public class XMLConfigurationTests {
 
     @Test
     public void shouldGetICFXsdFilepathFromConfiguration() {
-        final String xsdPath = "xsdRi.xsd";
+        final File xsdPath = new File("xsdRi.xsd");
 
         config.setXsdIcfFilePath(xsdPath);
         AssertJUnit.assertEquals(xsdPath, config.getXsdIcfFilePath());
@@ -58,21 +58,21 @@ public class XMLConfigurationTests {
 
     @Test
     public void shouldGetXsdFilepathFromConfiguration() {
-        final String xsdPath = "xsdTest.xsd";
+        final File xsdPath = new File("xsdTest.xsd");
 
         config.setXsdFilePath(xsdPath);
         AssertJUnit.assertEquals(xsdPath, config.getXsdFilePath());
     }
 
-    @Test(expectedExceptions=IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionWhenValidatingWithNullFilepath() {
         config.setXmlFilePath(null);
         config.validate();
     }
 
-    @Test(expectedExceptions=IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionWhenValidatingWithBlankFilepath() {
-        config.setXmlFilePath("");
+        config.setXmlFilePath(new File(""));
         config.validate();
     }
 }

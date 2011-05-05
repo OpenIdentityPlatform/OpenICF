@@ -22,7 +22,6 @@
  *
  * $Id$
  */
-
 package com.forgerock.openicf.xml.tests;
 
 import org.testng.annotations.AfterClass;
@@ -63,10 +62,8 @@ public class XMLFilterTranslatorTests {
 
     private static final String LOCAL_ATTR_ACCOUNT_VALUE_LAST_NAME = "Maul";
     private static final String LOCAL_ATTR_ACCOUNT_VALUE_FIRST_NAME = "Lighter";
-
     private static XMLHandlerImpl xmlHandler;
     private static XMLFilterTranslator filterTranslator;
-
     private static Query equalsQueryFnVader;
     private static Query equalsQueryFnMaul;
     private static Query equalsQueryLnVader;
@@ -77,7 +74,8 @@ public class XMLFilterTranslatorTests {
     private static Query gtoreqQueryYearsEmployed;
     private static Query ltoreqQueryYearsEmployed;
 
-    public XMLFilterTranslatorTests() {}
+    public XMLFilterTranslatorTests() {
+    }
 
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -170,10 +168,8 @@ public class XMLFilterTranslatorTests {
 
     @AfterClass
     public static void tearDownClass() throws Exception {
-        File xmlFile = new File(XML_FILEPATH);
-
-        if(xmlFile.exists()){
-            xmlFile.delete();
+        if (XML_FILEPATH.exists()) {
+            XML_FILEPATH.delete();
         }
     }
 
@@ -224,7 +220,7 @@ public class XMLFilterTranslatorTests {
     public void testFunctionQueryExpressionWhereNotIsTrue() {
         final String expected = "fn:not(matches($x/firstname, '123'))";
         String fn = "matches";
-        String [] args = {"$x/firstname", "'123'"};
+        String[] args = {"$x/firstname", "'123'"};
         FunctionQuery functionQuery = new FunctionQuery(args, fn, true);
 
         AssertJUnit.assertEquals(expected, functionQuery.getExpression());
@@ -233,7 +229,7 @@ public class XMLFilterTranslatorTests {
     @Test
     public void testFunctionQueryExpressionWhereNotIsFalse() {
         String fn = "matches";
-        String [] args = {"$x/firstname", "'123'"};
+        String[] args = {"$x/firstname", "'123'"};
         String expected = "fn:matches($x/firstname, '123')";
         FunctionQuery functionQuery = new FunctionQuery(args, fn, false);
 
@@ -362,6 +358,6 @@ public class XMLFilterTranslatorTests {
     private List<ConnectorObject> getResultsFromQuery(Query query) {
 
         return new ArrayList<ConnectorObject>(
-            xmlHandler.search(new QueryBuilder(query, ObjectClass.ACCOUNT).toString(), ObjectClass.ACCOUNT));
+                xmlHandler.search(new QueryBuilder(query, ObjectClass.ACCOUNT).toString(), ObjectClass.ACCOUNT));
     }
 }

@@ -23,7 +23,6 @@
  *
  * $Id$
  */
-
 package com.forgerock.openicf.xml.tests;
 
 import org.testng.annotations.AfterMethod;
@@ -52,15 +51,15 @@ import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
+import org.testng.Assert;
 
 public class UpdateEntryTests {
 
     //private static final String XML_FILEPATH = "test/xml_store/test.xml";
-
     private static XMLHandler handler;
 
     @BeforeMethod
-	public void init() {
+    public void init() {
         XMLConfiguration config = new XMLConfiguration();
         config.setXmlFilePath(XML_FILEPATH);
         config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
@@ -70,15 +69,13 @@ public class UpdateEntryTests {
     }
 
     @AfterMethod
-	public void destroy(){
-        File xmlFile = new File(XML_FILEPATH);
-
-        if(xmlFile.exists()){
-            xmlFile.delete();
+    public void destroy() {
+        if (XML_FILEPATH.exists()) {
+            XML_FILEPATH.delete();
         }
     }
 
-    @Test(expectedExceptions=IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void withNonSupportedObjectTypeShouldThrowException() {
         final String objectType = "NonExistingObject";
         final String expectedErrorMessage = objectType + " is not supported.";
@@ -90,7 +87,7 @@ public class UpdateEntryTests {
         handler.create(objClass, null);
     }
 
-    @Test(expectedExceptions=IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void withNotSupportedAttributeShouldThrowException() {
         final String notSupportedAttribute = "notSupported";
         final String expectedErrorMessage = "Data field: " + notSupportedAttribute + " is not supported.";
@@ -106,7 +103,7 @@ public class UpdateEntryTests {
         handler.update(ObjectClass.ACCOUNT, insertedUid, newAttributes);
     }
 
-    @Test(expectedExceptions=IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void containingAttributesFlaggedAsNonUpdateableShouldThrowException() {
         final String expectedErrorMessage = ATTR_ACCOUNT_IS_DELETED + " is not updatable.";
 
@@ -121,7 +118,7 @@ public class UpdateEntryTests {
         handler.update(ObjectClass.ACCOUNT, insertedUid, newAttributes);
     }
 
-    @Test(expectedExceptions=IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void withBlankValueForRequiredFieldShouldThrowException() {
         final String expectedErrorMessage = "Parameter '" + ATTR_ACCOUNT_LAST_NAME + "' must not be blank.";
 
@@ -136,7 +133,7 @@ public class UpdateEntryTests {
         handler.update(ObjectClass.ACCOUNT, insertedUid, newAttributes);
     }
 
-    @Test(expectedExceptions=IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void withNullValueForRequiredFieldShouldThrowException() {
         final String expectedErrorMessage = "No values provided for required attribute: " + ATTR_ACCOUNT_LAST_NAME;
 
@@ -163,16 +160,16 @@ public class UpdateEntryTests {
         EqualsFilter equalsFilter = new EqualsFilter(AttributeBuilder.build(ATTR_NAME, ATTR_ACCOUNT_VALUE_NAME));
         XMLFilterTranslator filterTranslator = new XMLFilterTranslator();
 
-        Query equalsQuery =  filterTranslator.createEqualsExpression(equalsFilter, false);
+        Query equalsQuery = filterTranslator.createEqualsExpression(equalsFilter, false);
         QueryBuilder queryBuilder = new QueryBuilder(equalsQuery, ObjectClass.ACCOUNT);
 
         List<ConnectorObject> results = (List) handler.search(queryBuilder.toString(), ObjectClass.ACCOUNT);
         ConnectorObject connectorObject = results.get(0);
 
-        AssertJUnit.assertNull(connectorObject.getAttributeByName(ATTR_ACCOUNT_EMPLOYEE_TYPE));
+        Assert.assertNull(connectorObject.getAttributeByName(ATTR_ACCOUNT_EMPLOYEE_TYPE));
     }
 
-    @Test(expectedExceptions=IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void withAttributeContainingValuesOfIllegalTypeShouldThrowException() {
         final String expectedErrorMessage = ATTR_ACCOUNT_MS_EMPLOYED + " contains values of illegal type";
 
@@ -187,12 +184,12 @@ public class UpdateEntryTests {
         handler.update(ObjectClass.ACCOUNT, insertedUid, newAttributes);
     }
 
-    @Test(expectedExceptions=UnknownUidException.class)
+    @Test(expectedExceptions = UnknownUidException.class)
     public void withNonExistingUidShouldThrowException() {
         final ObjectClass objClass = ObjectClass.ACCOUNT;
         final String uid = "nonexisting";
-        final String expectedErrorMessage = "Could not update entry. No entry of type " +
-                objClass.getObjectClassValue() + " with the id " + uid + " found.";
+        final String expectedErrorMessage = "Could not update entry. No entry of type "
+                + objClass.getObjectClassValue() + " with the id " + uid + " found.";
 
         //thrown.expectMessage(expectedErrorMessage);
 
@@ -212,24 +209,24 @@ public class UpdateEntryTests {
 
         AssertJUnit.assertEquals(insertedUid.getUidValue(), updatedUid.getUidValue());
     }
-    
+
     @Test
     public void shouldUpdateFieldsInDocument() {
         final String firstName = "James";
         final String lastName = "Bond";
 
         ObjectClass objClass = ObjectClass.ACCOUNT;
-        
+
         // Setup account
         Uid insertedUid = createTestAccount();
-        
+
         Set<Attribute> attrSet = new HashSet<Attribute>();
         attrSet.add(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, firstName));
         attrSet.add(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, lastName));
-        
+
         // Update account
         handler.update(objClass, insertedUid, attrSet);
-        
+
         // Create search query
         XMLFilterTranslator translator = new XMLFilterTranslator();
         AttributeBuilder builder = new AttributeBuilder();
@@ -245,10 +242,10 @@ public class UpdateEntryTests {
                 handler.search(queryBuilder.toString(), objClass));
 
         // Check account values
-       ConnectorObject connObjAccount = results.get(0);
+        ConnectorObject connObjAccount = results.get(0);
 
-       AssertJUnit.assertEquals(firstName, AttributeUtil.getStringValue(connObjAccount.getAttributeByName(ATTR_ACCOUNT_FIRST_NAME)));
-       AssertJUnit.assertEquals(lastName, AttributeUtil.getStringValue(connObjAccount.getAttributeByName(ATTR_ACCOUNT_LAST_NAME)));
+        AssertJUnit.assertEquals(firstName, AttributeUtil.getStringValue(connObjAccount.getAttributeByName(ATTR_ACCOUNT_FIRST_NAME)));
+        AssertJUnit.assertEquals(lastName, AttributeUtil.getStringValue(connObjAccount.getAttributeByName(ATTR_ACCOUNT_LAST_NAME)));
     }
 
     private Uid createTestAccount() {

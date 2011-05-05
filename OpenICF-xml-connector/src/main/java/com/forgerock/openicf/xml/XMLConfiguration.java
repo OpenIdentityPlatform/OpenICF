@@ -25,7 +25,11 @@
  */
 package com.forgerock.openicf.xml;
 
-import org.identityconnectors.common.Assertions;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.UndeclaredThrowableException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import org.identityconnectors.framework.spi.AbstractConfiguration;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
 
@@ -37,43 +41,81 @@ import org.identityconnectors.framework.spi.ConfigurationProperty;
  */
 public class XMLConfiguration extends AbstractConfiguration {
 
-    private String xmlFilePath = null;
-    private String xsdFilePath = null;
-    private String xsdIcfFilePath = null;
+    private File xmlFilePath = null;
+    private File xsdFilePath = null;
+    private File xsdIcfFilePath = null;
 
     public XMLConfiguration() {
+        try {
+            URL defaultSchema = XMLConfiguration.class.getResource("resource-schema-1.xsd");
+            if (null != defaultSchema) {
+                xsdIcfFilePath = new File(defaultSchema.toURI());
+            }
+        } catch (URISyntaxException e) {
+            // Should never happen.
+            throw new UndeclaredThrowableException(e);
+        }
     }
 
-    @ConfigurationProperty(displayMessageKey = "XML_FILEPATH_PROPERTY_DISPLAY", helpMessageKey = "XML_FILEPATH_PROPERTY_HELP", confidential = false)
-    public String getXmlFilePath() {
+    @ConfigurationProperty(displayMessageKey = "XML_FILEPATH_PROPERTY_DISPLAY", helpMessageKey = "XML_FILEPATH_PROPERTY_HELP", required = true)
+    public File getXmlFilePath() {
         return xmlFilePath;
     }
 
-    public void setXmlFilePath(String xmlFilePath) {
+    public void setXmlFilePath(File xmlFilePath) {
         this.xmlFilePath = xmlFilePath;
     }
 
-    @ConfigurationProperty(displayMessageKey = "XSD_FILEPATH_PROPERTY_DISPLAY", helpMessageKey = "XSD_FILEPATH_PROPERTY_HELP", confidential = false)
-    public String getXsdFilePath() {
+    @ConfigurationProperty(displayMessageKey = "XSD_FILEPATH_PROPERTY_DISPLAY", helpMessageKey = "XSD_FILEPATH_PROPERTY_HELP", required = true)
+    public File getXsdFilePath() {
         return this.xsdFilePath;
     }
 
-    public void setXsdFilePath(String xsdFilePath) {
+    public void setXsdFilePath(File xsdFilePath) {
         this.xsdFilePath = xsdFilePath;
     }
 
-    @ConfigurationProperty(displayMessageKey = "XSD_ICF_FILEPATH_PROPERTY_DISPLAY", helpMessageKey = "XSD_ICF_FILEPATH_PROPERTY_HELP", confidential = false)
-    public String getXsdIcfFilePath() {
+    @ConfigurationProperty(displayMessageKey = "XSD_ICF_FILEPATH_PROPERTY_DISPLAY", helpMessageKey = "XSD_ICF_FILEPATH_PROPERTY_HELP")
+    public File getXsdIcfFilePath() {
         return this.xsdIcfFilePath;
     }
 
-    public void setXsdIcfFilePath(String xsdFilePath) {
+    public void setXsdIcfFilePath(File xsdFilePath) {
         this.xsdIcfFilePath = xsdFilePath;
     }
 
     public void validate() {
-        Assertions.blankCheck(xmlFilePath, "xmlFilePath");
-        Assertions.blankCheck(xsdFilePath, "xsdFilePath");
-        Assertions.blankCheck(xsdIcfFilePath, "xsdIcfFilePath");
+        if (null == xsdFilePath || !xsdFilePath.canRead()) {
+            throw new IllegalArgumentException("Missing xsd file");
+        }
+        if (null == xmlFilePath) {
+            throw new IllegalArgumentException("Missing xml file");
+        } else if (!xmlFilePath.exists()) {
+            try {
+                if (xmlFilePath.createNewFile()) {
+                    xmlFilePath.delete();
+                }
+            } catch (IOException ex) {
+                throw new IllegalArgumentException("Xml file can not be created");
+            }
+        } else if (!xmlFilePath.canWrite()) {
+            throw new IllegalArgumentException("Xml file can not be written");
+        }
+        if (null != xsdIcfFilePath && !xsdIcfFilePath.canRead()) {
+            throw new IllegalArgumentException("Connector schema file can not be read");
+        } else if (null == xsdIcfFilePath) {
+            try {
+                URL defaultSchema = XMLConfiguration.class.getResource("/resource-schema-1.xsd");
+                if (null != defaultSchema) {
+                    xsdIcfFilePath = new File(defaultSchema.toURI());
+                }
+            } catch (URISyntaxException e) {
+                // Should never happen.
+                throw new UndeclaredThrowableException(e);
+            }
+        }
+        if (null == xsdIcfFilePath || !xsdIcfFilePath.canRead()) {
+            throw new IllegalArgumentException("Missing connector xsd file");
+        }
     }
 }

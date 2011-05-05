@@ -25,6 +25,7 @@
  */
 package com.forgerock.openicf.xml.tests;
 
+import java.net.URISyntaxException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 import org.testng.annotations.BeforeMethod;
@@ -36,7 +37,6 @@ import com.forgerock.openicf.xml.XMLHandler;
 import com.forgerock.openicf.xml.XMLHandlerImpl;
 import com.forgerock.openicf.xml.xsdparser.SchemaParser;
 import static com.forgerock.openicf.xml.tests.XmlConnectorTestUtil.*;
-import java.io.File;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -56,26 +56,23 @@ public class CreateEntryTests {
     private static XMLHandler handler;
 
     @BeforeMethod
-    public void init() {
+    public void init() throws URISyntaxException {
         XMLConfiguration config = new XMLConfiguration();
-
         config.setXmlFilePath(XML_FILEPATH);
         config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
-
+        config.validate();
         SchemaParser parser = new SchemaParser(XMLConnector.class, config.getXsdFilePath());
         handler = new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
     }
 
     @AfterMethod
     public void destroy() {
-        File xmlFile = new File(XML_FILEPATH);
-
-        if (xmlFile.exists()) {
-            xmlFile.delete();
+        if (XML_FILEPATH.exists()) {
+            XML_FILEPATH.delete();
         }
     }
 
-    @Test(expectedExceptions=IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void withNonSupportedObjectTypeShouldThrowException() {
         final String objectType = "NonExistingObject";
         final String expectedErrorMessage = objectType + " is not supported.";
@@ -87,7 +84,7 @@ public class CreateEntryTests {
         handler.create(objClass, null);
     }
 
-    @Test(expectedExceptions=IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void withoutNameAttributeDefinedShouldThrowException() {
         final String expectedErrorMessage = Name.NAME + " must be defined.";
 
@@ -96,7 +93,7 @@ public class CreateEntryTests {
         handler.create(ObjectClass.ACCOUNT, null);
     }
 
-    @Test(expectedExceptions=IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void containingAttributesFlaggedAsNonCreateableShouldThrowException() {
         final String expectedErrorMessage = ATTR_ACCOUNT_IS_DELETED + " is not a creatable field.";
 
@@ -108,7 +105,7 @@ public class CreateEntryTests {
         handler.create(ObjectClass.ACCOUNT, attrSet);
     }
 
-    @Test(expectedExceptions=IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void withMissingRequiredFieldShouldThrowException() {
         final String expectedErrorMessage = "Missing required field: " + ATTR_PASSWORD;
 
@@ -120,7 +117,7 @@ public class CreateEntryTests {
         handler.create(ObjectClass.ACCOUNT, convertToAttributeSet(requiredMap));
     }
 
-    @Test(expectedExceptions=IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void withBlankRequiredFieldShouldThrowException() {
         final String expectedErrorMessage = "Parameter '" + ATTR_PASSWORD + "' must not be blank.";
 
@@ -133,7 +130,7 @@ public class CreateEntryTests {
         handler.create(ObjectClass.ACCOUNT, convertToAttributeSet(requiredMap));
     }
 
-    @Test(expectedExceptions=IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void withIllegalAttributeTypeShouldThrowException() {
         final String expectedErrorMessage = ATTR_ACCOUNT_FIRST_NAME + " contains invalid type. Value(s) should be of type java.lang.String";
 
@@ -174,7 +171,7 @@ public class CreateEntryTests {
         AssertJUnit.assertNotSame(uid, name.getNameValue());
     }
 
-    @Test(expectedExceptions=AlreadyExistsException.class)
+    @Test(expectedExceptions = AlreadyExistsException.class)
     public void withExistingIdShouldThrowException() {
         final String uid = AttributeUtil.getNameFromAttributes(getRequiredAccountAttributes()).getNameValue();
         final String expectedErrorMessage = "Could not create entry. An entry with the " + Uid.NAME + " of " + uid + " already exists.";

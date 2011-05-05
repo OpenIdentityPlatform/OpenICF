@@ -25,13 +25,17 @@
  */
 package com.forgerock.openicf.xml.tests;
 
+import java.io.File;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
@@ -42,9 +46,9 @@ import org.identityconnectors.framework.common.objects.Uid;
 
 public class XmlConnectorTestUtil {
 
-    public final static String XSD_SCHEMA_FILEPATH;
-    public final static String ICF_SCHEMA_FILEPATH;
-    public final static String XML_FILEPATH;
+    public final static File XSD_SCHEMA_FILEPATH;
+    public final static File ICF_SCHEMA_FILEPATH;
+    public final static File XML_FILEPATH;
     // Object types
     public static final String ACCOUNT_TYPE = "__ACCOUNT__";
     public static final String GROUP_TYPE = "__GROUP__";
@@ -109,15 +113,16 @@ public class XmlConnectorTestUtil {
     public static final String ATTR_GROUP_VALUE_SHORT_NAME = "TE";
 
     static {
-        String xsd = "test/xml_store/ef2bc95b-76e0-48e2-86d6-4d4f44d4e4a4.xsd";
-        String icf = "test/xml_store/resource-schema-1.xsd";
-        String xml = "test/xml_store/test.xsd";
+        File xsd = new File("test/xml_store/ef2bc95b-76e0-48e2-86d6-4d4f44d4e4a4.xsd");
+        File icf = new File("test/xml_store/resource-schema-1.xsd");
+        File xml = new File("test/xml_store/test.xsd");
         try {
             URL root = XmlConnectorTestUtil.class.getResource("/");
-            xsd = new URL(root, xsd).getPath();
-            icf = new URL(root, icf).getPath();
-            xml = new URL(root, xml).getPath();
-        } catch (MalformedURLException ex) {
+            xsd = new File(root.toURI().resolve("test/xml_store/ef2bc95b-76e0-48e2-86d6-4d4f44d4e4a4.xsd"));
+            icf = new File(root.toURI().resolve("test/xml_store/resource-schema-1.xsd"));
+            xml = new File(root.toURI().resolve("test/xml_store/test.xsd"));
+        } catch (URISyntaxException ex) {
+            Logger.getLogger(XmlConnectorTestUtil.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             XSD_SCHEMA_FILEPATH = xsd;
             ICF_SCHEMA_FILEPATH = icf;
@@ -128,7 +133,7 @@ public class XmlConnectorTestUtil {
     public static Set<Attribute> getRequiredAccountAttributes() {
         Set<Attribute> requiredAttrSet = new HashSet<Attribute>();
         requiredAttrSet.add(AttributeBuilder.build(ATTR_NAME, ATTR_ACCOUNT_VALUE_NAME));
-        requiredAttrSet.add(AttributeBuilder.buildPassword(new String(ATTR_ACCOUNT_VALUE_PASSWORD).toCharArray()));
+        requiredAttrSet.add(AttributeBuilder.buildPassword(ATTR_ACCOUNT_VALUE_PASSWORD.toCharArray()));
         requiredAttrSet.add(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, ATTR_ACCOUNT_VALUE_LAST_NAME));
 
         return requiredAttrSet;

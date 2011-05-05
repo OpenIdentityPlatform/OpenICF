@@ -45,7 +45,8 @@
     <distributionManagement>
         <site>
             <id>forgerock.org</id>
-            <url>scp://openicf.forgerock.org/var/www/vhosts/openicf.forgerock.org/httpdocs/connectors/file/${artifactId}/${project.version}</url>
+            <!--url>scp://openicf.forgerock.org/var/www/vhosts/openicf.forgerock.org/httpdocs/connectors/file/${artifactId}</url-->
+            <url>scp://local.openicf.forgerock.org/Users/laszlohordos/Sites/openicf.forgerock.org/connectors/file/${artifactId}</url>
         </site>
     </distributionManagement>
 
