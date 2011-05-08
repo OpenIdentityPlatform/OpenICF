@@ -26,38 +26,72 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.forgerock.openicf.bundles</groupId>
-        <artifactId>bundles-parent</artifactId>
+        <groupId>org.forgerock.openicf.connectors</groupId>
+        <artifactId>connectors-parent</artifactId>
         <version>1.1.0.0-SNAPSHOT</version>
     </parent>
-    <groupId>org.forgerock.openicf.bundles.ldap</groupId>
+    <groupId>org.forgerock.openicf.connectors.ldap</groupId>
     <artifactId>ldap</artifactId>
     <packaging>bundle</packaging>
     <name>OpenDJ and Sun DSEE Connector (Generic LDAP Connector)</name>
     <description>Connector for Sun DSEE and OpenDJ and Generic LDAP</description>
-
+    <url>http://openicf.forgerock.org/connectors/${project.artifactId}</url>
     <properties>
         <defaultConnectorFamily>ldap</defaultConnectorFamily>
         <skipTests>true</skipTests>
         <contracts.skip>true</contracts.skip>
         <privateConfigPath>${user.home}/.connectors/connector-${project.artifactId}/config</privateConfigPath>
-        <embedded.dependencies>jndi</embedded.dependencies>
+        <embedded.dependencies>ldapbp</embedded.dependencies>
         <connectorPackage>org.identityconnectors.ldap</connectorPackage>
         <connectorClass>LdapConnector</connectorClass>
     </properties>
-
+    <repositories>
+        <repository>
+            <id>forgerock-staging-repository</id>
+            <name>ForgeRock Release Repository</name>
+            <url>http://maven.forgerock.org/repo/releases</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>forgerock-snapshots-repository</id>
+            <name>ForgeRock Snapshot Repository</name>
+            <url>http://maven.forgerock.org/repo/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+        <repository>
+            <id>JavaNet</id>
+            <name>JavaNet Repository</name>
+            <url>http://download.java.net/maven/2</url>
+        </repository>
+    </repositories>
+    <profiles>
+        <profile>
+            <id>with-embedded-dependencies</id>
+            <properties>
+                <embedded.dependencies>ldapbp</embedded.dependencies>
+            </properties>
+        </profile>
+        <profile>
+            <id>active-embedded-dependencies</id>
+            <properties>
+                <embedded.dependencies>ldapbp</embedded.dependencies>
+            </properties>
+        </profile>
+    </profiles>
     <dependencies>
         <dependency>
             <groupId>com.sun</groupId>
-            <artifactId>jndi</artifactId>
+            <artifactId>ldapbp</artifactId>
             <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/ldapbp.jar</systemPath>
         </dependency>
         <dependency>
-            <groupId>org.forgerock.openidm</groupId>
+            <groupId>org.forgerock.opendj</groupId>
             <artifactId>opendj</artifactId>
-            <version>2.4-BETA1</version>
+            <version>2.4.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -72,14 +106,14 @@
                 </configuration>
             </plugin>
             <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <suiteXmlFiles>
-            <suiteXmlFile>testng.xml</suiteXmlFile>
-          </suiteXmlFiles>
-        </configuration>
-      </plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <suiteXmlFiles>
+                        <suiteXmlFile>testng.xml</suiteXmlFile>
+                    </suiteXmlFiles>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     
