@@ -26,16 +26,16 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.forgerock.openicf.bundles</groupId>
-        <artifactId>bundles-parent</artifactId>
+        <groupId>org.forgerock.openicf.connectors</groupId>
+        <artifactId>connectors-parent</artifactId>
         <version>1.1.0.0-SNAPSHOT</version>
     </parent>
-    <groupId>org.forgerock.openicf.bundles.db</groupId>
+    <groupId>org.forgerock.openicf.connectors.db</groupId>
     <artifactId>databasetable</artifactId>
     <packaging>bundle</packaging>
     <name>Database Table Connector</name>
     <description>Database table connector use a single database table to store the Account attributes.</description>
-
+    <url>http://openicf.forgerock.org/connectors/${project.artifactId}</url>
     <properties>
         <defaultConnectorFamily>db</defaultConnectorFamily>
         <skipTests>true</skipTests>
@@ -45,10 +45,41 @@
         <connectorPackage>org.identityconnectors.databasetable</connectorPackage>
         <connectorClass>DatabaseTableConnector</connectorClass>
     </properties>
-
+    <repositories>
+        <repository>
+            <id>forgerock-staging-repository</id>
+            <name>ForgeRock Release Repository</name>
+            <url>http://maven.forgerock.org/repo/releases</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>forgerock-snapshots-repository</id>
+            <name>ForgeRock Snapshot Repository</name>
+            <url>http://maven.forgerock.org/repo/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+    </repositories>
+    <profiles>
+        <profile>
+            <id>with-embedded-dependencies</id>
+            <properties>
+                <embedded.dependencies>dbcommon</embedded.dependencies>
+            </properties>
+        </profile>
+        <profile>
+            <id>active-embedded-dependencies</id>
+            <properties>
+                <embedded.dependencies>dbcommon</embedded.dependencies>
+            </properties>
+        </profile>
+    </profiles>
     <dependencies>
         <dependency>
-            <groupId>org.forgerock.openicf.bundles.misc</groupId>
+            <groupId>org.forgerock.openicf.connectors.misc</groupId>
             <artifactId>dbcommon</artifactId>
             <version>1.1.0.0-SNAPSHOT</version>
         </dependency>
