@@ -1,0 +1,103 @@
+   -------------------------
+    Title
+   -------------------------
+   -------------------------
+    Date
+   -------------------------
+~~
+~~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+~~
+~~ Copyright © 2011. ForgeRock AS. All rights reserved.
+~~
+~~ The contents of this file are subject to the terms
+~~ of the Common Development and Distribution License
+~~ (the License). You may not use this file except in
+~~ compliance with the License.
+~~
+~~ You can obtain a copy of the License at
+~~ http://forgerock.org/license/CDDLv1.0.html
+~~ See the License for the specific language governing
+~~ permission and limitations under the License.
+~~
+~~ When distributing Covered Code, include this CDDL
+~~ Header Notice in each file and include the License file
+~~ at http://forgerock.org/license/CDDLv1.0.html
+~~ If applicable, add the following below the CDDL Header,
+~~ with the fields enclosed by brackets [] replaced by
+~~ your own identifying information:
+~~ "Portions Copyrighted [year] [name of copyright owner]"
+~~
+~~ $Id$
+~~
+
+Connector Server
+
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer sapien purus, congue a tincidunt non, mollis vitae
+    diam. Fusce pharetra massa interdum nisl ultrices mattis. Cras eget est ultricies magna auctor condimentum.
+    Phasellus sed elit erat, a ultricies arcu. Proin vitae volutpat ante. Quisque porta tempor elit, non aliquam tortor
+    sodales nec. Sed imperdiet metus sed orci adipiscing faucibus. Nulla facilisi. Nulla massa tortor, dapibus a
+    vehicula vel, cursus vel mi. Integer sed lacus velit. Etiam dignissim varius turpis ut ullamcorper. Integer
+    lobortis imperdiet dui, ut porta nulla interdum ac. Nulla neque lorem, bibendum et venenatis a, convallis in arcu.
+    In sagittis neque ac mauris venenatis id elementum elit lacinia. Phasellus porttitor turpis eu ipsum pharetra
+    eleifend. Integer ac magna sit amet mi luctus scelerisque at a odio. Quisque sed mi nibh, ac pretium felis.
+    Nunc congue sapien sit amet ipsum elementum ac euismod justo mollis. Etiam dictum elementum libero sed sagittis.
+
++---
+java -jar connector-framework-internal.jar
+Usage: Main -run -properties <connectorserver.properties>
+       Main -setKey -key <key> -properties <connectorserver.properties>
+       Main -setDefaults -properties <connectorserver.properties>
+NOTE: If using SSL, you must specify the system config
+    properties:
+        -Djavax.net.ssl.keyStore
+        -Djavax.net.ssl.keyStoreType (optional)
+        -Djavax.net.ssl.keyStorePassword
+
++---
+
+Example connector server properties file
+
+    key=xOS4IeeE6eb/AhMbhxZEC37PgtE\=
+    value=Passw0rd
+
++---
+##
+## The port we are to run on
+##
+connectorserver.port=8759
+
+##
+## The bundle directory in which to find the bundles
+##
+connectorserver.bundleDir=bundles
+
+##
+## The bundle directory in which to find any libraries needed by bundles at runtime
+##
+connectorserver.libDir=lib
+
+##
+## Set to true to use SSL.
+## NOTE: If using SSL, you must specify the following system config properties (on the command line):
+##      -Djavax.net.ssl.keyStore
+##      -Djavax.net.ssl.keyStoreType (optional);
+##      -Djavax.net.ssl.keyStorePassword;
+##
+connectorserver.usessl=false
+
+##
+## Optionally specify a specific address to bind to
+##
+#connectorserver.ifaddress=localhost
+
+##
+## Secure hash of the gateway key. Set this by using the
+## -setKey flag
+##
+connectorserver.key=lmA6bMfENJGlIDbfrVtklXFK32s\=
+
+##
+## Logger class.
+##
++---
+    

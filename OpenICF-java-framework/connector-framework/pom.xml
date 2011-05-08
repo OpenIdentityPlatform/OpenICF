@@ -32,6 +32,10 @@
     </parent>
     <artifactId>connector-framework</artifactId>
     <name>OpenICF Framework</name>
+    <description>
+        The IdentityConnectors framework provides a container to separate the Connector bundle from the application.
+        The framework provides many common features that developers would otherwise need to implement on their own.
+    </description>
     <packaging>bundle</packaging>
     <build>
         <plugins>

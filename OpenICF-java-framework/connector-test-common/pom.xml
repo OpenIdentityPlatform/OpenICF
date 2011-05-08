@@ -32,6 +32,7 @@
     </parent>
     <artifactId>connector-test-common</artifactId>
     <name>OpenICF Common Test Library</name>
+    <description>TestHelpers is a helper class to simplify the testing of connectors.</description>
     <packaging>jar</packaging>
 
     <dependencies>

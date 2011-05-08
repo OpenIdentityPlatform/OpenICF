@@ -28,22 +28,36 @@
     xsi:schemaLocation="http://maven.apache.org/DECORATION/1.0.1 http://maven.apache.org/xsd/decoration-1.0.1.xsd">
     <skin>
         <groupId>org.forgerock.commons</groupId>
-		<artifactId>maven-forgerock-skin</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+        <artifactId>forgerock-community-skin</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
     </skin>
     <publishDate position="right" format="yyyy.MM.dd"/>
     <version position="right"/>
-    <bannerLeft>
-        <name>OpenICF</name>
-        <src>https://wikis.forgerock.org/confluence/plugins/servlet/builder/resource/OPENIDM/OpenIDM-tagline-200x65.png</src>
-        <alt>OpenICF</alt>
-        <href>https://wikis.forgerock.org/confluence/display/openicf/Home</href>
-    </bannerLeft>
     <body>
         <breadcrumbs>
-            <item name="OpenICF" href="https://wikis.forgerock.org/confluence/display/openicf/Home"/>
+            <item name="OpenICF" href="http://openicf.forgerock.org"/>
         </breadcrumbs>
-        <menu ref="modules"/>
+        <menu name="Overview" img="images/arrow_right.png">
+            <item name="Contribute" href="contribute.html"/>
+            <item name="FAQ" href="faq.html"/>
+            <item name="Design" href="design.html"/>
+            <item name="Downloads" href="downloads.html"/>
+            <item name="Connectors" href="connectors"/>
+        </menu>
+        <menu name="Modules" img="images/arrow_right.png">
+            <item name="Framework" href="connector-framework"/>
+            <item name="Framework - Internal" href="connector-framework-internal"/>
+            <item name="Common Test Library" href="connector-test-common"/>
+            <item name="Connector Archetype" href="connector-archetype"/>
+            <item name="Contract Tests" href="connector-framework-contract"/>
+        </menu>
         <menu ref="reports"/>
     </body>
+    <custom>
+        <openproject>
+            <href>http://openicf.forgerock.org</href>
+            <src>images/openicf-tagline-195x65.png</src>
+            <alt>OpenICF</alt>
+        </openproject>
+    </custom>
 </project>

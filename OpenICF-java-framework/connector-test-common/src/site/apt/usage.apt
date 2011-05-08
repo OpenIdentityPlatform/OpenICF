@@ -1,0 +1,139 @@
+   -------------------------
+    Title
+   -------------------------
+   -------------------------
+    Date
+   -------------------------
+~~
+~~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+~~
+~~ Copyright © 2011. ForgeRock AS. All rights reserved.
+~~
+~~ The contents of this file are subject to the terms
+~~ of the Common Development and Distribution License
+~~ (the License). You may not use this file except in
+~~ compliance with the License.
+~~
+~~ You can obtain a copy of the License at
+~~ http://forgerock.org/license/CDDLv1.0.html
+~~ See the License for the specific language governing
+~~ permission and limitations under the License.
+~~
+~~ When distributing Covered Code, include this CDDL
+~~ Header Notice in each file and include the License file
+~~ at http://forgerock.org/license/CDDLv1.0.html
+~~ If applicable, add the following below the CDDL Header,
+~~ with the fields enclosed by brackets [] replaced by
+~~ your own identifying information:
+~~ "Portions Copyrighted [year] [name of copyright owner]"
+~~
+~~ $Id$
+~~
+
+Usage
+
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer sapien purus, congue a tincidunt non, mollis vitae
+    diam. Fusce pharetra massa interdum nisl ultrices mattis. Cras eget est ultricies magna auctor condimentum.
+    Phasellus sed elit erat, a ultricies arcu. Proin vitae volutpat ante. Quisque porta tempor elit, non aliquam tortor
+    sodales nec. Sed imperdiet metus sed orci adipiscing faucibus. Nulla facilisi. Nulla massa tortor, dapibus a
+    vehicula vel, cursus vel mi. Integer sed lacus velit. Etiam dignissim varius turpis ut ullamcorper. Integer
+    lobortis imperdiet dui, ut porta nulla interdum ac. Nulla neque lorem, bibendum et venenatis a, convallis in arcu.
+    In sagittis neque ac mauris venenatis id elementum elit lacinia. Phasellus porttitor turpis eu ipsum pharetra
+    eleifend. Integer ac magna sit amet mi luctus scelerisque at a odio. Quisque sed mi nibh, ac pretium felis.
+    Nunc congue sapien sit amet ipsum elementum ac euismod justo mollis. Etiam dictum elementum libero sed sagittis.
+
++---
+    /*
+    * Example test properties.
+    * See the Javadoc of the TestHelpers class for the location of the public and private configuration files.
+    */
+    private static final PropertyBag properties = TestHelpers.getProperties(${connector_name}Connector.class);
+    // Host is a public property read from public configuration file
+    private static final String HOST = properties.getStringProperty("configuration.host");
+    // Login and password are private properties read from private configuration file
+    private static final String REMOTE_USER = properties.getStringProperty("configuration.remoteUser");
+    private static final GuardedString PASSWORD = properties.getProperty("configuration.password", GuardedString.class);
+
+    //set up logging
+    private static final Log log = Log.getLog(${connector_name}ConnectorTests.class);
+
+    @BeforeClass
+    public static void setUp() {
+        Assert.assertNotNull(HOST);
+        Assert.assertNotNull(REMOTE_USER);
+        Assert.assertNotNull(PASSWORD);
+
+        //
+        //other setup work to do before running tests
+        //
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        //
+        //clean up resources
+        //
+    }
+
+    @Test
+    public void exampleTest1() {
+        log.info("Running Test 1...");
+        //You can use TestHelpers to do some of the boilerplate work in running a search
+        //TestHelpers.search(theConnector, ObjectClass.ACCOUNT, filter, handler, null);
+    }
+
+    @Test
+    public void exampleTest2() {
+        log.info("Running Test 2...");
+        //Another example using TestHelpers
+        //List<ConnectorObject> results = TestHelpers.searchToList(theConnector, ObjectClass.GROUP, filter);
+    }
+
+    protected ConnectorFacade getFacade(${connector_name}Configuration config) {
+        ConnectorFacadeFactory factory = ConnectorFacadeFactory.getInstance();
+        // **test only**
+        APIConfiguration impl = TestHelpers.createTestConfiguration(${connector_name}Connector.class, config);
+        return factory.newInstance(impl);
+    }
++---
+
++---
+/* +---------------------------------------------------+
+ *  ----------- Contract Tests configuration ------------
+ *  +---------------------------------------------------+
+ */
+
+import org.identityconnectors.contract.data.groovy.Lazy
+import org.identityconnectors.common.security.GuardedString
+
+// Connector WRONG configuration for ValidateApiOpTests
+connector.i1.wrong.host=""
+connector.i2.wrong.login=""
+connector.i3.wrong.password=new GuardedString("".toCharArray())
+
+
+configuration{
+    ssl = false
+    host="__configureme__"
+    remoteUser="__configureme__"
+    password=new GuardedString("__configureme__".toCharArray())
+}
+
+testsuite {
+    // path to bundle jar - property is set by ant - leave it as it is
+    bundleJar=System.getProperty("bundleJar")
+    bundleName=System.getProperty("bundleName")
+    bundleVersion=System.getProperty("bundleVersion")
+    connectorName=""
+
+    // ValidateApiOpTests:
+    Validate.iterations="3"
+
+    // AuthenticationApiOpTests:
+    Authentication.__ACCOUNT__.username=Lazy.get("i0.Authentication.__ACCOUNT__.__NAME__")
+    Authentication.__ACCOUNT__.wrong.password=new GuardedString("bogus".toCharArray())
+} // testsuite
+
+HOST="0.0.0.0"
++---
+    
