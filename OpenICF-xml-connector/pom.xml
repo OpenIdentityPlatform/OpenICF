@@ -26,37 +26,30 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.forgerock.openicf.bundles</groupId>
-        <artifactId>bundles-parent</artifactId>
+        <groupId>org.forgerock.openicf.connectors</groupId>
+        <artifactId>connectors-parent</artifactId>
         <version>1.1.0.0-SNAPSHOT</version>
     </parent>
-    <groupId>org.forgerock.openicf.bundles.file</groupId>
-    <version>1.1.0.0-SNAPSHOT</version>
+    <groupId>org.forgerock.openicf.connectors.file</groupId>
     <artifactId>xml</artifactId>
+    <version>1.1.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>Simulated XML Connector</name>
     <description>Connector can simulate almost any kind of resource.</description>
-    <url>https://openicf.forgerock.org/connectors/${connector_family}/${artifactId}/${project.version}</url>
+    <url>http://openicf.forgerock.org/connectors/${project.artifactId}</url>
     <scm>
         <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/bundles/file/xml</connection>
         <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/bundles/file/xml</developerConnection>
         <url>http://sources.forgerock.org/browse/openicf/trunk/java/bundles/file/xml</url>
     </scm>
-    <distributionManagement>
-        <site>
-            <id>forgerock.org</id>
-            <!--url>scp://openicf.forgerock.org/var/www/vhosts/openicf.forgerock.org/httpdocs/connectors/file/${artifactId}</url-->
-            <url>scp://local.openicf.forgerock.org/Users/laszlohordos/Sites/openicf.forgerock.org/connectors/file/${artifactId}</url>
-        </site>
-    </distributionManagement>
 
     <properties>
         <defaultConnectorFamily>file</defaultConnectorFamily>
         <skipTests>false</skipTests>
         <contracts.skip>true</contracts.skip>
         <privateConfigPath>${user.home}/.connectors/connector-xml/config</privateConfigPath>
-        <embedded.dependencies>jaxen,saxonhe,xsom,relaxngDatatype</embedded.dependencies>
-        <connectorPackage>org.forgerock.openicf.xml</connectorPackage>
+        <embedded.dependencies>jaxen,saxonhe,xsom,relaxngDatatype,xml-apis,xercesImpl</embedded.dependencies>
+        <connectorPackage>com.forgerock.openicf.xml</connectorPackage>
         <connectorClass>XMLConnector</connectorClass>
     </properties>
 
@@ -83,7 +76,21 @@
             <url>http://download.java.net/maven/2</url>
         </repository>
     </repositories>
-  
+    <profiles>
+        <profile>
+            <id>with-embedded-dependencies</id>
+            <properties>
+                <embedded.dependencies>jaxen,saxonhe,xsom,relaxngDatatype</embedded.dependencies>
+            </properties>
+        </profile>
+        <profile>
+            <id>active-embedded-dependencies</id>
+            <properties>
+                <embedded.dependencies>jaxen,saxonhe,xsom,relaxngDatatype</embedded.dependencies>
+            </properties>
+        </profile>
+    </profiles>
+
     <dependencies>
         <dependency>
             <groupId>jaxen</groupId>
