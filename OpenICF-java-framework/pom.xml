@@ -42,9 +42,9 @@
     <inceptionYear>2011</inceptionYear>
     <url>http://openicf.forgerock.org</url>
     <scm>
-        <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/framework</connection>
-        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/openicf/trunk/framework</developerConnection>
-        <url>http://sources.forgerock.org/browse/openicf/framework</url>
+        <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/framework/java</connection>
+        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/framework/java</developerConnection>
+        <url>http://sources.forgerock.org/browse/openicf/trunk/framework/java</url>
     </scm>
     <distributionManagement>
         <site>
@@ -102,13 +102,13 @@
             <unsubscribe>https://lists.forgerock.org/mailman/listinfo/openicf-dev</unsubscribe>
             <archive>https://lists.forgerock.org/pipermail/openicf-dev/</archive>
         </mailingList>
-        <mailingList>
+        <!--mailingList>
             <name>OpenICF: Issue Notifications</name>
             <post>openicf-issues@forgerock.org</post>
             <subscribe>https://lists.forgerock.org/mailman/listinfo/openicf-issues</subscribe>
             <unsubscribe>https://lists.forgerock.org/mailman/listinfo/openicf-issues</unsubscribe>
             <archive>https://lists.forgerock.org/pipermail/openicf-issues/</archive>
-        </mailingList>
+        </mailingList-->
     </mailingLists>
 
     <issueManagement>
