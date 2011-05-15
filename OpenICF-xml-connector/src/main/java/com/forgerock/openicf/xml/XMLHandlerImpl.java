@@ -39,8 +39,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -48,8 +46,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -363,14 +359,17 @@ public class XMLHandlerImpl implements XMLHandler {
                     ConnectorObject conObj = conObjCreator.createConnectorObject(nodes);
                     results.add(conObj);
                 }
-            } catch (XQException ex) {
+            }
+            catch (XQException ex) {
                 log.error("Error while searching: {0}", ex);
                 throw new ConnectorException(ex);
-            } finally {
-                xqHandler.close();
+            }
+            finally {
+                if (null != xqHandler) {
+                    xqHandler.close();
+                }
             }
         }
-
         log.info("Exit {0}", method);
 
         return results;
@@ -408,10 +407,12 @@ public class XMLHandlerImpl implements XMLHandler {
             transformer.transform(source, result);
 
             log.info("Saving changes to xml file");
-        } catch (TransformerException ex) {
+        }
+        catch (TransformerException ex) {
             log.error("Failed saving changes to xml file: {0}", ex);
             throw ConnectorException.wrap(ex);
-        } catch (FileNotFoundException ex) {
+        }
+        catch (FileNotFoundException ex) {
             log.error("Failed saving changes to xml file: {0}", ex);
             throw ConnectorException.wrap(ex);
         }
@@ -470,7 +471,8 @@ public class XMLHandlerImpl implements XMLHandler {
         try {
             builder = builderFactory.newDocumentBuilder();
             log.info("Creating new xml storage file: {0}", config.getXmlFilePath());
-        } catch (ParserConfigurationException ex) {
+        }
+        catch (ParserConfigurationException ex) {
             log.error("Filed creating XML document: {0}", ex);
             throw ConnectorException.wrap(ex);
         }
@@ -508,11 +510,14 @@ public class XMLHandlerImpl implements XMLHandler {
             document = docBuilder.parse(xmlFile);
 
             log.info("Loading XML document from: {0}", xmlFile.getPath());
-        } catch (ParserConfigurationException ex) {
+        }
+        catch (ParserConfigurationException ex) {
             throw ConnectorException.wrap(ex);
-        } catch (SAXException ex) {
+        }
+        catch (SAXException ex) {
             throw ConnectorException.wrap(ex);
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
             throw ConnectorException.wrap(ex);
         }
 
@@ -578,10 +583,14 @@ public class XMLHandlerImpl implements XMLHandler {
                 result = (Element) results.getItem().getNode();
                 log.info("Entry found: ", result.toString());
             }
-        } catch (XQException ex) {
+        }
+        catch (XQException ex) {
             throw ConnectorException.wrap(ex);
-        } finally {
-            xqHandler.close();
+        }
+        finally {
+            if (null != xqHandler) {
+                xqHandler.close();
+            }
         }
 
         log.info("Exit {0}", method);
