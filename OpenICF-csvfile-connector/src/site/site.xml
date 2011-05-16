@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+  ~
+  ~ Copyright © 2011. ForgeRock AS. All rights reserved.
+  ~
+  ~ The contents of this file are subject to the terms
+  ~ of the Common Development and Distribution License
+  ~ (the License). You may not use this file except in
+  ~ compliance with the License.
+  ~
+  ~ You can obtain a copy of the License at
+  ~ http://forgerock.org/license/CDDLv1.0.html
+  ~ See the License for the specific language governing
+  ~ permission and limitations under the License.
+  ~
+  ~ When distributing Covered Code, include this CDDL
+  ~ Header Notice in each file and include the License file
+  ~ at http://forgerock.org/license/CDDLv1.0.html
+  ~ If applicable, add the following below the CDDL Header,
+  ~ with the fields enclosed by brackets [] replaced by
+  ~ your own identifying information:
+  ~ "Portions Copyrighted [year] [name of copyright owner]"
+  ~
+  ~ $Id$
+-->
+
+<project xmlns="http://maven.apache.org/DECORATION/1.0.1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/DECORATION/1.0.1 http://maven.apache.org/xsd/decoration-1.0.1.xsd">  
+    <skin>
+        <groupId>org.forgerock.commons</groupId>
+        <artifactId>forgerock-community-skin</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </skin>
+    <publishDate position="right" format="yyyy.MM.dd"/>
+    <version position="right"/>
+    <body>
+        <breadcrumbs>
+            <item name="CSVFile Connector" href="http://openicf.forgerock.org/connectors/csvfile/index.html" />
+        </breadcrumbs>
+        <menu name="Overview" img="images/arrow_right.png">
+            <item name="Introduction" href="index.html"/>
+            <item name="Compatibility" href="compatibility.html"/>
+            <item name="Installation" href="installation.html"/>
+            <item name="Configuration" href="configuration.html"/>
+            <item name="About" href="aboutpage.html"/>
+            <item name="Changes" href="changelog.html"/>
+            <item name="FAQ" href="faq.html"/>
+            <item name="Embedded" href="embedded.html"/>
+        </menu>
+        <menu ref="reports"/>
+    </body>
+    <custom>
+        <openproject>
+            <href>http://openicf.forgerock.org</href>
+            <src>images/openicf-tagline-195x65.png</src>
+            <alt>OpenICF</alt>
+        </openproject>
+    </custom>
+</project>
