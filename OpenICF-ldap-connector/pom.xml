@@ -92,6 +92,7 @@
             <groupId>com.sun</groupId>
             <artifactId>ldapbp</artifactId>
             <version>1.0</version>
+            <scope>provided</scope>
         </dependency>
         <!-- Java 6 has the JNDI
         <dependency>
