@@ -99,71 +99,6 @@
             <id>forgerock-bundle-release</id>
             <build>
                 <plugins>
-                    <plugin>
-                        <artifactId>maven-resources-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>replace-pom-placeholder</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <resources>
-                                        <resource>
-                                            <directory>${basedir}</directory>
-                                            <includes>
-                                                <include>releases-pom.xml</include>
-                                            </includes>
-                                            <filtering>true</filtering>
-                                        </resource>
-                                    </resources>
-                                    <outputDirectory>${project.build.directory}/pom-install-deploy-fix</outputDirectory>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <plugin>
-                        <artifactId>maven-install-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>overwrite-pom</id>
-                                <phase>install</phase>
-                                <goals>
-                                    <goal>install-file</goal>
-                                </goals>
-                                <configuration>
-                                    <packaging>pom</packaging>
-                                    <file>target/pom-install-deploy-fix/releases-pom.xml</file>
-                                    <pomFile>target/pom-install-deploy-fix/releases-pom.xml</pomFile>
-                                    <version>${project.version}</version>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <plugin>
-                        <artifactId>maven-deploy-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>overwrite-pom</id>
-                                <phase>deploy</phase>
-                                <goals>
-                                    <goal>deploy-file</goal>
-                                </goals>
-                                <configuration>
-                                    <packaging>pom</packaging>
-                                    <file>target/pom-install-deploy-fix/releases-pom.xml</file>
-                                    <pomFile>target/pom-install-deploy-fix/releases-pom.xml</pomFile>
-                                    <url>${project.distributionManagement.repository.url}</url>
-                                    <version>${project.version}</version>
-                                    <updateReleaseInfo>true</updateReleaseInfo>
-                                    <uniqueVersion>false</uniqueVersion>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
                     <!-- We want to sign the artifact, the POM, and all attached artifacts
                          Only the patched version http://jira.codehaus.org/browse/MGPG-34
                          signs the correct POM
@@ -305,13 +240,9 @@
                                 <Embed-Dependency>${embedded.dependencies}</Embed-Dependency>
                                 <Embed-Directory>lib</Embed-Directory>
                                 <Embed-Transitive>true</Embed-Transitive>
-                                <Export-Package>
-                                    ${connectorPackage}
-                                </Export-Package>
-                                <Import-Package>
-                                *
-                                </Import-Package>
-                                <Fragment-Host>org.forgerock.openicf.framework.connector-framework</Fragment-Host>
+                                <Export-Package>${connectorPackage}.*</Export-Package>
+                                <Import-Package>*</Import-Package>
+                                <!--Fragment-Host>org.forgerock.openicf.framework.connector-framework</Fragment-Host-->
                                 <!--Bundle-SymbolicName>${ConnectorBundle-Name}</Bundle-SymbolicName-->
                                 <ConnectorBundle-FrameworkVersion>${ConnectorBundle-FrameworkVersion}</ConnectorBundle-FrameworkVersion>
                                 <ConnectorBundle-Name>${ConnectorBundle-Name}</ConnectorBundle-Name>
@@ -420,22 +351,7 @@
                                 </configuration>
                             </execution>
                         </executions>
-                    </plugin>
-
-                    <!-- And attach  sources -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
+                    </plugin>                    
 
                     <!-- Skip default test execution -->
                     <plugin>
@@ -517,6 +433,72 @@
                         </executions>
                     </plugin>
 
+                    <plugin>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>replace-pom-placeholder</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <resources>
+                                        <resource>
+                                            <directory>${basedir}</directory>
+                                            <includes>
+                                                <include>releases-pom.xml</include>
+                                            </includes>
+                                            <filtering>true</filtering>
+                                        </resource>
+                                    </resources>
+                                    <outputDirectory>${project.build.directory}/pom-install-deploy-fix</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <artifactId>maven-install-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>overwrite-pom</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>install-file</goal>
+                                </goals>
+                                <configuration>
+                                    <packaging>pom</packaging>
+                                    <file>target/pom-install-deploy-fix/releases-pom.xml</file>
+                                    <pomFile>target/pom-install-deploy-fix/releases-pom.xml</pomFile>
+                                    <version>${project.version}</version>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <artifactId>maven-deploy-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>overwrite-pom</id>
+                                <phase>deploy</phase>
+                                <goals>
+                                    <goal>deploy-file</goal>
+                                </goals>
+                                <configuration>
+                                    <packaging>pom</packaging>
+                                    <file>target/pom-install-deploy-fix/releases-pom.xml</file>
+                                    <pomFile>target/pom-install-deploy-fix/releases-pom.xml</pomFile>
+                                    <url>${project.distributionManagement.repository.url}</url>
+                                    <version>${project.version}</version>
+                                    <updateReleaseInfo>true</updateReleaseInfo>
+                                    <uniqueVersion>false</uniqueVersion>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-scm-plugin</artifactId>

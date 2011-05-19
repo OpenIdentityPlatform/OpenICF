@@ -316,17 +316,6 @@
         <pluginManagement>
             <plugins>
                 <plugin>
-                    <artifactId>maven-jar-plugin</artifactId>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>jar</goal>
-                                <goal>test-jar</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <configuration>
                         <includes>
@@ -372,6 +361,11 @@
                         </execution>
                     </executions>
                 </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>cobertura-maven-plugin</artifactId>
+                    <version>2.5</version>
+                </plugin>
             </plugins>
         </pluginManagement>
 
@@ -405,8 +399,10 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-		<!-- http://mojo.codehaus.org/cobertura-maven-plugin/ -->
+            <!--plugin>
+
+                Use metrics profile from forgerock-parent
+
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>cobertura-maven-plugin</artifactId>
                 <version>2.5</version>
@@ -431,7 +427,7 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin-->
         </plugins>
     </build>
     <reporting>
@@ -538,15 +534,11 @@
                 <version>2.5</version>
                 <configuration>
                     <aggregate>${openicf.parent.reports.aggregate}</aggregate>
-                    <targetjdk>1.5</targetjdk>
                     <rulesets>
                         <ruleset>/rulesets/basic.xml</ruleset>
                         <ruleset>/rulesets/controversial.xml</ruleset>
                     </rulesets>
                     <format>xml</format>
-                    <linkXref>true</linkXref>
-                    <sourceEncoding>${project.build.sourceEncoding}</sourceEncoding>
-                    <minimumTokens>100</minimumTokens>
                 </configuration>
             </plugin>
             <!--plugin>
@@ -603,7 +595,9 @@
                 <artifactId>findbugs-maven-plugin</artifactId>
                 <version>2.3.2</version>
                 <configuration>
-                    <onlyAnalyze>org.identityconnectors.*</onlyAnalyze>
+                    <effort>Max</effort>
+                    <threshold>Low</threshold>
+                    <onlyAnalyze>org.identityconnectors.*,org.forgerock.openicf.*</onlyAnalyze>
                 </configuration>
             </plugin>
             <plugin>

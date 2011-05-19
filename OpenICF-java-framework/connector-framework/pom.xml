@@ -39,6 +39,21 @@
     <packaging>bundle</packaging>
     <build>
         <plugins>
+            <!--
+                We need to create the test JAR because the connector-framework-internal
+                depends on but the jar plugin conflicts with the bundle plugin in the parent
+            -->
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jar</goal>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
@@ -46,20 +61,8 @@
                 <configuration>
                     <instructions>
                         <Export-Package>org.identityconnectors.*</Export-Package>
-                        <!--Include-Resource>
-                            {maven-resources}
-                        </Include-Resource-->
+                        <DynamicImport-Package>*</DynamicImport-Package>
                     </instructions>
-                </configuration>
-            </plugin>
-            <!--
-                We need to create the test JARS but he jar plugin
-                conflicts with the bundle
-            -->
-            <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <useDefaultManifestFile>true</useDefaultManifestFile>
                 </configuration>
             </plugin>
         </plugins>
