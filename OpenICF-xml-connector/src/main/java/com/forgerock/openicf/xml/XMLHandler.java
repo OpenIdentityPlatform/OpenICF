@@ -23,7 +23,6 @@
  *
  * $Id$
  */
-
 package com.forgerock.openicf.xml;
 
 import java.util.Collection;
@@ -33,7 +32,6 @@ import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
-
 
 public interface XMLHandler {
 
@@ -47,5 +45,7 @@ public interface XMLHandler {
 
     Uid authenticate(String username, GuardedString password);
 
-    void serialize();
+    XMLHandler init();
+
+    void dispose();
 }

@@ -32,15 +32,31 @@
 
 Simulated XML Connector
 
-  Etiam adipiscing urna sit amet metus auctor porttitor. Fusce pharetra.
+  The XML Connector has been designed around pure demo purpose. The supported <ObjectClasses> <Attributes> and the <Operations> are configurable via the given XSD file. 
 
 * Overview
 
-  Cras tempor consequat vulputate. Nam vulputate metus et urna facilisis sit amet malesuada tellus commodo.
-  Nulla id augue at odio tristique hendrerit. Sed a pellentesque urna. Maecenas pretium, libero vel porttitor fringilla,
-  justo augue vehicula tellus, eget porta sem mauris.
-
-  []
+    There will be more available XSD files to configure and simulate common systems. Now the only available is a fully featured demo file.
+ 
+** Schema and Supported Features    
+    
+    The Connector implements the following interfaces:
+    
+	* Connector
+	
+	* AuthenticateOp
+	
+	* CreateOp
+	
+	* DeleteOp
+	
+	* SearchOp
+	
+	* SchemaOp
+	
+	* TestOp
+	
+	* UpdateOp
 
 * Usage
 

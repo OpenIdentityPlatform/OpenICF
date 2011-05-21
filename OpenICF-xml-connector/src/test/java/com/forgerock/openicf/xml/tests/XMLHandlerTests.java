@@ -25,7 +25,7 @@
  */
 package com.forgerock.openicf.xml.tests;
 
-import org.testng.annotations.AfterClass;
+import com.forgerock.openicf.xml.ConcurrentXMLHandler;
 import org.testng.annotations.Test;
 import org.testng.annotations.BeforeClass;
 import org.testng.AssertJUnit;
@@ -33,12 +33,10 @@ import com.forgerock.openicf.xml.XMLConfiguration;
 import com.forgerock.openicf.xml.XMLConnector;
 import com.forgerock.openicf.xml.XMLFilterTranslator;
 import com.forgerock.openicf.xml.XMLHandler;
-import com.forgerock.openicf.xml.XMLHandlerImpl;
 import com.forgerock.openicf.xml.query.QueryBuilder;
 import com.forgerock.openicf.xml.query.abstracts.Query;
 import com.forgerock.openicf.xml.xsdparser.SchemaParser;
 import static com.forgerock.openicf.xml.tests.XmlConnectorTestUtil.*;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -61,12 +59,13 @@ public class XMLHandlerTests {
     public static void setUp() {
 
         XMLConfiguration config = new XMLConfiguration();
-        config.setXmlFilePath(XML_FILEPATH);
+        config.setXmlFilePath(getRandomXMLFile());
         config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
         SchemaParser parser = new SchemaParser(XMLConnector.class, config.getXsdFilePath());
 
-        handler = new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
-
+        handler = new ConcurrentXMLHandler(config, parser.parseSchema(), parser.getXsdSchema());
+        handler.init();
+        
         Set<Attribute> attributes = getRequiredAccountAttributes();
         attributes.add(AttributeBuilder.build(ATTR_ACCOUNT_MS_EMPLOYED, ATTR_ACCOUNT_VALUE_MS_EMPLOYED));
         attributes.add(AttributeBuilder.build(ATTR_ACCOUNT_SIXTH_SENSE, ATTR_ACCOUNT_VALUE_SIXTH_SENSE));
@@ -89,13 +88,6 @@ public class XMLHandlerTests {
 
         ArrayList<ConnectorObject> hits = (ArrayList<ConnectorObject>) handler.search(queryBuilder.toString(), ObjectClass.ACCOUNT);
         existingUsrConObj = hits.get(0);
-    }
-
-    @AfterClass
-    public static void tearDown() {
-        if (XML_FILEPATH.exists()) {
-            XML_FILEPATH.delete();
-        }
     }
 
     @Test

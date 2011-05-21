@@ -31,13 +31,13 @@ import org.testng.AssertJUnit;
 import com.forgerock.openicf.xml.XMLConfiguration;
 import com.forgerock.openicf.xml.XMLConnector;
 import com.forgerock.openicf.xml.XMLFilterTranslator;
-import com.forgerock.openicf.xml.XMLHandlerImpl;
+import com.forgerock.openicf.xml.ConcurrentXMLHandler;
+import com.forgerock.openicf.xml.XMLHandler;
 import com.forgerock.openicf.xml.query.FunctionQuery;
 import com.forgerock.openicf.xml.query.QueryBuilder;
 import com.forgerock.openicf.xml.query.abstracts.Query;
 import com.forgerock.openicf.xml.xsdparser.SchemaParser;
 import static com.forgerock.openicf.xml.tests.XmlConnectorTestUtil.*;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -62,7 +62,7 @@ public class XMLFilterTranslatorTests {
 
     private static final String LOCAL_ATTR_ACCOUNT_VALUE_LAST_NAME = "Maul";
     private static final String LOCAL_ATTR_ACCOUNT_VALUE_FIRST_NAME = "Lighter";
-    private static XMLHandlerImpl xmlHandler;
+    private static XMLHandler xmlHandler;
     private static XMLFilterTranslator filterTranslator;
     private static Query equalsQueryFnVader;
     private static Query equalsQueryFnMaul;
@@ -80,12 +80,12 @@ public class XMLFilterTranslatorTests {
     @BeforeClass
     public static void setUpClass() throws Exception {
         XMLConfiguration config = new XMLConfiguration();
-        config.setXmlFilePath(XML_FILEPATH);
+        config.setXmlFilePath(getRandomXMLFile());
         config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
         SchemaParser parser = new SchemaParser(XMLConnector.class, config.getXsdFilePath());
 
-        xmlHandler = new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
-
+        xmlHandler = new ConcurrentXMLHandler(config, parser.parseSchema(), parser.getXsdSchema());
+        xmlHandler.init();
         Set<Attribute> attributesFirst = getRequiredAccountAttributes();
         attributesFirst.add(AttributeBuilder.build(ATTR_ACCOUNT_MS_EMPLOYED, ATTR_ACCOUNT_VALUE_MS_EMPLOYED));
         attributesFirst.add(AttributeBuilder.build(ATTR_ACCOUNT_SIXTH_SENSE, ATTR_ACCOUNT_VALUE_SIXTH_SENSE));
@@ -164,13 +164,6 @@ public class XMLFilterTranslatorTests {
         GreaterThanOrEqualFilter gtoreqFilter = new GreaterThanOrEqualFilter(attrBld.build());
         gtoreqQueryYearsEmployed = filterTranslator.createGreaterThanOrEqualExpression(gtoreqFilter, false);
 
-    }
-
-    @AfterClass
-    public static void tearDownClass() throws Exception {
-        if (XML_FILEPATH.exists()) {
-            XML_FILEPATH.delete();
-        }
     }
 
     @Test

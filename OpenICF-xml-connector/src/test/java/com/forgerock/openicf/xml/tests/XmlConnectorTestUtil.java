@@ -26,7 +26,7 @@
 package com.forgerock.openicf.xml.tests;
 
 import java.io.File;
-import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collection;
@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -48,7 +49,6 @@ public class XmlConnectorTestUtil {
 
     public final static File XSD_SCHEMA_FILEPATH;
     public final static File ICF_SCHEMA_FILEPATH;
-    public final static File XML_FILEPATH;
     // Object types
     public static final String ACCOUNT_TYPE = "__ACCOUNT__";
     public static final String GROUP_TYPE = "__GROUP__";
@@ -113,20 +113,21 @@ public class XmlConnectorTestUtil {
     public static final String ATTR_GROUP_VALUE_SHORT_NAME = "TE";
 
     static {
-        File xsd = new File("test/xml_store/ef2bc95b-76e0-48e2-86d6-4d4f44d4e4a4.xsd");
-        File icf = new File("test/xml_store/resource-schema-1.xsd");
-        File xml = new File("test/xml_store/test.xsd");
+        XSD_SCHEMA_FILEPATH = getTestFile("ef2bc95b-76e0-48e2-86d6-4d4f44d4e4a4.xsd");
+        ICF_SCHEMA_FILEPATH = getTestFile("resource-schema-1.xsd");
+    }
+
+    public static File getRandomXMLFile() {
+        return getTestFile(UUID.randomUUID().toString() + ".xml");
+    }
+
+    public static File getTestFile(String fileName) {
         try {
             URL root = XmlConnectorTestUtil.class.getResource("/");
-            xsd = new File(root.toURI().resolve("test/xml_store/ef2bc95b-76e0-48e2-86d6-4d4f44d4e4a4.xsd"));
-            icf = new File(root.toURI().resolve("test/xml_store/resource-schema-1.xsd"));
-            xml = new File(root.toURI().resolve("test/xml_store/test.xsd"));
-        } catch (URISyntaxException ex) {
-            Logger.getLogger(XmlConnectorTestUtil.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            XSD_SCHEMA_FILEPATH = xsd;
-            ICF_SCHEMA_FILEPATH = icf;
-            XML_FILEPATH = xml;
+            return new File(root.toURI().resolve("test/xml_store/" + fileName));
+        }
+        catch (URISyntaxException ex) {
+            throw new IllegalArgumentException("Testfile URL is invalid", ex);
         }
     }
 

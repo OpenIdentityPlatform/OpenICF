@@ -25,6 +25,7 @@
  */
 package com.forgerock.openicf.xml.tests;
 
+import com.forgerock.openicf.xml.ConcurrentXMLHandler;
 import java.net.URISyntaxException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
@@ -34,7 +35,6 @@ import org.testng.Assert;
 import com.forgerock.openicf.xml.XMLConfiguration;
 import com.forgerock.openicf.xml.XMLConnector;
 import com.forgerock.openicf.xml.XMLHandler;
-import com.forgerock.openicf.xml.XMLHandlerImpl;
 import com.forgerock.openicf.xml.xsdparser.SchemaParser;
 import static com.forgerock.openicf.xml.tests.XmlConnectorTestUtil.*;
 import java.util.HashSet;
@@ -58,19 +58,15 @@ public class CreateEntryTests {
     @BeforeMethod
     public void init() throws URISyntaxException {
         XMLConfiguration config = new XMLConfiguration();
-        config.setXmlFilePath(XML_FILEPATH);
+        config.setXmlFilePath(getRandomXMLFile());
         config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
         config.validate();
         SchemaParser parser = new SchemaParser(XMLConnector.class, config.getXsdFilePath());
-        handler = new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
+        handler = new ConcurrentXMLHandler(config, parser.parseSchema(), parser.getXsdSchema());
+        handler.init();
     }
 
-    @AfterMethod
-    public void destroy() {
-        if (XML_FILEPATH.exists()) {
-            XML_FILEPATH.delete();
-        }
-    }
+   
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void withNonSupportedObjectTypeShouldThrowException() {

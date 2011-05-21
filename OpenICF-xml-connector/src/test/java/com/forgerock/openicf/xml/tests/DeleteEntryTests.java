@@ -32,12 +32,12 @@ import org.testng.AssertJUnit;
 import com.forgerock.openicf.xml.XMLConfiguration;
 import com.forgerock.openicf.xml.XMLConnector;
 import com.forgerock.openicf.xml.XMLFilterTranslator;
-import com.forgerock.openicf.xml.XMLHandlerImpl;
+import com.forgerock.openicf.xml.ConcurrentXMLHandler;
+import com.forgerock.openicf.xml.XMLHandler;
 import com.forgerock.openicf.xml.query.QueryBuilder;
 import com.forgerock.openicf.xml.query.abstracts.Query;
 import com.forgerock.openicf.xml.xsdparser.SchemaParser;
 import static com.forgerock.openicf.xml.tests.XmlConnectorTestUtil.*;
-import java.io.File;
 import java.util.Collection;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
@@ -50,23 +50,17 @@ public class DeleteEntryTests {
 
     // Test filepaths
     //private static final String XML_FILEPATH = "test/xml_store/test.xml";
-    private static XMLHandlerImpl handler;
+    private static XMLHandler handler;
 
     @BeforeMethod
     public void init() {
         XMLConfiguration config = new XMLConfiguration();
-        config.setXmlFilePath(XML_FILEPATH);
+        config.setXmlFilePath(getRandomXMLFile());
         config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
 
         SchemaParser parser = new SchemaParser(XMLConnector.class, config.getXsdFilePath());
-        handler = new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
-    }
-
-    @AfterMethod
-    public void destroy() {
-        if (XML_FILEPATH.exists()) {
-            XML_FILEPATH.delete();
-        }
+        handler = new ConcurrentXMLHandler(config, parser.parseSchema(), parser.getXsdSchema());
+        handler.init();
     }
 
     @Test(expectedExceptions = UnknownUidException.class)

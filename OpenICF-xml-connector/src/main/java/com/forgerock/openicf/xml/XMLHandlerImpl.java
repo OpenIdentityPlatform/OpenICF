@@ -90,10 +90,12 @@ public class XMLHandlerImpl implements XMLHandler {
      */
     private static final Log log = Log.getLog(XMLHandlerImpl.class);
     private XMLConfiguration config;
-    private Document document;
+    private volatile Document document;
     private Schema connSchema;
     private XSSchema icfSchema;
     private XSSchema riSchema;
+    private long lastModified = 0l;
+    private volatile long version = 0l;
     public static final String XSI_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance";
     public static final String ICF_NAMESPACE_PREFIX = "icf";
     public static final String RI_NAMESPACE_PREFIX = "ri";
@@ -109,7 +111,11 @@ public class XMLHandlerImpl implements XMLHandler {
         this.icfSchema = xsdSchemas.getSchema(2);
 
         NamespaceLookupUtil.INSTANCE.initialize(icfSchema, riSchema);
+    }
+
+    public XMLHandler init() {
         buildDocument();
+        return this;
     }
 
     @Override
@@ -213,8 +219,6 @@ public class XMLHandlerImpl implements XMLHandler {
 
         document.getDocumentElement().appendChild(objElement);
 
-        serialize();
-
         log.info("Exit {0}", method);
 
         return new Uid(uidValue);
@@ -292,8 +296,6 @@ public class XMLHandlerImpl implements XMLHandler {
             throw new UnknownUidException("Could not update entry. No entry of type " + objClass.getObjectClassValue() + " with the id " + uid.getUidValue() + " found.");
         }
 
-        serialize();
-
         log.info("Exit {0}", method);
 
         return uid;
@@ -313,8 +315,6 @@ public class XMLHandlerImpl implements XMLHandler {
         } else {
             throw new UnknownUidException("Deleting entry failed. Could not find an entry of type " + objClass.getObjectClassValue() + " with the uid " + uid.getUidValue());
         }
-
-        serialize();
 
         log.info("Exit {0}", method);
     }
@@ -375,10 +375,21 @@ public class XMLHandlerImpl implements XMLHandler {
         return results;
     }
 
+    private boolean isExternallyModified() {
+        boolean modified = false;
+        if (config.getXmlFilePath().exists()) {
+            modified = lastModified != config.getXmlFilePath().lastModified();
+        }
+        return modified;
+    }
+
     @Override
-    public void serialize() {
+    public void dispose() {
         final String method = "serialize";
         log.info("Entry {0}", method);
+        if (version != lastModified && isExternallyModified()) {
+            log.error("UPDATE COLLUSION: File has been modified after read into memory and the data in memory has not been synced before.");
+        }
 
         try {
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
@@ -508,7 +519,8 @@ public class XMLHandlerImpl implements XMLHandler {
         try {
             docBuilder = docBuilderFactory.newDocumentBuilder();
             document = docBuilder.parse(xmlFile);
-
+            lastModified = xmlFile.lastModified();
+            version = lastModified;
             log.info("Loading XML document from: {0}", xmlFile.getPath());
         }
         catch (ParserConfigurationException ex) {
@@ -529,7 +541,6 @@ public class XMLHandlerImpl implements XMLHandler {
         log.info("Entry {0}", method);
 
         File xmlFile = config.getXmlFilePath();
-
         if (!xmlFile.exists()) {
             createDocument();
         } else {

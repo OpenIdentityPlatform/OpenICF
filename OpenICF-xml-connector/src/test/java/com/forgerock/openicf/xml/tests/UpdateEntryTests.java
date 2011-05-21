@@ -38,7 +38,6 @@ import com.forgerock.openicf.xml.query.QueryBuilder;
 import com.forgerock.openicf.xml.query.abstracts.Query;
 import com.forgerock.openicf.xml.xsdparser.SchemaParser;
 import static com.forgerock.openicf.xml.tests.XmlConnectorTestUtil.*;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -61,18 +60,12 @@ public class UpdateEntryTests {
     @BeforeMethod
     public void init() {
         XMLConfiguration config = new XMLConfiguration();
-        config.setXmlFilePath(XML_FILEPATH);
+        config.setXmlFilePath(getRandomXMLFile());
         config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
 
         SchemaParser parser = new SchemaParser(XMLConnector.class, config.getXsdFilePath());
         handler = new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
-    }
-
-    @AfterMethod
-    public void destroy() {
-        if (XML_FILEPATH.exists()) {
-            XML_FILEPATH.delete();
-        }
+        handler.init();
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)

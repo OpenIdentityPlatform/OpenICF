@@ -41,11 +41,7 @@
         </breadcrumbs>
         <menu name="Overview" img="images/arrow_right.png">
             <item name="Introduction" href="index.html"/>
-            <item name="Compatibility" href="compatibility.html"/>
-            <item name="Installation" href="installation.html"/>
             <item name="Configuration" href="configuration.html"/>
-            <item name="About" href="aboutpage.html"/>
-            <item name="Changes" href="changelog.html"/>
             <item name="FAQ" href="faq.html"/>
             <item name="Embedded" href="embedded.html"/>
         </menu>

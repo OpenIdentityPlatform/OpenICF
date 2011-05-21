@@ -28,8 +28,10 @@ package com.forgerock.openicf.xml;
 import com.forgerock.openicf.xml.query.abstracts.Query;
 import com.forgerock.openicf.xml.query.QueryBuilder;
 import com.forgerock.openicf.xml.xsdparser.SchemaParser;
-import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.identityconnectors.common.Assertions;
@@ -39,6 +41,7 @@ import org.identityconnectors.framework.spi.operations.*;
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 import org.identityconnectors.framework.common.exceptions.InvalidPasswordException;
 
 /**
@@ -48,14 +51,14 @@ import org.identityconnectors.framework.common.exceptions.InvalidPasswordExcepti
  * @since 1.0
  */
 @ConnectorClass(displayNameKey = "XML", configurationClass = XMLConfiguration.class)
-public class XMLConnector implements PoolableConnector, AuthenticateOp, CreateOp, DeleteOp, SearchOp<Query>, SchemaOp, TestOp, UpdateOp {
+public class XMLConnector implements Connector, AuthenticateOp, CreateOp, DeleteOp, SearchOp<Query>, SchemaOp, TestOp, UpdateOp {
 
     private static final Log log = Log.getLog(XMLConnector.class);
-    private XMLHandler xmlHandler;
+    private static /*volatile*/ final Map<String, ConcurrentXMLHandler> XMLHandlerCache = new HashMap<String, ConcurrentXMLHandler>(1);
     private XMLConfiguration config;
+    private XMLHandler xmlInstanceHandler = null;
     private SchemaParser schemaParser;
-    //@TODO - Use cache while more than one client is alive
-    private static volatile int invokers = 0;
+
 
     /*
      * (non-Javadoc)
@@ -70,20 +73,25 @@ public class XMLConnector implements PoolableConnector, AuthenticateOp, CreateOp
      * @see org.identityconnectors.framework.spi.Connector#init(org.identityconnectors.framework.spi.Configuration)
      */
     public void init(Configuration configuration) {
-        final String method = "init";
-        log.info("Entry {0}", method);
-
-        Assertions.nullCheck(configuration, "config");
-
+        this.config = Assertions.nullChecked((XMLConfiguration) configuration, "config");
         synchronized (XMLConnector.class) {
-            this.config = (XMLConfiguration) configuration;
-            this.schemaParser = new SchemaParser(XMLConnector.class, config.getXsdFilePath());
-            this.xmlHandler = new XMLHandlerImpl(config, schema(), schemaParser.getXsdSchema());
-            //Increase the number of actual threads that are using this connector form the pool.
-            invokers++;
+            try {
+                String canonicalPath = config.getXmlFilePath().getCanonicalPath();
+                ConcurrentXMLHandler handler = XMLHandlerCache.get(canonicalPath);
+
+                if (null == handler) {
+                    this.schemaParser = new SchemaParser(XMLConnector.class, config.getXsdFilePath());
+                    handler = new ConcurrentXMLHandler(config, schema(), schemaParser.getXsdSchema());
+                    XMLHandlerCache.put(canonicalPath, handler);
+                }
+                xmlInstanceHandler = handler.init();
+            }
+            catch (IOException ex) {
+                log.error(ex, "Failed to get the CanonicalPath of {0}", config.getXmlFilePath());
+                throw new ConnectorIOException(ex);
+            }
         }
         log.info("XMLConnector initialized");
-        log.info("Exit {0}", method);
     }
 
     /*
@@ -91,45 +99,23 @@ public class XMLConnector implements PoolableConnector, AuthenticateOp, CreateOp
      * @see org.identityconnectors.framework.spi.Connector#dispose()
      */
     public void dispose() {
-        synchronized (XMLConnector.class) {
-            invokers--;
-            if (invokers == 0) {
-                xmlHandler.serialize();
-            }
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see org.identityconnectors.framework.spi.PoolableConnector#checkAlive()
-     */
-    public void checkAlive() {
-        //TODO: implement this method
+        xmlInstanceHandler.dispose();
+        log.ok("Dispose {0}", config.getXmlFilePath());
     }
 
     @Override
     public Uid authenticate(final ObjectClass objClass, final String username, final GuardedString password, final OperationOptions options) {
-        final String method = "authenticate";
-        log.info("Entry {0}", method);
+        if (ObjectClass.ACCOUNT.is(Assertions.nullChecked(objClass, "objectClass").getObjectClassValue())) {
 
-        Assertions.nullCheck(objClass, "objectClass");
-        Assertions.nullCheck(username, "username");
-        Assertions.blankCheck(username, "username");
-        Assertions.nullCheck(password, "password");
+            Uid uid = xmlInstanceHandler.authenticate(Assertions.blankChecked(username, "username"), Assertions.nullChecked(password, "password"));
 
-        if (!objClass.is(ObjectClass.ACCOUNT_NAME)) {
-            throw new IllegalArgumentException("Authentication failed. Can only authenticate against " + ObjectClass.ACCOUNT_NAME + " resources.");
+            if (uid == null) {
+                throw new InvalidPasswordException("Invalid password for user: " + username);
+            }
+            log.info("authenticated {0}", uid);
+            return uid;
         }
-
-        Uid uid = xmlHandler.authenticate(username, password);
-
-        if (uid == null) {
-            throw new InvalidPasswordException("Invalid password for user: " + username);
-        }
-
-        log.info("Exit {0}", method);
-
-        return uid;
+        throw new IllegalArgumentException("Authentication failed. Can only authenticate against " + ObjectClass.ACCOUNT_NAME + " resources.");
     }
 
     /*
@@ -138,15 +124,12 @@ public class XMLConnector implements PoolableConnector, AuthenticateOp, CreateOp
      */
     @Override
     public Uid create(final ObjectClass objClass, final Set<Attribute> attributes, final OperationOptions options) {
-        final String method = "create";
-        log.info("Entry {0}", method);
-
         Assertions.nullCheck(objClass, "objectClass");
         Assertions.nullCheck(attributes, "attributes");
 
-        Uid returnUid = xmlHandler.create(objClass, attributes);
+        Uid returnUid = xmlInstanceHandler.create(objClass, attributes);
 
-        log.info("Exit {0}", method);
+        log.info("Created {0}", returnUid);
 
         return returnUid;
     }
@@ -157,15 +140,12 @@ public class XMLConnector implements PoolableConnector, AuthenticateOp, CreateOp
      */
     @Override
     public Uid update(ObjectClass objClass, Uid uid, Set<Attribute> replaceAttributes, OperationOptions options) {
-        final String method = "update";
-        log.info("Entry {0}", method);
-
         Assertions.nullCheck(objClass, "objectClass");
         Assertions.nullCheck(uid, "attributes");
 
-        Uid returnUid = xmlHandler.update(objClass, uid, replaceAttributes);
+        Uid returnUid = xmlInstanceHandler.update(objClass, uid, replaceAttributes);
 
-        log.info("Exit {0}", method);
+        log.info("Updated {0}", returnUid);
 
         return returnUid;
     }
@@ -176,15 +156,12 @@ public class XMLConnector implements PoolableConnector, AuthenticateOp, CreateOp
      */
     @Override
     public void delete(final ObjectClass objClass, final Uid uid, final OperationOptions options) {
-        final String method = "delete";
-        log.info("Entry {0}", method);
-
         Assertions.nullCheck(objClass, "objectClass");
         Assertions.nullCheck(uid, "uid");
 
-        xmlHandler.delete(objClass, uid);
+        xmlInstanceHandler.delete(objClass, uid);
 
-        log.info("Exit {0}", method);
+        log.info("Deleted {0}", uid);
     }
 
     /*
@@ -211,18 +188,16 @@ public class XMLConnector implements PoolableConnector, AuthenticateOp, CreateOp
      */
     @Override
     public void executeQuery(ObjectClass objClass, Query query, ResultsHandler handler, OperationOptions options) {
-        final String method = "executeQuery";
-        log.info("Entry {0}", method);
-
         QueryBuilder queryBuilder = new QueryBuilder(query, objClass);
 
-        Collection<ConnectorObject> hits = xmlHandler.search(queryBuilder.toString(), objClass);
-
+        Collection<ConnectorObject> hits = xmlInstanceHandler.search(queryBuilder.toString(), objClass);
+        int count = 0;
         for (ConnectorObject hit : hits) {
+            count++;
             handler.handle(hit);
         }
 
-        log.info("Exit {0}", method);
+        log.info("Query returned {0} object(s)", count);
     }
 
     /*
@@ -231,15 +206,10 @@ public class XMLConnector implements PoolableConnector, AuthenticateOp, CreateOp
      */
     @Override
     public void test() {
-        final String method = "test";
-        log.info("Entry {0}", method);
-
-        Assertions.nullCheck(config, "config");
-        Assertions.nullCheck(xmlHandler, "xmlHandler");
+        Assertions.nullCheck(config, "configuration");
+        Assertions.nullCheck(xmlInstanceHandler, "xmlHandler");
         Assertions.nullCheck(schemaParser, "schemaParser");
-
         config.validate();
-
-        log.info("Exit {0}", method);
+        log.info("Test Succeed");
     }
 }
