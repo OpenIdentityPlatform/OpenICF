@@ -57,7 +57,6 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
     private static /*volatile*/ final Map<String, ConcurrentXMLHandler> XMLHandlerCache = new HashMap<String, ConcurrentXMLHandler>(1);
     private XMLConfiguration config;
     private XMLHandler xmlInstanceHandler = null;
-    private SchemaParser schemaParser;
 
 
     /*
@@ -80,7 +79,7 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
                 ConcurrentXMLHandler handler = XMLHandlerCache.get(canonicalPath);
 
                 if (null == handler) {
-                    this.schemaParser = new SchemaParser(XMLConnector.class, config.getXsdFilePath());
+                    SchemaParser schemaParser = new SchemaParser(XMLConnector.class, config.getXsdFilePath());
                     handler = new ConcurrentXMLHandler(config, schema(), schemaParser.getXsdSchema());
                     XMLHandlerCache.put(canonicalPath, handler);
                 }
@@ -170,6 +169,7 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      */
     @Override
     public Schema schema() {
+        SchemaParser schemaParser = new SchemaParser(XMLConnector.class, config.getXsdFilePath());
         return schemaParser.parseSchema();
     }
 
@@ -208,7 +208,6 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
     public void test() {
         Assertions.nullCheck(config, "configuration");
         Assertions.nullCheck(xmlInstanceHandler, "xmlHandler");
-        Assertions.nullCheck(schemaParser, "schemaParser");
         config.validate();
         log.info("Test Succeed");
     }
