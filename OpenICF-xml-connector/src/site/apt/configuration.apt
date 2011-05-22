@@ -42,7 +42,7 @@ Configuration
 
 ** Required
 
-*-------------*----------*-----------------*
+*-------------+----------+-------------------+
  <<Property>> | <<Type>> | <<Descriptions>> 
 *------------*------*----------------*
  xmlFilePath | File | Data file path	
