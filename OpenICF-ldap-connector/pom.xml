@@ -33,7 +33,7 @@
     <groupId>org.forgerock.openicf.connectors.ldap</groupId>
     <artifactId>ldap</artifactId>
     <packaging>bundle</packaging>
-    <name>OpenDJ and Sun DSEE Connector (Generic JNDI LDAP Connector)</name>
+    <name>Generic JNDI based LDAP Connector</name>
     <description>Connector for Sun DSEE and OpenDJ and Generic LDAP</description>
     <url>http://openicf.forgerock.org/connectors/${project.artifactId}</url>
     <properties>
@@ -41,7 +41,7 @@
         <skipTests>true</skipTests>
         <contracts.skip>true</contracts.skip>
         <privateConfigPath>${user.home}/.connectors/connector-${project.artifactId}/config</privateConfigPath>
-        <!--embedded.dependencies>ldapbp,providerutil</embedded.dependencies-->
+        <embedded.dependencies>ldapbp</embedded.dependencies>
         <connectorPackage>org.identityconnectors.ldap</connectorPackage>
         <connectorClass>LdapConnector</connectorClass>
     </properties>

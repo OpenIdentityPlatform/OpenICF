@@ -7,7 +7,7 @@
 ~~
 ~~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 ~~
-~~ Copyright Â© 2011. ForgeRock AS. All rights reserved.
+~~ Copyright © 2011. ForgeRock AS. All rights reserved.
 ~~
 ~~ The contents of this file are subject to the terms
 ~~ of the Common Development and Distribution License
@@ -32,15 +32,35 @@
 
 LDAP Connector
 
-  Etiam adipiscing urna sit amet metus auctor porttitor. Fusce pharetra.
+  This is a generic JNDI based connector to connect to LDAP systems.
 
 * Overview
 
-  Cras tempor consequat vulputate. Nam vulputate metus et urna facilisis sit amet malesuada tellus commodo.
-  Nulla id augue at odio tristique hendrerit. Sed a pellentesque urna. Maecenas pretium, libero vel porttitor fringilla,
-  justo augue vehicula tellus, eget porta sem mauris.
-
-  []
+** Schema and Supported Features    
+    
+    The Connector implements the following interfaces:
+    
+	* PoolableConnector
+	
+	* AuthenticateOp
+	
+	* CreateOp
+	
+	* DeleteOp
+	
+	* SearchOp
+	
+	* SchemaOp
+	
+	* TestOp
+	
+	* UpdateOp
+	
+	* ResolveUsernameOp
+	
+	* UpdateAttributeValuesOp
+	
+	* SyncOp
 
 * Usage
 
