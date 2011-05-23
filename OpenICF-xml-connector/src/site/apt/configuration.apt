@@ -44,11 +44,11 @@ Configuration
 
 *-------------+----------+-------------------+
  <<Property>> | <<Type>> | <<Descriptions>> 
-*------------*------*----------------*
+*-------------+----------+-------------------+
  xmlFilePath | File | Data file path	
-*------------*------*----------------*
+*-------------+----------+-------------------+
  xsdFilePath | File | XSD  file path	
-*------------*------*----------------*
+*-------------+----------+-------------------+
     
 
 ** Optional
@@ -64,11 +64,11 @@ Configuration
 	http://openidm.forgerock.com/xml/ns/public/resource/openicf/resource-schema-1.xsd data/resource-schema-1.xsd">
 +---	 
 	
-*-------------*----------*-----------------*
+*-------------+----------+-------------------+
  <<Property>> | <<Type>> | <<Descriptions>> 
-*------------*------*----------------*
+*-------------+----------+-------------------+
  xsdIcfFilePath | File | path of the {{{https://svn.forgerock.org/openicf/trunk/connectors/java/xml/src/main/resources/resource-schema-1.xsd}default resource schema}} 	
-*---------------*------*----------------*
+*-------------+----------+-------------------+
 
 
 * XSD Configuration
