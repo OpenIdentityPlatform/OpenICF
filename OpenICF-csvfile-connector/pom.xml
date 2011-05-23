@@ -40,15 +40,15 @@
     <name>CSVFile Connector</name>
     <description>Connector for CSVFile</description>
     <url>https://openicf.forgerock.org/connectors/csvfile</url>
-    <issueManagement>
+    <!--issueManagement>
         <system>jira</system>
-        <url>https://bugster.forgerock.org/jira/browse/ICFXXX</url>
-    </issueManagement>
-    <!--scm>
-        <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/java/connectors/file/csvfile</connection>
-        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/java/connectors/file/csvfile</developerConnection>
-        <url>http://sources.forgerock.org/browse/openicf/trunk/java/connectors/file/csvfile</url>
-    </scm-->
+        <url>https://bugster.forgerock.org/jira/browse/ICFCSVFILE</url>
+    </issueManagement-->
+    <scm>
+        <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/connectors/java/csvfile</connection>
+        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/connectors/java/csvfile</developerConnection>
+        <url>http://sources.forgerock.org/browse/openicf/trunk/connectors/java/csvfile</url>
+    </scm>
     <properties>
         <defaultConnectorFamily>file</defaultConnectorFamily>
         <skipTests>false</skipTests>
