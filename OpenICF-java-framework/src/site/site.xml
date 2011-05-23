@@ -38,6 +38,7 @@
             <item name="OpenICF" href="http://openicf.forgerock.org"/>
         </breadcrumbs>
         <menu name="Overview" img="images/arrow_right.png">
+            <item name="Wiki" href="https://wikis.forgerock.org/confluence/display/openicf/OpenICF"/>
             <item name="Contribute" href="http://www.forgerock.org/get_involved.html"/>
             <item name="FAQ" href="faq.html"/>
             <item name="Design" href="design.html"/>
@@ -59,5 +60,6 @@
             <src>images/openicf-tagline-195x65.png</src>
             <alt>OpenICF</alt>
         </openproject>
+        <googleAnalytics>UA-23412190-3</googleAnalytics>
     </custom>
 </project>

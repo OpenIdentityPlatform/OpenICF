@@ -26,8 +26,8 @@
         <faq id="openicf02">
             <question>What are the goals of this project?</question>
             <answer>
-                <P>At a high level: Provide a generic layer between applications and target resources.</P>
-                <P>At a lower level:</P>
+                <p>At a high level: Provide a generic layer between applications and target resources.</p>
+                <p>At a lower level:</p>
                 <ul>
                     <li>Offer generic features that are less resource-specific</li>
                     <li>Extract common functionality out to the framework (reduce duplication in resource adapters)</li>
