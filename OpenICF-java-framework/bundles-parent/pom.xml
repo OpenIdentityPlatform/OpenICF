@@ -45,11 +45,11 @@
             <url>${siteDistributionURL}/connectors/</url>
         </site>
     </distributionManagement>
-    <!--scm>
-        <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/java/framework/bundles-parent</connection>
-        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/java/framework/bundles-parent</developerConnection- ->
-        <url>http://sources.forgerock.org/browse/openicf/trunk/java/framework/bundles-parent</url>
-    </scm-->
+    <scm>
+        <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/framework/java/connectors-parent</connection>
+        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/framework/java/connectors-parent</developerConnection>
+        <url>http://sources.forgerock.org/browse/openicf/trunk/framework/java/connectors-parent</url>
+    </scm>
     <!-- mvn help:effective-pom
          mvn archetype:create-from-project
          mvn help:active-profiles
@@ -351,7 +351,7 @@
                                 </configuration>
                             </execution>
                         </executions>
-                    </plugin>                    
+                    </plugin>
 
                     <!-- Skip default test execution -->
                     <plugin>
