@@ -38,6 +38,8 @@
     <version position="right"/>
     <body>
         <breadcrumbs>
+            <item name="OpenICF" href="http://openicf.forgerock.org"/>
+            <item name="Connectors" href="http://openicf.forgerock.org/connectors/index.html" />
             <item name="CSVFile Connector" href="http://openicf.forgerock.org/connectors/csvfile/index.html" />
         </breadcrumbs>
         <menu name="Overview" img="images/arrow_right.png">
