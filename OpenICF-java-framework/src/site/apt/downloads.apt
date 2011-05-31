@@ -32,6 +32,8 @@
 
 Downloads
 
+    <<Java>>
+
     Downloads are available from the {{{http://maven.forgerock.org/repo/snapshots/org/forgerock/openicf/}ForgeRock Maven repository}}
 
     * Connector Framework {{{http://maven.forgerock.org/repo/snapshots/org/forgerock/openicf/framework/connector-framework/1.1.0.0-SNAPSHOT}connector-framework-1.1.0.0-SNAPSHOT.jar}}
@@ -42,5 +44,20 @@ Downloads
 
     Connectors are under their family directories in {{{http://maven.forgerock.org/repo/snapshots/org/forgerock/openicf/connectors/}Maven}}
 
+    <<.Net>>
+
+    Connector Server
+
+    * Connector Server ZIP {{{http://repo.forgerock.org/org/forgerock/openicf/dotnet/ConnectorServer-1.2.0.5478.zip}ConnectorServer-1.2.0.5478.zip}}
+
+    * Connector Server MSI {{{http://repo.forgerock.org/org/forgerock/openicf/dotnet/ServiceInstall-1.2.0.5478.msi}ServiceInstall-1.2.0.5478.msi}}
+
+    []
+
+    Connectors
+
+    {{{http://repo.forgerock.org/org/forgerock/openicf/dotnet/ActiveDirectory.Connector-1.0.0.5570.zip}ActiveDirectory.Connector-1.0.0.5570.zip}}
+
+    {{{http://repo.forgerock.org/org/forgerock/openicf/dotnet/ActiveDirectoryConnectorTests-1.0.0.5590.zip}ActiveDirectoryConnectorTests-1.0.0.5590.zip}}
 
     

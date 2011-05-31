@@ -1,0 +1,287 @@
+   -------------------------
+    Title
+   -------------------------
+   -------------------------
+    Date
+   -------------------------
+
+~~
+~~ CCPL HEADER START
+~~
+~~ This work is licensed under the Creative Commons
+~~ Attribution-NonCommercial-NoDerivs 3.0 Unported License.
+~~ To view a copy of this license, visit
+~~ http://creativecommons.org/licenses/by-nc-nd/3.0/
+~~ or send a letter to Creative Commons, 444 Castro Street,
+~~ Suite 900, Mountain View, California, 94041, USA.
+~~
+~~ You can also obtain a copy of the license at
+~~ legal/CC-BY-NC-ND.txt.
+~~ See the License for the specific language governing permissions
+~~ and limitations under the License.
+~~
+~~ If applicable, add the following below this CCPL HEADER, with the fields
+~~ enclosed by brackets "[]" replaced with your own identifying information:
+~~      Portions Copyright [yyyy] [name of copyright owner]
+~~
+~~ CCPL HEADER END
+~~
+~~      Copyright 2011 ForgeRock AS
+~~
+~~
+
+Developing OpenICF
+
+*Developing Java Connector Framework
+
+    <<Requirements:>>
+
+    *{{{http://maven.apache.org/download.html}Maven 3.0}}
+
+    []
+
+    <<Checkout the Build>>
+
++---
+C:\build> svn checkout https://svn.forgerock.org/openicf/trunk/framework/java framework
+C:\build> cd framework
+
+C:\framework> mvn install
++---
+
+    This command will install the 1.1.0.0-SNAPSHOT version of the OpenICF Framework. The same binaries are published to frequently to the {{{http://maven.forgerock.org/repo/snapshots/org/forgerock/openicf/}ForgeRock Snapshot Repository}}.
+
+*Developing .NET Connector Framework
+
+    <<Requirements:>>
+
+    *{{{http://www.microsoft.com/downloads/details.aspx?familyid=ab99342f-5d1a-413d-8319-81da479ab0d7&displaylang=en}.NET Framework 3.5 SP1}}
+
+    *{{{http://www.microsoft.com/downloads/details.aspx?FamilyId=F26B1AA4-741A-433A-9BE5-FA919850BDBF&displaylang=en}Microsoft Windows SDK for Windows Server 2008 and .NET Framework 3.5}}
+
+~~    {{{http://www.microsoft.com/downloads/dlx/en-us/listdetailsview.aspx?FamilyID=6b6c21d2-2006-4afa-9702-529fa782d63b}Microsoft Windows SDK for Windows 7 and .NET Framework 4}} {{{http://www.microsoft.com/downloads/en/details.aspx?FamilyID=35aeda01-421d-4ba5-b44b-543dc8c33a20&displaylang=en}ISO}}
+
+    *{{{http://msbuildtasks.tigris.org/}MSBuild Community Tasks}} {{{http://msbuildtasks.tigris.org/MSBuild.Community.Tasks.Nightly.msi}Download}}
+
+    *{{{http://www.nunit.org/index.php?p=download}NUnit}}
+
+    *{{{http://wix.sourceforge.net/}Wix}}
+
+    *{{{http://subversion.apache.org/}Subversion}}
+
+    []
+
+    <<Checkout the Build>>
+
+    <command>: msbuild.exe ConnectorFramework.sln /p:Configuration=Release /p:ZipRelease=true
+
++---
+C:\build> svn checkout https://svn.forgerock.org/openicf/trunk/framework/dotnet/ framework
+C:\build> set WIX_HOME=C:\Program Files\Windows Installer XML v3.5
+C:\build> set Path=%Path%;%WIX_HOME%\bin
+C:\build> set NUNIT_HOME=C:\Program Files\NUnit 2.5.10
+
+C:\framework> C:\WINDOWS\Microsoft.NET\Framework\v3.5\msbuild.exe ConnectorFramework.sln /p:Configuration=Release
++---
+
+    MSBUILD : warning MSB6004: The specified task executable location "\bin\nunit -console.exe" is invalid.
+    Copy the content of the C:\Program Files\NUnit 2.5.10\bin\net-2.0 to C:\Program Files\NUnit 2.5.10\bin
+
+*---+---+
+<<Properties>> | <<Default value>>
+*---+---+
+FrameworkDistDir | $(MSBuildProjectDirectory)\\..\\Dist
+*---+---+
+Configuration | Debug
+*---+---+
+ZipRelease | true
+*---+---+
+
+    <<Recommended:>>
+
+    {{{http://www.icsharpcode.net/OpenSource/SD/Download/#SharpDevelop4x}SharpDevelop}} free IDE to develop .NET applications with plus it includes most of the dependencies.
+
+    * .NET 4.0 Full runtime must be installed on your machine {{{http://www.microsoft.com/downloads/details.aspx?FamilyID=0a391abd-25c1-4fc0-919f-b21f31ab88b7&displaylang=en}Download}}
+    
+    * .NET 3.5 SP1 runtime must be installed {{{http://www.microsoft.com/downloads/details.aspx?familyid=ab99342f-5d1a-413d-8319-81da479ab0d7&displaylang=en}Download}}
+
+
+*Developing Java Connector Bundles
+
+    Before you can start you need the following information:
+
+    *<groupId>: org.forgerock.openicf.[{{{Connector Families}Connector Family}}]
+
+        <<Example>>: org.forgerock.openicf.misc
+
+    *<artifactId>: lowercase name of the connector. This name MUST be unique within the group.
+
+        <<Example>>: sample
+
+    *<version>: This value will be prefixed with the compatibility version (1.1). The final version 1.1.1.0-SNAPSHOT
+
+        <<Example>>: 1.0-SNAPSHOT
+
+    *<package>: org.forgerock.openicf.[artifactId]
+
+        <<Example>>: org.forgerock.openicf.example
+
+    *<connector_name>: Camle-case artifactId. The classes are using this value (SampleConnector, SampleConfiguration, etc.)
+
+        <<Example>>: Sample
+
+    []
+
+{Connector Families}
+
+    * Cloud => cloud
+
+    * Database => db
+
+    * File => file
+
+    * LDAP => ldap
+
+    * Mainframe => mainframe
+
+    * Message Bus => messagebus
+
+    * Misc => misc
+
+    * PKI => pki
+
+    * ERP => erp
+
+    * SSO => sso
+
+    * Operating Systems => os
+
+    * WebServices => webservice
+
+    * Groupware => groupware
+
+
+    []
+
+    To create a new project open a console and navigate to the directory where you want to create project and simply type the following:
+
++---
+mvn archetype:generate \
+-DarchetypeGroupId=org.forgerock.openicf \
+-DarchetypeArtifactId=connector-archetype \
+-DarchetypeVersion=1.0.0-SNAPSHOT \
+-DremoteRepositories=http://maven.forgerock.org/repo/snapshots \
+-DgroupId=org.forgerock.openicf.bundles.misc \
+-DartifactId=sample \
+-Dversion=1.0-SNAPSHOT \
+-Dpackage=org.forgerock.openicf.sample \
+-Dconnector_name=Sample
++---
+
+    The result of this is a directory sample which is a maven project that defines a public package org.forgerock.openicf.connectors.misc The project is packaged as an OSGi bundle.
+
++---
+    $ mvn archetype:generate -DarchetypeCatalog=local
+    [INFO] Scanning for projects...
+    [INFO]
+    [INFO] Generating project in Interactive mode
+    Choose archetype:
+    1: local -> connector-archetype (OpenICF Connector Development Archetype)
+    Choose a number: : 1
+    Define value for property 'groupId': : org.forgerock.openicf.<<misc>>
+    Define value for property 'artifactId': : <<sample>>
+    Define value for property 'version':  1.0-SNAPSHOT: :
+    Define value for property 'package':  org.forgerock.openicf.<<sample>>: :
+    [INFO] Using property: ALL_OPERATIONS = yes
+    [INFO] Using property: OP_AUTHENTICATE = yes
+    [INFO] Using property: OP_CREATE = yes
+    [INFO] Using property: OP_DELETE = yes
+    [INFO] Using property: OP_RESOLVEUSERNAME = yes
+    [INFO] Using property: OP_SCHEMA = yes
+    [INFO] Using property: OP_SCRIPTONCONNECTOR = yes
+    [INFO] Using property: OP_SCRIPTONRESOURCE = yes
+    [INFO] Using property: OP_SEARCH = yes
+    [INFO] Using property: OP_SYUPDATENC = yes
+    [INFO] Using property: OP_TEST = yes
+    [INFO] Using property: OP_UPDATE = yes
+    [INFO] Using property: OP_UPDATEATTRIBUTEVALUES = yes
+    [INFO] Using property: compatibility_version = 1.1
+    [INFO] Using property: connector_family = <<misc>>
+    Define value for property 'connector_name': : <<Sample>>
+    [INFO] Using property: framework_version = 0.0-SNAPSHOT
+    [INFO] Using property: jira_project = ICFXXX
+    [INFO] Using property: poolable_connector = no
+    Confirm properties configuration:
+    groupId: org.forgerock.openicf.misc
+    artifactId: test
+    version: 1.0-SNAPSHOT
+    package: org.forgerock.openicf.test
+    ALL_OPERATIONS: yes
+    OP_AUTHENTICATE: yes
+    OP_CREATE: yes
+    OP_DELETE: yes
+    OP_RESOLVEUSERNAME: yes
+    OP_SCHEMA: yes
+    OP_SCRIPTONCONNECTOR: yes
+    OP_SCRIPTONRESOURCE: yes
+    OP_SEARCH: yes
+    OP_SYUPDATENC: yes
+    OP_TEST: yes
+    OP_UPDATE: yes
+    OP_UPDATEATTRIBUTEVALUES: yes
+    compatibility_version: 1.1
+    connector_family: misc
+    connector_name: TestSample
+    framework_version: 0.0-SNAPSHOT
+    jira_project: ICFXXX
+    poolable_connector: no
+     Y: :
+    [INFO] ------------------------------------------------------------------------
+    [INFO] BUILD SUCCESS
+    [INFO] ------------------------------------------------------------------------
+    [INFO] ------------------------------------------------------------------------
+    $ cd test
+    $ mvn install
++---
+
+Developing .NET Connector Bundles
+
+
+~~    ActiveDirectory.Connector-1.0.0.5570.zip
+~~    ActiveDirectoryConnectorTests-1.0.0.5590.zip
+~~
+~~    ConnectorServer-1.2.0.5478.zip
+~~    ServiceInstall-1.2.0.5478.msi
+
+    Download libraries to the same folder:
+
+    *{{{http://repo.forgerock.org/org/forgerock/openicf/dotnet/Common-1.2.0.5629.zip}Common-1.2.0.5629.zip}}
+
+    *{{{http://repo.forgerock.org/org/forgerock/openicf/dotnet/Framework-1.2.0.5478.zip}Framework-1.2.0.5478.zip}}
+
+    *{{{http://repo.forgerock.org/org/forgerock/openicf/dotnet/FrameworkInternal-1.2.0.5478.zip}FrameworkInternal-1.2.0.5478.zip}}
+
+    *{{{http://repo.forgerock.org/org/forgerock/openicf/dotnet/FrameworkTests-1.2.0.6069.zip}FrameworkTests-1.2.0.6069.zip}}
+
+    *{{{http://repo.forgerock.org/org/forgerock/openicf/dotnet/TestCommon-1.2.0.5478.zip}TestCommon-1.2.0.5478.zip}}
+
+    Script support
+
+    *{{{http://repo.forgerock.org/org/forgerock/openicf/dotnet/Boo.ScriptExecutorFactory-1.0.0.5478.zip}Boo.ScriptExecutorFactory-1.0.0.5478.zip}}
+
+    *{{{http://repo.forgerock.org/org/forgerock/openicf/dotnet/Shell.ScriptExecutorFactory-1.0.0.5478.zip}Shell.ScriptExecutorFactory-1.0.0.5478.zip}}
+
+
+    Set the <<OPENICF_HOME>>=<dir> point to the directory where the previous archives are extracted.
+
+    <command>: msbuild.exe DotNetConnectors.sln /p:Configuration=Release /p:ZipRelease=true
+
+
++---
+C:\build> svn checkout https://svn.forgerock.org/openicf/trunk/connectors/dotnet/ connectors
+C:\build> set WIX_HOME=C:\Program Files\Windows Installer XML v3.5
+C:\build> set Path=%Path%;%WIX_HOME%\bin
+C:\build> set NUNIT_HOME=C:\Program Files\NUnit 2.5.10
+
+C:\connectors> C:\WINDOWS\Microsoft.NET\Framework\v3.5\msbuild.exe DotNetConnectors.sln /p:Configuration=Release /p:ZipRelease=true
++---

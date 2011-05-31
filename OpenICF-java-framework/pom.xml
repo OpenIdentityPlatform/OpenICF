@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <!--
  Copyright (c) 2011 ForgeRock Inc. All Rights Reserved
 
@@ -21,9 +20,7 @@
  with the fields enclosed by brackets [] replaced by
  your own identifying information:
  "Portions Copyrighted 2011 [name of copyright owner]"
--->
-
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+--><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.forgerock</groupId>
@@ -34,13 +31,27 @@
     <artifactId>framework</artifactId>
     <version>1.1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>OpenICF 1.1.0.0</name>
+    <name>OpenICF Project</name>
     <description>
      The Open Identity Connectors Framework and Toolkit (OpenICF) is built to help drive development of Connectors.
      Connectors provide a consistent generic layer between applications and target resources.
     </description>
     <inceptionYear>2011</inceptionYear>
     <url>http://openicf.forgerock.org</url>
+    <licenses>
+        <license>
+            <name>CDDL-1.0</name>
+            <url>http://www.opensource.org/licenses/cddl1.php</url>
+            <comments>Common Development and Distribution License (CDDL) 1.0</comments>
+            <distribution>repo</distribution>
+        </license>
+        <license>
+            <name>CC BY-NC-ND 3.0</name>
+            <url>http://creativecommons.org/licenses/by-nc-nd/3.0/</url>
+            <comments>Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported</comments>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
     <scm>
         <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/framework/java</connection>
         <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/framework/java</developerConnection>
@@ -49,6 +60,7 @@
     <distributionManagement>
         <site>
             <id>forgerock.org</id>
+            <name>ForgeRock Community Server</name>
             <url>${siteDistributionURL}</url>
         </site>
     </distributionManagement>
@@ -163,7 +175,7 @@
         <module>testbundlev2</module>
         <!--module>compatibility-tests-parent</module-->
         <module>bundles-parent</module>
-    </modules>
+  </modules>
 
     <profiles>
         <profile>
