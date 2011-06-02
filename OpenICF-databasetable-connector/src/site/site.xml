@@ -35,6 +35,7 @@
     <version position="right"/>
     <body>
         <breadcrumbs>
+            <item name="Developer Community" href="http://www.forgerock.org" />
             <item name="OpenICF" href="http://openicf.forgerock.org"/>
             <item name="Connectors" href="http://openicf.forgerock.org/connectors/index.html" />
             <item name="Database Table Connector" href="http://openicf.forgerock.org/connectors/databasetable/index.html" />
