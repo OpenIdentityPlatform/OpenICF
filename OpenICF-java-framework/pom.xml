@@ -175,6 +175,7 @@
         <module>testbundlev2</module>
         <!--module>compatibility-tests-parent</module-->
         <module>bundles-parent</module>
+    <module>icfl-over-slf4j</module>
   </modules>
 
     <profiles>
