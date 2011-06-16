@@ -85,24 +85,26 @@ public class XMLConfiguration extends AbstractConfiguration {
     }
 
     public void validate() {
-        if (null == xsdFilePath || !xsdFilePath.canRead()) {
-            throw new IllegalArgumentException("Missing xsd file");
+        if (null == xsdFilePath) {
+            throw new IllegalArgumentException("Missing xsdFilePath property");
+        } else if (!xsdFilePath.canRead()) {
+            throw new IllegalArgumentException("Unreadable xsdFilePath at: " + xsdFilePath.getAbsolutePath());
         }
         if (null == xmlFilePath) {
-            throw new IllegalArgumentException("Missing xml file");
+            throw new IllegalArgumentException("Missing xmlFilePath property");
         } else if (!xmlFilePath.exists()) {
             try {
                 if (xmlFilePath.createNewFile()) {
                     xmlFilePath.delete();
                 }
             } catch (IOException ex) {
-                throw new IllegalArgumentException("Xml file can not be created");
+                throw new IllegalArgumentException("Xml file can not be created at " + xmlFilePath.getAbsolutePath());
             }
         } else if (!xmlFilePath.canWrite()) {
-            throw new IllegalArgumentException("Xml file can not be written");
+            throw new IllegalArgumentException("Xml file can not be written at " + xmlFilePath.getAbsolutePath());
         }
         if (null != xsdIcfFilePath && !xsdIcfFilePath.canRead()) {
-            throw new IllegalArgumentException("Connector schema file can not be read");
+            throw new IllegalArgumentException("Connector schema file can not be read from " + xsdIcfFilePath.getAbsolutePath());
         } else if (null == xsdIcfFilePath) {
             try {
                 URL defaultSchema = XMLConfiguration.class.getResource("/resource-schema-1.xsd");
@@ -114,8 +116,10 @@ public class XMLConfiguration extends AbstractConfiguration {
                 throw new UndeclaredThrowableException(e);
             }
         }
-        if (null == xsdIcfFilePath || !xsdIcfFilePath.canRead()) {
-            throw new IllegalArgumentException("Missing connector xsd file");
+        if (null == xsdIcfFilePath) {
+            throw new IllegalArgumentException("Missing xsdIcfFilePath property");
+        } else if (!xsdIcfFilePath.canRead()) {
+            throw new IllegalArgumentException("Unreadable xsdIcfFilePath at: " + xsdIcfFilePath.getAbsolutePath());
         }
     }
 }
