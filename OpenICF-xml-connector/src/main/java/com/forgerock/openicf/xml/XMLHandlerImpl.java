@@ -640,16 +640,17 @@ public class XMLHandlerImpl implements XMLHandler {
     }
 
     private boolean valuesAreExpectedClass(Class expectedClass, List<Object> values) {
-        if (expectedClass.isPrimitive()) {
-            expectedClass = AttributeTypeUtil.convertPrimitiveToWrapper(expectedClass.getName());
-        }
+        if (null != values) {
+            if (expectedClass.isPrimitive()) {
+                expectedClass = AttributeTypeUtil.convertPrimitiveToWrapper(expectedClass.getName());
+            }
 
-        for (Object obj : values) {
-            if (expectedClass != obj.getClass()) {
-                return false;
+            for (Object obj : values) {
+                if (expectedClass != obj.getClass()) {
+                    return false;
+                }
             }
         }
-
         return true;
     }
 
