@@ -178,8 +178,8 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      * @see org.identityconnectors.framework.spi.operations.SearchOp#createFilterTranslator(org.identityconnectors.framework.common.objects.ObjectClass, org.identityconnectors.framework.common.objects.OperationOptions)
      */
     @Override
-    public FilterTranslator<Query> createFilterTranslator(ObjectClass objClass, OperationOptions options) {
-        return new XMLFilterTranslator();
+    public FilterTranslator<Query> createFilterTranslator(ObjectClass objClass, OperationOptions options) {        
+        return new XMLFilterTranslator(xmlInstanceHandler.isSupportUid(objClass));
     }
 
     /*

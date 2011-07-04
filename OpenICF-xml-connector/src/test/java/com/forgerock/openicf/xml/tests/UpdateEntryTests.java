@@ -151,7 +151,7 @@ public class UpdateEntryTests {
         handler.update(ObjectClass.ACCOUNT, insertedUid, attrWithoutValue);
 
         EqualsFilter equalsFilter = new EqualsFilter(AttributeBuilder.build(ATTR_NAME, ATTR_ACCOUNT_VALUE_NAME));
-        XMLFilterTranslator filterTranslator = new XMLFilterTranslator();
+        XMLFilterTranslator filterTranslator = new XMLFilterTranslator(true);
 
         Query equalsQuery = filterTranslator.createEqualsExpression(equalsFilter, false);
         QueryBuilder queryBuilder = new QueryBuilder(equalsQuery, ObjectClass.ACCOUNT);
@@ -221,7 +221,7 @@ public class UpdateEntryTests {
         handler.update(objClass, insertedUid, attrSet);
 
         // Create search query
-        XMLFilterTranslator translator = new XMLFilterTranslator();
+        XMLFilterTranslator translator = new XMLFilterTranslator(true);
         AttributeBuilder builder = new AttributeBuilder();
         builder.setName(Uid.NAME);
         builder.addValue(insertedUid.getUidValue());

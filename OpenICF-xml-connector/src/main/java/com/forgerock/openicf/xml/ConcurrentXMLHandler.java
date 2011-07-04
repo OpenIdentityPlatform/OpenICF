@@ -136,4 +136,10 @@ public class ConcurrentXMLHandler implements XMLHandler {
             lock.readLock().unlock();
         }
     }
+
+    public boolean isSupportUid(ObjectClass objectClass) {
+        return proxy.isSupportUid(objectClass);
+    }
+
+
 }

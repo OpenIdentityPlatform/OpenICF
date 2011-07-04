@@ -36,6 +36,9 @@ import java.util.List;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.filter.*;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.Name;
+import org.identityconnectors.framework.common.objects.Uid;
 
 /**
  * This is an implementation of AbstractFilterTranslator that gives a concrete representation
@@ -52,9 +55,23 @@ import org.identityconnectors.framework.common.objects.filter.*;
  */
 public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
 
+    private boolean preferUidOverName = false;
+
+    public XMLFilterTranslator(boolean preferUidOverName) {
+        this.preferUidOverName = preferUidOverName;
+    }
+
+    private String getAttributeName(Attribute attribute) {
+        String attrName = attribute.getName();
+        if (!preferUidOverName && Uid.NAME.equals(attrName)) {
+            attrName = Name.NAME;
+        }
+        return attrName;
+    }
+
     @Override
     public Query createEndsWithExpression(EndsWithFilter filter, boolean not) {
-        String attrName = filter.getAttribute().getName();
+        String attrName = getAttributeName(filter.getAttribute());
         String prefixedName = createNameWithNamespace(attrName);
         String value = AttributeUtil.getSingleValue(filter.getAttribute()).toString();
         String[] args = createFunctionArgs(prefixedName, value);
@@ -64,7 +81,7 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
 
     @Override
     public Query createContainsAllValuesExpression(ContainsAllValuesFilter filter, boolean not) {
-        String attrName = filter.getAttribute().getName();
+        String attrName = getAttributeName(filter.getAttribute());
         List<Object> values = filter.getAttribute().getValue();
 
         int numOfValues = values.size();
@@ -104,7 +121,7 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
 
     @Override
     public Query createStartsWithExpression(StartsWithFilter filter, boolean not) {
-        String attrName = filter.getAttribute().getName();
+        String attrName = getAttributeName(filter.getAttribute());
         String prefixedName = createNameWithNamespace(attrName);
         String value = AttributeUtil.getSingleValue(filter.getAttribute()).toString();
         String[] args = createFunctionArgs(prefixedName, value);
@@ -114,7 +131,7 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
 
     @Override
     public Query createContainsExpression(ContainsFilter filter, boolean not) {
-        String attrName = filter.getAttribute().getName();
+        String attrName = getAttributeName(filter.getAttribute());
         String prefixedName = createNameWithNamespace(attrName);
         String value = AttributeUtil.getSingleValue(filter.getAttribute()).toString();
 
@@ -127,7 +144,7 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
 
     @Override
     public Query createEqualsExpression(EqualsFilter filter, boolean not) {
-        String attrName = filter.getAttribute().getName();
+        String attrName = getAttributeName(filter.getAttribute());
         String prefixedName = createNameWithNamespace(attrName);
         String value = AttributeUtil.getSingleValue(filter.getAttribute()).toString();
 
@@ -136,7 +153,7 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
 
     @Override
     public Query createGreaterThanExpression(GreaterThanFilter filter, boolean not) {
-        String attrName = filter.getAttribute().getName();
+        String attrName = getAttributeName(filter.getAttribute());
         String prefixedName = createNameWithNamespace(attrName);
         String value = AttributeUtil.getSingleValue(filter.getAttribute()).toString();
 
@@ -145,7 +162,7 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
 
     @Override
     public Query createGreaterThanOrEqualExpression(GreaterThanOrEqualFilter filter, boolean not) {
-        String attrName = filter.getAttribute().getName();
+        String attrName = getAttributeName(filter.getAttribute());
         String prefixedName = createNameWithNamespace(attrName);
         String value = AttributeUtil.getSingleValue(filter.getAttribute()).toString();
 
@@ -168,7 +185,7 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
 
     @Override
     public Query createLessThanExpression(LessThanFilter filter, boolean not) {
-        String attrName = filter.getAttribute().getName();
+        String attrName = getAttributeName(filter.getAttribute());
         String prefixedName = createNameWithNamespace(attrName);
         String value = AttributeUtil.getSingleValue(filter.getAttribute()).toString();
 
@@ -177,7 +194,7 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
 
     @Override
     public Query createLessThanOrEqualExpression(LessThanOrEqualFilter filter, boolean not) {
-        String attrName = filter.getAttribute().getName();
+        String attrName = getAttributeName(filter.getAttribute());
         String prefixedName = createNameWithNamespace(attrName);
         String value = AttributeUtil.getSingleValue(filter.getAttribute()).toString();
 

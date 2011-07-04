@@ -107,7 +107,7 @@ public class XMLFilterTranslatorTests {
         xmlHandler.create(ObjectClass.ACCOUNT, attributesSecond);
 
 
-        filterTranslator = new XMLFilterTranslator();
+        filterTranslator = new XMLFilterTranslator(true);
 
         AttributeBuilder attrBld = new AttributeBuilder();
         attrBld.setName(ATTR_ACCOUNT_FIRST_NAME);

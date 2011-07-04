@@ -471,6 +471,20 @@ public class XMLHandlerImpl implements XMLHandler {
         return uid;
     }
 
+    public boolean isSupportUid(ObjectClass objectClass) {
+        ObjectClassInfo objInfo = connSchema.findObjectClassInfo(objectClass.getObjectClassValue());
+        if (null != objInfo) {
+            for (AttributeInfo info: objInfo.getAttributeInfo()) {
+                if (info.is(Uid.NAME)){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
+
     private void createDocument() {
         final String method = "createDocument";
         log.info("Entry {0}", method);
@@ -574,7 +588,7 @@ public class XMLHandlerImpl implements XMLHandler {
         Element result = null;
 
         // Build search query
-        XMLFilterTranslator translator = new XMLFilterTranslator();
+        XMLFilterTranslator translator = new XMLFilterTranslator(isSupportUid(objClass));
         String idField = getElementIdentifierField(objClass, identifierField);
         AttributeBuilder builder = new AttributeBuilder();
         builder.setName(idField);

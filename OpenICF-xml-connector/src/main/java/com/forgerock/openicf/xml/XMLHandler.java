@@ -48,4 +48,6 @@ public interface XMLHandler {
     XMLHandler init();
 
     void dispose();
+
+    boolean isSupportUid(ObjectClass objectClass);
 }

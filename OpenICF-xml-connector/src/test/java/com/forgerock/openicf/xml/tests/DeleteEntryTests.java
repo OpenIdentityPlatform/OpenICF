@@ -93,7 +93,7 @@ public class DeleteEntryTests {
 
         // Create search query
         Collection<ConnectorObject> searchResults = null;
-        XMLFilterTranslator translator = new XMLFilterTranslator();
+        XMLFilterTranslator translator = new XMLFilterTranslator(true);
         AttributeBuilder builder = new AttributeBuilder();
         builder.setName(Uid.NAME);
         builder.addValue(insertedUid.getUidValue());

@@ -80,7 +80,7 @@ public class XMLHandlerTests {
         handler.create(ObjectClass.ACCOUNT, attributes);
 
         // INITIALIZE QUERY FOR TESTING
-        XMLFilterTranslator filterTranslator = new XMLFilterTranslator();
+        XMLFilterTranslator filterTranslator = new XMLFilterTranslator(true);
 
         EqualsFilter filter = new EqualsFilter(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, ATTR_ACCOUNT_VALUE_FIRST_NAME));
         Query query = filterTranslator.createEqualsExpression(filter, false);
