@@ -45,12 +45,6 @@
             <comments>Common Development and Distribution License (CDDL) 1.0</comments>
             <distribution>repo</distribution>
         </license>
-        <license>
-            <name>CC BY-NC-ND 3.0</name>
-            <url>http://creativecommons.org/licenses/by-nc-nd/3.0/</url>
-            <comments>Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported</comments>
-            <distribution>repo</distribution>
-        </license>
     </licenses>
     <scm>
         <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/framework/java</connection>
