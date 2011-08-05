@@ -35,7 +35,7 @@
     <packaging>jar</packaging>
     <name>Database Common</name>
     <description>This is a generic bundle that contains many of the utilities needed for any sort of database connector, such as query builders, connection wrappers, and other SQL utilities.</description>
-    <url>http://openicf.forgerock.org/connectors/${project.artifactId}</url>
+    <url>http://openicf.forgerock.org/connectors/dbcommon</url>
     <scm>
         <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/connectors/java/dbcommon</connection>
         <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/connectors/java/dbcommon</developerConnection>
