@@ -30,6 +30,7 @@ import java.util.Set;
 
 import org.identityconnectors.common.pooling.ObjectPoolConfiguration;
 import org.identityconnectors.framework.api.ConnectorKey;
+import org.identityconnectors.framework.api.ResultsHandlerConfiguration;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.impl.api.APIConfigurationImpl;
 import org.identityconnectors.framework.impl.api.ConfigurationPropertiesImpl;
@@ -84,6 +85,37 @@ class APIConfigurationHandlers {
             }
         
         });
+
+        HANDLERS.add(
+                new AbstractObjectSerializationHandler(ResultsHandlerConfiguration.class, "ResultsHandlerConfiguration") {
+
+                    public Object deserialize(ObjectDecoder decoder) {
+                        ResultsHandlerConfiguration rv =
+                                new ResultsHandlerConfiguration();
+                        rv.setEnableNormalizingResultsHandler(
+                                decoder.readBooleanField("enableNormalizingResultsHandler", rv.isEnableNormalizingResultsHandler()));
+                        rv.setEnableFilteredResultsHandler(
+                                decoder.readBooleanField("enableFilteredResultsHandler", rv.isEnableFilteredResultsHandler()));
+                        rv.setEnableCaseInsensitiveFilter(
+                                decoder.readBooleanField("enableCaseInsensitiveFilter", rv.isEnableCaseInsensitiveFilter()));
+                        rv.setEnableNormalizingResultsHandler(
+                                decoder.readBooleanField("enableAttributesToGetSearchResultsHandler", rv.isEnableAttributesToGetSearchResultsHandler()));
+                        return rv;
+                    }
+
+                    public void serialize(Object object, ObjectEncoder encoder) {
+                        ResultsHandlerConfiguration val =
+                                (ResultsHandlerConfiguration) object;
+                        encoder.writeBooleanField("enableNormalizingResultsHandler",
+                                val.isEnableNormalizingResultsHandler());
+                        encoder.writeBooleanField("enableFilteredResultsHandler",
+                                val.isEnableFilteredResultsHandler());
+                        encoder.writeBooleanField("enableCaseInsensitiveFilter",
+                                val.isEnableCaseInsensitiveFilter());
+                        encoder.writeBooleanField("enableAttributesToGetSearchResultsHandler",
+                                val.isEnableAttributesToGetSearchResultsHandler());
+                    }
+                });
         
         HANDLERS.add(
                 
