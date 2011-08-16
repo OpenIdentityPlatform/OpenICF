@@ -195,4 +195,8 @@ public class APIConfigurationImpl implements APIConfiguration {
         }
         return _resultsHandlerConfiguration;
     }
+
+    public void setResultsHandlerConfiguration(ResultsHandlerConfiguration config) {
+        this._resultsHandlerConfiguration = config;
+    }
 }

@@ -98,7 +98,7 @@ class APIConfigurationHandlers {
                                 decoder.readBooleanField("enableFilteredResultsHandler", rv.isEnableFilteredResultsHandler()));
                         rv.setEnableCaseInsensitiveFilter(
                                 decoder.readBooleanField("enableCaseInsensitiveFilter", rv.isEnableCaseInsensitiveFilter()));
-                        rv.setEnableNormalizingResultsHandler(
+                        rv.setEnableAttributesToGetSearchResultsHandler(
                                 decoder.readBooleanField("enableAttributesToGetSearchResultsHandler", rv.isEnableAttributesToGetSearchResultsHandler()));
                         return rv;
                     }
@@ -203,6 +203,9 @@ class APIConfigurationHandlers {
                 rv.setConnectorPoolConfiguration(
                         (ObjectPoolConfiguration)
                         decoder.readObjectField("connectorPoolConfiguration",null,null));
+                rv.setResultsHandlerConfiguration(
+                        (ResultsHandlerConfiguration)
+                        decoder.readObjectField("resultsHandlerConfiguration",null,null));
                 rv.setConfigurationProperties((ConfigurationPropertiesImpl)
                         decoder.readObjectField("ConfigurationProperties",ConfigurationPropertiesImpl.class,null));
                 @SuppressWarnings("unchecked")
@@ -227,6 +230,8 @@ class APIConfigurationHandlers {
                         val.isConnectorPoolingSupported());
                 encoder.writeObjectField("connectorPoolConfiguration",
                         val.getConnectorPoolConfiguration(),false);
+                encoder.writeObjectField("resultsHandlerConfiguration",
+                        val.getResultsHandlerConfiguration(),false);
                 encoder.writeObjectField("ConfigurationProperties",
                         val.getConfigurationProperties(),true);
                 encoder.writeObjectField("timeoutMap",

@@ -46,7 +46,7 @@
 
 <!ENTITY % xmlObject
   "%primitiveTypes; | %exceptionTypes; | %messageTypes; | %filterTypes; | %attributeTypes; |
-ObjectPoolConfiguration | ConfigurationProperty | ConfigurationProperties |
+ObjectPoolConfiguration | ResultsHandlerConfiguration | ConfigurationProperty | ConfigurationProperties |
 APIConfiguration | ConnectorMessages | ConnectorKey | ConnectorInfo |
 UpdateApiOpType | AttributeInfo | ConnectorObject | ObjectClass |
 ObjectClassInfo | Schema | Script | ScriptContext | OperationOptions | 
@@ -138,6 +138,14 @@ OperationOptionInfo | SyncDeltaType | SyncToken | SyncDelta | QualifiedUid
     minIdle CDATA #IMPLIED
 >
 
+<!ELEMENT ResultsHandlerConfiguration EMPTY>
+<!ATTLIST ResultsHandlerConfiguration
+    enableNormalizingResultsHandler CDATA #IMPLIED
+    enableFilteredResultsHandler CDATA #IMPLIED
+    enableCaseInsensitiveFilter CDATA #IMPLIED
+    enableAttributesToGetSearchResultsHandler CDATA #IMPLIED
+>
+
 <!ELEMENT ConfigurationProperty (value,operations)> 
 <!ATTLIST ConfigurationProperty
     order CDATA #IMPLIED
@@ -152,12 +160,13 @@ OperationOptionInfo | SyncDeltaType | SyncToken | SyncDelta | QualifiedUid
 <!ELEMENT operations (Class)*>
 <!ELEMENT ConfigurationProperties ((ConfigurationProperty)*)> 
 
-<!ELEMENT APIConfiguration (connectorPoolConfiguration,ConfigurationProperties,timeoutMap,SupportedOperations)> 
+<!ELEMENT APIConfiguration (connectorPoolConfiguration,resultsHandlerConfiguration,ConfigurationProperties,timeoutMap,SupportedOperations)>
 <!ATTLIST APIConfiguration
     connectorPoolingSupported CDATA #REQUIRED
     producerBufferSize CDATA #REQUIRED
 >
-<!ELEMENT connectorPoolConfiguration ((ObjectPoolConfiguration))> 
+<!ELEMENT connectorPoolConfiguration ((ObjectPoolConfiguration))>
+<!ELEMENT resultsHandlerConfiguration ((ResultsHandlerConfiguration))>
 <!ELEMENT timeoutMap (Map)>
 <!ELEMENT SupportedOperations ((Class)*)>
 <!ELEMENT ConnectorMessages (catalogs)>
