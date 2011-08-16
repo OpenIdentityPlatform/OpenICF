@@ -29,6 +29,7 @@ import java.util.Set;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.pooling.ObjectPoolConfiguration;
 import org.identityconnectors.framework.api.APIConfiguration;
+import org.identityconnectors.framework.api.ResultsHandlerConfiguration;
 import org.identityconnectors.framework.api.operations.APIOperation;
 
 
@@ -41,6 +42,8 @@ public class APIConfigurationImpl implements APIConfiguration {
      * All configuration related to connector pooling.
      */
     private ObjectPoolConfiguration _connectorPoolConfiguration;
+
+    private ResultsHandlerConfiguration _resultsHandlerConfiguration;
     
     private boolean _isConnectorPoolingSupported;
     
@@ -181,5 +184,15 @@ public class APIConfigurationImpl implements APIConfiguration {
      */
     public int getProducerBufferSize() {
         return this._bufferSize;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public ResultsHandlerConfiguration getResultsHandlerConfiguration() {
+        if (null == _resultsHandlerConfiguration) {
+            _resultsHandlerConfiguration = new ResultsHandlerConfiguration();
+        }
+        return _resultsHandlerConfiguration;
     }
 }

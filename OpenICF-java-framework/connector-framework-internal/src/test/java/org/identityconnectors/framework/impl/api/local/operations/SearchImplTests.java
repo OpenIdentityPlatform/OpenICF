@@ -23,7 +23,6 @@
 package org.identityconnectors.framework.impl.api.local.operations;
 
 import org.testng.annotations.Test;
-import org.testng.AssertJUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -39,11 +38,11 @@ import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
-import org.identityconnectors.framework.impl.api.local.operations.SearchImpl;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.operations.SearchOp;
 import org.identityconnectors.test.common.TestHelpers;
+import org.testng.Assert;
 
 /**
  * Attempt to test Search.
@@ -81,7 +80,7 @@ public class SearchImplTests {
                 new DuplicateProvider(), ObjectClass.ACCOUNT, new MockFilter(
                         main), null);
         List<ConnectorObject> expecteList = CollectionUtil.newList(expected);
-        AssertJUnit.assertEquals(expecteList, actual);
+        Assert.assertEquals(expecteList, actual);
     }
 
     @Test
@@ -110,7 +109,7 @@ public class SearchImplTests {
         List<ConnectorObject> actual = TestHelpers.searchToList(
                 search, ObjectClass.ACCOUNT, filter, options);
         List<ConnectorObject> expecteList = CollectionUtil.newList(expected);
-        AssertJUnit.assertEquals(expecteList, actual);
+        Assert.assertEquals(expecteList, actual);
     }
 
     ConnectorObject createObject(int uid) {

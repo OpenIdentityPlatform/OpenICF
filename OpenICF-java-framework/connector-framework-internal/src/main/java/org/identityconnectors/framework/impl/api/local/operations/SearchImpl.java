@@ -25,6 +25,7 @@ package org.identityconnectors.framework.impl.api.local.operations;
 import java.util.List;
 
 import org.identityconnectors.common.Assertions;
+import org.identityconnectors.framework.api.ResultsHandlerConfiguration;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -65,21 +66,41 @@ public class SearchImpl extends ConnectorAPIOperationRunner implements SearchApi
         }
         SearchOp<?> search =
             ((SearchOp<?>)getConnector());
-        final ObjectNormalizerFacade normalizer =
-            getNormalizer(oclass);
-        //chain a normalizing handler (must come before
-        //filter handler)
-        NormalizingResultsHandler normalizingHandler =
-            new NormalizingResultsHandler(handler,normalizer);
-        final Filter normalizedFilter =
-            normalizer.normalizeFilter(originalFilter);
-        // chain a filter handler..
-        ResultsHandler filteredHandler = 
-            new FilteredResultsHandler(normalizingHandler, normalizedFilter); 
+
+        ResultsHandlerConfiguration hdlCfg = null != getOperationalContext() ? 
+            getOperationalContext().getResultsHandlerConfiguration() : new ResultsHandlerConfiguration();
+        ResultsHandler handlerChain = handler;
+        Filter finalFilter = originalFilter;
+
+        if (hdlCfg.isEnableNormalizingResultsHandler()) {
+            final ObjectNormalizerFacade normalizer =
+                    getNormalizer(oclass);
+            //chain a normalizing handler (must come before
+            //filter handler)
+            NormalizingResultsHandler normalizingHandler =
+                    new NormalizingResultsHandler(handler, normalizer);
+            final Filter normalizedFilter =
+                    normalizer.normalizeFilter(originalFilter);
+            // chain a filter handler..
+            if (hdlCfg.isEnableFilteredResultsHandler()) {
+                // chain a filter handler..
+                handlerChain =
+                        new FilteredResultsHandler(normalizingHandler, normalizedFilter);
+                finalFilter = normalizedFilter;
+            } else {
+                handlerChain = normalizingHandler;
+            }
+        } else if (hdlCfg.isEnableFilteredResultsHandler()) {
+            // chain a filter handler..
+            ResultsHandler filteredHandler =
+                    new FilteredResultsHandler(handler, originalFilter);
+        }
         // chain an attributes to get handler..
-        ResultsHandler attrsToGetHandler = 
-            getAttributesToGetResutlsHandler(filteredHandler, options);
-        rawSearch(search,oclass,normalizedFilter,attrsToGetHandler,options);
+        if (hdlCfg.isEnableAttributesToGetSearchResultsHandler()) {
+            handlerChain =
+                    getAttributesToGetResutlsHandler(handlerChain, options);
+        }
+        rawSearch(search,oclass,finalFilter,handlerChain,options);
     }
     
     /**

@@ -94,15 +94,15 @@
                 </p>
                 <p>
 		You'll also want to review the basic
-                    <a href="./conventions.html">coding conventions</a> and eventually, the
-                    <a href="/contract-tests-groovy/index.html">contract tests</a> section. The contract tests are an automated suite of tests that make sure a connector
+                    <a href="https://wikis.forgerock.org/confluence/display/devcom/Coding+Style+and+Guidelines">coding conventions</a> and eventually, the
+                    <a href="/connector-framework-contract/index.html">contract tests</a> section. The contract tests are an automated suite of tests that make sure a connector
 		generally looks, feels, and behaves like a connector should.
                 </p>
                 <p>
 		Finally, throughout the whole process, we encourage you to
-                    <a href="./contribute.html">contribute</a> to the IdentityConnectors project. Asking questions on the mailing list, reporting bugs, and submitting patches are great ways to get involved, and we appreciate them.
+                    <a href="http://www.forgerock.org/get_involved.html">contribute</a> to the IdentityConnectors project. Asking questions on the mailing list, reporting bugs, and submitting patches are great ways to get involved, and we appreciate them.
 		If you would like to contribute a new connector, just
-                    <a href="mailto:connectordev@forgerock.org">send an email</a> to the community.
+                    <a href="mailto:laszlo.hordos@forgerock.org">send an email</a> to the community.
                 </p>
             </answer>
         </faq>
@@ -110,7 +110,7 @@
             <question>How Do I Contribute Code and Bug Fixes?</question>
             <answer>
                 <p>See the
-                    <a href="./contribute.html">Contribute</a> section of this site.
+                    <a href="http://www.forgerock.org/get_involved.html">Contribute</a> section of this site.
                 </p>
             </answer>
         </faq>

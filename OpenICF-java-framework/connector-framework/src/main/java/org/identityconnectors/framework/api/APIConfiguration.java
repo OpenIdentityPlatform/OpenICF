@@ -111,4 +111,9 @@ public interface APIConfiguration {
      */
     int getProducerBufferSize();
 
+    /**
+     * Get the configuration of the ResultsHandler chain of the Search operation.
+     */
+    ResultsHandlerConfiguration getResultsHandlerConfiguration();
+
 }

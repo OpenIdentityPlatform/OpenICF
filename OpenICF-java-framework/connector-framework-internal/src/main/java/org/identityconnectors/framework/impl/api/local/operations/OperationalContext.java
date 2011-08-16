@@ -22,6 +22,7 @@
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
+import org.identityconnectors.framework.api.ResultsHandlerConfiguration;
 import org.identityconnectors.framework.impl.api.APIConfigurationImpl;
 import org.identityconnectors.framework.impl.api.local.JavaClassProperties;
 import org.identityconnectors.framework.impl.api.local.LocalConnectorInfoImpl;
@@ -59,5 +60,9 @@ public class OperationalContext {
     
     protected LocalConnectorInfoImpl getConnectorInfo() {
         return connectorInfo;
+    }
+
+    public ResultsHandlerConfiguration getResultsHandlerConfiguration() {
+        return new ResultsHandlerConfiguration(apiConfiguration.getResultsHandlerConfiguration());
     }
 }
