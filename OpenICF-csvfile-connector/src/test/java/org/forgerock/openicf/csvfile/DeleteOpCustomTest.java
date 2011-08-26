@@ -127,4 +127,49 @@ public class DeleteOpCustomTest {
 
         configFile.delete();
     }
+
+    @Test
+    public void correctDeleteSecondAfterDoubleCreate() throws Exception {
+        File configFile = TestUtils.getTestFile(TEST_FOLDER + "delete-after-double-create.csv");
+        File backup = TestUtils.getTestFile(TEST_FOLDER + "delete-after-double-create-backup.csv");
+        Utils.copyAndReplace(backup, configFile);
+
+        CSVFileConfiguration config = new CSVFileConfiguration();
+        config.setFilePath(TestUtils.getTestFile(TEST_FOLDER + "delete-after-double-create.csv"));
+        config.setUniqueAttribute("id");
+
+        CSVFileConnector connector = new CSVFileConnector();
+        connector.init(config);
+
+        Set<Attribute> attributes = new HashSet<Attribute>();
+        String uidValue = "nvix05";
+        attributes.add(new Name(uidValue));
+        attributes.add(AttributeBuilder.build("firstname", "Nivan"));
+        attributes.add(AttributeBuilder.build("lastname", "Nnoris05"));
+        Uid uidFirst = connector.create(ObjectClass.ACCOUNT, attributes, null);
+        assertNotNull(uidFirst);
+        assertEquals(uidValue, uidFirst.getUidValue());
+
+        attributes = new HashSet<Attribute>();
+        uidValue = "nvix06";
+        attributes.add(new Name(uidValue));
+        attributes.add(AttributeBuilder.build("firstname", "Nivan06"));
+        attributes.add(AttributeBuilder.build("lastname", "Nnoris06"));
+        Uid uidSecond = connector.create(ObjectClass.ACCOUNT, attributes, null);
+        assertNotNull(uidSecond);
+        assertEquals(uidValue, uidSecond.getUidValue());
+
+        String result = TestUtils.compareFiles(config.getFilePath(), TestUtils.getTestFile(TEST_FOLDER + "expected-double-create.csv"));
+        assertNull("File updated incorrectly (create): " + result, result);
+
+        connector.delete(ObjectClass.ACCOUNT, uidSecond, null);
+
+        connector.dispose();
+        connector = null;
+
+        result = TestUtils.compareFiles(config.getFilePath(), TestUtils.getTestFile(TEST_FOLDER + "expected-double-create-delete-second.csv"));
+        assertNull("File updated incorrectly (delete): " + result, result);
+
+        configFile.delete();
+    }
 }
