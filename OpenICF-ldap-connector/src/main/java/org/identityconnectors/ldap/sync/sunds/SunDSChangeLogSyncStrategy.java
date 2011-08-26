@@ -67,6 +67,7 @@ import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
 import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
+import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapEntry;
 import org.identityconnectors.ldap.search.DefaultSearchStrategy;
@@ -125,7 +126,7 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
         final String changeNumberAttr = getChangeNumberAttribute();
         SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
         controls.setSearchScope(SearchControls.ONELEVEL_SCOPE);
-        controls.setReturningAttributes(new String[] { changeNumberAttr, "targetDN", "changeType", "changes", "newRdn", "deleteOldRdn", "newSuperior" });
+        controls.setReturningAttributes(new String[] { changeNumberAttr, "targetDN", "changeType", "changes", "newRdn", "deleteOldRdn", "newSuperior", "targetEntryUUID", "changeInitiatorsName" });
 
         final int[] currentChangeNumber = { getStartChangeNumber(token) };
 
@@ -187,11 +188,22 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
         if (deltaType.equals(SyncDeltaType.DELETE)) {
             log.ok("Creating sync delta for deleted entry");
             // XXX fix this!
+            if (filterOutDeleteByModifiersNames(changeLogEntry)) {
+                log.ok("Skipping entry because modifiersName is in the list of modifiersName's to filter out");
+                return null;
+            }
             String uidAttr = conn.getSchemaMapping().getLdapUidAttribute(oclass);
             if (!LdapEntry.isDNAttribute(uidAttr)) {
-                throw new ConnectorException("Unsupported Uid attribute " + uidAttr);
+                // This is "entryUUID" by default but the "targetDN" is not a UUID
+                String entryUUID = getStringAttrValue(changeLogEntry.getAttributes(), "targetEntryUUID");
+                if (null != entryUUID) {
+                    syncDeltaBuilder.setUid(new Uid(entryUUID));
+                } else {
+                    throw new ConnectorException("Unsupported Uid attribute " + uidAttr);
+                }
+            } else {
+                syncDeltaBuilder.setUid(conn.getSchemaMapping().createUid(oclass, targetDN));
             }
-            syncDeltaBuilder.setUid(conn.getSchemaMapping().createUid(oclass, targetDN));
             return syncDeltaBuilder.build();
         }
 
@@ -334,6 +346,21 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
             return false;
         }
         LdapName modifiersName = quietCreateLdapName(modifiersNameValues.get(0).toString());
+        return filter.contains(modifiersName);
+    }
+
+    private boolean filterOutDeleteByModifiersNames(LdapEntry changeLogEntry) {
+        Set<LdapName> filter = conn.getConfiguration().getModifiersNamesToFilterOutAsLdapNames();
+        if (filter.isEmpty()) {
+            log.ok("Filtering by modifiersName disabled");
+            return false;
+        }
+        String changeInitiatorsName = getStringAttrValue(changeLogEntry.getAttributes(), "changeInitiatorsName");
+        if (null == changeInitiatorsName) {
+            log.ok("Not filtering by changeInitiatorsName because not set for this entry");
+            return false;
+        }
+        LdapName modifiersName = quietCreateLdapName(changeInitiatorsName);
         return filter.contains(modifiersName);
     }
 
