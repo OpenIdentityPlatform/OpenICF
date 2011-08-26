@@ -31,6 +31,8 @@ package org.forgerock.openicf.csvfile.sync;
  */
 public class DiffException extends Exception {
 
+    private static final long serialVersionUID = -2467406395542291044L;
+
     public DiffException(String message) {
         super(message);
     }

@@ -34,7 +34,6 @@ import static org.testng.Assert.*;
 import org.forgerock.openicf.csvfile.util.TestUtils;
 import org.forgerock.openicf.csvfile.util.Utils;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.forgerock.openicf.csvfile.util.Base64;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -47,6 +46,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 
 import java.io.File;
+import org.identityconnectors.common.Base64;
 
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
@@ -132,7 +132,7 @@ public class CreateOpTest {
         Set<Attribute> attributes = new HashSet<Attribute>();
         attributes.add(createAttribute("firstName", "viliam"));
         attributes.add(createAttribute("lastName", "repan", "repan2"));
-        attributes.add(AttributeBuilder.buildPassword(new GuardedString(Base64.encode("asdf").toCharArray())));
+        attributes.add(AttributeBuilder.buildPassword(new GuardedString(Base64.encode("asdf".getBytes()).toCharArray())));
         connector.create(ObjectClass.ACCOUNT, attributes, null);
     }
 
@@ -171,7 +171,7 @@ public class CreateOpTest {
         attributes.add(new Name("vilo repan"));
         attributes.add(createAttribute("firstName", "vilo"));
         attributes.add(createAttribute("uid", uidValue));
-        attributes.add(AttributeBuilder.buildPassword(new GuardedString(Base64.encode("asdf").toCharArray())));
+        attributes.add(AttributeBuilder.buildPassword(new GuardedString(Base64.encode("asdf".getBytes()).toCharArray())));
         Uid uid = connector.create(ObjectClass.ACCOUNT, attributes, null);
         assertNotNull(uid);
         assertEquals(uidValue, uid.getUidValue());
@@ -182,7 +182,7 @@ public class CreateOpTest {
         attributes.add(new Name("vilo"));
         attributes.add(createAttribute("firstName", "viliam"));
         attributes.add(createAttribute("lastName", "repan", "repan2"));
-        attributes.add(AttributeBuilder.buildPassword(new GuardedString(Base64.encode("asdf").toCharArray())));
+        attributes.add(AttributeBuilder.buildPassword(new GuardedString(Base64.encode("asdf".getBytes()).toCharArray())));
 
         return attributes;
     }

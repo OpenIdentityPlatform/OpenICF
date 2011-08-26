@@ -61,6 +61,7 @@ public class InMemoryDiff {
         this.linePattern = linePattern;
     }
 
+    @SuppressWarnings("unchecked")
     public List<Change> diff() throws DiffException {
         List<Change> changes = new ArrayList<Change>();
         try {

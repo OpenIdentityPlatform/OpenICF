@@ -29,8 +29,8 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import static org.testng.Assert.*;
 import org.testng.annotations.Test;
-import org.forgerock.openicf.csvfile.util.Base64;
 import org.forgerock.openicf.csvfile.util.TestUtils;
+import org.identityconnectors.common.Base64;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -80,13 +80,13 @@ public class AuthenticateOpTest {
 
     @Test(expectedExceptions = ConnectorException.class)
     public void badObjectClass() {
-        GuardedString guarded = new GuardedString(Base64.encode("good").toCharArray());
+        GuardedString guarded = new GuardedString(Base64.encode("good".getBytes()).toCharArray());
         connector.authenticate(ObjectClass.GROUP, "vilo", guarded, null);
     }
 
     @Test(expectedExceptions = InvalidPasswordException.class)
     public void badPassword() {
-        GuardedString guarded = new GuardedString(Base64.encode("bad").toCharArray());
+        GuardedString guarded = new GuardedString(Base64.encode("bad".getBytes()).toCharArray());
         connector.authenticate(ObjectClass.ACCOUNT, "vilo", guarded, null);
     }
 
@@ -97,7 +97,7 @@ public class AuthenticateOpTest {
 
     @Test(expectedExceptions = InvalidCredentialException.class)
     public void nullUsername() {
-        GuardedString guarded = new GuardedString(Base64.encode("bad").toCharArray());
+        GuardedString guarded = new GuardedString(Base64.encode("bad".getBytes()).toCharArray());
         connector.authenticate(ObjectClass.ACCOUNT, null, guarded, null);
     }
 
@@ -108,13 +108,13 @@ public class AuthenticateOpTest {
 
     @Test(expectedExceptions = InvalidCredentialException.class)
     public void nonexistingUsername() {
-        GuardedString guarded = new GuardedString(Base64.encode("bad").toCharArray());
+        GuardedString guarded = new GuardedString(Base64.encode("bad".getBytes()).toCharArray());
         connector.authenticate(ObjectClass.ACCOUNT, "unexisting", guarded, null);
     }
 
     @Test
     public void correctAuthentication() {
-        GuardedString guarded = new GuardedString(Base64.encode("good").toCharArray());
+        GuardedString guarded = new GuardedString(Base64.encode("good".getBytes()).toCharArray());
         Uid uid = connector.authenticate(ObjectClass.ACCOUNT, "vilo", guarded, null);
 
         assertNotNull(uid);

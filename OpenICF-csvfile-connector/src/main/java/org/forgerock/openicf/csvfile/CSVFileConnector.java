@@ -24,7 +24,6 @@
  */
 package org.forgerock.openicf.csvfile;
 
-import org.identityconnectors.framework.spi.*;
 import org.identityconnectors.framework.spi.operations.*;
 import org.identityconnectors.framework.common.objects.*;
 
@@ -842,37 +841,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                 List<String> header = readHeader(reader, linePattern, configuration);
                 writeHeader(writer, header);
 
-                boolean found = false;
-                String line = null;
-                CsvItem item = null;
-                while (( line = reader.readLine() ) != null) {
-                    item = createCsvItem(line);
-                    if (isEmptyOrComment(line)) {
-                        writer.write(line);
-                        writer.write('\n');
-                        continue;
-                    }
-
-                    int fieldIndex = header.indexOf(configuration.getUniqueAttribute());
-                    String value = item.getAttribute(fieldIndex);
-                    if (!StringUtil.isEmpty(value) && value.equals(uid.getUidValue())) {
-                        switch (operation) {
-                            case UPDATE:
-                            case ADD_ATTR_VALUE:
-                            case REMOVE_ATTR_VALUE:
-                                line = updateLine(operation, header, item, attributes);
-                                break;
-                            case DELETE:
-                        }
-                        found = true;
-                    }
-
-                    if (operation != Operation.DELETE) {
-                        writer.write(line);
-                        writer.write('\n');
-                    }
-                }
-
+                boolean found = readAndUpdateFile(reader, writer, header, operation, uid, attributes);
                 if (!found) {
                     throw new UnknownUidException("Uid '" + uid.getUidValue() + "' not found in file.");
                 }
@@ -915,6 +884,41 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
 
         log.info("doUpdate::end");
         return uid;
+    }
+
+    private boolean readAndUpdateFile(BufferedReader reader, BufferedWriter writer, List<String> header,
+            Operation operation, Uid uid, Set<Attribute> attributes) throws IOException {
+        boolean found = false;
+        String line = null;
+        CsvItem item = null;
+        while (( line = reader.readLine() ) != null) {
+            if (isEmptyOrComment(line)) {
+                writer.write(line);
+                writer.write('\n');
+                continue;
+            }
+
+            item = createCsvItem(line);
+            int fieldIndex = header.indexOf(configuration.getUniqueAttribute());
+            String value = item.getAttribute(fieldIndex);
+            if (!StringUtil.isEmpty(value) && value.equals(uid.getUidValue())) {
+                found = true;
+
+                switch (operation) {
+                    case UPDATE:
+                    case ADD_ATTR_VALUE:
+                    case REMOVE_ATTR_VALUE:
+                        line = updateLine(operation, header, item, attributes);
+                        break;
+                    case DELETE:
+                        continue;
+                }
+            }
+
+            writer.write(line);
+            writer.write('\n');
+        }
+        return found;
     }
 
     private String appendValues(String attributeName, List<Object> values) {
@@ -1022,7 +1026,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                         break;
                     case ADD_ATTR_VALUE:
                     case REMOVE_ATTR_VALUE:
-                        List<String> oldValues = new ArrayList();
+                        List<String> oldValues = new ArrayList<String>();
                         String oldValuesStr = item.getAttribute(index);
                         if (StringUtil.isNotEmpty(value)) {
                             if (configuration.isUsingMultivalue()) {

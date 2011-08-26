@@ -26,8 +26,6 @@
 package org.forgerock.openicf.csvfile;
 
 import org.testng.annotations.Test;
-import org.testng.AssertJUnit;
-import org.testng.annotations.Test;
 import java.net.URL;
 import java.io.File;
 import org.forgerock.openicf.csvfile.util.Utils;
@@ -70,6 +68,7 @@ public class UtilsTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     public void parseValuesSimpleTest() throws Exception {
         initConnector("\"", "|", ",");
 
@@ -89,8 +88,9 @@ public class UtilsTest {
                     connector.getLinePattern(), (CSVFileConfiguration) connector.getConfiguration()).toArray()));
         }
     }
-
+    
     @Test
+    @SuppressWarnings("deprecation")
     public void parseValuesSpecialTest() throws Exception {
         initConnector("\"", ".", "\\|");
 
