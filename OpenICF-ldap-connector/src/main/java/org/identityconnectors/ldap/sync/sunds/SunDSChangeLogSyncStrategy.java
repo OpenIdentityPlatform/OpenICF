@@ -192,12 +192,20 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
                 log.ok("Skipping entry because modifiersName is in the list of modifiersName's to filter out");
                 return null;
             }
-            String uidAttr = conn.getSchemaMapping().getLdapUidAttribute(oclass);
+            String uidAttr = conn.getSchemaMapping().getLdapUidAttribute(oclass);            
             if (!LdapEntry.isDNAttribute(uidAttr)) {
-                // This is "entryUUID" by default but the "targetDN" is not a UUID
-                String entryUUID = getStringAttrValue(changeLogEntry.getAttributes(), "targetEntryUUID");
-                if (null != entryUUID) {
-                    syncDeltaBuilder.setUid(new Uid(entryUUID));
+                if ("entryUUID".equalsIgnoreCase(uidAttr)) {
+                    // This is "entryUUID" by default but the "targetDN" is not a UUID
+                    String entryUUID = getStringAttrValue(changeLogEntry.getAttributes(), "targetEntryUUID");
+                    if (null == entryUUID) {
+                        entryUUID = getStringAttrValue(changeLogEntry.getAttributes(), "targetUniqueID");
+                    }
+                    if (null != entryUUID) {
+                        syncDeltaBuilder.setUid(new Uid(entryUUID));
+                    } else {
+                        log.error("Failed the read the entryUUID attribute from Changelog entry. Neither 'targetEntryUUID' nor 'targetUniqueID' has the value");
+                        throw new ConnectorException("Unable to find entryUUID in targetEntryUUID or targetUniqueID attribute");
+                    }
                 } else {
                     throw new ConnectorException("Unsupported Uid attribute " + uidAttr);
                 }
