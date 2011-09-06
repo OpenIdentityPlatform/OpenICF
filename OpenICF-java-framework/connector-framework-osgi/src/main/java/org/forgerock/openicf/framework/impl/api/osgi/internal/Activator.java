@@ -27,10 +27,8 @@ import java.util.Hashtable;
 import org.forgerock.openicf.framework.api.osgi.ConnectorManager;
 import org.identityconnectors.framework.api.ConnectorInfoManager;
 import org.identityconnectors.framework.common.FrameworkUtil;
-import org.ops4j.pax.swissbox.extender.BundleManifestScanner;
 import org.ops4j.pax.swissbox.extender.BundleWatcher;
 import org.ops4j.pax.swissbox.extender.ManifestEntry;
-import org.ops4j.pax.swissbox.extender.RegexKeyManifestFilter;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -64,7 +62,7 @@ public class Activator implements BundleActivator {
 
         OsgiConnectorInfoManagerImpl manager = new OsgiConnectorInfoManagerImpl();
         connectorWatcher = new BundleWatcher<ManifestEntry>(context,
-                new BundleManifestScanner(new RegexKeyManifestFilter("^ConnectorBundle-.*")), manager );
+                new ConnectorManifestScanner(FrameworkUtil.getFrameworkVersion()), manager );
         connectorWatcher.start();
         
         Hashtable<String, String> prop = new Hashtable<String, String>();

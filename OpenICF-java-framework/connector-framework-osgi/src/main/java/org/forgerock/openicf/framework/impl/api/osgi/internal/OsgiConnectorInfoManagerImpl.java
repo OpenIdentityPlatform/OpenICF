@@ -34,11 +34,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
-import java.util.jar.Manifest;
 import org.forgerock.openicf.framework.api.osgi.ConnectorManager;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.Pair;
 import org.identityconnectors.common.ReflectionUtil;
+import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorInfo;
@@ -47,17 +47,18 @@ import org.identityconnectors.framework.common.FrameworkUtil;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.impl.api.APIConfigurationImpl;
+import org.identityconnectors.framework.impl.api.AbstractConnectorInfo;
 import org.identityconnectors.framework.impl.api.ConnectorMessagesImpl;
-import org.identityconnectors.framework.impl.api.local.ConnectorBundleManifest;
-import org.identityconnectors.framework.impl.api.local.ConnectorBundleManifestParser;
 import org.identityconnectors.framework.impl.api.local.ConnectorPoolManager;
 import org.identityconnectors.framework.impl.api.local.JavaClassProperties;
+import org.identityconnectors.framework.impl.api.local.LocalConnectorFacadeImpl;
 import org.identityconnectors.framework.impl.api.local.LocalConnectorInfoImpl;
 import org.identityconnectors.framework.impl.api.local.ThreadClassLoaderManager;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.ConnectorClass;
 import org.identityconnectors.framework.spi.PoolableConnector;
+import org.ops4j.lang.NullArgumentException;
 import org.ops4j.pax.swissbox.extender.BundleObserver;
 import org.ops4j.pax.swissbox.extender.ManifestEntry;
 import org.osgi.framework.Bundle;
@@ -77,24 +78,26 @@ public class OsgiConnectorInfoManagerImpl implements ConnectorManager, BundleObs
      * Logger.
      */
     private static final Logger logger = LoggerFactory.getLogger(OsgiConnectorInfoManagerImpl.class);
-    private final HashMap<String, Pair<Bundle, ConnectorInfo>> connectorInfoCache = new HashMap<String, Pair<Bundle, ConnectorInfo>>();
-
-    public OsgiConnectorInfoManagerImpl() throws RuntimeException {
-    }
+    /**
+     * Connector Cache
+     */
+    private final HashMap<String, Pair<Bundle, List<ConnectorInfo>>> connectorInfoCache = new HashMap<String, Pair<Bundle, List<ConnectorInfo>>>();
 
     public ConnectorInfo findConnectorInfo(ConnectorKey key) {
-        for (Pair<Bundle, ConnectorInfo> info : connectorInfoCache.values()) {
-            if (info.second.getConnectorKey().equals(key)) {
-                return info.second;
+        for (Pair<Bundle, List<ConnectorInfo>> bundle : connectorInfoCache.values()) {
+            for (ConnectorInfo info : bundle.second) {
+                if (info.getConnectorKey().equals(key)) {
+                    return info;
+                }
             }
         }
         return null;
     }
 
     public List<ConnectorInfo> getConnectorInfos() {
-        List<ConnectorInfo> result = new ArrayList<ConnectorInfo>(connectorInfoCache.size());
-        for (Pair<Bundle, ConnectorInfo> info : connectorInfoCache.values()) {
-            result.add(info.second);
+        List<ConnectorInfo> result = new ArrayList<ConnectorInfo>();
+        for (Pair<Bundle, List<ConnectorInfo>> info : connectorInfoCache.values()) {
+            result.addAll(info.second);
         }
         return CollectionUtil.newReadOnlyList(result);
     }
@@ -104,53 +107,97 @@ public class OsgiConnectorInfoManagerImpl implements ConnectorManager, BundleObs
     }
 
     public ConnectorFacade newInstance(APIConfiguration config) {
-
-
-
-        throw new UnsupportedOperationException("Not supported yet.");
+        ConnectorFacade ret = null;
+        APIConfigurationImpl impl = (APIConfigurationImpl) config;
+        AbstractConnectorInfo connectorInfo = impl.getConnectorInfo();
+        if (connectorInfo instanceof LocalConnectorInfoImpl) {
+            LocalConnectorInfoImpl localInfo =
+                    (LocalConnectorInfoImpl) connectorInfo;
+            try {
+                // create a new Provisioner..
+                ret = new LocalConnectorFacadeImpl(localInfo, impl);
+            }
+            catch (Exception ex) {
+                String connector = impl.getConnectorInfo().getConnectorKey().toString();
+                logger.error("Failed to create new connector facade: {}, {}",
+                        new Object[]{connector, config}, ex);
+                throw ConnectorException.wrap(ex);
+            }
+        } else {
+            throw new ConnectorException("RemoteConnector not supported!");
+        }
+        return ret;
     }
 
     public void addingEntries(Bundle bundle, List<ManifestEntry> list) {
+        NullArgumentException.validateNotNull(bundle, "Bundle");
+        NullArgumentException.validateNotNull(list, "ManifestEntry");
         synchronized (connectorInfoCache) {
             if (!connectorInfoCache.containsKey(bundle.getSymbolicName())) {
-                connectorInfoCache.put(bundle.getSymbolicName(), processBundle(bundle));
+                Pair<Bundle, List<ConnectorInfo>> info = processBundle(bundle, list);
+                if (null != info) {
+                    connectorInfoCache.put(bundle.getSymbolicName(), info);
+                }
                 logger.info("Add Connector {}, list: {}", bundle.getSymbolicName(), list);
             }
         }
     }
 
     public void removingEntries(Bundle bundle, List<ManifestEntry> list) {
+        NullArgumentException.validateNotNull(bundle, "Bundle");
         synchronized (connectorInfoCache) {
             connectorInfoCache.remove(bundle.getSymbolicName());
         }
         logger.info("Remove Connector {}, list: {}", bundle.getSymbolicName(), list);
     }
 
-    //TODO Implement this method
-    private Pair<Bundle, ConnectorInfo> processBundle(Bundle bundle) {
-        return new Pair(bundle, new LocalConnectorInfoImpl());
+    private Pair<Bundle, List<ConnectorInfo>> processBundle(Bundle bundle, List<ManifestEntry> list) {
+        Pair<Bundle, List<ConnectorInfo>> result = null;
+        try {
+            List<ConnectorInfo> info = createConnectorInfo(bundle, list);
+            if (!info.isEmpty()) {
+                result = new Pair(bundle, info);
+            }
+        }
+        catch (Throwable t) {
+            logger.error("ConnectorBundel {} loading failed.", bundle.getSymbolicName(), t);
+        }
+        return result;
     }
 
     /**
      * Final pass - create connector infos
      */
-    private List<ConnectorInfo> createConnectorInfo(Bundle parsed) throws ConfigurationException, IOException {
+    private List<ConnectorInfo> createConnectorInfo(Bundle parsed, List<ManifestEntry> manifestEnties) {
         List<ConnectorInfo> rv = new ArrayList<ConnectorInfo>();
-        ClassLoader loader = parsed.getClass().getClassLoader();
+        Enumeration<URL> classFiles = parsed.findEntries("/", "*.class", true);
+        Enumeration<URL> propertyFiles = parsed.findEntries("/", "*.properties", true);
 
-        URL metaUrl = parsed.getEntry("META-INF/MANIFEST.MF");
-        //This may throw IOException
-        ConnectorBundleManifest manifest = ( new ConnectorBundleManifestParser(parsed.getLocation(), new Manifest(metaUrl.openStream())) ).parse();
+        String frameworkVersion = null;
+        String bundleName = null;
+        String bundleVersion = null;
 
-        Enumeration<String> classFiles = parsed.findEntries("/", "*.class", true);
-        Enumeration<String> propertyFiles = parsed.findEntries("/", "*.properties", true);
+        for (ManifestEntry entry : manifestEnties) {
+            if (ConnectorManifestScanner.ATT_FRAMEWORK_VERSION.equals(entry.getKey())) {
+                frameworkVersion = entry.getValue();
+            } else if (ConnectorManifestScanner.ATT_BUNDLE_NAME.equals(entry.getKey())) {
+                bundleName = entry.getValue();
+            } else if (ConnectorManifestScanner.ATT_BUNDLE_VERSION.equals(entry.getKey())) {
+                bundleVersion = entry.getValue();
+            }
+        }
+
+        if (StringUtil.isBlank(bundleName) || StringUtil.isBlank(bundleVersion)) {
+            return rv;
+        }
 
         while (classFiles.hasMoreElements()) {
 
             Class<?> connectorClass = null;
             ConnectorClass options = null;
-            String name = classFiles.nextElement();
-            String className = name.substring(0, name.length() - ".class".length());
+            String name = classFiles.nextElement().getFile();
+
+            String className = name.substring(1, name.length() - ".class".length());
             className = className.replace('/', '.');
             try {
                 connectorClass = parsed.loadClass(className);
@@ -173,8 +220,8 @@ public class OsgiConnectorInfoManagerImpl implements ConnectorManager, BundleObs
                 info.setConnectorConfigurationClass(options.configurationClass());
                 info.setConnectorDisplayNameKey(options.displayNameKey());
                 info.setConnectorKey(new ConnectorKey(
-                        manifest.getBundleName(),
-                        manifest.getBundleVersion(),
+                        bundleName,
+                        bundleVersion,
                         connectorClass.getName()));
                 ConnectorMessagesImpl messages = loadMessageCatalog(
                         propertyFiles,
@@ -183,7 +230,6 @@ public class OsgiConnectorInfoManagerImpl implements ConnectorManager, BundleObs
                 info.setMessages(messages);
                 info.setDefaultAPIConfiguration(createDefaultAPIConfiguration(info));
                 rv.add(info);
-
             }
         }
         return rv;
@@ -215,7 +261,7 @@ public class OsgiConnectorInfoManagerImpl implements ConnectorManager, BundleObs
         }
     }
 
-    private ConnectorMessagesImpl loadMessageCatalog(Enumeration<String> propertyFiles, Bundle loader, Class<? extends Connector> connector)
+    private ConnectorMessagesImpl loadMessageCatalog(Enumeration<URL> propertyFiles, Bundle loader, Class<? extends Connector> connector)
             throws ConfigurationException {
         try {
             final String[] prefixes = getBundleNamePrefixes(connector);
@@ -225,7 +271,7 @@ public class OsgiConnectorInfoManagerImpl implements ConnectorManager, BundleObs
             for (int i = prefixes.length - 1; i >= 0; i--) {
                 String prefix = prefixes[i];
                 while (propertyFiles.hasMoreElements()) {
-                    String path = propertyFiles.nextElement();
+                    String path = propertyFiles.nextElement().getFile();
                     if (path.startsWith(prefix)) {
                         String localeStr = path.substring(prefix.length());
                         if (localeStr.endsWith(suffix)) {
@@ -293,7 +339,7 @@ public class OsgiConnectorInfoManagerImpl implements ConnectorManager, BundleObs
             paths = new String[]{messageCatalog};
         }
         for (int i = 0; i < paths.length; i++) {
-            paths[i] = paths[i].replace('.', '/');
+            paths[i] = "/" + paths[i].replace('.', '/');
         }
         return paths;
     }
@@ -308,7 +354,8 @@ public class OsgiConnectorInfoManagerImpl implements ConnectorManager, BundleObs
             Properties rv = new Properties();
             rv.load(in);
             return rv;
-        } finally {
+        }
+        finally {
             in.close();
         }
     }
