@@ -126,7 +126,7 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
         final String changeNumberAttr = getChangeNumberAttribute();
         SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
         controls.setSearchScope(SearchControls.ONELEVEL_SCOPE);
-        controls.setReturningAttributes(new String[] { changeNumberAttr, "targetDN", "changeType", "changes", "newRdn", "deleteOldRdn", "newSuperior", "targetEntryUUID", "changeInitiatorsName" });
+        controls.setReturningAttributes(new String[] { changeNumberAttr, "targetDN", "changeType", "changes", "newRdn", "deleteOldRdn", "newSuperior", "targetEntryUUID", "targetUniqueID", "changeInitiatorsName" });
 
         final int[] currentChangeNumber = { getStartChangeNumber(token) };
 
@@ -433,6 +433,9 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
                     while (lines.hasNext()) {
                         line = lines.next();
                         if (line instanceof Separator) {
+                            if ("delete".equalsIgnoreCase(operation)){
+                                result.put(attrName, values);
+                            }
                             break;
                         }
                         nameValue = (NameValue) line;
