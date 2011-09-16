@@ -101,9 +101,8 @@ public class SchemaOpTest {
         assertFalse(info.isContainer());
         Set<AttributeInfo> attrInfos = info.getAttributeInfo();
         assertNotNull(attrInfos);
-        assertEquals(5, attrInfos.size());
+        assertEquals(4, attrInfos.size());
 
-        testAttribute("uid", attrInfos, false, false);
         testAttribute("firstName", attrInfos, false, false);
         testAttribute("lastName", attrInfos, false, false);
         testAttribute("__NAME__", attrInfos, true, false);

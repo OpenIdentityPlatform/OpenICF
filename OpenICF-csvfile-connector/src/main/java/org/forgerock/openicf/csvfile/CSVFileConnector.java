@@ -291,7 +291,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
         }
 
         if (headers == null || headers.isEmpty()) {
-            throw new ConnectorException("Schema can't be generated, header is null (proably" + " not defined in file - first line in csv).");
+            throw new ConnectorException("Schema can't be generated, header is null (proably not defined in file - first line in csv).");
         }
 
         ObjectClassInfoBuilder objClassBuilder = new ObjectClassInfoBuilder();
@@ -708,6 +708,10 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
     private List<AttributeInfo> createAttributeInfo(List<String> names) {
         List<AttributeInfo> infos = new ArrayList<AttributeInfo>();
         for (String name : names) {
+            if (name.equals(configuration.getNameAttribute())) {
+                continue;
+            }
+
             AttributeInfoBuilder builder = new AttributeInfoBuilder(name);
             if (name.equals(configuration.getPasswordAttribute())) {
                 builder.setType(GuardedString.class);
