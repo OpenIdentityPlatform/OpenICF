@@ -42,5 +42,21 @@ public enum SyncDeltaType {
     /**
      * The change represents a DELETE in the resource
      */
-    DELETE
+    DELETE,
+
+    /**
+     * The change represents a CREATE in the resource
+     * <p/>
+     * Experimental type to support better event mechanism where it's possible.
+     * @see #CREATE_OR_UPDATE
+     */
+    CREATE,
+
+    /**
+     * The change represents a UPDATE in the resource
+     * <p/>
+     * Experimental type to support better event mechanism where it's possible.
+     * @see #CREATE_OR_UPDATE
+     */   
+    UPDATE
 }

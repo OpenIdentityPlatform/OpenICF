@@ -62,7 +62,7 @@ public final class SyncDelta {
         Assertions.nullCheck(uid, "uid");
         
         //do not allow previous Uid for anything else than create or update
-        if ( previousUid != null && deltaType != SyncDeltaType.CREATE_OR_UPDATE) {
+        if ( previousUid != null && deltaType == SyncDeltaType.DELETE) {
             throw new IllegalArgumentException("The previous Uid can only be specified for create or update.");
         }
         
