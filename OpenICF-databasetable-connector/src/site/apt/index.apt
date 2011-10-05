@@ -1,9 +1,9 @@
-   -------------------------
-    Title
-   -------------------------
-   -------------------------
-    Date
-   -------------------------
+~~   -------------------------
+~~    Title
+~~   -------------------------
+~~   -------------------------
+~~    Date
+~~   -------------------------
 ~~
 ~~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 ~~
@@ -32,18 +32,258 @@
 
 Database Table Connector
 
-  Etiam adipiscing urna sit amet metus auctor porttitor. Fusce pharetra.
+  The Database Table connector is used to manage identity stores in a single
+  database table or view. Integration to the database requires a compliant
+  SQL92 JDBC Driver.
 
-* Overview
+* Download
 
-  Cras tempor consequat vulputate. Nam vulputate metus et urna facilisis sit amet malesuada tellus commodo.
-  Nulla id augue at odio tristique hendrerit. Sed a pellentesque urna. Maecenas pretium, libero vel porttitor fringilla,
-  justo augue vehicula tellus, eget porta sem mauris.
+  Latest releases:
 
+*---*---------*-----------------------------*
+| # | Version | Download                    |
+*---*---------*-----------------------------*
+| 1 | 1.1.0.0 | {{http://maven.forgerock.org/repo/snapshots/org/forgerock/openicf/connectors/db/databasetable/1.1.0.0-SNAPSHOT/databasetable-1.1.0.0-SNAPSHOT.jar}}|
+*---*---------*-----------------------------*
+|   |         |                             |
+*---*---------*-----------------------------*
+
+* Supported Resource Versions
+
+*--------------------*--------------------------------------*-----------------------------*
+| Identity Connector | Identity Connector Version (minimum) | Target Resource and Version |
+*--------------------*--------------------------------------*-----------------------------*
+|                    |                                      |                             |
+*--------------------*--------------------------------------*-----------------------------*
+|                    |                                      |                             |
+*--------------------*--------------------------------------*-----------------------------*
+
+* Release Notes
+
+*-------------------*---------*---------------*
+| Connector Version | Issue # | Release Notes |
+*-------------------*---------*---------------*
+|                   |         |               |
+*-------------------*---------*---------------*
+|                   |         |               |
+*-------------------*---------*---------------*
+
+* Installation
+
+  To install the Database Table connector in OpenIDM perform the
+  following steps:
+  
+  * Download the appropriate connector jar and place it in the
+    $OPENIDM/connectors folder.
+  * Provide the applicable JDBC driver and make it available via the CLASSPATH.
+  * Setup and configure the $OPENIDM/conf/provisioner.openicf-dbtable.json
+    connector instance configuration.
+
+* Supported Operations
+
+  * Authenticate (<Optional>) Specify the password column configuration
+    property.
+  * Create
+  * Delete
+  * Update
+  * Search
+  * Schema
+  * Test
+  * LiveSync (<Optional>) Specify the Change Log Column configuration property.
+
+* Configuration
+
+  A valid jdbc driver must be present and accessible, typically via the
+  CLASSPATH. The connector configuration requires connectivity information.
+
+** Configuration Methods
+
+  You can use one of the following methods to connect the JDBC driver to the
+  resource:
+  
+  * Provide the user, password, host, port, and database name configuration
+    properties.
+  
+  * The mandatory URL Template can contain wild cards such as %h, %p, and
+    %d|%h, %p, and %d. These wild cards will be replaced by provided values
+    such as host, port, and database. If the URL Template contains any of
+    these wild cards, the connector considers the host, port, and database
+    to be required configuration properties and they are used accordingly.
+  
+  * Provide the user and password configuration properties and an exact URL
+    Template with a JDBC connection URL (no wild-cards).
+  
+  * Provide a datasource name and the optional JNDI properties.
+  
+  * While the datasource name with JNDI properties is sufficient to connect to
+    the resource, the configuration properties mentioned in the previous two
+    methods will not be considered.
+  
   []
+  
+  The Database Table connector manages users that are located in a single,
+  custom database table or view. The database table or view name is a part
+  of the required configuration that must be defined in the connector
+  instance configuration file.
 
-* Usage
+  The Database Table connector also uses a required keyColumn name
+  configuration property to store the account`s names within the custom table.
 
-  Instructions on how to configure the Database Table Connector {{{./configuration.html}here}}.
+  You can configure the optional passwordColumn name to activate the
+  authentication capabilities.
 
+  The adapter also supports LiveSync to poll for account changes. To allow
+  LiveSync capabilities, specify the changeLogColumn.
 
+** Configuration Properties
+
+  The following table outlines the properties associated with the connector:
+  
+*------------------------*---------*----------*--------------*-----------------------------+
+| Configuration Property | Type    | Required | Required     | Definition                  |
+|                        |         | (Driver) | (Datasource) |                             |
+*------------------------*---------*----------*--------------*-----------------------------+
+| JDBC Driver            | String  | X        | X            | The JDBC Driver class name. |
+|                        |         |          |              | * MySQL is                  |
+|                        |         |          |              |   org.gjt.mm.mysql.Driver.  |
+|                        |         |          |              | * Oracle is                 |
+|                        |         |          |              |   oracle.jdbc.driver.OracleDriver. |
+*------------------------*---------*----------*--------------*-----------------------------+
+| JDBC URL Template      | String  | X (%h,   |              | The JDBC connection URL     |
+|                        |         | %p, and  |              | Template with %h, %p, and   |
+|                        |         | %d)      |              | %d wild-cards.              |
+|                        |         |          |              | * MySQL template is         |
+|                        |         |          |              |   jdbc:mysql:<//%h:%p/%d>.  |
+|                        |         |          |              |   For more information,     |
+|                        |         |          |              |   refer to your JDBC driver |
+|                        |         |          |              |   documentation.            |
+|                        |         |          |              | * Oracle template is        |
+|                        |         |          |              |   jdbc:oracle:thin:<@%h:%p:%d>. |
+*------------------------*---------*----------*--------------*-----------------------------+
+| Host                   | String  | when %h  |              | Resource host. Used in      |
+|                        |         |          |              | place of the %h wild card   |
+|                        |         |          |              | in the URL Template.        |
+*------------------------*---------*----------*--------------*-----------------------------+
+| Port                   | String  | when %p  |              | Resource port. Used in      |
+|                        |         |          |              | place of the %p wild card   |
+|                        |         |          |              | in the URL Template.        |
+*------------------------*---------*----------*--------------*-----------------------------+
+| Database               | String  | when %d  |              | Resource database. Used in  |
+|                        |         |          |              | place of the %d wild card   |
+|                        |         |          |              | in the URL Template.        |
+*------------------------*---------*----------*--------------*-----------------------------+
+| Password               | String  | X        |              | Resource admin user's       |
+|                        |         |          |              | password.                   |
+*------------------------*---------*----------*--------------*-----------------------------+
+| Datasource             | String  |          | X            | Datasource name for         |
+|                        |         |          |              | datasource-managed          |
+|                        |         |          |              | connections.                |
+*------------------------*---------*----------*--------------*-----------------------------+
+| JNDI Properties        | String  |          |              | <Optional> naming of        |
+|                        |         |          |              | datasource look-up          |
+|                        |         |          |              | properties.                 |
+*------------------------*---------*----------*--------------*-----------------------------+
+| Table                  | String  | X        | X            | Name of the single table    |
+|                        |         |          |              | where the accounts are      |
+|                        |         |          |              | stored.                     |
+*------------------------*---------*----------*--------------*-----------------------------+
+| Key Column             | String  | X        | X            | Name of the column          |
+|                        |         |          |              | where the accounts' names   |
+|                        |         |          |              | are stored.                 |
+*------------------------*---------*----------*--------------*-----------------------------+
+| Password Column        | String  |          |              | <Optional> name of the      |
+|                        |         |          |              | password column where       |
+|                        |         |          |              | accounts' passwords are     |
+|                        |         |          |              | stored.                     |
+*------------------------*---------*----------*--------------*-----------------------------+
+| Change Log Column      | String  |          |              | <Optional> name of column   |
+|                        |         |          |              | where the last              |
+|                        |         |          |              | update-related,             |
+|                        |         |          |              | non-decreasing value is     |
+|                        |         |          |              | stored. This value can be a |
+|                        |         |          |              | number or a timestamp value.|
+*------------------------*---------*----------*--------------*-----------------------------+
+| Quoting                | String  |          |              | Column quoting property     |
+|                        |         |          |              | (such as None, Single,      |
+|                        |         |          |              | Double, Back, or Brackets)  |
+|                        |         |          |              | that best fits your         |
+|                        |         |          |              | resource. Default is None.  |
+|                        |         |          |              | Column names display        |
+|                        |         |          |              | between single quotes,      |
+|                        |         |          |              | double quotes, back quotes, |
+|                        |         |          |              | or brackets in the          |
+|                        |         |          |              | generated SQL when          |
+|                        |         |          |              | accessing the database.     |
+*------------------------*---------*----------*--------------*-----------------------------+
+| Enable Empty String    | Boolean |          |              | Select to enable support    |
+|                        |         |          |              | for writing an empty string |
+|                        |         |          |              | instead of a NULL value. By |
+|                        |         |          |              | default empty strings are   |
+|                        |         |          |              | written as NULL values.     |
+*------------------------*---------*----------*--------------*-----------------------------+
+| Rethrow All SQL        | Boolean |          |              | If false (default), the     |
+| Exceptions             |         |          |              | SQLExceptions with a 0      |
+|                        |         |          |              | ErrorCode are considered a  |
+|                        |         |          |              | success, or not an error,   |
+|                        |         |          |              | and they are caught and     |
+|                        |         |          |              | suppressed by the           |
+|                        |         |          |              | connector. For example,     |
+|                        |         |          |              | some databases return an    |
+|                        |         |          |              | exception for an empty      |
+|                        |         |          |              | result set. Select to throw |
+|                        |         |          |              | exceptions when the         |
+|                        |         |          |              | ErrorCode is 0.             |
+|                        |         |          |              | <<Note>>: No other          |
+|                        |         |          |              | SQLExceptions are           |
+|                        |         |          |              | influenced by this property.|
+*------------------------*---------*----------*--------------*-----------------------------+
+| Native Timestamps      | Boolean |          |              | If false (default),         |
+|                        |         |          |              | timestamp data are read as  |
+|                        |         |          |              | Strings, which can cause the|
+|                        |         |          |              | loss of time milliseconds.  |
+|                        |         |          |              | Select to retrieve the data |
+|                        |         |          |              | as java.sql.Timestamp type, |
+|                        |         |          |              | and have the connector      |
+|                        |         |          |              | perform the conversion.     |
+*------------------------*---------*----------*--------------*-----------------------------+
+| All Native             | Boolean |          |              | If false (default),         |
+|                        |         |          |              | the attribute data are      |
+|                        |         |          |              | converted to Strings using  |
+|                        |         |          |              | the JDBC driver. Select to  |
+|                        |         |          |              | use the appropriate JDBC    |
+|                        |         |          |              | types and force the         |
+|                        |         |          |              | connector to perform the    |
+|                        |         |          |              | conversion as needed.       |
+*------------------------*---------*----------*--------------*-----------------------------+
+| Valid Connection Query | String  |          |              | If false (default), the     |
+|                        |         |          |              | connection is validated by  |
+|                        |         |          |              | switching the auto commit   |
+|                        |         |          |              | mode. For example, you      |
+|                        |         |          |              | might have <select 1 from   |
+|                        |         |          |              | dummy>, which might be more |
+|                        |         |          |              | efficient on some databases.|
+*------------------------*---------*----------*--------------*-----------------------------+
+
+* Schema
+
+  The Database Table connector only supports the ACCOUNT objectclass.
+  
+  The following table describes the attributes that are explicitly supported
+  in the schema.
+  
+  All of these attributes are single-valued, and unless specifically noted
+  otherwise in this table, they can be created, updated, and read.
+  
+*-------------------*--------------------------------------------------------+
+| Attribute Name    | Description                                            |
+*-------------------*--------------------------------------------------------+
+| "column name"     | This attribute is required when "column" is NOT NULL.  |
+|                   | Blobs, clobs, and binaries are not returned by default.|
+*-------------------*--------------------------------------------------------+
+| All columns ...   | Description                                            |
+*-------------------*--------------------------------------------------------+
+| _PASSWORD_        | This attribute is required for a Password Column and   |
+|                   | it is not readable or returned by default.             |
+*-------------------*--------------------------------------------------------+
+| _NAME_            | This attribute is required.                            |
+*-------------------*--------------------------------------------------------+
