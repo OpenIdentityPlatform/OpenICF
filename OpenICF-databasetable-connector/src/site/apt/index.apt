@@ -75,7 +75,9 @@ Database Table Connector
   
   * Download the appropriate connector jar and place it in the
     $OPENIDM/connectors folder.
+
   * Provide the applicable JDBC driver and make it available via the CLASSPATH.
+
   * Setup and configure the $OPENIDM/conf/provisioner.openicf-dbtable.json
     connector instance configuration.
 
@@ -83,12 +85,19 @@ Database Table Connector
 
   * Authenticate (<Optional>) Specify the password column configuration
     property.
+
   * Create
+
   * Delete
+
   * Update
+
   * Search
+
   * Schema
+
   * Test
+
   * LiveSync (<Optional>) Specify the Change Log Column configuration property.
 
 * Configuration
