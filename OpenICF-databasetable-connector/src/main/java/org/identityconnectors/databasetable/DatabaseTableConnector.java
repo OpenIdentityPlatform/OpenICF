@@ -449,7 +449,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
                 log.ok("Appended to update statement the attribute {0} for columnName {1} and sqlType {2}", attributeName, columnName, sqlType);                        
             }
         }
-        log.info("Update account {1}", accountName);
+        log.info("Update account {0}", accountName);
         
         // Format the update query
         final String tblname = config.getTable();
