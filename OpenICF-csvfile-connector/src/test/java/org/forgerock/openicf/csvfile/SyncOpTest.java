@@ -21,6 +21,8 @@
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
  *
+ * Portions Copyrighted 2011 Viliam Repan (lazyman)
+ *
  * $Id$
  */
 package org.forgerock.openicf.csvfile;
@@ -28,7 +30,6 @@ package org.forgerock.openicf.csvfile;
 import org.forgerock.openicf.csvfile.util.TestUtils;
 import org.testng.annotations.AfterMethod;
 import org.testng.Assert;
-import org.testng.AssertJUnit;
 import org.identityconnectors.framework.common.objects.Uid;
 import java.util.Map;
 import java.io.File;
@@ -49,7 +50,7 @@ import static org.testng.Assert.*;
 
 /**
  *
- * @author lazyman
+ * @author Viliam Repan (lazyman)
  */
 public class SyncOpTest {
 
@@ -178,7 +179,7 @@ public class SyncOpTest {
         cBuilder.setName("miso");
         cBuilder.setUid("miso");
         cBuilder.setObjectClass(ObjectClass.ACCOUNT);
-        cBuilder.addAttribute("uid", "miso");
+//        cBuilder.addAttribute("uid", "miso"); //we're not returning unique attribute, it's already there as __UID__
         cBuilder.addAttribute("firstName", "michal");
         cBuilder.addAttribute("lastName", "LastnameChange");
         cBuilder.addAttribute("__PASSWORD__", new GuardedString("Z29vZA==".toCharArray()));
@@ -193,7 +194,7 @@ public class SyncOpTest {
         cBuilder.setName("fanfi");
         cBuilder.setUid("fanfi");
         cBuilder.setObjectClass(ObjectClass.ACCOUNT);
-        cBuilder.addAttribute("uid", "fanfi");
+//        cBuilder.addAttribute("uid", "fanfi"); //we're not returning unique attribute, it's already there as __UID__
         cBuilder.addAttribute("firstName", "igor");
         cBuilder.addAttribute("lastName", "farinicNewRecord");
         cBuilder.addAttribute("__PASSWORD__", new GuardedString("Z29vZA==".toCharArray()));

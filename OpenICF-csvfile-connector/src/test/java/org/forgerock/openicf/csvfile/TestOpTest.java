@@ -21,12 +21,13 @@
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
  *
+ * Portions Copyrighted 2011 Viliam Repan (lazyman)
+ *
  * $Id$
  */
 package org.forgerock.openicf.csvfile;
 
 import org.testng.annotations.AfterMethod;
-import org.testng.annotations.Test;
 import java.io.File;
 import java.net.URL;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
@@ -34,7 +35,7 @@ import org.testng.annotations.Test;
 
 /**
  *
- * @author lazyman
+ * @author Viliam Repan (lazyman)
  */
 public class TestOpTest {
 

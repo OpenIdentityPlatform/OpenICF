@@ -20,6 +20,9 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2011 Viliam Repan (lazyman)
+ *
  * $Id$
  */
 package org.forgerock.openicf.csvfile;
@@ -37,6 +40,7 @@ import org.identityconnectors.framework.spi.ConfigurationProperty;
  * Extends the {@link AbstractConfiguration} class to provide all the necessary
  * parameters to initialize the CSVFile Connector.
  *
+ * @author Viliam Repan (lazyman)
  * @author $author$
  * @version $Revision$ $Date$
  */

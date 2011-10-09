@@ -21,6 +21,8 @@
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
  *
+ * Portions Copyrighted 2011 Viliam Repan (lazyman)
+ *
  * $Id$
  */
 package org.forgerock.openicf.csvfile.util;
@@ -35,7 +37,7 @@ import org.testng.Assert;
 
 /**
  *
- * @author lazyman
+ * @author Viliam Repan (lazyman)
  */
 public class TestUtils {
 

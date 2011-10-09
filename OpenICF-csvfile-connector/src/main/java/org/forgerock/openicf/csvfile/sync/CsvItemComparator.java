@@ -21,6 +21,8 @@
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
  *
+ * Portions Copyrighted 2011 Viliam Repan (lazyman)
+ * 
  * $Id$
  */
 package org.forgerock.openicf.csvfile.sync;
@@ -30,7 +32,7 @@ import java.util.Comparator;
 
 /**
  *
- * @author lazyman
+ * @author Viliam Repan (lazyman)
  */
 class CsvItemComparator implements Comparator<CsvItem> {
 

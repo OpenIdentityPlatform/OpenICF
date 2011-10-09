@@ -20,6 +20,9 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * 
+ * Portions Copyrighted 2011 Viliam Repan (lazyman)
+ * 
  * $Id$
  */
 package org.forgerock.openicf.csvfile;
@@ -96,12 +99,14 @@ import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
 /**
  * Main implementation of the CSVFile Connector
  *
+ * @author Viliam Repan (lazyman)
  * @author $author$
  * @version $Revision$ $Date$
  */
 @ConnectorClass(displayNameKey = "UI_CONNECTOR_NAME",
 configurationClass = CSVFileConfiguration.class)
-public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsernameOp, CreateOp, DeleteOp, SchemaOp, ScriptOnConnectorOp, ScriptOnResourceOp, SearchOp<String>, SyncOp, TestOp, UpdateAttributeValuesOp {
+public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsernameOp, CreateOp, DeleteOp, SchemaOp,
+        ScriptOnConnectorOp, ScriptOnResourceOp, SearchOp<String>, SyncOp, TestOp, UpdateAttributeValuesOp {
 
     /**
      * Setup logging for the {@link CSVFileConnector}.
@@ -708,6 +713,9 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
     private List<AttributeInfo> createAttributeInfo(List<String> names) {
         List<AttributeInfo> infos = new ArrayList<AttributeInfo>();
         for (String name : names) {
+            if (name.equals(configuration.getUniqueAttribute())) {
+                continue;
+            }
             if (name.equals(configuration.getNameAttribute())) {
                 continue;
             }
@@ -733,7 +741,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
             String name = header.get(i);
             if (name.equals(configuration.getUniqueAttribute())) {
                 builder.setUid(item.getAttribute(i));
-                builder.addAttribute(name, item.getAttribute(i));
+//                builder.addAttribute(name, item.getAttribute(i));
 
                 if (!configuration.isUniqueAndNameAttributeEqual()) {
                     continue;

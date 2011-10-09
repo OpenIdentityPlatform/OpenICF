@@ -21,12 +21,13 @@
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
  *
+ * Portions Copyrighted 2011 Viliam Repan (lazyman)
+ *
  * $Id$
  */
 package org.forgerock.openicf.csvfile;
 
 import org.forgerock.openicf.csvfile.util.TestUtils;
-import org.testng.AssertJUnit;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import java.util.List;
@@ -43,7 +44,7 @@ import static org.testng.Assert.*;
 
 /**
  *
- * @author lazyman
+ * @author Viliam Repan (lazyman)
  */
 public class SearchOpTest {
 
@@ -151,10 +152,10 @@ public class SearchOpTest {
         assertNotNull(object);
         assertNotNull(object.getUid());
         assertEquals("vilo", object.getUid().getUidValue());
-        assertEquals(object.getAttributes().size(), 6);
+        assertEquals(object.getAttributes().size(), 5);
         testAttribute(object, "__NAME__", "vilo");
         testAttribute(object, "__UID__", "vilo");
-        testAttribute(object, "uid", "vilo");
+//        testAttribute(object, "uid", "vilo"); //we're not returning unique attribute, it's already there as __UID__
         testAttribute(object, "firstName", "viliam");
         testAttribute(object, "lastName", "repan");
         testAttribute(object, "__PASSWORD__", new GuardedString("Z29vZA==".toCharArray()));
@@ -165,9 +166,10 @@ public class SearchOpTest {
         assertNotNull(object);
         assertNotNull(object.getUid());
         assertEquals("miso", object.getUid().getUidValue());
+        assertEquals(object.getAttributes().size(), 4);
         testAttribute(object, "__NAME__", "miso");
         testAttribute(object, "__UID__", "miso");
-        testAttribute(object, "uid", "miso");
+//        testAttribute(object, "uid", "miso"); //we're not returning unique attribute, it's already there as __UID__
         testAttribute(object, "firstName", "michal");
         testAttribute(object, "lastName");
         testAttribute(object, "__PASSWORD__", new GuardedString("bad=".toCharArray()));

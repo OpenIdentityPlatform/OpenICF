@@ -21,13 +21,14 @@
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
  *
+ * Portions Copyrighted 2011 Viliam Repan (lazyman)
+ *
  * $Id$
  */
 package org.forgerock.openicf.csvfile;
 
 import org.forgerock.openicf.csvfile.sync.Change;
 import org.forgerock.openicf.csvfile.sync.InMemoryDiff;
-import java.io.File;
 import java.util.List;
 import java.util.regex.Pattern;
 import org.forgerock.openicf.csvfile.util.TestUtils;
@@ -35,7 +36,7 @@ import org.testng.annotations.Test;
 
 /**
  *
- * @author lazyman
+ * @author Viliam Repan (lazyman)
  */
 public class InMemoryDiffTest {
 
