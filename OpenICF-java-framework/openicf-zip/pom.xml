@@ -35,10 +35,10 @@
     <name>OpenICF Java ZIP file assembly</name>
     <description>OpenICF Connector server</description>
     <dependencies>
-        <!--dependency>
+        <dependency>
             <groupId>org.forgerock.openicf.framework</groupId>
             <artifactId>connector-framework-internal</artifactId>
-        </dependency-->
+        </dependency>
         <dependency>
             <groupId>org.forgerock.openicf.framework</groupId>
             <artifactId>icfl-over-slf4j</artifactId>
@@ -50,9 +50,9 @@
             <version>1.6.2</version>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-jdk14</artifactId>
-            <version>1.6.2</version>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>0.9.29</version>
         </dependency>
     </dependencies>
     <build>

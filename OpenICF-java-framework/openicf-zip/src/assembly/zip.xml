@@ -66,6 +66,7 @@
             <outputDirectory>/openicf/lib/framework</outputDirectory>
             <includes>
                 <include>org.slf4j:*</include>
+                <include>ch.qos.logback:*</include>
             </includes>
         </dependencySet>
         <dependencySet>
