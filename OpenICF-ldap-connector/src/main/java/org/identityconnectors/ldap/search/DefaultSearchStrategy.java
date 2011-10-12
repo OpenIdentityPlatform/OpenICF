@@ -62,13 +62,13 @@ public class DefaultSearchStrategy extends LdapSearchStrategy {
                 if (!ignoreNonExistingBaseDNs) {
                     throw e;
                 }
-                log.warn(e, null);
+                log.info(e, null);
                 continue;
             } catch (InvalidNameException e) {
                 if (!ignoreNonExistingBaseDNs) {
                     throw e;
                 }
-                log.warn(e, null);
+                log.info(e, null);
                 continue;
             }
             try {
