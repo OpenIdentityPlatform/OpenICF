@@ -140,7 +140,7 @@ public class LdapConfiguration extends AbstractConfiguration {
     /**
      * Whether to use block-based LDAP controls like simple paged results or VLV control.
      */
-    private boolean useBlocks = true;
+    private boolean useBlocks = false;
 
     /**
      * The block size for simple paged results and VLV index searches.
