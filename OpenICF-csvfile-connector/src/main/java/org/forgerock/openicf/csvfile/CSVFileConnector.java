@@ -22,6 +22,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * 
  * Portions Copyrighted 2011 Viliam Repan (lazyman)
+ * Portions Copyrighted 2011 Radovan Semancik
  * 
  * $Id$
  */
@@ -113,9 +114,6 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
      */
     private static final Log log = Log.getLog(CSVFileConnector.class);
     public static final String TMP_EXTENSION = ".tmp";
-    private static final String ATTRIBUTE_NAME = "__NAME__";
-    private static final String ATTRIBUTE_PASSWORD = "__PASSWORD__";
-    private static final String ATTRIBUTE_UID = "__UID__";
 
     private static enum Operation {
 
@@ -695,10 +693,10 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
 
     private Attribute getAttribute(String name, Set<Attribute> attributes) {
         if (name.equals(configuration.getPasswordAttribute())) {
-            name = ATTRIBUTE_PASSWORD;
+            name = OperationalAttributes.PASSWORD_NAME;
         }
         if (name.equals(configuration.getNameAttribute())) {
-            name = ATTRIBUTE_NAME;
+            name = Name.NAME;
         }
 
         for (Attribute attribute : attributes) {
@@ -717,6 +715,10 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                 continue;
             }
             if (name.equals(configuration.getNameAttribute())) {
+                continue;
+            }
+            if (name.equals(configuration.getPasswordAttribute())) {
+            	infos.add(OperationalAttributeInfos.PASSWORD);
                 continue;
             }
 
@@ -752,7 +754,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                 continue;
             }
             if (name.equals(configuration.getPasswordAttribute())) {
-                builder.addAttribute(ATTRIBUTE_PASSWORD, new GuardedString(item.getAttribute(i).toCharArray()));
+                builder.addAttribute(OperationalAttributes.PASSWORD_NAME, new GuardedString(item.getAttribute(i).toCharArray()));
                 continue;
             }
             builder.addAttribute(name, item.getAttribute(i));

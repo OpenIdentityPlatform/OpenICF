@@ -22,6 +22,7 @@
  * "Portions Copyrighted 2010 [name of copyright owner]"
  *
  * Portions Copyrighted 2011 Viliam Repan (lazyman)
+ * Portions Copyrighted 2011 Radovan Semancik
  *
  * $Id$
  */
@@ -108,7 +109,7 @@ public class SchemaOpTest {
         testAttribute("firstName", attrInfos, false, false);
         testAttribute("lastName", attrInfos, false, false);
         testAttribute("__NAME__", attrInfos, true, false);
-        testAttribute("password", attrInfos, false, true);
+        testAttribute("__PASSWORD__", attrInfos, false, true);
     }
 
     @Test(enabled = false)
