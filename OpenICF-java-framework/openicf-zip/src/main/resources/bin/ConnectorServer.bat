@@ -59,7 +59,7 @@ set JAVA_DLL="%JAVA_HOME%\jre\bin\server\jvm.dll"
 :homeOk
 
 rem Set CLASSPATH for starting connector server
-set CP="%CONNECTOR_SERVER_HOME%\lib\framework\connector-framework-1.1.0.0-SNAPSHOT.jar";"%CONNECTOR_SERVER_HOME%\lib\framework\connector-framework-internal-1.1.0.0-SNAPSHOT.jar";"%CONNECTOR_SERVER_HOME%\lib\framework\groovy-all-1.8.1.jar";
+set CP="%CONNECTOR_SERVER_HOME%\lib\framework\connector-framework-1.1.0.0-SNAPSHOT.jar";"%CONNECTOR_SERVER_HOME%\lib\framework\connector-framework-internal-1.1.0.0-SNAPSHOT.jar";"%CONNECTOR_SERVER_HOME%\lib\framework\groovy-all-1.8.3.jar";
 
 rem SET MISC PROPERTIES
 rem Architecture, can be i386 or amd64 (it is basically the directory name
