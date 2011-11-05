@@ -63,7 +63,7 @@ public final class Assertions {
      *             if <code>o</code> is <code>null</code> and constructs a
      *             message with the name of the parameter.
      *             
-     * @since 1.2
+     * @since 1.1
      */
     public static <T> T nullChecked(T o, String param) {
         // Avoid calling nullCheck() here to reuse code: it deepens the stack trace.
@@ -102,7 +102,7 @@ public final class Assertions {
      *            name of the parameter to check.
      * @return the value of the <code>o</code> parameter.
      *             
-     * @since 1.2
+     * @since 1.1
      */
     public static String blankChecked(String o, String param) {
         // Avoid calling blankCheck() here to reuse code: it deepens the stack trace.

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <!--
- Copyright (c) 2011 ForgeRock Inc. All Rights Reserved
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+ Copyright © 2011 ForgeRock AS. All rights reserved.
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -9,20 +10,18 @@
  compliance with the License.
 
  You can obtain a copy of the License at
- http://www.opensource.org/licenses/cddl1.php or
- OpenIDM/legal/CDDLv1.0.txt
+ http://forgerock.org/license/CDDLv1.0.html
  See the License for the specific language governing
  permission and limitations under the License.
 
  When distributing Covered Code, include this CDDL
  Header Notice in each file and include the License file
- at OpenIDM/legal/CDDLv1.0.txt.
+ at http://forgerock.org/license/CDDLv1.0.html
  If applicable, add the following below the CDDL Header,
  with the fields enclosed by brackets [] replaced by
  your own identifying information:
- "Portions Copyrighted 2011 [name of copyright owner]"
+ "Portions Copyrighted [year] [name of copyright owner]"
 -->
-
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
@@ -60,9 +59,6 @@
         <framework.version>${framework.compatibilityVersion}.${framework.releaseVersion}</framework.version>
         <licenseResourceBundle>org.forgerock.openicf:openicf-license:1.0.0</licenseResourceBundle>
 
-        <defaultConnectorFamily>misc</defaultConnectorFamily>
-        <defaultConnectorGroupId>org.forgerock.openicf.bundles.${defaultConnectorFamily}</defaultConnectorGroupId>
-        <defaultConnectorVersion>${framework.compatibilityVersion}.${framework.releaseVersion}</defaultConnectorVersion>
         <!--
             These are the properties needed in manifest file of the bundle,
             but now hardcoded in tests
@@ -196,8 +192,7 @@
                             <artifactId>maven-javadoc-plugin</artifactId>
                             <configuration>
                                 <links>
-                                    <link>http://download.oracle.com/javaee/5/api/</link>
-                                    <link>http://download.oracle.com/javase/5/docs/api/</link>
+                                    <link>http://download.oracle.com/javase/6/docs/api/</link>
                                     <link>http://groovy.codehaus.org/api/</link>
                                     <link>http://openicf.forgerock.org/connector-framework/apidocs/</link>
                                 </links>
@@ -223,7 +218,7 @@
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-scm-plugin</artifactId>
                             <configuration>
-                                <tag>${project.groupId}.${project.artifactId}-${project.version}</tag>
+                                <tag>${project.artifactId}-${project.version}</tag>
                                 <message>[ForgeRock Connector Release] ${project.name} </message>
                             </configuration>
                         </plugin>
@@ -242,8 +237,6 @@
                                 <Embed-Transitive>true</Embed-Transitive>
                                 <Export-Package>${connectorPackage}.*</Export-Package>
                                 <Import-Package>*</Import-Package>
-                                <!--Fragment-Host>org.forgerock.openicf.framework.connector-framework</Fragment-Host-->
-                                <!--Bundle-SymbolicName>${ConnectorBundle-Name}</Bundle-SymbolicName-->
                                 <ConnectorBundle-FrameworkVersion>${ConnectorBundle-FrameworkVersion}</ConnectorBundle-FrameworkVersion>
                                 <ConnectorBundle-Name>${ConnectorBundle-Name}</ConnectorBundle-Name>
                                 <ConnectorBundle-Version>${ConnectorBundle-Version}</ConnectorBundle-Version>

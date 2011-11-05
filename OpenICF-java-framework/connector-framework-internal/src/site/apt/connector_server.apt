@@ -54,7 +54,7 @@ Connector Server
     
     []
 
-    Execute <<ServiceInstall-1.2.0.5478.msi>>. Just follow the wizard. It will walk you through the whole process step by step. Upon completion, the Connector Server will be installed as a windows service.
+    Execute <<ServiceInstall-1.1.0.xxxx.msi>>. Just follow the wizard. It will walk you through the whole process step by step. Upon completion, the Connector Server will be installed as a windows service.
 
 **Configuring the .NET Connector Server
 
@@ -241,8 +241,7 @@ java -cp "connector-framework.jar:connector-framework-internal.jar:groovy-all.ja
 
 Example connector server properties file
 
-    key=xOS4IeeE6eb/AhMbhxZEC37PgtE\=
-    value=Passw0rd
+    Clear key value: changeit
 
 +---
 ##

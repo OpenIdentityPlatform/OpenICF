@@ -250,10 +250,10 @@ Developing .NET Connector Bundles
 ~~    ActiveDirectory.Connector-1.0.0.5570.zip
 ~~    ActiveDirectoryConnectorTests-1.0.0.5590.zip
 ~~
-~~    ConnectorServer-1.2.0.5478.zip
-~~    ServiceInstall-1.2.0.5478.msi
+~~    ConnectorServer-1.1.0.xxxx.zip
+~~    ServiceInstall-1.1.0.xxxx.msi
 
-    Download libraries to the same folder:
+    Download libraries to the same folder from {{{http://www.forgerock.org/openicf.html}OpenICF download site}}:
 
     *{{{http://repo.forgerock.org/org/forgerock/openicf/dotnet/Common-1.2.0.5629.zip}Common-1.2.0.5629.zip}}
 

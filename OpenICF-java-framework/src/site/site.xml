@@ -43,7 +43,7 @@
 
         <menu name="OpenICF">
             <item name="Welcome" href="index.html" />
-            <item name="Downloads" href="downloads.html" />
+            <item name="Downloads" href="http://www.forgerock.org/openicf.html" />
             <item name="Connectors" href="./connectors"/>
             <item name="FAQ" href="faq.html" />
             <!--item name="Wiki" href="http://wikis.forgerock.org/openicf/" /-->
