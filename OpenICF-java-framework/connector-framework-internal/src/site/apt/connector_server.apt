@@ -48,7 +48,7 @@ Connector Server
 
     *Windows Server 2003 or 2008
 
-    *.NET Framework 3.5 or higher
+    *.NET Framework 3.5 or higher but not 4.0 or above!
 
     *Refer to your .NET connector to determine if there are any additional requirements
     
