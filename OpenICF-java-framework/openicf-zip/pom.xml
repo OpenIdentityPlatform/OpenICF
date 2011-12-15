@@ -46,15 +46,16 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.6.2</version>
+            <version>1.6.4</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>0.9.29</version>
+            <version>1.0.0</version>
         </dependency>
     </dependencies>
     <build>
+        <finalName>openicf-${project.version}-java</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -82,23 +83,63 @@
             <id>openicf-connectors</id>
             <dependencies>
                 <dependency>
-                    <groupId>org.forgerock.openicf.connectors.os</groupId>
-                    <artifactId>solaris</artifactId>
-                    <version>1.1.0.0-SNAPSHOT</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.forgerock.openicf.connectors.os</groupId>
-                    <artifactId>vms</artifactId>
+                    <groupId>org.forgerock.openicf.connectors.db</groupId>
+                    <artifactId>openicf-db2-connector</artifactId>
                     <version>1.1.0.0-SNAPSHOT</version>
                 </dependency>
                 <dependency>
                     <groupId>org.forgerock.openicf.connectors.db</groupId>
-                    <artifactId>databasetable</artifactId>
+                    <artifactId>openicf-databasetable-connector</artifactId>
                     <version>1.1.0.0-SNAPSHOT</version>
                 </dependency>
                 <dependency>
                     <groupId>org.forgerock.openicf.connectors.db</groupId>
-                    <artifactId>mysqluser</artifactId>
+                    <artifactId>openicf-mysqluser-connector</artifactId>
+                    <version>1.1.0.0-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.forgerock.openicf.connectors.db</groupId>
+                    <artifactId>openicf-oracle-connector</artifactId>
+                    <version>1.1.0.0-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.forgerock.openicf.connectors.db</groupId>
+                    <artifactId>openicf-scriptedsql-connector</artifactId>
+                    <version>1.1.0.0-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.forgerock.openicf.connectors.file</groupId>
+                    <artifactId>openicf-csvfile-connector</artifactId>
+                    <version>1.1.0.0-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.forgerock.openicf.connectors.file</groupId>
+                    <artifactId>openicf-flatfile-connector</artifactId>
+                    <version>1.1.0.0-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.forgerock.openicf.connectors.file</groupId>
+                    <artifactId>openicf-xml-connector</artifactId>
+                    <version>1.1.0.0-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.forgerock.openicf.connectors.ldap</groupId>
+                    <artifactId>openicf-ldap-connector</artifactId>
+                    <version>1.1.0.0-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.forgerock.openicf.connectors.os</groupId>
+                    <artifactId>openicf-solaris-connector</artifactId>
+                    <version>1.1.0.0-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.forgerock.openicf.connectors.os</groupId>
+                    <artifactId>openicf-vms-connector</artifactId>
+                    <version>1.1.0.0-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.forgerock.openicf.connectors.webservice</groupId>
+                    <artifactId>openicf-spml-connector</artifactId>
                     <version>1.1.0.0-SNAPSHOT</version>
                 </dependency>
             </dependencies>
