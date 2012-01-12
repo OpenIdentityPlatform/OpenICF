@@ -27,11 +27,8 @@
  */
 package org.forgerock.openicf.csvfile.util;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.net.URISyntaxException;
 import java.net.URL;
 import org.testng.Assert;
 
@@ -41,7 +38,7 @@ import org.testng.Assert;
  */
 public class TestUtils {
 
-    public static File getTestFile(String name) throws Exception {
+    public static File getTestFile(String name) throws IOException, URISyntaxException {
         Assert.assertNotNull(name);
         URL filesURL = TestUtils.class.getResource("/files/");
         Assert.assertNotNull(filesURL);

@@ -27,7 +27,6 @@
  */
 package org.forgerock.openicf.csvfile.util;
 
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -50,6 +49,16 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
  * @author Viliam Repan (lazyman)
  */
 public class Utils {
+
+    public static String escapeFieldDelimiter(String delimiter) {
+        String[] specials = new String[]{"|", ".", "\\", "^", "$", "[", "]", "(", ")"};
+        for (String special : specials) {
+            if (special.equals(delimiter)) {
+                return "\\" + delimiter;
+            }
+        }
+        return delimiter;
+    }
 
     public static void isAccount(ObjectClass oc) {
         if (oc == null) {
@@ -92,7 +101,8 @@ public class Utils {
         FileChannel outChannel = new FileOutputStream(to).getChannel();
         try {
             inChannel.transferTo(0, inChannel.size(), outChannel);
-        } finally {
+        }
+        finally {
             if (inChannel != null) {
                 inChannel.close();
             }
@@ -118,7 +128,8 @@ public class Utils {
                 reader.close();
             }
             unlock(lock);
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
             throw new ConnectorException("Couldn't close reader, reason: " + ex.getMessage(), ex);
         }
     }
@@ -127,7 +138,8 @@ public class Utils {
         if (lock != null && lock.isValid()) {
             try {
                 lock.release();
-            } catch (IOException ex) {
+            }
+            catch (IOException ex) {
                 throw new ConnectorException("Couldn't release file lock, reason: " + ex.getMessage(), ex);
             }
         }
@@ -140,7 +152,7 @@ public class Utils {
         }
         //this if is hack for regexp - if line starts with field delimiter regexp
         //will fail, so if we find that we put "empty field" as it was expected
-        if (line.matches("^" + configuration.getFieldDelimiter() + ".*$")) {
+        if (line.matches("^" + escapeFieldDelimiter(configuration.getFieldDelimiter()) + ".*$")) {
             StringBuilder builder = new StringBuilder();
             builder.append(configuration.getValueQualifier());
             builder.append(configuration.getValueQualifier());
@@ -159,7 +171,7 @@ public class Utils {
         String line = null;
         do {
             line = reader.readLine();
-        } while ((line != null) && isEmptyOrComment(line));
+        } while (( line != null ) && isEmptyOrComment(line));
 
         if (line == null) {
             throw new ConnectorException("Csv file '" + configuration.getFilePath() + "' doesn't contain header.");

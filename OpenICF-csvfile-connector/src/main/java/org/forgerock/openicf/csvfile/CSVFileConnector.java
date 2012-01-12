@@ -55,6 +55,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import org.forgerock.openicf.csvfile.util.Utils;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
@@ -143,10 +144,13 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
         notNullArgument(initialConfiguration1, "configuration");
 
         this.configuration = (CSVFileConfiguration) initialConfiguration1;
+        
+        String fieldDelimiter = Utils.escapeFieldDelimiter(configuration.getFieldDelimiter());
+        
         // regexp with ," chars is (?:^|,)(\"(?:[^\"]+|\"\")*\"|[^,]*)
         StringBuilder builder = new StringBuilder();
         builder.append("(?:^|");
-        builder.append(this.configuration.getFieldDelimiter());
+        builder.append(fieldDelimiter);
         builder.append(")(");
         builder.append(this.configuration.getValueQualifier());
         builder.append("(?:[^");
@@ -157,7 +161,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
         builder.append(")*");
         builder.append(this.configuration.getValueQualifier());
         builder.append("|[^");
-        builder.append(this.configuration.getFieldDelimiter());
+        builder.append(fieldDelimiter);
         builder.append("]*)");
         linePattern = Pattern.compile(builder.toString());
     }

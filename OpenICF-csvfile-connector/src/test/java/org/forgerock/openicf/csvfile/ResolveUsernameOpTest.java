@@ -46,7 +46,7 @@ public class ResolveUsernameOpTest {
     private CSVFileConnector connector;
 
     @BeforeMethod
-	public void before() throws Exception {
+    public void before() throws Exception {
         CSVFileConfiguration config = new CSVFileConfiguration();
         config.setEncoding("utf-8");
         config.setFilePath(TestUtils.getTestFile("resolve.csv"));
@@ -58,7 +58,7 @@ public class ResolveUsernameOpTest {
     }
 
     @AfterMethod
-	public void after() {
+    public void after() {
         connector.dispose();
         connector = null;
     }
