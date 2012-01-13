@@ -21,7 +21,7 @@
   !
   ! CCPL HEADER END
   !
-  !      Copyright 2011 ForgeRock AS
+  !      Copyright 2011-2012 ForgeRock AS
   !
 -->
 
@@ -77,6 +77,6 @@
             <src>images/openicf-tagline-195x65.png</src>
             <alt>OpenICF</alt>
         </openproject>
-        <googleAnalytics>UA-23412190-3</googleAnalytics>
+        <googleAnalytics>UA-23412190-10</googleAnalytics>
     </custom>
 </project>
