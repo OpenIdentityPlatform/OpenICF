@@ -7,7 +7,7 @@
 ~~
 ~~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 ~~
-~~ Copyright © 2011. ForgeRock AS. All rights reserved.
+~~ Copyright © 2011-2012. ForgeRock AS. All rights reserved.
 ~~
 ~~ The contents of this file are subject to the terms
 ~~ of the Common Development and Distribution License
@@ -68,6 +68,8 @@ Configuration
  <<Property>> | <<Type>> | <<Descriptions>> 
 *-------------+----------+-------------------+
  xsdIcfFilePath | File | path of the {{{https://svn.forgerock.org/openicf/trunk/connectors/java/xml/src/main/resources/resource-schema-1.xsd}default resource schema}} 	
+*-------------+----------+-------------------+
+ createFileIfNotExists | boolean | Default value: false. It allows to create the xml file if not exits.
 *-------------+----------+-------------------+
 
 

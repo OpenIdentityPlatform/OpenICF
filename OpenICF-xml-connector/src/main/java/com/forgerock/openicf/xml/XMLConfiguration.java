@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2010 ForgeRock Inc. All Rights Reserved
+ * Copyright (c) 2010-2012 ForgeRock Inc. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -30,11 +30,12 @@ import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.net.URISyntaxException;
 import java.net.URL;
+
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.spi.AbstractConfiguration;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
 
 /**
- *
  * @author $author$
  * @version $Revision$ $Date$
  * @since 1.0
@@ -44,6 +45,7 @@ public class XMLConfiguration extends AbstractConfiguration {
     private File xmlFilePath = null;
     private File xsdFilePath = null;
     private File xsdIcfFilePath = null;
+    private boolean createFileIfNotExists = false;
 
     public XMLConfiguration() {
         try {
@@ -84,6 +86,15 @@ public class XMLConfiguration extends AbstractConfiguration {
         this.xsdIcfFilePath = xsdFilePath;
     }
 
+    @ConfigurationProperty(displayMessageKey = "CREATE_FILE_IF_NOT_EXISTS_DISPLAY", helpMessageKey = "CREATE_FILE_IF_NOT_EXISTS_HELP")
+    public boolean isCreateFileIfNotExists() {
+        return createFileIfNotExists;
+    }
+
+    public void setCreateFileIfNotExists(boolean createFileIfNotExists) {
+        this.createFileIfNotExists = createFileIfNotExists;
+    }
+
     public void validate() {
         if (null == xsdFilePath) {
             throw new IllegalArgumentException("Missing xsdFilePath property");
@@ -93,12 +104,17 @@ public class XMLConfiguration extends AbstractConfiguration {
         if (null == xmlFilePath) {
             throw new IllegalArgumentException("Missing xmlFilePath property");
         } else if (!xmlFilePath.exists()) {
-            try {
-                if (xmlFilePath.createNewFile()) {
-                    xmlFilePath.delete();
+            if (createFileIfNotExists) {
+                try {
+                    xmlFilePath.getParentFile().mkdir();
+                    if (xmlFilePath.createNewFile()) {
+                        xmlFilePath.delete();
+                    }
+                } catch (IOException ex) {
+                    throw new IllegalArgumentException("Xml file can not be created at " + xmlFilePath.getAbsolutePath());
                 }
-            } catch (IOException ex) {
-                throw new IllegalArgumentException("Xml file can not be created at " + xmlFilePath.getAbsolutePath());
+            } else {
+                throw new ConfigurationException("Xml file does not exists: " + xmlFilePath.toString());
             }
         } else if (!xmlFilePath.canWrite()) {
             throw new IllegalArgumentException("Xml file can not be written at " + xmlFilePath.getAbsolutePath());

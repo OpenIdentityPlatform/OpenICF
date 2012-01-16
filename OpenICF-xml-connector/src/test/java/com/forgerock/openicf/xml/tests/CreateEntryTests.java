@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2010 ForgeRock Inc. All Rights Reserved
+ * Copyright (c) 2010-2012 ForgeRock Inc. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -60,6 +60,7 @@ public class CreateEntryTests {
         XMLConfiguration config = new XMLConfiguration();
         config.setXmlFilePath(getRandomXMLFile());
         config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
+        config.setCreateFileIfNotExists(true);
         config.validate();
         SchemaParser parser = new SchemaParser(XMLConnector.class, config.getXsdFilePath());
         handler = new ConcurrentXMLHandler(config, parser.parseSchema(), parser.getXsdSchema());

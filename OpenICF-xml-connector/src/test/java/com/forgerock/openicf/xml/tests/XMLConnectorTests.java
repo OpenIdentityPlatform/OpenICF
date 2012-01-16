@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2010 ForgeRock Inc. All Rights Reserved
+ * Copyright (c) 2010-2012 ForgeRock Inc. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -56,6 +56,7 @@ public class XMLConnectorTests {
         XMLConfiguration config = new XMLConfiguration();
         config.setXmlFilePath(getRandomXMLFile());
         config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
+        config.setCreateFileIfNotExists(true);
         APIConfiguration impl = TestHelpers.createTestConfiguration(XMLConnector.class, config);
         ConnectorFacadeFactory factory = ConnectorFacadeFactory.getInstance();
         facade = factory.newInstance(impl);
