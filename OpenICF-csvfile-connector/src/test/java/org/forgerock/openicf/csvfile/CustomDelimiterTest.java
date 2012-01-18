@@ -103,7 +103,6 @@ public class CustomDelimiterTest {
     }
 
     private void testEntryOne(ConnectorObject object) {
-        System.out.println(object);
         assertNotNull(object);
         assertNotNull(object.getUid());
         assertEquals("vilo", object.getUid().getUidValue());

@@ -144,9 +144,9 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
         notNullArgument(initialConfiguration1, "configuration");
 
         this.configuration = (CSVFileConfiguration) initialConfiguration1;
-        
+
         String fieldDelimiter = Utils.escapeFieldDelimiter(configuration.getFieldDelimiter());
-        
+
         // regexp with ," chars is (?:^|,)(\"(?:[^\"]+|\"\")*\"|[^,]*)
         StringBuilder builder = new StringBuilder();
         builder.append("(?:^|");
@@ -174,12 +174,14 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
     public void dispose() {
     }
 
-    /******************
+    /**
+     * ****************
      * SPI Operations
      *
-     * Implement the following operations using the contract and
-     * description found in the Javadoc for these methods.
-     ******************/
+     * Implement the following operations using the contract and description
+     * found in the Javadoc for these methods.
+     *****************
+     */
     /**
      * {@inheritDoc}
      */
@@ -686,9 +688,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
 
             String value = appendValues(name, attribute.getValue());
             if (StringUtil.isNotEmpty(value)) {
-                builder.append(configuration.getValueQualifier());
-                builder.append(value);
-                builder.append(configuration.getValueQualifier());
+                appendQualifiedValue(builder, value);
             }
         }
 
@@ -722,7 +722,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                 continue;
             }
             if (name.equals(configuration.getPasswordAttribute())) {
-            	infos.add(OperationalAttributeInfos.PASSWORD);
+                infos.add(OperationalAttributeInfos.PASSWORD);
                 continue;
             }
 
@@ -1063,13 +1063,26 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
             }
 
             if (StringUtil.isNotEmpty(value)) {
-                builder.append(configuration.getValueQualifier());
-                builder.append(value);
-                builder.append(configuration.getValueQualifier());
+                appendQualifiedValue(builder, value);
             }
         }
 
         return builder.toString();
+    }
+
+    private void appendQualifiedValue(StringBuilder builder, String value) {
+        boolean useQualifier = configuration.getAlwaysQualify() || mustUseQualifier(value);
+        if (useQualifier) {
+            builder.append(configuration.getValueQualifier());
+        }
+        builder.append(value);
+        if (useQualifier) {
+            builder.append(configuration.getValueQualifier());
+        }
+    }
+
+    private boolean mustUseQualifier(String value) {
+        return value.contains(Utils.escapeFieldDelimiter(configuration.getFieldDelimiter()));
     }
 
     private void testHeader(List<String> headers) {
@@ -1146,6 +1159,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
 
     /**
      * Only for tests!
+     *
      * @return
      * @deprecated
      */

@@ -59,7 +59,7 @@ public class SearchOpTest {
         config.setPasswordAttribute("password");
 
         connector = new CSVFileConnector();
-        connector.init(config);
+        connector.init(config);        
     }
 
     @AfterMethod
@@ -148,7 +148,6 @@ public class SearchOpTest {
 
     @Test(enabled = false)
     private void testEntryOne(ConnectorObject object) {
-        System.out.println(object);
         assertNotNull(object);
         assertNotNull(object.getUid());
         assertEquals("vilo", object.getUid().getUidValue());

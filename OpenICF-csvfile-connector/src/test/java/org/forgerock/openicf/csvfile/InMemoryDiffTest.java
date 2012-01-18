@@ -69,7 +69,7 @@ public class InMemoryDiffTest {
 
         List<Change> changes = diff.diff();
         for (Change change : changes) {
-            System.out.println(change.getType() + "\t" + change.getUid());
+//            System.out.println(change.getType() + "\t" + change.getUid());
         }
     }
 }
