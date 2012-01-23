@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.identityconnectors.common.Base64;
 import org.identityconnectors.common.security.GuardedByteArray;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -106,11 +108,11 @@ public class AttributeTypeUtil {
             return gs;
         }
         else if (javaclass.equals(XmlHandlerUtil.GUARDED_BYTE_ARRAY)) {
-            GuardedByteArray gb = new GuardedByteArray(attrValue.getBytes());
+            GuardedByteArray gb = new GuardedByteArray(Base64.decode(attrValue));
             return gb;
         }
         else if (javaclass.equals(XmlHandlerUtil.BYTE_ARRAY)) {
-            byte[] b = attrValue.getBytes();
+            byte[] b = Base64.decode(attrValue);
             return b;
         }
         else {
@@ -120,38 +122,46 @@ public class AttributeTypeUtil {
 
     public static List<String> findAttributeValue(Attribute attr, AttributeInfo attrInfo) {
 
-        String javaClass = attrInfo.getType().getName();
+        Class<?> javaClass = attrInfo.getType();
         List<String> results = new ArrayList<String>();
         String stringValue = null;
 
         if (attr != null && attr.getValue() != null && attrInfo != null) {
+            if (attrInfo.getType().isPrimitive())
+                javaClass = convertPrimitiveToWrapper(attrInfo.getType().getName());
+
             for (Object value : attr.getValue()) {
 
-                Class clazz;
-                try {
-                    if (attrInfo.getType().isPrimitive())
-                        javaClass = convertPrimitiveToWrapper(attrInfo.getType().getName()).getName();
-                        
-                    clazz = Class.forName(javaClass);
-
-                    if (!clazz.isInstance(value)) {
-                        throw new IllegalArgumentException(attrInfo.getName() + " contains invalid type. Value(s) should be of type " + clazz.getName());
-                    }
-                }
-                catch (ClassNotFoundException ex) {
-                    throw ConnectorException.wrap(ex);
+                if (!javaClass.isInstance(value)) {
+                    throw new IllegalArgumentException(attrInfo.getName() + " contains invalid type. Value(s) should be of type " + javaClass.getName());
                 }
 
-                if (javaClass.equals("org.identityconnectors.common.security.GuardedString")) {
+                if (javaClass.equals(GuardedString.class)) {
                     GuardedStringAccessor accessor = new GuardedStringAccessor();
                     GuardedString gs = AttributeUtil.getGuardedStringValue(attr);
                     gs.access(accessor);
                     stringValue = String.valueOf(accessor.getArray());
-                } else if (javaClass.equals("org.identityconnectors.common.security.GuardedByteArray")) {
+                } else if (javaClass.equals(GuardedByteArray.class)) {
                     GuardedByteArrayAccessor accessor = new GuardedByteArrayAccessor();
                     GuardedByteArray gba = (GuardedByteArray) attr.getValue().get(0);
                     gba.access(accessor);
-                    stringValue = new String(accessor.getArray());
+                    stringValue = Base64.encode(accessor.getArray());
+                } else if (javaClass.isArray()) {
+                    Class<?> sourceType = javaClass.getComponentType();
+                    if (sourceType == byte.class) {
+                        results.add(Base64.encode((byte[])value));
+                    } else if (sourceType == char.class) {
+                        results.add(new String((char[]) value));
+                    } else if (sourceType == Character.class) {
+                        Character[] characterArray = (Character[]) value;
+                        char[] charArray = new char[characterArray.length];
+                        for (int i = 0; i < characterArray.length; i++) {
+                            charArray[i] = characterArray[i];
+                        }
+                        results.add(new String(charArray));
+                    } else {
+                        throw new IllegalArgumentException(attrInfo.getName() + " contains invalid type. Value(s) should be of type " + javaClass.getName());
+                    }
                 } else {
                     stringValue = value.toString();
                 }
@@ -174,7 +184,7 @@ public class AttributeTypeUtil {
         primitiveMap.put("double", Double.class);
     }
 
-    public static Class convertPrimitiveToWrapper(String name) {
+    public static Class<?> convertPrimitiveToWrapper(String name) {
         return primitiveMap.get(name);
     }
 }

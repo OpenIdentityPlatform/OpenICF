@@ -57,6 +57,10 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 import javax.xml.xquery.XQException;
 import javax.xml.xquery.XQResultSequence;
 
@@ -79,11 +83,10 @@ import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
-import org.w3c.dom.DOMImplementation;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.*;
+import org.w3c.dom.ls.DOMImplementationLS;
+import org.w3c.dom.ls.LSOutput;
+import org.w3c.dom.ls.LSSerializer;
 import org.xml.sax.SAXException;
 
 public class XMLHandlerImpl implements XMLHandler {
@@ -393,11 +396,28 @@ public class XMLHandlerImpl implements XMLHandler {
         }
 
         try {
-            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            try {
+                XPathFactory xpathFactory = new net.sf.saxon.xpath.XPathFactoryImpl();
+                // XPath to find empty text nodes.
+                XPathExpression xpathExp = xpathFactory.newXPath().compile("//text()[normalize-space(.) = '']");
+                NodeList emptyTextNodes = null;
+                emptyTextNodes = (NodeList) xpathExp.evaluate(document, XPathConstants.NODESET);
+
+                // Remove each empty text node from document.
+                for (int i = 0; i < emptyTextNodes.getLength(); i++) {
+                    Node emptyTextNode = emptyTextNodes.item(i);
+                    emptyTextNode.getParentNode().removeChild(emptyTextNode);
+                }
+            } catch (XPathExpressionException e) {
+                //We don't care. It's just formatting.
+            }
+
+            TransformerFactory transformerFactory = new net.sf.saxon.TransformerFactoryImpl();
             Transformer transformer = transformerFactory.newTransformer();
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             transformer.setOutputProperty(OutputKeys.METHOD, "xml");
             transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
 
             DOMSource source = new DOMSource(document);
             /* Running this code in java 5 we had to change

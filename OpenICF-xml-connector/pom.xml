@@ -49,7 +49,7 @@
         <skipTests>false</skipTests>
         <contracts.skip>true</contracts.skip>
         <privateConfigPath>${user.home}/.connectors/${project.artifactId}/config</privateConfigPath>
-        <embedded.dependencies>jaxen,saxonhe,xsom,relaxngDatatype,xml-apis,xercesImpl,stax-api</embedded.dependencies>
+        <embedded.dependencies>jaxen,saxon9he,xsom,relaxngDatatype,xml-apis,xercesImpl,stax-api</embedded.dependencies>
         <connectorPackage>com.forgerock.openicf.xml</connectorPackage>
         <connectorClass>XMLConnector</connectorClass>
         <jira.componentIds>10181</jira.componentIds>
@@ -78,21 +78,13 @@
             <name>JavaNet Repository</name>
             <url>http://download.java.net/maven/2</url>
         </repository>
+        <repository>
+            <!-- required for saxon-9.0 -->
+            <id>servicemix-m2-repo</id>
+            <name>Servicemix Maven2 Repository</name>
+            <url>http://svn.apache.org/repos/asf/servicemix/m2-repo/</url>
+        </repository>
     </repositories>
-    <profiles>
-        <profile>
-            <id>with-embedded-dependencies</id>
-            <properties>
-                <embedded.dependencies>jaxen,saxonhe,xsom,relaxngDatatype</embedded.dependencies>
-            </properties>
-        </profile>
-        <profile>
-            <id>active-embedded-dependencies</id>
-            <properties>
-                <embedded.dependencies>jaxen,saxonhe,xsom,relaxngDatatype</embedded.dependencies>
-            </properties>
-        </profile>
-    </profiles>
 
     <dependencies>
         <dependency>
@@ -103,8 +95,8 @@
         </dependency>
         <dependency>
             <groupId>net.sf.saxon</groupId>
-            <artifactId>saxonhe</artifactId>
-            <version>9.3</version>
+            <artifactId>saxon9he</artifactId>
+            <version>9.4.0.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
