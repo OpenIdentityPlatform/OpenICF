@@ -27,11 +27,11 @@
     <parent>
         <groupId>org.forgerock.openicf.connectors</groupId>
         <artifactId>connectors-parent</artifactId>
-        <version>1.1.0.0-SNAPSHOT</version>
+        <version>1.1.0.1-SNAPSHOT</version>
     </parent>
     <groupId>org.forgerock.openicf.connectors.file</groupId>
     <artifactId>openicf-csvfile-connector</artifactId>
-    <version>1.1.0.0-SNAPSHOT</version>
+    <version>1.1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>CSVFile Connector</name>
     <description>Connector for CSVFile</description>
@@ -72,18 +72,4 @@
             </releases>
         </repository>
     </repositories>
-    <profiles>
-        <profile>
-            <id>with-embedded-dependencies</id>
-            <properties>
-                <!-- Example: <embedded.dependencies>dbcommon</embedded.dependencies> -->
-            </properties>
-        </profile>
-        <profile>
-            <id>active-embedded-dependencies</id>
-            <properties>
-            </properties>
-        </profile>
-    </profiles>
-
 </project>
