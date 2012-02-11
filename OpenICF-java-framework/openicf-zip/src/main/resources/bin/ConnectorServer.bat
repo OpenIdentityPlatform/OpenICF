@@ -58,8 +58,13 @@ set JAVA="%JAVA_HOME%\bin\java.exe"
 set JAVA_DLL="%JAVA_HOME%\jre\bin\server\jvm.dll"
 :homeOk
 
-rem Set CLASSPATH for starting connector server
-set CP="%CONNECTOR_SERVER_HOME%\lib\framework\connector-framework-1.1.0.0-SNAPSHOT.jar";"%CONNECTOR_SERVER_HOME%\lib\framework\connector-framework-internal-1.1.0.0-SNAPSHOT.jar";"%CONNECTOR_SERVER_HOME%\lib\framework\groovy-all-1.8.3.jar";
+rem Set CLASSPATH for starting connector server %CONNECTOR_SERVER_HOME%\lib\framework\*
+set CP="%CONNECTOR_SERVER_HOME%\lib\framework\connector-framework.jar"; \
+    "%CONNECTOR_SERVER_HOME%\lib\framework\connector-framework-internal.jar"; \
+    "%CONNECTOR_SERVER_HOME%\lib\framework\groovy-all.jar"; \
+    "%CONNECTOR_SERVER_HOME%\lib\framework\slf4j-api"; \
+    "%CONNECTOR_SERVER_HOME%\lib\framework\logback-core.jar"; \
+    "%CONNECTOR_SERVER_HOME%\lib\framework\logback-classic.jar";
 
 rem SET MISC PROPERTIES
 rem Architecture, can be i386 or amd64 (it is basically the directory name
@@ -67,7 +72,7 @@ rem   where the binaries are stored, if not set this script will try to
 rem   find the value automatically based on environment variables)
 set ARCH=
 rem Run java options, separated by space
-set JAVA_OPTS=-Xmx500m "-Djava.util.logging.config.file=%CONNECTOR_SERVER_HOME%\conf\logging.properties"
+set JAVA_OPTS=-Xmx500m "-Djava.util.logging.config.file=%CONNECTOR_SERVER_HOME%\conf\logging.properties" "-Dlogback.configurationFile=%CONNECTOR_SERVER_HOME%\lib\logback.xml"
 rem Service java options, needs to be separated by ;
 set JAVA_OPTS_SERVICE=-Xmx500m;"-Djava.util.logging.config.file=%CONNECTOR_SERVER_HOME%\conf\logging.properties";
 set MAIN_CLASS=org.identityconnectors.framework.server.Main

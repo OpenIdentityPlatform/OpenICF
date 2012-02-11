@@ -153,10 +153,11 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
     }
     
     private static void listBundleContents2(String prefix, File file, List<String> result) {
-        result.add(prefix+file.getName());
-        if ( file.isDirectory() ) {
+        String path = prefix + file.getName();
+        result.add(path);
+        if (file.isDirectory()) {
             for (File sub : file.listFiles()) {
-                listBundleContents2(prefix+"/",sub,result);
+                listBundleContents2(path + "/", sub, result);
             }
         }
     }

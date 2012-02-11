@@ -173,10 +173,12 @@ public abstract class ConnectorInfoManagerTestBase {
             // correctly pointed to the native library (but the library could not be
             // loaded, since it is not a valid library--we want to keep our tests
             // platform-independent).
-            AssertJUnit.assertTrue(e.getMessage().contains("file too short"));
+            AssertJUnit.assertTrue(e.getMessage().contains("file too short") ||
+                    e.getMessage().contains("no suitable image found"));
         } catch (RuntimeException e) {
             // Remote framework serializes UnsatisfiedLinkError as RuntimeException.
-            AssertJUnit.assertTrue(e.getMessage().contains("file too short"));
+            AssertJUnit.assertTrue(e.getMessage().contains("file too short") ||
+                    e.getMessage().contains("no suitable image found"));
         }
     }
     

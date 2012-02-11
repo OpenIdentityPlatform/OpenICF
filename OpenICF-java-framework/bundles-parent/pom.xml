@@ -2,7 +2,7 @@
 <!--
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
- Copyright © 2011 ForgeRock AS. All rights reserved.
+ Copyright © 2011-2012 ForgeRock AS. All rights reserved.
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -22,20 +22,21 @@
  your own identifying information:
  "Portions Copyrighted [year] [name of copyright owner]"
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.forgerock.openicf.framework</groupId>
         <artifactId>framework</artifactId>
-        <version>1.1.0.0-SNAPSHOT</version>
+        <version>1.1.0.1-SNAPSHOT</version>
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>connectors-parent</artifactId>
-    <version>1.1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>OpenICF Connectors Parent</name>
     <description>
-        This pom module is the parent for all connector bundles. It defines the dependencies on framework, building the connector bundle and common reporting for connectors.
+        This pom module is the parent for all connector bundles. It defines the dependencies on framework, building the
+        connector bundle and common reporting for connectors.
         This is not multimodule project, it does not aggregate the connectors, it is just common parent.
     </description>
     <distributionManagement>
@@ -46,7 +47,9 @@
     </distributionManagement>
     <scm>
         <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/framework/java/connectors-parent</connection>
-        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/framework/java/connectors-parent</developerConnection>
+        <developerConnection>
+            scm:svn:https://svn.forgerock.org/openicf/trunk/framework/java/connectors-parent
+        </developerConnection>
         <url>http://sources.forgerock.org/browse/openicf/trunk/framework/java/connectors-parent</url>
     </scm>
     <!-- mvn help:effective-pom
@@ -55,7 +58,7 @@
      -->
     <properties>
         <framework.compatibilityVersion>1.1</framework.compatibilityVersion>
-        <framework.releaseVersion>0.0-SNAPSHOT</framework.releaseVersion>
+        <framework.releaseVersion>0.1-SNAPSHOT</framework.releaseVersion>
         <framework.version>${framework.compatibilityVersion}.${framework.releaseVersion}</framework.version>
         <licenseResourceBundle>org.forgerock.openicf:openicf-license:1.0.0</licenseResourceBundle>
 
@@ -64,7 +67,7 @@
             but now hardcoded in tests
         -->
         <ConnectorBundle-FrameworkVersion>${framework.compatibilityVersion}</ConnectorBundle-FrameworkVersion>
-        <ConnectorBundle-Name>${project.groupId}.${project.artifactId}</ConnectorBundle-Name>
+        <ConnectorBundle-Name>${project.artifactId}</ConnectorBundle-Name>
         <ConnectorBundle-Version>${project.version}</ConnectorBundle-Version>
         <!-- 
             These are the variables needs to define in order to a proper test coverage.
@@ -78,6 +81,60 @@
         <contract.suiteName>org.identityconnectors.contract.test.ContractTestSuite</contract.suiteName>
         <junits.skip>${skipTests}</junits.skip>
         <contracts.skip>${skipTests}</contracts.skip>
+
+        <!-- OSGi Properties -->
+        <openicf.osgi.exclude.dependencies>false</openicf.osgi.exclude.dependencies>
+
+
+        <openicf.osgi.import.framework.version>
+            version="[$(version;==;${framework.version}),$(version;+;${framework.version}))"
+        </openicf.osgi.import.framework.version>
+        <openicf.osgi.import.strict.version>
+            version="[$(version;===;${framework.version}),$(version;==+;${framework.version}))"
+        </openicf.osgi.import.strict.version>
+
+        <openicf.osgi.import.before.defaults/>
+        <openicf.osgi.import.defaults/>
+        <openicf.osgi.import.additional/>
+
+        <openicf.osgi.import.pkg>
+            org.identityconnectors.*;${openicf.osgi.import.framework.version},
+            ${openicf.osgi.import.before.defaults},
+            ${openicf.osgi.import.defaults},
+            ${openicf.osgi.import.additional},
+            *
+        </openicf.osgi.import.pkg>
+        <openicf.osgi.import>${openicf.osgi.import.pkg}</openicf.osgi.import>
+
+        <openicf.osgi.private/>
+        <!--openicf.osgi.private>${connectorPackage}*.impl</openicf.osgi.private-->
+
+        <openicf.osgi.export.pkg>!*.impl;${connectorPackage}*</openicf.osgi.export.pkg>
+        <openicf.osgi.version>version=${project.version}</openicf.osgi.version>
+        <openicf.osgi.split.pkg>-split-package:=first</openicf.osgi.split.pkg>
+        <!--openicf.osgi.export>
+            ${openicf.osgi.export.pkg};${openicf.osgi.version};-noimport:=true;${openicf.osgi.split.pkg}
+        </openicf.osgi.export-->
+        <openicf.osgi.export>
+            ${openicf.osgi.export.pkg};${openicf.osgi.version};-noimport:=true
+        </openicf.osgi.export>
+
+
+        <openicf.osgi.symbolic.name>${project.artifactId}</openicf.osgi.symbolic.name>
+        <openicf.osgi.activator/>
+        <openicf.osgi.dynamic.import/>
+        <openicf.osgi.include.resource>{maven-resources}</openicf.osgi.include.resource>
+        <openicf.osgi.import.default.version>
+            [$(version;==;$(@)),$(version;=+;$(@)))
+        </openicf.osgi.import.default.version>
+        <openicf.osgi.remove.headers>
+            Ignore-Package,Include-Resource,Private-Package,Bundle-DocURL,Embedded-Artifacts,Embed-Dependency,Built-By
+        </openicf.osgi.remove.headers>
+        <openicf.osgi.failok>false</openicf.osgi.failok>
+        <openicf.osgi.export.service/>
+        <openicf.osgi.import.service/>
+        <openicf.osgi.embed/>
+
     </properties>
     <build>
         <plugins>
@@ -91,36 +148,6 @@
         </plugins>
     </build>
     <profiles>
-        <profile>
-            <id>forgerock-bundle-release</id>
-            <build>
-                <plugins>
-                    <!-- We want to sign the artifact, the POM, and all attached artifacts
-                         Only the patched version http://jira.codehaus.org/browse/MGPG-34
-                         signs the correct POM
-                    -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <!--version>1.3-SNAPSHOT</version-->
-                        <configuration>
-                            <passphrase>${gpg.passphrase}</passphrase>
-                            <useAgent>true</useAgent>
-                            <pomFile>target/pom-install-deploy-fix/releases-pom.xml</pomFile>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
         <profile>
             <id>bundle-impl</id>
             <activation>
@@ -184,7 +211,7 @@
                         <directory>src/test/resources</directory>
                     </testResource>
                 </testResources>
-                
+
                 <pluginManagement>
                     <plugins>
                         <plugin>
@@ -198,7 +225,7 @@
                                 </links>
                             </configuration>
                         </plugin>
-                        <plugin>
+                        <!--plugin>
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-release-plugin</artifactId>
                             <configuration>
@@ -207,19 +234,38 @@
                                 <goals>deploy</goals>
                                 <arguments>-Pforgerock-release,forgerock-bundle-release</arguments>
                             </configuration>
-                        </plugin>
+                        </plugin-->
                         <plugin>
                             <artifactId>maven-site-plugin</artifactId>
-                            <configuration>
-                                <stagingSiteURL>${siteDistributionURL}/connectors/${project.artifactId}-${project.version}</stagingSiteURL>
-                            </configuration>
+                            <executions>
+                                <execution>
+                                    <id>site-deploy</id>
+                                    <goals>
+                                        <goal>site</goal>
+                                        <goal>deploy</goal>
+                                    </goals>
+                                    <phase>site</phase>
+                                </execution>
+                                <execution>
+                                    <id>site-stage-deploy</id>
+                                    <goals>
+                                        <goal>stage-deploy</goal>
+                                    </goals>
+                                    <phase>site</phase>
+                                    <configuration>
+                                        <stagingSiteURL>
+                                            ${siteDistributionURL}/connectors/${project.artifactId}-${project.version}
+                                        </stagingSiteURL>
+                                    </configuration>
+                                </execution>
+                            </executions>
                         </plugin>
                         <plugin>
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-scm-plugin</artifactId>
                             <configuration>
                                 <tag>${project.artifactId}-${project.version}</tag>
-                                <message>[ForgeRock Connector Release] ${project.name} </message>
+                                <message>[ForgeRock Connector Release] ${project.name}</message>
                             </configuration>
                         </plugin>
                     </plugins>
@@ -231,16 +277,51 @@
                         <artifactId>maven-bundle-plugin</artifactId>
                         <extensions>true</extensions>
                         <configuration>
+                            <excludeDependencies>${openicf.osgi.exclude.dependencies}</excludeDependencies>
                             <instructions>
-                                <Embed-Dependency>${embedded.dependencies}</Embed-Dependency>
+                                <!-- Required immutable instructions -->
                                 <Embed-Directory>lib</Embed-Directory>
                                 <Embed-Transitive>true</Embed-Transitive>
-                                <Export-Package>${connectorPackage}.*</Export-Package>
-                                <Import-Package>*</Import-Package>
-                                <ConnectorBundle-FrameworkVersion>${ConnectorBundle-FrameworkVersion}</ConnectorBundle-FrameworkVersion>
+
+                                <!-- OpenICF Headers -->
+                                <ConnectorBundle-FrameworkVersion>
+                                    ${ConnectorBundle-FrameworkVersion}
+                                </ConnectorBundle-FrameworkVersion>
                                 <ConnectorBundle-Name>${ConnectorBundle-Name}</ConnectorBundle-Name>
                                 <ConnectorBundle-Version>${ConnectorBundle-Version}</ConnectorBundle-Version>
-                                <Subversion-Revision>${Subversion-Revision}</Subversion-Revision>
+
+
+                                <!-- OSGi Headers -->
+                                <Bundle-Name>${project.name}</Bundle-Name>
+                                <Bundle-SymbolicName>${openicf.osgi.symbolic.name}</Bundle-SymbolicName>
+                                <Bundle-Activator>${openicf.osgi.activator}</Bundle-Activator>
+                                <Export-Package>${openicf.osgi.export}</Export-Package>
+                                <Import-Package>${openicf.osgi.import}</Import-Package>
+                                <DynamicImport-Package>${openicf.osgi.dynamic.import}</DynamicImport-Package>
+                                <Private-Package>${openicf.osgi.private}</Private-Package>
+                                <Include-Resource>${openicf.osgi.include.resource}</Include-Resource>
+                                <_versionpolicy>${openicf.osgi.import.default.version}</_versionpolicy>
+                                <_removeheaders>${openicf.osgi.remove.headers}</_removeheaders>
+                                <_failok>${openicf.osgi.failok}</_failok>
+                                <Export-Service>${openicf.osgi.export.service}</Export-Service>
+                                <Import-Service>${openicf.osgi.import.service}</Import-Service>
+                                <Embed-Dependency>${openicf.osgi.embed}</Embed-Dependency>
+
+
+                                <!-- Implementation Entries -->
+                                <Implementation-Title>${project.name}</Implementation-Title>
+                                <Implementation-Version>${project.version}</Implementation-Version>
+                                <Implementation-Vendor-Id>${project.groupId}</Implementation-Vendor-Id>
+                                <Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
+
+                                <!-- Specification Entries - ->
+                                <Specification-Title>${project.name}</Specification-Title>
+                                <Specification-Version>${project.version}</Specification-Version>
+                                <Specification-Vendor>${project.organization.name}</Specification-Vendor-->
+
+
+                                <!-- Miscellanies instructions -->
+                                <Subversion-Revision>${env.SVN_REVISION}</Subversion-Revision>
                             </instructions>
                         </configuration>
                     </plugin>
@@ -260,13 +341,15 @@
                                         <artifactItem>
                                             <groupId>org.forgerock.openicf.framework</groupId>
                                             <artifactId>connector-framework-contract</artifactId>
-                                            <outputDirectory>${project.build.directory}/contractClasses</outputDirectory>
+                                            <outputDirectory>${project.build.directory}/contractClasses
+                                            </outputDirectory>
                                         </artifactItem>
                                         <artifactItem>
                                             <groupId>org.forgerock.openicf.framework</groupId>
                                             <artifactId>connector-framework-contract</artifactId>
                                             <classifier>sources</classifier>
-                                            <outputDirectory>${project.build.directory}/contractSources</outputDirectory>
+                                            <outputDirectory>${project.build.directory}/contractSources
+                                            </outputDirectory>
                                         </artifactItem>
                                     </artifactItems>
                                 </configuration>
@@ -329,7 +412,7 @@
                             </execution>
 
                             <!-- Attach private test config -->
-                            <execution>
+                            <!--execution>
                                 <id>package-privatetestconfig</id>
                                 <phase>package</phase>
                                 <goals>
@@ -342,7 +425,7 @@
                                         <include>${connectorName}/config-private/**</include>
                                     </includes>
                                 </configuration>
-                            </execution>
+                            </execution-->
                         </executions>
                     </plugin>
 
@@ -391,10 +474,13 @@
                                 <configuration>
                                     <bundleJar>${project.build.directory}/${project.build.finalName}.jar</bundleJar>
                                     <skipTests>${contracts.skip}</skipTests>
-                                    <testSourceDirectory>${project.build.directory}/contractSources</testSourceDirectory>
-                                    <testClassesDirectory>${project.build.directory}/contractClasses</testClassesDirectory>
+                                    <testSourceDirectory>${project.build.directory}/contractSources
+                                    </testSourceDirectory>
+                                    <testClassesDirectory>${project.build.directory}/contractClasses
+                                    </testClassesDirectory>
                                     <additionalClasspathElements>
-                                        <additionalClasspathElement>${project.build.testOutputDirectory}</additionalClasspathElement>
+                                        <additionalClasspathElement>${project.build.testOutputDirectory}
+                                        </additionalClasspathElement>
                                     </additionalClasspathElements>
                                     <test>${contract.suiteName}</test>
                                     <systemProperties>
@@ -427,77 +513,17 @@
                     </plugin>
 
                     <plugin>
-                        <artifactId>maven-resources-plugin</artifactId>
+                        <groupId>org.forgerock.maven.plugins</groupId>
+                        <artifactId>openicf-build-maven-plugin</artifactId>
+                        <version>1.0.0-SNAPSHOT</version>
                         <executions>
                             <execution>
-                                <id>replace-pom-placeholder</id>
                                 <phase>package</phase>
                                 <goals>
-                                    <goal>copy-resources</goal>
+                                    <goal>reducepom</goal>
                                 </goals>
-                                <configuration>
-                                    <resources>
-                                        <resource>
-                                            <directory>${basedir}</directory>
-                                            <includes>
-                                                <include>releases-pom.xml</include>
-                                            </includes>
-                                            <filtering>true</filtering>
-                                        </resource>
-                                    </resources>
-                                    <outputDirectory>${project.build.directory}/pom-install-deploy-fix</outputDirectory>
-                                </configuration>
                             </execution>
                         </executions>
-                    </plugin>
-
-                    <plugin>
-                        <artifactId>maven-install-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>overwrite-pom</id>
-                                <phase>install</phase>
-                                <goals>
-                                    <goal>install-file</goal>
-                                </goals>
-                                <configuration>
-                                    <packaging>pom</packaging>
-                                    <file>target/pom-install-deploy-fix/releases-pom.xml</file>
-                                    <pomFile>target/pom-install-deploy-fix/releases-pom.xml</pomFile>
-                                    <version>${project.version}</version>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <plugin>
-                        <artifactId>maven-deploy-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>overwrite-pom</id>
-                                <phase>deploy</phase>
-                                <goals>
-                                    <goal>deploy-file</goal>
-                                </goals>
-                                <configuration>
-                                    <packaging>pom</packaging>
-                                    <file>target/pom-install-deploy-fix/releases-pom.xml</file>
-                                    <pomFile>target/pom-install-deploy-fix/releases-pom.xml</pomFile>
-                                    <url>${project.distributionManagement.repository.url}</url>
-                                    <version>${project.version}</version>
-                                    <updateReleaseInfo>true</updateReleaseInfo>
-                                    <uniqueVersion>false</uniqueVersion>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-scm-plugin</artifactId>
-                        <configuration>
-                            <tag>${project.groupId}.${project.artifactId}-${project.version}</tag>
-                        </configuration>
                     </plugin>
                 </plugins>
             </build>
@@ -518,21 +544,5 @@
            has precedence over the others.
 
         -->
-        <profile>
-            <id>with-embedded-dependencies</id>
-            <activation>
-                <property>
-                    <name>buildWithEmbeddedDependencies</name>
-                </property>
-            </activation>
-        </profile>
-        <profile>
-            <id>active-embedded-dependencies</id>
-            <activation>
-                <property>
-                    <name>!buildWithEmbeddedDependencies</name>
-                </property>
-            </activation>
-        </profile>
     </profiles>
 </project>
