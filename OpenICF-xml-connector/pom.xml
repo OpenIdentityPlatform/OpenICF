@@ -27,7 +27,7 @@
     <parent>
         <groupId>org.forgerock.openicf.connectors</groupId>
         <artifactId>connectors-parent</artifactId>
-        <version>1.1.0.0</version>
+        <version>1.1.0.1-SNAPSHOT</version>
     </parent>
     <groupId>org.forgerock.openicf.connectors.file</groupId>
     <artifactId>openicf-xml-connector</artifactId>
@@ -49,7 +49,8 @@
         <skipTests>false</skipTests>
         <contracts.skip>true</contracts.skip>
         <privateConfigPath>${user.home}/.connectors/${project.artifactId}/config</privateConfigPath>
-        <embedded.dependencies>jaxen,saxon9he,xsom,relaxngDatatype,xml-apis,xercesImpl,stax-api</embedded.dependencies>
+        <openicf.osgi.embed>jaxen,saxon9he,xsom,relaxngDatatype,xml-apis,xercesImpl,stax-api</openicf.osgi.embed>
+        <openicf.osgi.import.before.defaults>!javax.swing*,</openicf.osgi.import.before.defaults>
         <connectorPackage>com.forgerock.openicf.xml</connectorPackage>
         <connectorClass>XMLConnector</connectorClass>
         <jira.componentIds>10181</jira.componentIds>
