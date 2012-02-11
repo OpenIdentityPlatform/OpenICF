@@ -2,7 +2,7 @@
 <!--
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
- Copyright © 2011 ForgeRock AS. All rights reserved.
+ Copyright © 2011-2012 ForgeRock AS. All rights reserved.
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -27,10 +27,11 @@
     <parent>
         <groupId>org.forgerock.openicf.connectors</groupId>
         <artifactId>connectors-parent</artifactId>
-        <version>1.1.0.0-SNAPSHOT</version>
+        <version>1.1.0.1-SNAPSHOT</version>
     </parent>
     <groupId>org.forgerock.openicf.connectors.ldap</groupId>
     <artifactId>openicf-ldap-connector</artifactId>
+    <version>1.1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>Generic JNDI based LDAP Connector</name>
     <description>Connector for Sun DSEE and OpenDJ and Generic LDAP</description>
@@ -45,10 +46,10 @@
         <url>https://bugster.forgerock.org/jira/browse/OPENICF/component/10182</url>
     </issueManagement>
     <properties>
-        <skipTests>true</skipTests>
-        <contracts.skip>true</contracts.skip>
+        <skipTests>false</skipTests>
+        <contracts.skip>false</contracts.skip>
         <privateConfigPath>${user.home}/.connectors/${project.artifactId}/config</privateConfigPath>
-        <embedded.dependencies>ldapbp</embedded.dependencies>
+        <openicf.osgi.embed>ldapbp</openicf.osgi.embed>
         <connectorPackage>org.identityconnectors.ldap</connectorPackage>
         <connectorClass>LdapConnector</connectorClass>
         <jira.componentIds>10182</jira.componentIds>
@@ -72,30 +73,11 @@
             </releases>
         </repository>
         <repository>
-            <id>repo.forgerock.com</id>
-            <name>Deprecated ForgeRock Repository</name>
-            <url>http://repo.forgerock.org/</url>
-        </repository>
-        <repository>
             <id>JavaNet</id>
             <name>JavaNet Repository</name>
             <url>http://download.java.net/maven/2</url>
         </repository>
     </repositories>
-    <profiles>
-        <profile>
-            <id>with-embedded-dependencies</id>
-            <properties>
-                <embedded.dependencies>ldapbp</embedded.dependencies>
-            </properties>
-        </profile>
-        <profile>
-            <id>active-embedded-dependencies</id>
-            <properties>
-                <embedded.dependencies>ldapbp</embedded.dependencies>
-            </properties>
-        </profile>
-    </profiles>
     <dependencies>
         <dependency>
             <groupId>com.sun</groupId>
@@ -116,8 +98,20 @@
         </dependency-->
         <dependency>
             <groupId>org.forgerock.opendj</groupId>
+            <artifactId>opendj-ldap-sdk</artifactId>
+            <version>3.0.0-M1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.forgerock.opendj</groupId>
             <artifactId>opendj-server</artifactId>
-            <version>2.5.0-SNAPSHOT</version>
+            <version>2.4.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.9.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -138,9 +132,30 @@
                     <suiteXmlFiles>
                         <suiteXmlFile>testng.xml</suiteXmlFile>
                     </suiteXmlFiles>
+                    <systemPropertyVariables>
+                        <opendj.port>${opendj.port}</opendj.port>
+                    </systemPropertyVariables>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                        <id>reserve-network-port</id>
+                        <goals>
+                            <goal>reserve-network-port</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <portNames>
+                                <portName>opendj.port</portName>
+                            </portNames>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
-    
 </project>
