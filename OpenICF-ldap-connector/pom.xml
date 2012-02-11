@@ -46,8 +46,8 @@
         <url>https://bugster.forgerock.org/jira/browse/OPENICF/component/10182</url>
     </issueManagement>
     <properties>
-        <skipTests>false</skipTests>
-        <contracts.skip>false</contracts.skip>
+        <skipTests>true</skipTests>
+        <contracts.skip>true</contracts.skip>
         <privateConfigPath>${user.home}/.connectors/${project.artifactId}/config</privateConfigPath>
         <openicf.osgi.embed>ldapbp</openicf.osgi.embed>
         <connectorPackage>org.identityconnectors.ldap</connectorPackage>
