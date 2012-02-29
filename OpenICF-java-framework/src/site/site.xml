@@ -78,5 +78,6 @@
             <alt>OpenICF</alt>
         </openproject>
         <googleAnalytics>UA-23412190-10</googleAnalytics>
+        <siteSearchFQDN>openicf.forgerock.org</siteSearchFQDN>
     </custom>
 </project>
