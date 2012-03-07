@@ -41,6 +41,7 @@ import java.util.regex.Pattern;
 import java.util.List;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -235,14 +236,15 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                     throw new ConnectorException("Can't insert empty record.");
                 }
 
-                reader = createReader(configuration);
-                reader.skip(configuration.getFilePath().length() - 1);
+                FileInputStream fis = new FileInputStream(configuration.getFilePath());
+                fis.skip(configuration.getFilePath().length() - 1); 
 
-                char[] chars = new char[1];
-                reader.read(chars);
+                byte[] chars = new byte[1];
+                fis.read(chars);
+                fis.close(); 
 
                 writer = createWriter(true);
-                if (chars[0] != '\n') {
+                if (chars[0] != 10) { // 10 is the decimal value for \n 
                     writer.write('\n');
                 }
                 writer.append(record);
