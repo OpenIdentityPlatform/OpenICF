@@ -94,7 +94,7 @@ public class XmlConnectorTestUtil {
     //Attribute values for test account
     public static final String ATTR_ACCOUNT_VALUE_NAME = "vaderUID";
     public static final String ATTR_ACCOUNT_VALUE_PASSWORD = "secret";
-    public static final String ATTR_ACCOUNT_VALUE_LAST_NAME = "Vader";
+    public static final String ATTR_ACCOUNT_VALUE_LAST_NAME = "Vader's";
     public static final String ATTR_ACCOUNT_VALUE_FIRST_NAME = "Darth";
     public static final char ATTR_ACCOUNT_VALUE_FIRST_LETTER_LAST_NAME = 'V';
     public static final String ATTR_ACCOUNT_VALUE_EMPLOYEE_TYPE = "bad-ass";

@@ -132,7 +132,7 @@ public class XMLConnectorTests {
 
         // Build query string
         //XMLFilterTranslator filterTranslator = (XMLFilterTranslator) connector.createFilterTranslator(ObjectClass.ACCOUNT, null);
-        EqualsFilter equalsFilter = new EqualsFilter(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "Vader"));
+        EqualsFilter equalsFilter = new EqualsFilter(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, ATTR_ACCOUNT_VALUE_LAST_NAME));
         TestResultsHandler resultsHandler = new TestResultsHandler();
 
         facade.search(

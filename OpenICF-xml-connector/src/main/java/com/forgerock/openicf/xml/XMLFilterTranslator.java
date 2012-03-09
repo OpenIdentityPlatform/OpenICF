@@ -203,7 +203,7 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
 
     private Query createComparisonQuery(String name, String operator, String value) {
         Query query = new QueryImpl();
-        query.set(new ComparisonQuery("$x/" + name, operator, "'" + value + "'"));
+        query.set(new ComparisonQuery("$x/" + name, operator, escape(value)));
 
         return query;
     }
@@ -216,7 +216,7 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
     }
 
     private String[] createFunctionArgs(String attrName, String value) {
-        String[] args = {"$x/" + attrName, "'" + value + "'"};
+        String[] args = {"$x/" + attrName, escape(value)};
 
         return args;
     }
@@ -225,5 +225,9 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
         String prefix = NamespaceLookupUtil.INSTANCE.getAttributePrefix(attrName);
 
         return prefix + ":" + attrName;
+    }
+    
+    private String escape(String value) {
+        return "'" + value.replaceAll("'","''") + "'";
     }
 }
