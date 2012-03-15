@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2010 ForgeRock Inc. All Rights Reserved
+ * Copyright (c) 2010-2012 ForgeRock Inc. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -28,6 +28,7 @@
 package org.forgerock.openicf.csvfile.util;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -168,6 +169,10 @@ public class Utils {
     }
 
     public static List<String> readHeader(BufferedReader reader, Pattern linePattern, CSVFileConfiguration configuration) throws IOException {
+        return readHeader(reader,null,linePattern,configuration);
+    }
+
+    public static List<String> readHeader(BufferedReader reader, BufferedWriter writer, Pattern linePattern, CSVFileConfiguration configuration) throws IOException {
         String line = null;
         do {
             line = reader.readLine();
@@ -175,6 +180,11 @@ public class Utils {
 
         if (line == null) {
             throw new ConnectorException("Csv file '" + configuration.getFilePath() + "' doesn't contain header.");
+        }
+
+        if (null != writer){
+            writer.write(line);
+            writer.write('\n');
         }
 
         return parseValues(line, linePattern, configuration);

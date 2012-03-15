@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright © 2011 ForgeRock AS. All rights reserved.
+ * Copyright © 2011-2012 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -632,20 +632,6 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
         }
     }
 
-    private void writeHeader(Writer writer, List<String> headers) throws IOException {
-        StringBuilder builder = new StringBuilder();
-        for (String header : headers) {
-            if (headers.indexOf(header) != 0) {
-                builder.append(configuration.getFieldDelimiter());
-            }
-            builder.append(configuration.getValueQualifier());
-            builder.append(header);
-            builder.append(configuration.getValueQualifier());
-        }
-        writer.write(builder.toString());
-        writer.write('\n');
-    }
-
     private CsvItem findAccount(BufferedReader reader, List<String> header, String username) throws IOException {
         String line = null;
         while (( line = reader.readLine() ) != null) {
@@ -858,8 +844,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                 reader = createReader(configuration);
                 File tmpFile = new File(configuration.getFilePath().getCanonicalPath() + TMP_EXTENSION);
                 writer = createWriter(tmpFile, true);
-                List<String> header = readHeader(reader, linePattern, configuration);
-                writeHeader(writer, header);
+                List<String> header = readHeader(reader, writer, linePattern, configuration);
 
                 boolean found = readAndUpdateFile(reader, writer, header, operation, uid, attributes);
                 if (!found) {
