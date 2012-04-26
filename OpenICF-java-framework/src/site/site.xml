@@ -27,7 +27,7 @@
 
 <project xmlns="http://maven.apache.org/DECORATION/1.0.1"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/DECORATION/1.0.1 http://maven.apache.org/xsd/decoration-1.0.1.xsd">
+    xsi:schemaLocation="http://maven.apache.org/DECORATION/1.1.0 http://maven.apache.org/xsd/decoration-1.1.0.xsd">
     <skin>
         <groupId>org.forgerock.commons</groupId>
         <artifactId>forgerock-community-skin</artifactId>
@@ -61,7 +61,7 @@
             <item name="Developments" href="development.html"/>
             <item name="Connector Archetype" href="connector-archetype"/>
             <item name="Design" href="design.html"/>
-            <item name="Modules">
+            <item name="Modules" href="#">
                 <item name="Framework" href="connector-framework"/>
                 <item name="Framework - Internal" href="connector-framework-internal"/>
                 <item name="Common Test Library" href="connector-test-common"/>
@@ -71,13 +71,13 @@
 
         <menu ref="reports"/>
     </body>
+	<googleAnalyticsAccountId>UA-23412190-10</googleAnalyticsAccountId>
     <custom>
         <openproject>
             <href>http://openicf.forgerock.org</href>
             <src>images/openicf-tagline-195x65.png</src>
             <alt>OpenICF</alt>
         </openproject>
-        <googleAnalytics>UA-23412190-10</googleAnalytics>
         <siteSearchFQDN>openicf.forgerock.org</siteSearchFQDN>
     </custom>
 </project>
