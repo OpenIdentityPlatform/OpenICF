@@ -27,6 +27,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -82,15 +83,16 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         List<WorkingBundleInfo> rv = new ArrayList<WorkingBundleInfo>();
         for (URL url : bundleURLs) {
             WorkingBundleInfo info;
-            
-            File file = new File(url.getFile());
-            if ( "file".equals(url.getProtocol()) && file.isDirectory() ) {
-                info = processDirectory(file);
+            try {
+                File file = new File(url.toURI()); //getFile() fails when the url contains space
+                if ("file".equals(url.getProtocol()) && file.isDirectory()) {
+                    info = processDirectory(file);
+                } else {
+                    info = processURL(url, true);
+                }
+            } catch (URISyntaxException e) {
+                throw new ConfigurationException("Invalid bundleURL: " + url.getFile(), e);
             }
-            else {
-                info = processURL(url,true);                
-            }
-            
             rv.add(info);
         }
         return rv;
