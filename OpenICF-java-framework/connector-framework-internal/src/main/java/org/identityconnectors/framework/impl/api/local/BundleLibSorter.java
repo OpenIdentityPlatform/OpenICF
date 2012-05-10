@@ -52,7 +52,7 @@ public class BundleLibSorter implements Comparator<File> {
         File [] files = getSortedFiles(dir);
         List<URL> rv = new ArrayList<URL>();
         for (File file : files) {
-            rv.add(file.toURL());
+            rv.add(file.toURI().toURL());
         }
         return rv;
     }

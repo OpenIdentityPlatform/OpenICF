@@ -37,6 +37,7 @@ abstract public class AbstractConnectorInfo implements ConnectorInfo {
     private String _connectorDisplayNameKey;
     private ConnectorKey _connectorKey;
     private ConnectorMessages _messages;  
+    private String _connectorCategoryKey;
     
     private APIConfigurationImpl _defaultAPIConfiguration;
 
@@ -65,6 +66,18 @@ abstract public class AbstractConnectorInfo implements ConnectorInfo {
         _connectorDisplayNameKey = name;
     }
 
+    public final String getConnectorCategory() {
+        return _messages.format(_connectorCategoryKey, null);
+    }
+    
+    public final String getConnectorCategoryKey() {
+        return _connectorCategoryKey;
+    }
+    
+    public final void setConnectorCategoryKey(String key) {
+        _connectorCategoryKey = key;
+    }
+    
     public final ConnectorKey getConnectorKey() {
         return _connectorKey;
     }

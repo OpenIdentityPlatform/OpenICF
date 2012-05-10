@@ -49,6 +49,11 @@ public interface ConfigurationProperty {
     public String getDisplayName(String def);
 
     /**
+     * Get name of the group for this configuration property.
+     */
+    public String getGroup(String def);
+
+    /**
      * Get the value from the property. 
      * This value should be the default value.
      */

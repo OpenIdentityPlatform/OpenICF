@@ -23,6 +23,7 @@
 package org.identityconnectors.framework.impl.serializer;
 
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.testng.AssertJUnit;
 import java.io.ByteArrayOutputStream;
@@ -430,6 +431,7 @@ public class ObjectSerializationTests {
         v1.setName("foo");
         v1.setHelpMessageKey("help key");
         v1.setDisplayMessageKey("display key");
+        v1.setGroupMessageKey("group key");
         v1.setValue("bar");
         v1.setType(String.class);
         v1.setOperations(FrameworkUtil.allAPIOperations());
@@ -442,6 +444,7 @@ public class ObjectSerializationTests {
         AssertJUnit.assertEquals("foo", v2.getName());
         AssertJUnit.assertEquals("help key", v2.getHelpMessageKey());
         AssertJUnit.assertEquals("display key", v2.getDisplayMessageKey());
+        AssertJUnit.assertEquals("group key", v2.getGroupMessageKey());
         AssertJUnit.assertEquals("bar", v2.getValue());
         AssertJUnit.assertEquals(String.class, v2.getType());
         AssertJUnit.assertEquals(FrameworkUtil.allAPIOperations(), v2.getOperations());
@@ -456,6 +459,7 @@ public class ObjectSerializationTests {
         prop1.setName("foo");
         prop1.setHelpMessageKey("help key");
         prop1.setDisplayMessageKey("display key");
+        prop1.setGroupMessageKey("group key");
         prop1.setValue("bar");
         prop1.setType(String.class);
         prop1.setOperations(null);
@@ -478,6 +482,7 @@ public class ObjectSerializationTests {
         prop1.setName("foo");
         prop1.setHelpMessageKey("help key");
         prop1.setDisplayMessageKey("display key");
+        prop1.setGroupMessageKey("group key");
         prop1.setValue("bar");
         prop1.setType(String.class);
         prop1.setOperations(null);
@@ -538,6 +543,7 @@ public class ObjectSerializationTests {
         apiImpl.setConfigurationProperties(configProperties);
         v1.setDefaultAPIConfiguration(apiImpl);
         v1.setConnectorDisplayNameKey("mykey");
+        v1.setConnectorCategoryKey("LDAP");
         RemoteConnectorInfoImpl v2 = (RemoteConnectorInfoImpl)
             cloneObject(v1);
         
@@ -546,6 +552,7 @@ public class ObjectSerializationTests {
         AssertJUnit.assertEquals("my version", v2.getConnectorKey().getBundleVersion());
         AssertJUnit.assertEquals("my connector", v2.getConnectorKey().getConnectorName());
         AssertJUnit.assertEquals("mykey", v2.getConnectorDisplayNameKey());
+        Assert.assertEquals(v2.getConnectorCategoryKey(), "LDAP");
         AssertJUnit.assertNotNull(v2.getDefaultAPIConfiguration());
     }
     
@@ -893,6 +900,7 @@ public class ObjectSerializationTests {
         apiImpl.setConfigurationProperties(configProperties);
         info.setDefaultAPIConfiguration(apiImpl);
         info.setConnectorDisplayNameKey("mykey");
+        info.setConnectorCategoryKey("");
         HelloResponse v1 = new HelloResponse(ex,CollectionUtil.newList(info));
         HelloResponse v2 = (HelloResponse)cloneObject(v1);
         AssertJUnit.assertNotNull(v2.getException());

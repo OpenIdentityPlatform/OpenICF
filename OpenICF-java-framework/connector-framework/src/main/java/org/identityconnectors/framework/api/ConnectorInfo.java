@@ -48,11 +48,17 @@ public interface ConnectorInfo {
     public ConnectorMessages getMessages();
 
     /**
+     * Get the category this connector belongs to.
+     * 
+     * @return category name.
+     */
+    public String getConnectorCategory();
+
+    /**
      * Uniquely identifies this connector in a given installation
      * @return The connector key
      */
     public ConnectorKey getConnectorKey();
-
 
     /**
      * Loads the {@link Connector} and {@link Configuration} class in order to

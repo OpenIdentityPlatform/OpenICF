@@ -239,7 +239,7 @@ public final class Main {
         List<URL> rv = new ArrayList<URL>();
         for (File bundle : dir.listFiles()) {
             if ( bundle.getName().endsWith(".jar")) {
-                rv.add(bundle.toURL());
+                rv.add(bundle.toURI().toURL());
             }
         }
         return rv;

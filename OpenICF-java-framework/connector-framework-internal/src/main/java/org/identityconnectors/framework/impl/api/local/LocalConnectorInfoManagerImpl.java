@@ -114,7 +114,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
             finally {
                 IOUtil.quietClose(in);
             }
-            info.getImmediateClassPath().add(dir.toURL());
+            info.getImmediateClassPath().add(dir.toURI().toURL());
             List<String> bundleContents = listBundleContents(dir);
             info.getImmediateBundleContents().addAll(bundleContents);
             File libDir = new File(dir, "lib");
@@ -179,7 +179,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
                 InputStream stream2 = null;
                 try {
                     stream2 = url.openStream();
-                    info.getImmediateClassPath().add(tempDir.copyStreamToFile(stream2).toURL());
+                    info.getImmediateClassPath().add(tempDir.copyStreamToFile(stream2).toURI().toURL());
                 }
                 finally {
                     IOUtil.quietClose(stream2);
@@ -204,7 +204,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
                     info.getImmediateBundleContents().add(name);
                     if ( name.startsWith("lib/") && !entry.isDirectory() ) {
                         String localName = name.substring("lib/".length());
-                        URL tempurl = tempDir.copyStreamToFile(stream, name).toURL();
+                        URL tempurl = tempDir.copyStreamToFile(stream, name).toURI().toURL();
                         libURLs.put(localName, tempurl);
                     }
                     if ( name.startsWith("native/") && !entry.isDirectory() ) {
@@ -264,6 +264,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
                     info.setConnectorClass(connectorClass.asSubclass(Connector.class));
                     info.setConnectorConfigurationClass(options.configurationClass());
                     info.setConnectorDisplayNameKey(options.displayNameKey());
+                    info.setConnectorCategoryKey(options.categoryKey());
                     info.setConnectorKey(new ConnectorKey(
                             bundleInfo.getManifest().getBundleName(),
                             bundleInfo.getManifest().getBundleVersion(),

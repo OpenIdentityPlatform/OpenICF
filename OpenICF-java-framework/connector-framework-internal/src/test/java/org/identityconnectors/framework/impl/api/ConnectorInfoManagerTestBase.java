@@ -210,6 +210,7 @@ public abstract class ConnectorInfoManagerTestBase {
         CurrentLocale.clear();
         AssertJUnit.assertEquals("Help for test field.",property.getHelpMessage(null));
         AssertJUnit.assertEquals("Display for test field.",property.getDisplayName(null));
+        AssertJUnit.assertEquals("Group for test field.", property.getGroup(null));
         AssertJUnit.assertEquals("Test Framework Value",
                 info.getMessages().format("TEST_FRAMEWORK_KEY", "empty"));
 

@@ -61,7 +61,12 @@ public class ConfigurationPropertyImpl implements ConfigurationProperty {
      * Display message key.
      */
     private String _displayMessageKey;
-    
+
+    /**
+     * Group message key.
+     */
+    private String _groupMessageKey;
+
     /**
      * The value of the property
      */
@@ -123,6 +128,14 @@ public class ConfigurationPropertyImpl implements ConfigurationProperty {
 
     public void setDisplayMessageKey(String key) {
         _displayMessageKey = key;
+    }
+    
+    public String getGroupMessageKey() {
+        return _groupMessageKey;
+    }
+    
+    public void setGroupMessageKey(String key) {
+        _groupMessageKey = key;
     }
     
     public void setType(Class<?> type) {
@@ -211,7 +224,14 @@ public class ConfigurationPropertyImpl implements ConfigurationProperty {
     public String getDisplayName(String def) {
         return formatMessage(_displayMessageKey, def);
     }
-    
+
+    /**
+     * {@inheritDoc}
+     */
+    public String getGroup(String def) {
+        return formatMessage(_groupMessageKey, def);
+    }
+
     public int hashCode() {
         return getName().hashCode();
     }
@@ -232,6 +252,9 @@ public class ConfigurationPropertyImpl implements ConfigurationProperty {
                 return false;
             }
             if (!CollectionUtil.equals(getDisplayMessageKey(),other.getDisplayMessageKey())) {
+                return false;
+            }
+            if (!CollectionUtil.equals(getGroupMessageKey(),other.getGroupMessageKey())) {
                 return false;
             }
             if (isConfidential() != other.isConfidential()) {

@@ -583,7 +583,7 @@ public class IOUtil {
         if (!file.isFile()) {
             throw new IOException(file.getPath() + " does not exist");
         }
-        return file.toURL();
+        return file.toURI().toURL();
     }
 
     /**

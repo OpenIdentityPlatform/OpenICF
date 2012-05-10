@@ -123,6 +123,7 @@ public class JavaClassProperties
             int order = 0;
             String helpKey = name + ".help";
             String displKey = name + ".display";
+            String grpKey = name + ".group";
             boolean confidential = false;
             boolean required = false;
             if (options != null) {
@@ -132,6 +133,9 @@ public class JavaClassProperties
                 }
                 if (StringUtil.isNotBlank(options.displayMessageKey())) {
                     displKey = options.displayMessageKey();
+                }
+                if (StringUtil.isNotBlank(options.groupMessageKey())) {
+                    grpKey = options.groupMessageKey();
                 }
                 // determine the order..
                 order = options.order();
@@ -157,6 +161,7 @@ public class JavaClassProperties
             prop.setConfidential(confidential);
             prop.setDisplayMessageKey(displKey);
             prop.setHelpMessageKey(helpKey);
+            prop.setGroupMessageKey(grpKey);
             prop.setName(name);
             prop.setOrder(order);
             prop.setValue(value);

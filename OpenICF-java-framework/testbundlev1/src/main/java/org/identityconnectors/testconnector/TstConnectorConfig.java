@@ -30,6 +30,7 @@ import org.identityconnectors.framework.spi.operations.SyncOp;
 
 public class TstConnectorConfig extends AbstractConfiguration {
     private String _tstField;
+    private String _tst1Field;
 
     private int _numResults;
     
@@ -61,6 +62,16 @@ public class TstConnectorConfig extends AbstractConfiguration {
     public void setTstField(String value) {
         TstConnector.checkClassLoader();
         _tstField = value;
+    }
+
+    public String getTst1Field() {
+        TstConnector.checkClassLoader();
+        return _tst1Field;
+    }
+
+    public void setTst1Field(String value) {
+        TstConnector.checkClassLoader();
+        _tst1Field = value;
     }
 
     public int getNumResults() {

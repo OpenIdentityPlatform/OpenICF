@@ -56,6 +56,7 @@ import org.identityconnectors.testcommon.TstCommon;
 
 @ConnectorClass(
     displayNameKey="TestConnector",
+    categoryKey="TestConnector.category",
     configurationClass=TstConnectorConfig.class)
 public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, SearchOp<String>, SyncOp {
    

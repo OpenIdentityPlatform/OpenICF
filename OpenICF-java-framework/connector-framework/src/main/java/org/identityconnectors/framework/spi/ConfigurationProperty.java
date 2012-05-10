@@ -60,6 +60,11 @@ public @interface ConfigurationProperty {
     public String displayMessageKey() default "";
     
     /**
+     * Grouping of properties for UI.
+     */
+    public String groupMessageKey() default "";
+    
+    /**
      * Is this a confidential property whose value should be encrypted by
      * the application when persisted?
      */
@@ -70,7 +75,7 @@ public @interface ConfigurationProperty {
      * @return True iff the property is required
      */
     public boolean required() default false;
-    
+
     /**
      * List of operations for which this property must be specified.
      * This is used for the case where a connector may or may not

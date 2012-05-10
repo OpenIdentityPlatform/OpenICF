@@ -45,6 +45,11 @@ public @interface ConnectorClass {
      * catalog.
      */
     String displayNameKey();
+
+    /**
+     * Category the connector belongs to such as 'LDAP' or 'DB'.
+     */
+    String categoryKey() default "";
     
     /**
      * The resource path(s) to the message catalog.
@@ -53,5 +58,4 @@ public @interface ConnectorClass {
      * specified, we use <code>connector-package.Messages.properties</code>
      */
     String [] messageCatalogPaths() default {};
-
 }

@@ -154,6 +154,7 @@ OperationOptionInfo | SyncDeltaType | SyncToken | SyncDelta | QualifiedUid
     name CDATA #REQUIRED  
     helpMessageKey CDATA #REQUIRED
     displayMessageKey CDATA #REQUIRED
+    groupMessageKey CDATA #REQUIRED
     type CDATA #REQUIRED
 >
 <!ELEMENT value (%xmlObject;)> 
@@ -177,9 +178,10 @@ OperationOptionInfo | SyncDeltaType | SyncToken | SyncDelta | QualifiedUid
     bundleVersion CDATA #REQUIRED
     connectorName CDATA #REQUIRED
 >
-<!ELEMENT ConnectorInfo (ConnectorKey,ConnectorMessages,APIConfiguration)> 
+<!ELEMENT ConnectorInfo (ConnectorKey,ConnectorMessages,APIConfiguration)>
 <!ATTLIST ConnectorInfo
     connectorDisplayNameKey CDATA #REQUIRED
+    connectorCategoryKey CDATA #REQUIRED
 >
 
 <!--=======================================================-->

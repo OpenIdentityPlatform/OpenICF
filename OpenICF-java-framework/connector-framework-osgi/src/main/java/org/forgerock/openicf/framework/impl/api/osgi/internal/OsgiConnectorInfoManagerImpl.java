@@ -156,7 +156,7 @@ public class OsgiConnectorInfoManagerImpl implements ConnectorManager, BundleObs
         try {
             List<ConnectorInfo> info = createConnectorInfo(bundle, list);
             if (!info.isEmpty()) {
-                result = new Pair(bundle, info);
+                result = new Pair<Bundle, List<ConnectorInfo>>(bundle, info);
             }
         }
         catch (Throwable t) {
