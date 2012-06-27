@@ -440,6 +440,10 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                     }
                 }
                 syncFile.renameTo(new File(configuration.getFilePath().getParent(), configuration.getFilePath().getName() + "." + timestamp));
+
+                if (oldFile != null && oldFile.exists()) {
+                    oldFile.delete();
+                }
             }
             catch (DiffException ex) {
                 throw new ConnectorException("Could not create csv diff, reason: " + ex.getMessage(), ex);
@@ -457,7 +461,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
             if (tokenLongValue != -1) {
                 date = df.format(new Date(tokenLongValue));
             }
-            log.info("File has not changed after {0} (token value {1}), diff will be skippend.", date, tokenValue);
+            log.info("File has not changed after {0} (token value {1}), diff will be skipped.", date, tokenValue);
         }
         log.info("sync::end");
     }

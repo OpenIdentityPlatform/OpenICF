@@ -28,6 +28,7 @@
 package org.forgerock.openicf.csvfile;
 
 import org.forgerock.openicf.csvfile.util.TestUtils;
+import org.forgerock.openicf.csvfile.util.Utils;
 import org.testng.annotations.AfterMethod;
 import org.testng.Assert;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -98,6 +99,8 @@ public class SyncOpTest {
     @Test
     public void syncTest() throws Exception {
         initConnector("../../../src/test/resources/files/sync.csv");
+        Utils.copyAndReplace(new File("./src/test/resources/files/sync.csv.1300734815289.backup"),
+                new File("./src/test/resources/files/sync.csv.1300734815289"));
 
         SyncToken oldToken = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
         assertEquals("1300734815289", oldToken.getValue());
@@ -131,9 +134,11 @@ public class SyncOpTest {
     @Test
     public void syncTestHandlerStopped() throws Exception {
         initConnector("../../../src/test/resources/files/sync.csv");
+        Utils.copyAndReplace(new File("./src/test/resources/files/sync.csv.1300734815289.backup"),
+                new File("./src/test/resources/files/sync.csv.1300734815289"));
 
         SyncToken oldToken = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
-        assertEquals("1300734815289", oldToken.getValue());
+        assertEquals(oldToken.getValue(), "1300734815289");
         final List<SyncDelta> deltas = new ArrayList<SyncDelta>();
         connector.sync(ObjectClass.ACCOUNT, oldToken, new SyncResultsHandler() {
 
@@ -158,7 +163,7 @@ public class SyncOpTest {
             deltaMap.remove(delta.getUid().getUidValue());
             assertEquals(syncDelta, delta);
         }
-        assertEquals(2, deltaMap.size());
+        assertEquals(deltaMap.size(), 2);
     }
 
     private Map<String, SyncDelta> createSyncDeltaTestMap(SyncToken token) {

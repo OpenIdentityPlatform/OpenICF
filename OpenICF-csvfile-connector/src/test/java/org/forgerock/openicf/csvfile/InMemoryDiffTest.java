@@ -29,10 +29,13 @@ package org.forgerock.openicf.csvfile;
 
 import org.forgerock.openicf.csvfile.sync.Change;
 import org.forgerock.openicf.csvfile.sync.InMemoryDiff;
+import org.forgerock.openicf.csvfile.util.TestUtils;
+import org.forgerock.openicf.csvfile.util.Utils;
+import org.testng.annotations.Test;
+
+import java.io.File;
 import java.util.List;
 import java.util.regex.Pattern;
-import org.forgerock.openicf.csvfile.util.TestUtils;
-import org.testng.annotations.Test;
 
 /**
  *
@@ -42,6 +45,9 @@ public class InMemoryDiffTest {
 
     @Test
     public void simpleTest() throws Exception {
+        Utils.copyAndReplace(new File("./src/test/resources/files/sync.csv.1300734815289.backup"),
+                new File("./target/test-classes/files/sync.csv.1300734815289"));
+
         CSVFileConfiguration config = new CSVFileConfiguration();
         config.setEncoding("utf-8");
         config.setFilePath(TestUtils.getTestFile("sync.csv"));
