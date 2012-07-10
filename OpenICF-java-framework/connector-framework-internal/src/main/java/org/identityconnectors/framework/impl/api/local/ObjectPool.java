@@ -20,23 +20,30 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
+/*
+ * Portions Copyrighted  2012 ForgeRock Inc.
+ */
 package org.identityconnectors.framework.impl.api.local;
 
-import java.util.IdentityHashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.pooling.ObjectPoolConfiguration;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.serializer.SerializerUtil;
 
 
 public class ObjectPool<T> {
 
     private static final Log _log = Log.getLog(ObjectPool.class);
-    
+
     /**
      * Statistics bean
      */
@@ -60,7 +67,7 @@ public class ObjectPool<T> {
          * Returns the number of active objects
          */
         public int getNumActive() {
-            return _numActive;
+            return _numActive - _numIdle;
         }
     }
     
@@ -68,7 +75,7 @@ public class ObjectPool<T> {
      * An object plus additional book-keeping
      * information about the object
      */
-    private static class PooledObject<T> {
+    private  class PooledObject implements ObjectPoolEntry<T>{
         /**
          * The underlying object 
          */
@@ -97,10 +104,18 @@ public class ObjectPool<T> {
             touch();
         }
         
-        public T getObject() {
+        public T getPooledObject() {
             return _object;
         }
-        
+
+        public void close() throws IOException {
+            try {
+            returnObject(this);
+            } catch (InterruptedException e){
+                _log.error(e,"Failed to close/dispose PooledObject object");
+            }
+        }
+
         public boolean isNew() {
             return _isNew;
         }
@@ -119,32 +134,38 @@ public class ObjectPool<T> {
         private void touch() {
             _lastStateChangeTimestamp = System.currentTimeMillis();
         }
-        
-        public long getLastStateChangeTimestamp() {
-            return _lastStateChangeTimestamp;
+
+        public boolean isOlderThan(long maxAge) {
+            return maxAge < (System.currentTimeMillis() - _lastStateChangeTimestamp);
         }
     }
-    
+
     /**
-     * The lock object we use for everything
+     * Set contains all the PooledObject was made by this pool.
+     * It contains all idle and borrowed(active) objects.
      */
-    private final Object LOCK = new Object();
-    
-    /**
-     * Map from the object to the
-     * PooledObject (use IdentityHashMap so it's
-     * always object equality)
-     */
-    private final Map<T,PooledObject<T>>
-        _activeObjects = new IdentityHashMap<T, PooledObject<T>>();
-    
+    private Set<PooledObject> activeObjects;
+
     /**
      * Queue of idle objects. The one that has
      * been idle for the longest comes first in the queue
      */
-    private final LinkedList<PooledObject<T>>
-        _idleObjects = new LinkedList<PooledObject<T>>();
-    
+    private ConcurrentLinkedQueue<PooledObject> _idleObjects =  new ConcurrentLinkedQueue<PooledObject>();
+
+    /**
+     * Limits the maximum available pooled object in the pool.
+     */
+    private Semaphore totalPermit;
+
+    /**
+     * Lock to maintain the state changes of the pool.
+     */
+    /** Lock held by take, poll, etc */
+    private final ReentrantLock takeLock = new ReentrantLock();
+
+    /** Wait queue for waiting takes */
+    private final Condition notEmpty = takeLock.newCondition();
+
     /**
      * ObjectPoolHandler we use for managing object lifecycle
      */
@@ -154,11 +175,11 @@ public class ObjectPool<T> {
      * Configuration for this pool.
      */
     private final ObjectPoolConfiguration _config;
-    
+
     /**
      * Is the pool shutdown
      */
-    private boolean _isShutdown;
+    private volatile boolean _isShutdown = false;
     
     /**
      * Create a new ObjectPool
@@ -173,44 +194,43 @@ public class ObjectPool<T> {
         
         _handler = handler;
         //clone it
-        _config = 
-            (ObjectPoolConfiguration)SerializerUtil.cloneObject(config);
-        //validate it
-        _config.validate();
-        
+        _config = _handler.validate(config);
+        activeObjects = new HashSet<PooledObject>(_config.getMaxObjects());
+        totalPermit = new Semaphore(_config.getMaxObjects());
     }
-    
+
+    /**
+     * Get the state of the pool.
+     *
+     * @return true if the {@link #shutdown()} method was called before.
+     */
+    public boolean isShutdown() {
+        return _isShutdown;
+    }
+
     /**
      * Return an object to the pool
-     * @param object
+     * @param pooled
      */
-    public void returnObject(T object) {
-        Assertions.nullCheck(object, "object");
-        synchronized (LOCK) {
-            //remove it from the active list
-            PooledObject<T> pooled =
-                _activeObjects.remove(object);
-            
-            //they are attempting to return something
-            //we haven't allocated (or that they've
-            //already returned)
-            if ( pooled == null ) {
-                throw new IllegalStateException("Attempt to return an object not in the pool: "+object);
+    private void returnObject(PooledObject pooled) throws InterruptedException {
+        if (isShutdown() || _config.getMaxIdle() < 1) {
+            dispose(pooled);
+        } else {
+            try {
+                for (PooledObject entry : _idleObjects) {
+                    if ((_config.getMaxIdle() <= _idleObjects.size()) || entry
+                            .isOlderThan(_config.getMinEvictableIdleTimeMillis())) {
+                        if (_idleObjects.remove(entry)) {
+                            dispose(entry);
+                        }
+                    }
+                }
+            } finally {
+                pooled.setActive(false);
+                pooled.setNew(false);
+                _idleObjects.add(pooled);
+                signalNotEmpty();
             }
-            
-            //set it to idle and add to idle list
-            //(this might get evicted right away
-            //by evictIdleObjects if we're over the
-            //limit or if we're shutdown)
-            pooled.setActive(false);
-            pooled.setNew(false);
-            _idleObjects.add(pooled);
-            
-            //finally evict idle objects
-            evictIdleObjects();
-            
-            //wake anyone up who was waiting on a object
-            LOCK.notifyAll();
         }
     }
     
@@ -218,110 +238,122 @@ public class ObjectPool<T> {
      * Borrow an object from the pool.
      * @return An object
      */
-    public T borrowObject() {
-        while ( true ) {
-            PooledObject<T> rv = borrowObjectNoTest();
-            try {
-                //make sure we are testing it outside
-                //of synchronization. otherwise this
-                //can create an IO bottleneck
-                assert !Thread.holdsLock(LOCK);
-                _handler.testObject(rv.getObject());
-                return rv.getObject();
-            }
-            catch (Exception e) {
-                //it's bad - remove from active objects
-                synchronized (LOCK) {
-                    _activeObjects.remove(rv.getObject());
+    public ObjectPoolEntry borrowObject() {
+        PooledObject rv = null;
+        try {
+            do {
+                rv = borrowObjectNoTest();
+                try {
+                    _handler.testObject(rv.getPooledObject());
+                } catch (Exception e) {
+                    if (null != rv) {
+                        dispose(rv);
+                        //if it's a new object, break out of the loop
+                        //immediately
+                        if (rv.isNew()) {
+                            throw ConnectorException.wrap(e);
+                        }
+                        rv = null;
+                    }
                 }
-                disposeNoException(rv.getObject());
-                //if it's a new object, break out of the loop
-                //immediately
-                if ( rv.isNew() ) {
-                    throw ConnectorException.wrap(e);
-                }
-            }
+            } while (null == rv);
+            rv.setActive(true);
+        } catch (InterruptedException e) {
+            _log.error(e, "Failed to borrow object from pool.");
+            throw ConnectorException.wrap(e);
         }
+        return rv;
     }
-    
+
     /**
      * Borrow an object from the pool, but don't test
      * it (it gets tested by the caller *outside* of
      * synchronization)
      * @return the object
      */
-    private PooledObject<T> borrowObjectNoTest() {        
-        //time when the call began
-        final long startTime = System.currentTimeMillis();
-        
-        synchronized (LOCK) {
-            evictIdleObjects();
-            while ( true ) {
-                if (_isShutdown) {
-                    throw new IllegalStateException("Object pool already shutdown");
-                }
-                
-                PooledObject<T> pooledConn = null;
-                
-                //first try to recycle an idle object
-                if (_idleObjects.size() > 0) {
-                    pooledConn = _idleObjects.removeFirst();
-                }
-                //otherwise, allocate a new object if
-                //below the limit
-                else if (_activeObjects.size() < _config.getMaxObjects()) {
-                    pooledConn =
-                        new PooledObject<T>(_handler.newObject());
-                }
-                
-                //if there's an object available, return it
-                //and break out of the loop
-                if ( pooledConn != null ) {
-                    pooledConn.setActive(true);
-                    _activeObjects.put(pooledConn.getObject(), 
-                            pooledConn);
-                    return pooledConn;
-                }
-                
-                //see if we haven't timed-out yet
-                final long elapsed =
-                    System.currentTimeMillis() - startTime;
-                final long remaining = _config.getMaxWait() - elapsed;
+    private PooledObject borrowObjectNoTest() throws InterruptedException {
+        if (isShutdown()) {
+            throw new IllegalStateException("Object pool already shutdown");
+        }
 
-                //wait if we haven't timed out
-                if (remaining > 0) {
-                    try {
-                        LOCK.wait(remaining);
+        // First borrow from the idle pool
+        PooledObject pooledConn = borrowIdleObject();
+        if (null == pooledConn) {
+            long nanos = TimeUnit.SECONDS.toNanos(_config.getMaxWait());
+            final ReentrantLock lock = this.takeLock;
+            lock.lockInterruptibly();
+            try {
+                do {
+                    if (totalPermit.tryAcquire()) {
+                        //If the pool is empty and there are available permits then create a new instance.
+                        return makeObject();
+                    } else {
+                        // Wait for permit or object to became available
+                        try {
+                            nanos = notEmpty.awaitNanos(nanos);
+                        } catch (InterruptedException ie) {
+                            notEmpty.signal(); // propagate to non-interrupted thread
+                            throw ConnectorException.wrap(ie);
+                        }
+
+                        if (nanos <= 0) {
+                            throw new ConnectorException("TimeOut");
+                        }
+                        // Try to borrow from the idle pool
+                        pooledConn = borrowIdleObject();
+                        if (null != pooledConn) {
+                            return pooledConn;
+                        }
                     }
-                    catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        throw new ConnectorException(e);
-                    }
-                }
-                else {
-                    //otherwise throw
-                    throw new ConnectorException("Max objects exceeded");
-                }
+                } while (nanos > 0);
+            } finally {
+                lock.unlock();
             }
         }
+        return pooledConn;
     }
-    
+
+    /**
+     * Polls the head object from the queue.
+     * <p/>
+     * Polls the head object and before it returns it checks the {@code MaxIdle} size and the {@code
+     * MinEvictableIdleTime} before accepts the object.
+     *
+     * @return null if there was no fresh/new object in the queue.
+     * @throws InterruptedException
+     */
+    private PooledObject borrowIdleObject() throws InterruptedException {
+        for (PooledObject pooledConn = _idleObjects.poll(); pooledConn != null; pooledConn = _idleObjects.poll()) {
+            int size = _idleObjects.size();
+            if (_config.getMinIdle() < size + 1 && ((_config.getMaxIdle() < size) || pooledConn
+                    .isOlderThan(_config.getMinEvictableIdleTimeMillis()))) {
+                dispose(pooledConn);
+            } else {
+                return pooledConn;
+            }
+        }
+        return null;
+    }
+
     /**
      * Closes any idle objects in the pool.
+     * <p/>
      * Existing active objects will remain alive and
      * be allowed to shutdown gracefully, but no more 
      * objects will be allocated.
      */
     public void shutdown() {
-        synchronized(LOCK) {
-            _isShutdown = true;
-            //just evict idle objects
-            //if there are any active objects still
-            //going, leave them alone so they can return
-            //gracefully
-            evictIdleObjects();
-            //wake anyone up who was waiting on an object
-            LOCK.notifyAll();
+        _isShutdown = true;
+        //just evict idle objects
+        //if there are any active objects still
+        //going, leave them alone so they can return
+        //gracefully
+        for (PooledObject entry = _idleObjects.poll(); entry != null; entry = _idleObjects.poll()) {
+            try {
+                dispose(entry);
+            } catch (InterruptedException e) {
+                _log.error(e, "Failed to dispose PooledObject object");
+            }
         }
     }
     
@@ -330,66 +362,61 @@ public class ObjectPool<T> {
      * @return The statistics
      */
     public Statistics getStatistics() {
-        synchronized(LOCK) {
-            return new Statistics(_idleObjects.size(),
-                    _activeObjects.size());
-        }
+        return new Statistics(_idleObjects.size(), activeObjects.size());
     }
-    
-    /**
-     * Evicts idle objects as needed (evicts
-     * all idle objects if we're shutdown)
-     */
-    private void evictIdleObjects() {      
-        assert Thread.holdsLock(LOCK);
-        while (tooManyIdleObjects()) {
-            PooledObject<T> conn = _idleObjects.removeFirst();
-            disposeNoException(conn.getObject());
-        }
-    }
-    
-    /**
-     * Returns true if any of the following are true:
-     * <ol>
-     *    <li>We're shutdown and there are idle objects</li>
-     *    <li>Max idle objects exceeded</li>
-     *    <li>Min idle objects exceeded and there are old objects</li>
-     * </ol>
-     */
-    private boolean tooManyIdleObjects() {
-        assert Thread.holdsLock(LOCK);
-        
-        if (_isShutdown && _idleObjects.size() > 0) {
-            return true;
-        }
-        
-        if (_config.getMaxIdle() < _idleObjects.size()) {
-            return true;
-        }
-        if (_config.getMinIdle() >= _idleObjects.size()) {
-            return false;
-        }
-        
-        PooledObject<T> oldest =
-            _idleObjects.getFirst();
-        
-        long age = 
-            ( System.currentTimeMillis()-oldest.getLastStateChangeTimestamp() );
-        
 
-        return age > _config.getMinEvictableIdleTimeMillis();
+    /**
+     * This is a long running process to create and init the connector instance.
+     * <p/>
+     *
+     * @throws ConnectorException
+     *         if something happens.
+     */
+    private PooledObject makeObject() {
+        synchronized (activeObjects) {
+            PooledObject pooledConn = new PooledObject(
+                    (activeObjects.size() > 0) ? _handler.makeObject() : _handler.makeFirstObject());
+            activeObjects.add(pooledConn);
+            return pooledConn;
+        }
     }
-    
+
     /**
      * Dispose of an object, but don't throw any exceptions
-     * @param object
+     *
+     * @param entry
      */
-    private void disposeNoException(T object) {
+    private void dispose(PooledObject entry) throws InterruptedException {
+        final ReentrantLock lock = this.takeLock;
+        lock.lockInterruptibly();
         try {
-            _handler.disposeObject(object);
-        }
-        catch (Exception e) {
+            synchronized (activeObjects) {
+                //Make sure the disposed object was the last item in the activeObjects
+                if (activeObjects.remove(entry) && activeObjects.isEmpty()) {
+                    _handler.disposeLastObject(entry.getPooledObject());
+                } else {
+                    _handler.disposeObject(entry.getPooledObject());
+                }
+            }
+        } catch (Exception e) {
             _log.warn(e, "disposeObject() is not supposed to throw");
+        } finally {
+            totalPermit.release();
+            notEmpty.signal();
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Signals a waiting take. Called only from borrowObjectNoTest
+     */
+    private void signalNotEmpty() {
+        final ReentrantLock takeLock = this.takeLock;
+        takeLock.lock();
+        try {
+            notEmpty.signal();
+        } finally {
+            takeLock.unlock();
         }
     }
 }

@@ -20,10 +20,14 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
+/*
+ * Portions Copyrighted  2012 ForgeRock Inc.
+ */
 package org.identityconnectors.framework.impl.serializer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.identityconnectors.framework.api.ConnectorKey;
 import org.identityconnectors.framework.api.operations.APIOperation;
@@ -58,11 +62,12 @@ class MessageHandlers {
             new AbstractObjectSerializationHandler(HelloRequest.class,"HelloRequest") {
             
             public Object deserialize(ObjectDecoder decoder)  {
-                return new HelloRequest();
+                return new HelloRequest(decoder.readIntField("infoLevel", HelloRequest.CONNECTOR_INFO));
             }
     
-            public void serialize(Object object, ObjectEncoder encoder)
-                     {
+            public void serialize(Object object, ObjectEncoder encoder){
+                HelloRequest val = (HelloRequest) object;
+                encoder.writeIntField("infoLevel",val.getInfoLevel());
             }
             
         });
@@ -75,17 +80,25 @@ class MessageHandlers {
                 Throwable exception =
                     (Throwable)decoder.readObjectField("exception",null,null);
                 @SuppressWarnings("unchecked")
+                Map<String,Object> serverInfo =
+                        (Map<String,Object>) decoder.readObjectField("serverInfoMap", null, null);
+                @SuppressWarnings("unchecked")
                 List<RemoteConnectorInfoImpl> connectorInfos =
-                    (List)decoder.readObjectField("ConnectorInfos",List.class,null);
+                        (List)decoder.readObjectField("ConnectorInfos",List.class,null);
+                @SuppressWarnings("unchecked")
+                List<ConnectorKey> connectorKeys =
+                    (List)decoder.readObjectField("ConnectorKeys",List.class,null);
                 
-                return new HelloResponse(exception,connectorInfos);
+                return new HelloResponse(exception,serverInfo,connectorKeys,connectorInfos);
             }
     
             public void serialize(Object object, ObjectEncoder encoder)
                      {
                 HelloResponse val = (HelloResponse)object;
                 encoder.writeObjectField("exception", val.getException(), false);
+                encoder.writeObjectField("serverInfoMap", val.getServerInfo(), false);
                 encoder.writeObjectField("ConnectorInfos", val.getConnectorInfos(), true);
+                encoder.writeObjectField("ConnectorKeys", val.getConnectorKeys(), true);
             }
             
         });

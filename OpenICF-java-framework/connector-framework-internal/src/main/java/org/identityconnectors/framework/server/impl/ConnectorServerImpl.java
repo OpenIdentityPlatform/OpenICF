@@ -20,6 +20,9 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
+/*
+ * Portions Copyrighted  2012 ForgeRock Inc.
+ */
 package org.identityconnectors.framework.server.impl;
 
 import java.net.ServerSocket;
@@ -41,7 +44,12 @@ public class ConnectorServerImpl extends ConnectorServer {
 
     private ConnectionListener _listener;
     private CountDownLatch _stopLatch;
-    
+    private Long _startDate = null;
+
+    public Long getStartTime() {
+        return _startDate;
+    }
+
     @Override
     public boolean isStarted() {
         return _listener != null;
@@ -67,6 +75,7 @@ public class ConnectorServerImpl extends ConnectorServer {
         ConnectionListener listener = new ConnectionListener(this,socket);
         listener.start();
         _stopLatch = new CountDownLatch(1);
+        _startDate = System.currentTimeMillis();
         _listener = listener;
     }
     
@@ -123,6 +132,7 @@ public class ConnectorServerImpl extends ConnectorServer {
                 _stopLatch.countDown();
             }
             _stopLatch = null;
+            _startDate = null;
             _listener = null;
         }
         ConnectorFacadeFactory.getInstance().dispose();

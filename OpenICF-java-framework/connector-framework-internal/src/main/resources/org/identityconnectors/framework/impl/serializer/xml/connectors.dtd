@@ -360,9 +360,14 @@ OperationOptionInfo | SyncDeltaType | SyncToken | SyncDelta | QualifiedUid
 <!--=                                                     =-->
 <!--=======================================================-->
 <!ELEMENT HelloRequest EMPTY>
+<!ATTLIST HelloRequest
+    infoLevel CDATA #REQUIRED
+>
+<!ELEMENT serverInfoMap (Map)>
+<!ELEMENT ConnectorKeys ((ConnectorKey)*)>
 <!ELEMENT ConnectorInfos ((ConnectorInfo)*)>
 <!ELEMENT exception (%exceptionTypes;)>
-<!ELEMENT HelloResponse (exception,ConnectorInfos)>
+<!ELEMENT HelloResponse (exception,serverInfoMap,ConnectorInfos,ConnectorKeys)>
 <!ELEMENT OperationRequest (ConnectorKey,APIConfiguration,Arguments)>
 <!ATTLIST OperationRequest
     operation CDATA #REQUIRED

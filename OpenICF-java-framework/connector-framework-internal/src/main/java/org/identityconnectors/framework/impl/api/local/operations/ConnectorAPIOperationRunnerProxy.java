@@ -29,6 +29,7 @@ import java.lang.reflect.Method;
 
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.impl.api.local.ObjectPool;
+import org.identityconnectors.framework.impl.api.local.ObjectPoolEntry;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.PoolableConnector;
 
@@ -75,12 +76,14 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
         Object ret = null;
         Connector connector = null;
         ObjectPool<PoolableConnector> pool = _context.getPool();
+        ObjectPoolEntry<PoolableConnector> poolEntry = null;
         // get the connector class..
         Class<? extends Connector> connectorClazz = _context.getConnectorClass();
         try {
             // pooling is implemented get one..
             if (pool != null) {
-                connector = pool.borrowObject();
+                poolEntry = pool.borrowObject();
+                connector = poolEntry.getPooledObject();
             }
             else {
                 // get a new instance of the connector..
@@ -100,7 +103,7 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
             // make sure dispose of the connector properly
             if (connector != null) {
                 // determine if there was a pool..
-                if (pool != null) {
+                if (poolEntry != null) {
                     try {
                         //try to return it to the pool even though an
                         //exception may have happened that leaves it in
@@ -108,7 +111,7 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
                         //is that it will tell you if the connector is
                         //still valid and so we leave it up to the pool
                         //and connector to work it out.
-                        pool.returnObject((PoolableConnector)connector);
+                        poolEntry.close();
                     } catch (Exception e) {
                         //don't let pool exceptions propogate or mask
                         //other exceptions. do log it though.

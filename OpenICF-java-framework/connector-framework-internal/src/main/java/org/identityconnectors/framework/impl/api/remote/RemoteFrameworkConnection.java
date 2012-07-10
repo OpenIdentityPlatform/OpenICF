@@ -22,6 +22,7 @@
  */
 package org.identityconnectors.framework.impl.api.remote;
 
+import java.io.Closeable;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
@@ -33,6 +34,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.RemoteFrameworkConnectionInfo;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.serializer.BinaryObjectDeserializer;
@@ -40,8 +42,9 @@ import org.identityconnectors.framework.common.serializer.BinaryObjectSerializer
 import org.identityconnectors.framework.common.serializer.ObjectSerializerFactory;
 
 
-public class RemoteFrameworkConnection {
-    
+public class RemoteFrameworkConnection implements Closeable {
+
+    private static final Log _log = Log.getLog(RemoteFrameworkConnection.class);
     private Socket _socket;
     private BinaryObjectSerializer _encoder;
     private BinaryObjectDeserializer _decoder;
@@ -51,6 +54,7 @@ public class RemoteFrameworkConnection {
             init(info);
         }
         catch (Exception e) {
+            _log.error(e, "Failed to init remote connection to {0}", info);
             throw ConnectorException.wrap(e);
         }
     }
@@ -60,6 +64,7 @@ public class RemoteFrameworkConnection {
             init(socket);
         }
         catch (Exception e) {
+            _log.error(e, "Failed to init remote connection to {0}", socket);
             throw ConnectorException.wrap(e);
         }
     }
@@ -134,6 +139,7 @@ public class RemoteFrameworkConnection {
             }
         }
         catch (Exception e) {
+            _log.info(e, "Failed to close connection.");
             throw ConnectorException.wrap(e);
         }
     }

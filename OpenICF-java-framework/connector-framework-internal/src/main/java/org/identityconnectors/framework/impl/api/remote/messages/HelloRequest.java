@@ -20,6 +20,9 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
+/*
+ * Portions Copyrighted  2012 ForgeRock Inc.
+ */
 package org.identityconnectors.framework.impl.api.remote.messages;
 
 /**
@@ -27,8 +30,35 @@ package org.identityconnectors.framework.impl.api.remote.messages;
  * will respond with a {@link HelloResponse}.
  */
 public class HelloRequest implements Message {
-        
-    public HelloRequest() {
+
+    public static final int SERVER_INFO = 4;
+    public static final int CONNECTOR_KEY_LIST = 16;
+    private static final int DEFAULT_CONFIG = 32;
+    public static final int CONNECTOR_INFO = CONNECTOR_KEY_LIST | DEFAULT_CONFIG;
+
+    private final int level;
+
+    public HelloRequest(int infoLevel) {
+        level = infoLevel;
     }
-        
+
+    public int getInfoLevel() {
+        return level;
+    }
+
+    private boolean checkInfoLevel(int info) {
+        return ((level & info) == info);
+    }
+
+    public boolean isServerInfo() {
+        return checkInfoLevel(SERVER_INFO);
+    }
+
+    public boolean isConnectorKeys() {
+        return checkInfoLevel(CONNECTOR_KEY_LIST);
+    }
+
+    public boolean isConnectorInfo() {
+        return checkInfoLevel(CONNECTOR_INFO);
+    }
 }

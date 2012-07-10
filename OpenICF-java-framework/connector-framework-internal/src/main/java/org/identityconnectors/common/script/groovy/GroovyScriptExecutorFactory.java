@@ -22,6 +22,7 @@
  */
 package org.identityconnectors.common.script.groovy;
 
+import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
 
@@ -65,9 +66,7 @@ public class GroovyScriptExecutorFactory extends ScriptExecutorFactory {
 
         public Object execute(Map<String, Object> arguments) throws Exception {
             Map<String, Object> args = CollectionUtil.nullAsEmpty(arguments);
-            for (Map.Entry<String, Object> entry : args.entrySet()) {
-                _groovyScript.setProperty(entry.getKey(), entry.getValue());
-            }
+            _groovyScript.setBinding(new Binding(args));
             return _groovyScript.run();
         }
     }

@@ -20,6 +20,9 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
+/*
+ * Portions Copyrighted  2012 ForgeRock Inc.
+ */
 package org.identityconnectors.framework.server;
 
 import java.net.InetAddress;
@@ -285,6 +288,15 @@ public abstract class ConnectorServer {
     public void setBundleParentClassLoader(ClassLoader bundleParentClassLoader) {
         this.bundleParentClassLoader = bundleParentClassLoader;
     }
+
+    /**
+     * Gets the time when the servers was started last time.
+     * <p/>
+     * {@code System.currentTimeMillis()}
+     *
+     * @return last start dateTime in milliseconds
+     */
+    abstract public Long getStartTime();
 
     /**
      * Starts the server. All server settings must be configured prior

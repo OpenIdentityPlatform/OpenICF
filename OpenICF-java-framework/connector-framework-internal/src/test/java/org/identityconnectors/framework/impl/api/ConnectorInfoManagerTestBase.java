@@ -23,6 +23,9 @@
 package org.identityconnectors.framework.impl.api;
 
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import org.testng.annotations.BeforeMethod;
 import org.testng.AssertJUnit;
@@ -97,7 +100,7 @@ public abstract class ConnectorInfoManagerTestBase {
         FrameworkUtilTestHelpers.setFrameworkVersion(Version.parse("2.0"));
     }
 
-    @AfterMethod
+    @AfterTest
 	public void after() {
         shutdownConnnectorInfoManager();
         FrameworkUtilTestHelpers.setFrameworkVersion(null);
@@ -388,9 +391,8 @@ public abstract class ConnectorInfoManagerTestBase {
         System.out.println("Test took: "+(end-start)/1000);
     }
 
-        @Test(groups = {"broken"} )
-        //HACK TestNG failes with java.lang.OutOfMemoryError: Java heap space
-	public void testSchemaStress() throws Exception {
+    //@Test(groups = {"broken"}, threadPoolSize = 4, invocationCount = 1000, timeOut = 1000)
+    public void testSchemaStress() throws Exception {
         ConnectorInfoManager manager = 
             getConnectorInfoManager();
         ConnectorInfo info = 
@@ -403,15 +405,12 @@ public abstract class ConnectorInfoManagerTestBase {
         
         ConnectorFacadeFactory facf = ConnectorFacadeFactory.getInstance();
         ConnectorFacade facade = facf.newInstance(api);
-        
-        for (int i = 0; i < 1000; i++) {
-            facade.schema();
-        }
+
+        facade.schema();
     }
-    
-    //@Test 
-    @Test
-	public void testCreateStress() throws Exception {
+
+    //@Test(groups = {"broken"}, threadPoolSize = 4, invocationCount = 1000, timeOut = 1000, dataProvider = "Data-Provider-Function")
+    public void testCreateStress(Set<Attribute> attrs) throws Exception {
         ConnectorInfoManager manager = 
             getConnectorInfoManager();
         ConnectorInfo info = 
@@ -424,16 +423,17 @@ public abstract class ConnectorInfoManagerTestBase {
         
         ConnectorFacadeFactory facf = ConnectorFacadeFactory.getInstance();
         ConnectorFacade facade = facf.newInstance(api);
-        
-        for (int i = 0; i < 1000; i++) {
-            Set<Attribute> attrs = new HashSet<Attribute>();
-            for ( int j = 0; j < 50; j++) {
-                attrs.add(AttributeBuilder.build("myattributename"+j, "myattributevalue"+j));
-            }
-            facade.create(ObjectClass.ACCOUNT,attrs,null);
-        }
+        facade.create(ObjectClass.ACCOUNT,attrs,null);
     }
-    
+
+    @DataProvider(name = "Data-Provider-Function")
+    public Object[][] scriptProvider() {
+        Set<Attribute> attrs = new HashSet<Attribute>();
+        for ( int j = 0; j < 50; j++) {
+            attrs.add(AttributeBuilder.build("myattributename"+j, "myattributevalue"+j));
+        }
+        return new Object[][] { { attrs } };
+    }
     
     /**
      * Main purpose of this is to test sync with
@@ -442,7 +442,7 @@ public abstract class ConnectorInfoManagerTestBase {
      * code in the remote stuff that is there to handle this
      * in particular that we want to excercise.
      */
-    @Test 
+    @Test
     public void testSyncWithManyResults() throws Exception {
         ConnectorInfoManager manager = 
             getConnectorInfoManager();

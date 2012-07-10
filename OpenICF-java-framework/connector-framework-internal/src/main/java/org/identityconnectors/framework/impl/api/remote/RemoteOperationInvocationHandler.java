@@ -49,13 +49,13 @@ import org.identityconnectors.framework.impl.api.remote.messages.OperationRespon
 public class RemoteOperationInvocationHandler implements InvocationHandler {
     private final APIConfigurationImpl _configuration;
     private final Class<? extends APIOperation> _operation;
-    
+
     public RemoteOperationInvocationHandler(APIConfigurationImpl configuration,
             Class<? extends APIOperation> operation) {
         _configuration = configuration;
         _operation = operation;
     }
-        
+
     public Object invoke(Object proxy, Method method, Object[] args)
             throws Throwable {
         //don't proxy toString, hashCode, or equals
@@ -69,11 +69,11 @@ public class RemoteOperationInvocationHandler implements InvocationHandler {
             CollectionUtil.newList(args);
         ObjectStreamHandler streamHandlerArg =
             extractStreamHandler(method.getParameterTypes(),simpleMarshallArgs);
-        
+
         //build the request object
-        RemoteConnectorInfoImpl connectorInfo = 
+        RemoteConnectorInfoImpl connectorInfo =
             (RemoteConnectorInfoImpl)_configuration.getConnectorInfo();
-        RemoteFrameworkConnectionInfo connectionInfo = 
+        RemoteFrameworkConnectionInfo connectionInfo =
             connectorInfo.getRemoteConnectionInfo();
         OperationRequest request = new OperationRequest(
                 connectorInfo.getConnectorKey(),
@@ -81,22 +81,22 @@ public class RemoteOperationInvocationHandler implements InvocationHandler {
                 _operation,
                 method.getName(),
                 simpleMarshallArgs);
-        
+
         //create the connection
-        RemoteFrameworkConnection connection = 
-            new RemoteFrameworkConnection(connectionInfo);
-            
+        RemoteFrameworkConnection connection = null;
+
         try {
+            connection = new RemoteFrameworkConnection(connectionInfo);
             connection.writeObject(CurrentLocale.get());
             connection.writeObject(connectionInfo.getKey());
             //send the request
             connection.writeObject(request);
-            
+
             //now process the response stream (if any)
             if ( streamHandlerArg != null ) {
                 handleStreamResponse(connection,streamHandlerArg);
             }
-            
+
             //finally return the actual return value
             OperationResponsePart response = (OperationResponsePart) connection.readObject();
             if (response.getException() != null) {
@@ -104,16 +104,18 @@ public class RemoteOperationInvocationHandler implements InvocationHandler {
             }
             return response.getResult();
         } finally {
-            connection.close();
+            if (null != connection) {
+                connection.close();
+            }
         }
-        
+
     }
-    
+
     /**
      * Handles a stream response until the end of the stream
      */
     private static void handleStreamResponse(RemoteFrameworkConnection connection, ObjectStreamHandler streamHandler) throws ConnectorException {
-        Object response; 
+        Object response;
         boolean handleMore = true;
         while ( true ) {
             response = connection.readObject();
@@ -142,10 +144,10 @@ public class RemoteOperationInvocationHandler implements InvocationHandler {
             else {
                 throw new ConnectorException("Unexpected response: "+response);
             }
-        }            
+        }
     }
-    
-    
+
+
     /**
      * Partitions arguments into regular arguments and
      * stream arguments.
@@ -156,12 +158,12 @@ public class RemoteOperationInvocationHandler implements InvocationHandler {
      */
     private static ObjectStreamHandler extractStreamHandler(Class<?> [] paramTypes,
             List<Object> arguments) {
-        ObjectStreamHandler rv = null; 
+        ObjectStreamHandler rv = null;
         List<Object> filteredArguments = new ArrayList<Object>();
         for ( int i = 0; i < paramTypes.length; i++ ) {
             Class<?> paramType = paramTypes[i];
             Object arg = arguments.get(i);
-            if (StreamHandlerUtil.isAdaptableToObjectStreamHandler(paramType)) {                
+            if (StreamHandlerUtil.isAdaptableToObjectStreamHandler(paramType)) {
                 ObjectStreamHandler handler = StreamHandlerUtil.adaptToObjectStreamHandler(paramType, arg);
                 if ( rv != null ) {
                     throw new UnsupportedOperationException("Multiple stream handlers not supported");

@@ -20,9 +20,13 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
+/*
+ * Portions Copyrighted  2012 ForgeRock Inc.
+ */
 package org.identityconnectors.framework.impl.api.remote;
 
 import java.util.List;
+import java.util.Map;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.l10n.CurrentLocale;
@@ -38,7 +42,7 @@ import org.identityconnectors.framework.impl.api.remote.messages.HelloResponse;
 
 public class RemoteConnectorInfoManagerImpl implements ConnectorInfoManager {
 
-    
+    private RemoteFrameworkConnectionInfo _connectionInfo;
     private List<ConnectorInfo> _connectorInfo;
     
     private RemoteConnectorInfoManagerImpl() {
@@ -47,11 +51,12 @@ public class RemoteConnectorInfoManagerImpl implements ConnectorInfoManager {
     
     public RemoteConnectorInfoManagerImpl(RemoteFrameworkConnectionInfo info) 
         throws RuntimeException {
+        _connectionInfo = info;
         RemoteFrameworkConnection connection = new RemoteFrameworkConnection(info);
         try {
             connection.writeObject(CurrentLocale.get());
             connection.writeObject(info.getKey());
-            connection.writeObject(new HelloRequest());
+            connection.writeObject(new HelloRequest(HelloRequest.CONNECTOR_INFO));
             HelloResponse response = (HelloResponse)connection.readObject();
             if ( response.getException() != null ) {
                 throw ConnectorException.wrap(response.getException());
@@ -103,4 +108,35 @@ public class RemoteConnectorInfoManagerImpl implements ConnectorInfoManager {
         return _connectorInfo;
     }
 
+    public Map<String, Object> getServerInfo() throws RuntimeException {
+        RemoteFrameworkConnection connection = new RemoteFrameworkConnection(_connectionInfo);
+        try {
+            connection.writeObject(CurrentLocale.get());
+            connection.writeObject(_connectionInfo.getKey());
+            connection.writeObject(new HelloRequest(HelloRequest.SERVER_INFO));
+            HelloResponse response = (HelloResponse) connection.readObject();
+            if (response.getException() != null) {
+                throw ConnectorException.wrap(response.getException());
+            }
+            return response.getServerInfo();
+        } finally {
+            connection.close();
+        }
+    }
+
+    public List<ConnectorKey> getConnectorKeys() throws RuntimeException {
+        RemoteFrameworkConnection connection = new RemoteFrameworkConnection(_connectionInfo);
+        try {
+            connection.writeObject(CurrentLocale.get());
+            connection.writeObject(_connectionInfo.getKey());
+            connection.writeObject(new HelloRequest(HelloRequest.CONNECTOR_KEY_LIST));
+            HelloResponse response = (HelloResponse) connection.readObject();
+            if (response.getException() != null) {
+                throw ConnectorException.wrap(response.getException());
+            }
+            return response.getConnectorKeys();
+        } finally {
+            connection.close();
+        }
+    }
 }

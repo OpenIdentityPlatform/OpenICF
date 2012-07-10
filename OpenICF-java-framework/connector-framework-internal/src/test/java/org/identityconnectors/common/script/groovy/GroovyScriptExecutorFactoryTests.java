@@ -43,11 +43,13 @@ public class GroovyScriptExecutorFactoryTests {
     @Test
     public void testWithVariables() throws Exception {
         Object actual;
-        ScriptExecutor ex = getScriptExecutor("return x;");
-        actual = ex.execute(CollectionUtil.<String, Object>newMap("x", 1));
+        ScriptExecutor ex = getScriptExecutor("return y != null ? y : x;");
+        actual = ex.execute(CollectionUtil.<String, Object>newMap("x", 1, "y", null));
         AssertJUnit.assertEquals(1, actual);
-        actual = ex.execute(CollectionUtil.<String, Object>newMap("x", 2));
+        actual = ex.execute(CollectionUtil.<String, Object>newMap("x", 1, "y", 2));
         AssertJUnit.assertEquals(2, actual);
+        actual = ex.execute(CollectionUtil.<String, Object>newMap("x", 3, "y", null));
+        AssertJUnit.assertEquals(3, actual);
     }
     
     private ScriptExecutor getScriptExecutor(String script) {

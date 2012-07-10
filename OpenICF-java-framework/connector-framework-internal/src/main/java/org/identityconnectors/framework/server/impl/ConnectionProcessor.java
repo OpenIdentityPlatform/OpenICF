@@ -20,6 +20,9 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
+/*
+ * Portions Copyrighted  2012 ForgeRock Inc.
+ */
 package org.identityconnectors.framework.server.impl;
 
 import java.io.EOFException;
@@ -28,9 +31,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.common.logging.Log;
@@ -40,6 +45,7 @@ import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.api.ConnectorInfoManager;
 import org.identityconnectors.framework.api.ConnectorInfoManagerFactory;
+import org.identityconnectors.framework.api.ConnectorKey;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
@@ -170,7 +176,7 @@ public class ConnectionProcessor implements Runnable {
         if ( requestObject instanceof HelloRequest ) {
             if (authException != null) {
                 HelloResponse response =
-                    new HelloResponse(authException,null);
+                    new HelloResponse(authException,null,null,null);
                 _connection.writeObject(response);
             }
             else {
@@ -227,28 +233,39 @@ public class ConnectionProcessor implements Runnable {
     }
     
     private HelloResponse processHelloRequest(HelloRequest request) {
-        List<RemoteConnectorInfoImpl> connectorInfo;
+        List<RemoteConnectorInfoImpl> connectorInfo = null;
+        List<ConnectorKey> connectorKeys = null;
+        Map<String,Object> serverInfo = null;
         Exception exception = null;
         try {
-            ConnectorInfoManager manager =
-                getConnectorInfoManager();
-            
-            List<ConnectorInfo> localInfos =
-                manager.getConnectorInfos();
-            connectorInfo = new ArrayList<RemoteConnectorInfoImpl>();
-            for (ConnectorInfo localInfo : localInfos) {
-                LocalConnectorInfoImpl localInfoImpl = 
-                    (LocalConnectorInfoImpl)localInfo;
-                RemoteConnectorInfoImpl remoteInfo =
-                    localInfoImpl.toRemote();
-                connectorInfo.add(remoteInfo);
+            serverInfo = new HashMap<String, Object>(1);
+            if (request.isServerInfo()) {
+                serverInfo.put(HelloResponse.SERVER_START_TIME, _server.getStartTime());
+            }
+            if (request.isConnectorKeys()) {
+                ConnectorInfoManager manager = getConnectorInfoManager();
+                List<ConnectorInfo> localInfos = manager.getConnectorInfos();
+                connectorKeys = new ArrayList<ConnectorKey>();
+                for (ConnectorInfo localInfo : localInfos) {
+                    connectorKeys.add(localInfo.getConnectorKey());
+                }
+                if (request.isConnectorInfo()) {
+                    connectorInfo = new ArrayList<RemoteConnectorInfoImpl>();
+                    for (ConnectorInfo localInfo : localInfos) {
+                        LocalConnectorInfoImpl localInfoImpl =
+                                (LocalConnectorInfoImpl) localInfo;
+                        RemoteConnectorInfoImpl remoteInfo =
+                                localInfoImpl.toRemote();
+                        connectorInfo.add(remoteInfo);
+                    }
+                }
             }
         }
         catch (Exception e) {
             exception = e;
             connectorInfo = null;
         }
-        return new HelloResponse(exception,connectorInfo);
+        return new HelloResponse(exception,serverInfo,connectorKeys,connectorInfo);
     }
         
     private Method getOperationMethod(OperationRequest request) {

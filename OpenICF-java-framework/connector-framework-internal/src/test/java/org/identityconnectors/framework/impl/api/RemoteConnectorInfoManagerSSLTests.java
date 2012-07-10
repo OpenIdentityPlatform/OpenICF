@@ -185,20 +185,24 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
         List<URL> urls = getTestBundles();
         
         final int PORT = 8761;
-        
+
         TrustManager clientTrustManager =
             new MyTrustManager("server.pfx");
         KeyManager serverKeyManager =
             new MyKeyManager("server.pfx");
-        
-        _server = ConnectorServer.newInstance();
-        _server.setBundleURLs(urls);
-        _server.setPort(PORT);
-        _server.setKeyHash(SecurityUtil.computeBase64SHA1Hash("changeit".toCharArray()));
-        _server.setUseSSL(true);
-        _server.setKeyManagers(CollectionUtil.newList(serverKeyManager));
-        _server.setIfAddress(InetAddress.getByName("127.0.0.1"));
-        _server.start();
+
+        synchronized (RemoteConnectorInfoManagerSSLTests.class) {
+            if (null == _server) {
+                _server = ConnectorServer.newInstance();
+                _server.setBundleURLs(urls);
+                _server.setPort(PORT);
+                _server.setKeyHash(SecurityUtil.computeBase64SHA1Hash("changeit".toCharArray()));
+                _server.setUseSSL(true);
+                _server.setKeyManagers(CollectionUtil.newList(serverKeyManager));
+                _server.setIfAddress(InetAddress.getByName("127.0.0.1"));
+                _server.start();
+            }
+        }
         ConnectorInfoManagerFactory fact = ConnectorInfoManagerFactory.getInstance();
         
         RemoteFrameworkConnectionInfo connInfo = new
@@ -215,9 +219,11 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
     
     @Override
     protected void shutdownConnnectorInfoManager() {
-        if (_server != null) {
-            _server.stop();
-            _server = null;
+        synchronized (RemoteConnectorInfoManagerSSLTests.class) {
+            if (_server != null) {
+                _server.stop();
+                _server = null;
+            }
         }
         // These are initialized by the connector server.    
         ConnectorFacadeFactory.getInstance().dispose();
