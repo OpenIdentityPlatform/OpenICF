@@ -65,13 +65,7 @@
         <dependency>
             <groupId>org.ops4j.pax.swissbox</groupId>
             <artifactId>pax-swissbox-extender</artifactId>
-            <version>1.5.0</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>pax-swissbox-optional-jcl</artifactId>
-                    <groupId>org.ops4j.pax.swissbox</groupId>
-                </exclusion>
-            </exclusions>
+            <version>1.5.1</version>
         </dependency>
         <dependency>
             <groupId>org.forgerock.openicf.framework</groupId>
@@ -88,7 +82,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Package>org.forgerock.openicf.framework.api.osgi.*;version=${project.version}</Export-Package>
+                        <!--Export-Package>org.forgerock.openicf.framework.api.osgi.*;version=${project.version}</Export-Package-->
                         <Private-Package>org.forgerock.openicf.framework.impl.api.osgi.internal.*</Private-Package>
                         <Bundle-Activator>org.forgerock.openicf.framework.impl.api.osgi.internal.Activator</Bundle-Activator>
                     </instructions>

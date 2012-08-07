@@ -21,36 +21,15 @@
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
-package org.forgerock.openicf.framework.api.osgi;
+package org.forgerock.openicf.framework.impl.api.osgi.internal;
 
-import org.identityconnectors.framework.api.APIConfiguration;
-import org.identityconnectors.framework.api.ConnectorFacade;
-import org.identityconnectors.framework.api.ConnectorInfoManager;
+import org.identityconnectors.framework.impl.api.local.LocalConnectorInfoImpl;
 
 /**
- * Sample Class Doc
- *
  * @author $author$
  * @version $Revision$ $Date$
- * @since 1.0.0
  */
-public interface ConnectorManager extends ConnectorInfoManager {
+public class OsgiConnectorInfoImpl extends LocalConnectorInfoImpl {
 
-    public static final String code_id = "$Id$";
 
-    /**
-     * Dispose of all object pools and other resources associated with this
-     * class.
-     */
-    public void dispose();
-
-    /**
-     * Get a new instance of {@link ConnectorFacade}.
-     *
-     * @param config
-     *            all the configuration that the framework, connector, and
-     *            pooling needs.
-     * @return {@link ConnectorFacade} to call API operations against.
-     */
-    public ConnectorFacade newInstance(APIConfiguration config);
 }

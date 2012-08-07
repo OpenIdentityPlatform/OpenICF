@@ -24,7 +24,8 @@
 package org.forgerock.openicf.framework.impl.api.osgi.internal;
 
 import java.util.Hashtable;
-import org.forgerock.openicf.framework.api.osgi.ConnectorManager;
+
+import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.api.ConnectorInfoManager;
 import org.identityconnectors.framework.common.FrameworkUtil;
 import org.ops4j.pax.swissbox.extender.BundleWatcher;
@@ -40,7 +41,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author $author$
  * @version $Revision$ $Date$
- * @since 1.0.0
+ * @since 1.1.0.0
  */
 public class Activator implements BundleActivator {
 
@@ -49,7 +50,7 @@ public class Activator implements BundleActivator {
      */
     private static final Logger LOG = LoggerFactory.getLogger(Activator.class);
     /**
-     * Bundle watcher of ConnectoBundle-.
+     * Bundle watcher of ConnectorBundle-.
      */
     private BundleWatcher<ManifestEntry> connectorWatcher;
     /**
@@ -62,14 +63,14 @@ public class Activator implements BundleActivator {
 
         OsgiConnectorInfoManagerImpl manager = new OsgiConnectorInfoManagerImpl();
         connectorWatcher = new BundleWatcher<ManifestEntry>(context,
-                new ConnectorManifestScanner(FrameworkUtil.getFrameworkVersion()), manager );
+                new ConnectorManifestScanner(FrameworkUtil.getFrameworkVersion()), manager);
         connectorWatcher.start();
-        
+
         Hashtable<String, String> prop = new Hashtable<String, String>();
         prop.put("ConnectorBundle-FrameworkVersion", FrameworkUtil.getFrameworkVersion().getVersion());
 
         connectorInfoManager = context.registerService(new String[]{ConnectorInfoManager.class.getName(),
-                    ConnectorManager.class.getName()}, manager, prop);
+                ConnectorFacadeFactory.class.getName()}, manager, prop);
 
         LOG.debug("OpenICF OSGi Extender - Started");
     }
@@ -78,7 +79,7 @@ public class Activator implements BundleActivator {
         LOG.debug("OpenICF OSGi Extender - Stopping");
         connectorInfoManager.unregister();
         // Stop the bundle watcher.
-        // This will result in unpublish of each web application that was registered during the lifetime of
+        // This will result in un-publish of each web application that was registered during the lifetime of
         // bundle watcher.
         if (connectorWatcher != null) {
             connectorWatcher.stop();

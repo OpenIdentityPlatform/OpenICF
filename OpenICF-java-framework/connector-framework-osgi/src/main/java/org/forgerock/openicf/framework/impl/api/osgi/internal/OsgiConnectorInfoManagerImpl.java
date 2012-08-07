@@ -34,15 +34,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
-import org.forgerock.openicf.framework.api.osgi.ConnectorManager;
+
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.Pair;
 import org.identityconnectors.common.ReflectionUtil;
 import org.identityconnectors.common.StringUtil;
-import org.identityconnectors.framework.api.APIConfiguration;
-import org.identityconnectors.framework.api.ConnectorFacade;
-import org.identityconnectors.framework.api.ConnectorInfo;
-import org.identityconnectors.framework.api.ConnectorKey;
+import org.identityconnectors.framework.api.*;
 import org.identityconnectors.framework.common.FrameworkUtil;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -72,7 +69,7 @@ import org.slf4j.LoggerFactory;
  * @version $Revision$ $Date$
  * @since 1.0.0
  */
-public class OsgiConnectorInfoManagerImpl implements ConnectorManager, BundleObserver<ManifestEntry> {
+public class OsgiConnectorInfoManagerImpl extends ConnectorFacadeFactory implements ConnectorInfoManager, BundleObserver<ManifestEntry> {
 
     /**
      * Logger.
@@ -116,8 +113,7 @@ public class OsgiConnectorInfoManagerImpl implements ConnectorManager, BundleObs
             try {
                 // create a new Provisioner..
                 ret = new LocalConnectorFacadeImpl(localInfo, impl);
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 String connector = impl.getConnectorInfo().getConnectorKey().toString();
                 logger.error("Failed to create new connector facade: {}, {}",
                         new Object[]{connector, config}, ex);
@@ -158,8 +154,7 @@ public class OsgiConnectorInfoManagerImpl implements ConnectorManager, BundleObs
             if (!info.isEmpty()) {
                 result = new Pair<Bundle, List<ConnectorInfo>>(bundle, info);
             }
-        }
-        catch (Throwable t) {
+        } catch (Throwable t) {
             logger.error("ConnectorBundel {} loading failed.", bundle.getSymbolicName(), t);
         }
         return result;
@@ -202,8 +197,7 @@ public class OsgiConnectorInfoManagerImpl implements ConnectorManager, BundleObs
             try {
                 connectorClass = parsed.loadClass(className);
                 options = connectorClass.getAnnotation(ConnectorClass.class);
-            }
-            catch (Throwable e) {
+            } catch (Throwable e) {
                 //probe for the class. this might not be an error since it might be from a bundle
                 //fragment ( a bundle only included by other bundles ). However, we should definitely warn
                 logger.warn("Unable to load class {} from bundle {}. Class will be ignored and will not be listed in list of connectors.",
@@ -252,11 +246,9 @@ public class OsgiConnectorInfoManagerImpl implements ConnectorManager, BundleObs
             rv.setConnectorInfo(localInfo);
             rv.setSupportedOperations(FrameworkUtil.getDefaultSupportedOperations(connectorClass));
             return rv;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw ConnectorException.wrap(e);
-        }
-        finally {
+        } finally {
             ThreadClassLoaderManager.getInstance().popClassLoader();
         }
     }
@@ -292,11 +284,9 @@ public class OsgiConnectorInfoManagerImpl implements ConnectorManager, BundleObs
                 }
             }
             return rv;
-        }
-        catch (RuntimeException e) {
+        } catch (RuntimeException e) {
             throw e;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new ConfigurationException(e);
         }
     }
@@ -354,8 +344,7 @@ public class OsgiConnectorInfoManagerImpl implements ConnectorManager, BundleObs
             Properties rv = new Properties();
             rv.load(in);
             return rv;
-        }
-        finally {
+        } finally {
             in.close();
         }
     }

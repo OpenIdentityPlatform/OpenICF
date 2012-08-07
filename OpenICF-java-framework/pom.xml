@@ -2,7 +2,7 @@
 <!--
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
- Copyright © 2011-2012 ForgeRock AS. All rights reserved.
+ Copyright (c) 2011-2012 ForgeRock AS. All rights reserved.
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -233,7 +233,6 @@
                                 <plugin>
                                     <groupId>org.apache.maven.plugins</groupId>
                                     <artifactId>maven-checkstyle-plugin</artifactId>
-                                    <version>2.8</version>
                                 </plugin>
                                 <plugin>
                                     <groupId>org.apache.maven.plugins</groupId>
@@ -304,8 +303,8 @@
             <dependency>
                 <groupId>org.codehaus.groovy</groupId>
                 <artifactId>groovy-all</artifactId>
-                <!--version>1.8.5</version-->
-                <version>[1.8.5,1.8.9]</version>
+                <version>1.8.7</version>
+                <!--version>[1.8.5,1.8.9]</version-->
             </dependency>
             <dependency>
                 <groupId>junit</groupId>
@@ -383,7 +382,7 @@
                         <source>${maven.compiler.source}</source>
                         <show>public</show>
                         <links>
-                            <link>http://download.oracle.com/javase/6/docs/api/</link>
+                            <link>http://docs.oracle.com/javase/6/docs/api</link>
                             <link>http://groovy.codehaus.org/api/</link>
                         </links>
                     </configuration>
@@ -451,12 +450,6 @@
                         </reports>
                     </reportSet>
                 </reportSets>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>2.8</version>
             </plugin>
 
             <plugin>
@@ -564,7 +557,6 @@
                 <artifactId>maven-pmd-plugin</artifactId>
                 <version>2.6</version>
                 <configuration>
-                    <aggregate>${openicf.parent.reports.aggregate}</aggregate>
                     <rulesets>
                         <ruleset>/rulesets/basic.xml</ruleset>
                         <ruleset>/rulesets/controversial.xml</ruleset>
@@ -578,7 +570,6 @@
                 <artifactId>taglist-maven-plugin</artifactId>
                 <version>2.4</version>
                 <configuration>
-                    <aggregate>${openicf.parent.reports.aggregate}</aggregate>
                     <tags>
                         <tag>@FIXME</tag>
                         <tag>@fixme</tag>
