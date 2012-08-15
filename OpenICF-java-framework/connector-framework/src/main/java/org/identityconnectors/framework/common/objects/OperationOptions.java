@@ -19,10 +19,13 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2012 ForgeRock Inc.
+ *
  */
 package org.identityconnectors.framework.common.objects;
 
-import java.util.Map;
+import java.util.HashMap;import java.util.Map;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.security.GuardedString;
@@ -126,12 +129,22 @@ public final class OperationOptions {
         for (Object value : operationOptions.values()) {
             FrameworkUtil.checkOperationOptionValue(value);
         }
-        // clone options to do a deep copy in case anything
-        // is an array
-        @SuppressWarnings("unchecked")
-        Map<String, Object> operationOptionsClone = (Map<String, Object>) SerializerUtil
-                .cloneObject(operationOptions);
+        // Clone options that are mutable, specifically in OpenICF arrays
+        Map<String, Object> operationOptionsClone = copyMutables(operationOptions);
         _operationOptions = CollectionUtil.asReadOnlyMap(operationOptionsClone);
+    }
+
+    // NOTE: this method makes a heavy assumption that in OpenICF only arrays occur as mutable values in operation options, and that there is a single level of array/nesting.
+    // Really would be better if OpenICF switched to List and not array
+    // To more easily return immutable views
+    private Map<String, Object> copyMutables(Map<String, Object> operationOptions) {
+        Map<String, Object> operationOptionsCopy = new HashMap(operationOptions);
+        for (Map.Entry<String, Object> entry : operationOptionsCopy.entrySet()) {
+            if (entry.getValue() instanceof Object[]) {
+                entry.setValue(((Object[]) entry.getValue()).clone());
+            }
+        }
+        return operationOptionsCopy;
     }
 
     /**
