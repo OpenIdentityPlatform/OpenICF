@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.List;
+
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.Version;
 import org.ops4j.lang.NullArgumentException;
@@ -37,7 +38,7 @@ import org.osgi.framework.Bundle;
 
 /**
  * Sample Class Doc
- *
+ * 
  * @author $author$
  * @version $Revision$ $Date$
  * @since 1.0.0
@@ -73,7 +74,7 @@ public class ConnectorManifestScanner implements BundleScanner<ManifestEntry> {
                 if (ATT_FRAMEWORK_VERSION.equals(key)) {
                     frameworkVersion = (String) bundleHeaders.get(key);
                     if (version.compareTo(Version.parse(frameworkVersion)) < 0) {
-                        //Framework is incompatible
+                        // Framework is incompatible
                         frameworkVersion = null;
                     }
                 } else if (ATT_BUNDLE_NAME.equals(key)) {
@@ -83,7 +84,8 @@ public class ConnectorManifestScanner implements BundleScanner<ManifestEntry> {
                 }
             }
         }
-        if (!StringUtil.isBlank(frameworkVersion) && !StringUtil.isBlank(bundleName) && !StringUtil.isBlank(bundleVersion)) {
+        if (!StringUtil.isBlank(frameworkVersion) && !StringUtil.isBlank(bundleName)
+                && !StringUtil.isBlank(bundleVersion)) {
             List<ManifestEntry> result = new ArrayList<ManifestEntry>(3);
             result.add(new ManifestEntry(ATT_FRAMEWORK_VERSION, frameworkVersion));
             result.add(new ManifestEntry(ATT_BUNDLE_NAME, bundleName));

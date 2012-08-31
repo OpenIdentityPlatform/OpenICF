@@ -25,7 +25,7 @@ package org.forgerock.openicf.framework.impl.api.osgi.internal;
 
 import java.util.Hashtable;
 
-import org.identityconnectors.framework.api.ConnectorFacadeFactory;
+import org.identityconnectors.common.event.ConnectorEventPublisher;
 import org.identityconnectors.framework.api.ConnectorInfoManager;
 import org.identityconnectors.framework.common.FrameworkUtil;
 import org.ops4j.pax.swissbox.extender.BundleWatcher;
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Sample Class Doc
- *
+ * 
  * @author $author$
  * @version $Revision$ $Date$
  * @since 1.1.0.0
@@ -62,15 +62,18 @@ public class Activator implements BundleActivator {
         LOG.debug("OpenICF OSGi Extender - Starting");
 
         OsgiConnectorInfoManagerImpl manager = new OsgiConnectorInfoManagerImpl();
-        connectorWatcher = new BundleWatcher<ManifestEntry>(context,
-                new ConnectorManifestScanner(FrameworkUtil.getFrameworkVersion()), manager);
+        connectorWatcher =
+                new BundleWatcher<ManifestEntry>(context, new ConnectorManifestScanner(
+                        FrameworkUtil.getFrameworkVersion()), manager);
         connectorWatcher.start();
 
         Hashtable<String, String> prop = new Hashtable<String, String>();
-        prop.put("ConnectorBundle-FrameworkVersion", FrameworkUtil.getFrameworkVersion().getVersion());
+        prop.put("ConnectorBundle-FrameworkVersion", FrameworkUtil.getFrameworkVersion()
+                .getVersion());
 
-        connectorInfoManager = context.registerService(new String[]{ConnectorInfoManager.class.getName(),
-                ConnectorFacadeFactory.class.getName()}, manager, prop);
+        connectorInfoManager =
+                context.registerService(new String[] { ConnectorInfoManager.class.getName(),
+                    ConnectorEventPublisher.class.getName() }, manager, prop);
 
         LOG.debug("OpenICF OSGi Extender - Started");
     }
@@ -79,7 +82,8 @@ public class Activator implements BundleActivator {
         LOG.debug("OpenICF OSGi Extender - Stopping");
         connectorInfoManager.unregister();
         // Stop the bundle watcher.
-        // This will result in un-publish of each web application that was registered during the lifetime of
+        // This will result in un-publish of each web application that was
+        // registered during the lifetime of
         // bundle watcher.
         if (connectorWatcher != null) {
             connectorWatcher.stop();

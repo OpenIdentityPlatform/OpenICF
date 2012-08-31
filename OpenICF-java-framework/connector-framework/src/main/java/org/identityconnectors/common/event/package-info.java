@@ -1,7 +1,7 @@
 /*
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+ * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright © 2011 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2012 ForgeRock Inc. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -21,15 +21,16 @@
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
-package org.forgerock.openicf.framework.impl.api.osgi.internal;
-
-import org.identityconnectors.framework.impl.api.local.LocalConnectorInfoImpl;
 
 /**
- * @author $author$
- * @version $Revision$ $Date$
+ * NOTICE: This package is an early specification of the Events API for 1.2.x.x version.
+ * Use carefully, this package may change bifore the final 1.2.0.0 release.
+ * <p/>
+ * Classes and interfaces for asynchronous event based monitoring of the connectors.
+ * The parent application can use these the check if a remote connector server status
+ * has been changed or connectors has be added/removed.
+ *
+ * @author Laszlo Hordos
+ * @since 1.2
  */
-public class OsgiConnectorInfoImpl extends LocalConnectorInfoImpl {
-
-
-}
+package org.identityconnectors.common.event;

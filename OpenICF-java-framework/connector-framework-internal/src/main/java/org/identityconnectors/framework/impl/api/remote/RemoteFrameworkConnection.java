@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.List;
 
 import javax.net.ssl.SSLContext;
@@ -37,6 +38,7 @@ import javax.net.ssl.TrustManager;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.RemoteFrameworkConnectionInfo;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 import org.identityconnectors.framework.common.serializer.BinaryObjectDeserializer;
 import org.identityconnectors.framework.common.serializer.BinaryObjectSerializer;
 import org.identityconnectors.framework.common.serializer.ObjectSerializerFactory;
@@ -52,20 +54,24 @@ public class RemoteFrameworkConnection implements Closeable {
     public RemoteFrameworkConnection(RemoteFrameworkConnectionInfo info) {
         try {
             init(info);
-        }
-        catch (Exception e) {
-            _log.error(e, "Failed to init remote connection to {0}", info);
-            throw ConnectorException.wrap(e);
+        } catch (SocketException e) {
+            throw new ConnectorIOException(
+                    "Failed to init remote connection to " + (null != info ? info.toString() : "null"), e);
+        } catch (Exception e) {
+            throw new ConnectorException(
+                    "Failed to init remote connection to " + (null != info ? info.toString() : "null"), e);
         }
     }
     
     public RemoteFrameworkConnection(Socket socket) {
         try {
             init(socket);
-        }
-        catch (Exception e) {
-            _log.error(e, "Failed to init remote connection to {0}", socket);
-            throw ConnectorException.wrap(e);
+        } catch (SocketException e) {
+            throw new ConnectorIOException(
+                    "Failed to init remote connection to " + (null != socket ? socket.toString() : "null"), e);
+        } catch (Exception e) {
+            throw new ConnectorException(
+                    "Failed to init remote connection to " + (null != socket ? socket.toString() : "null"), e);
         }
     }
     

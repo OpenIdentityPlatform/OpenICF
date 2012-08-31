@@ -198,14 +198,14 @@ abstract public class AbstractFilterTranslator<T> implements FilterTranslator<T>
                     translateInternal(simplifiedLeft);
                 List<T> rightExprs =
                     translateInternal(simplifiedRight);
-                if (leftExprs.size() == 0) {
+                if (leftExprs.isEmpty()) {
                     //This can happen only when one of the create* methods
                     //is inconsistent from one invocation to the next
                     //(simplifiedLeft should have been null 
                     //in the previous 'if' above).
                     throw new IllegalStateException("Translation method is inconsistent: "+leftExprs);
                 }
-                if (rightExprs.size() == 0) {
+                if (rightExprs.isEmpty()) {
                     //This can happen only when one of the create* methods
                     //is inconsistent from one invocation to the next
                     //(simplifiedRight should have been null 
@@ -371,12 +371,12 @@ abstract public class AbstractFilterTranslator<T> implements FilterTranslator<T>
     private List<T> translateOr( OrFilter filter ) {
         List<T> leftExprs = translateInternal(filter.getLeft());
         List<T> rightExprs = translateInternal(filter.getRight());
-        if ( leftExprs.size() == 0 ) {
+        if ( leftExprs.isEmpty() ) {
             //This can happen only if one of the create* methods
             //is inconsistent from one invocation to the next.
             throw new IllegalStateException("Translation method is inconsistent");            
         }
-        if ( rightExprs.size() == 0 ) {
+        if ( rightExprs.isEmpty() ) {
             //This can happen only if one of the create* methods
             //methods is inconsistent from on invocation to the next.
             throw new IllegalStateException("Translation method is inconsistent");

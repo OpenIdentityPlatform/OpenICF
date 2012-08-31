@@ -33,8 +33,8 @@ public class HelloRequest implements Message {
 
     public static final int SERVER_INFO = 4;
     public static final int CONNECTOR_KEY_LIST = 16;
-    private static final int DEFAULT_CONFIG = 32;
-    public static final int CONNECTOR_INFO = CONNECTOR_KEY_LIST | DEFAULT_CONFIG;
+    //public static final int DEFAULT_CONFIG = 32;
+    public static final int CONNECTOR_INFO = CONNECTOR_KEY_LIST | SERVER_INFO;
 
     private final int level;
 

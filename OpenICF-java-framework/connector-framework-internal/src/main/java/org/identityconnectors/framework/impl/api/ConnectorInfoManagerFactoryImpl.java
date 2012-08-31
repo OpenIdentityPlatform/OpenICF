@@ -98,6 +98,18 @@ public class ConnectorInfoManagerFactoryImpl extends ConnectorInfoManagerFactory
         }
     }
 
+    public ConnectorInfoManager getUnCheckedRemoteManager(RemoteFrameworkConnectionInfo info) {
+        RemoteManagerKey key = new RemoteManagerKey(info);
+        synchronized (_remoteManagerCache) {
+            RemoteConnectorInfoManagerImpl rv = _remoteManagerCache.get(key);
+            if ( rv == null ) {
+                rv = new RemoteConnectorInfoManagerImpl(info, false);
+            }
+            _remoteManagerCache.put(key, rv);
+            return rv;
+        }
+    }
+
     private static final class LocalManagerKey {
         
         private final List<URL> _urls;

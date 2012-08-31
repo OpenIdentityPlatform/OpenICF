@@ -92,7 +92,30 @@ public abstract class ConnectorInfoManagerFactory {
      */
     public abstract ConnectorInfoManager getRemoteManager(RemoteFrameworkConnectionInfo info)
         throws RuntimeException;
-    
+
+    /**
+     /**
+     * Creates the <code>ConnectorInfoManager</code> for
+     * a remote framework but the connection is not checked and not initialised.
+     * <p>
+     * NOTICE: This method is an early specification of the Events API for 1.2.x.x
+     * version. Use carefully, this package may change before the final 1.2.0.0
+     * release.
+     * <p/>
+     * As now the {@code ConnectorInfoManager} MUST implement the {@link Runnable}
+     * to connect to the remote connector server.
+     * <b>NOTE:</b> The results from this call are automatically
+     * cached and keyed by the RemoteFrameworkConnectionInfo passed in. To clear
+     * the cache, call {@link #clearRemoteCache}.
+     *
+     * @param info The connection information.
+     *
+     * @return The manager
+     *
+     * @since 1.2
+     */
+    public abstract ConnectorInfoManager getUnCheckedRemoteManager(RemoteFrameworkConnectionInfo info);
+
     /**
      * Clears the local bundle manager cache. 
      * NOTE: Avoid using this method outside of unit testing. 
