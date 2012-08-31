@@ -20,6 +20,9 @@ rem If applicable, add the following below this CDDL Header, with the fields
 rem enclosed by brackets [] replaced by your own identifying information: 
 rem "Portions Copyrighted [year] [name of copyright owner]"
 rem ====================
+rem
+rem Portions Copyrighted 2012 ForgeRock AS
+rem
 rem -- END LICENSE
 
 SETLOCAL ENABLEDELAYEDEXPANSION
@@ -58,34 +61,43 @@ set JAVA="%JAVA_HOME%\bin\java.exe"
 set JAVA_DLL="%JAVA_HOME%\jre\bin\server\jvm.dll"
 :homeOk
 
-rem Set CLASSPATH for starting connector server %CONNECTOR_SERVER_HOME%\lib\framework\*
-set CP="%CONNECTOR_SERVER_HOME%\lib\framework\connector-framework.jar"; \
-    "%CONNECTOR_SERVER_HOME%\lib\framework\connector-framework-internal.jar"; \
-    "%CONNECTOR_SERVER_HOME%\lib\framework\groovy-all.jar"; \
-    "%CONNECTOR_SERVER_HOME%\lib\framework\slf4j-api"; \
-    "%CONNECTOR_SERVER_HOME%\lib\framework\logback-core.jar"; \
-    "%CONNECTOR_SERVER_HOME%\lib\framework\logback-classic.jar";
+rem Set CLASSPATH for starting connector server
+rem Only Java 6 supports wildcard (*)
+rem set CP="lib/*;lib/framework/*"
+
+rem setup the classpath
+set CP=lib\framework\connector-framework.jar
+set CP=%CP%;lib\framework\connector-framework-internal.jar
+set CP=%CP%;lib\framework\groovy-all.jar
+set CP=%CP%;lib\framework\icfl-over-slf4j.jar
+set CP=%CP%;lib\framework\slf4j-api.jar
+set CP=%CP%;lib\framework\logback-core.jar
+set CP=%CP%;lib\framework\logback-classic.jar
+
+echo %CP%
 
 rem SET MISC PROPERTIES
-rem Architecture, can be i386 or amd64 (it is basically the directory name
+rem Architecture, can be i386 or amd64 or ia64 (it is basically the directory name
 rem   where the binaries are stored, if not set this script will try to 
 rem   find the value automatically based on environment variables)
 set ARCH=
-rem Run java options, separated by space
-set JAVA_OPTS=-Xmx500m "-Djava.util.logging.config.file=%CONNECTOR_SERVER_HOME%\conf\logging.properties" "-Dlogback.configurationFile=%CONNECTOR_SERVER_HOME%\lib\logback.xml"
-rem Service java options, needs to be separated by ;
-set JAVA_OPTS_SERVICE=-Xmx500m;"-Djava.util.logging.config.file=%CONNECTOR_SERVER_HOME%\conf\logging.properties";
-set MAIN_CLASS=org.identityconnectors.framework.server.Main
-set SERVER_PROPERTIES_KEY=-properties
-set SERVER_PROPERTIES="%CONNECTOR_SERVER_HOME%\conf\ConnectorServer.properties"
-set JVM_OPTION_IDENTIFIER=-J
-
 rem find out the architecture
 if ""%ARCH%"" == """" (
   set ARCH=i386
-  if ""%PROCESSOR_ARCHITECTURE%"" == ""amd64"" set ARCH=amd64
-  if ""%PROCESSOR_ARCHITEW6432%"" == ""amd64"" set ARCH=amd64
+  if ""%PROCESSOR_ARCHITECTURE%"" == ""AMD64"" set ARCH=amd64
+  if ""%PROCESSOR_ARCHITECTURE%"" == ""IA64""  set ARCH=ia64
 )
+
+rem Run java options, separated by space
+set JAVA_OPTS=-Xmx500m "-Djava.util.logging.config.file=conf\logging.properties" "-Dlogback.configurationFile=lib\logback.xml"
+
+rem Service java options, needs to be separated by ;
+set JAVA_OPTS_SERVICE=-Xmx500m;"-Dlogback.configurationFile=lib\logback.xml";
+set MAIN_CLASS=org.identityconnectors.framework.server.Main
+set SERVER_PROPERTIES_KEY=-properties
+set SERVER_PROPERTIES="conf\ConnectorServer.properties"
+set JVM_OPTION_IDENTIFIER=-J
+
 
 if ""%1"" == ""/run"" goto srvRun
 if ""%1"" == ""/setkey"" goto srvSetKey
@@ -120,6 +132,7 @@ for %%P in (%*) do (
     )
 )
 cd "%CONNECTOR_SERVER_HOME%"
+
 %JAVA% %JAVA_OPTS% %JAVA_OPTS_PARAM% -server -classpath %CP% %MAIN_CLASS% -run %SERVER_PROPERTIES_KEY% %SERVER_PROPERTIES%
 cd "%CURRENT_DIR%"
 goto :EOF
@@ -158,7 +171,7 @@ for %%P in (%*) do (
     )
 )
 "%CONNECTOR_SERVER_HOME%\bin\%ARCH%\ConnectorServerJava.exe" //IS//%SERVICE_NAME% --Install="%CONNECTOR_SERVER_HOME%\bin\%ARCH%\ConnectorServerJava.exe" --Description="OpenICF Connectors Java Server" --Jvm=%JAVA_DLL% --Classpath=%CP% --JvmOptions=%JAVA_OPTS_SERVICE%%JAVA_OPTS_PARAM% --StartPath="%CONNECTOR_SERVER_HOME%" --StartMode=jvm --StartClass=%MAIN_CLASS% --StartParams="-run;%SERVER_PROPERTIES_KEY%;%SERVER_PROPERTIES%" --StopMode=jvm --StopClass=%MAIN_CLASS% --StopMethod=stop --StopParams=dummy --LogPath="%CONNECTOR_SERVER_HOME%\logs" --LogPrefix=service --StdOutput=auto --StdError=auto --LogLevel=INFO
-echo Connector server sucessfully installed as "%SERVICE_NAME%" service
+echo Connector server successfully installed as "%SERVICE_NAME%" service
 goto :EOF
 
 :srvUninstall
@@ -169,7 +182,7 @@ if not ""%1"" == """" (
     set SERVICE_NAME=OpenICFConnectorServerJava
 )
 "%CONNECTOR_SERVER_HOME%\bin\%ARCH%\ConnectorServerJava.exe" //DS//%SERVICE_NAME%
-echo Service "%SERVICE_NAME%" removed sucessfully
+echo Service "%SERVICE_NAME%" removed successfully
 goto :EOF
 
 :exit

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
- Copyright (c) 2011 ForgeRock Inc. All Rights Reserved
+ Copyright (c) 2011-2012 ForgeRock Inc. All Rights Reserved
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -23,13 +23,85 @@
 -->
 <configuration>
 
+    <property name="SERVER_LEVEL" value="INFO" />
+    <property name="LOGS_FOLDER" value="${CONNECTOR_SERVER_HOME}/logs" />
+    <appender name="SERVER-FILE" class="ch.qos.logback.core.FileAppender">
+        <file>logs/ConnectorServer.log</file>
+        <append>true</append>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/ConnectorServer-%d{yyyyMMdd}.log</fileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg %n</pattern>
+        </encoder>
+    </appender>
+    <appender name="CONNECTOR-FILE" class="ch.qos.logback.core.FileAppender">
+        <file>logs/Connector.log</file>
+        <append>true</append>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/Connector-%d{yyyyMMdd}.log</fileNamePattern>
+        </rollingPolicy>
+        <!--rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>${LOGS_FOLDER}/my-application-troubleshooting.%i.log</fileNamePattern>
+            <maxIndex>10</maxIndex>
+        </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>10MB</maxFileSize>
+        </triggeringPolicy-->
+        <encoder>
+            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg %n</pattern>
+        </encoder>
+    </appender>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
             <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
         </layout>
     </appender>
-  
-    <logger name="org.identityconnectors" level="TRACE"/>
+
+    <!-- additivity=false ensures connectors data only goes to the connector log -->
+    <logger name="org.forgerock.openicf.misc" level="INFO" additivity="false">
+        <appender-ref ref="CONNECTOR-FILE"/>
+    </logger>
+    <logger name="org.forgerock.openicf.connectors" level="INFO" additivity="false">
+        <appender-ref ref="CONNECTOR-FILE"/>
+    </logger>
+    <logger name="org.forgerock.openicf.framework" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="SERVER-FILE"/>
+    </logger>
+    <logger name="org.forgerock.openicf.common" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="SERVER-FILE"/>
+    </logger>
+    <logger name="org.forgerock.openicf.contract" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="SERVER-FILE"/>
+    </logger>
+    <logger name="org.forgerock.openicf.test" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="SERVER-FILE"/>
+    </logger>
+    <logger name="org.identityconnectors.common" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="SERVER-FILE"/>
+    </logger>
+    <logger name="org.identityconnectors.framework" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="SERVER-FILE"/>
+    </logger>
+    <logger name="org.identityconnectors.contract" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="SERVER-FILE"/>
+    </logger>
+    <logger name="org.identityconnectors.test" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="SERVER-FILE"/>
+    </logger>
+
+    <!-- Legacy connectors -->
+    <logger name="org.identityconnectors" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
   
     <root level="debug">
         <appender-ref ref="STDOUT" />
