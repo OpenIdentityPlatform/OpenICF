@@ -318,7 +318,7 @@ public class LdapConnection {
             String vendorVersion = getStringAttrValue(attrs, "vendorVersion");
             if (vendorVersion != null) {
                 vendorVersion = vendorVersion.toLowerCase();
-                if (vendorVersion.contains("opends")) {
+                if (vendorVersion.contains("opends") || vendorVersion.contains("opendj")) {
                     return ServerType.OPENDS;
                 }
                 if (vendorVersion.contains("sun") && vendorVersion.contains("directory")) {

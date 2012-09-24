@@ -73,7 +73,7 @@ public class LdapUpdate extends LdapModifyOperation {
     }
 
     public Uid update(Set<Attribute> attrs) {
-        String entryDN = LdapSearches.findEntryDN(conn, oclass, uid);
+        String entryDN = LdapSearches.getEntryDN(conn, oclass, uid);
         PosixGroupMember posixMember = new PosixGroupMember(entryDN);
 
         // Extract the Name attribute if any, to be used to rename the entry later.
