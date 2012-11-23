@@ -29,25 +29,21 @@ package org.forgerock.openicf.csvfile;
 
 import org.forgerock.openicf.csvfile.util.TestUtils;
 import org.forgerock.openicf.csvfile.util.Utils;
-import org.testng.annotations.AfterMethod;
+import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.*;
 import org.testng.Assert;
-import org.identityconnectors.framework.common.objects.Uid;
-import java.util.Map;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.Test;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
-import org.identityconnectors.framework.common.objects.ObjectClass;
-import org.identityconnectors.framework.common.objects.SyncDelta;
-import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
-import org.identityconnectors.framework.common.objects.SyncDeltaType;
-import org.identityconnectors.framework.common.objects.SyncResultsHandler;
-import org.identityconnectors.framework.common.objects.SyncToken;
-import org.testng.annotations.Test;
-import static org.testng.Assert.*;
+import java.util.Map;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 /**
  *
@@ -134,8 +130,9 @@ public class SyncOpTest {
     @Test
     public void syncTestHandlerStopped() throws Exception {
         initConnector("../../../src/test/resources/files/sync.csv");
+        File file = new File("./src/test/resources/files/sync.csv.1300734815289");
         Utils.copyAndReplace(new File("./src/test/resources/files/sync.csv.1300734815289.backup"),
-                new File("./src/test/resources/files/sync.csv.1300734815289"));
+                file);
 
         SyncToken oldToken = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
         assertEquals(oldToken.getValue(), "1300734815289");
@@ -164,6 +161,25 @@ public class SyncOpTest {
             assertEquals(syncDelta, delta);
         }
         assertEquals(deltaMap.size(), 2);
+
+        if (file.exists()) {
+            file.delete();
+        }
+    }
+
+    @Test
+    public void noSyncTokenAvailable() throws Exception {
+        assertTrue(new File("./src/test/resources/files/sync.csv").exists());
+        initConnector("../../../src/test/resources/files/sync.csv");
+
+        SyncToken oldToken = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
+        assertEquals(oldToken.getValue(),
+                Long.toString(new File("./src/test/resources/files/sync.csv").lastModified()));
+
+        CSVFileConfiguration config = (CSVFileConfiguration)connector.getConfiguration();
+        File syncFile = config.getFilePath();
+        File file = new File(syncFile.getParent(), syncFile.getName() + "." + oldToken.getValue());
+        file.delete();
     }
 
     private Map<String, SyncDelta> createSyncDeltaTestMap(SyncToken token) {

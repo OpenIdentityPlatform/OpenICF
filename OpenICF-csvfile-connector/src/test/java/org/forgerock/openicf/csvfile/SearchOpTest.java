@@ -27,19 +27,24 @@
  */
 package org.forgerock.openicf.csvfile;
 
+import org.forgerock.openicf.csvfile.util.CSVSchemaException;
 import org.forgerock.openicf.csvfile.util.TestUtils;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import java.util.List;
-import java.util.ArrayList;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.testng.Assert.*;
 
 /**
@@ -186,5 +191,47 @@ public class SearchOpTest {
             assertEquals(attrValues.size(), values.length);
             assertEquals(attrValues.toArray(), values, "Attribute '" + name + "' doesn't have same values.");
         }
+    }
+
+    @Test(expectedExceptions = CSVSchemaException.class)
+    private void testMissingColumn() throws Exception {
+        CSVFileConfiguration config = new CSVFileConfiguration();
+        config.setEncoding("utf-8");
+        config.setFilePath(TestUtils.getTestFile("missing-column.csv"));
+        config.setUniqueAttribute("uid");
+        config.setPasswordAttribute("password");
+
+        CSVFileConnector connector = new CSVFileConnector();
+        connector.init(config);
+
+        ResultsHandler handler = new ResultsHandler() {
+
+            @Override
+            public boolean handle(ConnectorObject co) {
+                return true;
+            }
+        };
+        connector.executeQuery(ObjectClass.ACCOUNT, null, handler, null);
+    }
+
+    @Test(expectedExceptions = ConnectorIOException.class)
+    private void nonExistingFile() throws Exception {
+        CSVFileConfiguration config = new CSVFileConfiguration();
+        config.setEncoding("utf-8");
+        config.setFilePath(new File("C:\\non-existing-file.csv"));
+        config.setUniqueAttribute("uid");
+        config.setPasswordAttribute("password");
+
+        CSVFileConnector connector = new CSVFileConnector();
+        connector.init(config);
+
+        ResultsHandler handler = new ResultsHandler() {
+
+            @Override
+            public boolean handle(ConnectorObject co) {
+                return true;
+            }
+        };
+        connector.executeQuery(ObjectClass.ACCOUNT, null, handler, null);
     }
 }

@@ -28,76 +28,32 @@
  */
 package org.forgerock.openicf.csvfile;
 
-import org.identityconnectors.framework.spi.operations.*;
-import org.identityconnectors.framework.common.objects.*;
-
 import org.forgerock.openicf.csvfile.sync.Change;
-import org.forgerock.openicf.csvfile.util.CsvItem;
-import org.forgerock.openicf.csvfile.sync.DiffException;
 import org.forgerock.openicf.csvfile.sync.InMemoryDiff;
-import static org.forgerock.openicf.csvfile.util.Utils.*;
-import java.io.File;
-import java.util.regex.Pattern;
-import java.util.List;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.nio.channels.FileLock;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import org.forgerock.openicf.csvfile.util.CSVSchemaException;
+import org.forgerock.openicf.csvfile.util.CsvItem;
+import org.forgerock.openicf.csvfile.util.TokenFileNameFilter;
 import org.forgerock.openicf.csvfile.util.Utils;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
-import org.identityconnectors.framework.common.exceptions.ConfigurationException;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
-import org.identityconnectors.framework.common.exceptions.InvalidPasswordException;
-import org.identityconnectors.framework.common.exceptions.UnknownUidException;
-import org.identityconnectors.framework.common.objects.Attribute;
-import org.identityconnectors.framework.common.objects.AttributeInfo;
-import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
-import org.identityconnectors.framework.common.objects.ConnectorObject;
-import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
-import org.identityconnectors.framework.common.objects.Name;
-import org.identityconnectors.framework.common.objects.ObjectClass;
-import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
-import org.identityconnectors.framework.common.objects.OperationOptions;
-import org.identityconnectors.framework.common.objects.ResultsHandler;
-import org.identityconnectors.framework.common.objects.Schema;
-import org.identityconnectors.framework.common.objects.SchemaBuilder;
-import org.identityconnectors.framework.common.objects.SyncDelta;
-import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
-import org.identityconnectors.framework.common.objects.SyncDeltaType;
-import org.identityconnectors.framework.common.objects.SyncResultsHandler;
-import org.identityconnectors.framework.common.objects.SyncToken;
-import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.common.exceptions.*;
+import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.objects.filter.AbstractFilterTranslator;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.ConnectorClass;
-import org.identityconnectors.framework.spi.operations.AuthenticateOp;
-import org.identityconnectors.framework.spi.operations.CreateOp;
-import org.identityconnectors.framework.spi.operations.DeleteOp;
-import org.identityconnectors.framework.spi.operations.ResolveUsernameOp;
-import org.identityconnectors.framework.spi.operations.SchemaOp;
-import org.identityconnectors.framework.spi.operations.SearchOp;
-import org.identityconnectors.framework.spi.operations.SyncOp;
-import org.identityconnectors.framework.spi.operations.TestOp;
-import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
+import org.identityconnectors.framework.spi.operations.*;
+
+import java.io.*;
+import java.nio.channels.FileLock;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.regex.Pattern;
+
+import static org.forgerock.openicf.csvfile.util.Utils.*;
 
 /**
  * Main implementation of the CSVFile Connector
@@ -122,9 +78,10 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
         DELETE, UPDATE, ADD_ATTR_VALUE, REMOVE_ATTR_VALUE;
     }
     private static final Object lock = new Object();
+    private static final DateFormat FORMAT = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
     private Pattern linePattern;
     /**
-     * Place holder for the {@link Configuration} passed into the init() method
+     * Place holder for the {@link org.identityconnectors.framework.spi.Configuration} passed into the init() method
      * {@link CSVFileConnector#init(org.identityconnectors.framework.spi.Configuration)}.
      */
     private CSVFileConfiguration configuration;
@@ -137,9 +94,9 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
     }
 
     /**
-     * Callback method to receive the {@link Configuration}.
+     * Callback method to receive the {@link org.identityconnectors.framework.spi.Configuration}.
      *
-     * @see Connector#init(org.identityconnectors.framework.spi.Configuration)
+     * @see org.identityconnectors.framework.spi.Connector#init(org.identityconnectors.framework.spi.Configuration)
      */
     public void init(Configuration initialConfiguration1) {
         notNullArgument(initialConfiguration1, "configuration");
@@ -170,7 +127,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
     /**
      * Disposes of the {@link CSVFileConnector}'s resources.
      *
-     * @see Connector#dispose()
+     * @see org.identityconnectors.framework.spi.Connector#dispose()
      */
     public void dispose() {
     }
@@ -237,11 +194,11 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                 }
 
                 FileInputStream fis = new FileInputStream(configuration.getFilePath());
-                fis.skip(configuration.getFilePath().length() - 1); 
+                fis.skip(configuration.getFilePath().length() - 1);
 
                 byte[] chars = new byte[1];
                 fis.read(chars);
-                fis.close(); 
+                fis.close();
 
                 writer = createWriter(true);
                 if (chars[0] != 10) { // 10 is the decimal value for \n 
@@ -250,11 +207,8 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                 writer.append(record);
                 writer.append('\n');
             }
-            catch (ConnectorException ex) {
-                throw ex;
-            }
             catch (Exception ex) {
-                throw new ConnectorException("Couldn't create account, reason: " + ex.getMessage(), ex);
+                handleGenericException(ex, "Couldn't create account");
             }
             finally {
                 lock.notify();
@@ -289,11 +243,8 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                 headers = readHeader(reader, linePattern, configuration);
                 testHeader(headers);
             }
-            catch (ConnectorException ex) {
-                throw ex;
-            }
             catch (Exception ex) {
-                throw new ConnectorException("Couldn't read csv file header, reason: " + ex.getMessage(), ex);
+                handleGenericException(ex, "Couldn't create schema");
             }
             finally {
                 lock.notify();
@@ -302,7 +253,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
         }
 
         if (headers == null || headers.isEmpty()) {
-            throw new ConnectorException("Schema can't be generated, header is null (proably not defined in file - first line in csv).");
+            throw new CSVSchemaException("Schema can't be generated, header is null (probably not defined in file - first line in csv).");
         }
 
         ObjectClassInfoBuilder objClassBuilder = new ObjectClassInfoBuilder();
@@ -355,13 +306,15 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                 reader = createReader(configuration);
                 List<String> header = readHeader(reader, linePattern, configuration);
 
-                String line = null;
-                CsvItem item = null;
-                while (( line = reader.readLine() ) != null) {
+                String line;
+                CsvItem item;
+                int lineNumber = 1;
+                while ((line = reader.readLine()) != null) {
+                    lineNumber++;
                     if (isEmptyOrComment(line)) {
                         continue;
                     }
-                    item = createCsvItem(line);
+                    item = Utils.createCsvItem(header, line, lineNumber, linePattern, configuration);
 
                     ConnectorObject object = createConnectorObject(header, item);
                     if (!handler.handle(object)) {
@@ -369,11 +322,8 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                     }
                 }
             }
-            catch (ConnectorException ex) {
-                throw ex;
-            }
             catch (Exception ex) {
-                throw new ConnectorException("Can't execute query, reason: " + ex.getMessage(), ex);
+                handleGenericException(ex, "Can't execute query");
             }
             finally {
                 lock.notify();
@@ -385,85 +335,164 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
     }
 
     /**
+     * method use when there is not old sync files - no sync token available. New sync file with token (time) is
+     * created. It means we're synchronizing from now on.
+     *
+     * @return new token value
+     */
+    private String createNewSyncFile() {
+        long timestamp = configuration.getFilePath().lastModified();
+        File syncFile = new File(configuration.getFilePath().getParentFile(),
+                configuration.getFilePath().getName() + "." + timestamp);
+        synchronized (lock) {
+            try {
+                copyAndReplace(configuration.getFilePath(), syncFile);
+            }
+            catch (Exception ex) {
+                handleGenericException(ex, "Couldn't create file copy for sync");
+            }
+            finally {
+                lock.notify();
+            }
+        }
+
+        return Long.toString(timestamp);
+    }
+
+    /**
      * {@inheritDoc}
      */
     public void sync(ObjectClass objectClass, SyncToken token, SyncResultsHandler handler, final OperationOptions options) {
         log.info("sync::begin");
         isAccount(objectClass);
         notNull(handler, "Sync results handler must not be null.");
-        if (token == null || token.getValue() == null) {
-            token = new SyncToken("-1");
+
+        long tokenLongValue = getTokenValue(token);
+        log.info("Token {0}", tokenLongValue);
+
+        if (tokenLongValue == -1) {
+            //token doesn't exist, we only create new sync file - we're synchronizing from now on
+            createNewSyncFile();
+            log.info("Token value was not defined {0}, only creating new sync file, synchronizing from now on.", token);
+            log.info("sync::end");
+            return;
         }
-        String tokenValue = getTokenValue(token);
-        long tokenLongValue = Long.parseLong(tokenValue);
 
         boolean hasFileChanged = false;
-        final DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
         if (configuration.getFilePath().lastModified() > tokenLongValue) {
             hasFileChanged = true;
             log.info("Csv file has changed on {0} which is after time {1}, based on token value {2}",
-                    df.format(new Date(configuration.getFilePath().lastModified())), df.format(new Date(tokenLongValue)), tokenLongValue);
+                    FORMAT.format(new Date(configuration.getFilePath().lastModified())),
+                    FORMAT.format(new Date(tokenLongValue)), tokenLongValue);
         }
 
-        if (hasFileChanged) {
+        if (!hasFileChanged) {
+            log.info("File has not changed after {0} (token value {1}), diff will be skipped.",
+                    FORMAT.format(new Date(tokenLongValue)), tokenLongValue);
+            log.info("sync::end");
+            return;
+        }
+
+        syncReal(tokenLongValue, handler);
+        log.info("sync::end");
+    }
+
+    private void syncReal(long tokenLongValue, SyncResultsHandler handler) {
             long timestamp = configuration.getFilePath().lastModified();
-            log.info("Next last sync token value will be {0} ({1}).", timestamp, df.format(new Date(timestamp)));
-            File syncFile = new File(configuration.getFilePath().getParentFile(), configuration.getFilePath().getName() + "." + timestamp + TMP_EXTENSION);
-            synchronized (lock) {
-                try {
-                    copyAndReplace(configuration.getFilePath(), syncFile);
-                }
-                catch (ConnectorException ex) {
-                    throw ex;
-                }
-                catch (Exception ex) {
-                    throw new ConnectorException("Could not create file copy for sync, reason: " + ex.getMessage(), ex);
-                }
-                finally {
-                    lock.notify();
-                }
-            }
-
-            File oldFile = null;
-            if (!"-1".equals(tokenValue)) {
-                oldFile = new File(configuration.getFilePath().getParent(), configuration.getFilePath().getName() + "." + tokenValue);
-            }
-            InMemoryDiff memoryDiff = new InMemoryDiff(oldFile, syncFile, linePattern, configuration);
+        log.info("Next last sync token value will be {0} ({1}).", timestamp, FORMAT.format(new Date(timestamp)));
+        File syncFile = new File(configuration.getFilePath().getParentFile(),
+                configuration.getFilePath().getName() + "." + timestamp + TMP_EXTENSION);
+        synchronized (lock) {
             try {
-                List<Change> changes = memoryDiff.diff();
-                log.info("Found {0} differences.", changes.size());
-                SyncToken newToken = new SyncToken(Long.toString(timestamp));
-                for (Change change : changes) {
-                    SyncDelta delta = createSyncDelta(change, newToken);
-                    if (!handler.handle(delta)) {
-                        break;
-                    }
-                }
-                syncFile.renameTo(new File(configuration.getFilePath().getParent(), configuration.getFilePath().getName() + "." + timestamp));
-
-                if (oldFile != null && oldFile.exists()) {
-                    oldFile.delete();
-                }
-            }
-            catch (DiffException ex) {
-                throw new ConnectorException("Could not create csv diff, reason: " + ex.getMessage(), ex);
+                copyAndReplace(configuration.getFilePath(), syncFile);
             }
             catch (Exception ex) {
-                throw new ConnectorException("Could not finish sync operation, reason: " + ex.getMessage(), ex);
+                handleGenericException(ex, "Could not create file copy for sync");
             }
             finally {
-                if (syncFile.exists()) {
-                    syncFile.delete();
+                lock.notify();
+            }
+        }
+
+        File tokenSyncFile = new File(configuration.getFilePath().getParent(), configuration.getFilePath().getName()
+                    + "." + tokenLongValue);
+        log.info("Diff actual file {0} with last file based on token {1}.", syncFile.getName(), tokenSyncFile.getName());
+        InMemoryDiff memoryDiff = new InMemoryDiff(tokenSyncFile, syncFile, linePattern, configuration);
+        try {
+            List<Change> changes = memoryDiff.diff();
+            log.info("Found {0} differences.", changes.size());
+            if (changes.size() == 0) {
+                //this was only phantom change, nothing was really changed, delete sync file (new token not necessary)
+                log.info("Deleting file {0}.", syncFile.getName());
+                syncFile.delete();
+                return;
+            }
+
+            SyncToken newToken = new SyncToken(Long.toString(timestamp));
+            for (Change change : changes) {
+                SyncDelta delta = createSyncDelta(change, newToken);
+                if (!handler.handle(delta)) {
+                    break;
                 }
             }
-        } else {
-            String date = "Unknown";
-            if (tokenLongValue != -1) {
-                date = df.format(new Date(tokenLongValue));
-            }
-            log.info("File has not changed after {0} (token value {1}), diff will be skipped.", date, tokenValue);
+
+            File newFile = new File(configuration.getFilePath().getParent(), configuration.getFilePath().getName() + "." + timestamp);
+            log.info("Renaming file {0} to {1}.", syncFile.getName(), newFile.getName());
+            syncFile.renameTo(newFile);
+
+            cleanupOldTokenFiles();
         }
-        log.info("sync::end");
+        catch (Exception ex) {
+            handleGenericException(ex, "Couldn't finish sync operation");
+        }
+    }
+
+    private void handleGenericException(Exception ex, String message) {
+        if (ex instanceof ConnectorException) {
+            throw (ConnectorException) ex;
+        }
+
+        if (ex instanceof IOException) {
+            throw new ConnectorIOException(message + ", IO exception occurred, reason: " + ex.getMessage(), ex);
+        }
+
+        throw new ConnectorException(message + ", reason: " + ex.getMessage(), ex);
+    }
+
+    private void cleanupOldTokenFiles() {
+        String[] tokenFiles = listTokenFiles();
+        Arrays.sort(tokenFiles);
+
+        int preserve = configuration.getPreserveLastTokens();
+        if (preserve <= 1) {
+            log.info("Not removing old token files. Preserve last tokens: {0}.", preserve);
+            return;
+        }
+
+        File parentFolder = configuration.getFilePath().getParentFile();
+        for (int i = 0; i + preserve < tokenFiles.length; i++) {
+            File tokenSyncFile = new File(parentFolder, tokenFiles[i]);
+            if (!tokenSyncFile.exists()) {
+                continue;
+            }
+
+            log.info("Deleting file {0}.", tokenSyncFile.getName());
+            tokenSyncFile.delete();
+        }
+    }
+
+    private String[] listTokenFiles() {
+        if (!configuration.getFilePath().exists()) {
+            throw new ConnectorIOException("Csv file '" + configuration.getFilePath() + "' not found.");
+        }
+        File parentFolder = configuration.getFilePath().getParentFile();
+        if (!parentFolder.exists() || !parentFolder.isDirectory()) {
+            throw new ConnectorIOException("Parent folder for '" + configuration.getFilePath()
+                    + "' doesn't exist, or is not a directory.");
+        }
+
+        String csvFileName = configuration.getFilePath().getName();
+        return parentFolder.list(new TokenFileNameFilter(csvFileName));
     }
 
     /**
@@ -473,39 +502,16 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
         log.info("getLatestSyncToken::begin");
         isAccount(objectClass);
 
-        if (!configuration.getFilePath().exists()) {
-            throw new ConnectorException("Csv file '" + configuration.getFilePath() + "' not found.");
-        }
-        File parentFolder = configuration.getFilePath().getParentFile();
-        if (!parentFolder.exists() || !parentFolder.isDirectory()) {
-            throw new ConnectorException("Parent folder for '" + configuration.getFilePath()
-                    + "' doesn't exist, or is not a directory.");
-        }
-
-        final String csvFileName = configuration.getFilePath().getName();
-        String[] oldCsvFiles = parentFolder.list(new FilenameFilter() {
-
-            @Override
-            public boolean accept(File parent, String fileName) {
-                File file = new File(parent, fileName);
-                if (file.isDirectory()) {
-                    return false;
-                }
-
-                if (fileName.matches(csvFileName.replaceAll("\\.", "\\\\.") + "\\.[0-9]{13}$")) {
-                    return true;
-                }
-
-                return false;
-            }
-        });
-        String token = "-1";
+        String csvFileName = configuration.getFilePath().getName();
+        String[] oldCsvFiles = listTokenFiles();
+        String token;
         if (oldCsvFiles.length != 0) {
             Arrays.sort(oldCsvFiles);
             String latestCsvFile = oldCsvFiles[oldCsvFiles.length - 1];
             token = latestCsvFile.replaceFirst(csvFileName + ".", "");
         } else {
-            log.info("Old csv files was not found, returning default token '-1'.");
+            log.info("Old csv files were not found, creating token, synchronizing from \"now\".");
+            token = createNewSyncFile();
         }
 
         log.info("getLatestSyncToken::end, returning token {0}.", token);
@@ -523,23 +529,15 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
         BufferedReader reader = null;
         synchronized (lock) {
             try {
-                log.info("Openin input stream to file {0}.", configuration.getFilePath());
+                log.info("Opening input stream to file {0}.", configuration.getFilePath());
                 reader = createReader(configuration);
 
                 List<String> headers = readHeader(reader, linePattern, configuration);
                 testHeader(headers);
             }
-//            catch (IOException ex) {
-//                log.error("Test configuration was unsuccessful, reason: {0}.", ex.getMessage());
-//                throw new ConnectorException("I/O error occured, reason: " + ex.getMessage(), ex);
-//            }
-            catch (ConnectorException ex) {
-                log.error("Connector exception occured, reason: {0}.", ex.getMessage());
-                throw ex;
-            }
             catch (Exception ex) {
                 log.error("Test configuration was unsuccessful, reason: {0}.", ex.getMessage());
-                throw new ConnectorException("Uknown error occured during test connection, " + "reason: " + ex.getMessage(), ex);
+                handleGenericException(ex, "Test configuration was unsuccessful");
             }
             finally {
                 log.info("Closing file input stream.");
@@ -625,25 +623,27 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
         try {
             if (file.exists()) {
                 if (!file.delete()) {
-                    throw new ConnectorException("Couldn't delete old tmp file '" + file.getAbsolutePath() + "'.");
+                    throw new ConnectorIOException("Couldn't delete old tmp file '" + file.getAbsolutePath() + "'.");
                 }
             }
             file.createNewFile();
         }
         catch (IOException ex) {
-            throw new ConnectorException("Couldn't create tmp file '" + file.getAbsolutePath()
+            throw new ConnectorIOException("Couldn't create tmp file '" + file.getAbsolutePath()
                     + "', reason: " + ex.getMessage(), ex);
         }
     }
 
     private CsvItem findAccount(BufferedReader reader, List<String> header, String username) throws IOException {
-        String line = null;
+        int lineNumber = 1;
+        String line;
         while (( line = reader.readLine() ) != null) {
+            lineNumber++;
             if (isEmptyOrComment(line)) {
                 continue;
             }
 
-            CsvItem item = createCsvItem(line);
+            CsvItem item = Utils.createCsvItem(header, line, lineNumber, linePattern, configuration);
 
             int fieldIndex = header.indexOf(configuration.getUniqueAttribute());
             String value = item.getAttribute(fieldIndex);
@@ -652,12 +652,6 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
             }
         }
         return null;
-    }
-
-    private CsvItem createCsvItem(String line) {
-        CsvItem item = new CsvItem(parseValues(line, linePattern, configuration));
-
-        return item;
     }
 
     private StringBuilder createRecord(List<String> header, Set<Attribute> attributes) {
@@ -671,7 +665,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
             Attribute attribute = getAttribute(name, attributes);
             if (configuration.getUniqueAttribute().equals(name)) {
                 if (attribute == null || attribute.getValue().isEmpty()) {
-                    throw new ConnectorException("Unique attribute for record is not defined.");
+                    throw new CSVSchemaException("Unique attribute for record is not defined.");
                 }
             }
             if (attribute == null) {
@@ -817,11 +811,10 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                 }
                 return new Uid(uidAttribute);
             }
-            catch (ConnectorException ex) {
-                throw ex;
-            }
             catch (Exception ex) {
-                throw new ConnectorException("Can't authenticate '" + username + "', reason: " + ex.getMessage(), ex);
+                handleGenericException(ex, "Can't authenticate '" + username + "'");
+                //it won't go here
+                return null;
             }
             finally {
                 lock.notify();
@@ -867,12 +860,8 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                             + "' and replace it by new file '" + tmpFile.getAbsolutePath() + "'.");
                 }
             }
-            catch (ConnectorException ex) {
-                throw ex;
-            }
             catch (Exception ex) {
-                throw new ConnectorException("Couldn't do " + operation + " on account '" + uid.getUidValue()
-                        + "', reason: " + ex.getMessage(), ex);
+                handleGenericException(ex, "Couldn't do " + operation + " on account '" + uid.getUidValue() + "'");
             }
             finally {
                 lock.notify();
@@ -898,16 +887,18 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
     private boolean readAndUpdateFile(BufferedReader reader, BufferedWriter writer, List<String> header,
             Operation operation, Uid uid, Set<Attribute> attributes) throws IOException {
         boolean found = false;
-        String line = null;
-        CsvItem item = null;
+        String line;
+        int lineNumber = 1;
+        CsvItem item;
         while (( line = reader.readLine() ) != null) {
+            lineNumber++;
             if (isEmptyOrComment(line)) {
                 writer.write(line);
                 writer.write('\n');
                 continue;
             }
 
-            item = createCsvItem(line);
+            item = Utils.createCsvItem(header, line, lineNumber, linePattern, configuration);
             int fieldIndex = header.indexOf(configuration.getUniqueAttribute());
             String value = item.getAttribute(fieldIndex);
             if (!StringUtil.isEmpty(value) && value.equals(uid.getUidValue())) {
@@ -1118,16 +1109,16 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
         }
     }
 
-    private String getTokenValue(SyncToken token) {
+    private long getTokenValue(SyncToken token) {
         if (token == null || token.getValue() == null) {
-            return "-1";
+            return -1;
         }
         String object = token.getValue().toString();
         if (!object.matches("[0-9]{13}")) {
-            return "-1";
+            return -1;
         }
 
-        return object;
+        return Long.parseLong(object);
     }
 
     private SyncDelta createSyncDelta(Change change, SyncToken token) {

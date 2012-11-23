@@ -27,23 +27,17 @@
  */
 package org.forgerock.openicf.csvfile;
 
+import org.forgerock.openicf.csvfile.util.TestUtils;
+import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.objects.*;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-import org.identityconnectors.framework.common.objects.Uid;
-import java.util.Map;
+import org.testng.annotations.Test;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import org.forgerock.openicf.csvfile.util.TestUtils;
-import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
-import org.identityconnectors.framework.common.objects.ObjectClass;
-import org.identityconnectors.framework.common.objects.SyncDelta;
-import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
-import org.identityconnectors.framework.common.objects.SyncDeltaType;
-import org.identityconnectors.framework.common.objects.SyncResultsHandler;
-import org.identityconnectors.framework.common.objects.SyncToken;
-import org.testng.annotations.Test;
+import java.util.Map;
 
 /**
  *
@@ -77,8 +71,8 @@ public class ComplexSyncOpTest {
     @Test(groups = "broken")
     public void syncTest() {
         final List<SyncDelta> deltas = new ArrayList<SyncDelta>();
-        SyncToken token = null;
-        for (int i = 0; i < 3; i++) {
+        SyncToken token = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
+        for (int i = 0; i < 10; i++) {
             connector.sync(ObjectClass.ACCOUNT, token, new SyncResultsHandler() {
 
                 @Override
@@ -91,12 +85,12 @@ public class ComplexSyncOpTest {
                 token = deltas.get(0).getToken();
             }
 
-            Map<String, SyncDelta> deltaMap = createSyncDeltaTestMap(token);
-            for (SyncDelta delta : deltas) {
-                SyncDelta syncDelta = deltaMap.get(delta.getUid().getUidValue());
-                deltaMap.remove(delta.getUid().getUidValue());
-//                assertEquals(syncDelta, delta);
-            }
+//            Map<String, SyncDelta> deltaMap = createSyncDeltaTestMap(token);
+//            for (SyncDelta delta : deltas) {
+//                SyncDelta syncDelta = deltaMap.get(delta.getUid().getUidValue());
+//                deltaMap.remove(delta.getUid().getUidValue());
+////                assertEquals(syncDelta, delta);
+//            }
             deltas.clear();
         }
     }

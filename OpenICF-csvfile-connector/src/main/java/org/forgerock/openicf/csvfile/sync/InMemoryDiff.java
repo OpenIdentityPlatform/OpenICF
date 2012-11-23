@@ -27,25 +27,29 @@
  */
 package org.forgerock.openicf.csvfile.sync;
 
+import org.forgerock.openicf.csvfile.CSVFileConfiguration;
+import org.forgerock.openicf.csvfile.util.CSVSchemaException;
 import org.forgerock.openicf.csvfile.util.CsvItem;
-import static org.forgerock.openicf.csvfile.util.Utils.*;
+import org.forgerock.openicf.csvfile.util.Utils;
+import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.regex.Pattern;
-import org.forgerock.openicf.csvfile.CSVFileConfiguration;
+
+import static org.forgerock.openicf.csvfile.util.Utils.*;
 
 /**
  *
  * @author Viliam Repan (lazyman)
  */
 public class InMemoryDiff {
+
+    private static final Log log = Log.getLog(InMemoryDiff.class);
 
     private CSVFileConfiguration configuration;
     private Pattern linePattern;
@@ -65,6 +69,10 @@ public class InMemoryDiff {
 
     @SuppressWarnings("unchecked")
     public List<Change> diff() throws DiffException {
+        log.info("Computing diff from old {0} ({1}) and new {2} ({3}).",
+                (oldFile != null ? oldFile.getName() : "null"), (oldFile != null ? oldFile.length() : 0),
+                newFile.getName(), newFile.length());
+
         List<Change> changes = new ArrayList<Change>();
         try {
             if (oldFile != null) {
@@ -79,21 +87,22 @@ public class InMemoryDiff {
                 List<CsvItem> newList = new ArrayList(newRecordSet.getRecords());
                 List<CsvItem> oldList = new ArrayList(oldRecordSet.getRecords());
 
-                changes.addAll(findChanges(uidIndex, newRecordSet.getHeaders(), newList, oldList));
+                log.info("Record set size, new: {0}, old: {1}", newList.size(), oldList.size());
+
+                if (oldList.isEmpty()) {
+                    createOneTypeChanges(newRecordSet, uidIndex, changes, Change.Type.CREATE);
+                } else if (newList.isEmpty()) {
+                    createOneTypeChanges(oldRecordSet, uidIndex, changes, Change.Type.DELETE);
+                } else {
+                    changes.addAll(findChanges(uidIndex, newRecordSet.getHeaders(), newList, oldList));
+                }
             } else {
                 //everything will be add
-                Set<CsvItem> items = newRecordSet.getRecords();
-                Iterator<CsvItem> iterator = items.iterator();
-                Change change = null;
-                while (iterator.hasNext()) {
-                    CsvItem item = iterator.next();
-
-                    change = new Change(item.getAttribute(uidIndex), Change.Type.CREATE,
-                            newRecordSet.getHeaders(), item.getAttributes());
-                    changes.add(change);
-                }
+                createOneTypeChanges(newRecordSet, uidIndex, changes, Change.Type.CREATE);
             }
-        } catch (DiffException ex) {
+        } catch (IOException ex) {
+            throw new ConnectorIOException(ex);
+        } catch (ConnectorException ex) {
             throw ex;
         } catch (Exception ex) {
             throw new DiffException("Can't create csv diff, reason: " + ex.getMessage(), ex);
@@ -102,9 +111,22 @@ public class InMemoryDiff {
         return changes;
     }
 
+    private void createOneTypeChanges(RecordSet recordSet, int uidIndex, List<Change> changes, Change.Type type) {
+        Set<CsvItem> items = recordSet.getRecords();
+        Iterator<CsvItem> iterator = items.iterator();
+        Change change;
+        while (iterator.hasNext()) {
+            CsvItem item = iterator.next();
+
+            change = new Change(item.getAttribute(uidIndex), type,
+                    recordSet.getHeaders(), item.getAttributes());
+            changes.add(change);
+        }
+    }
+
     private List<Change> findChanges(int uidIndex, List<String> headers, List<CsvItem> newList, List<CsvItem> oldList) {
         List<Change> changes = new ArrayList<Change>();
-        Change change = null;
+        Change change;
         int newIndex = 0, oldIndex = 0;
         String oldUid, newUid;
 
@@ -112,6 +134,11 @@ public class InMemoryDiff {
         for (; newIndex < newList.size(); newIndex++) {
             CsvItem newItem = newList.get(newIndex);
             newUid = newItem.getAttribute(uidIndex);
+
+            if (oldIndex >= oldList.size()) {
+                break;
+            }
+
             for (; oldIndex < oldList.size();) {
                 CsvItem oldItem = oldList.get(oldIndex);
                 oldUid = oldItem.getAttribute(uidIndex);
@@ -165,7 +192,7 @@ public class InMemoryDiff {
         return Arrays.equals(item1.getAttributes().toArray(), item2.getAttributes().toArray());
     }
 
-    private RecordSet createRecordSet(File file) throws IOException, DiffException {
+    private RecordSet createRecordSet(File file) throws IOException {
         RecordSet recordSet = null;
 
         BufferedReader reader = null;
@@ -174,18 +201,20 @@ public class InMemoryDiff {
             List<String> headers = readHeader(reader, linePattern, configuration);
             int index = headers.indexOf(configuration.getUniqueAttribute());
             if (index < 0 || index >= headers.size()) {
-                throw new DiffException("Header in '" + file.getAbsolutePath()
+                throw new CSVSchemaException("Header in '" + file.getAbsolutePath()
                         + "' doesn't contain unique attribute '" + configuration.getUniqueAttribute()
                         + "' as defined in configuration.");
             }
             Set<CsvItem> set = new TreeSet<CsvItem>(new CsvItemComparator(index));
-            String line = null;
+            String line;
+            int lineNumber = 1;
             while ((line = reader.readLine()) != null) {
+                lineNumber++;
                 if (isEmptyOrComment(line)) {
                     continue;
                 }
 
-                set.add(new CsvItem(parseValues(line, linePattern, configuration)));
+                set.add(Utils.createCsvItem(headers, line, lineNumber, linePattern, configuration));
             }
 
             recordSet = new RecordSet(headers, set);
@@ -198,7 +227,7 @@ public class InMemoryDiff {
         return recordSet;
     }
 
-    private void testHeaders(File newFile, File oldFile) throws IOException, DiffException {
+    private void testHeaders(File newFile, File oldFile) throws IOException, CSVSchemaException {
         List<String> newHeaders = null;
         List<String> oldHeaders = null;
 
@@ -217,7 +246,7 @@ public class InMemoryDiff {
 
         if (newHeaders == null || oldHeaders == null || !Arrays.equals(newHeaders.toArray(),
                 oldHeaders.toArray())) {
-            throw new DiffException("Headers in files '" + newFile.getPath()
+            throw new CSVSchemaException("Headers in files '" + newFile.getPath()
                     + "' and '" + oldFile.getPath() + "' doesn't match.");
         }
     }

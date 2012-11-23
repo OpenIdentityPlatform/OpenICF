@@ -37,11 +37,53 @@ import java.io.File;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import static org.testng.Assert.assertEquals;
+
 /**
  *
  * @author Viliam Repan (lazyman)
  */
 public class InMemoryDiffTest {
+
+    @Test
+    public void test1() throws Exception {
+        InMemoryDiff diff = initializeDiff(new File("./src/test/resources/diff/test1.csv"),
+                new File("./src/test/resources/diff/test1.csv.tmp"));
+        List<Change> changes = diff.diff();
+        assertEquals(changes.size(), 1);
+        assertEquals(changes.get(0).getType(), Change.Type.CREATE);
+    }
+
+    @Test
+    public void test2() throws Exception {
+        InMemoryDiff diff = initializeDiff(new File("./src/test/resources/diff/test2.csv"),
+                new File("./src/test/resources/diff/test2.csv.tmp"));
+        List<Change> changes = diff.diff();
+        assertEquals(changes.size(), 0);
+    }
+
+    @Test
+    public void test3() throws Exception {
+        InMemoryDiff diff = initializeDiff(new File("./src/test/resources/diff/test3.csv"),
+                new File("./src/test/resources/diff/test3.csv.tmp"));
+        List<Change> changes = diff.diff();
+        assertEquals(changes.size(), 1);
+        assertEquals(changes.get(0).getType(), Change.Type.CREATE);
+    }
+
+    private InMemoryDiff initializeDiff(File oldFile, File newFile) throws Exception {
+        CSVFileConfiguration config = new CSVFileConfiguration();
+        config.setEncoding("utf-8");
+        //just to make connector initialization happy
+        config.setFilePath(TestUtils.getTestFile("../../../src/test/resources/files/sync.csv"));
+        config.setUniqueAttribute("id");
+        config.setPasswordAttribute("password");
+
+        CSVFileConnector connector = new CSVFileConnector();
+        connector.init(config);
+
+        return new InMemoryDiff(oldFile, newFile, connector.getLinePattern(), config);
+    }
 
     @Test
     public void simpleTest() throws Exception {

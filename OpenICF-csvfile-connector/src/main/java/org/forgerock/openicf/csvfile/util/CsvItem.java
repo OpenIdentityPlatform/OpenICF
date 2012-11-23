@@ -51,7 +51,7 @@ public class CsvItem {
     }
 
     public String getAttribute(int index) {
-        if (index < 0 || attributes == null || attributes.size() < index) {
+        if (index < 0 || attributes == null || attributes.size() <= index) {
             return null;
         }
 
