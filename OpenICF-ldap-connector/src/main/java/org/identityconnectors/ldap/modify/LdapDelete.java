@@ -22,6 +22,8 @@
  */
 package org.identityconnectors.ldap.modify;
 
+import static org.identityconnectors.ldap.LdapUtil.escapeDNValueOfJNDIReservedChars;
+
 import java.util.List;
 import java.util.Set;
 
@@ -47,7 +49,7 @@ public class LdapDelete extends LdapModifyOperation {
     }
 
     public void execute() {
-        String entryDN = LdapSearches.getEntryDN(conn, oclass, uid);
+        String entryDN = escapeDNValueOfJNDIReservedChars(LdapSearches.getEntryDN(conn, oclass, uid));
 
         if (conn.getConfiguration().isMaintainLdapGroupMembership()) {
             List<String> ldapGroups = groupHelper.getLdapGroups(entryDN);

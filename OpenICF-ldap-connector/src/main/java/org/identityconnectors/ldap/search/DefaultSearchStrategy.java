@@ -22,6 +22,8 @@
  */
 package org.identityconnectors.ldap.search;
 
+import static org.identityconnectors.ldap.LdapUtil.escapeDNValueOfJNDIReservedChars;
+
 import java.util.Iterator;
 import java.util.List;
 
@@ -57,7 +59,7 @@ public class DefaultSearchStrategy extends LdapSearchStrategy {
 
             NamingEnumeration<SearchResult> results;
             try {
-                results = initCtx.search(baseDN, query, searchControls);
+                results = initCtx.search((escapeDNValueOfJNDIReservedChars(baseDN)), query, searchControls);
             } catch (NameNotFoundException e) {
                 if (!ignoreNonExistingBaseDNs) {
                     throw e;

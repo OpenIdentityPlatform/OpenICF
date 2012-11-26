@@ -27,6 +27,7 @@ import static org.identityconnectors.common.CollectionUtil.newSet;
 import static org.identityconnectors.common.CollectionUtil.nullAsEmpty;
 import static org.identityconnectors.ldap.LdapUtil.checkedListByFilter;
 import static org.identityconnectors.ldap.LdapUtil.quietCreateLdapName;
+import static org.identityconnectors.ldap.LdapUtil.escapeDNValueOfJNDIReservedChars;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -73,7 +74,7 @@ public class LdapUpdate extends LdapModifyOperation {
     }
 
     public Uid update(Set<Attribute> attrs) {
-        String entryDN = LdapSearches.getEntryDN(conn, oclass, uid);
+        String entryDN = escapeDNValueOfJNDIReservedChars(LdapSearches.getEntryDN(conn, oclass, uid));
         PosixGroupMember posixMember = new PosixGroupMember(entryDN);
 
         // Extract the Name attribute if any, to be used to rename the entry later.

@@ -25,6 +25,7 @@ package org.identityconnectors.ldap.modify;
 import static org.identityconnectors.common.CollectionUtil.isEmpty;
 import static org.identityconnectors.common.CollectionUtil.nullAsEmpty;
 import static org.identityconnectors.ldap.LdapUtil.checkedListByFilter;
+import static org.identityconnectors.ldap.LdapUtil.escapeDNValueOfJNDIReservedChars;
 
 import java.util.List;
 import java.util.Set;
@@ -110,6 +111,8 @@ public class LdapCreate extends LdapModifyOperation {
         } else {
             entryDN[0] = conn.getSchemaMapping().create(oclass, nameAttr, ldapAttrs);
         }
+
+	entryDN[0] = escapeDNValueOfJNDIReservedChars(entryDN[0]);
 
         if (!isEmpty(ldapGroups)) {
             groupHelper.addLdapGroupMemberships(entryDN[0], ldapGroups);

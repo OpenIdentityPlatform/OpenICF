@@ -127,6 +127,25 @@ public class LdapUtil {
     }
 
     /**
+     * Escape DN value of JNDI reserved characters
+     * forward slash (/)
+     */
+    public static String escapeDNValueOfJNDIReservedChars(String DN) {
+	StringBuilder toBuilder = new StringBuilder();
+	for (int i = 0; i < DN.length(); i++) {
+	    char ch = DN.charAt(i);
+	    switch (ch) {
+	    case '/':
+		toBuilder.append("\\2f");
+		break;
+	    default:
+		toBuilder.append(ch);
+	    }
+	}
+        return toBuilder.toString();        
+    }
+
+    /**
      * Escapes the given attribute value to the given {@code StringBuilder}.
      * Returns {@code true} iff anything was written to the builder.
      */
