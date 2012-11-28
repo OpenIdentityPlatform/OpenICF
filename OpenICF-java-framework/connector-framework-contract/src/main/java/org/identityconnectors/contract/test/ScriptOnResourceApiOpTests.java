@@ -19,6 +19,9 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2012 ForgeRock AS
+ *
  */
 package org.identityconnectors.contract.test;
 
@@ -35,10 +38,13 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.ScriptOnResourceApiOp;
+import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.ScriptContext;
+import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
+import org.testng.log4testng.Logger;
 
 
 /**
@@ -46,14 +52,16 @@ import org.testng.annotations.Test;
  * 
  * @author Zdenek Louzensky
  */
+@Guice(modules = FrameworkModule.class)
+@Test(testName =  ScriptOnResourceApiOpTests.TEST_NAME)
 public class ScriptOnResourceApiOpTests extends ContractTestBase {
 
     /**
      * Logging..
      */
-    private static final Log LOG = Log.getLog(ScriptOnResourceApiOpTests.class);
+    private static final Logger logger = Logger.getLogger(ValidateApiOpTests.class);
     
-    private static final String TEST_NAME="ScriptOnResource";
+    public static final String TEST_NAME="ScriptOnResource";
     private static final String LANGUAGE_PROP_PREFIX = "language";
     private static final String SCRIPT_PROP_PREFIX = "script";
     private static final String ARGUMENTS_PROP_PREFIX = "arguments";
@@ -94,20 +102,20 @@ public class ScriptOnResourceApiOpTests extends ContractTestBase {
                 // run the script
                 Object result = getConnectorFacade().runScriptOnResource(
                         new ScriptContext(language, script, arguments),
-                        getOperationOptionsByOp(ScriptOnResourceApiOp.class));
+                        getOperationOptionsByOp(null, ScriptOnResourceApiOp.class));
 
                 // check that returned result was expected
                 final String MSG = "Script result was unexpected, expected: '%s', returned: '%s'.";
                 assertEquals(expResult, result,String.format(MSG, expResult, result));
             } catch (ObjectNotFoundException ex) {
                 // ok - properties were not provided - test is skipped
-                LOG.info("Test properties not set, skipping the test " + TEST_NAME);
+                logger.info("Test properties not set, skipping the test " + TEST_NAME);
             }
         }
         else {
-            LOG.info("---------------------------------");
-            LOG.info("Skipping test ''testRunScript''.");
-            LOG.info("---------------------------------");
+            logger.info("---------------------------------");
+            logger.info("Skipping test ''testRunScript''.");
+            logger.info("---------------------------------");
         }
     }
     
@@ -128,9 +136,9 @@ public class ScriptOnResourceApiOpTests extends ContractTestBase {
             }
         }
         else {
-            LOG.info("----------------------------------------------------");
-            LOG.info("Skipping test ''testRunScriptFailUnknownLanguage''.");
-            LOG.info("----------------------------------------------------");
+            logger.info("----------------------------------------------------");
+            logger.info("Skipping test ''testRunScriptFailUnknownLanguage''.");
+            logger.info("----------------------------------------------------");
         }
     }
 
@@ -150,9 +158,9 @@ public class ScriptOnResourceApiOpTests extends ContractTestBase {
             }
         }
         else {
-            LOG.info("----------------------------------------------------");
-            LOG.info("Skipping test ''testRunScriptFailEmptyScriptText''.");
-            LOG.info("----------------------------------------------------");
+            logger.info("----------------------------------------------------");
+            logger.info("Skipping test ''testRunScriptFailEmptyScriptText''.");
+            logger.info("----------------------------------------------------");
         }
     }
 
@@ -160,28 +168,28 @@ public class ScriptOnResourceApiOpTests extends ContractTestBase {
      * {@inheritDoc}
      */
     @Override
-    public OperationOptions getOperationOptionsByOp(Class<? extends APIOperation> clazz) {
+    public OperationOptions getOperationOptionsByOp(ObjectClass objectClass, Class<? extends APIOperation> clazz) {
         if (clazz.equals(ScriptOnResourceApiOp.class)) {
             OperationOptionsBuilder builder = new OperationOptionsBuilder();
             
             // OperationOptions RUN_AS_USER
             final String user = (String) getProperty(OperationOptions.OP_RUN_AS_USER);
             if (user != null) {
-                LOG.info("Using OperationOptions: ''{0}'' value: ''{1}''.", OperationOptions.OP_RUN_AS_USER, user);
+                logger.info("Using OperationOptions: ''"+OperationOptions.OP_RUN_AS_USER+"'' value: ''"+user+"''.");
                 builder.setRunAsUser(user);
             }
 
             // OperationOptions RUN_WITH_PASSWORD
             final GuardedString password = (GuardedString) getProperty(OperationOptions.OP_RUN_WITH_PASSWORD);
             if (password != null) {
-                LOG.info("Using OperationOptions: ''{0}'' value: ''{1}''.", OperationOptions.OP_RUN_WITH_PASSWORD, password);
+                logger.info("Using OperationOptions: ''"+OperationOptions.OP_RUN_WITH_PASSWORD+"'' value: ''"+password+"''.");
                 builder.setRunWithPassword(password);
             }
 
             return builder.build();
         }
-
-        return super.getOperationOptionsByOp(clazz);
+        fail("ScriptOnResourceApiOp test failed");
+        return null;
     }
 
     /**
@@ -193,7 +201,7 @@ public class ScriptOnResourceApiOpTests extends ContractTestBase {
         Object value = null;
         try {
             value = getDataProvider().getTestSuiteAttribute(name, TEST_NAME);
-            LOG.info("Property ''{0}'' value ''{1}''.", name, value);
+            logger.info("Property ''"+name+"'' value ''"+value+"''.");
         } catch (ObjectNotFoundException ex) {
             // ok
         }

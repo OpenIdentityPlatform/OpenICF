@@ -19,6 +19,9 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2012 ForgeRock AS
+ *
  */
 package org.identityconnectors.contract.test;
 
@@ -35,6 +38,7 @@ import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.testng.Assert;
+import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 /**
@@ -42,15 +46,12 @@ import org.testng.annotations.Test;
  * 
  * @author David Adam
  */
-//@RunWith(Parameterized.class)
+@Guice(modules = FrameworkModule.class)
+@Test(testName =  ResolveUsernameApiOpTests.TEST_NAME)
 public class ResolveUsernameApiOpTests extends ObjectClassRunner {
 
-    private static final String TEST_NAME = "ResolveUsername";
+    public static final String TEST_NAME = "ResolveUsername";
     private static final String WRONG_USERNAME = "wrong.username";
-
-    public ResolveUsernameApiOpTests(ObjectClass oclass) {
-        super(oclass);
-    }
 
     @Override
     public String getTestName() {
@@ -58,13 +59,13 @@ public class ResolveUsernameApiOpTests extends ObjectClassRunner {
     }
 
     @Override
-    public void testRun() {
+    public void testRun(ObjectClass objectClass) {
         // empty on purpose.
     }
 
-    @Test
-    public void testPositive() {
-        if (!ConnectorHelper.operationsSupported(getConnectorFacade(), getObjectClass(), getAPIOperations())) {
+    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    public void testPositive(ObjectClass objectClass) {
+        if (!ConnectorHelper.operationsSupported(getConnectorFacade(), objectClass, getAPIOperations())) {
             return;
         }
 
@@ -74,37 +75,37 @@ public class ResolveUsernameApiOpTests extends ObjectClassRunner {
              * create a new user
              */
             Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
-                    getObjectClassInfo(), AuthenticationApiOpTests.TEST_NAME, 0, true, false);
-            uid = getConnectorFacade().create(getObjectClass(), attrs,
-                    getOperationOptionsByOp(CreateApiOp.class));
+                    getObjectClassInfo(objectClass), AuthenticationApiOpTests.TEST_NAME, 0, true, false);
+            uid = getConnectorFacade().create(objectClass, attrs,
+                    getOperationOptionsByOp(objectClass, CreateApiOp.class));
 
             // get the user to make sure it exists now
-            ConnectorObject obj = getConnectorFacade().getObject(getObjectClass(), uid,
-                    getOperationOptionsByOp(GetApiOp.class));
+            ConnectorObject obj = getConnectorFacade().getObject(objectClass, uid,
+                    getOperationOptionsByOp(objectClass, GetApiOp.class));
             Assert.assertNotNull(obj,"Unable to retrieve newly created object");
         
             // compare requested attributes to retrieved attributes
-            ConnectorHelper.checkObject(getObjectClassInfo(), obj, attrs);
+            ConnectorHelper.checkObject(getObjectClassInfo(objectClass), obj, attrs);
         
             /*
              * try resolving the new user
              */
             // get username
-            String username = (String) getDataProvider().getTestSuiteAttribute(getObjectClass().getObjectClassValue() + "." + AuthenticationApiOpTests.USERNAME_PROP, AuthenticationApiOpTests.TEST_NAME);
-            Uid result = getConnectorFacade().resolveUsername(getObjectClass(), username, null);
+            String username = (String) getDataProvider().getTestSuiteAttribute(objectClass.getObjectClassValue() + "." + AuthenticationApiOpTests.USERNAME_PROP, AuthenticationApiOpTests.TEST_NAME);
+            Uid result = getConnectorFacade().resolveUsername(objectClass, username, null);
             Assert.assertEquals(uid, result);
         } finally {
             if (uid != null) {
                 // delete the object
-                getConnectorFacade().delete(getSupportedObjectClass(), uid,
-                        getOperationOptionsByOp(DeleteApiOp.class));
+                getConnectorFacade().delete(objectClass, uid,
+                        getOperationOptionsByOp(objectClass, DeleteApiOp.class));
             }
         }
     }
 
-    @Test
-    public void testNegative() {
-        if (!ConnectorHelper.operationsSupported(getConnectorFacade(), getObjectClass(), getAPIOperations())) {
+    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    public void testNegative(ObjectClass objectClass) {
+        if (!ConnectorHelper.operationsSupported(getConnectorFacade(), objectClass, getAPIOperations())) {
             return;
         }
 
@@ -117,7 +118,7 @@ public class ResolveUsernameApiOpTests extends ObjectClassRunner {
         }
         
         try {
-            getConnectorFacade().resolveUsername(getObjectClass(), wrongUsername, null);
+            getConnectorFacade().resolveUsername(objectClass, wrongUsername, null);
             Assert.fail("Runtime exception should be thrown when attempt to resolve non-existing user: '" + wrongUsername + "'");
         } catch (RuntimeException ex) {
             // OK

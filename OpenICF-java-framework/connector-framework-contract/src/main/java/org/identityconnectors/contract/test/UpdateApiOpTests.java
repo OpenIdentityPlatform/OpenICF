@@ -19,6 +19,9 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2012 ForgeRock AS
+ *
  */
 package org.identityconnectors.contract.test;
 
@@ -34,7 +37,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
@@ -49,28 +51,27 @@ import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.testng.Assert;
+import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
+import org.testng.log4testng.Logger;
 
 
 /**
  * Contract test of {@link UpdateApiOp} 
  */
-//@RunWith(Parameterized.class)
+@Guice(modules = FrameworkModule.class)
+@Test(testName =  UpdateApiOpTests.TEST_NAME)
 public class UpdateApiOpTests extends ObjectClassRunner {
     /**
      * Logging..
      */
-    private static final Log LOG = Log.getLog(UpdateApiOpTests.class);
+    private static final Logger logger = Logger.getLogger(ValidateApiOpTests.class);
     
     protected static final String MODIFIED = "modified";
     private static final String ADDED = "added";
-    private static final String TEST_NAME = "Update";
+    public static final String TEST_NAME = "Update";
 
     private static final String NON_EXISTING_PROP_NAME = "unsupportedAttributeName";
-
-    public UpdateApiOpTests(ObjectClass objectClass) {
-        super(objectClass);
-    }
     
     /**
      * {@inheritDoc}     
@@ -89,7 +90,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
      * {@inheritDoc}      
      */
     @Override
-    public void testRun() {
+    public void testRun(ObjectClass objectClass) {
         ConnectorObject obj = null;
         Uid uid = null;
 
@@ -97,24 +98,24 @@ public class UpdateApiOpTests extends ObjectClassRunner {
         try {
             // create an object to update
             uid = ConnectorHelper.createObject(getConnectorFacade(), getDataProvider(),
-                    getObjectClassInfo(), getTestName(), 0, getOperationOptionsByOp(CreateApiOp.class));
+                    getObjectClassInfo(objectClass), getTestName(), 0, getOperationOptionsByOp(objectClass, CreateApiOp.class));
             assertNotNull(uid,"Create returned null Uid.");
 
             // get by uid
-            obj = getConnectorFacade().getObject(getSupportedObjectClass(), uid, getOperationOptionsByOp(GetApiOp.class));
+            obj = getConnectorFacade().getObject(objectClass, uid, getOperationOptionsByOp(objectClass, GetApiOp.class));
             assertNotNull(obj,"Cannot retrieve created object.");
 
             Set<Attribute> replaceAttributes = ConnectorHelper.getUpdateableAttributes(
-                    getDataProvider(), getObjectClassInfo(), getTestName(), MODIFIED, 0, false,
+                    getDataProvider(), getObjectClassInfo(objectClass), getTestName(), MODIFIED, 0, false,
                     false);
 
-            if (replaceAttributes.size() > 0 || !isObjectClassSupported()) {
+            if (replaceAttributes.size() > 0 || !isObjectClassSupported(objectClass)) {
                 // update only in case there is something to update or when object class is not supported
                 replaceAttributes.add(uid);
 
                 assertTrue((replaceAttributes.size() > 0),"no update attributes were found");
                 Uid newUid = getConnectorFacade().update(
-                        getObjectClass(), uid, AttributeUtil.filterUid(replaceAttributes), getOperationOptionsByOp(UpdateApiOp.class));
+                        objectClass, uid, AttributeUtil.filterUid(replaceAttributes), getOperationOptionsByOp(objectClass, UpdateApiOp.class));
 
                 // Update change of Uid must be propagated to replaceAttributes
                 // set
@@ -126,21 +127,21 @@ public class UpdateApiOpTests extends ObjectClassRunner {
             }
 
             // verify the change
-            obj = getConnectorFacade().getObject(getSupportedObjectClass(), uid,
-                    getOperationOptionsByOp(GetApiOp.class));
+            obj = getConnectorFacade().getObject(objectClass, uid,
+                    getOperationOptionsByOp(objectClass, GetApiOp.class));
             assertNotNull(obj,"Cannot retrieve updated object.");
-            ConnectorHelper.checkObject(getObjectClassInfo(), obj, replaceAttributes);
+            ConnectorHelper.checkObject(getObjectClassInfo(objectClass), obj, replaceAttributes);
 
             // ADD and DELETE update test:
             // set of *multivalue* attributes with generated values
             Set<Attribute> addDelAttrs = ConnectorHelper.getUpdateableAttributes(getDataProvider(),
-                    getObjectClassInfo(), getTestName(), ADDED, 0, false, true);
+                    getObjectClassInfo(objectClass), getTestName(), ADDED, 0, false, true);
             if (addDelAttrs.size() > 0) {
                 // uid must be present for update
                 addDelAttrs.add(uid);
-                Uid newUid = getConnectorFacade().addAttributeValues(getObjectClass(),
+                Uid newUid = getConnectorFacade().addAttributeValues(objectClass,
                         uid,
-                        AttributeUtil.filterUid(addDelAttrs), getOperationOptionsByOp(UpdateApiOp.class));
+                        AttributeUtil.filterUid(addDelAttrs), getOperationOptionsByOp(objectClass, UpdateApiOp.class));
 
                 // Update change of Uid
                 if (!newUid.equals(uid)) {
@@ -152,19 +153,19 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                 }
 
                 // verify the change after ADD
-                obj = getConnectorFacade().getObject(getSupportedObjectClass(), uid,
-                        getOperationOptionsByOp(GetApiOp.class));
+                obj = getConnectorFacade().getObject(objectClass, uid,
+                        getOperationOptionsByOp(objectClass, GetApiOp.class));
                 assertNotNull(obj,"Cannot retrieve updated object.");
                 // don't want to have two same values for UID attribute
                 addDelAttrs.remove(uid);
-                ConnectorHelper.checkObject(getObjectClassInfo(), obj,
+                ConnectorHelper.checkObject(getObjectClassInfo(objectClass), obj,
                         mergeAttributeSets(addDelAttrs, replaceAttributes));
                 addDelAttrs.add(uid);
 
                 // delete added attribute values
-                newUid = getConnectorFacade().removeAttributeValues(getObjectClass(),
+                newUid = getConnectorFacade().removeAttributeValues(objectClass,
                         uid,
-                        AttributeUtil.filterUid(addDelAttrs), getOperationOptionsByOp(UpdateApiOp.class));
+                        AttributeUtil.filterUid(addDelAttrs), getOperationOptionsByOp(objectClass, UpdateApiOp.class));
 
                 // Update change of Uid must be propagated to replaceAttributes
                 if (!newUid.equals(uid)) {
@@ -176,16 +177,16 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                 }
 
                 // verify the change after DELETE
-                obj = getConnectorFacade().getObject(getSupportedObjectClass(), uid,
-                        getOperationOptionsByOp(GetApiOp.class));
+                obj = getConnectorFacade().getObject(objectClass, uid,
+                        getOperationOptionsByOp(objectClass, GetApiOp.class));
                 assertNotNull(obj,"Cannot retrieve updated object.");
-                ConnectorHelper.checkObject(getObjectClassInfo(), obj, replaceAttributes);
+                ConnectorHelper.checkObject(getObjectClassInfo(objectClass), obj, replaceAttributes);
             }                        
         } finally {
             if (uid != null) {
                 // finally ... get rid of the object
-                ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid,
-                        false, getOperationOptionsByOp(DeleteApiOp.class));
+                ConnectorHelper.deleteObject(getConnectorFacade(), objectClass, uid,
+                        false, getOperationOptionsByOp(objectClass, DeleteApiOp.class));
             }
         }
     }   
@@ -194,9 +195,9 @@ public class UpdateApiOpTests extends ObjectClassRunner {
      * The test verifies that connector doesn't throw NullPointerException or some other unexpected behavior when passed null as 
      * attribute value. Test passes null values only for non-required non-special updateable attributes.
      */
-    @Test
-    public void testUpdateToNull() {
-        if (ConnectorHelper.operationsSupported(getConnectorFacade(), getObjectClass(),
+    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    public void testUpdateToNull(ObjectClass objectClass) {
+        if (ConnectorHelper.operationsSupported(getConnectorFacade(), objectClass,
                 getAPIOperations()) ) {
             ConnectorObject obj = null;
             Uid uid = null;
@@ -204,14 +205,14 @@ public class UpdateApiOpTests extends ObjectClassRunner {
             try {
                 // create an object to update
                 uid = ConnectorHelper.createObject(getConnectorFacade(), getDataProvider(),
-                        getObjectClassInfo(), getTestName(), 2, getOperationOptionsByOp(CreateApiOp.class));
+                        getObjectClassInfo(objectClass), getTestName(), 2, getOperationOptionsByOp(objectClass, CreateApiOp.class));
                 assertNotNull(uid,"Create returned null Uid.");
                 
                 Collection<String> skippedAttributesForUpdateToNullValue = getSkippedAttributesForUpdateToNullValue();
-                for (AttributeInfo attInfo : getObjectClassInfo().getAttributeInfo()) {
+                for (AttributeInfo attInfo : getObjectClassInfo(objectClass).getAttributeInfo()) {
                     if (attInfo.isUpdateable() && !attInfo.isRequired() && !AttributeUtil.isSpecial(attInfo) && !attInfo.getType().isPrimitive()) {
                         if(skippedAttributesForUpdateToNullValue.contains(attInfo.getName())){
-                            LOG.info("Attribute '{0}' was skipped in testUpdateToNull", attInfo.getName());
+                            logger.info("Attribute '"+attInfo.getName()+"' was skipped in testUpdateToNull");
                             continue;
                         }
                         Set<Attribute> nullAttributes = new HashSet<Attribute>();
@@ -220,10 +221,11 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                         
                         try {
                             Uid newUid = getConnectorFacade().update(
-                                getObjectClass(), uid, nullAttributes,
-                                getOperationOptionsByOp(UpdateApiOp.class));
+                                objectClass, uid, nullAttributes,
+                                getOperationOptionsByOp(objectClass, UpdateApiOp.class));
                             
-                            LOG.info("No exception was thrown, attributes should be either removed or their values set to null.");
+                            logger.info(
+                                    "No exception was thrown, attributes should be either removed or their values set to null.");
                             
                             // update uid
                             if (!uid.equals(newUid)) {
@@ -231,12 +233,12 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                             }
                             
                             // verify the change
-                            obj = getConnectorFacade().getObject(getObjectClass(), uid,
-                                    getOperationOptionsByOp(GetApiOp.class));
+                            obj = getConnectorFacade().getObject(objectClass, uid,
+                                    getOperationOptionsByOp(objectClass, GetApiOp.class));
                             assertNotNull(obj,"Cannot retrieve updated object.");
                             
                             // check that nulled attributes were removed or set to null             
-                            if (ConnectorHelper.isReadable(getObjectClassInfo(), attr)) {
+                            if (ConnectorHelper.isReadable(getObjectClassInfo(objectClass), attr)) {
                                 // null in case attribute is not present
                                 Attribute checkedAttribute = obj.getAttributeByName(attInfo.getName());
                                 final String MSG = "Attribute '%s' was neither removed nor its value set to null or empty list. Updated value is : '%s'";
@@ -250,23 +252,22 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                             // every RuntimeException except for NPE is possible
                             assertFalse(ex instanceof NullPointerException,String.format("Update of attribute '%s' to null thrown NullPointerException.",
                                     attInfo.getName()));
-                            LOG.info(String.format("RuntimeException was thrown when trying to update '%s' to null.",
-                                                    attInfo.getName()));
+                            logger.info(String.format("RuntimeException was thrown when trying to update '%s' to null.",
+                                    attInfo.getName()));
                         }  
                     }
                 }               
             } finally {
                 if (uid != null) {
                     // finally ... get rid of the object
-                    ConnectorHelper.deleteObject(getConnectorFacade(), getObjectClass(), uid,
-                            false, getOperationOptionsByOp(DeleteApiOp.class));
+                    ConnectorHelper.deleteObject(getConnectorFacade(), objectClass, uid,
+                            false, getOperationOptionsByOp(objectClass, DeleteApiOp.class));
                 }
             }
         } else {
-            LOG.info("----------------------------------------------------------------------------------------");
-            LOG.info("Skipping test ''testUpdateToNull'' for object class ''{0}''.",
-                    getObjectClass());
-            LOG.info("----------------------------------------------------------------------------------------");
+            logger.info("----------------------------------------------------------------------------------------");
+            logger.info("Skipping test ''testUpdateToNull'' for object class ''"+objectClass+"''.");
+            logger.info("----------------------------------------------------------------------------------------");
         }
     }
     
@@ -274,42 +275,42 @@ public class UpdateApiOpTests extends ObjectClassRunner {
      * Tests create of two different objects and then update one to the same
      * attributes as the second. Test that updated object did not update uid to the same value as the first object. 
      */
-    @Test
-    public void testUpdateToSameAttributes() {
-        if (ConnectorHelper.operationsSupported(getConnectorFacade(), getObjectClass(), getAPIOperations())) {
+    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    public void testUpdateToSameAttributes(ObjectClass objectClass) {
+        if (ConnectorHelper.operationsSupported(getConnectorFacade(), objectClass, getAPIOperations())) {
             Uid uid1 = null;
             Uid uid2 = null;
             
             try {
                 // create two new objects
                 Set<Attribute> attrs1 = ConnectorHelper.getCreateableAttributes(getDataProvider(),
-                        getObjectClassInfo(), getTestName(), 1, true, false);
-                uid1 = getConnectorFacade().create(getSupportedObjectClass(), attrs1, null);
+                        getObjectClassInfo(objectClass), getTestName(), 1, true, false);
+                uid1 = getConnectorFacade().create(objectClass, attrs1, null);
                 assertNotNull(uid1,"Create returned null uid.");
                 
                 // get the object to make sure it exist now
-                ConnectorObject obj1 = getConnectorFacade().getObject(getSupportedObjectClass(),
-                        uid1, getOperationOptionsByOp(GetApiOp.class));
+                ConnectorObject obj1 = getConnectorFacade().getObject(objectClass,
+                        uid1, getOperationOptionsByOp(objectClass, GetApiOp.class));
                 
                 // compare requested attributes to retrieved attributes
-                ConnectorHelper.checkObject(getObjectClassInfo(), obj1, attrs1);
+                ConnectorHelper.checkObject(getObjectClassInfo(objectClass), obj1, attrs1);
                 
                 Set<Attribute> attrs2 = ConnectorHelper.getCreateableAttributes(getDataProvider(),
-                        getObjectClassInfo(), getTestName(), 2, true, false);
-                uid2 = getConnectorFacade().create(getSupportedObjectClass(), attrs2, null);
+                        getObjectClassInfo(objectClass), getTestName(), 2, true, false);
+                uid2 = getConnectorFacade().create(objectClass, attrs2, null);
                 assertNotNull(uid2,"Create returned null uid.");
                 
                 // get the object to make sure it exist now
-                ConnectorObject obj2 = getConnectorFacade().getObject(getSupportedObjectClass(),
-                        uid2, getOperationOptionsByOp(GetApiOp.class));
+                ConnectorObject obj2 = getConnectorFacade().getObject(objectClass,
+                        uid2, getOperationOptionsByOp(objectClass, GetApiOp.class));
                 
                 // compare requested attributes to retrieved attributes
-                ConnectorHelper.checkObject(getObjectClassInfo(), obj2, attrs2);
+                ConnectorHelper.checkObject(getObjectClassInfo(objectClass), obj2, attrs2);
                                 
                 // update second object with updateable attributes of first object
                 Set<Attribute> replaceAttributes = new HashSet<Attribute>();
                 for (Attribute attr : attrs1) {
-                    if (ConnectorHelper.isUpdateable(getObjectClassInfo(), attr)) {
+                    if (ConnectorHelper.isUpdateable(getObjectClassInfo(objectClass), attr)) {
                         replaceAttributes.add(attr);
                     }
                 }
@@ -317,7 +318,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                 
                 try {
                     Uid newUid = getConnectorFacade().update(
-                        getSupportedObjectClass(), uid2, AttributeUtil.filterUid(replaceAttributes), getOperationOptionsByOp(UpdateApiOp.class));
+                        objectClass, uid2, AttributeUtil.filterUid(replaceAttributes), getOperationOptionsByOp(objectClass, UpdateApiOp.class));
                 
                     if (!uid2.equals(newUid)) {
                         uid2 = newUid;
@@ -333,20 +334,20 @@ public class UpdateApiOpTests extends ObjectClassRunner {
             } finally {
                 if (uid1 != null) {
                     // delete the object
-                    ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid1,
-                            false, getOperationOptionsByOp(DeleteApiOp.class));
+                    ConnectorHelper.deleteObject(getConnectorFacade(), objectClass, uid1,
+                            false, getOperationOptionsByOp(objectClass, DeleteApiOp.class));
                 }
                 if (uid2 != null) {
                     // delete the object
-                    ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid2,
-                            false, getOperationOptionsByOp(DeleteApiOp.class));
+                    ConnectorHelper.deleteObject(getConnectorFacade(), objectClass, uid2,
+                            false, getOperationOptionsByOp(objectClass, DeleteApiOp.class));
                 }
             }
         }
         else {
-            LOG.info("----------------------------------------------------------------------------------------");
-            LOG.info("Skipping test ''testUpdateToSameAttributes'' for object class ''{0}''.", getObjectClass());
-            LOG.info("----------------------------------------------------------------------------------------");
+            logger.info("----------------------------------------------------------------------------------------");
+            logger.info("Skipping test ''testUpdateToSameAttributes'' for object class ''"+objectClass+"''.");
+            logger.info("----------------------------------------------------------------------------------------");
         }
     }
 
@@ -361,32 +362,32 @@ public class UpdateApiOpTests extends ObjectClassRunner {
      * connector developers can set the value of unsupported attribute
      * using test property: <code>testsuite.Create.unsupportedAttributeName</code>
      */
-    @Test
-    public void testUpdateFailUnsupportedAttribute() {
+    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    public void testUpdateFailUnsupportedAttribute(ObjectClass objectClass) {
         // run the contract test only if update is supported by tested object class
         if (ConnectorHelper.operationsSupported(getConnectorFacade(),
-                getObjectClass(), getAPIOperations())) {
+                objectClass, getAPIOperations())) {
 
             Uid uid = null;
             try {
                 // create an object to update
                 uid = ConnectorHelper.createObject(getConnectorFacade(),
-                        getDataProvider(), getObjectClassInfo(), getTestName(),
-                        0, getOperationOptionsByOp(CreateApiOp.class));
+                        getDataProvider(), getObjectClassInfo(objectClass), getTestName(),
+                        0, getOperationOptionsByOp(objectClass, CreateApiOp.class));
                 assertNotNull(uid,"Create returned null Uid.");
 
                 // get by uid
                 ConnectorObject obj = getConnectorFacade().getObject(
-                        getSupportedObjectClass(), uid,
-                        getOperationOptionsByOp(GetApiOp.class));
+                        objectClass, uid,
+                        getOperationOptionsByOp(objectClass, GetApiOp.class));
                 assertNotNull(obj,"Cannot retrieve created object.");
 
                 Set<Attribute> replaceAttributes = ConnectorHelper
                         .getUpdateableAttributes(getDataProvider(),
-                                getObjectClassInfo(), getTestName(), MODIFIED,
+                                getObjectClassInfo(objectClass), getTestName(), MODIFIED,
                                 0, false, false);
 
-                if (replaceAttributes.size() > 0 || !isObjectClassSupported()) {
+                if (replaceAttributes.size() > 0 || !isObjectClassSupported(objectClass)) {
                     // update only in case there is something to update or when
                     // object class is not supported
                     replaceAttributes.add(uid);
@@ -407,7 +408,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
 
                     Uid uidNew = null;
                     try {
-                        uidNew = getConnectorFacade().update(getObjectClass(),
+                        uidNew = getConnectorFacade().update(objectClass,
                                 uid,
                                 AttributeUtil.filterUid(replaceAttributes),
                                 null);
@@ -419,8 +420,8 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                         if (uidNew != null) {
                             // delete the created the object
                             ConnectorHelper.deleteObject(getConnectorFacade(),
-                                    getSupportedObjectClass(), uidNew, false,
-                                    getOperationOptionsByOp(DeleteApiOp.class));
+                                    objectClass, uidNew, false,
+                                    getOperationOptionsByOp(objectClass, DeleteApiOp.class));
                         }
                     }
                 }
@@ -428,18 +429,17 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                 if (uid != null) {
                     // delete the created the object
                     ConnectorHelper.deleteObject(getConnectorFacade(),
-                            getSupportedObjectClass(), uid, false,
-                            getOperationOptionsByOp(DeleteApiOp.class));
+                            objectClass, uid, false,
+                            getOperationOptionsByOp(objectClass, DeleteApiOp.class));
                 }
             }
         } else {
-            LOG
+            logger
                     .info("----------------------------------------------------------------------------------------");
-            LOG
+            logger
                     .info(
-                            "Skipping test ''testCreateFailUnsupportedAttribute'' for object class ''{0}''.",
-                            getObjectClass());
-            LOG
+                            "Skipping test ''testCreateFailUnsupportedAttribute'' for object class ''"+objectClass+"''.");
+            logger
                     .info("----------------------------------------------------------------------------------------");
         }
     }

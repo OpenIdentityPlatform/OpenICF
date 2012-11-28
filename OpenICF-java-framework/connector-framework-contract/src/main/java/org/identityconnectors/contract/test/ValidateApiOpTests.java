@@ -19,84 +19,103 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2012 ForgeRock AS
+ *
  */
 package org.identityconnectors.contract.test;
 
 
 import static org.testng.Assert.fail;
 
+import java.lang.reflect.Method;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.ValidateApiOp;
+import org.testng.ITestContext;
+import org.testng.SkipException;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
+import org.testng.log4testng.Logger;
 
 /**
  * Contract test of {@link ValidateApiOp} operation.
  * Positive test for validate() is performed every time connector facade is created.
  */
+@Guice(modules = FrameworkModule.class)
+@Test(testName = ValidateApiOpTests.TEST_NAME)
 public class ValidateApiOpTests extends ContractTestBase {
     
     private static final String PROPERTY_NAME_INVALID_CONFIG = "invalidConfig";
     /**
      * Logging..
      */
-    private static final Log LOG = Log.getLog(TestApiOpTests.class);
-    private static final String TEST_NAME = "Validate";
-    
+    private static final Logger logger = Logger.getLogger(ValidateApiOpTests.class);
+    public static final String TEST_NAME = "Validate";
+
     /**
      * Tests validate() with configuration that should NOT be correct.
      */
-    @Test
-    public void testValidateFail() {
-        final String testPropertyName = "testsuite." + TEST_NAME + "."
-                + PROPERTY_NAME_INVALID_CONFIG;
-       
-        // run test only in case operation is supported
-        if (ConnectorHelper.operationsSupported(getConnectorFacade(), getAPIOperations())) {
-            // READ THE TEST PROPERTY WITH WRONG CONFIGURATIONS THAT OVERRIDE THE DEFAULT CONFIGURATION
-            Object o = null;
-            try {
-                 o = getDataProvider().getTestSuiteAttribute(PROPERTY_NAME_INVALID_CONFIG, TEST_NAME);
-            } catch (ObjectNotFoundException ex) {
-                fail(String.format("Missing test property: '%s'", testPropertyName));
-            }
-            
-            if (!(o instanceof List<?>)) {
-                fail(String.format("Test property '%s' should be of type List", testPropertyName));
-            }
-            
-            final List<?> wrongConfigList = (List<?>) o;
-            
-            for (Object currentWrongConfigMap : wrongConfigList) {
-                if (!(currentWrongConfigMap instanceof Map<?,?>)) {
-                    fail(String.format("Test property '%s' contains other than Map properties.", testPropertyName));
-                }
-                Map<?,?> currentWrongMapConfig = (Map<?,?>) currentWrongConfigMap;
-                
-                _connFacade = ConnectorHelper
-                        .createConnectorFacadeWithWrongConfiguration(
-                                getDataProvider(), currentWrongMapConfig);
-                try {
-                    // should throw RuntimeException
-                    getConnectorFacade().validate();
-                    String msg = String.format("Validate should throw RuntimeException because configuration should be invalid. Wrong properties used: \n%s", currentWrongMapConfig.toString());
-                    fail(msg);
-                } catch (RuntimeException ex) {
-                    // expected
-                }
-            }
+    @Test(dataProvider = "invalidConfig")
+    public void testValidateFail(Object currentWrongConfigMap) {
+        if (!(currentWrongConfigMap instanceof Map<?, ?>)) {
+            fail(String.format("Test property '%s.%s.%s' contains other than Map properties.", TESTSUITE, TEST_NAME,
+                    PROPERTY_NAME_INVALID_CONFIG));
         }
-        else {
-            LOG.info("--------------------------------");
-            LOG.info("Skipping test ''testValidateFail''.");
-            LOG.info("--------------------------------");
+        Map<?, ?> currentWrongMapConfig = (Map<?, ?>) currentWrongConfigMap;
+
+        _connFacade = ConnectorHelper
+                .createConnectorFacadeWithWrongConfiguration(
+                        getDataProvider(), currentWrongMapConfig);
+        try {
+            // should throw RuntimeException
+            getConnectorFacade().validate();
+            String msg = String
+                    .format("Validate should throw RuntimeException because configuration should be invalid. Wrong properties used: \n%s",
+                            currentWrongMapConfig.toString());
+            fail(msg);
+        } catch (RuntimeException ex) {
+            // expected
         }
+    }
+
+    @DataProvider(name = "invalidConfig")
+    public Iterator<Object[]> createData(final ITestContext context, Method method) {
+        // READ THE TEST PROPERTY WITH WRONG CONFIGURATIONS THAT OVERRIDE THE DEFAULT CONFIGURATION
+        Object o = null;
+        try {
+            o = getDataProvider().getTestSuiteAttribute(PROPERTY_NAME_INVALID_CONFIG, TEST_NAME);
+        } catch (ObjectNotFoundException ex) {
+            fail(String.format("Missing test property: '%s.%s.%s'", TESTSUITE,TEST_NAME,PROPERTY_NAME_INVALID_CONFIG));
+        }
+
+        if (!(o instanceof List<?>)) {
+            fail(String.format("Test property '%s.%s.%s' should be of type List", TESTSUITE,TEST_NAME,PROPERTY_NAME_INVALID_CONFIG));
+        }
+
+        final Iterator<?> wrongConfigList = ((List<?>) o).iterator();
+
+        return new Iterator<Object[]>() {
+            public boolean hasNext() {
+                return wrongConfigList.hasNext();
+            }
+
+            public Object[] next() {
+                return new Object[]{wrongConfigList.next()};
+            }
+
+            public void remove() {
+                wrongConfigList.remove();
+            }
+        };
     }
 
     /**

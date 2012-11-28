@@ -45,7 +45,7 @@ public interface DataProvider {
      * @param sequenceNumber
      * @param isMultivalue switch between single and multivalue query
      * @return 
-     * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
+     * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
      */
     public Object get(Class<?> dataTypeName, String name,
             String componentName, int sequenceNumber, boolean isMultivalue);
@@ -57,7 +57,7 @@ public interface DataProvider {
      * @param name
      * @param componentName
      * @return
-     * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
+     * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
      */
     public Object get(Class<?> dataTypeName, String name,
             String componentName);
@@ -69,7 +69,7 @@ public interface DataProvider {
      * @param componentName
      * @param sequenceNumber
      * @return
-     * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
+     * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
      */
     public String getString(String name,
             String componentName, int sequenceNumber);
@@ -80,7 +80,7 @@ public interface DataProvider {
      * @param name
      * @param componentName
      * @return
-     * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
+     * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
      */
     public String getString(String name,
             String componentName);
@@ -90,7 +90,7 @@ public interface DataProvider {
      * @param propName
      * 
      * @return
-     * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
+     * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
      */
     public Object getConnectorAttribute(String propName);
     
@@ -99,7 +99,7 @@ public interface DataProvider {
      * @param propName
      * 
      * @return
-     * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
+     * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
      */
     public Object getTestSuiteAttribute(String propName);
     
@@ -108,7 +108,7 @@ public interface DataProvider {
      * @param propName
      * 
      * @return
-     * @throws org.identityconnectors.contract.data.DataProvider.ObjectNotFoundException
+     * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
      */
     public Object getTestSuiteAttribute(String propName, 
             String testName);

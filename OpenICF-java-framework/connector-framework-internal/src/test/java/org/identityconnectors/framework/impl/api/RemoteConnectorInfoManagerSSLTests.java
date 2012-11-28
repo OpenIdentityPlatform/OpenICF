@@ -140,7 +140,7 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
         public X509Certificate[] getCertificateChain(String a) {
             try {
                 KeyStore store = loadKeyStoreResource(_keyStoreName);
-                String alias = (String)store.aliases().nextElement();
+                String alias = store.aliases().nextElement();
                 return new X509Certificate[]{
                         (X509Certificate)store.getCertificateChain(alias)[0]};
             }
@@ -154,7 +154,7 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
         public PrivateKey getPrivateKey(String a) {
             try {
                 KeyStore store = loadKeyStoreResource(_keyStoreName);
-                String alias = (String)store.aliases().nextElement();
+                String alias = store.aliases().nextElement();
                 return (PrivateKey)store.getKey(
                         alias,
                         "changeit".toCharArray());

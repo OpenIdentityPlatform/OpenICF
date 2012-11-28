@@ -30,34 +30,57 @@
         <version>1.1.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>connector-framework-internal</artifactId>
+    <packaging>bundle</packaging>
     <name>OpenICF Framework - Internal</name>
     <description>
         The IdentityConnectors framework provides a container to separate the Connector bundle from the application.
         The framework provides many common features that developers would otherwise need to implement on their own.
     </description>
-    <packaging>bundle</packaging>
-    <scm>
-        <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/framework/java/connector-framework-internal</connection>
-        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/framework/java/connector-framework-internal</developerConnection>
-        <url>http://sources.forgerock.org/browse/openicf/trunk/framework/java/connector-framework-internal</url>
-    </scm>
+
     <dependencies>
         <dependency>
             <groupId>org.forgerock.openicf.framework</groupId>
             <artifactId>connector-framework</artifactId>
         </dependency>
+
+        <!-- Provided Dependencies -->
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-all</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.forgerock.openicf.framework</groupId>
             <artifactId>connector-test-common</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+            <!-- @see: org/identityconnectors/framework/impl/test/TestHelpersImpl.java -->
+        </dependency>
+
+        <!-- Test Dependencies -->
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.forgerock.openicf.framework</groupId>
             <artifactId>connector-framework</artifactId>
             <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <!-- Force to build the test bundles before -->
+        <dependency>
+            <groupId>org.forgerock.openicf.framework</groupId>
+            <artifactId>testbundlev1</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.forgerock.openicf.framework</groupId>
+            <artifactId>testbundlev2</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -75,59 +98,33 @@
                     </instructions>
                 </configuration>
             </plugin>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <!-- Copy bundle JARs -->
+                    <execution>
+                        <id>copy-contractclasses</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.forgerock.openicf.framework</groupId>
+                                    <artifactId>testbundlev1</artifactId>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.forgerock.openicf.framework</groupId>
+                                    <artifactId>testbundlev2</artifactId>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
+                            <stripVersion>true</stripVersion>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
-    <profiles>
-        <profile>
-            <id>framework-build</id>
-            <activation>
-                <file>
-                    <exists>./connector-framework-internal</exists>
-                </file>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>org.forgerock.openicf.framework</groupId>
-                    <artifactId>testbundlev1</artifactId>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>org.forgerock.openicf.framework</groupId>
-                    <artifactId>testbundlev2</artifactId>
-                    <scope>test</scope>
-                </dependency>
-            </dependencies>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-dependency-plugin</artifactId>
-                        <executions>
-                            <!-- Copy bundle JARs -->
-                            <execution>
-                                <id>copy-contractclasses</id>
-                                <phase>generate-test-sources</phase>
-                                <goals>
-                                    <goal>copy</goal>
-                                </goals>
-                                <configuration>
-                                    <artifactItems>
-                                        <artifactItem>
-                                            <groupId>org.forgerock.openicf.framework</groupId>
-                                            <artifactId>testbundlev1</artifactId>
-                                        </artifactItem>
-                                        <artifactItem>
-                                            <groupId>org.forgerock.openicf.framework</groupId>
-                                            <artifactId>testbundlev2</artifactId>
-                                        </artifactItem>
-                                    </artifactItems>
-                                    <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
-                                    <stripVersion>true</stripVersion>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>

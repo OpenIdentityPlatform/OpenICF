@@ -19,6 +19,9 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2012 ForgeRock AS
+ *
  */
 package org.identityconnectors.contract.test;
 
@@ -35,7 +38,9 @@ import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.ScriptOnConnectorApiOp;
 import org.identityconnectors.framework.common.objects.ScriptContext;
+import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
+import org.testng.log4testng.Logger;
 
 
 /**
@@ -43,14 +48,16 @@ import org.testng.annotations.Test;
  * 
  * @author Zdenek Louzensky
  */
+@Guice(modules = FrameworkModule.class)
+@Test(testName =  ScriptOnConnectorApiOpTests.TEST_NAME)
 public class ScriptOnConnectorApiOpTests extends ContractTestBase {
 
     /**
      * Logging..
      */
-    private static final Log LOG = Log.getLog(ScriptOnConnectorApiOpTests.class);
+    private static final Logger logger = Logger.getLogger(ValidateApiOpTests.class);
 
-    private static final String TEST_NAME="ScriptOnConnector";
+    public static final String TEST_NAME="ScriptOnConnector";
     private static final String LANGUAGE_PROP_PREFIX = "language";
     private static final String SCRIPT_PROP_PREFIX = "script";
     private static final String ARGUMENTS_PROP_PREFIX = "arguments";
@@ -90,20 +97,20 @@ public class ScriptOnConnectorApiOpTests extends ContractTestBase {
                 // run the script
                 Object result = getConnectorFacade().runScriptOnConnector(
                         new ScriptContext(language, script, arguments),
-                        getOperationOptionsByOp(ScriptOnConnectorApiOp.class));
+                        getOperationOptionsByOp(null, ScriptOnConnectorApiOp.class));
 
                 // check that returned result was expected
                 final String MSG = "Script result was unexpected, expected: '%s', returned: '%s'.";
                 assertEquals(expResult, result,String.format(MSG, expResult, result));
             } catch (ObjectNotFoundException ex) {
                 // ok - properties were not provided - test is skipped
-                LOG.info("Test properties not set, skipping the test " + TEST_NAME);
+                logger.info("Test properties not set, skipping the test " + TEST_NAME);
             }
         }
         else {
-            LOG.info("---------------------------------");
-            LOG.info("Skipping test ''testRunScript''.");
-            LOG.info("---------------------------------");
+            logger.info("---------------------------------");
+            logger.info("Skipping test ''testRunScript''.");
+            logger.info("---------------------------------");
         }
     }
 
@@ -124,9 +131,9 @@ public class ScriptOnConnectorApiOpTests extends ContractTestBase {
             }
         }
         else {
-            LOG.info("----------------------------------------------------");
-            LOG.info("Skipping test ''testRunScriptFailUnknownLanguage''.");
-            LOG.info("----------------------------------------------------");
+            logger.info("----------------------------------------------------");
+            logger.info("Skipping test ''testRunScriptFailUnknownLanguage''.");
+            logger.info("----------------------------------------------------");
         }
     }
 
@@ -146,9 +153,9 @@ public class ScriptOnConnectorApiOpTests extends ContractTestBase {
             }
         }
         else {
-            LOG.info("----------------------------------------------------");
-            LOG.info("Skipping test ''testRunScriptFailEmptyScriptText''.");
-            LOG.info("----------------------------------------------------");
+            logger.info("----------------------------------------------------");
+            logger.info("Skipping test ''testRunScriptFailEmptyScriptText''.");
+            logger.info("----------------------------------------------------");
         }
     }
 

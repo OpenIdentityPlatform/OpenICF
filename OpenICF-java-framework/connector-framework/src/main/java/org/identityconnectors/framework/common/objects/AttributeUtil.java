@@ -211,8 +211,9 @@ public final class AttributeUtil {
         if (val != null && !val.isEmpty()) {
             // make sure this only called for single value..
             if (val.size() > 1) {
-                final String MSG = "The method is only for single value attributes.";
-                throw new IllegalArgumentException(MSG);
+                final StringBuilder MSG = new StringBuilder("The ").append(attr.getName())
+                        .append(" attribute is not single value attribute.");
+                throw new IllegalArgumentException(MSG.toString());
             }
             ret = val.get(0);
         }

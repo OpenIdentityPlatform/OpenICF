@@ -43,7 +43,7 @@
     <licenses>
         <license>
             <name>CDDL-1.0</name>
-            <url>http://www.opensource.org/licenses/cddl1.php</url>
+            <url>http://opensource.org/licenses/CDDL-1.0</url>
             <comments>Common Development and Distribution License (CDDL) 1.0.
             This license applies to OpenICF source code as indicated in the
             sources.
@@ -137,18 +137,8 @@
     </issueManagement>
 
     <ciManagement>
-        <system>hudson</system>
+        <system>jenkins</system>
         <url>http://builds.forgerock.org/job/OpenICF</url>
-        <notifiers>
-            <notifier>
-                <type>mail</type>
-                <sendOnError>true</sendOnError>
-                <sendOnFailure>true</sendOnFailure>
-                <sendOnSuccess>false</sendOnSuccess>
-                <sendOnWarning>false</sendOnWarning>
-                <!--address>openicf-issues@forgerock.org</address-->
-            </notifier>
-        </notifiers>
     </ciManagement>
 
     <developers>
@@ -170,9 +160,22 @@
         <framework.compatibilityVersion>1.1</framework.compatibilityVersion>
         <licenseResourceBundle>org.forgerock.openicf:openicf-license:1.0.0</licenseResourceBundle>
         <siteDistributionURL>scp://forgerock.org/var/www/vhosts/openicf.forgerock.org/httpdocs</siteDistributionURL>
-        <jira.componentIds>10192</jira.componentIds>
-		<jira.fixVersionIds/>
-        <jira.versionPrefix>framework</jira.versionPrefix>
+
+        <!-- forgerock-build-tools stylesheet org/forgerock/javadoc/javadoc.css
+             does not work with JDK7 -->
+        <javadocStylesheet>org/forgerock/javadoc/javadoc.css</javadocStylesheet>
+
+        <!-- Core documentation properties -->
+        <docTargetVersion>${project.version}</docTargetVersion>
+        <googleAnalyticsAccountId>UA-23412190-10</googleAnalyticsAccountId>
+        <!--
+            Release date is specified only when building the documentation
+            for publication. For example:
+                -D"releaseDate=Software release date: January 1, 1970"
+            Otherwise release date should remain empty.
+        -->
+        <releaseDate/>
+        <softwareReleaseDate>${releaseDate}</softwareReleaseDate>
     </properties>
 
     <modules>
@@ -185,7 +188,6 @@
         <module>testcommonv2</module>
         <module>testbundlev1</module>
         <module>testbundlev2</module>
-        <!--module>compatibility-tests-parent</module-->
         <module>bundles-parent</module>
         <module>icfl-over-slf4j</module>
         <module>openicf-zip</module>
@@ -212,38 +214,6 @@
                 </plugins>
             </build>
         </profile>
-        <profile>
-            <id>maven-3</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-site-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-descriptor</id>
-                                <goals>
-                                    <goal>attach-descriptor</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <outputEncoding>${project.build.sourceEncoding}</outputEncoding>
-                            <reportPlugins>
-                                <plugin>
-                                    <groupId>org.apache.maven.plugins</groupId>
-                                    <artifactId>maven-checkstyle-plugin</artifactId>
-                                </plugin>
-                                <plugin>
-                                    <groupId>org.apache.maven.plugins</groupId>
-                                    <artifactId>maven-javadoc-plugin</artifactId>
-                                </plugin>
-                            </reportPlugins>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
     </profiles>
 
     <dependencyManagement>
@@ -255,12 +225,12 @@
             </dependency>
             <dependency>
                 <groupId>org.forgerock.openicf.framework</groupId>
-                <artifactId>connector-test-common</artifactId>
+                <artifactId>connector-framework-internal</artifactId>
                 <version>1.1.0.1-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>org.forgerock.openicf.framework</groupId>
-                <artifactId>connector-framework-internal</artifactId>
+                <artifactId>connector-test-common</artifactId>
                 <version>1.1.0.1-SNAPSHOT</version>
             </dependency>
             <dependency>
@@ -268,95 +238,51 @@
                 <artifactId>connector-framework-contract</artifactId>
                 <version>1.1.0.1-SNAPSHOT</version>
             </dependency>
+
+            <!-- Provided Dependencies -->
+            <dependency>
+                <groupId>org.codehaus.groovy</groupId>
+                <artifactId>groovy-all</artifactId>
+                <version>2.0.5</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- Test Dependencies -->
             <dependency>
                 <groupId>org.forgerock.openicf.framework</groupId>
                 <artifactId>connector-framework</artifactId>
                 <version>1.1.0.1-SNAPSHOT</version>
                 <type>test-jar</type>
-            </dependency>
-            <dependency>
-                <groupId>org.forgerock.openicf.framework</groupId>
-                <artifactId>testcommonv1</artifactId>
-                <version>1.1.0.1-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>org.forgerock.openicf.framework</groupId>
-                <artifactId>testcommonv2</artifactId>
-                <version>1.1.0.1-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>org.forgerock.openicf.framework</groupId>
-                <artifactId>testbundlev1</artifactId>
-                <version>1.1.0.1-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>org.forgerock.openicf.framework</groupId>
-                <artifactId>testbundlev2</artifactId>
-                <version>1.1.0.1-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>org.forgerock.openicf</groupId>
-                <artifactId>openicf-license</artifactId>
-                <version>1.0.0</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.codehaus.groovy</groupId>
-                <artifactId>groovy-all</artifactId>
-                <version>1.8.7</version>
-                <!--version>[1.8.5,1.8.9]</version-->
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.10</version>
+                <version>4.11</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
-                <version>6.3.1</version>
+                <version>6.8</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.forgerock.openicf</groupId>
-            <artifactId>openicf-license</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-all</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
 
     <build>
         <pluginManagement>
             <plugins>
                 <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.12.4</version>
                     <configuration>
                         <includes>
+                            <include>**/Test*.java</include>
                             <include>**/*Test.java</include>
                             <include>**/*Tests.java</include>
-                        </includes>
-                        <excludedGroups>broken</excludedGroups>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.forgerock.openicf</groupId>
-                    <artifactId>maven-surefire-execs-plugin</artifactId>
-                    <version>1.0.0</version>
-                    <configuration>
-                        <includes>
-                            <include>**/*Test.java</include>
-                            <include>**/*Tests.java</include>
+                            <include>**/*TestCase.java</include>
                         </includes>
                     </configuration>
                 </plugin>
@@ -373,11 +299,14 @@
                     </executions>
                 </plugin>
                 <plugin>
+                    <groupId>org.forgerock.commons</groupId>
+                    <artifactId>forgerock-doc-maven-plugin</artifactId>
+                    <version>1.1.0-SNAPSHOT</version>
+                </plugin>
+                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <configuration>
-                        <charset>${project.build.sourceEncoding}</charset>
-                        <docencoding>${project.build.sourceEncoding}</docencoding>
                         <docfilessubdirs>true</docfilessubdirs>
                         <source>${maven.compiler.source}</source>
                         <show>public</show>
@@ -399,6 +328,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>cobertura-maven-plugin</artifactId>
+                    <version>2.5.2</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -421,6 +351,56 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.forgerock.commons</groupId>
+                <artifactId>forgerock-doc-maven-plugin</artifactId>
+                <inherited>false</inherited>
+                <configuration>
+                    <projectName>OpenICF</projectName>
+                    <googleAnalyticsId>${googleAnalyticsAccountId}</googleAnalyticsId>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>build-doc</id>
+                        <phase>pre-site</phase>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>layout-doc</id>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>layout</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-descriptor</id>
+                        <goals>
+                            <goal>attach-descriptor</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <outputEncoding>${project.build.sourceEncoding}</outputEncoding>
+                    <!--reportPlugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-checkstyle-plugin</artifactId>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-javadoc-plugin</artifactId>
+                        </plugin>
+                    </reportPlugins-->
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <reporting>
@@ -428,7 +408,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-project-info-reports-plugin</artifactId>
-                <version>2.4</version>
+                <version>2.5.1</version>
                 <reportSets>
                     <reportSet>
                         <reports>
@@ -455,26 +435,17 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.8</version>
                 <reportSets>
                     <reportSet>
                         <id>html</id>
-                        <configuration>
-                            <header><![CDATA[<b>${project.name} ${project.version}</b>]]>
-                            </header>
-                            <footer><![CDATA[<b>${project.name} ${project.version}</b>]]>
-                            </footer>
-                        </configuration>
                         <reports>
-                            <report>javadoc</report>
+                            <report>aggregate</report>
                         </reports>
                     </reportSet>
                     <reportSet>
                         <id>test-html</id>
-                        <configuration>
-                        </configuration>
                         <reports>
-                            <report>test-javadoc</report>
+                            <report>test-aggregate</report>
                         </reports>
                     </reportSet>
                 </reportSets>
@@ -484,17 +455,12 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jxr-plugin</artifactId>
                 <version>2.3</version>
-                <configuration>
-                    <aggregate>${openicf.parent.reports.aggregate}</aggregate>
-                    <windowTitle>OpenICF ${project.version} Reference</windowTitle>
-                    <linkJavadoc>true</linkJavadoc>
-                </configuration>
             </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-report-plugin</artifactId>
-                <version>2.11</version>
+                <version>2.12.4</version>
                 <configuration>
                     <showSuccess>false</showSuccess>
                     <!--reportsDirectory>${project.build.directory}/test-reports</reportsDirectory-->
@@ -504,111 +470,16 @@
                         <id>${project.artifactId}-test-report-only</id>
                         <inherited>true</inherited>
                         <reports>
-                            <report>report-only</report>
-                        </reports>
-                    </reportSet>
-                </reportSets>
-            </plugin>
-            
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-changes-plugin</artifactId>
-                <version>2.6</version>
-                <configuration>
-                    <columnNames>Type,Key,Summary,Assignee,Status,Resolution,Fix Version</columnNames>
-                    <sortColumnNames>Type,Key DESC</sortColumnNames>
-                    <resolutionIds>Unresolved, Closed</resolutionIds>
-                    <statusIds>Open, Resolved, Closed</statusIds>
-                    <typeIds>Bug, New Feature, Improvement, Wish</typeIds>
-                    <component>${jira.componentIds}</component>
-					<fixVersionIds>${jira.fixVersionIds}</fixVersionIds>
-                    <versionPrefix>${jira.versionPrefix}</versionPrefix>
-                </configuration>
-                <reportSets>
-                    <reportSet>
-                        <reports>
-                            <report>changes-report</report>
-                            <report>jira-report</report>
+                            <report>report</report>
                         </reports>
                     </reportSet>
                 </reportSets>
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-changelog-plugin</artifactId>
-                <version>2.2</version>
-                <reportSets>
-                    <reportSet>
-                        <id>dual-report</id>
-                        <configuration>
-                            <type>range</type>
-                            <range>30</range>
-                        </configuration>
-                        <reports>
-                            <report>changelog</report>
-                        </reports>
-                    </reportSet>
-                </reportSets>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-                <version>2.6</version>
-                <configuration>
-                    <rulesets>
-                        <ruleset>/rulesets/basic.xml</ruleset>
-                        <ruleset>/rulesets/controversial.xml</ruleset>
-                    </rulesets>
-                    <format>xml</format>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>taglist-maven-plugin</artifactId>
-                <version>2.4</version>
-                <configuration>
-                    <tags>
-                        <tag>@FIXME</tag>
-                        <tag>@fixme</tag>
-                        <tag>FIXME</tag>
-                        <tag>fixme</tag>
-                        <tag>@TODO</tag>
-                        <tag>@todo</tag>
-                        <tag>TODO</tag>
-                        <tag>todo</tag>
-                        <tag>HACK</tag>
-                        <tag>hack</tag>
-                    </tags>
-                </configuration>
-            </plugin>
-            <plugin>
-		<!-- Note: aggregate-able, may cause problems if we aggregate jxr and
-					not this because of the xref links -->
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>javancss-maven-plugin</artifactId>
-                <version>2.0</version>
-            </plugin>
-            <plugin>
-		<!-- http://mojo.codehaus.org/findbugs-maven-plugin/usage.html -->
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>findbugs-maven-plugin</artifactId>
-                <version>2.3.3</version>
-                <configuration>
-                    <effort>Max</effort>
-                    <threshold>Low</threshold>
-                    <onlyAnalyze>org.identityconnectors.*,org.forgerock.openicf.*</onlyAnalyze>
-                </configuration>
-            </plugin>
-            <plugin>
-		<!-- http://mojo.codehaus.org/cobertura-maven-plugin/
-                     http://jira.codehaus.org/browse/MCOBERTURA-145 -->
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>cobertura-maven-plugin</artifactId>
-                <version>2.5.1</version>
-                <!--version>2.6</version-->
+                <version>2.5.2</version>
             </plugin>
         </plugins>
     </reporting>

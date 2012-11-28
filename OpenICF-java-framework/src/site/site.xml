@@ -25,9 +25,9 @@
   !
 -->
 
-<project xmlns="http://maven.apache.org/DECORATION/1.0.1"
+<project xmlns="http://maven.apache.org/DECORATION/1.3.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/DECORATION/1.1.0 http://maven.apache.org/xsd/decoration-1.1.0.xsd">
+    xsi:schemaLocation="http://maven.apache.org/DECORATION/1.3.0 http://maven.apache.org/xsd/decoration-1.3.0.xsd">
     <skin>
         <groupId>org.forgerock.commons</groupId>
         <artifactId>forgerock-community-skin</artifactId>
@@ -48,8 +48,14 @@
             <item name="FAQ" href="faq.html" />
             <!--item name="Wiki" href="http://wikis.forgerock.org/openicf/" /-->
             <item name="Mailing Lists" href="mail-lists.html" />
-            <item name="Support" href="http://forgerock.com/subscriptions.html" />
-            <item name="Partners" href="http://forgerock.com/partners.html" />
+            <item name="Support" href="http://forgerock.com/what-we-offer/open-identity-stack/openidm" />
+            <item name="Partners" href="http://forgerock.com/partners/find-a-partner" />
+        </menu>
+
+        <menu name="OpenICF Core Docs">
+            <item name="All Formats" href="docs.html" />
+            <item name="Release Notes" href="./doc/release-notes/index.html" />
+            <item name="Developer Guide" href="./doc/dev-guide/index.html" />
         </menu>
 
         <menu name="OpenICF Development" img="images/arrow_right.png">

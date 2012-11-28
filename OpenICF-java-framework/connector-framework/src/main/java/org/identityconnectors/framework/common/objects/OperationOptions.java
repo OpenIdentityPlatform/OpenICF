@@ -25,7 +25,8 @@
  */
 package org.identityconnectors.framework.common.objects;
 
-import java.util.HashMap;import java.util.Map;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.security.GuardedString;
@@ -138,7 +139,7 @@ public final class OperationOptions {
     // Really would be better if OpenICF switched to List and not array
     // To more easily return immutable views
     private Map<String, Object> copyMutables(Map<String, Object> operationOptions) {
-        Map<String, Object> operationOptionsCopy = new HashMap(operationOptions);
+        Map<String, Object> operationOptionsCopy = new HashMap<String, Object>(operationOptions);
         for (Map.Entry<String, Object> entry : operationOptionsCopy.entrySet()) {
             if (entry.getValue() instanceof Object[]) {
                 entry.setValue(((Object[]) entry.getValue()).clone());

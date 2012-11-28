@@ -42,6 +42,8 @@
         <dependency>
             <groupId>org.forgerock.openicf.framework</groupId>
             <artifactId>testcommonv1</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

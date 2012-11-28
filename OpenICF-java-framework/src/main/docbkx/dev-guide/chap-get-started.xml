@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ! CCPL HEADER START
+  !
+  ! This work is licensed under the Creative Commons
+  ! Attribution-NonCommercial-NoDerivs 3.0 Unported License.
+  ! To view a copy of this license, visit
+  ! http://creativecommons.org/licenses/by-nc-nd/3.0/
+  ! or send a letter to Creative Commons, 444 Castro Street,
+  ! Suite 900, Mountain View, California, 94041, USA.
+  !
+  ! You can also obtain a copy of the license at
+  ! legal/CC-BY-NC-ND.txt.
+  ! See the License for the specific language governing permissions
+  ! and limitations under the License.
+  !
+  ! If applicable, add the following below this CCPL HEADER, with the fields
+  ! enclosed by brackets "[]" replaced with your own identifying information:
+  !      Portions Copyright [yyyy] [name of copyright owner]
+  !
+  ! CCPL HEADER END
+  !
+  !      Copyright 2012 ForgeRock AS
+  !    
+-->
+<chapter xml:id='chap-get-started'
+ xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
+ xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+ xsi:schemaLocation='http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd'
+ xmlns:xlink='http://www.w3.org/1999/xlink'
+ xmlns:xinclude='http://www.w3.org/2001/XInclude'>
+ <title>Getting Started</title>
+
+ <itemizedlist>
+  <para>To use connectors in your application, first download the <link
+  xlink:href="http://openicf.forgerock.org/downloads.html" xlink:show="new"
+  >Connector Framework</link>. Next, add the following jars to your
+  CLASSPATH:</para>
+  <listitem>
+   <para><filename>connector-framework.jar</filename> (compile and runtime
+   dependency)</para>
+  </listitem>
+  <listitem>
+   <para><filename>connector-framework-internal.jar</filename> (runtime
+   dependency only)</para>
+  </listitem>
+ </itemizedlist>
+
+ <para>Also download the Connector Bundles you need, and add them to the
+ CLASSPATH as well. At this point you can start using the connectors in your
+ application.</para>
+
+ <para>You can also download builds from the <link
+ xlink:href="http://openicf.forgerock.org/downloads.html"
+ xlink:show="new">OpenICF download page</link>.</para>
+</chapter>

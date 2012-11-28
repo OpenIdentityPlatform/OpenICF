@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ! CCPL HEADER START
+  !
+  ! This work is licensed under the Creative Commons
+  ! Attribution-NonCommercial-NoDerivs 3.0 Unported License.
+  ! To view a copy of this license, visit
+  ! http://creativecommons.org/licenses/by-nc-nd/3.0/
+  ! or send a letter to Creative Commons, 444 Castro Street,
+  ! Suite 900, Mountain View, California, 94041, USA.
+  !
+  ! You can also obtain a copy of the license at
+  ! legal/CC-BY-NC-ND.txt.
+  ! See the License for the specific language governing permissions
+  ! and limitations under the License.
+  !
+  ! If applicable, add the following below this CCPL HEADER, with the fields
+  ! enclosed by brackets "[]" replaced with your own identifying information:
+  !      Portions Copyright [yyyy] [name of copyright owner]
+  !
+  ! CCPL HEADER END
+  !
+  !      Copyright 2012 ForgeRock AS
+  !    
+-->
+<chapter xml:id='chap-about'
+ xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
+ xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+ xsi:schemaLocation='http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd'
+ xmlns:xlink='http://www.w3.org/1999/xlink'
+ xmlns:xinclude='http://www.w3.org/2001/XInclude'>
+ <title>About Connectors</title>
+
+ <para>Connectors give you a way to decouple applications from data resources.
+ Open Identity Connector Framework (OpenICF) focuses on provisioning and
+ identity management, but also provides general purpose capabilities including
+ authentication, create, read, update, delete, search, scripting, and
+ synchronization. Connector bundles rely on the Connector Framework, but
+ applications remain completely separate from connector bundles, so that
+ you can change and update connectors without changing your application or
+ its dependencies.</para>
+
+ <itemizedlist>
+  <para>OpenICF provides many capabilities.</para>
+  <listitem>
+   <para>Connection pooling</para>
+  </listitem>
+  <listitem>
+   <para>Timeouts on all operations</para>
+  </listitem>
+  <listitem>
+   <para>Search filtering</para>
+  </listitem>
+  <listitem>
+   <para>Search and synchronization buffering and results streaming</para>
+  </listitem>
+  <listitem>
+   <para>Scripting with Groovy and Boo .NET</para>
+  </listitem>
+  <listitem>
+   <para>Classloader and JVM isolation</para>
+  </listitem>
+  <listitem>
+   <para>An independent logging API/SPI similar to Apache Commons logging</para>
+  </listitem>
+  <listitem>
+   <para>Java and .NET platform support</para>
+  </listitem>
+  <listitem>
+   <para>Opt-in operations that support both simple and advanced implementations
+   for the same CRUD operation</para>
+  </listitem>
+  <listitem>
+   <para>A logging proxy that captures all API calls</para>
+  </listitem>
+  <listitem>
+   <para>A connector archetype to create connectors with support for Ant,
+   NetBeans, and Eclipse</para>
+  </listitem>
+ </itemizedlist>
+</chapter>

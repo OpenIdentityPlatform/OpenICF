@@ -19,6 +19,9 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2012 ForgeRock AS
+ *
  */
 package org.identityconnectors.contract.test;
 
@@ -30,11 +33,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.TestApiOp;
+import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
+import org.testng.log4testng.Logger;
 
 
 /**
@@ -44,13 +48,15 @@ import org.testng.annotations.Test;
  * 
  * Currently there is not ability in API to test contract in case connection is lost.
  */
+@Guice(modules = FrameworkModule.class)
+@Test(testName =  TestApiOpTests.TEST_NAME)
 public class TestApiOpTests extends ContractTestBase {
     
     /**
      * Logging..
      */
-    private static final Log LOG = Log.getLog(TestApiOpTests.class);
-    private static final String TEST_NAME = "Test";
+    private static final Logger logger = Logger.getLogger(ValidateApiOpTests.class);
+    public static final String TEST_NAME = "Test";
     private static final String PROPERTY_NAME_INVALID_CONFIG = "invalidConfig";
     
     /**
@@ -97,9 +103,9 @@ public class TestApiOpTests extends ContractTestBase {
             }
         }
         else {
-            LOG.info("--------------------------------");
-            LOG.info("Skipping test ''testTestFail''.");
-            LOG.info("--------------------------------");
+            logger.info("--------------------------------");
+            logger.info("Skipping test ''testTestFail''.");
+            logger.info("--------------------------------");
         }
     }
     

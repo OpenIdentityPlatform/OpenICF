@@ -155,7 +155,7 @@ public abstract class ConnectorInfoManagerTestBase {
         AssertJUnit.assertSame(startLocal, Thread.currentThread().getContextClassLoader());
     }
     
-    @Test(groups = {"broken"})
+    @Test
     public void testNativeLibraries() throws Exception {
         ConnectorInfoManager manager = 
             getConnectorInfoManager();

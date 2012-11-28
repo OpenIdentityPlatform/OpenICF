@@ -61,7 +61,7 @@ C:\framework> mvn install
 
 ~~    {{{http://www.microsoft.com/downloads/dlx/en-us/listdetailsview.aspx?FamilyID=6b6c21d2-2006-4afa-9702-529fa782d63b}Microsoft Windows SDK for Windows 7 and .NET Framework 4}} {{{http://www.microsoft.com/downloads/en/details.aspx?FamilyID=35aeda01-421d-4ba5-b44b-543dc8c33a20&displaylang=en}ISO}}
 
-    *{{{http://msbuildtasks.tigris.org/}MSBuild Community Tasks}} {{{http://msbuildtasks.tigris.org/MSBuild.Community.Tasks.Nightly.msi}Download}}
+    *{{{http://msbuildtasks.tigris.org/}MSBuild Community Tasks}} {{{https://github.com/downloads/loresoft/msbuildtasks/MSBuild.Community.Tasks.v1.4.0.42.msi}Download}}
 
     *{{{http://www.nunit.org/index.php?p=download}NUnit}}
 

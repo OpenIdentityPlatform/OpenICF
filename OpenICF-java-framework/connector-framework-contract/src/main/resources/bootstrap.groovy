@@ -84,7 +84,7 @@ Tbytearray=Lazy.random(".............", byte[].class)
 Tcharacter=Lazy.random(".", Character.class)
 Tchar=Lazy.random(".", Character.class)
 Tguardedstring=Lazy.random("AAAAA##", org.identityconnectors.common.security.GuardedString.class)
-
+Tguardedbytearray=Lazy.random("AAAAA##", org.identityconnectors.common.security.GuardedByteArray.class)
 
 
 // Default data for multivalue attributes of common types

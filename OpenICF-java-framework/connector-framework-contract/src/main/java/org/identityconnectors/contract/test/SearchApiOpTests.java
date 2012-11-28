@@ -19,6 +19,9 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2012 ForgeRock AS
+ *
  */
 package org.identityconnectors.contract.test;
 
@@ -49,19 +52,22 @@ import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
+import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
+import org.testng.log4testng.Logger;
 
 /**
  * Contract test of {@link SearchApiOp} 
  */
-//@RunWith(Parameterized.class)
+@Guice(modules = FrameworkModule.class)
+@Test(testName =  SearchApiOpTests.TEST_NAME)
 public class SearchApiOpTests extends ObjectClassRunner {
 
     /**
      * Logging..
      */
-    private static final Log LOG = Log.getLog(SearchApiOpTests.class);
-    private static final String TEST_NAME = "Search";
+    private static final Logger logger = Logger.getLogger(ValidateApiOpTests.class);
+    public static final String TEST_NAME = "Search";
     /**
      * Properties' prefixes to enable case insensitive search tests
      * (Connectors by default are not capable of this.)
@@ -69,10 +75,6 @@ public class SearchApiOpTests extends ObjectClassRunner {
     private static final String CASE_INSENSITIVE_PREFIX = "caseinsensitive";
     private static final String DISABLE = "disable";
     private static final String COMPARE_BY_UID_ONLY = "compareExistingObjectsByUidOnly";
-
-    public SearchApiOpTests(ObjectClass oclass) {
-        super(oclass);
-    }
 
     /**
      * {@inheritDoc}     
@@ -91,7 +93,7 @@ public class SearchApiOpTests extends ObjectClassRunner {
      * {@inheritDoc}      
      */
     @Override
-    public void testRun() {
+    public void testRun(ObjectClass objectClass) {
         Uid uid = null;
         List<Uid> uids = new ArrayList<Uid>();
         List<Set<Attribute>> attrs = new ArrayList<Set<Attribute>>();
@@ -104,15 +106,15 @@ public class SearchApiOpTests extends ObjectClassRunner {
             // own test data
             // should throw if object class is not supported and test ends
             Map<Uid, ConnectorObject> coBeforeTest = ConnectorHelper.search2Map(getConnectorFacade(),
-                    getObjectClass(), null, getOperationOptionsByOp(SearchApiOp.class));
+                    objectClass, null, getOperationOptionsByOp(objectClass, SearchApiOp.class));
 
             //prepare the data
             for (int i = 0; i < recordCount; i++) {
                 //create objects
                 Set<Attribute> attr = ConnectorHelper.getCreateableAttributes(getDataProvider(),
-                        getObjectClassInfo(), getTestName(), i, true, false);
+                        getObjectClassInfo(objectClass), getTestName(), i, true, false);
 
-                Uid luid = getConnectorFacade().create(getSupportedObjectClass(), attr, getOperationOptionsByOp(CreateApiOp.class));
+                Uid luid = getConnectorFacade().create(objectClass, attr, getOperationOptionsByOp(objectClass, CreateApiOp.class));
                 assertNotNull(luid, "Create returned null uid.");
                 attrs.add(attr);
                 uids.add(luid);
@@ -120,19 +122,19 @@ public class SearchApiOpTests extends ObjectClassRunner {
 
             // retrieve all objects including newly created
             List<ConnectorObject> coAll = ConnectorHelper.search(getConnectorFacade(),
-                    getObjectClass(), null, getOperationOptionsByOp(SearchApiOp.class));
+                    objectClass, null, getOperationOptionsByOp(objectClass, SearchApiOp.class));
 
             //search by id 
             uid = uids.get(0);
             Filter fltUid = FilterBuilder.equalTo(uid);
             List<ConnectorObject> coObjects = ConnectorHelper.search(getConnectorFacade(),
-                    getObjectClass(), fltUid, getOperationOptionsByOp(SearchApiOp.class));
+                    objectClass, fltUid, getOperationOptionsByOp(objectClass, SearchApiOp.class));
             assertTrue(coObjects.size() == 1, "Search filter by uid failed, expected to return one object, but returned "
                     + coObjects.size());
             coFound = coObjects.get(0);
 
             final Set<Attribute> searchBy = attrs.get(0);
-            ConnectorHelper.checkObject(getObjectClassInfo(), coFound, searchBy);
+            ConnectorHelper.checkObject(getObjectClassInfo(objectClass), coFound, searchBy);
 
             //get name
             Attribute attName = coFound.getAttributeByName(Name.NAME);
@@ -140,10 +142,10 @@ public class SearchApiOpTests extends ObjectClassRunner {
             String attNameValue = attName.getValue().get(0).toString();
 
             //search by name
-            coFound = ConnectorHelper.findObjectByName(getConnectorFacade(), getObjectClass(),
-                    attNameValue, getOperationOptionsByOp(SearchApiOp.class));
+            coFound = ConnectorHelper.findObjectByName(getConnectorFacade(), objectClass,
+                    attNameValue, getOperationOptionsByOp(objectClass, SearchApiOp.class));
 
-            ConnectorHelper.checkObject(getObjectClassInfo(), coFound, searchBy);
+            ConnectorHelper.checkObject(getObjectClassInfo(objectClass), coFound, searchBy);
 
             //search by all non special readable attributes
             Filter fltAllAtts = null;
@@ -151,7 +153,7 @@ public class SearchApiOpTests extends ObjectClassRunner {
             Set<Attribute> filteredAttrs = new HashSet<Attribute>();
 
             for (Attribute attribute : searchBy) {
-                if (!AttributeUtil.isSpecial(attribute) && ConnectorHelper.isReadable(getObjectClassInfo(), attribute)) {
+                if (!AttributeUtil.isSpecial(attribute) && ConnectorHelper.isReadable(getObjectClassInfo(objectClass), attribute)) {
                     if (fltAllAtts == null) {
                         fltAllAtts = FilterBuilder.equalTo(attribute);
                     } else {
@@ -171,21 +173,21 @@ public class SearchApiOpTests extends ObjectClassRunner {
                     }
                 }
                 coObjects = ConnectorHelper.search(getConnectorFacade(),
-                        getObjectClass(), fltAllAtts,
-                        getOperationOptionsByOp(SearchApiOp.class));
+                        objectClass, fltAllAtts,
+                        getOperationOptionsByOp(objectClass, SearchApiOp.class));
 
                 assertEquals(count, coObjects.size(), "Search by all non-special attributes returned "
                         + coObjects.size() + " objects, but expected was "
                         + count + " .");
 
                 for (ConnectorObject coChecked : coObjects) {
-                    ConnectorHelper.checkObject(getObjectClassInfo(), coChecked,
+                    ConnectorHelper.checkObject(getObjectClassInfo(objectClass), coChecked,
                             filteredAttrs);
                 }
             }
 
             //check null filter
-            coObjects = ConnectorHelper.search(getConnectorFacade(), getObjectClass(), null, getOperationOptionsByOp(SearchApiOp.class));
+            coObjects = ConnectorHelper.search(getConnectorFacade(), objectClass, null, getOperationOptionsByOp(objectClass, SearchApiOp.class));
             assertTrue(coObjects.size() == uids.size() + coBeforeTest.size(), "Null-filter search failed, wrong number of objects returned, expected: "
                     + (uids.size() + coBeforeTest.size()) + " but found: "
                     + coObjects.size());
@@ -200,7 +202,7 @@ public class SearchApiOpTests extends ObjectClassRunner {
                     // remove it from temp list
                     assertTrue(tempUids.remove(cObject.getUid()));
                     // compare the attributes
-                    ConnectorHelper.checkObject(getObjectClassInfo(), cObject, attrs.get(idx));
+                    ConnectorHelper.checkObject(getObjectClassInfo(objectClass), cObject, attrs.get(idx));
                 } else {
                     if (compareExistingObjectsByUidOnly()) {
                         assertTrue(coBeforeTest.containsKey(cObject.getUid()),
@@ -218,8 +220,8 @@ public class SearchApiOpTests extends ObjectClassRunner {
             // remove objects created by test
             for (Uid deluid : uids) {
                 try {
-                    ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(),
-                            deluid, false, getOperationOptionsByOp(DeleteApiOp.class));
+                    ConnectorHelper.deleteObject(getConnectorFacade(), objectClass,
+                            deluid, false, getOperationOptionsByOp(objectClass, DeleteApiOp.class));
                 } catch (Exception e) {
                     // ok
                     // note: this is thrown, when we delete the same object twice.
@@ -233,24 +235,24 @@ public class SearchApiOpTests extends ObjectClassRunner {
      * Test Search without specified OperationOptions attrsToGet which is the default for all other tests.
      * All the other tests contain explicit attrsToGet.
      */
-    @Test
-    public void testSearchWithoutAttrsToGet() {
+    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    public void testSearchWithoutAttrsToGet(ObjectClass objectClass) {
         // run the contract test only if search is supported by tested object class
-        if (ConnectorHelper.operationsSupported(getConnectorFacade(), getObjectClass(),
+        if (ConnectorHelper.operationsSupported(getConnectorFacade(), objectClass,
                 getAPIOperations())) {
             Uid uid = null;
 
             try {
                 Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
-                        getObjectClassInfo(), getTestName(), 0, true, false);
+                        getObjectClassInfo(objectClass), getTestName(), 0, true, false);
 
-                uid = getConnectorFacade().create(getSupportedObjectClass(), attrs, null);
+                uid = getConnectorFacade().create(objectClass, attrs, null);
                 assertNotNull(uid, "Create returned null uid.");
 
                 // get the user to make sure it exists now
                 Filter fltUid = FilterBuilder.equalTo(uid);
                 List<ConnectorObject> coObjects = ConnectorHelper.search(getConnectorFacade(),
-                        getSupportedObjectClass(), fltUid, null);
+                        objectClass, fltUid, null);
                 assertTrue(coObjects.size() == 1,
                         "Search filter by uid with no OperationOptions failed, expected to return one object, but returned "
                         + coObjects.size());
@@ -260,17 +262,17 @@ public class SearchApiOpTests extends ObjectClassRunner {
                 // compare requested attributes to retrieved attributes, but
                 // don't compare attrs which
                 // are not returned by default
-                ConnectorHelper.checkObject(getObjectClassInfo(), coObjects.get(0), attrs, false);
+                ConnectorHelper.checkObject(getObjectClassInfo(objectClass), coObjects.get(0), attrs, false);
             } finally {
                 if (uid != null) {
                     // delete the object
-                    getConnectorFacade().delete(getSupportedObjectClass(), uid, null);
+                    getConnectorFacade().delete(objectClass, uid, null);
                 }
             }
         } else {
-            LOG.info("----------------------------------------------------------------------------------------");
-            LOG.info("Skipping test ''testSearchWithoutAttrsToGet'' for object class ''{0}''.", getObjectClass());
-            LOG.info("----------------------------------------------------------------------------------------");
+            logger.info("----------------------------------------------------------------------------------------");
+            logger.info("Skipping test ''testSearchWithoutAttrsToGet'' for object class ''"+objectClass+"''.");
+            logger.info("----------------------------------------------------------------------------------------");
         }
     }
 
@@ -288,27 +290,27 @@ public class SearchApiOpTests extends ObjectClassRunner {
      * 
      * There is twice Search performed, once with changed case. The results should be identical.
      */
-    @Test
-    public void testCaseInsensitiveSearch() {
+    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    public void testCaseInsensitiveSearch(ObjectClass objectClass) {
         // run the contract test only if search is supported by tested object
         // class
         if (ConnectorHelper.operationsSupported(getConnectorFacade(),
-                getObjectClass(), getAPIOperations())
+                objectClass, getAPIOperations())
                 && canSearchCaseInsensitive()) {
             Uid uid = null;
 
             try {
                 // create a new dummy object
                 Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(
-                        getDataProvider(), getObjectClassInfo(), getTestName(),
+                        getDataProvider(), getObjectClassInfo(objectClass), getTestName(),
                         0, true, false);
 
-                uid = getConnectorFacade().create(getSupportedObjectClass(),
+                uid = getConnectorFacade().create(objectClass,
                         attrs, null);
                 assertNotNull(uid, "Create returned null uid.");
 
                 // 1st search, contains the original object
-                ConnectorObject searchResult = searchForUid(uid.getUidValue(), "[query by original uid]");
+                ConnectorObject searchResult = searchForUid(objectClass, uid.getUidValue(), "[query by original uid]");
 
                 // get created uid and change its case, than perform 2nd search for uid with changed case
                 String uidStr = uid.getUidValue();
@@ -318,19 +320,19 @@ public class SearchApiOpTests extends ObjectClassRunner {
                 String caseChngd_uidStr = changeCase(uidStr); // inverts the case of the original uid (example: BvZAO96 --> bVzao96)
 
                 // change the case in NAME
-                String name = getName(uid);
+                String name = getName(objectClass, uid);
                 String caseChngd_NAME = changeCase(name);
 
 
                 //perform search with changed case UID
-                ConnectorObject searchWithChngdCaseResult = searchForUid(
+                ConnectorObject searchWithChngdCaseResult = searchForUid(objectClass,
                         caseChngd_uidStr, "[query by changed case uid]");
 
                 assertTrue(searchWithChngdCaseResult.equals(searchResult),
                         "The search responses differ for changed case query [UID] and simple query.");
 
                 //perform search with changed case NAME
-                searchWithChngdCaseResult = searchForName(
+                searchWithChngdCaseResult = searchForName(objectClass,
                         caseChngd_NAME, "[query by changed case name]");
 
                 assertTrue(searchWithChngdCaseResult.equals(searchResult),
@@ -338,24 +340,23 @@ public class SearchApiOpTests extends ObjectClassRunner {
             } finally {
                 if (uid != null) {
                     // delete the dummy object
-                    getConnectorFacade().delete(getSupportedObjectClass(), uid,
+                    getConnectorFacade().delete(objectClass, uid,
                             null);
                 }
             }
         } else {
-            LOG.info("----------------------------------------------------------------------------------------");
-            LOG.info(
-                    "Skipping test ''testCaseInsensitiveSearch'' for object class ''{0}''.",
-                    getObjectClass());
-            LOG.info("----------------------------------------------------------------------------------------");
+            logger.info("----------------------------------------------------------------------------------------");
+            logger.info(
+                    "Skipping test ''testCaseInsensitiveSearch'' for object class ''"+objectClass+"''.");
+            logger.info("----------------------------------------------------------------------------------------");
         }
     }
 
-    private ConnectorObject searchForName(String caseChngd_NAME, String msg) {
+    private ConnectorObject searchForName(ObjectClass objectClass, String caseChngd_NAME, String msg) {
         // get the user to make sure it exists now
         Filter fltUid = FilterBuilder.equalTo(AttributeBuilder.build(Name.NAME, caseChngd_NAME));
         List<ConnectorObject> coObjects = ConnectorHelper.search(
-                getConnectorFacade(), getSupportedObjectClass(), fltUid, null);
+                getConnectorFacade(), objectClass, fltUid, null);
         assertTrue(coObjects.size() == 1,
                 msg
                 + " Search filter by uid with no OperationOptions failed, expected to return one object, but returned "
@@ -366,20 +367,20 @@ public class SearchApiOpTests extends ObjectClassRunner {
     }
 
     /** get the name for uid */
-    private String getName(Uid uid) {
+    private String getName(ObjectClass objectClass, Uid uid) {
         OperationOptionsBuilder oob = new OperationOptionsBuilder();
         oob.setAttributesToGet(Name.NAME);
-        ConnectorObject o = getConnectorFacade().getObject(getObjectClass(), uid, oob.build()); // get the name
+        ConnectorObject o = getConnectorFacade().getObject(objectClass, uid, oob.build()); // get the name
         Attribute attrName = o.getAttributeByName(Name.NAME);
         return attrName.getValue().get(0).toString();
     }
 
     /** search for given Uid and return first item in the response list */
-    private ConnectorObject searchForUid(String uidValue, String msg) {
+    private ConnectorObject searchForUid(ObjectClass objectClass, String uidValue, String msg) {
         // get the user to make sure it exists now
         Filter fltUid = FilterBuilder.equalTo(AttributeBuilder.build(Uid.NAME, uidValue));
         List<ConnectorObject> coObjects = ConnectorHelper.search(
-                getConnectorFacade(), getSupportedObjectClass(), fltUid, null);
+                getConnectorFacade(), objectClass, fltUid, null);
         assertTrue(coObjects.size() == 1,
                 msg
                 + " Search filter by uid with no OperationOptions failed, expected to return one object, but returned "
@@ -406,7 +407,7 @@ public class SearchApiOpTests extends ObjectClassRunner {
     /**
      * <p>
      * Returns true if tests are configured to enable case insensitive tests
-     * {@link SearchApiOpTests#testCaseInsensitiveSearch()}.
+     * {@link SearchApiOpTests#testCaseInsensitiveSearch(ObjectClass)}.
      * </p>
      * 
      * <p>

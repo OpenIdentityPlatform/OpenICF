@@ -19,6 +19,9 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2012 ForgeRock AS
+ *
  */
 package org.identityconnectors.contract.test;
 
@@ -45,19 +48,22 @@ import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
+import org.testng.log4testng.Logger;
 
 /**
  * Contract test of {@link SyncApiOp}
  */
-//@RunWith(Parameterized.class)
+@Guice(modules = FrameworkModule.class)
+@Test(testName =  SyncApiOpTests.TEST_NAME)
 public class SyncApiOpTests extends ObjectClassRunner {
 
     /**
      * Logging..
      */
-    private static final Log LOG = Log.getLog(SyncApiOpTests.class);
-    private static final String TEST_NAME = "Sync";
+    private static final Logger logger = Logger.getLogger(ValidateApiOpTests.class);
+    public static final String TEST_NAME = "Sync";
     public static final String MODIFIED = "modified";
 
     /*
@@ -68,10 +74,6 @@ public class SyncApiOpTests extends ObjectClassRunner {
     private static final String CREATE_PREFIX = "create";
     private static final String UPDATE_PREFIX = "update";
     private static final String DELETE_PREFIX = "delete";
-
-    public SyncApiOpTests(ObjectClass oclass) {
-        super(oclass);
-    }
 
     /**
      * {@inheritDoc}
@@ -89,7 +91,7 @@ public class SyncApiOpTests extends ObjectClassRunner {
      * {@inheritDoc}
      */
     @Override
-    public void testRun() {
+    public void testRun(ObjectClass objectClass) {
         Uid uid = null;
         Set<Attribute> attrs = null;
         List<SyncDelta> deltas = null;
@@ -98,28 +100,28 @@ public class SyncApiOpTests extends ObjectClassRunner {
 
         try {
             // start synchronizing from now
-            token = getConnectorFacade().getLatestSyncToken(getObjectClass());
+            token = getConnectorFacade().getLatestSyncToken(objectClass);
 
             /* CREATE: */
 
             // create record
             attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
-                    getObjectClassInfo(), getTestName(), 0, true, false);
-            uid = getConnectorFacade().create(getSupportedObjectClass(), attrs,
-                    getOperationOptionsByOp(CreateApiOp.class));
+                    getObjectClassInfo(objectClass), getTestName(), 0, true, false);
+            uid = getConnectorFacade().create(objectClass, attrs,
+                    getOperationOptionsByOp(objectClass, CreateApiOp.class));
             assertNotNull(uid, "Create returned null uid.");
 
             if (canSyncAfterOp(CreateApiOp.class)) {
                 // sync after create
-                deltas = ConnectorHelper.sync(getConnectorFacade(), getObjectClass(), token,
-                        getOperationOptionsByOp(SyncApiOp.class));
+                deltas = ConnectorHelper.sync(getConnectorFacade(), objectClass, token,
+                        getOperationOptionsByOp(objectClass, SyncApiOp.class));
 
                 // check that returned one delta
                 msg = "Sync should have returned one sync delta after creation of one object, but returned: %d";
                 assertTrue(deltas.size() == 1, String.format(msg, deltas.size()));
 
                 // check delta
-                ConnectorHelper.checkSyncDelta(getObjectClassInfo(), deltas.get(0), uid, attrs,
+                ConnectorHelper.checkSyncDelta(getObjectClassInfo(objectClass), deltas.get(0), uid, attrs,
                         SyncDeltaType.CREATE_OR_UPDATE, true);
 
                 token = deltas.get(0).getToken();
@@ -131,7 +133,7 @@ public class SyncApiOpTests extends ObjectClassRunner {
                     && canSyncAfterOp(UpdateApiOp.class)) {
 
                 Set<Attribute> replaceAttributes = ConnectorHelper.getUpdateableAttributes(
-                        getDataProvider(), getObjectClassInfo(), getTestName(), MODIFIED, 0, false,
+                        getDataProvider(), getObjectClassInfo(objectClass), getTestName(), MODIFIED, 0, false,
                         false);
 
                 // update only in case there is something to update
@@ -140,8 +142,8 @@ public class SyncApiOpTests extends ObjectClassRunner {
 
                     assertTrue((replaceAttributes.size() > 0), "no update attributes were found");
                     Uid newUid = getConnectorFacade().update(
-                            getSupportedObjectClass(), uid, AttributeUtil.filterUid(replaceAttributes),
-                            getOperationOptionsByOp(UpdateApiOp.class));
+                            objectClass, uid, AttributeUtil.filterUid(replaceAttributes),
+                            getOperationOptionsByOp(objectClass, UpdateApiOp.class));
 
                     // Update change of Uid must be propagated to
                     // replaceAttributes
@@ -152,15 +154,15 @@ public class SyncApiOpTests extends ObjectClassRunner {
                     }
 
                     // sync after update
-                    deltas = ConnectorHelper.sync(getConnectorFacade(), getObjectClass(), token,
-                            getOperationOptionsByOp(SyncApiOp.class));
+                    deltas = ConnectorHelper.sync(getConnectorFacade(), objectClass, token,
+                            getOperationOptionsByOp(objectClass, SyncApiOp.class));
 
                     // check that returned one delta
                     msg = "Sync should have returned one sync delta after update of one object, but returned: %d";
                     assertTrue(deltas.size() == 1, String.format(msg, deltas.size()));
 
                     // check delta
-                    ConnectorHelper.checkSyncDelta(getObjectClassInfo(), deltas.get(0), uid,
+                    ConnectorHelper.checkSyncDelta(getObjectClassInfo(objectClass), deltas.get(0), uid,
                             replaceAttributes, SyncDeltaType.CREATE_OR_UPDATE, true);
 
                     token = deltas.get(0).getToken();
@@ -171,92 +173,92 @@ public class SyncApiOpTests extends ObjectClassRunner {
 
             if (canSyncAfterOp(DeleteApiOp.class)) {
                 // delete object
-                getConnectorFacade().delete(getObjectClass(), uid,
-                        getOperationOptionsByOp(DeleteApiOp.class));
+                getConnectorFacade().delete(objectClass, uid,
+                        getOperationOptionsByOp(objectClass, DeleteApiOp.class));
 
                 // sync after delete
-                deltas = ConnectorHelper.sync(getConnectorFacade(), getObjectClass(), token,
-                        getOperationOptionsByOp(SyncApiOp.class));
+                deltas = ConnectorHelper.sync(getConnectorFacade(), objectClass, token,
+                        getOperationOptionsByOp(objectClass, SyncApiOp.class));
 
                 // check that returned one delta
                 msg = "Sync should have returned one sync delta after delete of one object, but returned: %d";
                 assertTrue(deltas.size() == 1, String.format(msg, deltas.size()));
 
                 // check delta
-                ConnectorHelper.checkSyncDelta(getObjectClassInfo(), deltas.get(0), uid, null,
+                ConnectorHelper.checkSyncDelta(getObjectClassInfo(objectClass), deltas.get(0), uid, null,
                         SyncDeltaType.DELETE, true);
             }
         } finally {
             // cleanup test data
-            ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid,
-                    false, getOperationOptionsByOp(DeleteApiOp.class));
+            ConnectorHelper.deleteObject(getConnectorFacade(), objectClass, uid,
+                    false, getOperationOptionsByOp(objectClass, DeleteApiOp.class));
         }
     }
 
     /**
      * Test Sync without attrsToGet.
      */
-    @Test
-    public void testSyncWithoutAttrsToGet() {
+    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    public void testSyncWithoutAttrsToGet(ObjectClass objectClass) {
         // run the test only if sync is supported and also object class is
         // supported and connector can sync CREATEs
-        if (ConnectorHelper.operationsSupported(getConnectorFacade(), getObjectClass(), getAPIOperations())
+        if (ConnectorHelper.operationsSupported(getConnectorFacade(), objectClass, getAPIOperations())
                 && canSyncAfterOp(CreateApiOp.class)) {
             Uid uid = null;
             try {
                 // start synchronizing from now
-                SyncToken token = getConnectorFacade().getLatestSyncToken(getObjectClass());
+                SyncToken token = getConnectorFacade().getLatestSyncToken(objectClass);
 
                 // create record
                 Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
-                        getObjectClassInfo(), getTestName(), 1, true, false);
-                uid = getConnectorFacade().create(getSupportedObjectClass(), attrs, null);
+                        getObjectClassInfo(objectClass), getTestName(), 1, true, false);
+                uid = getConnectorFacade().create(objectClass, attrs, null);
                 assertNotNull(uid, "Create returned null uid.");
 
                 List<SyncDelta> deltas = ConnectorHelper.sync(getConnectorFacade(),
-                        getSupportedObjectClass(), token, null);
+                        objectClass, token, null);
 
                 // check that returned one delta
                 final String MSG = "Sync should have returned one sync delta after creation of one object, but returned: %d";
                 assertTrue(deltas.size() == 1,String.format(MSG, deltas.size()));
 
                 // check delta, but don't check attributes which are not returned by default
-                ConnectorHelper.checkSyncDelta(getObjectClassInfo(), deltas.get(0), uid, attrs,
+                ConnectorHelper.checkSyncDelta(getObjectClassInfo(objectClass), deltas.get(0), uid, attrs,
                         SyncDeltaType.CREATE_OR_UPDATE, false);
             } finally {
                 // cleanup
-                getConnectorFacade().delete(getSupportedObjectClass(), uid, null);
+                getConnectorFacade().delete(objectClass, uid, null);
             }
         } else {
-            LOG.info("----------------------------------------------------------------------------------------");
-            LOG.info("Skipping test ''testSyncWithoutAttrsToGet'' for object class ''{0}''.", getObjectClass());
-            LOG.info("----------------------------------------------------------------------------------------");
+            logger.info("----------------------------------------------------------------------------------------");
+            logger.info("Skipping test ''testSyncWithoutAttrsToGet'' for object class ''"+objectClass+"''.");
+            logger.info("----------------------------------------------------------------------------------------");
         }
     }
 
     /**
-     * Tests that {@link SyncApiOp#getLatestSyncToken()} returns really the latest sync token which is available.
+     * Tests that {@link SyncApiOp#getLatestSyncToken(ObjectClass)} returns really the latest sync token which is available.
      */
-    @Test
-    public void testLatestSyncToken() {
+    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    public void testLatestSyncToken(ObjectClass objectClass) {
         // run the test only if sync is supported by the tested object class
-        if (ConnectorHelper.operationsSupported(getConnectorFacade(), getObjectClass(), getAPIOperations())
+        if (ConnectorHelper.operationsSupported(getConnectorFacade(), objectClass, getAPIOperations())
                 && canSyncAfterOp(CreateApiOp.class)) {
             Uid uid1 = null;
             Uid uid2 = null;
             try {
                 // create one new object
                 Set<Attribute> attrs1 = ConnectorHelper.getCreateableAttributes(getDataProvider(),
-                        getObjectClassInfo(), getTestName(), 2, true, false);
-                uid1 = getConnectorFacade().create(getSupportedObjectClass(), attrs1, null);
+                        getObjectClassInfo(objectClass), getTestName(), 2, true, false);
+                uid1 = getConnectorFacade().create(objectClass, attrs1, null);
                 assertNotNull(uid1,"Create returned null uid.");
 
                 // get latest sync token
-                SyncToken latestToken = getConnectorFacade().getLatestSyncToken(getObjectClass());
+                SyncToken latestToken = getConnectorFacade().getLatestSyncToken(objectClass);
 
                 // sync with latest sync token, should return nothing
                 final LinkedList<SyncDelta> deltas = new LinkedList<SyncDelta>();
-                getConnectorFacade().sync(getObjectClass(), latestToken, new SyncResultsHandler() {
+                getConnectorFacade().sync(objectClass, latestToken, new SyncResultsHandler() {
 
                     public boolean handle(SyncDelta delta) {
                         deltas.add(delta);
@@ -269,13 +271,13 @@ public class SyncApiOpTests extends ObjectClassRunner {
 
                 // create another object
                 Set<Attribute> attrs2 = ConnectorHelper.getCreateableAttributes(getDataProvider(),
-                        getObjectClassInfo(), getTestName(), 3, true, false);
-                uid2 = getConnectorFacade().create(getSupportedObjectClass(), attrs2, null);
+                        getObjectClassInfo(objectClass), getTestName(), 3, true, false);
+                uid2 = getConnectorFacade().create(objectClass, attrs2, null);
                 assertNotNull(uid2,"Create returned null uid.");
 
                 // sync with the same latest sync token as previous sync
                 // should return one change this time
-                getConnectorFacade().sync(getObjectClass(), latestToken, new SyncResultsHandler() {
+                getConnectorFacade().sync(objectClass, latestToken, new SyncResultsHandler() {
 
                     public boolean handle(SyncDelta delta) {
                         deltas.add(delta);
@@ -286,17 +288,17 @@ public class SyncApiOpTests extends ObjectClassRunner {
                 final String MSG2 = "Sync with latest sync token retrieved before one create should return one sync delta, but returned: %d";
                 assertTrue(deltas.size() == 1,String.format(MSG2, deltas.size()));
 
-                ConnectorHelper.checkSyncDelta(getObjectClassInfo(), deltas.get(0), uid2, attrs2,
+                ConnectorHelper.checkSyncDelta(getObjectClassInfo(objectClass), deltas.get(0), uid2, attrs2,
                         SyncDeltaType.CREATE_OR_UPDATE, false);
             } finally {
                 // cleanup
-                getConnectorFacade().delete(getSupportedObjectClass(), uid1, null);
-                getConnectorFacade().delete(getSupportedObjectClass(), uid2, null);
+                getConnectorFacade().delete(objectClass, uid1, null);
+                getConnectorFacade().delete(objectClass, uid2, null);
             }
         } else {
-            LOG.info("----------------------------------------------------------------------------------------");
-            LOG.info("Skipping test ''testLatestSyncToken'' for object class ''{0}''.", getObjectClass());
-            LOG.info("----------------------------------------------------------------------------------------");
+            logger.info("----------------------------------------------------------------------------------------");
+            logger.info("Skipping test ''testLatestSyncToken'' for object class ''"+objectClass+"''.");
+            logger.info("----------------------------------------------------------------------------------------");
         }
     }
 

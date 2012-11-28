@@ -506,7 +506,7 @@ public class GroovyDataProviderTest {
         Map<Object, Object> m = (Map<Object, Object>) o;
         int cntr = 0;
         for (Iterator<Map.Entry<Object, Object>> iterator = m.entrySet().iterator(); iterator.hasNext();) {
-            Map.Entry<Object, Object> current = (Map.Entry<Object, Object>) iterator.next();
+            Map.Entry<Object, Object> current = iterator.next();
             if (cntr == 0 || cntr == 1) {
                 AssertJUnit.assertTrue(current.getValue() instanceof String);
                 //System.out.println("k: " + current.getKey().toString() + " v: " + current.getValue().toString());

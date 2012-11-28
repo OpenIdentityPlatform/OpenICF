@@ -134,7 +134,8 @@ public class GroovyDataProvider implements DataProvider {
     /** cache for resolved values */
     private Map<String, Object> cache = new HashMap<String, Object>();
 
-    private final ConfigSlurper cs = new ConfigSlurper();
+    private final ConfigSlurper cs = null != System.getProperty("environment") ? new ConfigSlurper(
+            System.getProperty("environment")) : new ConfigSlurper();
 
     private static final Log LOG = Log.getLog(GroovyDataProvider.class);
 
@@ -818,7 +819,7 @@ public class GroovyDataProvider implements DataProvider {
     /**
      * gets short name for the type, eg. java.lang.String returns string
      * 
-     * @param Type
+     * @param dataType
      *            Name
      * @return Short Name
      */
@@ -1116,7 +1117,7 @@ public class GroovyDataProvider implements DataProvider {
         return "";
     }
 
-    /** does the same as {@link GroovyDataProvider#flattenMap(Object, String)} for lists*/
+    /** does the same as {@link GroovyDataProvider#flattenMap(Object)} for lists*/
     private String flattenList(Object obj) {
         String svalue = null;
         StringBuilder sb = new StringBuilder();

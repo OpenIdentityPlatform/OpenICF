@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ! CCPL HEADER START
+  !
+  ! This work is licensed under the Creative Commons
+  ! Attribution-NonCommercial-NoDerivs 3.0 Unported License.
+  ! To view a copy of this license, visit
+  ! http://creativecommons.org/licenses/by-nc-nd/3.0/
+  ! or send a letter to Creative Commons, 444 Castro Street,
+  ! Suite 900, Mountain View, California, 94041, USA.
+  !
+  ! You can also obtain a copy of the license at
+  ! legal/CC-BY-NC-ND.txt.
+  ! See the License for the specific language governing permissions
+  ! and limitations under the License.
+  !
+  ! If applicable, add the following below this CCPL HEADER, with the fields
+  ! enclosed by brackets "[]" replaced with your own identifying information:
+  !      Portions Copyright [yyyy] [name of copyright owner]
+  !
+  ! CCPL HEADER END
+  !
+  !      Copyright 2012 ForgeRock AS
+  !    
+-->
+<chapter xml:id='chap-writing-connectors'
+ xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
+ xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+ xsi:schemaLocation='http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd'
+ xmlns:xlink='http://www.w3.org/1999/xlink'
+ xmlns:xinclude='http://www.w3.org/2001/XInclude'>
+ <title>Writing Connectors</title>
+
+ <para>Use the Maven connector archetype to get started developing your own
+ connector bundle. First, familiarize yourself with the structure of the
+ SPI, and then read the Javadoc for the framework. You can also study source
+ code for other connectors.</para>
+
+ <para>If you are thinking of contributing your connector to OpenICF, review the
+ <link xlink:href="https://wikis.forgerock.org/confluence/display/devcom/Coding+Style+and+Guidelines"
+ xlink:show="new">coding conventions</link> and the <link
+ xlink:href="http://openicf.forgerock.org/connector-framework-contract/index.html"
+ xlink:show="new">contract tests</link> documentation. The contract tests are
+ an automated suite of tests to make sure your connector generally looks, feels,
+ and behaves like a connector should.</para>
+
+ <para>You are welcome to join and ask questions on the <link
+ xlink:href="https://lists.forgerock.org/mailman/listinfo/openicf-dev"
+ xlink:show="new">mailing list</link>, to <link
+ xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF"
+ xlink:show="new">report bugs</link>, and submit patches when you <link
+ xlink:href="http://www.forgerock.org/get_involved.html" xlink:show="new">get
+ involved</link>.</para>
+
+ <para>To get started with the Connector Archtetype, first execute the following
+ command to import the archetype and generate a new connector project.</para>
+
+ <screen>$ mvn archetype:generate
+ -DarchetypeGroupId=org.forgerock.openicf
+ -DarchetypeArtifactId=connector-archetype
+ -DarchetypeVersion=1.0.0-SNAPSHOT
+ -DremoteRepositories=http://maven.forgerock.org/repo/snapshots
+ -DarchetypeRepository=http://maven.forgerock.org/repo/snapshots
+ -DgroupId=org.forgerock.openicf.connectors.misc
+ -DartifactId=sample
+ -Dversion=1.0-SNAPSHOT
+ -Dpackage=org.forgerock.openicf.sample
+ -Dconnector_name=Sample</screen>
+
+ <para>You can customize <literal>-DartifactId=sample</literal>,
+ <literal>-Dversion=1.0-SNAPSHOT</literal>,
+ <literal>-Dpackage=org.forgerock.openicf.sample</literal>, and
+ <literal>-Dconnector_name=Sample</literal>.</para>
+
+ <para>After you import the archetype, you can use the local version.</para>
+
+ <screen>$ mvn archetype:generate -DarchetypeCatalog=local
+$ cd sample
+$ mvn install</screen>
+</chapter>

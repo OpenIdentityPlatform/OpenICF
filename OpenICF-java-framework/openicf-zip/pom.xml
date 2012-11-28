@@ -49,6 +49,11 @@
             <artifactId>logback-classic</artifactId>
             <version>1.0.7</version>
         </dependency>
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-all</artifactId>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
     <build>
         <finalName>openicf-${project.version}-java</finalName>
@@ -74,71 +79,4 @@
             </plugin>
         </plugins>
     </build>
-    <profiles>
-        <profile>
-            <id>openicf-connectors</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.forgerock.openicf.connectors.db</groupId>
-                    <artifactId>openicf-db2-connector</artifactId>
-                    <version>1.1.0.0-SNAPSHOT</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.forgerock.openicf.connectors.db</groupId>
-                    <artifactId>openicf-databasetable-connector</artifactId>
-                    <version>1.1.0.0-SNAPSHOT</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.forgerock.openicf.connectors.db</groupId>
-                    <artifactId>openicf-mysqluser-connector</artifactId>
-                    <version>1.1.0.0-SNAPSHOT</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.forgerock.openicf.connectors.db</groupId>
-                    <artifactId>openicf-oracle-connector</artifactId>
-                    <version>1.1.0.0-SNAPSHOT</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.forgerock.openicf.connectors.db</groupId>
-                    <artifactId>openicf-scriptedsql-connector</artifactId>
-                    <version>1.1.0.0-SNAPSHOT</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.forgerock.openicf.connectors.file</groupId>
-                    <artifactId>openicf-csvfile-connector</artifactId>
-                    <version>1.1.0.0-SNAPSHOT</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.forgerock.openicf.connectors.file</groupId>
-                    <artifactId>openicf-flatfile-connector</artifactId>
-                    <version>1.1.0.0-SNAPSHOT</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.forgerock.openicf.connectors.file</groupId>
-                    <artifactId>openicf-xml-connector</artifactId>
-                    <version>1.1.0.0-SNAPSHOT</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.forgerock.openicf.connectors.ldap</groupId>
-                    <artifactId>openicf-ldap-connector</artifactId>
-                    <version>1.1.0.0-SNAPSHOT</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.forgerock.openicf.connectors.os</groupId>
-                    <artifactId>openicf-solaris-connector</artifactId>
-                    <version>1.1.0.0-SNAPSHOT</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.forgerock.openicf.connectors.os</groupId>
-                    <artifactId>openicf-vms-connector</artifactId>
-                    <version>1.1.0.0-SNAPSHOT</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.forgerock.openicf.connectors.webservice</groupId>
-                    <artifactId>openicf-spml-connector</artifactId>
-                    <version>1.1.0.0-SNAPSHOT</version>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
 </project>

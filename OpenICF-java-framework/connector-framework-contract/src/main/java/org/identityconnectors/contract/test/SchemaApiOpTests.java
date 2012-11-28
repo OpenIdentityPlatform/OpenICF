@@ -22,17 +22,23 @@
  */
 package org.identityconnectors.contract.test;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-import java.util.*;
-
 import org.identityconnectors.common.*;
 import org.identityconnectors.contract.exceptions.*;
 import org.identityconnectors.framework.api.operations.*;
 import org.identityconnectors.framework.common.objects.*;
+import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 
@@ -42,9 +48,11 @@ import org.testng.annotations.Test;
  * @author Zdenek Louzensky
  *
  */
+@Guice(modules = FrameworkModule.class)
+@Test(testName =  SchemaApiOpTests.TEST_NAME)
 public class SchemaApiOpTests extends ContractTestBase {
 
-    private static final String TEST_NAME = "Schema";
+    public static final String TEST_NAME = "Schema";
     
     /*
      * Properties prefixes:
@@ -298,19 +306,19 @@ public class SchemaApiOpTests extends ContractTestBase {
 
         msg = "Object class '" + ocInfo.getType() + "', attribute '" + attribute.getName()
                 + "': field '%s' expected value is '%s', but returned '%s'.";        
-        assertEquals(expectedValues.get(ATTRIBUTE_FIELD_TYPE), attribute.getType(),String.format(msg, ATTRIBUTE_FIELD_TYPE, expectedValues
+        assertEquals(attribute.getType(), expectedValues.get(ATTRIBUTE_FIELD_TYPE), String.format(msg, ATTRIBUTE_FIELD_TYPE, expectedValues
                 .get(ATTRIBUTE_FIELD_TYPE), attribute.getType().getName()));
-        assertEquals(expectedValues.get(ATTRIBUTE_FILED_READABLE), attribute.isReadable(),String.format(msg, ATTRIBUTE_FILED_READABLE, expectedValues
+        assertEquals(attribute.isReadable(), expectedValues.get(ATTRIBUTE_FILED_READABLE), String.format(msg, ATTRIBUTE_FILED_READABLE, expectedValues
                 .get(ATTRIBUTE_FILED_READABLE), attribute.isReadable()));
-        assertEquals(expectedValues.get(ATTRIBUTE_FIELD_CREATEABLE), attribute.isCreateable(),String.format(msg, ATTRIBUTE_FIELD_CREATEABLE, expectedValues
+        assertEquals(attribute.isCreateable(), expectedValues.get(ATTRIBUTE_FIELD_CREATEABLE), String.format(msg, ATTRIBUTE_FIELD_CREATEABLE, expectedValues
                 .get(ATTRIBUTE_FIELD_CREATEABLE), attribute.isCreateable()));
-        assertEquals(expectedValues.get(ATTRIBUTE_FIELD_UPDATEABLE), attribute.isUpdateable(),String.format(msg, ATTRIBUTE_FIELD_UPDATEABLE, expectedValues
+        assertEquals(attribute.isUpdateable(), expectedValues.get(ATTRIBUTE_FIELD_UPDATEABLE), String.format(msg, ATTRIBUTE_FIELD_UPDATEABLE, expectedValues
                 .get(ATTRIBUTE_FIELD_UPDATEABLE), attribute.isUpdateable()));
-        assertEquals(expectedValues.get(ATTRIBUTE_FIELD_REQUIRED), attribute.isRequired(),String.format(msg, ATTRIBUTE_FIELD_REQUIRED, expectedValues
+        assertEquals(attribute.isRequired(), expectedValues.get(ATTRIBUTE_FIELD_REQUIRED), String.format(msg, ATTRIBUTE_FIELD_REQUIRED, expectedValues
                 .get(ATTRIBUTE_FIELD_REQUIRED), attribute.isRequired()));
-        assertEquals(expectedValues.get(ATTRIBUTE_FIELD_MULTI_VALUE), attribute.isMultiValued(),String.format(msg, ATTRIBUTE_FIELD_MULTI_VALUE, expectedValues
+        assertEquals(attribute.isMultiValued(), expectedValues.get(ATTRIBUTE_FIELD_MULTI_VALUE), String.format(msg, ATTRIBUTE_FIELD_MULTI_VALUE, expectedValues
                 .get(ATTRIBUTE_FIELD_MULTI_VALUE), attribute.isMultiValued()));
-        assertEquals(expectedValues.get(ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT), attribute.isReturnedByDefault(),String.format(msg, ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT,
+        assertEquals(attribute.isReturnedByDefault(), expectedValues.get(ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT), String.format(msg, ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT,
                 expectedValues.get(ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT), attribute.isReturnedByDefault()));
     }
     

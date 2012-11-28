@@ -19,12 +19,14 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2012 ForgeRock AS
+ *
  */
 package org.identityconnectors.contract.test;
 
 import java.util.List;
 
-import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.contract.data.DataProvider;
 import org.identityconnectors.framework.api.ConfigurationProperties;
 import org.identityconnectors.framework.api.ConfigurationProperty;
@@ -33,6 +35,7 @@ import org.identityconnectors.framework.spi.Configuration;
 import org.testng.annotations.Test;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.log4testng.Logger;
 
 import static org.testng.Assert.*;
 
@@ -43,7 +46,7 @@ import static org.testng.Assert.*;
  */
 public final class ConfigurationTests {
 
-    private static final Log LOG = Log.getLog(ConfigurationTests.class);           
+    private static final Logger logger = Logger.getLogger(ValidateApiOpTests.class);
     private ConfigurationProperties _configProperties = null;
 
     /**
@@ -80,7 +83,7 @@ public final class ConfigurationTests {
             assertNotNull(property);
                         
             String typeName = property.getType().getName();
-            LOG.ok("Property: ''{0}'' type ''{1}''", property.getName(), typeName);
+            logger.trace("Property: ''"+property.getName()+"'' type ''"+typeName+"''");
             assertTrue(FrameworkUtil.isSupportedConfigurationType(property.getType()),
                     "Type " + typeName + " not allowed in configuration!");
         }

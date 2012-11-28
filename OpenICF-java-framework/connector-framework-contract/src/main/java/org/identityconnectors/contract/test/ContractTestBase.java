@@ -19,6 +19,9 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2012 ForgeRock AS
+ *
  */
 package org.identityconnectors.contract.test;
 
@@ -27,9 +30,15 @@ import java.util.Set;
 import org.identityconnectors.contract.data.DataProvider;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.operations.APIOperation;
+import org.identityconnectors.framework.api.operations.ValidateApiOp;
+import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.testng.ITestContext;
+import org.testng.SkipException;
 import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.log4testng.Logger;
+import com.google.inject.Inject;
 
 
 /**
@@ -39,28 +48,66 @@ import org.testng.annotations.BeforeMethod;
  */
 public abstract class ContractTestBase {
 
+    /**
+     * Name of the ConfigObject
+     */
+    public static final String TESTSUITE = "testsuite";
+
+    /**
+     * Name of TestNG DataProvider to iterate over the supported ObjectClasses
+     */
+    public static final String OBJECTCALSS_DATAPROVIDER = "ObjectClass-DataProvider";
+
+    /**
+     * Logging..
+     */
+    private static final Logger logger = Logger.getLogger(ContractTestBase.class);
+
     private static DataProvider _dataProvider;
-    
+
+    @Inject
     protected ConnectorFacade _connFacade;
+
+    @BeforeClass
+    public void BeforeClass(ITestContext context) throws Exception {
+        // run test only in case operation is supported
+        if (!getConnectorFacade().getSupportedOperations().containsAll(getAPIOperations())) {
+            StringBuilder sb = new StringBuilder("Skipping test '");
+            sb.append(context.getName()).append("' because the connector does not implement: ");
+            boolean skip = true;
+            for (Class<? extends APIOperation> clazz : getAPIOperations()) {
+                if (skip) {
+                    skip = false;
+                } else {
+                    sb.append(", ");
+                }
+                sb.append(clazz.getSimpleName());
+            }
+            logger.info("--------------------------------");
+            logger.info(sb.toString());
+            logger.info("--------------------------------");
+            throw new SkipException(sb.toString());
+        }
+    }
 
     private static void disposeDataProvider() {
     	if(_dataProvider != null) {
 	        _dataProvider.dispose();       
     	}
     }
-    
-    /**
+
+/*    *//**
      * Initialize the environment needed to run the test. Called once per test method (@Before).
-     */
+     *//*
     @BeforeMethod
-    public void init() {        
-        _connFacade = ConnectorHelper.createConnectorFacade(getDataProvider());       
-    }
+    public void init() {
+        _connFacade = ConnectorHelper.createConnectorFacade(getDataProvider());
+    }*/
 
     /**
      * Dispose the test environment, do the cleanup. Called once per test method (@After).
      */
-    @AfterMethod
+    //@AfterMethod
     public void dispose() {
         _connFacade = null;
         disposeDataProvider();
@@ -99,7 +146,7 @@ public abstract class ContractTestBase {
      * Should be used in all tests requiring OperationOptions unless it's special case.
      * @return {@link OperationOptions}
      */
-    public OperationOptions getOperationOptionsByOp(Class<? extends APIOperation> clazz) {
+    public OperationOptions getOperationOptionsByOp(ObjectClass objectClass, Class<? extends APIOperation> clazz) {
         return null;
     }
 }

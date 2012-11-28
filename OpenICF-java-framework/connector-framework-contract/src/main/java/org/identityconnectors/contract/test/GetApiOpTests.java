@@ -19,6 +19,9 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2012 ForgeRock AS
+ *
  */
 package org.identityconnectors.contract.test;
 
@@ -27,7 +30,6 @@ import static org.testng.Assert.assertNotNull;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
@@ -38,24 +40,24 @@ import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
-
+import org.testng.annotations.Guice;
+import org.testng.annotations.Test;
+import org.testng.log4testng.Logger;
 
 
 /**
  * Contract test of {@link GetApiOp} 
  */
-//@RunWith(Parameterized.class)
+@Guice(modules = FrameworkModule.class)
+@Test(testName =  GetApiOpTests.TEST_NAME)
 public class GetApiOpTests extends ObjectClassRunner {
     /**
      * Logging..
      */
     @SuppressWarnings("unused")
-    private static final Log LOG = Log.getLog(GetApiOpTests.class);
-    private static final String TEST_NAME = "Get";
+    private static final Logger logger = Logger.getLogger(ValidateApiOpTests.class);
+    public static final String TEST_NAME = "Get";
 
-    public GetApiOpTests(ObjectClass oclass) {
-        super(oclass);
-    }
 
     
     /**
@@ -75,40 +77,40 @@ public class GetApiOpTests extends ObjectClassRunner {
      * {@inheritDoc}      
      */
     @Override
-    public void testRun() {
+    public void testRun(ObjectClass objectClass) {
         ConnectorObject obj = null;
         Uid uid = null;
         
         try {
             Set<Attribute> requestedAttributes = ConnectorHelper.getCreateableAttributes(
-                    getDataProvider(), getObjectClassInfo(), getTestName(), 0, true, false);
+                    getDataProvider(), getObjectClassInfo(objectClass), getTestName(), 0, true, false);
 
             // object class is always supported
-            uid = getConnectorFacade().create(getSupportedObjectClass(),
-                    requestedAttributes, getOperationOptionsByOp(CreateApiOp.class));
+            uid = getConnectorFacade().create(objectClass,
+                    requestedAttributes, getOperationOptionsByOp(objectClass, CreateApiOp.class));
             assertNotNull(uid,
                     "Unable to perform get test because object to be get cannot be created");
 
             // retrieve by uid
-            obj = getConnectorFacade().getObject(getObjectClass(), uid, getOperationOptionsByOp(GetApiOp.class));
+            obj = getConnectorFacade().getObject(objectClass, uid, getOperationOptionsByOp(objectClass, GetApiOp.class));
             assertNotNull(obj,"Unable to get object by uid");
 
-            ConnectorHelper.checkObject(getObjectClassInfo(), obj, requestedAttributes);
+            ConnectorHelper.checkObject(getObjectClassInfo(objectClass), obj, requestedAttributes);
 
             // retrieve by name
             Name name = obj.getName();
-            obj = ConnectorHelper.findObjectByName(getConnectorFacade(), getObjectClass(),
-                    name.getNameValue(), getOperationOptionsByOp(SearchApiOp.class));
+            obj = ConnectorHelper.findObjectByName(getConnectorFacade(), objectClass,
+                    name.getNameValue(), getOperationOptionsByOp(objectClass, SearchApiOp.class));
             assertNotNull(obj,"Unable to get object by name");
 
-            ConnectorHelper.checkObject(getObjectClassInfo(), obj, requestedAttributes);
+            ConnectorHelper.checkObject(getObjectClassInfo(objectClass), obj, requestedAttributes);
 
             // get by other attributes???
 
         } finally {
             // finally ... get rid of the object
-            ConnectorHelper.deleteObject(getConnectorFacade(), getSupportedObjectClass(), uid, false,
-                    getOperationOptionsByOp(DeleteApiOp.class));
+            ConnectorHelper.deleteObject(getConnectorFacade(), objectClass, uid, false,
+                    getOperationOptionsByOp(objectClass, DeleteApiOp.class));
         }
     }
     
