@@ -185,7 +185,7 @@
 
         <para>The ${connectorDisplayName} has the following configuration properties.</para>
 
-        #if ($requiredConfigurationProperties)
+        #if ($requiredConfigurationProperties && $requiredConfigurationProperties.size() > 0)
             #configurationProperties( $requiredConfigurationProperties, "Required Properties" )
         #end
 
@@ -196,7 +196,7 @@
             #end
         #end
 
-        #if ($optionalConfigurationProperties)
+        #if ($optionalConfigurationProperties && $optionalConfigurationProperties.size() > 0)
             #configurationProperties( $optionalConfigurationProperties, "Optional Properties" )
         #end
 
