@@ -29,8 +29,8 @@
         <artifactId>connectors-parent</artifactId>
         <version>1.1.0.1-SNAPSHOT</version>
     </parent>
-    <groupId>org.forgerock.openicf.connectors.ldap</groupId>
-    <artifactId>openicf-ldap-connector</artifactId>
+    <groupId>org.forgerock.openicf.connectors</groupId>
+    <artifactId>ldap-connector</artifactId>
     <version>1.1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>Generic JNDI based LDAP Connector</name>
@@ -45,10 +45,11 @@
         <system>jira</system>
         <url>https://bugster.forgerock.org/jira/browse/OPENICF/component/10182</url>
     </issueManagement>
+    <ciManagement>
+        <system>jenkins</system>
+        <url>http://builds.forgerock.org/job/OpenICF - Ldap Connector</url>
+    </ciManagement>
     <properties>
-        <skipTests>true</skipTests>
-        <contracts.skip>true</contracts.skip>
-        <privateConfigPath>${user.home}/.connectors/${project.artifactId}/config</privateConfigPath>
         <openicf.osgi.embed>ldapbp</openicf.osgi.embed>
         <connectorPackage>org.identityconnectors.ldap</connectorPackage>
         <connectorClass>LdapConnector</connectorClass>
@@ -129,6 +130,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <skip>true</skip>
                     <suiteXmlFiles>
                         <suiteXmlFile>testng.xml</suiteXmlFile>
                     </suiteXmlFiles>
@@ -153,6 +155,22 @@
                                 <portName>opendj.port</portName>
                             </portNames>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+            </plugin>
+            <plugin>
+                <groupId>org.forgerock.maven.plugins</groupId>
+                <artifactId>openicf-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>reduce-pom</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
