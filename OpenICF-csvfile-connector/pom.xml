@@ -2,7 +2,7 @@
 <!--
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
- Copyright © 2011 ForgeRock AS. All rights reserved.
+ Copyright (c) 2011-2012 ForgeRock AS. All rights reserved.
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -29,8 +29,8 @@
         <artifactId>connectors-parent</artifactId>
         <version>1.1.0.1-SNAPSHOT</version>
     </parent>
-    <groupId>org.forgerock.openicf.connectors.file</groupId>
-    <artifactId>openicf-csvfile-connector</artifactId>
+    <groupId>org.forgerock.openicf.connectors</groupId>
+    <artifactId>csvfile-connector</artifactId>
     <version>1.1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>CSVFile Connector</name>
@@ -41,14 +41,15 @@
         <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/connectors/java/csvfile</developerConnection>
         <url>http://sources.forgerock.org/browse/openicf/trunk/connectors/java/csvfile</url>
     </scm>
+    <ciManagement>
+        <system>jenkins</system>
+        <url>http://builds.forgerock.org/job/OpenICF - CSVFile Connector</url>
+    </ciManagement>
     <issueManagement>
         <system>jira</system>
         <url>https://bugster.forgerock.org/jira/browse/OPENICF/component/10179</url>
     </issueManagement>
     <properties>
-        <skipTests>false</skipTests>
-        <contracts.skip>true</contracts.skip>
-        <privateConfigPath>${user.home}/.connectors/${project.artifactId}/config</privateConfigPath>
         <connectorPackage>org.forgerock.openicf.csvfile</connectorPackage>
         <connectorClass>CSVFileConnector</connectorClass>
         <jira.componentIds>10179</jira.componentIds>
@@ -72,4 +73,24 @@
             </releases>
         </repository>
     </repositories>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+            </plugin>
+            <plugin>
+                <groupId>org.forgerock.maven.plugins</groupId>
+                <artifactId>openicf-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>reduce-pom</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
