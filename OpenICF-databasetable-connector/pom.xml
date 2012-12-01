@@ -2,7 +2,7 @@
 <!--
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
- Copyright © 2011 ForgeRock AS. All rights reserved.
+ Copyright (c) 2011-2012 ForgeRock AS. All rights reserved.
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -27,14 +27,15 @@
     <parent>
         <groupId>org.forgerock.openicf.connectors</groupId>
         <artifactId>connectors-parent</artifactId>
-        <version>1.1.0.0-SNAPSHOT</version>
+        <version>1.1.0.1-SNAPSHOT</version>
     </parent>
-    <groupId>org.forgerock.openicf.connectors.db</groupId>
-    <artifactId>openicf-databasetable-connector</artifactId>
+    <groupId>org.forgerock.openicf.connectors</groupId>
+    <artifactId>databasetable-connector</artifactId>
+    <version>1.1.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>Database Table Connector</name>
     <description>Database table connector use a single database table to store the Account attributes.</description>
-    <url>http://openicf.forgerock.org/connectors/databasetable</url>
+    <url>https://openicf.forgerock.org/connectors/databasetable-connector</url>
     <scm>
         <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/connectors/java/databasetable</connection>
         <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/connectors/java/databasetable</developerConnection>
@@ -44,11 +45,12 @@
         <system>jira</system>
         <url>https://bugster.forgerock.org/jira/browse/OPENICF/component/10174</url>
     </issueManagement>
+    <ciManagement>
+        <system>jenkins</system>
+        <url>http://builds.forgerock.org/job/OpenICF - DatabaseTable Connector</url>
+    </ciManagement>
     <properties>
-        <skipTests>true</skipTests>
-        <contracts.skip>true</contracts.skip>
-        <privateConfigPath>${user.home}/.connectors/${project.artifactId}/config</privateConfigPath>
-        <embedded.dependencies>dbcommon</embedded.dependencies>
+        <openicf.osgi.embed>dbcommon</openicf.osgi.embed>
         <connectorPackage>org.identityconnectors.databasetable</connectorPackage>
         <connectorClass>DatabaseTableConnector</connectorClass>
         <jira.componentIds>10174</jira.componentIds>
@@ -72,33 +74,54 @@
             </releases>
         </repository>
     </repositories>
-    <profiles>
-        <profile>
-            <id>with-embedded-dependencies</id>
-            <properties>
-                <embedded.dependencies>dbcommon</embedded.dependencies>
-            </properties>
-        </profile>
-        <profile>
-            <id>active-embedded-dependencies</id>
-            <properties>
-                <embedded.dependencies>dbcommon</embedded.dependencies>
-            </properties>
-        </profile>
-    </profiles>
     <dependencies>
         <dependency>
             <groupId>org.forgerock.openicf.connectors.misc</groupId>
             <artifactId>dbcommon</artifactId>
-            <version>1.1.0.0-SNAPSHOT</version>
+            <version>1.1.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>
-            <version>10.7.1.1</version>
+            <version>10.9.1.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
-
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>**/DatabaseTableOracleTests*</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.forgerock.maven.plugins</groupId>
+                <artifactId>openicf-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>reduce-pom</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.forgerock.openicf.connectors.misc</groupId>
+                        <artifactId>dbcommon</artifactId>
+                        <version>1.1.0.0</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
 </project>

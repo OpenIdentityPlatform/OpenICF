@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+  ~
+  ~ Copyright (c) 2012 ForgeRock AS. All Rights Reserved
+  ~
+  ~ The contents of this file are subject to the terms
+  ~ of the Common Development and Distribution License
+  ~ (the License). You may not use this file except in
+  ~ compliance with the License.
+  ~
+  ~ You can obtain a copy of the License at
+  ~ http://forgerock.org/license/CDDLv1.0.html
+  ~ See the License for the specific language governing
+  ~ permission and limitations under the License.
+  ~
+  ~ When distributing Covered Code, include this CDDL
+  ~ Header Notice in each file and include the License file
+  ~ at http://forgerock.org/license/CDDLv1.0.html
+  ~ If applicable, add the following below the CDDL Header,
+  ~ with the fields enclosed by brackets [] replaced by
+  ~ your own identifying information:
+  ~ "Portions Copyrighted [year] [name of copyright owner]"
+  -->
+<chapter xml:id='chap-databasetable-connector'
+ xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
+ xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+ xsi:schemaLocation='http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd'
+ xmlns:xlink='http://www.w3.org/1999/xlink'
+ xmlns:xinclude='http://www.w3.org/2001/XInclude'>
+<!--
+ What follows here is an example for the DatabaseTable Connector.
+ 
+ This section assumes the following names:
+ * connector-display-name: DatabaseTable Connector
+ * connector-name: databasetable-connector
+-->
+ <title>DatabaseTable Connector Reference</title>
+
+ <para>This chapter covers installation and configuration of the DatabaseTable  Connector.</para>
+
+ <!--
+ This chapter has at least a section on installing the connector, and another
+ section on configuring the connector. If the connector schema can be read
+ from the source, then this chapter also includes a schema section.
+
+ If the connector has multiple implementations, then the chapter repeats the
+ install, config, and schema sections for connector-display-name-1,
+ connector-display-name-2, connector-display-name-3...
+
+ Each section might be a separate XML file referenced with an <xinclude>
+ element. However it is implemented, the chapter as a whole should be
+ valid DocBook 5 XML.
+ -->
+
+ <!-- Hand-written instructions for installing the connector: -->
+ <xinclude:include href="sec-install-databasetable-connector.xml" />
+
+ <!-- The rest of the sections in this chapter are generated from source. -->
+
+ <xinclude:include href="sec-config-databasetableconnector.xml" />
+ <!--xinclude:include href="sec-schema-databasetableconnector.xml" /-->
+</chapter>
