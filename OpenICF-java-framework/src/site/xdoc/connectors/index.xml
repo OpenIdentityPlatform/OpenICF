@@ -191,7 +191,7 @@
                         <td width="10%">Supported</td>
                         <td width="10%">Build Date</td>
                     </tr>
-                    <tr class="b">
+                    <!--tr class="b">
                         <td>
                             <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=releases%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Ffile%2Fopenicf-csvfile-connector%2F1.1.0.0"
                                target="_blank">
@@ -206,7 +206,7 @@
                             <img src="../images/forgerock_supported.png" align="middle"/>
                         </td>
                         <td>20120112</td>
-                    </tr>
+                    </tr-->
                 </tbody>
             </table>
             <br/>
@@ -230,15 +230,15 @@
                             </a>
                         </td>
                         <td>
-                            <a href="./csvfile-connector/doc/OpenICF-CSVFile-Connector-1.1.0.1-Snapshot.epub">
+                            <a href="./csvfile-connector/doc/OpenICF-Csvfile-Connector-1.1.0.1-Snapshot.epub">
                                 EPUB</a>,
                             <a href="./csvfile-connector/doc/csvfile-connector-1.1.0.1-SNAPSHOT/index.html">HTML
                                 (single page)</a>,
                             <a href="./csvfile-connector/doc/csvfile-connector-1.1.0.1-SNAPSHOT/index/index.html">
                                 HTML (1 page/chapter)</a>,
-                            <a href="./csvfile-connector/doc/OpenICF-CSVFile-Connector-1.1.0.1-Snapshot.pdf">
+                            <a href="./csvfile-connector/doc/OpenICF-Csvfile-Connector-1.1.0.1-Snapshot.pdf">
                                 PDF</a>,
-                            <a href="./csvfile-connector/doc/OpenICF-CSVFile-Connector-1.1.0.1-Snapshot.rtf">
+                            <a href="./csvfile-connector/doc/OpenICF-Csvfile-Connector-1.1.0.1-Snapshot.rtf">
                                 RTF
                             </a>
                         </td>
@@ -304,15 +304,15 @@
                             </a>
                         </td>
                         <td>
-                            <a href="./databasetable-connector/doc/OpenICF-DatabaseTable-Connector-1.1.0.1-Snapshot.epub">
+                            <a href="./databasetable-connector/doc/OpenICF-Databasetable-Connector-1.1.0.0-Snapshot.epub">
                                 EPUB</a>,
-                            <a href="./databasetable-connector/doc/databasetable-connector-1.1.0.1-SNAPSHOT/index.html">HTML
+                            <a href="./databasetable-connector/doc/databasetable-connector-1.1.0.0-SNAPSHOT/index.html">HTML
                                 (single page)</a>,
-                            <a href="./databasetable-connector/doc/databasetable-connector-1.1.0.1-SNAPSHOT/index/index.html">
+                            <a href="./databasetable-connector/doc/databasetable-connector-1.1.0.0-SNAPSHOT/index/index.html">
                                 HTML (1 page/chapter)</a>,
-                            <a href="./databasetable-connector/doc/OpenICF-DatabaseTable-Connector-1.1.0.1-Snapshot.pdf">
+                            <a href="./databasetable-connector/doc/OpenICF-Databasetable-Connector-1.1.0.0-Snapshot.pdf">
                                 PDF</a>,
-                            <a href="./databasetable-connector/doc/OpenICF-DatabaseTable-Connector-1.1.0.1-Snapshot.rtf">
+                            <a href="./databasetable-connector/doc/OpenICF-Databasetable-Connector-1.1.0.0-Snapshot.rtf">
                                 RTF
                             </a>
                         </td>
