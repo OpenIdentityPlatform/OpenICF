@@ -42,15 +42,15 @@
         <menu name="OpenICF">
             <item name="Welcome" href="index.html" />
             <item name="Downloads" href="http://www.forgerock.org/openicf.html" />
-            <item name="Connectors" href="./connectors"/>
+            <item name="Connectors" href="./connectors/index.html"/>
             <item name="FAQ" href="faq.html" />
             <!--item name="Wiki" href="http://wikis.forgerock.org/openicf/" /-->
             <item name="Mailing Lists" href="mail-lists.html" />
-            <item name="Support" href="http://forgerock.com/what-we-offer/open-identity-stack/openidm" />
-            <item name="Partners" href="http://forgerock.com/partners/find-a-partner" />
+            <item name="Support" href="http://forgerock.com/what-we-offer/subscriptions/" />
+            <item name="Partners" href="http://forgerock.com/partners/" />
         </menu>
 
-        <menu name="OpenICF Core Docs">
+        <menu name="OpenICF Docs (in progress)">
             <item name="All Formats" href="docs.html" />
             <item name="Release Notes" href="./doc/release-notes/index.html" />
             <item name="Developer Guide" href="./doc/dev-guide/index.html" />
