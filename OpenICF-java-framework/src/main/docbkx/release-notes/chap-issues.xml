@@ -39,31 +39,46 @@
  <section xml:id="fixes">
   <title>Fixes &amp; Improvements</title>
 
-  <itemizedlist>
-   <para>OpenICF <?eval ${docTargetVersion}?> includes the following fixes
-   and improvements.</para>
+  <para>OpenICF <?eval ${docTargetVersion}?> fixes the following issues.</para>
 
-   <listitem>
-    <para>TODO</para>
-   </listitem>
+  <!-- List generated using http://bugster.forgerock.org/jira/rest/api/2/search?jql=project+%3D+OpenICF+and+resolution+%3D+Fixed+and+component+!%3D+documentation+and+type+%3D+Bug&startAt=0&maxResults=500&fields=summary-->
+  <itemizedlist>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-53" xlink:show="new">OPENICF-53</link>: escape / in DN entry</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-50" xlink:show="new">OPENICF-50</link>: clear text password is not properly passed to create/update scripts</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-45" xlink:show="new">OPENICF-45</link>: Throw UnknownUidException if the connector tries to update a non existing entry</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-35" xlink:show="new">OPENICF-35</link>: Read of AD Group without members fails</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-33" xlink:show="new">OPENICF-33</link>: Scripted connector does not recognises the multi valued attributes if they are Collections</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-27" xlink:show="new">OPENICF-27</link>: Fix the broken communication between Java and .Net</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-24" xlink:show="new">OPENICF-24</link>: Memory leak in AD Connector and/or .Net Connector Server</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-23" xlink:show="new">OPENICF-23</link>: Reading AD groups with more than 1500 members fails with NPE</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-22" xlink:show="new">OPENICF-22</link>: Header values randomly switch between being quoted and unquoted</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-21" xlink:show="new">OPENICF-21</link>: XML Connector throws exception when trying to query an XML File with user containing apostrophe. </para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-20" xlink:show="new">OPENICF-20</link>: Once an output CSV file reaches 658 lines long, any further rows are output with an extra newline character between them.</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-14" xlink:show="new">OPENICF-14</link>: CSVFileConnector - fieldDelimiter of "|" causes connector to fail</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-10" xlink:show="new">OPENICF-10</link>: Default to handle missing file as an error rather than creating an empty default</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-9" xlink:show="new">OPENICF-9</link>: CSV File Connector writes one newline to much per record</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-1" xlink:show="new">OPENICF-1</link>: ClassNotFoundException in OSGi environment with org.identityconnectors.framework.impl.api.local.BundleClassLoader</para></listitem>
   </itemizedlist>
  </section>
 
  <section xml:id="limitations">
   <title>Limitations</title>
 
-  <para>TODO</para>
+  <para>No particular limitations are identified for this release.</para>
  </section>
 
  <section xml:id="known-issues">
   <title>Known Issues</title>
 
+  <para>The following known issues remained open at the time of release.</para>
+
+  <!-- List generated using http://bugster.forgerock.org/jira/rest/api/2/search?jql=project+%3D+OPENICF+AND+resolution+%3D+Unresolved+AND+type+%3D+Bug+AND+component+%21%3D+documentation+and+priority+in+%28Blocker%2C+Critical%2C+Major%29&startAt=0&maxResults=500&fields=summary-->
   <itemizedlist>
-   <para>OpenICF <?eval ${docTargetVersion}?> has the following known
-   issues.</para>
-   <listitem>
-    <para>TODO</para>
-   </listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-54" xlink:show="new">OPENICF-54</link>: Powershell scripts - missing stdole.dll</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-48" xlink:show="new">OPENICF-48</link>: Can't change the secret key on Java Connector server.</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-42" xlink:show="new">OPENICF-42</link>: Fix and update the common Active Directory attribute support</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-36" xlink:show="new">OPENICF-36</link>: Create/Update LDAP user with groups can fail and leaves a partially modified user object.</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-2" xlink:show="new">OPENICF-2</link>: ICF throwing "invisible" exceptions</para></listitem>
   </itemizedlist>
  </section>
 </chapter>

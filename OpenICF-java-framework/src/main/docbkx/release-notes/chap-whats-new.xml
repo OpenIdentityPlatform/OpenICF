@@ -31,11 +31,20 @@
  xmlns:xinclude='http://www.w3.org/2001/XInclude'>
  <title>What's New in OpenICF <?eval ${docTargetVersion}?></title>
 
- <itemizedlist>
-  <para>OpenICF <?eval ${docTargetVersion}?> fixes a number of issues. OpenICF
-  <?eval ${docTargetVersion}?> also provides the following new features.</para>
-  <listitem>
-   <para>TODO</para>
-  </listitem>
- </itemizedlist>
+ <para>This release of OpenICF includes the following enhancements and new features.</para>
+
+  <!-- List generated using http://bugster.forgerock.org/jira/rest/api/2/search?jql=project+%3D+OpenICF+and+component+!%3D+documentation+and+resolution+%3D+fixed+and+type+in+%28Improvement%2C+%22New+Feature%22%29&startAt=0&maxResults=500&fields=summary-->
+  <itemizedlist>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-40" xlink:show="new">OPENICF-40</link>: Update the Apache Commons Daemon binary in OpenICF Java assembly</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-38" xlink:show="new">OPENICF-38</link>: Make more useable the return objects of the ScriptExecutors</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-34" xlink:show="new">OPENICF-34</link>: AD Connector should be able  to run PowerShell script for the RunScriptOnResource operation</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-32" xlink:show="new">OPENICF-32</link>: ScriptedSQL connector should validate connection to the database</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-31" xlink:show="new">OPENICF-31</link>: ScriptedSQL connector needs a debug mode where scripts are reloaded when invoked</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-30" xlink:show="new">OPENICF-30</link>: ScriptedSQL connector autocommit mode to be configurable</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-25" xlink:show="new">OPENICF-25</link>: Add simple heartbeat facility</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-18" xlink:show="new">OPENICF-18</link>: Improve and unify the maven build and artifacts </para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-16" xlink:show="new">OPENICF-16</link>: Connector adds a arbitrary number of empty lines to the XML files wenn writing to it.</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-15" xlink:show="new">OPENICF-15</link>: Output fields always quoted with valueQualifier</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-4" xlink:show="new">OPENICF-4</link>: Add optional MVCC support</para></listitem>
+  </itemizedlist>
 </chapter>
