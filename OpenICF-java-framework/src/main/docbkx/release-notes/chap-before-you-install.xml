@@ -79,9 +79,14 @@
  <section xml:id="connector-requirements">
   <title>Supported Connectors to Data Resources</title>
 
-  <para>This section covers the data resources that OpenICF connectors support.
-  If you have a special request to support a data resource connector not
-  referenced here, contact ForgeRock at <link
+  <para>This section covers the basic data resources that OpenICF connectors
+  support.</para>
+
+  <para>Many advanced connectors not listed in this section are also available,
+  including connectors for IBM Resource Access Control Facility (RACF), IBM
+  Tivoli Access Manager (TAM), SAP, a wide range of databases, as well as
+  enterprise and cloud applications. If you require support for a data resource
+  connector not mentioned here, contact ForgeRock at <link
   xlink:href="mailto:info@forgerock.com">info@forgerock.com</link>.</para>
 
   <itemizedlist>
@@ -110,23 +115,6 @@
 
    <listitem>
     <para>Scripted SQL</para>
-   </listitem>
-  </itemizedlist>
-
-  <itemizedlist>
-   <para>Connectors to the following data resources are also known to
-   work.</para>
-
-   <listitem>
-    <para>IBM Resource Access Control Facility (RACF)</para>
-   </listitem>
-
-   <listitem>
-    <para>IBM Tivoli Access Manager (TAM)</para>
-   </listitem>
-
-   <listitem>
-    <para>SAP Human Resources (HR)</para>
    </listitem>
   </itemizedlist>
  </section>
