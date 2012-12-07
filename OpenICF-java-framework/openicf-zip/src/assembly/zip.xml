@@ -43,32 +43,16 @@
             <outputDirectory>/openicf/</outputDirectory>
         </fileSet>
     </fileSets>
-    <moduleSets>
-        <moduleSet>
-            <!-- Enable access to all projects in the current multi module build! -->
-            <useAllReactorProjects>true</useAllReactorProjects>
-            <includes>
-                <include>org.forgerock.openicf.framework:connector-framework</include>
-                <include>org.forgerock.openicf.framework:connector-framework-internal</include>
-                <include>org.forgerock.openicf.framework:icfl-over-slf4j</include>
-            </includes>
-        </moduleSet>
-    </moduleSets>
     <dependencySets>
         <dependencySet>
             <useProjectArtifact>false</useProjectArtifact>
             <outputDirectory>/openicf/lib/framework</outputDirectory>
+            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <includes>
+                <include>org.forgerock.openicf.framework:*</include>
                 <include>org.slf4j:*</include>
                 <include>ch.qos.logback:*</include>
                 <include>org.codehaus.groovy:groovy-all</include>
-            </includes>
-        </dependencySet>
-        <dependencySet>
-            <useProjectArtifact>false</useProjectArtifact>
-            <outputDirectory>/openicf/bundles</outputDirectory>
-            <includes>
-                <include>org.forgerock.openicf.connectors.*</include>
             </includes>
         </dependencySet>
     </dependencySets>
