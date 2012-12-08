@@ -185,7 +185,8 @@ public class GroupHelper {
         try {
             conn.getInitialContext().modifyAttributes(groupDN, new ModificationItem[] { item });
         } catch (AttributeInUseException e) {
-            throw new ConnectorException(conn.format("memberAlreadyInGroup", null, memberValue, groupDN), e);
+            //throw new ConnectorException(conn.format("memberAlreadyInGroup", null, memberValue, groupDN), e);
+            log.ok("Duplicate value when adding {0} to {1}",memberValue,groupDN);
         } catch (NamingException e) {
             throw new ConnectorException(e);
         }
