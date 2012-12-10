@@ -29,6 +29,8 @@ import org.forgerock.openicf.connectors.xml.util.AttributeTypeUtil;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
@@ -41,6 +43,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 class ConnectorObjectCreator {
+
+    private static final Log logger = Log.getLog(ConnectorObjectCreator.class);
 
     private Map<String, String> attributeClassMap;
     private Map<String, AttributeInfo> attributeInfoMap;
@@ -94,7 +98,10 @@ class ConnectorObjectCreator {
 
                     Attribute attribute = null;
                     AttributeInfo info = attributeInfoMap.get(attrName);
-
+                    if (null == info) {
+                        logger.ok("There is no AttributeInfo found for attribute {0} but it in the XML document and violates the schema.", attrName);
+                        continue;
+                    }
                     if (info.isReadable()) {
                         if (!info.isMultiValued()) {
                             attribute = createAttribute(attrName, attrValue);

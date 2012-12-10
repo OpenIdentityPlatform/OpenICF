@@ -27,6 +27,7 @@
 package org.forgerock.openicf.connectors.xml.util;
 
 import com.sun.xml.xsom.XSSchema;
+import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 
 public class XmlHandlerUtil {
@@ -67,10 +68,10 @@ public class XmlHandlerUtil {
     public static final String UPDATE = "UPDATE";
 
     // List of all flags
-    public static final String NOT_CREATABLE = "NOT_CREATABLE";
-    public static final String NOT_UPDATABLE = "NOT_UPDATABLE";
-    public static final String NOT_READABLE = "NOT_READABLE";
-    public static final String NOT_RETURNED_BY_DEFAULT = "NOT_RETURNED_BY_DEFAULT";
+    public static final String NOT_CREATABLE = AttributeInfo.Flags.NOT_CREATABLE.name();
+    public static final String NOT_UPDATEABLE = AttributeInfo.Flags.NOT_UPDATEABLE.name();
+    public static final String NOT_READABLE = AttributeInfo.Flags.NOT_READABLE.name();
+    public static final String NOT_RETURNED_BY_DEFAULT = AttributeInfo.Flags.NOT_RETURNED_BY_DEFAULT.name();
 
     public static void checkObjectType(ObjectClass objClass, XSSchema schema) {
         if (!schema.getElementDecls().containsKey(objClass.getObjectClassValue())) {

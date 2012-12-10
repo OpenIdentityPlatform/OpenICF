@@ -117,7 +117,7 @@ your own identifying information:
             </xsd:documentation>
             <xsd:appinfo>
                 <tns:flag>NOT_CREATABLE</tns:flag>
-                <tns:flag>NOT_UPDATABLE</tns:flag>
+                <tns:flag>NOT_UPDATEABLE</tns:flag>
             </xsd:appinfo>
         </xsd:annotation>
     </xsd:element>
@@ -137,7 +137,7 @@ your own identifying information:
             </xsd:documentation>
             <xsd:appinfo>
                 <tns:flag>NOT_CREATABLE</tns:flag>
-                <tns:flag>NOT_UPDATABLE</tns:flag>
+                <tns:flag>NOT_UPDATEABLE</tns:flag>
             </xsd:appinfo>
         </xsd:annotation>
     </xsd:element>
@@ -233,7 +233,7 @@ your own identifying information:
         <xsd:simpleType>
             <xsd:restriction base="xsd:string">
                 <xsd:enumeration value="NOT_CREATABLE"/>
-                <xsd:enumeration value="NOT_UPDATEBLE"/>
+                <xsd:enumeration value="NOT_UPDATEABLE"/>
                 <xsd:enumeration value="NOT_READABLE"/>
                 <xsd:enumeration value="NOT_RETURNED_BY_DEFAULT"/>
             </xsd:restriction>

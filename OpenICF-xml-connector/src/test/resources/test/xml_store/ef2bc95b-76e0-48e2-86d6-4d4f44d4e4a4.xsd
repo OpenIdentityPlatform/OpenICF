@@ -43,7 +43,7 @@
                     <xsd:annotation>
                         <xsd:appinfo>
                             <icf:flag>NOT_CREATABLE</icf:flag>
-                            <icf:flag>NOT_UPDATABLE</icf:flag>
+                            <icf:flag>NOT_UPDATEABLE</icf:flag>
                         </xsd:appinfo>
                     </xsd:annotation>
                 </xsd:element>
@@ -60,14 +60,14 @@
                         <xsd:appinfo>
                             <icf:javaclass>java.math.BigInteger</icf:javaclass>
                             <icf:flag>NOT_CREATABLE</icf:flag>
-                            <icf:flag>NOT_UPDATABLE</icf:flag>
+                            <icf:flag>NOT_UPDATEABLE</icf:flag>
                         </xsd:appinfo>
                     </xsd:annotation>
                 </xsd:element>
                 <xsd:element name="account-created-timestamp" type="xsd:long" minOccurs="0">
                     <xsd:annotation>
                         <xsd:appinfo>
-                            <icf:flag>NOT_UPDATABLE</icf:flag>
+                            <icf:flag>NOT_UPDATEABLE</icf:flag>
                         </xsd:appinfo>
                     </xsd:annotation>
                 </xsd:element>
@@ -152,7 +152,7 @@
                 <xsd:element name="userCertificate" type="xsd:base64Binary" minOccurs="0">
                     <xsd:annotation>
                         <xsd:appinfo>
-                            <icf:flag>NOT_RETURN_BY_DEFAULT</icf:flag>
+                            <icf:flag>NOT_RETURNED_BY_DEFAULT</icf:flag>
                         </xsd:appinfo>
                     </xsd:annotation>
                 </xsd:element>

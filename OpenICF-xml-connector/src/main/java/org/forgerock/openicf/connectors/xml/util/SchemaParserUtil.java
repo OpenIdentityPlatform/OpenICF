@@ -185,7 +185,7 @@ public class SchemaParserUtil {
             if (s.equals(XmlHandlerUtil.NOT_CREATABLE)) {
                 flags.add(Flags.NOT_CREATABLE);
 
-            } else if (s.equals(XmlHandlerUtil.NOT_UPDATABLE)) {
+            } else if (s.equals(XmlHandlerUtil.NOT_UPDATEABLE)) {
                 flags.add(Flags.NOT_UPDATEABLE);
 
             } else if (s.equals(XmlHandlerUtil.NOT_READABLE)) {
