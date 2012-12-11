@@ -58,6 +58,7 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
     private XMLConfiguration config;
     private XMLHandler xmlInstanceHandler = null;
 
+    private static Map<String, Object> lockMap = new HashMap<String, Object>();
 
     /*
      * (non-Javadoc)
@@ -101,6 +102,16 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
         xmlInstanceHandler.dispose();
         log.ok("Dispose {0}", config.getXmlFilePath());
     }
+    
+    private synchronized Object getLock() {
+        String filename = config.getXmlFilePath().getAbsolutePath();
+        Object lock = lockMap.get(filename);
+        if (lock == null) {
+            lock = new Object();
+            lockMap.put(filename, lock);
+        }
+        return lock;
+    }
 
     public Uid authenticate(final ObjectClass objClass, final String username, final GuardedString password, final OperationOptions options) {
         if (ObjectClass.ACCOUNT.is(Assertions.nullChecked(objClass, "objectClass").getObjectClassValue())) {
@@ -121,14 +132,13 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      * @see org.identityconnectors.framework.spi.operations.CreateOp#create(org.identityconnectors.framework.common.objects.ObjectClass, java.util.Set, org.identityconnectors.framework.common.objects.OperationOptions)
      */
     public Uid create(final ObjectClass objClass, final Set<Attribute> attributes, final OperationOptions options) {
-        Assertions.nullCheck(objClass, "objectClass");
-        Assertions.nullCheck(attributes, "attributes");
-
-        Uid returnUid = xmlInstanceHandler.create(objClass, attributes);
-
-        log.info("Created {0}", returnUid);
-
-        return returnUid;
+        synchronized (getLock()) {
+            Assertions.nullCheck(objClass, "objectClass");
+            Assertions.nullCheck(attributes, "attributes");
+            Uid returnUid = xmlInstanceHandler.create(objClass, attributes);
+            log.info("Created {0}", returnUid);
+            return returnUid;
+        }
     }
 
     /*
@@ -136,14 +146,14 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      * @see org.identityconnectors.framework.spi.operations.UpdateOp#update(org.identityconnectors.framework.common.objects.ObjectClass, org.identityconnectors.framework.common.objects.Uid, java.util.Set, org.identityconnectors.framework.common.objects.OperationOptions)
      */
     public Uid update(ObjectClass objClass, Uid uid, Set<Attribute> replaceAttributes, OperationOptions options) {
-        Assertions.nullCheck(objClass, "objectClass");
-        Assertions.nullCheck(uid, "attributes");
-
-        Uid returnUid = xmlInstanceHandler.update(objClass, uid, replaceAttributes);
-
-        log.info("Updated {0}", returnUid);
-
-        return returnUid;
+        synchronized (getLock()) {
+            Assertions.nullCheck(objClass, "objectClass");
+            Assertions.nullCheck(uid, "attributes");
+            Uid returnUid = xmlInstanceHandler.update(objClass, uid,
+                    replaceAttributes);
+            log.info("Updated {0}", returnUid);
+            return returnUid;
+        }
     }
 
     /*
@@ -151,12 +161,12 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      * @see org.identityconnectors.framework.spi.operations.DeleteOp#delete(org.identityconnectors.framework.common.objects.ObjectClass, org.identityconnectors.framework.common.objects.Uid, org.identityconnectors.framework.common.objects.OperationOptions)
      */
     public void delete(final ObjectClass objClass, final Uid uid, final OperationOptions options) {
-        Assertions.nullCheck(objClass, "objectClass");
-        Assertions.nullCheck(uid, "uid");
-
-        xmlInstanceHandler.delete(objClass, uid);
-
-        log.info("Deleted {0}", uid);
+        synchronized (getLock()) {
+            Assertions.nullCheck(objClass, "objectClass");
+            Assertions.nullCheck(uid, "uid");
+            xmlInstanceHandler.delete(objClass, uid);
+            log.info("Deleted {0}", uid);
+        }
     }
 
     /*
@@ -181,16 +191,17 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      * @see org.identityconnectors.framework.spi.operations.SearchOp#executeQuery(org.identityconnectors.framework.common.objects.ObjectClass, java.lang.Object, org.identityconnectors.framework.common.objects.ResultsHandler, org.identityconnectors.framework.common.objects.OperationOptions)
      */
     public void executeQuery(ObjectClass objClass, Query query, ResultsHandler handler, OperationOptions options) {
-        QueryBuilder queryBuilder = new QueryBuilder(query, objClass);
-
-        Collection<ConnectorObject> hits = xmlInstanceHandler.search(queryBuilder.toString(), objClass);
-        int count = 0;
-        for (ConnectorObject hit : hits) {
-            count++;
-            handler.handle(hit);
+        synchronized (getLock()) {
+            QueryBuilder queryBuilder = new QueryBuilder(query, objClass);
+            Collection<ConnectorObject> hits = xmlInstanceHandler.search(
+                    queryBuilder.toString(), objClass);
+            int count = 0;
+            for (ConnectorObject hit : hits) {
+                count++;
+                handler.handle(hit);
+            }
+            log.info("Query returned {0} object(s)", count);
         }
-
-        log.info("Query returned {0} object(s)", count);
     }
 
     /*
