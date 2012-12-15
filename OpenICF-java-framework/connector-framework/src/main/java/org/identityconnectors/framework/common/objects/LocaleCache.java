@@ -23,6 +23,7 @@
 package org.identityconnectors.framework.common.objects;
 
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * An immutable reference to a {@link Locale } instance.
@@ -32,18 +33,16 @@ import java.util.Locale;
  */
 class LocaleCache {
 
-    private static Locale _instance;
+    private static final AtomicReference<Locale> _instance = new AtomicReference<Locale>();
 
-    public static synchronized Locale getInstance() {
-        if (_instance == null) {
-            _instance = Locale.getDefault();
-        }
-        return _instance;
+    public static Locale getInstance() {
+        _instance.compareAndSet(null, Locale.getDefault());
+        return _instance.get();
     }
 
     // For tests only!
     static synchronized void reset() {
-        _instance = null;
+        _instance.set(null);
     }
 
     private LocaleCache() {
