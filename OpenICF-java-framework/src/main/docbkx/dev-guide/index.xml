@@ -88,7 +88,7 @@
              TAM
 
  For example:
- <xinclude:include href="../../../../target/maven-shared-archive-resources/openicf-scriptedsql-connector-1.1.0.1-SNAPSHOT/chap-scriptedsql-connector.xml" />
+ <xinclude:include href="../../../../target/maven-shared-archive-resources/openicf-scriptedsql-connector-1.1.2.0-SNAPSHOT/chap-scriptedsql-connector.xml" />
  -->
  <index />
 </book>

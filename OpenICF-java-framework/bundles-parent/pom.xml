@@ -28,7 +28,7 @@
     <parent>
         <groupId>org.forgerock.openicf.framework</groupId>
         <artifactId>framework</artifactId>
-        <version>1.1.0.1-SNAPSHOT</version>
+        <version>1.1.2.0-SNAPSHOT</version>
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>connectors-parent</artifactId>
@@ -76,7 +76,7 @@
 
         <!-- OSGi Properties -->
         <openicf.osgi.exclude.dependencies>false</openicf.osgi.exclude.dependencies>
-        <framework.version>1.1.0.1</framework.version>
+        <framework.version>1.1.2.0-SNAPSHOT</framework.version>
 
         <openicf.osgi.import.framework.version>
             version="[$(version;==;${framework.version}),$(version;+;${framework.version}))"
@@ -330,7 +330,7 @@
                 <plugin>
                     <groupId>org.forgerock.maven.plugins</groupId>
                     <artifactId>openicf-maven-plugin</artifactId>
-                    <version>1.0.0-SNAPSHOT</version>
+                    <version>1.1.0-SNAPSHOT</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -340,7 +340,7 @@
             <plugin>
                 <groupId>org.forgerock.maven.plugins</groupId>
                 <artifactId>openicf-maven-plugin</artifactId>
-                <version>1.0.0-SNAPSHOT</version>
+                <version>1.1.0-SNAPSHOT</version>
             </plugin>
         </plugins>
     </reporting>

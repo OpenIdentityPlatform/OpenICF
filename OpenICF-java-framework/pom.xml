@@ -31,7 +31,7 @@
     </parent>
     <groupId>org.forgerock.openicf.framework</groupId>
     <artifactId>framework</artifactId>
-    <version>1.1.0.1-SNAPSHOT</version>
+    <version>1.1.2.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>OpenICF Project</name>
     <description>
@@ -221,22 +221,22 @@
             <dependency>
                 <groupId>org.forgerock.openicf.framework</groupId>
                 <artifactId>connector-framework</artifactId>
-                <version>1.1.0.1-SNAPSHOT</version>
+                <version>1.1.2.0-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>org.forgerock.openicf.framework</groupId>
                 <artifactId>connector-framework-internal</artifactId>
-                <version>1.1.0.1-SNAPSHOT</version>
+                <version>1.1.2.0-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>org.forgerock.openicf.framework</groupId>
                 <artifactId>connector-test-common</artifactId>
-                <version>1.1.0.1-SNAPSHOT</version>
+                <version>1.1.2.0-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>org.forgerock.openicf.framework</groupId>
                 <artifactId>connector-framework-contract</artifactId>
-                <version>1.1.0.1-SNAPSHOT</version>
+                <version>1.1.2.0-SNAPSHOT</version>
             </dependency>
 
             <!-- Provided Dependencies -->
@@ -251,7 +251,7 @@
             <dependency>
                 <groupId>org.forgerock.openicf.framework</groupId>
                 <artifactId>connector-framework</artifactId>
-                <version>1.1.0.1-SNAPSHOT</version>
+                <version>1.1.2.0-SNAPSHOT</version>
                 <type>test-jar</type>
                 <scope>test</scope>
             </dependency>
