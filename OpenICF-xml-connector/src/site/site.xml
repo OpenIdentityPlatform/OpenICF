@@ -29,7 +29,7 @@
     <skin>
         <groupId>org.forgerock.commons</groupId>
         <artifactId>forgerock-community-skin</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.0</version>
     </skin>
     <publishDate position="right" format="yyyy.MM.dd"/>
     <version position="right"/>
@@ -49,7 +49,7 @@
         <menu name="XML Core Docs">
             <!--item name="All Formats" href="docs.html" /-->
             <!--item name="Release Notes" href="./doc/release-notes/index.html" /-->
-            <item name="Developer Guide" href="./doc/xml-connector-1.1.0.1-SNAPSHOT/index.html" />
+            <item name="Developer Guide" href="./doc/xml-connector-1.1.1.0-SNAPSHOT/index.html" />
         </menu>
         <menu ref="reports"/>
     </body>

@@ -27,7 +27,7 @@
     <parent>
         <groupId>org.forgerock.openicf.connectors</groupId>
         <artifactId>connectors-parent</artifactId>
-        <version>1.1.0.1-SNAPSHOT</version>
+        <version>1.1.1.0</version>
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>xml-connector</artifactId>
@@ -47,7 +47,7 @@
     </issueManagement>
     <ciManagement>
         <system>jenkins</system>
-        <url>http://builds.forgerock.org/job/OpenICF - XML Connector</url>
+        <url>http://builds.forgerock.org/job/OpenICF - XML Connector 1.1.0.x branch</url>
     </ciManagement>
     <properties>
         <openicf.osgi.embed>jaxen,saxon9he,xsom,relaxngDatatype,xml-apis,xercesImpl,stax-api</openicf.osgi.embed>
