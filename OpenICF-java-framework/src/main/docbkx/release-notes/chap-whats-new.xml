@@ -33,10 +33,12 @@
 
  <para>This release of OpenICF includes the following enhancements and new features.</para>
 
-  <!-- List generated using http://bugster.forgerock.org/jira/rest/api/2/search?jql=project+%3D+OpenICF+and+component+!%3D+documentation+and+resolution+%3D+fixed+and+type+in+%28Improvement%2C+%22New+Feature%22%29&startAt=0&maxResults=500&fields=summary-->
+  <!-- List generated at 13:54:31 20121217 using http://bugster.forgerock.org/jira/rest/api/2/search?jql=project+%3D+OpenICF+and+component+!%3D+documentation+and+resolution+%3D+fixed+and+type+in+%28Improvement%2C+%22New+Feature%22%29&startAt=0&maxResults=500&fields=summary-->
   <itemizedlist>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-62" xlink:show="new">OPENICF-62</link>: Improve the performance - Disable LocalCache</para></listitem>
    <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-40" xlink:show="new">OPENICF-40</link>: Update the Apache Commons Daemon binary in OpenICF Java assembly</para></listitem>
    <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-38" xlink:show="new">OPENICF-38</link>: Make more useable the return objects of the ScriptExecutors</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-37" xlink:show="new">OPENICF-37</link>: Package the OpenICF .Net Connector server </para></listitem>
    <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-34" xlink:show="new">OPENICF-34</link>: AD Connector should be able  to run PowerShell script for the RunScriptOnResource operation</para></listitem>
    <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-32" xlink:show="new">OPENICF-32</link>: ScriptedSQL connector should validate connection to the database</para></listitem>
    <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-31" xlink:show="new">OPENICF-31</link>: ScriptedSQL connector needs a debug mode where scripts are reloaded when invoked</para></listitem>
