@@ -426,9 +426,9 @@
                                 Maven</a>,
                             <a href="./xml-connector/doc/OpenICF-Xml-Connector-1.1.0.2-Snapshot.epub">
                                 EPUB</a>,
-                            <a href="./xml-connector/doc/csvfile-connector-1.1.0.2-SNAPSHOT/index.html">HTML
+                            <a href="./xml-connector/doc/xml-connector-1.1.0.2-SNAPSHOT/index.html">HTML
                                 (single page)</a>,
-                            <a href="./xml-connector/doc/csvfile-connector-1.1.0.2-SNAPSHOT/index/index.html">
+                            <a href="./xml-connector/doc/xml-connector-1.1.0.2-SNAPSHOT/index/index.html">
                                 HTML (1 page/chapter)</a>,
                             <a href="./xml-connector/doc/OpenICF-Xml-Connector-1.1.0.2-Snapshot.pdf">
                                 PDF</a>,
@@ -497,15 +497,15 @@
                         <td>
                             <a href="./databasetable-connector-1.1.0.0/openicf-report.html">
                                 Maven</a>,
-                            <a href="./databasetable-connector-1.1.0.0/doc/OpenICF-Databasetable-Connector-1.1.0.0-Snapshot.epub">
+                            <a href="./databasetable-connector-1.1.0.0/doc/OpenICF-Databasetable-Connector-1.1.0.0.epub">
                                 EPUB</a>,
-                            <a href="./databasetable-connector-1.1.0.0/doc/databasetable-connector-1.1.0.0-SNAPSHOT/index.html">HTML
+                            <a href="./databasetable-connector-1.1.0.0/doc/databasetable-connector-1.1.0.0/index.html">HTML
                                 (single page)</a>,
-                            <a href="./databasetable-connector-1.1.0.0/doc/databasetable-connector-1.1.0.0-SNAPSHOT/index/index.html">
+                            <a href="./databasetable-connector-1.1.0.0/doc/databasetable-connector-1.1.0.0/index/index.html">
                                 HTML (1 page/chapter)</a>,
-                            <a href="./databasetable-connector-1.1.0.0/doc/OpenICF-Databasetable-Connector-1.1.0.0-Snapshot.pdf">
+                            <a href="./databasetable-connector-1.1.0.0/doc/OpenICF-Databasetable-Connector-1.1.0.0.pdf">
                                 PDF</a>,
-                            <a href="./databasetable-connector-1.1.0.0/doc/OpenICF-Databasetable-Connector-1.1.0.0-Snapshot.rtf">
+                            <a href="./databasetable-connector-1.1.0.0/doc/OpenICF-Databasetable-Connector-1.1.0.0.rtf">
                                 RTF
                             </a>
                         </td>
@@ -600,15 +600,15 @@
                         <td>
                             <a href="./googleapps-connector/openicf-report.html">
                                 Maven</a>,
-                            <a href="./googleapps-connector/doc/OpenICF-GoogleApps-Connector-1.1.0.0-Snapshot.epub">
+                            <a href="./googleapps-connector/doc/OpenICF-Googleapps-Connector-1.1.0.0-Snapshot.epub">
                                 EPUB</a>,
                             <a href="./googleapps-connector/doc/googleapps-connector-1.1.0.0-SNAPSHOT/index.html">HTML
                                 (single page)</a>,
                             <a href="./googleapps-connector/doc/googleapps-connector-1.1.0.0-SNAPSHOT/index/index.html">
                                 HTML (1 page/chapter)</a>,
-                            <a href="./googleapps-connector/doc/OpenICF-GoogleApps-Connector-1.1.0.0-Snapshot.pdf">
+                            <a href="./googleapps-connector/doc/OpenICF-Googleapps-Connector-1.1.0.0-Snapshot.pdf">
                                 PDF</a>,
-                            <a href="./googleapps-connector/doc/OpenICF-GoogleApps-Connector-1.1.0.0-Snapshot.rtf">
+                            <a href="./googleapps-connector/doc/OpenICF-Googleapps-Connector-1.1.0.0-Snapshot.rtf">
                                 RTF
                             </a>
                         </td>
