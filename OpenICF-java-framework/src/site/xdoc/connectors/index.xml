@@ -59,6 +59,34 @@
                         </td>
                         <td>20120112</td>
                     </tr>
+                    <tr class="b">
+                        <td>
+                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=releases%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fscriptedsql-connector%2F1.1.0.1"
+                               target="_blank">
+                                1.1.0.1
+                            </a>
+                        </td>
+                        <td>
+                            <a href="./scriptedsql-connector-1.1.0.1/openicf-report.html">
+                                Maven</a>,
+                            <a href="./scriptedsql-connector-1.1.0.1/doc/OpenICF-Scriptedsql-Connector-1.1.0.1.epub">
+                                EPUB</a>,
+                            <a href="./scriptedsql-connector-1.1.0.1/doc/scriptedsql-connector-1.1.0.1/index.html">HTML
+                                (single page)</a>,
+                            <a href="./scriptedsql-connector-1.1.0.1/doc/scriptedsql-connector-1.1.0.1/index/index.html">
+                                HTML (1 page/chapter)</a>,
+                            <a href="./scriptedsql-connector-1.1.0.1/doc/OpenICF-Scriptedsql-Connector-1.1.0.1.pdf">
+                                PDF</a>,
+                            <a href="./scriptedsql-connector-1.1.0.1/doc/OpenICF-Scriptedsql-Connector-1.1.0.1.rtf">
+                                RTF
+                            </a>
+                        </td>
+                        <td>trunk</td>
+                        <td>
+                            <img src="../images/forgerock_supported.png" align="middle"/>
+                        </td>
+                        <td>20121216</td>
+                    </tr>
                 </tbody>
             </table>
             <br/>
@@ -76,21 +104,23 @@
                     </tr>
                     <tr class="b">
                         <td>
-                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=snapshots%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fscriptedsql-connector%2F1.1.0.1-SNAPSHOT"
+                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=snapshots%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fscriptedsql-connector%2F1.1.1.0-SNAPSHOT"
                                target="_blank">
-                                1.1.0.1-SNAPSHOT
+                                1.1.1.0-SNAPSHOT
                             </a>
                         </td>
                         <td>
-                            <a href="./scriptedsql-connector/doc/OpenICF-Scriptedsql-Connector-1.1.0.1-Snapshot.epub">
+                            <a href="./scriptedsql-connector/openicf-report.html">
+                                Maven</a>,
+                            <a href="./scriptedsql-connector/doc/OpenICF-Scriptedsql-Connector-1.1.1.0-Snapshot.epub">
                                 EPUB</a>,
-                            <a href="./scriptedsql-connector/doc/scriptedsql-connector-1.1.0.1-SNAPSHOT/index.html">HTML
+                            <a href="./scriptedsql-connector/doc/scriptedsql-connector-1.1.1.0-SNAPSHOT/index.html">HTML
                                 (single page)</a>,
-                            <a href="./scriptedsql-connector/doc/scriptedsql-connector-1.1.0.1-SNAPSHOT/index/index.html">
+                            <a href="./scriptedsql-connector/doc/scriptedsql-connector-1.1.1.0-SNAPSHOT/index/index.html">
                                 HTML (1 page/chapter)</a>,
-                            <a href="./scriptedsql-connector/doc/OpenICF-Scriptedsql-Connector-1.1.0.1-Snapshot.pdf">
+                            <a href="./scriptedsql-connector/doc/OpenICF-Scriptedsql-Connector-1.1.1.0-Snapshot.pdf">
                                 PDF</a>,
-                            <a href="./scriptedsql-connector/doc/OpenICF-Scriptedsql-Connector-1.1.0.1-Snapshot.rtf">
+                            <a href="./scriptedsql-connector/doc/OpenICF-Scriptedsql-Connector-1.1.1.0-Snapshot.rtf">
                                 RTF
                             </a>
                         </td>
@@ -133,6 +163,34 @@
                         </td>
                         <td>20120112</td>
                     </tr>
+                    <tr class="b">
+                        <td>
+                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=releases%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fldap-connector%2F1.1.0.1"
+                               target="_blank">
+                                1.1.0.1
+                            </a>
+                        </td>
+                        <td>
+                            <a href="./ldap-connector-1.1.0.1/openicf-report.html">
+                                Maven</a>,
+                            <a href="./ldap-connector-1.1.0.1/doc/OpenICF-Ldap-Connector-1.1.0.1.epub">
+                                EPUB</a>,
+                            <a href="./ldap-connector-1.1.0.1/doc/ldap-connector-1.1.0.1/index.html">HTML
+                                (single page)</a>,
+                            <a href="./ldap-connector-1.1.0.1/doc/ldap-connector-1.1.0.1/index/index.html">
+                                HTML (1 page/chapter)</a>,
+                            <a href="./ldap-connector-1.1.0.1/doc/OpenICF-Ldap-Connector-1.1.0.1.pdf">
+                                PDF</a>,
+                            <a href="./ldap-connector-1.1.0.1/doc/OpenICF-Ldap-Connector-1.1.0.1.rtf">
+                                RTF
+                            </a>
+                        </td>
+                        <td>trunk</td>
+                        <td>
+                            <img src="../images/forgerock_supported.png" align="middle"/>
+                        </td>
+                        <td>20121216</td>
+                    </tr>
                 </tbody>
             </table>
             <br/>
@@ -150,12 +208,14 @@
                     </tr>
                     <tr class="b">
                         <td>
-                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=snapshots%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fldap-connector%2F1.1.0.1-SNAPSHOT"
+                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=snapshots%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fldap-connector%2F1.1.1.0-SNAPSHOT"
                                target="_blank">
-                                1.1.0.1-SNAPSHOT
+                                1.1.1.0-SNAPSHOT
                             </a>
                         </td>
                         <td>
+                            <a href="./ldap-connector/openicf-report.html">
+                                Maven</a>,
                             <a href="./ldap-connector/doc/OpenICF-Ldap-Connector-1.1.0.1-Snapshot.epub">
                                 EPUB</a>,
                             <a href="./ldap-connector/doc/ldap-connector-1.1.0.1-SNAPSHOT/index.html">HTML
@@ -191,7 +251,7 @@
                         <td width="10%">Supported</td>
                         <td width="10%">Build Date</td>
                     </tr>
-                    <!--tr class="b">
+                    <tr class="b">
                         <td>
                             <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=releases%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Ffile%2Fopenicf-csvfile-connector%2F1.1.0.0"
                                target="_blank">
@@ -206,7 +266,35 @@
                             <img src="../images/forgerock_supported.png" align="middle"/>
                         </td>
                         <td>20120112</td>
-                    </tr-->
+                    </tr>
+                    <tr class="b">
+                        <td>
+                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=releases%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fcsvfile-connector%2F1.1.0.1"
+                               target="_blank">
+                                1.1.0.1
+                            </a>
+                        </td>
+                        <td>
+                            <a href="./csvfile-connector-1.1.0.1/openicf-report.html">
+                                Maven</a>,
+                            <a href="./csvfile-connector-1.1.0.1/doc/OpenICF-Csvfile-Connector-1.1.0.1.epub">
+                                EPUB</a>,
+                            <a href="./csvfile-connector-1.1.0.1/doc/csvfile-connector-1.1.0.1/index.html">HTML
+                                (single page)</a>,
+                            <a href="./csvfile-connector-1.1.0.1/doc/csvfile-connector-1.1.0.1/index/index.html">
+                                HTML (1 page/chapter)</a>,
+                            <a href="./csvfile-connector-1.1.0.1/doc/OpenICF-Csvfile-Connector-1.1.0.1.pdf">
+                                PDF</a>,
+                            <a href="./csvfile-connector-1.1.0.1/doc/OpenICF-Csvfile-Connector-1.1.0.1.rtf">
+                                RTF
+                            </a>
+                        </td>
+                        <td>trunk</td>
+                        <td>
+                            <img src="../images/forgerock_supported.png" align="middle"/>
+                        </td>
+                        <td>20121216</td>
+                    </tr>
                 </tbody>
             </table>
             <br/>
@@ -224,21 +312,23 @@
                     </tr>
                     <tr class="b">
                         <td>
-                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=snapshots%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fcsvfile-connector%2F1.1.0.1-SNAPSHOT"
+                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=snapshots%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fcsvfile-connector%2F1.1.1.0-SNAPSHOT"
                                target="_blank">
-                                1.1.0.1-SNAPSHOT
+                                1.1.1.0-SNAPSHOT
                             </a>
                         </td>
                         <td>
-                            <a href="./csvfile-connector/doc/OpenICF-Csvfile-Connector-1.1.0.1-Snapshot.epub">
+                            <a href="./csvfile-connector/openicf-report.html">
+                                Maven</a>,
+                            <a href="./csvfile-connector/doc/OpenICF-Csvfile-Connector-1.1.1.0-Snapshot.epub">
                                 EPUB</a>,
-                            <a href="./csvfile-connector/doc/csvfile-connector-1.1.0.1-SNAPSHOT/index.html">HTML
+                            <a href="./csvfile-connector/doc/csvfile-connector-1.1.1.0-SNAPSHOT/index.html">HTML
                                 (single page)</a>,
-                            <a href="./csvfile-connector/doc/csvfile-connector-1.1.0.1-SNAPSHOT/index/index.html">
+                            <a href="./csvfile-connector/doc/csvfile-connector-1.1.1.0-SNAPSHOT/index/index.html">
                                 HTML (1 page/chapter)</a>,
-                            <a href="./csvfile-connector/doc/OpenICF-Csvfile-Connector-1.1.0.1-Snapshot.pdf">
+                            <a href="./csvfile-connector/doc/OpenICF-Csvfile-Connector-1.1.1.0-Snapshot.pdf">
                                 PDF</a>,
-                            <a href="./csvfile-connector/doc/OpenICF-Csvfile-Connector-1.1.0.1-Snapshot.rtf">
+                            <a href="./csvfile-connector/doc/OpenICF-Csvfile-Connector-1.1.1.0-Snapshot.rtf">
                                 RTF
                             </a>
                         </td>
@@ -248,6 +338,138 @@
                         </td>
                         <td>Yesterday</td>
                     </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section name="XML File Connector" href="xml-connector">
+            <table class="bodyTable" border="0" cellpadding="4" cellspacing="0">
+                <tbody>
+                    <tr class="a">
+                        <th colspan="5">Release</th>
+                    </tr>
+                    <tr style="background-color: rgb(224, 224, 224); font-weight: bold">
+                        <td width="30%">Download</td>
+                        <td width="40%">Documentation</td>
+                        <td width="10%">Built from</td>
+                        <td width="10%">Supported</td>
+                        <td width="10%">Build Date</td>
+                    </tr>
+                    <tr class="b">
+                        <td>
+                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=releases%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Ffile%2Fopenicf-xml-connector%2F1.1.0.0"
+                               target="_blank">
+                                1.1.0.0
+                            </a>
+                        </td>
+                        <td>
+                            N/A
+                        </td>
+                        <td>trunk</td>
+                        <td>
+                            <img src="../images/forgerock_supported.png" align="middle"/>
+                        </td>
+                        <td>20120112</td>
+                    </tr>
+                    <tr class="b">
+                        <td>
+                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=releases%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fxml-connector%2F1.1.0.1"
+                               target="_blank">
+                                1.1.0.1
+                            </a>
+                        </td>
+                        <td>
+                            <a href="./xml-connector-1.1.0.1/openicf-report.html">
+                                Maven</a>,
+                            <a href="./xml-connector-1.1.0.1/doc/OpenICF-Xml-Connector-1.1.0.1.epub">
+                                EPUB</a>,
+                            <a href="./xml-connector-1.1.0.1/doc/xml-connector-1.1.0.1/index.html">HTML
+                                (single page)</a>,
+                            <a href="./xml-connector-1.1.0.1/doc/xml-connector-1.1.0.1/index/index.html">
+                                HTML (1 page/chapter)</a>,
+                            <a href="./xml-connector-1.1.0.1/doc/OpenICF-Xml-Connector-1.1.0.1.pdf">
+                                PDF</a>,
+                            <a href="./xml-connector-1.1.0.1/doc/OpenICF-Xml-Connector-1.1.0.1.rtf">
+                                RTF
+                            </a>
+                        </td>
+                        <td>trunk</td>
+                        <td>
+                            <img src="../images/forgerock_supported.png" align="middle"/>
+                        </td>
+                        <td>20121216</td>
+                    </tr>
+                </tbody>
+            </table>
+            <br/>
+            <table class="bodyTable" border="0" cellpadding="4" cellspacing="0">
+                <tbody>
+                    <tr class="a">
+                        <th colspan="5">Nightly Builds</th>
+                    </tr>
+                    <tr style="background-color: rgb(224, 224, 224); font-weight: bold">
+                        <td width="30%">Download</td>
+                        <td width="40%">Documentation</td>
+                        <td width="10%">Built from</td>
+                        <td width="10%">Supported</td>
+                        <td width="10%">Build Date</td>
+                    </tr>
+                    <tr class="b">
+                        <td>
+                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=snapshots%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fxml-connector%2F1.1.0.2-SNAPSHOT"
+                               target="_blank">
+                                1.1.0.2-SNAPSHOT
+                            </a>
+                        </td>
+                        <td>
+                            <a href="./xml-connector/openicf-report.html">
+                                Maven</a>,
+                            <a href="./xml-connector/doc/OpenICF-Xml-Connector-1.1.0.2-Snapshot.epub">
+                                EPUB</a>,
+                            <a href="./xml-connector/doc/csvfile-connector-1.1.0.2-SNAPSHOT/index.html">HTML
+                                (single page)</a>,
+                            <a href="./xml-connector/doc/csvfile-connector-1.1.0.2-SNAPSHOT/index/index.html">
+                                HTML (1 page/chapter)</a>,
+                            <a href="./xml-connector/doc/OpenICF-Xml-Connector-1.1.0.2-Snapshot.pdf">
+                                PDF</a>,
+                            <a href="./xml-connector/doc/OpenICF-Xml-Connector-1.1.0.2-Snapshot.rtf">
+                                RTF
+                            </a>
+                        </td>
+                        <td>trunk</td>
+                        <td>
+                            <img src="../images/forgerock_supported.png" align="middle"/>
+                        </td>
+                        <td>Yesterday</td>
+                    </tr>
+                    <!--tr class="b">
+                        <td>
+                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=snapshots%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fxml-connector%2F1.1.1.0-SNAPSHOT"
+                               target="_blank">
+                                1.1.1.0-SNAPSHOT
+                            </a>
+                        </td>
+                        <td>
+                            <a href="./xml-connector/openicf-report.html">
+                                Maven</a>,
+                            <a href="./xml-connector/doc/OpenICF-Xml-Connector-1.1.1.0-Snapshot.epub">
+                                EPUB</a>,
+                            <a href="./xml-connector/doc/csvfile-connector-1.1.1.0-SNAPSHOT/index.html">HTML
+                                (single page)</a>,
+                            <a href="./xml-connector/doc/csvfile-connector-1.1.1.0-SNAPSHOT/index/index.html">
+                                HTML (1 page/chapter)</a>,
+                            <a href="./xml-connector/doc/OpenICF-Xml-Connector-1.1.1.0-Snapshot.pdf">
+                                PDF</a>,
+                            <a href="./xml-connector/doc/OpenICF-Xml-Connector-1.1.1.0-Snapshot.rtf">
+                                RTF
+                            </a>
+                        </td>
+                        <td>trunk</td>
+                        <td>
+                            <img src="../images/forgerock_supported.png" align="middle"/>
+                        </td>
+                        <td>Yesterday</td>
+                    </tr-->
                 </tbody>
             </table>
         </section>
@@ -267,19 +489,31 @@
                     </tr>
                     <tr class="b">
                         <td>
-                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=releases%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fdb%2Fopenicf-databasetable-connector%2F1.1.0.0"
+                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=releases%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fdatabasetable-connector%2F1.1.0.0"
                                target="_blank">
                                 1.1.0.0
                             </a>
                         </td>
                         <td>
-                            N/A
+                            <a href="./databasetable-connector-1.1.0.0/openicf-report.html">
+                                Maven</a>,
+                            <a href="./databasetable-connector-1.1.0.0/doc/OpenICF-Databasetable-Connector-1.1.0.0-Snapshot.epub">
+                                EPUB</a>,
+                            <a href="./databasetable-connector-1.1.0.0/doc/databasetable-connector-1.1.0.0-SNAPSHOT/index.html">HTML
+                                (single page)</a>,
+                            <a href="./databasetable-connector-1.1.0.0/doc/databasetable-connector-1.1.0.0-SNAPSHOT/index/index.html">
+                                HTML (1 page/chapter)</a>,
+                            <a href="./databasetable-connector-1.1.0.0/doc/OpenICF-Databasetable-Connector-1.1.0.0-Snapshot.pdf">
+                                PDF</a>,
+                            <a href="./databasetable-connector-1.1.0.0/doc/OpenICF-Databasetable-Connector-1.1.0.0-Snapshot.rtf">
+                                RTF
+                            </a>
                         </td>
                         <td>trunk</td>
                         <td>
                             <img src="../images/forgerock_supported.png" align="middle"/>
                         </td>
-                        <td>20120112</td>
+                        <td>20121216</td>
                     </tr>
                 </tbody>
             </table>
@@ -298,21 +532,143 @@
                     </tr>
                     <tr class="b">
                         <td>
-                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=snapshots%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fdatabasetable-connector%2F1.1.0.0-SNAPSHOT"
+                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=snapshots%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fdatabasetable-connector%2F1.1.1.0-SNAPSHOT"
                                target="_blank">
-                                1.1.0.1-SNAPSHOT
+                                1.1.1.0-SNAPSHOT
                             </a>
                         </td>
                         <td>
-                            <a href="./databasetable-connector/doc/OpenICF-Databasetable-Connector-1.1.0.0-Snapshot.epub">
+                            <a href="./databasetable-connector/openicf-report.html">
+                                Maven</a>,
+                            <a href="./databasetable-connector/doc/OpenICF-Databasetable-Connector-1.1.1.0-Snapshot.epub">
                                 EPUB</a>,
-                            <a href="./databasetable-connector/doc/databasetable-connector-1.1.0.0-SNAPSHOT/index.html">HTML
+                            <a href="./databasetable-connector/doc/databasetable-connector-1.1.1.0-SNAPSHOT/index.html">HTML
                                 (single page)</a>,
-                            <a href="./databasetable-connector/doc/databasetable-connector-1.1.0.0-SNAPSHOT/index/index.html">
+                            <a href="./databasetable-connector/doc/databasetable-connector-1.1.1.0-SNAPSHOT/index/index.html">
                                 HTML (1 page/chapter)</a>,
-                            <a href="./databasetable-connector/doc/OpenICF-Databasetable-Connector-1.1.0.0-Snapshot.pdf">
+                            <a href="./databasetable-connector/doc/OpenICF-Databasetable-Connector-1.1.1.0-Snapshot.pdf">
                                 PDF</a>,
-                            <a href="./databasetable-connector/doc/OpenICF-Databasetable-Connector-1.1.0.0-Snapshot.rtf">
+                            <a href="./databasetable-connector/doc/OpenICF-Databasetable-Connector-1.1.1.0-Snapshot.rtf">
+                                RTF
+                            </a>
+                        </td>
+                        <td>trunk</td>
+                        <td>
+                            <img src="../images/forgerock_supported.png" align="middle"/>
+                        </td>
+                        <td>Yesterday</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section name="GoogleApps Connector" href="googleapps-connector">
+            <table class="bodyTable" border="0" cellpadding="4" cellspacing="0">
+                <tbody>
+                    <tr class="a">
+                        <th colspan="5">Release</th>
+                    </tr>
+                    <tr style="background-color: rgb(224, 224, 224); font-weight: bold">
+                        <td width="30%">Download</td>
+                        <td width="40%">Documentation</td>
+                        <td width="10%">Built from</td>
+                        <td width="10%">Supported</td>
+                        <td width="10%">Build Date</td>
+                    </tr>
+                </tbody>
+            </table>
+            <br/>
+            <table class="bodyTable" border="0" cellpadding="4" cellspacing="0">
+                <tbody>
+                    <tr class="a">
+                        <th colspan="5">Nightly Builds</th>
+                    </tr>
+                    <tr style="background-color: rgb(224, 224, 224); font-weight: bold">
+                        <td width="30%">Download</td>
+                        <td width="40%">Documentation</td>
+                        <td width="10%">Built from</td>
+                        <td width="10%">Supported</td>
+                        <td width="10%">Build Date</td>
+                    </tr>
+                    <tr class="b">
+                        <td>
+                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=snapshots%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fgoogleapps-connector%2F1.1.0.0-SNAPSHOT"
+                               target="_blank">
+                                1.1.0.0-SNAPSHOT
+                            </a>
+                        </td>
+                        <td>
+                            <a href="./googleapps-connector/openicf-report.html">
+                                Maven</a>,
+                            <a href="./googleapps-connector/doc/OpenICF-GoogleApps-Connector-1.1.0.0-Snapshot.epub">
+                                EPUB</a>,
+                            <a href="./googleapps-connector/doc/googleapps-connector-1.1.0.0-SNAPSHOT/index.html">HTML
+                                (single page)</a>,
+                            <a href="./googleapps-connector/doc/googleapps-connector-1.1.0.0-SNAPSHOT/index/index.html">
+                                HTML (1 page/chapter)</a>,
+                            <a href="./googleapps-connector/doc/OpenICF-GoogleApps-Connector-1.1.0.0-Snapshot.pdf">
+                                PDF</a>,
+                            <a href="./googleapps-connector/doc/OpenICF-GoogleApps-Connector-1.1.0.0-Snapshot.rtf">
+                                RTF
+                            </a>
+                        </td>
+                        <td>trunk</td>
+                        <td>
+                            <img src="../images/forgerock_supported.png" align="middle"/>
+                        </td>
+                        <td>Yesterday</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section name="Dummy Connector" href="dummy-connector">
+            <table class="bodyTable" border="0" cellpadding="4" cellspacing="0">
+                <tbody>
+                    <tr class="a">
+                        <th colspan="5">Release</th>
+                    </tr>
+                    <tr style="background-color: rgb(224, 224, 224); font-weight: bold">
+                        <td width="30%">Download</td>
+                        <td width="40%">Documentation</td>
+                        <td width="10%">Built from</td>
+                        <td width="10%">Supported</td>
+                        <td width="10%">Build Date</td>
+                    </tr>
+                </tbody>
+            </table>
+            <br/>
+            <table class="bodyTable" border="0" cellpadding="4" cellspacing="0">
+                <tbody>
+                    <tr class="a">
+                        <th colspan="5">Nightly Builds</th>
+                    </tr>
+                    <tr style="background-color: rgb(224, 224, 224); font-weight: bold">
+                        <td width="30%">Download</td>
+                        <td width="40%">Documentation</td>
+                        <td width="10%">Built from</td>
+                        <td width="10%">Supported</td>
+                        <td width="10%">Build Date</td>
+                    </tr>
+                    <tr class="b">
+                        <td>
+                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=snapshots%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fdummy-connector%2F1.1.0.0-SNAPSHOT"
+                               target="_blank">
+                                1.1.0.0-SNAPSHOT
+                            </a>
+                        </td>
+                        <td>
+                            <a href="./dummy-connector/openicf-report.html">
+                                Maven</a>,
+                            <a href="./dummy-connector/doc/OpenICF-Dummy-Connector-1.1.0.0-Snapshot.epub">
+                                EPUB</a>,
+                            <a href="./dummy-connector/doc/dummy-connector-1.1.0.0-SNAPSHOT/index.html">HTML
+                                (single page)</a>,
+                            <a href="./dummy-connector/doc/dummy-connector-1.1.0.0-SNAPSHOT/index/index.html">
+                                HTML (1 page/chapter)</a>,
+                            <a href="./dummy-connector/doc/OpenICF-Dummy-Connector-1.1.0.0-Snapshot.pdf">
+                                PDF</a>,
+                            <a href="./dummy-connector/doc/OpenICF-Dummy-Connector-1.1.0.0-Snapshot.rtf">
                                 RTF
                             </a>
                         </td>
