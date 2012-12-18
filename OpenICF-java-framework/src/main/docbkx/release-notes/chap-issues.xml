@@ -41,7 +41,7 @@
 
   <para>OpenICF <?eval ${docTargetVersion}?> fixes the following bugs.</para>
 
-  <!-- List generated at 13:56:22 20121217 using http://bugster.forgerock.org/jira/rest/api/2/search?jql=project+%3D+OpenICF+and+resolution+%3D+Fixed+and+component+!%3D+documentation+and+type+%3D+Bug&startAt=0&maxResults=500&fields=summary-->
+  <!-- List generated at 17:00:16 20121218 using http://bugster.forgerock.org/jira/rest/api/2/search?jql=project+%3D+OpenICF+and+resolution+%3D+Fixed+and+%28component+%21%3D+documentation+OR+component+is+EMPTY%29+and+type+%3D+Bug&startAt=0&maxResults=500&fields=summary-->
   <itemizedlist>
    <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-60" xlink:show="new">OPENICF-60</link>: Typo and schema error in XML resource schema</para></listitem>
    <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-59" xlink:show="new">OPENICF-59</link>: NPE when the AttributeInfo is null</para></listitem>
@@ -52,7 +52,7 @@
    <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-45" xlink:show="new">OPENICF-45</link>: Throw UnknownUidException if the connector tries to update a non existing entry</para></listitem>
    <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-36" xlink:show="new">OPENICF-36</link>: Create/Update LDAP user with groups can fail and leaves a partially modified user object.</para></listitem>
    <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-35" xlink:show="new">OPENICF-35</link>: Read of AD Group without members fails</para></listitem>
-   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-33" xlink:show="new">OPENICF-33</link>: Scripted connector does not recognises the multi valued attributes if they are Collections</para></listitem>
+   <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-33" xlink:show="new">OPENICF-33</link>: Scripted connector does not recognize multi valued attributes if they are Collections</para></listitem>
    <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-27" xlink:show="new">OPENICF-27</link>: Fix the broken communication between Java and .Net</para></listitem>
    <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-24" xlink:show="new">OPENICF-24</link>: Memory leak in AD Connector and/or .Net Connector Server</para></listitem>
    <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-23" xlink:show="new">OPENICF-23</link>: Reading AD groups with more than 1500 members fails with NPE</para></listitem>
@@ -77,7 +77,7 @@
 
   <para>The following known issues remained open at the time of release.</para>
 
-  <!-- List generated at 13:56:52 20121217 using http://bugster.forgerock.org/jira/rest/api/2/search?jql=project+%3D+OPENICF+AND+resolution+%3D+Unresolved+AND+type+%3D+Bug+AND+component+%21%3D+documentation+and+priority+in+%28Blocker%2C+Critical%2C+Major%29&startAt=0&maxResults=500&fields=summary-->
+  <!-- List generated at 17:00:39 20121218 using http://bugster.forgerock.org/jira/rest/api/2/search?jql=project+%3D+OPENICF+AND+resolution+%3D+Unresolved+AND+type+%3D+Bug+AND+%28component+%21%3D+documentation+OR+component+is+EMPTY%29+and+priority+in+%28Blocker%2C+Critical%2C+Major%29&startAt=0&maxResults=500&fields=summary-->
   <itemizedlist>
    <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-61" xlink:show="new">OPENICF-61</link>: XML Connector throws errors when using special characters in user account.</para></listitem>
    <listitem><para><link xlink:href="https://bugster.forgerock.org/jira/browse/OPENICF-54" xlink:show="new">OPENICF-54</link>: Powershell scripts - missing stdole.dll</para></listitem>
