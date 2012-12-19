@@ -166,8 +166,7 @@
         <javadocStylesheet>org/forgerock/javadoc/javadoc.css</javadocStylesheet>
 
         <!-- Core documentation properties -->
-        <!--docTargetVersion>${project.version}</docTargetVersion-->
-        <docTargetVersion>1.1.1.0</docTargetVersion>
+        <docTargetVersion>${project.version}</docTargetVersion>
         <googleAnalyticsAccountId>UA-23412190-10</googleAnalyticsAccountId>
         <!--
             Release date is specified only when building the documentation
