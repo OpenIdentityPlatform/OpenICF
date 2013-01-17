@@ -314,7 +314,11 @@ public class LdapConnection {
 
     private ServerType detectServerType() {
         try {
-            Attributes attrs = getInitialContext().getAttributes("", new String[] { "vendorVersion" });
+            Attributes attrs = getInitialContext().getAttributes("", new String[] { "vendorVersion", "vendorName" });
+            String vendorName = getStringAttrValue(attrs, "vendorName");
+            if (null != vendorName && vendorName.toLowerCase().contains("ibm")) {
+                return ServerType.IBM;
+            }
             String vendorVersion = getStringAttrValue(attrs, "vendorVersion");
             if (vendorVersion != null) {
                 vendorVersion = vendorVersion.toLowerCase();
@@ -399,6 +403,6 @@ public class LdapConnection {
 
     public enum ServerType {
 
-        SUN_DSEE, OPENDS, UNKNOWN
+        SUN_DSEE, OPENDS, IBM,  UNKNOWN
     }
 }

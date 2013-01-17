@@ -97,7 +97,7 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
      */
     private static final Set<String> LDIF_MODIFY_OPS;
 
-    private final LdapConnection conn;
+    protected final LdapConnection conn;
     private final ObjectClass oclass;
 
     private ChangeLogAttributes changeLogAttrs;
@@ -342,7 +342,7 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
         return false;
     }
 
-    private boolean filterOutByModifiersNames(Map<String, List<Object>> changes) {
+    protected boolean filterOutByModifiersNames(Map<String, List<Object>> changes) {
         Set<LdapName> filter = conn.getConfiguration().getModifiersNamesToFilterOutAsLdapNames();
         if (filter.isEmpty()) {
             log.ok("Filtering by modifiersName disabled");
