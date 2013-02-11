@@ -48,7 +48,6 @@ import org.testng.log4testng.Logger;
 /**
  * Contract test of {@link GetApiOp} 
  */
-@Guice(modules = FrameworkModule.class)
 @Test(testName =  GetApiOpTests.TEST_NAME)
 public class GetApiOpTests extends ObjectClassRunner {
     /**
@@ -77,7 +76,7 @@ public class GetApiOpTests extends ObjectClassRunner {
      * {@inheritDoc}      
      */
     @Override
-    public void testRun(ObjectClass objectClass) {
+    protected void testRun(ObjectClass objectClass) {
         ConnectorObject obj = null;
         Uid uid = null;
         

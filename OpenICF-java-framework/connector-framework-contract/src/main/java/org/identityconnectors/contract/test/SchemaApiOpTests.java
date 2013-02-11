@@ -48,7 +48,6 @@ import org.testng.annotations.Test;
  * @author Zdenek Louzensky
  *
  */
-@Guice(modules = FrameworkModule.class)
 @Test(testName =  SchemaApiOpTests.TEST_NAME)
 public class SchemaApiOpTests extends ContractTestBase {
 

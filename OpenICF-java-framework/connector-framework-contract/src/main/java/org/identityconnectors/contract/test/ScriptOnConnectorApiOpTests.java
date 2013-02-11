@@ -38,6 +38,7 @@ import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.ScriptOnConnectorApiOp;
 import org.identityconnectors.framework.common.objects.ScriptContext;
+import org.testng.Reporter;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 import org.testng.log4testng.Logger;
@@ -48,7 +49,6 @@ import org.testng.log4testng.Logger;
  * 
  * @author Zdenek Louzensky
  */
-@Guice(modules = FrameworkModule.class)
 @Test(testName =  ScriptOnConnectorApiOpTests.TEST_NAME)
 public class ScriptOnConnectorApiOpTests extends ContractTestBase {
 

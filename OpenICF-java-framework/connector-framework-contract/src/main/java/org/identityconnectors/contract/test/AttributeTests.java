@@ -77,7 +77,6 @@ import org.testng.log4testng.Logger;
  * 
  * @author David Adam
  */
-@Guice(modules = FrameworkModule.class)
 @Test(testName = AttributeTests.TEST_NAME)
 public class AttributeTests extends ObjectClassRunner {
 
@@ -123,7 +122,7 @@ public class AttributeTests extends ObjectClassRunner {
      * API operations for acquiring attributes: <code>GetApiOp</code>
      * </p>
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testNonReadable(ObjectClass objectClass) {
         if (ConnectorHelper.operationsSupported(getConnectorFacade(),
                 objectClass, getAPIOperations())) {
@@ -183,7 +182,7 @@ public class AttributeTests extends ObjectClassRunner {
      * <li>{@link SyncApiOp}</li>
      * </ul>
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testReturnedByDefault(ObjectClass objectClass) {
         if (ConnectorHelper.operationSupported(getConnectorFacade(),
                 objectClass, CreateApiOp.class)) {
@@ -204,7 +203,7 @@ public class AttributeTests extends ObjectClassRunner {
      * API operations for acquiring attributes: {@link GetApiOp}
      * </p>
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testNonUpdateable(ObjectClass objectClass) {
         boolean exceptionCaught = false;
         /** is there any non updateable item? (if not skip this test) */
@@ -342,21 +341,16 @@ public class AttributeTests extends ObjectClassRunner {
      * @param testName the name of the test to print
      */
     private void printSkipTestMsg(String testName, ObjectClass objectClass) {
-        logger
-                .info("----------------------------------------------------------------------------------------");
-        logger
-                .info(
-                        "Skipping test ''"+testName+"'' for object class ''"+objectClass+"''. (Reason: non-updateable attrs. are missing)");
-        logger
-                .info("----------------------------------------------------------------------------------------");
-
+        logger.info(LOG_SEPARATOR);
+        logger.info("Skipping test ''"+testName+"'' for object class ''"+objectClass+"''. (Reason: non-updateable attrs. are missing)");
+        logger.info(LOG_SEPARATOR);
     }
 
     /**
      * Required attributes must be creatable. It is a fialure if a required
      * attribute is not creatable.
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testRequirableIsCreatable(ObjectClass objectClass) {
         if (ConnectorHelper.operationSupported(getConnectorFacade(),
                 objectClass, CreateApiOp.class)

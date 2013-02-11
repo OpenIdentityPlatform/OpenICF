@@ -49,7 +49,6 @@ import org.testng.log4testng.Logger;
 /**
  * Contract test of {@link CreateApiOp} operation.
  */
-@Guice(modules = FrameworkModule.class)
 @Test(testName = CreateApiOpTests.TEST_NAME)
 public class CreateApiOpTests extends ObjectClassRunner {
     /**
@@ -76,7 +75,7 @@ public class CreateApiOpTests extends ObjectClassRunner {
      * {@inheritDoc}
      */
     @Override
-    public void testRun(ObjectClass objectClass) {
+    protected void testRun(ObjectClass objectClass) {
         
         Uid uid = null;
         
@@ -111,13 +110,14 @@ public class CreateApiOpTests extends ObjectClassRunner {
      * connector developers can set the value of unsupported attribute
      * using test property: <code>testsuite.Create.unsupportedAttributeName</code>
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testCreateFailUnsupportedAttribute(ObjectClass objectClass) {
         // run the contract test only if create is supported by tested object class
         if (ConnectorHelper.operationsSupported(getConnectorFacade(), objectClass,
                 getAPIOperations())) {
             // create not supported Attribute Set
-            Set<Attribute> attrs = new HashSet<Attribute>();
+            Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
+                    getObjectClassInfo(objectClass), getTestName(), 0, true, false);
             
             String unsupportedAttribute = null;
             try{
@@ -157,7 +157,7 @@ public class CreateApiOpTests extends ObjectClassRunner {
      * Tests create twice with the same attributes. It should return different
      * Uids.
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testCreateWithSameAttributes(ObjectClass objectClass) {
         // run the contract test only if create is supported by tested object class
         if (ConnectorHelper.operationsSupported(getConnectorFacade(), objectClass, getAPIOperations())) {

@@ -33,7 +33,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
@@ -55,7 +54,6 @@ import org.testng.log4testng.Logger;
 /**
  * Contract test of {@link SyncApiOp}
  */
-@Guice(modules = FrameworkModule.class)
 @Test(testName =  SyncApiOpTests.TEST_NAME)
 public class SyncApiOpTests extends ObjectClassRunner {
 
@@ -91,7 +89,7 @@ public class SyncApiOpTests extends ObjectClassRunner {
      * {@inheritDoc}
      */
     @Override
-    public void testRun(ObjectClass objectClass) {
+    protected void testRun(ObjectClass objectClass) {
         Uid uid = null;
         Set<Attribute> attrs = null;
         List<SyncDelta> deltas = null;
@@ -198,7 +196,7 @@ public class SyncApiOpTests extends ObjectClassRunner {
     /**
      * Test Sync without attrsToGet.
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testSyncWithoutAttrsToGet(ObjectClass objectClass) {
         // run the test only if sync is supported and also object class is
         // supported and connector can sync CREATEs
@@ -239,7 +237,7 @@ public class SyncApiOpTests extends ObjectClassRunner {
     /**
      * Tests that {@link SyncApiOp#getLatestSyncToken(ObjectClass)} returns really the latest sync token which is available.
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testLatestSyncToken(ObjectClass objectClass) {
         // run the test only if sync is supported by the tested object class
         if (ConnectorHelper.operationsSupported(getConnectorFacade(), objectClass, getAPIOperations())

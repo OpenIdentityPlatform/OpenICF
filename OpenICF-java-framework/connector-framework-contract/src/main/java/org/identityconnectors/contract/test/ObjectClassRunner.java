@@ -48,9 +48,10 @@ import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Schema;
+import org.testng.ITestContext;
+import org.testng.SkipException;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.Test;
-import org.testng.annotations.AfterMethod;
 import org.testng.log4testng.Logger;
 import com.google.inject.Inject;
 
@@ -85,7 +86,7 @@ public abstract class ObjectClassRunner extends ContractTestBase {
      * in configured number of iterations, runs the iteration only if the 
      * operation is supported by the connector
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testContract(ObjectClass objectClass) {
         //run the contract test for supported operation only
         if (ConnectorHelper.operationsSupported(getConnectorFacade(), objectClass,
@@ -108,9 +109,11 @@ public abstract class ObjectClassRunner extends ContractTestBase {
             }
         }
         else {
+            String msg = "Skipping test ''"+getTestName()+"'' for object class ''"+objectClass+"''.";
             logger.info("--------------------------------------------------------------------------------------");
-            logger.info("Skipping test ''"+getTestName()+"'' for object class ''"+objectClass+"''.");
+            logger.info(msg);
             logger.info("--------------------------------------------------------------------------------------");
+            throw new SkipException(msg);
         }
     }
 
@@ -124,8 +127,8 @@ public abstract class ObjectClassRunner extends ContractTestBase {
      * Return all the base {@link ObjectClass}s.
      */
 
-    @org.testng.annotations.DataProvider(name = OBJECTCALSS_DATAPROVIDER)
-    public Iterator<Object[]> data() {
+    @org.testng.annotations.DataProvider(name = OBJECTCLASS_DATAPROVIDER)
+    public Iterator<Object[]> data(ITestContext context) {
         List<Object[]> oclasses = new LinkedList<Object[]>();
 
         List<String> objectClasses = getObjectClassesProperty(dataProvider);
@@ -134,7 +137,7 @@ public abstract class ObjectClassRunner extends ContractTestBase {
                 oclasses.add(new Object[] { new ObjectClass(objectClass) });
             }
         } else {
-            Schema schema = ConnectorHelper.createConnectorFacade(getDataProvider()).schema();
+            Schema schema = getConnectorFacade().schema();
             for (ObjectClassInfo ocInfo : schema.getObjectClassInfo()) {
                 oclasses.add(new Object[] {ConnectorHelper.getObjectClassFromObjectClassInfo(ocInfo)});
             }

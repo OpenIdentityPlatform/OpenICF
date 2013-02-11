@@ -59,7 +59,6 @@ import org.testng.log4testng.Logger;
 /**
  * Contract test of {@link UpdateApiOp} 
  */
-@Guice(modules = FrameworkModule.class)
 @Test(testName =  UpdateApiOpTests.TEST_NAME)
 public class UpdateApiOpTests extends ObjectClassRunner {
     /**
@@ -87,10 +86,20 @@ public class UpdateApiOpTests extends ObjectClassRunner {
     }
     
     /**
-     * {@inheritDoc}      
+     * {@inheritDoc}
+     *
+     * This tests an proper updating of attributes. All new attributes' values in given set for update are valid.
+     *
+     * Test procedure:
+     * 1) Create object.
+     * 2) Get this created object + fill it with values
+     * 3) Get a set of new values for updateable attributes - replacing all attributes' values  (no add or delete)
+     * 4) Update uid and replaces values of attributes
+     * 5) Verify if the object has new values of attributes
+     * 6) ---- JUMPS TO FINALLY SECTION ---- see in TODOs
      */
     @Override
-    public void testRun(ObjectClass objectClass) {
+    protected void testRun(ObjectClass objectClass) {
         ConnectorObject obj = null;
         Uid uid = null;
 
@@ -110,6 +119,8 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                     false);
 
             if (replaceAttributes.size() > 0 || !isObjectClassSupported(objectClass)) {
+                /* TODO when object class is not supported?!
+                 */
                 // update only in case there is something to update or when object class is not supported
                 replaceAttributes.add(uid);
 
@@ -131,7 +142,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                     getOperationOptionsByOp(objectClass, GetApiOp.class));
             assertNotNull(obj,"Cannot retrieve updated object.");
             ConnectorHelper.checkObject(getObjectClassInfo(objectClass), obj, replaceAttributes);
-
+            // TODO Here it jumps to finally section which is wrong...
             // ADD and DELETE update test:
             // set of *multivalue* attributes with generated values
             Set<Attribute> addDelAttrs = ConnectorHelper.getUpdateableAttributes(getDataProvider(),
@@ -194,8 +205,18 @@ public class UpdateApiOpTests extends ObjectClassRunner {
     /**
      * The test verifies that connector doesn't throw NullPointerException or some other unexpected behavior when passed null as 
      * attribute value. Test passes null values only for non-required non-special updateable attributes.
+     *
+     * Test procedure:
+     * 1) Test if the required API operaions are supported by given objectClass.
+     * 2) Set all attributes' values to null
+     *    If you want to skip some attributes from being set to null list them in Update.updateToNullValue.skippedAttributes property
+     *    in groovy.config
+     * 3) Try to update the object with property's value = null -> IF no exception, property has been removed or set to null
+     * 4) Check if the property has been really removed or set to null
+     * 5) TODO something went wrong because the value has not been set to null value or removed. The value of nulled property pesisted.
+     *
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testUpdateToNull(ObjectClass objectClass) {
         if (ConnectorHelper.operationsSupported(getConnectorFacade(), objectClass,
                 getAPIOperations()) ) {
@@ -207,7 +228,10 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                 uid = ConnectorHelper.createObject(getConnectorFacade(), getDataProvider(),
                         getObjectClassInfo(objectClass), getTestName(), 2, getOperationOptionsByOp(objectClass, CreateApiOp.class));
                 assertNotNull(uid,"Create returned null Uid.");
-                
+
+                ConnectorObject originalObject = getConnectorFacade().getObject(objectClass, uid,
+                        getOperationOptionsByOp(objectClass, GetApiOp.class));
+
                 Collection<String> skippedAttributesForUpdateToNullValue = getSkippedAttributesForUpdateToNullValue();
                 for (AttributeInfo attInfo : getObjectClassInfo(objectClass).getAttributeInfo()) {
                     if (attInfo.isUpdateable() && !attInfo.isRequired() && !AttributeUtil.isSpecial(attInfo) && !attInfo.getType().isPrimitive()) {
@@ -223,7 +247,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                             Uid newUid = getConnectorFacade().update(
                                 objectClass, uid, nullAttributes,
                                 getOperationOptionsByOp(objectClass, UpdateApiOp.class));
-                            
+
                             logger.info(
                                     "No exception was thrown, attributes should be either removed or their values set to null.");
                             
@@ -265,9 +289,9 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                 }
             }
         } else {
-            logger.info("----------------------------------------------------------------------------------------");
+            logger.info(LOG_SEPARATOR);
             logger.info("Skipping test ''testUpdateToNull'' for object class ''"+objectClass+"''.");
-            logger.info("----------------------------------------------------------------------------------------");
+            logger.info(LOG_SEPARATOR);
         }
     }
     
@@ -275,7 +299,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
      * Tests create of two different objects and then update one to the same
      * attributes as the second. Test that updated object did not update uid to the same value as the first object. 
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testUpdateToSameAttributes(ObjectClass objectClass) {
         if (ConnectorHelper.operationsSupported(getConnectorFacade(), objectClass, getAPIOperations())) {
             Uid uid1 = null;
@@ -345,9 +369,9 @@ public class UpdateApiOpTests extends ObjectClassRunner {
             }
         }
         else {
-            logger.info("----------------------------------------------------------------------------------------");
+            logger.info(LOG_SEPARATOR);
             logger.info("Skipping test ''testUpdateToSameAttributes'' for object class ''"+objectClass+"''.");
-            logger.info("----------------------------------------------------------------------------------------");
+            logger.info(LOG_SEPARATOR);
         }
     }
 
@@ -362,7 +386,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
      * connector developers can set the value of unsupported attribute
      * using test property: <code>testsuite.Create.unsupportedAttributeName</code>
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testUpdateFailUnsupportedAttribute(ObjectClass objectClass) {
         // run the contract test only if update is supported by tested object class
         if (ConnectorHelper.operationsSupported(getConnectorFacade(),
@@ -434,13 +458,10 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                 }
             }
         } else {
-            logger
-                    .info("----------------------------------------------------------------------------------------");
-            logger
-                    .info(
-                            "Skipping test ''testCreateFailUnsupportedAttribute'' for object class ''"+objectClass+"''.");
-            logger
-                    .info("----------------------------------------------------------------------------------------");
+            String msg = "Skipping test ''testUpdateFailUnsupportedAttribute'' for object class ''"+objectClass+"''.";
+            logger.info(LOG_SEPARATOR);
+            logger.info(msg);
+            logger.info(LOG_SEPARATOR);
         }
     }
     

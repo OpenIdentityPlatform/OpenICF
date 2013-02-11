@@ -52,7 +52,6 @@ import org.testng.log4testng.Logger;
  * 
  * @author Zdenek Louzensky
  */
-@Guice(modules = FrameworkModule.class)
 @Test(testName =  ScriptOnResourceApiOpTests.TEST_NAME)
 public class ScriptOnResourceApiOpTests extends ContractTestBase {
 

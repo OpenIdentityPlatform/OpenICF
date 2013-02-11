@@ -54,6 +54,7 @@ import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.PredefinedAttributes;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.testng.SkipException;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 import org.testng.log4testng.Logger;
@@ -61,7 +62,6 @@ import org.testng.log4testng.Logger;
 /**
  * Contract test of {@link AuthenticationApiOp}
  */
-@Guice(modules = FrameworkModule.class)
 @Test(testName =  AuthenticationApiOpTests.TEST_NAME)
 public class AuthenticationApiOpTests extends ObjectClassRunner {
 
@@ -94,7 +94,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
      * {@inheritDoc}     
      */
     @Override
-    public void testRun(ObjectClass objectClass) {
+    protected void testRun(ObjectClass objectClass) {
 
         Uid uid = null;
         
@@ -218,7 +218,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
      * Tests that disabled user cannot authenticate.
      * RuntimeException should be thrown.
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testOpEnable(ObjectClass objectClass) {
         // now try to set the password to be expired and authenticate again
         // it's possible only in case Update and PASSWORD_EXPIRED are supported
@@ -279,7 +279,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
     /**
      * Tests that PasswordExpiredException is thrown in case PasswordExpirationDate is set to today.
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testOpPasswordExpirationDate(ObjectClass objectClass) {
         // now try to set the password to be expired and authenticate again
         // it's possible only in case Update and PASSWORD_EXPIRED
@@ -345,7 +345,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
     /**
      * Tests that PasswordExpiredException is thrown in case PasswordExpired is updated to true.
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testOpPasswordExpired(ObjectClass objectClass) {
         // now try to set the password to be expired and authenticate again
         // it's possible only in case Update and PASSWORD_EXPIRED
@@ -403,6 +403,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
             }
         } else {
             logger.info("Skipping testOpPasswordExpired test.");
+            throw new SkipException("Skipping testOpPasswordExpired test.");
         }
     }
     
@@ -411,7 +412,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
      * attributes during update. PASSWORD should be performed before
      * PASSWORD_EXPIRED.
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testPasswordBeforePasswordExpired(ObjectClass objectClass) {
         // run test only in case operation is supported and both PASSWORD and PASSWORD_EXPIRED are supported
         if (ConnectorHelper.operationsSupported(getConnectorFacade(), objectClass, getAPIOperations())

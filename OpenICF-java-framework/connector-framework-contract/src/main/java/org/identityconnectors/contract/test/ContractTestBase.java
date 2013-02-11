@@ -56,7 +56,9 @@ public abstract class ContractTestBase {
     /**
      * Name of TestNG DataProvider to iterate over the supported ObjectClasses
      */
-    public static final String OBJECTCALSS_DATAPROVIDER = "ObjectClass-DataProvider";
+    public static final String OBJECTCLASS_DATAPROVIDER = "ObjectClass-DataProvider";
+
+    protected static final String LOG_SEPARATOR = "--------------------------------------------------------------------------------------";
 
     /**
      * Logging..

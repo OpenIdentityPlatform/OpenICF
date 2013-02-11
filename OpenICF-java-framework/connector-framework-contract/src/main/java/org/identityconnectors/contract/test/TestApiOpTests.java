@@ -48,7 +48,6 @@ import org.testng.log4testng.Logger;
  * 
  * Currently there is not ability in API to test contract in case connection is lost.
  */
-@Guice(modules = FrameworkModule.class)
 @Test(testName =  TestApiOpTests.TEST_NAME)
 public class TestApiOpTests extends ContractTestBase {
     

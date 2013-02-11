@@ -24,51 +24,101 @@
 
 package org.identityconnectors.contract.test;
 
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+
+import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.contract.data.DataProvider;
+import org.identityconnectors.framework.api.ConnectorFacade;
+import org.identityconnectors.framework.common.objects.Schema;
+import org.testng.IObjectFactory;
 import org.testng.ITestContext;
 import org.testng.annotations.Factory;
-import org.testng.annotations.Parameters;
+import org.testng.internal.ObjectFactoryImpl;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-
 /**
  * A ContractITCase is the factory of the OpenICF connector contract tests.
- *
+ * 
  * @author Laszlo Hordos
  */
 public class ContractITCase {
 
+    public static final Class[] DEFAULT_TEST_CLASSES = new Class[] { AttributeTests.class,
+        AuthenticationApiOpTests.class, ConfigurationTests.class, CreateApiOpTests.class,
+        DeleteApiOpTests.class, GetApiOpTests.class, MultiOpTests.class, ResolveUsernameApiOpTests.class,SchemaApiOpTests.class,
+        ScriptOnConnectorApiOpTests.class, ScriptOnResourceApiOpTests.class,
+        SearchApiOpTests.class, SyncApiOpTests.class, TestApiOpTests.class, UpdateApiOpTests.class,
+        ValidateApiOpTests.class };
+
     /*
-    <testConfig>default</testConfig>
-    <connectorName>org.forgerock.openicf.connectors.BasicConnector</connectorName>
-    <bundleJar>target/basic-connector-1.1.0.0-SNAPSHOT.jar</bundleJar>
-    <bundleName>org.forgerock.openicf.connectors.basic-connector</bundleName>
-    <bundleVersion>1.1.0.0-SNAPSHOT</bundleVersion>
+     * <pre>
+     * <testConfig>default</testConfig>
+     * <connectorName>org.forgerock.openicf.connectors.BasicConnector</connectorName>
+     * <bundleJar>target/basic-connector-1.1.0.0-SNAPSHOT.jar</bundleJar>
+     * <bundleName>org.forgerock.openicf.connectors.basic-connector</bundleName>
+     * <bundleVersion>1.1.0.0-SNAPSHOT</bundleVersion>
+     * </pre>
      */
     @Factory
     public Object[] createInstances(ITestContext context) {
-        Class[] testClasses = new Class[]{
-                AttributeTests.class,
-                AuthenticationApiOpTests.class,
-                ConfigurationTests.class,
-                CreateApiOpTests.class,
-                DeleteApiOpTests.class,
-                GetApiOpTests.class,
-                MultiOpTests.class,
-                SchemaApiOpTests.class,
-                ScriptOnConnectorApiOpTests.class,
-                ScriptOnResourceApiOpTests.class,
-                SearchApiOpTests.class,
-                SyncApiOpTests.class,
-                TestApiOpTests.class,
-                UpdateApiOpTests.class,
-                ValidateApiOpTests.class
-        };
-        Injector injector = Guice.createInjector(new FrameworkModule(ConnectorHelper.createDataProvider()));
-        Object[] result = new Object[testClasses.length];
-        for (int i = 0; i < testClasses.length; i++) {
-            result[i] = injector.getInstance(testClasses[i]);
+
+        Injector injector = getInjector(context);
+        List<Object> result = new ArrayList<Object>();
+        IObjectFactory objectFactory = null;
+
+        for (Class<?> testClass: getContractTestClasses(context)) {
+            Constructor constructor = null;
+            try {
+                constructor = testClass.getConstructor(String.class);
+                Object test = objectFactory.newInstance(constructor, "");
+                injector.injectMembers(test);
+                result.add(test);
+            } catch (NoSuchMethodException e) {
+                result.add(injector.getInstance(testClass));
+            }
         }
-        return result;
+        return result.toArray();
+    }
+
+    public List<Class> getContractTestClasses(ITestContext context) {
+        String testNames = System.getProperty("testClasses");
+        if (StringUtil.isNotBlank(testNames)) {
+            String[] clazzNames = testNames.split(",");
+            List<Class> testClasses = new ArrayList<Class>(DEFAULT_TEST_CLASSES.length);
+            for (String test : clazzNames) {
+                for (Class clazz : DEFAULT_TEST_CLASSES) {
+                    if (clazz.getSimpleName().equalsIgnoreCase(test)) {
+                        testClasses.add(clazz);
+                    }
+                }
+            }
+            return testClasses;
+        } else {
+            return Arrays.asList(DEFAULT_TEST_CLASSES);
+        }
+    }
+
+    public Injector getInjector(ITestContext context) {
+        return Guice.createInjector(new FrameworkModule(ConnectorHelper.createDataProvider()));
+    }
+
+    public DataProvider getDataProvider(ITestContext context) {
+        return ConnectorHelper.createDataProvider();
+    }
+
+    private static class ContractTestFactory {
+
+        private ConnectorFacade connectorFacade = null;
+
+        private Schema schema = null;
+
+        private IObjectFactory objectFactory = new ObjectFactoryImpl();
+
     }
 }

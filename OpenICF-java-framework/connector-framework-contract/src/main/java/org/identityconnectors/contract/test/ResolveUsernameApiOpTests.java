@@ -46,7 +46,6 @@ import org.testng.annotations.Test;
  * 
  * @author David Adam
  */
-@Guice(modules = FrameworkModule.class)
 @Test(testName =  ResolveUsernameApiOpTests.TEST_NAME)
 public class ResolveUsernameApiOpTests extends ObjectClassRunner {
 
@@ -59,11 +58,11 @@ public class ResolveUsernameApiOpTests extends ObjectClassRunner {
     }
 
     @Override
-    public void testRun(ObjectClass objectClass) {
+    protected void testRun(ObjectClass objectClass) {
         // empty on purpose.
     }
 
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testPositive(ObjectClass objectClass) {
         if (!ConnectorHelper.operationsSupported(getConnectorFacade(), objectClass, getAPIOperations())) {
             return;
@@ -103,7 +102,7 @@ public class ResolveUsernameApiOpTests extends ObjectClassRunner {
         }
     }
 
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testNegative(ObjectClass objectClass) {
         if (!ConnectorHelper.operationsSupported(getConnectorFacade(), objectClass, getAPIOperations())) {
             return;

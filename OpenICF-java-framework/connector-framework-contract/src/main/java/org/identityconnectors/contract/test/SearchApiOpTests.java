@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.contract.exceptions.ObjectNotFoundException;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
@@ -59,7 +58,6 @@ import org.testng.log4testng.Logger;
 /**
  * Contract test of {@link SearchApiOp} 
  */
-@Guice(modules = FrameworkModule.class)
 @Test(testName =  SearchApiOpTests.TEST_NAME)
 public class SearchApiOpTests extends ObjectClassRunner {
 
@@ -93,7 +91,7 @@ public class SearchApiOpTests extends ObjectClassRunner {
      * {@inheritDoc}      
      */
     @Override
-    public void testRun(ObjectClass objectClass) {
+    protected void testRun(ObjectClass objectClass) {
         Uid uid = null;
         List<Uid> uids = new ArrayList<Uid>();
         List<Set<Attribute>> attrs = new ArrayList<Set<Attribute>>();
@@ -235,7 +233,7 @@ public class SearchApiOpTests extends ObjectClassRunner {
      * Test Search without specified OperationOptions attrsToGet which is the default for all other tests.
      * All the other tests contain explicit attrsToGet.
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testSearchWithoutAttrsToGet(ObjectClass objectClass) {
         // run the contract test only if search is supported by tested object class
         if (ConnectorHelper.operationsSupported(getConnectorFacade(), objectClass,
@@ -290,7 +288,7 @@ public class SearchApiOpTests extends ObjectClassRunner {
      * 
      * There is twice Search performed, once with changed case. The results should be identical.
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testCaseInsensitiveSearch(ObjectClass objectClass) {
         // run the contract test only if search is supported by tested object
         // class

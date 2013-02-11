@@ -75,7 +75,6 @@ import org.testng.log4testng.Logger;
  * @author Tomas Knappek
  * @author Zdenek Louzensky
  */
-@Guice(modules = FrameworkModule.class)
 @Test(testName =  MultiOpTests.TEST_NAME)
 public class MultiOpTests extends ObjectClassRunner {
 
@@ -95,7 +94,7 @@ public class MultiOpTests extends ObjectClassRunner {
      * 
      */
     @Override
-    public void testRun(ObjectClass objectClass) {
+    protected void testRun(ObjectClass objectClass) {
         // initial number of objects to be created
         final int recordCount = 10;
         
@@ -401,7 +400,7 @@ public class MultiOpTests extends ObjectClassRunner {
     /**
      * Tests ENABLE attribute contract 
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testEnableOpAttribute(ObjectClass objectClass) {
         if (isObjectClassSupported(objectClass)
                 && ConnectorHelper.isCRU(getObjectClassInfo(objectClass), OperationalAttributes.ENABLE_NAME)) {
@@ -422,7 +421,7 @@ public class MultiOpTests extends ObjectClassRunner {
     /**
      * Tests ENABLE_DATE attribute contract 
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testEnableDateOpAttribute(ObjectClass objectClass) {
         if (isObjectClassSupported(objectClass)
                 && ConnectorHelper.isCRU(getObjectClassInfo(objectClass), OperationalAttributes.ENABLE_DATE_NAME)) {
@@ -447,7 +446,7 @@ public class MultiOpTests extends ObjectClassRunner {
     /**
      * Tests DISABLE_DATE attribute contract 
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testDisableDateOpAttribute(ObjectClass objectClass) {
         if (isObjectClassSupported(objectClass)
                 && ConnectorHelper.isCRU(getObjectClassInfo(objectClass), OperationalAttributes.DISABLE_DATE_NAME)) {
@@ -501,7 +500,7 @@ public class MultiOpTests extends ObjectClassRunner {
 	/**
      * Tests LOCK_OUT attribute contract 
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testLockOutOpAttribute(ObjectClass objectClass) {
         if (isObjectClassSupported(objectClass)
                 && ConnectorHelper.isCRU(getObjectClassInfo(objectClass), OperationalAttributes.LOCK_OUT_NAME) && canLockOut()) {
@@ -522,7 +521,7 @@ public class MultiOpTests extends ObjectClassRunner {
     /**
      * Tests PASSWORD_EXPIRATION_DATE attribute contract 
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testPasswordExpirationDateOpAttribute(ObjectClass objectClass) {
         if (isObjectClassSupported(objectClass)
                 && ConnectorHelper.isCRU(getObjectClassInfo(objectClass), OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME)) {
@@ -541,7 +540,7 @@ public class MultiOpTests extends ObjectClassRunner {
     /**
      * Tests PASSWORD_EXPIRED attribute contract 
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testPasswordExpiredOpAttribute(ObjectClass objectClass) {
         if (isObjectClassSupported(objectClass)
                 && ConnectorHelper.isCRU(getObjectClassInfo(objectClass), OperationalAttributes.PASSWORD_EXPIRED_NAME)) {
@@ -559,7 +558,7 @@ public class MultiOpTests extends ObjectClassRunner {
     /**
      * Tests PASSWORD_CHANGE_INTERVAL attribute contract 
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testPasswordChangeIntervalPredAttribute(ObjectClass objectClass) {
         if (isObjectClassSupported(objectClass)
                 && ConnectorHelper.isCRU(getObjectClassInfo(objectClass), PredefinedAttributes.PASSWORD_CHANGE_INTERVAL_NAME)) {

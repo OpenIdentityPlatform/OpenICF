@@ -48,7 +48,6 @@ import org.testng.log4testng.Logger;
 /**
  * Contract test of {@link DeleteApiOp}
  */
-@Guice(modules = FrameworkModule.class)
 @Test(testName =  DeleteApiOpTests.TEST_NAME)
 public class DeleteApiOpTests extends ObjectClassRunner {
     /**
@@ -75,7 +74,7 @@ public class DeleteApiOpTests extends ObjectClassRunner {
      * {@inheritDoc}
      */
     @Override
-    public void testRun(ObjectClass objectClass) {
+    protected void testRun(ObjectClass objectClass) {
         ConnectorObject obj = null;
         Uid uid = null;
         
@@ -105,7 +104,7 @@ public class DeleteApiOpTests extends ObjectClassRunner {
     /**
      * Tests that delete throws {@link UnknownUidException} when object is deleted for the second time.
      */
-    @Test(dataProvider = OBJECTCALSS_DATAPROVIDER)
+    @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testDeleteThrowUnknownUid(ObjectClass objectClass) {
         // run the contract test only if delete is supported
         if (ConnectorHelper.operationsSupported(getConnectorFacade(), objectClass, getAPIOperations())) {

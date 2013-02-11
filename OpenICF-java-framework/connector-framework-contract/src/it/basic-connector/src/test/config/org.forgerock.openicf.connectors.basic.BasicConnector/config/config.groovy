@@ -44,6 +44,7 @@ configuration {
     host = "__configureme__"
     remoteUser = "__configureme__"
     password = new GuardedString("__configureme__".toCharArray())
+    baseContext = "dc=example,dc=com"
 }
 
 testsuite {
@@ -61,7 +62,7 @@ testsuite {
     // AuthenticationApiOpTests:
     Authentication {
         __ACCOUNT__ {
-            __NAME__ = 'uid=Bugs Bunny,' + Lazy.get('baseContext')
+            __NAME__ = 'uid=Bugs Bunny,' + Lazy.get('configuration.baseContext')
             __PASSWORD__ = new GuardedString('password'.toCharArray())
             username = 'Bugs Bunny'
             modified.__PASSWORD__ = new GuardedString('newpassword'.toCharArray())

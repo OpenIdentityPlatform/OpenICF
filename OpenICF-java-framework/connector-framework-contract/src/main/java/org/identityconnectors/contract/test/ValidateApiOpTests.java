@@ -50,7 +50,6 @@ import org.testng.log4testng.Logger;
  * Contract test of {@link ValidateApiOp} operation.
  * Positive test for validate() is performed every time connector facade is created.
  */
-@Guice(modules = FrameworkModule.class)
 @Test(testName = ValidateApiOpTests.TEST_NAME)
 public class ValidateApiOpTests extends ContractTestBase {
     
