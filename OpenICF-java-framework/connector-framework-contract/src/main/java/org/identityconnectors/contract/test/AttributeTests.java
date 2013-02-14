@@ -102,7 +102,7 @@ public class AttributeTests extends ObjectClassRunner {
      * {@inheritDoc}
      */
     @Override
-    public void testRun(ObjectClass objectClass) {
+    protected void testRun(ObjectClass objectClass) {
     }
 
     /**

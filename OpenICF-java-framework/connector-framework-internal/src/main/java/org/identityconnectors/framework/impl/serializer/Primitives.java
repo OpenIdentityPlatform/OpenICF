@@ -319,7 +319,35 @@ class Primitives {
                 encoder.writeStringContents(val.toString());
             }
         });
-        
+
+        HANDLERS.add(
+                new AbstractObjectSerializationHandler(Byte.class,"Byte") {
+
+                    public Object deserialize(ObjectDecoder decoder)  {
+                        return decoder.readByteArrayContents();
+                    }
+
+                    public void serialize(Object object, ObjectEncoder encoder)
+                    {
+                        byte val = (Byte) object;
+                        encoder.writeByteContents(val);
+                    }
+                });
+
+        HANDLERS.add(
+                new AbstractObjectSerializationHandler(byte.class,"byte") {
+
+                    public Object deserialize(ObjectDecoder decoder)  {
+                        return decoder.readByteArrayContents();
+                    }
+
+                    public void serialize(Object object, ObjectEncoder encoder)
+                    {
+                        byte val = (Byte) object;
+                        encoder.writeByteContents(val);
+                    }
+                });
+
         HANDLERS.add(
                 new AbstractObjectSerializationHandler(byte[].class,"ByteArray") {
                                 

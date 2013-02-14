@@ -125,7 +125,12 @@ public interface ObjectDecoder {
      * reads the value in-line. 
      */
     public double readDoubleContents();
-    
+
+    /**
+     * reads the value in-line.
+     */
+    public byte readByteContents();
+
     /**
      * reads the value in-line. 
      */

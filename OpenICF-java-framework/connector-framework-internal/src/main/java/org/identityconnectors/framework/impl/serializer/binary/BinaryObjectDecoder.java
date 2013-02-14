@@ -327,6 +327,11 @@ public class BinaryObjectDecoder implements ObjectDecoder, BinaryObjectDeseriali
         }
     }
 
+    public byte readByteContents() {
+        _internalDecoder.startAnonymousField(0);
+        return _internalDecoder.readByte();
+    }
+
     public byte[] readByteArrayContents() {
         _internalDecoder.startAnonymousField(0);
         return _internalDecoder.readByteArray();

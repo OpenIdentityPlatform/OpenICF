@@ -123,7 +123,12 @@ public interface ObjectEncoder {
      * Writes the value in-line. 
      */
     public void writeDoubleContents(double v);
-    
+
+    /**
+     * Writes the value in-line.
+     */
+    public void writeByteContents(byte v);
+
     /**
      * Special case for byte [] that uses base64 encoding for XML
      */

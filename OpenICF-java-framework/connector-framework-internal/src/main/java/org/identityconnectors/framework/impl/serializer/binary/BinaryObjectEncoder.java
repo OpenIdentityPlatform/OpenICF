@@ -367,6 +367,12 @@ public class BinaryObjectEncoder implements ObjectEncoder, BinaryObjectSerialize
         _internalEncoder.endField();
     }
 
+    public void writeByteContents(byte v) {
+        _internalEncoder.startAnonymousField();
+        _internalEncoder.writeByte(v);
+        _internalEncoder.endField();
+    }
+
     public void writeByteArrayContents(byte[] v) {
         _internalEncoder.startAnonymousField();
         _internalEncoder.writeByteArray(v);

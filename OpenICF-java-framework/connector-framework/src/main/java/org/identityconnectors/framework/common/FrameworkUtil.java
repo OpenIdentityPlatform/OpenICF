@@ -248,6 +248,8 @@ public final class FrameworkUtil {
         ATTR_SUPPORTED_TYPES.add(Integer.class);
         ATTR_SUPPORTED_TYPES.add(boolean.class);
         ATTR_SUPPORTED_TYPES.add(Boolean.class);
+        ATTR_SUPPORTED_TYPES.add(byte.class);
+        ATTR_SUPPORTED_TYPES.add(Byte.class);
         ATTR_SUPPORTED_TYPES.add(byte[].class);
         ATTR_SUPPORTED_TYPES.add(BigDecimal.class);
         ATTR_SUPPORTED_TYPES.add(BigInteger.class);
@@ -289,6 +291,8 @@ public final class FrameworkUtil {
      * <li>Integer.class</li>
      * <li>boolean.class</li>
      * <li>Boolean.class</li>
+     * <li>byte.class</li>
+     * <li>Byte.class</li>
      * <li>byte[].class</li>
      * <li>BigDecimal.class</li>
      * <li>BigInteger.class</li>

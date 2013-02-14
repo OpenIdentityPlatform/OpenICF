@@ -59,6 +59,10 @@ public class XmlObjectDecoder implements ObjectDecoder {
         return decodeBoolean(readStringAttributeInternal(fieldName,XmlObjectEncoder.encodeBoolean(dflt)));
     }
 
+    public byte readByteContents() {
+        return decodeByte(readStringContentsInternal());
+    }
+
     public byte[] readByteArrayContents() {
         return decodeByteArray(readStringContentsInternal());
     }
@@ -174,7 +178,11 @@ public class XmlObjectDecoder implements ObjectDecoder {
     private boolean decodeBoolean(String v) {
         return Boolean.parseBoolean(v);
     }
-    
+
+    private byte decodeByte(String v) {
+        return Byte.decode(v);
+    }
+
     private byte [] decodeByteArray(String base64) {
         return Base64.decode(base64);
     }

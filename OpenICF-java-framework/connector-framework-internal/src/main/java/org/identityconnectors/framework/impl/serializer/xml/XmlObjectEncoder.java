@@ -68,6 +68,10 @@ public class XmlObjectEncoder implements ObjectEncoder {
         writeAttributeInternal(fieldName,encodeBoolean(v));
     }
 
+    public void writeByteContents(byte v) {
+        writeStringContentsInternal(encodeByte(v));
+    }
+
     public void writeByteArrayContents(byte[] v) {
         writeStringContentsInternal(encodeByteArray(v));
     }
@@ -147,7 +151,11 @@ public class XmlObjectEncoder implements ObjectEncoder {
     static String encodeBoolean(boolean b) {
         return String.valueOf(b);
     }
-    
+
+    static String encodeByte(byte singleByte) {
+        return Byte.toString(singleByte);
+    }
+
     private static String encodeByteArray(byte [] bytes) {
         return Base64.encode(bytes);
     }
