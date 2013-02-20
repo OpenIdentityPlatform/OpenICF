@@ -747,10 +747,27 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                 builder.addAttribute(OperationalAttributes.PASSWORD_NAME, new GuardedString(item.getAttribute(i).toCharArray()));
                 continue;
             }
-            builder.addAttribute(name, item.getAttribute(i));
+            builder.addAttribute(name, createAttributeValues(item.getAttribute(i)));
         }
 
         return builder.build();
+    }
+
+    private List<String> createAttributeValues(String attributeValue) {
+        List<String> values = new ArrayList<String>();
+        if (!configuration.isUsingMultivalue()) {
+            values.add(attributeValue);
+            return values;
+        }
+
+        String[] array = attributeValue.split(configuration.getMultivalueDelimiter());
+        for (String val : array) {
+            if (val != null) {
+                values.add(val);
+            }
+        }
+
+        return values;
     }
 
     private Uid realAuthenticate(ObjectClass objectClass, String username, GuardedString pwd, boolean testPassword) {
@@ -1140,12 +1157,10 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
     }
 
     /**
-     * Only for tests!
+     * This method is only for tests!
      *
-     * @return
-     * @deprecated
+     * @return pattern used for matcher and line parsing
      */
-    @Deprecated
     Pattern getLinePattern() {
         return linePattern;
     }

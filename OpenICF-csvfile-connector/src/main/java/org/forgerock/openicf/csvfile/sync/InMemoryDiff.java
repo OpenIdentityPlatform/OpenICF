@@ -84,8 +84,8 @@ public class InMemoryDiff {
             if (oldFile != null) {
                 RecordSet oldRecordSet = createRecordSet(oldFile);
                 //compare records from both record sets
-                List<CsvItem> newList = new ArrayList(newRecordSet.getRecords());
-                List<CsvItem> oldList = new ArrayList(oldRecordSet.getRecords());
+                List<CsvItem> newList = new ArrayList<CsvItem>(newRecordSet.getRecords());
+                List<CsvItem> oldList = new ArrayList<CsvItem>(oldRecordSet.getRecords());
 
                 log.info("Record set size, new: {0}, old: {1}", newList.size(), oldList.size());
 
