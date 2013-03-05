@@ -432,6 +432,15 @@ public class LdapConfiguration extends AbstractConfiguration {
         this.accountSearchFilter = accountSearchFilter;
     }
 
+    public String[] getGroupObjectClasses() {
+        List<String> ldapClasses = groupConfig.getLdapClasses();
+        return ldapClasses.toArray(new String[ldapClasses.size()]);
+    }
+
+    public void setGroupObjectClasses(String... groupObjectClasses) {
+        groupConfig.setLdapClasses(Arrays.asList(groupObjectClasses));
+    }
+
     public String getGroupMemberAttribute() {
         return groupMemberAttribute;
     }
