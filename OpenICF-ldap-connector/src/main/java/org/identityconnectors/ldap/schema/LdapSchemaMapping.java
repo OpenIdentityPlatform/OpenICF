@@ -36,6 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.naming.NameAlreadyBoundException;
 
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -46,6 +47,7 @@ import javax.naming.ldap.LdapName;
 
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
@@ -309,6 +311,8 @@ public class LdapSchemaMapping {
         try {
             conn.getInitialContext().createSubcontext(entryName, ldapAttrs).close();
             return entryName.toString();
+        } catch (NameAlreadyBoundException e){
+            throw new AlreadyExistsException(e);
         } catch (NamingException e) {
             throw new ConnectorException(e);
         }
