@@ -126,12 +126,14 @@ public class GroupHelper {
     }
 
     public Set<GroupMembership> getPosixGroupMemberships(Collection<String> posixRefAttrs) {
-        log.ok("Retrieving POSIX group memberships for ", posixRefAttrs);
+        log.ok("Retrieving POSIX group memberships for {0}", posixRefAttrs);
         ToGroupMembershipHandler handler = new ToGroupMembershipHandler();
-        for (String posixRefAttr : posixRefAttrs) {
-            String filter = createAttributeFilter("memberUid", singletonList(posixRefAttr));
-            handler.setMemberRef(posixRefAttr);
-            LdapSearches.findEntries(handler, conn, filter);
+        if (posixRefAttrs != null){
+            for (String posixRefAttr : posixRefAttrs) {
+                String filter = createAttributeFilter("memberUid", singletonList(posixRefAttr));
+                handler.setMemberRef(posixRefAttr);
+                LdapSearches.findEntries(handler, conn, filter);
+            }
         }
         return handler.getResults();
     }
