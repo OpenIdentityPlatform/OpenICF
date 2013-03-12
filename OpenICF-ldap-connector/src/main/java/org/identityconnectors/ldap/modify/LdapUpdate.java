@@ -101,9 +101,6 @@ public class LdapUpdate extends LdapModifyOperation {
             checkRemovedPosixRefAttrs(posixMember.getPosixRefAttributes(), posixMember.getPosixGroupMemberships());
         }
 
-        // Update the attributes.
-        modifyAttributes(entryDN, attrToModify, DirContext.REPLACE_ATTRIBUTE);
-
         // Rename the entry if needed.
         String oldEntryDN = null;
         if (newName != null) {
@@ -113,6 +110,8 @@ public class LdapUpdate extends LdapModifyOperation {
             oldEntryDN = entryDN;
             entryDN = conn.getSchemaMapping().rename(oclass, oldEntryDN, newName);
         }
+        // Update the attributes.
+        modifyAttributes(entryDN, attrToModify, DirContext.REPLACE_ATTRIBUTE);
 
         // Update the LDAP groups.
         Modification<GroupMembership> ldapGroupMod = new Modification<GroupMembership>();
