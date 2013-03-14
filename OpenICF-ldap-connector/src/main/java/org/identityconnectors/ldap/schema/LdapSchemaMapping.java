@@ -366,6 +366,8 @@ public class LdapSchemaMapping {
         try {
             conn.getInitialContext().rename(entryDN, newEntryDN);
             return newEntryDN;
+        } catch (NameAlreadyBoundException e){
+            throw new AlreadyExistsException(e);
         } catch (NamingException e) {
             throw new ConnectorException(e);
         }

@@ -28,6 +28,7 @@ import static org.identityconnectors.common.CollectionUtil.nullAsEmpty;
 import static org.identityconnectors.ldap.LdapUtil.checkedListByFilter;
 import static org.identityconnectors.ldap.LdapUtil.quietCreateLdapName;
 import static org.identityconnectors.ldap.LdapUtil.escapeDNValueOfJNDIReservedChars;
+import static org.identityconnectors.ldap.LdapUtil.normalizeLdapString;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -103,7 +104,7 @@ public class LdapUpdate extends LdapModifyOperation {
 
         // Rename the entry if needed.
         String oldEntryDN = null;
-        if (newName != null) {
+        if ((newName != null) && (!normalizeLdapString(entryDN).equalsIgnoreCase(normalizeLdapString(newEntryDN)))) {
             if (newPosixRefAttrs != null && conn.getConfiguration().isMaintainPosixGroupMembership() || posixGroups != null) {
                 posixMember.getPosixRefAttributes();
             }

@@ -159,6 +159,28 @@ public class LdapUtil {
             return escapeStringAttrValue(value.toString(), toBuilder);
         }
     }
+    
+    /**
+     * Normalize the DN string
+     * @param The DN string to normalize
+     * @return The normalized DN string
+     */
+    
+    public static String  normalizeLdapString(String ldapString)
+        {
+            StringBuilder normalPath = new StringBuilder();
+            String[] parts = ldapString.split(",");
+            for (int i = 0; i < parts.length; i++)
+            {
+                normalPath.append(parts[i].trim());
+                // append a comma after each part (except the last one)
+                if (i < (parts.length - 1))
+                {
+                    normalPath.append(",");
+                }
+            }
+            return normalPath.toString();
+        }
 
     private static boolean escapeByteArrayAttrValue(byte[] bytes, StringBuilder toBuilder) {
         if (bytes.length == 0) {
