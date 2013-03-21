@@ -62,15 +62,29 @@ public abstract class LdapModifyOperation {
         if (isBlank(hashAlgorithm) || "NONE".equalsIgnoreCase(hashAlgorithm)) {
             return;
         }
-        try {
-            byte[] password = (byte[]) passwordAttr.get();
-            if (password != null) {
-                String newPassword = hashBytes(password, hashAlgorithm, entryDN != null ? entryDN.hashCode() : 0);
+        else if ("WIN-AD".equalsIgnoreCase(hashAlgorithm)){
+            try{
+                final StringBuilder sb = new StringBuilder("\"");
+                sb.append(new String((byte[])passwordAttr.get()));
+                sb.append("\"");
                 passwordAttr.clear();
-                passwordAttr.add(newPassword);
+                passwordAttr.add(sb.toString().getBytes("UTF-16LE"));
+            } catch (Exception e) {
+                throw new ConnectorException(e);
             }
-        } catch (NamingException e) {
-            throw new ConnectorException(e);
+                    
+        }
+        else{
+            try {
+                byte[] password = (byte[]) passwordAttr.get();
+                if (password != null) {
+                    String newPassword = hashBytes(password, hashAlgorithm, entryDN != null ? entryDN.hashCode() : 0);
+                    passwordAttr.clear();
+                    passwordAttr.add(newPassword);
+                }
+            } catch (NamingException e) {
+                throw new ConnectorException(e);
+            }
         }
     }
 
