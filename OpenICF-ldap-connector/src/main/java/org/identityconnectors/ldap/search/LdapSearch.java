@@ -219,6 +219,9 @@ public class LdapSearch {
 
         for (String attrName : attrsToGet) {
             Attribute attribute = null;
+            if (attrName.equalsIgnoreCase(Uid.NAME) || attrName.equalsIgnoreCase(Name.NAME)) {
+                continue;
+            }
             if (LdapConstants.isLdapGroups(attrName)) {
                 List<String> ldapGroups = groupHelper.getLdapGroups(entry.getDN().toString());
                 attribute = AttributeBuilder.build(LdapConstants.LDAP_GROUPS_NAME, ldapGroups);

@@ -42,6 +42,8 @@ public class LdapConstants {
     public static final String SEARCH_FILTER_NAME = "searchFilter";
 
     public static final String OP_SEARCH_FILTER = "searchFilter";
+    
+    public static final String MS_GUID_ATTR = "objectGUID";
 
     /**
      * Overrides the framework-defined password because ours is readable:

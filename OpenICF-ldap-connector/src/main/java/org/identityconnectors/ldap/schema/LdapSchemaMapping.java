@@ -31,6 +31,7 @@ import static org.identityconnectors.ldap.LdapEntry.isDNAttribute;
 import static org.identityconnectors.ldap.LdapUtil.addBinaryOption;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValue;
 import static org.identityconnectors.ldap.LdapUtil.quietCreateLdapName;
+import static org.identityconnectors.ldap.LdapUtil.objectGUIDtoString;
 
 import java.util.Iterator;
 import java.util.List;
@@ -63,6 +64,7 @@ import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.LdapConnection;
+import org.identityconnectors.ldap.LdapConstants;
 import org.identityconnectors.ldap.LdapEntry;
 import org.identityconnectors.ldap.ObjectClassMappingConfig;
 
@@ -252,8 +254,17 @@ public class LdapSchemaMapping {
         }
     }
 
-    private Uid createUid(String ldapUidAttr, Attributes attributes) {
-        String value = getStringAttrValue(attributes, ldapUidAttr);
+    public Uid createUid(String ldapUidAttr, Attributes attributes) {
+        String value = null;
+        if (LdapConstants.MS_GUID_ATTR.equalsIgnoreCase(ldapUidAttr)){
+            javax.naming.directory.Attribute attr = attributes.get(ldapUidAttr);
+            if (attr != null) {
+                value = objectGUIDtoString(attr);
+            }
+        }
+        else{
+            value = getStringAttrValue(attributes, ldapUidAttr);
+        }
         if (value != null) {
             return new Uid(value);
         }

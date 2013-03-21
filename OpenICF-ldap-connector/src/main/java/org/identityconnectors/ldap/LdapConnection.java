@@ -94,6 +94,9 @@ public class LdapConnection {
         LDAP_BINARY_OPTION_ATTRS.add("certificateRevocationList");
         LDAP_BINARY_OPTION_ATTRS.add("crossCertificatePair");
         LDAP_BINARY_OPTION_ATTRS.add("supportedAlgorithms");
+        
+        // MS-AD ObjectGUID
+        LDAP_BINARY_SYNTAX_ATTRS.add(LdapConstants.MS_GUID_ATTR);
     }
 
     private static final String LDAP_CTX_FACTORY = "com.sun.jndi.ldap.LdapCtxFactory";
@@ -140,6 +143,7 @@ public class LdapConnection {
         final List<Pair<AuthenticationResult, LdapContext>> result = new ArrayList<Pair<AuthenticationResult, LdapContext>>(1);
 
         final Hashtable<Object, Object> env = new Hashtable<Object, Object>();
+        env.put("java.naming.ldap.attributes.binary", LdapConstants.MS_GUID_ATTR);
         env.put(Context.INITIAL_CONTEXT_FACTORY, LDAP_CTX_FACTORY);
         env.put(Context.PROVIDER_URL, getLdapUrls());
         env.put(Context.REFERRAL, "follow");

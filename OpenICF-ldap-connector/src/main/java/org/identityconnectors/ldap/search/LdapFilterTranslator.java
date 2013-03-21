@@ -24,6 +24,7 @@ package org.identityconnectors.ldap.search;
 
 import static org.identityconnectors.ldap.LdapEntry.isDNAttribute;
 import static org.identityconnectors.ldap.LdapUtil.escapeAttrValue;
+import static org.identityconnectors.ldap.LdapUtil.guidStringtoByteString;
 
 import java.util.List;
 
@@ -40,6 +41,7 @@ import org.identityconnectors.framework.common.objects.filter.LessThanFilter;
 import org.identityconnectors.framework.common.objects.filter.LessThanOrEqualFilter;
 import org.identityconnectors.framework.common.objects.filter.SingleValueAttributeFilter;
 import org.identityconnectors.framework.common.objects.filter.StartsWithFilter;
+import org.identityconnectors.ldap.LdapConstants;
 import org.identityconnectors.ldap.schema.LdapSchemaMapping;
 
 public class LdapFilterTranslator extends AbstractFilterTranslator<LdapFilter> {
@@ -204,6 +206,9 @@ public class LdapFilterTranslator extends AbstractFilterTranslator<LdapFilter> {
             }
             if (isDNAttribute(attrName)) {
                 return LdapFilter.forEntryDN(single.toString());
+            }
+            if (LdapConstants.MS_GUID_ATTR.equalsIgnoreCase(attrName)){
+                return LdapFilter.forNativeFilter("("+LdapConstants.MS_GUID_ATTR+"="+guidStringtoByteString((String)values.get(0))+")");
             }
             builder = createBuilder(not);
             addSimpleFilter(attrName, "=", values.get(0), builder);
