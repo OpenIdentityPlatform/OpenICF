@@ -146,7 +146,7 @@ public class LdapConnection {
         env.put("java.naming.ldap.attributes.binary", LdapConstants.MS_GUID_ATTR);
         env.put(Context.INITIAL_CONTEXT_FACTORY, LDAP_CTX_FACTORY);
         env.put(Context.PROVIDER_URL, getLdapUrls());
-        env.put(Context.REFERRAL, "follow");
+        env.put(Context.REFERRAL, config.getReferralsHandling());
 
         if (config.isSsl()) {
             env.put(Context.SECURITY_PROTOCOL, "ssl");

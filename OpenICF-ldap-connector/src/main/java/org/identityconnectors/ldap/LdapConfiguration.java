@@ -98,6 +98,13 @@ public class LdapConfiguration extends AbstractConfiguration {
      * The base DNs for operations on the server.
      */
     private String[] baseContexts = { };
+    
+    /**
+     * Referral policy. Defaults to 'follow'
+     * Values can be: 'follow', 'ignore' or 'throw'
+     */
+    
+    private String referralsHandling = "follow";
 
     /**
      * The name of the attribute which the predefined PASSWORD attribute
@@ -229,6 +236,8 @@ public class LdapConfiguration extends AbstractConfiguration {
         checkNotEmpty(baseContexts, "baseContexts.notEmpty");
         checkNoBlankValues(baseContexts, "baseContexts.noBlankValues");
         checkNoInvalidLdapNames(baseContexts, "baseContexts.noInvalidLdapNames");
+        checkReferralsHandling(referralsHandling, "referralsHandling.invalidPolicy");
+        checkPasswordHashAlgorithm(passwordHashAlgorithm, "passwordHashAlgorithm.invalidName");
 
         checkNotBlank(passwordAttribute, "passwordAttribute.notBlank");
 
@@ -335,6 +344,18 @@ public class LdapConfiguration extends AbstractConfiguration {
             }
         }
     }
+    
+    private void checkReferralsHandling(String ref, String errorMessage){
+        if (!ref.matches("follow|ignore|throw")){
+            failValidation(errorMessage);
+        }
+    }
+    
+    private void checkPasswordHashAlgorithm(String algo, String errorMessage){
+        if ((algo != null) && !algo.matches("(?i:SSHA|SHA|SMD5|MD5|WIN-AD)")){
+            failValidation(errorMessage);
+        }
+    }
 
     private void failValidation(String key, Object... args) {
         String message = getConnectorMessages().format(key, null, args);
@@ -397,7 +418,15 @@ public class LdapConfiguration extends AbstractConfiguration {
     public void setBaseContexts(String... baseContexts) {
         this.baseContexts = baseContexts.clone();
     }
+    
+    public String getReferralsHandling(){
+        return referralsHandling;
+    }
 
+    public void setReferralsHandling(String referral){
+        this.referralsHandling = referral;
+    }
+    
     public String getPasswordAttribute() {
         return passwordAttribute;
     }

@@ -88,6 +88,7 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
     }
 
     public void test() {
+        config.validate();
         conn.test();
     }
 
