@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2013 Radovan Semancik, Evolveum
  */
 package org.identityconnectors.databasetable;
 
@@ -274,7 +275,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     public void setPasswordColumn(String value) {
         this.passwordColumn = value;
     }    
-    
+      
     /**
      * The Driver class. The jdbcDriver is located by connector framework to connect to database.
      * Required configuration property, and should be validated
@@ -526,11 +527,30 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     public void setJndiProperties(String[] value) {
         this.jndiProperties = value;
     }
+    
+    private boolean suppressPassword = true;
+    
+    /**
+     * If set to true then the password will not be returned. Never. Even though it is explicitly requested.
+     * If set to false then the password will be returned if it is explicitly requested.
+     */
+    @ConfigurationProperty(order = 22,
+            displayMessageKey = "SUPRESS_PASSWORD_DISPLAY", 
+            helpMessageKey = "SUPRESS_PASSWORD_HELP")
+    public boolean getSuppressPassword() {
+		return suppressPassword;
+	}
+
+	public void setSuppressPassword(boolean suppressPassword) {
+		this.suppressPassword = suppressPassword;
+	}
+    
+	
     // =======================================================================
     // Configuration Interface
     // =======================================================================
 
-    /**
+	/**
      * Attempt to validate the arguments added to the Configuration.
      */
     @Override

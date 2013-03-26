@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2013 Radovan Semancik, Evolveum
  */
 package org.identityconnectors.databasetable;
 
@@ -317,7 +318,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
 
     /**
      * Test to throw the exception
-     * @param e exception
+     * @param errorCode exception
      * @return
      */
     private boolean throwIt(int errorCode) {
@@ -1136,13 +1137,25 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
                 uidValue = param.getValue().toString();
                 bld.setName(uidValue);
             } else if (columnName.equalsIgnoreCase(config.getPasswordColumn())) {
-                // No Password in the result object
-                log.ok("No Password in the result object");                
+            	if (config.getSuppressPassword()) {
+	                // No Password in the result object
+	                log.ok("Password is supressed in the result object");
+            	} else {
+            		GuardedString passwordValue = null;
+            		if(param != null && param.getValue() != null) {
+            			passwordValue = new GuardedString(((String)param.getValue()).toCharArray());
+            		}
+            		if (passwordValue != null) {
+                        bld.addAttribute(AttributeBuilder.build(OperationalAttributes.PASSWORD_NAME, passwordValue));
+                    } else {
+                        bld.addAttribute(AttributeBuilder.build(OperationalAttributes.PASSWORD_NAME));                    
+                    }
+            	}
             } else if (columnName.equalsIgnoreCase(config.getChangeLogColumn())) {
             	//No changelogcolumn attribute in the results
                 log.ok("changelogcolumn attribute in the result");                
             } else {
-                if(param != null && param.getValue() != null) { 
+            	if(param != null && param.getValue() != null) { 
                     bld.addAttribute(AttributeBuilder.build(columnName, param.getValue()));
                 } else {
                     bld.addAttribute(AttributeBuilder.build(columnName));                    
@@ -1163,9 +1176,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         log.ok("ConnectorObject is builded");                
         return bld;
     }    
-
     
-    /**
+	/**
      * Construct a SyncDeltaBuilder the sync builder
      * <p>Taking care about special attributes</p>
      *  
