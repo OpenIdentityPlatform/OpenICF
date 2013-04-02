@@ -19,12 +19,14 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * 
+ * Portions Copyrighted 2013 Forgerock
  */
 package org.identityconnectors.ldap;
 
 import java.util.Set;
-
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
@@ -52,6 +54,7 @@ import org.identityconnectors.ldap.modify.LdapUpdate;
 import org.identityconnectors.ldap.search.LdapFilter;
 import org.identityconnectors.ldap.search.LdapFilterTranslator;
 import org.identityconnectors.ldap.search.LdapSearch;
+import org.identityconnectors.ldap.sync.activedirectory.ActiveDirectoryChangeLogSyncStrategy;
 import org.identityconnectors.ldap.sync.ibm.IBMDSChangeLogSyncStrategy;
 import org.identityconnectors.ldap.sync.sunds.SunDSChangeLogSyncStrategy;
 
@@ -139,8 +142,12 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
 
     public SyncToken getLatestSyncToken(ObjectClass oclass) {
         switch (conn.getServerType()) {
+            case UNKNOWN:
+                throw new ConnectorException("SYNC not available for Unknown directory type");
             case IBM:
                 return new IBMDSChangeLogSyncStrategy(conn, oclass).getLatestSyncToken();
+            case MSAD:
+                return new ActiveDirectoryChangeLogSyncStrategy(conn, oclass).getLatestSyncToken();
             default:
                 return new SunDSChangeLogSyncStrategy(conn, oclass).getLatestSyncToken();
         }
@@ -148,8 +155,13 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
 
     public void sync(ObjectClass oclass, SyncToken token, SyncResultsHandler handler, OperationOptions options) {
         switch (conn.getServerType()) {
+            case UNKNOWN:
+                throw new ConnectorException("SYNC not available for Unknown directory type");
             case IBM:
                 new IBMDSChangeLogSyncStrategy(conn, oclass).sync(token, handler, options);
+                break;
+            case MSAD:
+                new ActiveDirectoryChangeLogSyncStrategy(conn, oclass).sync(token, handler, options);
                 break;
             default:
                 new SunDSChangeLogSyncStrategy(conn, oclass).sync(token, handler, options);

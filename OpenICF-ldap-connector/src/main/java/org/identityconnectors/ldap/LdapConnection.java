@@ -19,6 +19,8 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * 
+ * Portions Copyrighted 2013 Forgerock
  */
 package org.identityconnectors.ldap;
 
@@ -318,24 +320,34 @@ public class LdapConnection {
 
     private ServerType detectServerType() {
         try {
-            Attributes attrs = getInitialContext().getAttributes("", new String[] { "vendorVersion", "vendorName" });
+            Attributes attrs = getInitialContext().getAttributes("", new String[] { "vendorVersion", "vendorName", "isGlobalCatalogReady" });
             String vendorName = getStringAttrValue(attrs, "vendorName");
             if (null != vendorName && vendorName.toLowerCase().contains("ibm")) {
+                log.info("IBM Directory server has been detected");
                 return ServerType.IBM;
             }
             String vendorVersion = getStringAttrValue(attrs, "vendorVersion");
             if (vendorVersion != null) {
                 vendorVersion = vendorVersion.toLowerCase();
                 if (vendorVersion.contains("opends") || vendorVersion.contains("opendj")) {
+                    log.info("OpenDS/OpenDJ Directory server has been detected");
                     return ServerType.OPENDS;
                 }
                 if (vendorVersion.contains("sun") && vendorVersion.contains("directory")) {
+                    log.info("Sun DSEE Directory server has been detected");
                     return ServerType.SUN_DSEE;
+                }
+            }
+            else{
+                if (getStringAttrValue(attrs, "isGlobalCatalogReady") != null){
+                    log.info("MS Active Directory server has been detected");
+                    return ServerType.MSAD;
                 }
             }
         } catch (NamingException e) {
             log.warn(e, "Exception while detecting the server type");
         }
+        log.info("Directory server type is unknown");
         return ServerType.UNKNOWN;
     }
 
@@ -406,7 +418,6 @@ public class LdapConnection {
     }
 
     public enum ServerType {
-
-        SUN_DSEE, OPENDS, IBM,  UNKNOWN
+        SUN_DSEE, OPENDS, IBM, MSAD, UNKNOWN
     }
 }
