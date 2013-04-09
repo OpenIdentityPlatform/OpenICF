@@ -27,6 +27,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.logging.Log;
@@ -69,7 +70,7 @@ public class BufferedResultsProxy implements InvocationHandler {
     
     private static class BufferedResultsHandler extends Thread implements ObjectStreamHandler {
         private static final Object DONE = new Object();
-        private boolean _stopped = false;
+        private AtomicBoolean _stopped = new AtomicBoolean(false);
         private final Method _method;
         private final Object _target;
         private final Object [] _arguments;
@@ -90,6 +91,9 @@ public class BufferedResultsProxy implements InvocationHandler {
         }
                 
         public boolean handle(final Object obj) {
+            if (isStopped()){
+                return false;
+            }
             Assertions.nullCheck(obj, "obj");
             try {
                 _buffer.put(obj);
@@ -108,33 +112,34 @@ public class BufferedResultsProxy implements InvocationHandler {
          *  timed out.
          */
         public void stop(boolean wait) {
-            if ( wait && Thread.currentThread() == this ) {
+            if (wait && Thread.currentThread() == this) {
                 throw new IllegalStateException("A thread cannot wait on itself");
             }
-            synchronized (this) {
-                _stopped = true;
-            }
-            //clear out the queue - this will cause the thread to
-            //wakeup so that it can exit
-            _buffer.clear();
-            if ( wait ) {
-                try {
-                    //join with a time-limit. this may timeout
-                    //if we are blocked in the producer
-                    join(_timeoutMillis);
-                }
-                catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw ConnectorException.wrap(e);
-                }
-                //if we're still alive, we've timed out
-                if (isAlive()) {
-                    throw new OperationTimeoutException();
+
+            if (_stopped.compareAndSet(false, true)) {
+
+                // clear out the queue - this will cause the thread to
+                // wakeup so that it can exit
+                _buffer.clear();
+                if (wait) {
+                    try {
+                        // join with a time-limit. this may timeout
+                        // if we are blocked in the producer
+                        join(_timeoutMillis);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw ConnectorException.wrap(e);
+                    }
+                    // if we're still alive, we've timed out
+                    if (isAlive()) {
+                        throw new OperationTimeoutException();
+                    }
                 }
             }
         }
-        public synchronized boolean isStopped() {
-            return _stopped;
+
+        public boolean isStopped() {
+            return _stopped.get();
         }
         
         private Object [] createActualArguments()
