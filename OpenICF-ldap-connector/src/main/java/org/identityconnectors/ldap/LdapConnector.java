@@ -24,8 +24,12 @@
  */
 package org.identityconnectors.ldap;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import javax.naming.NamingException;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -91,8 +95,33 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
     }
 
     public void test() {
+        List<String> badBC = new ArrayList<String>();
+        List<String> badBCS = new ArrayList<String>();
         config.validate();
         conn.test();
+        // Need to check that all the base contexts are valid
+        for (String context : config.getBaseContexts()) {
+            try {
+                conn.getInitialContext().getAttributes(context);
+            } catch (NamingException e) {
+                badBC.add(context);
+            }
+        }
+        for (String context : config.getBaseContextsToSynchronize()) {
+            try {
+                conn.getInitialContext().getAttributes(context);
+            } catch (NamingException e) {
+                badBCS.add(context);
+            }
+        }
+        if (!badBC.isEmpty()){
+            throw new ConfigurationException("Bad Base Context(s): " + badBC.toString());
+        }
+        if (!badBCS.isEmpty()){
+            throw new ConfigurationException("Bad Base Context(s) to Synchronize: " + badBCS.toString());
+        }
+        
+        
     }
 
     public void checkAlive() {
