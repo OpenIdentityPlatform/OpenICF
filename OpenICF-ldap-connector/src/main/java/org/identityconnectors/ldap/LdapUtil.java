@@ -24,6 +24,7 @@
  */
 package org.identityconnectors.ldap;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -37,13 +38,21 @@ import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
+import javax.naming.directory.SearchControls;
+import javax.naming.directory.SearchResult;
+import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.LdapName;
 
 import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.ldap.search.LdapInternalSearch;
 
 public class LdapUtil {
 
+    private static final Log log = Log.getLog(LdapUtil.class);
+    
     private static final String LDAP_BINARY_OPTION = ";binary";
 
     private LdapUtil() {
@@ -583,7 +592,7 @@ public class LdapUtil {
         return bString.toString();
     }
     
-        public static String guidStringtoByteString(String dashed){
+    public static String guidStringtoByteString(String dashed){
         // <GUID=2c6bfee3175c0a4e9af01182a2fb0ae1>
         if (dashed.length() != 39){
             throw new ConnectorException(LdapConstants.MS_GUID_ATTR+" attribute has the wrong length ("+dashed.length()+"). Should be 39 characters.");
@@ -595,4 +604,35 @@ public class LdapUtil {
         }
         return bString.toString();
     }
+    
+    // This function builds a _memberId attribute which is a helper
+    // that contains the group members' GUID
+    public static org.identityconnectors.framework.common.objects.Attribute buildMemberIdAttribute(LdapConnection conn, javax.naming.directory.Attribute attr) {
+        ArrayList<String> membersIds = new ArrayList<String>();
+        try {
+            NamingEnumeration<?> vals = attr.getAll();
+            while (vals.hasMore()) {
+                String entryDN = vals.next().toString();
+                SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
+                controls.setSearchScope(SearchControls.OBJECT_SCOPE);
+                LdapContext context = conn.getInitialContext().newInstance(null);
+                NamingEnumeration<SearchResult> entries = context.search(entryDN, "objectclass=*", controls);
+                SearchResult res = entries.next();
+                String uidAttr = conn.getConfiguration().getUidAttribute();
+                String id;
+                if (LdapConstants.MS_GUID_ATTR.equalsIgnoreCase(uidAttr)) {
+                    id = LdapUtil.objectGUIDtoString(res.getAttributes().get(conn.getConfiguration().getUidAttribute()));
+                } else {
+                    id = res.getAttributes().get(conn.getConfiguration().getUidAttribute()).get(0).toString();
+                }
+                membersIds.add(id);
+            }
+        } catch (NamingException e) {
+            log.error(e,"Error reading group member attribute");
+        }
+        return AttributeBuilder.build("_memberId", membersIds);
+    }
+        
+        
+        
 }

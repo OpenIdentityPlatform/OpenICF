@@ -19,18 +19,17 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * 
+ * Portions Copyrighted 2013 Forgerock
  */
 package org.identityconnectors.ldap.search;
 
-import static java.util.Collections.singletonList;
-import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
-import static org.identityconnectors.common.CollectionUtil.newSet;
-import static org.identityconnectors.common.StringUtil.isBlank;
-import static org.identityconnectors.ldap.LdapUtil.getStringAttrValues;
+import com.sun.jndi.ldap.ctl.VirtualListViewControl;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import static java.util.Collections.singletonList;
 
 import javax.naming.NamingException;
 import javax.naming.directory.SearchControls;
@@ -52,13 +51,18 @@ import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.QualifiedUid;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.ldap.ADUserAccountControl;
 import org.identityconnectors.ldap.GroupHelper;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapConstants;
 import org.identityconnectors.ldap.LdapEntry;
 import org.identityconnectors.ldap.schema.LdapSchemaMapping;
-
-import com.sun.jndi.ldap.ctl.VirtualListViewControl;
+import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
+import static org.identityconnectors.common.CollectionUtil.newSet;
+import static org.identityconnectors.common.StringUtil.isBlank;
+import org.identityconnectors.framework.common.objects.OperationalAttributeInfos;
+import static org.identityconnectors.ldap.LdapUtil.buildMemberIdAttribute;
+import static org.identityconnectors.ldap.LdapUtil.getStringAttrValues;
 
 /**
  * A class to perform an LDAP search against a {@link LdapConnection}.
@@ -231,11 +235,36 @@ public class LdapSearch {
                 attribute = AttributeBuilder.build(LdapConstants.POSIX_GROUPS_NAME, posixGroups);
             } else if (LdapConstants.PASSWORD.is(attrName)) {
                 attribute = AttributeBuilder.build(attrName, new GuardedString());
+            } else if (oclass.equals(ObjectClass.ACCOUNT) && OperationalAttributes.OPERATIONAL_ATTRIBUTE_NAMES.contains(attrName)){
+                try {
+                    switch (conn.getServerType()) {
+                        case MSAD:
+                            String controls = entry.getAttributes().get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR).get().toString();
+                            if (OperationalAttributeInfos.ENABLE.is(attrName)) {
+                                builder.addAttribute(AttributeBuilder.buildEnabled(!ADUserAccountControl.isAccountDisabled(controls)));
+                            } else if (OperationalAttributeInfos.LOCK_OUT.is(attrName)) {
+                                builder.addAttribute(AttributeBuilder.buildLockOut(ADUserAccountControl.isAccountLockOut(controls)));
+                            } else if (OperationalAttributeInfos.PASSWORD_EXPIRED.is(attrName)) {
+                                builder.addAttribute(AttributeBuilder.buildPasswordExpired(ADUserAccountControl.isPasswordExpired(controls)));
+                            }
+                            break;
+                        default:
+                            log.warn("Special Attribute {0} of object class {1} is not mapped to an LDAP attribute",
+                                    attrName, oclass.getObjectClassValue());
+                    }
+                }
+                catch(NamingException e){
+                    log.error(e, "Can't read " + ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR);
+                }
             } else {
                 attribute = conn.getSchemaMapping().createAttribute(oclass, attrName, entry, emptyAttrWhenNotFound);
             }
             if (attribute != null) {
                 builder.addAttribute(attribute);
+            }
+            if (oclass.equals(ObjectClass.GROUP) && conn.getConfiguration().getGroupMemberAttribute().equalsIgnoreCase(attrName)) {
+                // create an extra _memberId attr for groups
+                builder.addAttribute(buildMemberIdAttribute(conn,entry.getAttributes().get(attrName)));
             }
         }
 

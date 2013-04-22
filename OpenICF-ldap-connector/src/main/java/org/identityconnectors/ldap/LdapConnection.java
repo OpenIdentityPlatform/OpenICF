@@ -329,9 +329,13 @@ public class LdapConnection {
             String vendorVersion = getStringAttrValue(attrs, "vendorVersion");
             if (vendorVersion != null) {
                 vendorVersion = vendorVersion.toLowerCase();
-                if (vendorVersion.contains("opends") || vendorVersion.contains("opendj")) {
-                    log.info("OpenDS/OpenDJ Directory server has been detected");
+                if (vendorVersion.contains("opends")) {
+                    log.info("OpenDS Directory server has been detected");
                     return ServerType.OPENDS;
+                }
+                if (vendorVersion.contains("opendj")) {
+                    log.info("ForgeRock OpenDJ Directory server has been detected");
+                    return ServerType.OPENDJ;
                 }
                 if (vendorVersion.contains("sun") && vendorVersion.contains("directory")) {
                     log.info("Sun DSEE Directory server has been detected");
@@ -418,6 +422,6 @@ public class LdapConnection {
     }
 
     public enum ServerType {
-        SUN_DSEE, OPENDS, IBM, MSAD, UNKNOWN
+        SUN_DSEE, OPENDS, OPENDJ, IBM, MSAD, UNKNOWN
     }
 }

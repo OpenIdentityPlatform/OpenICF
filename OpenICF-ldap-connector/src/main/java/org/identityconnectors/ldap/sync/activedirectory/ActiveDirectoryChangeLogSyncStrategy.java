@@ -38,7 +38,6 @@ import javax.naming.ldap.Control;
 import javax.naming.ldap.LdapContext;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -49,9 +48,10 @@ import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.ldap.ADUserAccountControl;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapConstants;
-import org.identityconnectors.ldap.LdapUtil;
+import static org.identityconnectors.ldap.LdapUtil.buildMemberIdAttribute;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValue;
 import org.identityconnectors.ldap.search.LdapInternalSearch;
 import org.identityconnectors.ldap.search.SearchResultsHandler;
@@ -94,7 +94,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
         // We have to detect deleted entries as well. To do so, we use the filter (isDeleted==TRUE) to detect
         // the tombstones in the cn=delete objects,<defaultNamingContext> container.
 
-        final TreeMap<Integer, SyncDelta> changes = new TreeMap();
+        final TreeMap<Integer, SyncDelta> changes = new TreeMap<Integer, SyncDelta>();
 
         SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
         controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
@@ -109,7 +109,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
             search.execute(new SearchResultsHandler() {
                 public boolean handle(String baseDN, SearchResult result) throws NamingException {
                     Attributes attrs = result.getAttributes();
-                    NamingEnumeration<javax.naming.directory.Attribute> attrsEnum = (NamingEnumeration<javax.naming.directory.Attribute>) attrs.getAll();
+                    NamingEnumeration<? extends javax.naming.directory.Attribute> attrsEnum =  attrs.getAll();
                     Uid uid = conn.getSchemaMapping().createUid(conn.getConfiguration().getUidAttribute(), attrs);
                     // build the object first
                     ConnectorObjectBuilder cob = new ConnectorObjectBuilder();
@@ -130,7 +130,13 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                         }
                         cob.addAttribute(AttributeBuilder.build(id, values));
                         if (oclass.equals(ObjectClass.GROUP) && attr.getID().equalsIgnoreCase("member")) {
-                            cob.addAttribute(buildMemberIdAttribute(attr));
+                            cob.addAttribute(buildMemberIdAttribute(conn,attr));
+                        }
+                        if (oclass.equals(ObjectClass.ACCOUNT) && id.equalsIgnoreCase(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR)){
+                                String controls = values.get(0).toString();
+                                cob.addAttribute(AttributeBuilder.buildEnabled(!ADUserAccountControl.isAccountDisabled(controls)));
+                                cob.addAttribute(AttributeBuilder.buildLockOut(ADUserAccountControl.isAccountLockOut(controls)));
+                                cob.addAttribute(AttributeBuilder.buildPasswordExpired(ADUserAccountControl.isPasswordExpired(controls)));
                         }
                     }
                     String usnChanged = attrs.get(USN_CHANGED_ATTR).get().toString();
@@ -184,7 +190,9 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
         }
         // Changes are now ordered in the TreeMap according to usnChanged.
         for (Map.Entry<Integer, SyncDelta> entry : changes.entrySet()) {
-            handler.handle(entry.getValue());
+            if (!handler.handle(entry.getValue())){
+                break;
+            }
         }
     }
 
@@ -242,32 +250,5 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
         filter.insert(0, "(&");
         filter.append(")");
         return filter.toString();
-    }
-
-    // This private function builds a _memberId attribute which is a helper
-    // since it contains the group members' GUID
-    private Attribute buildMemberIdAttribute(javax.naming.directory.Attribute attr) {
-        ArrayList<String> membersIds = new ArrayList();
-        try {
-            NamingEnumeration vals = attr.getAll();
-            while (vals.hasMore()) {
-                String entryDN = vals.next().toString();
-                SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
-                controls.setSearchScope(SearchControls.OBJECT_SCOPE);
-                LdapContext context = conn.getInitialContext().newInstance(null);
-                NamingEnumeration<SearchResult> entries = context.search(entryDN, "objectclass=*", controls);
-                SearchResult res = entries.next();
-                String uidAttr = conn.getConfiguration().getUidAttribute();
-                String id = null;
-                if (LdapConstants.MS_GUID_ATTR.equalsIgnoreCase(uidAttr)) {
-                    id = LdapUtil.objectGUIDtoString(res.getAttributes().get(conn.getConfiguration().getUidAttribute()));
-                } else {
-                    id = res.getAttributes().get(conn.getConfiguration().getUidAttribute()).get(0).toString();
-                }
-                membersIds.add(id);
-            }
-        } catch (NamingException e) {
-        }
-        return AttributeBuilder.build("_memberId", membersIds);
     }
 }

@@ -65,6 +65,7 @@ import org.identityconnectors.framework.common.objects.ObjectClassUtil;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.ldap.ADUserAccountControl;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapConstants;
 import org.identityconnectors.ldap.LdapEntry;
@@ -173,6 +174,19 @@ public class LdapSchemaMapping {
 
         if (result == null && !AttributeUtil.isSpecialName(attrName)) {
             result = attrName;
+        }
+        
+        if (result == null && OperationalAttributes.OPERATIONAL_ATTRIBUTE_NAMES.contains(attrName)) {
+            if (oclass.equals(ObjectClass.ACCOUNT)){
+               switch (conn.getServerType()) {
+                   case MSAD:
+                        result = ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR;
+                       break;
+                   default:
+                       log.warn("Special Attribute {0} of object class {1} is not mapped to an LDAP attribute",
+                        attrName, oclass.getObjectClassValue());
+               }
+            }
         }
 
         if (result != null && transfer && conn.needsBinaryOption(result)) {
