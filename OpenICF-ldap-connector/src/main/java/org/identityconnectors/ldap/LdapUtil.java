@@ -610,22 +610,24 @@ public class LdapUtil {
     public static org.identityconnectors.framework.common.objects.Attribute buildMemberIdAttribute(LdapConnection conn, javax.naming.directory.Attribute attr) {
         ArrayList<String> membersIds = new ArrayList<String>();
         try {
-            NamingEnumeration<?> vals = attr.getAll();
-            while (vals.hasMore()) {
-                String entryDN = vals.next().toString();
-                SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
-                controls.setSearchScope(SearchControls.OBJECT_SCOPE);
-                LdapContext context = conn.getInitialContext().newInstance(null);
-                NamingEnumeration<SearchResult> entries = context.search(entryDN, "objectclass=*", controls);
-                SearchResult res = entries.next();
-                String uidAttr = conn.getConfiguration().getUidAttribute();
-                String id;
-                if (LdapConstants.MS_GUID_ATTR.equalsIgnoreCase(uidAttr)) {
-                    id = LdapUtil.objectGUIDtoString(res.getAttributes().get(conn.getConfiguration().getUidAttribute()));
-                } else {
-                    id = res.getAttributes().get(conn.getConfiguration().getUidAttribute()).get(0).toString();
+            if (attr != null) {
+                NamingEnumeration<?> vals = attr.getAll();
+                while (vals.hasMore()) {
+                    String entryDN = vals.next().toString();
+                    SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
+                    controls.setSearchScope(SearchControls.OBJECT_SCOPE);
+                    LdapContext context = conn.getInitialContext().newInstance(null);
+                    NamingEnumeration<SearchResult> entries = context.search(entryDN, "objectclass=*", controls);
+                    SearchResult res = entries.next();
+                    String uidAttr = conn.getConfiguration().getUidAttribute();
+                    String id;
+                    if (LdapConstants.MS_GUID_ATTR.equalsIgnoreCase(uidAttr)) {
+                        id = LdapUtil.objectGUIDtoString(res.getAttributes().get(conn.getConfiguration().getUidAttribute()));
+                    } else {
+                        id = res.getAttributes().get(conn.getConfiguration().getUidAttribute()).get(0).toString();
+                    }
+                    membersIds.add(id);
                 }
-                membersIds.add(id);
             }
         } catch (NamingException e) {
             log.error(e,"Error reading group member attribute");
