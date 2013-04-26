@@ -24,7 +24,7 @@ package org.identityconnectors.ldap.search;
 
 import static org.identityconnectors.ldap.LdapEntry.isDNAttribute;
 import static org.identityconnectors.ldap.LdapUtil.escapeAttrValue;
-import static org.identityconnectors.ldap.LdapUtil.guidStringtoByteString;
+import static org.identityconnectors.ldap.ADLdapUtil.guidStringtoByteString;
 
 import java.util.List;
 

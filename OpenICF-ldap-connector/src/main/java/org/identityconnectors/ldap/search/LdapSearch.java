@@ -262,7 +262,9 @@ public class LdapSearch {
             if (attribute != null) {
                 builder.addAttribute(attribute);
             }
-            if (oclass.equals(ObjectClass.GROUP) && conn.getConfiguration().getGroupMemberAttribute().equalsIgnoreCase(attrName)) {
+            if (conn.getConfiguration().isGetGroupMemberId()
+                    && oclass.equals(ObjectClass.GROUP) 
+                    && conn.getConfiguration().getGroupMemberAttribute().equalsIgnoreCase(attrName)) {
                 // create an extra _memberId attr for groups
                 builder.addAttribute(buildMemberIdAttribute(conn,entry.getAttributes().get(attrName)));
             }

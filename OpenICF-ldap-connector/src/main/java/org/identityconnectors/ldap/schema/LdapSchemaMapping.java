@@ -33,7 +33,7 @@ import static org.identityconnectors.ldap.LdapEntry.isDNAttribute;
 import static org.identityconnectors.ldap.LdapUtil.addBinaryOption;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValue;
 import static org.identityconnectors.ldap.LdapUtil.quietCreateLdapName;
-import static org.identityconnectors.ldap.LdapUtil.objectGUIDtoString;
+import static org.identityconnectors.ldap.ADLdapUtil.objectGUIDtoString;
 
 import java.util.Iterator;
 import java.util.List;

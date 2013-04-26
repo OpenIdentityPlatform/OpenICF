@@ -129,7 +129,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                             values.add(vals.next());
                         }
                         cob.addAttribute(AttributeBuilder.build(id, values));
-                        if (oclass.equals(ObjectClass.GROUP) && attr.getID().equalsIgnoreCase("member")) {
+                        if (conn.getConfiguration().isGetGroupMemberId() && oclass.equals(ObjectClass.GROUP) && attr.getID().equalsIgnoreCase("member")) {
                             cob.addAttribute(buildMemberIdAttribute(conn,attr));
                         }
                         if (oclass.equals(ObjectClass.ACCOUNT) && id.equalsIgnoreCase(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR)){

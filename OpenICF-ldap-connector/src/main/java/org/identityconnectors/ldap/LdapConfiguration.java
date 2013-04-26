@@ -123,6 +123,11 @@ public class LdapConfiguration extends AbstractConfiguration {
      * The LDAP attribute holding the member for non-POSIX static groups.
      */
     private String groupMemberAttribute = "uniqueMember";
+    
+    /**
+     * If true, add an extra _memberId attribute to get the group members __UID__
+     */
+    private boolean getGroupMemberId = false;
 
     /**
      * If true, will modify group membership of renamed/deleted entries.
@@ -478,6 +483,14 @@ public class LdapConfiguration extends AbstractConfiguration {
 
     public void setGroupMemberAttribute(String groupMemberAttribute) {
         this.groupMemberAttribute = groupMemberAttribute;
+    }
+
+    public boolean isGetGroupMemberId() {
+        return getGroupMemberId;
+    }
+
+    public void setGetGroupMemberId(boolean getGroupMemberId) {
+        this.getGroupMemberId = getGroupMemberId;
     }
 
     public boolean isMaintainLdapGroupMembership() {
