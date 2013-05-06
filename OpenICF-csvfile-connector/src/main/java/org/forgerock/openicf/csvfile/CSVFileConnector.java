@@ -813,7 +813,6 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
 
                     pwd.access(new GuardedString.Accessor() {
 
-                        @Override
                         public void access(char[] chars) {
                             if (!new String(chars).equals(password)) {
                                 throw new InvalidPasswordException("Invalid username and/or password.");
@@ -962,7 +961,6 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                 GuardedString pwd = (GuardedString) object;
                 pwd.access(new GuardedString.Accessor() {
 
-                    @Override
                     public void access(char[] chars) {
                         builder.append(chars);
                     }
@@ -1016,7 +1014,6 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                 GuardedString guarded = (GuardedString) object;
                 guarded.access(new GuardedString.Accessor() {
 
-                    @Override
                     public void access(char[] chars) {
                         values.remove(new String(chars));
                     }
@@ -1045,7 +1042,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                     case REMOVE_ATTR_VALUE:
                         List<String> oldValues = new ArrayList<String>();
                         String oldValuesStr = item.getAttribute(index);
-                        if (StringUtil.isNotEmpty(value)) {
+                        if (StringUtil.isNotEmpty(oldValuesStr)) {
                             if (configuration.isUsingMultivalue()) {
                                 String[] array = oldValuesStr.split(String.valueOf(
                                         configuration.getMultivalueDelimiter()));
