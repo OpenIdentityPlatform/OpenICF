@@ -2,7 +2,7 @@
 <!--
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
- Copyright (c) 2011-2012 ForgeRock AS. All rights reserved.
+ Copyright (c) 2011-2013 ForgeRock AS. All rights reserved.
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -301,7 +301,7 @@
                 <plugin>
                     <groupId>org.forgerock.commons</groupId>
                     <artifactId>forgerock-doc-maven-plugin</artifactId>
-                    <version>1.1.0</version>
+                    <version>1.2.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -360,6 +360,13 @@
                     <googleAnalyticsId>${googleAnalyticsAccountId}</googleAnalyticsId>
                 </configuration>
                 <executions>
+                    <execution>
+                        <id>copy-common</id>
+                        <phase>pre-site</phase>
+                        <goals>
+                            <goal>boilerplate</goal>
+                        </goals>
+                    </execution>
                     <execution>
                         <id>build-doc</id>
                         <phase>pre-site</phase>
