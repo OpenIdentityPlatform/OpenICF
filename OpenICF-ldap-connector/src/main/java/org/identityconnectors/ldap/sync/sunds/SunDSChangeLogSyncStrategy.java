@@ -210,7 +210,7 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
                     throw new ConnectorException("Unsupported Uid attribute " + uidAttr);
                 }
             } else {
-                syncDeltaBuilder.setUid(conn.getSchemaMapping().createUid(oclass, targetDN));
+                syncDeltaBuilder.setUid(new Uid(targetDN));
             }
             return syncDeltaBuilder.build();
         }
