@@ -195,6 +195,8 @@ public class LdapConnection {
                 authnResult = new AuthenticationResult(AuthenticationResultType.PASSWORD_EXPIRED, e);
             } else if (message.contains("password has expired")) { // RACF.
                 authnResult = new AuthenticationResult(AuthenticationResultType.PASSWORD_EXPIRED, e);
+            } else if (message.contains("ldap: error code 49 ") && message.contains("data 773,")) { // MSAD.
+                authnResult = new AuthenticationResult(AuthenticationResultType.PASSWORD_EXPIRED, e);
             } else {
                 authnResult = new AuthenticationResult(AuthenticationResultType.FAILED, e);
             }
