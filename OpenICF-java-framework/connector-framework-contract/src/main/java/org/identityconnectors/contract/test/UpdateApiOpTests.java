@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  *
@@ -57,7 +57,7 @@ import org.testng.log4testng.Logger;
 
 
 /**
- * Contract test of {@link UpdateApiOp} 
+ * Contract test of {@link UpdateApiOp}
  */
 @Test(testName =  UpdateApiOpTests.TEST_NAME)
 public class UpdateApiOpTests extends ObjectClassRunner {
@@ -65,15 +65,15 @@ public class UpdateApiOpTests extends ObjectClassRunner {
      * Logging..
      */
     private static final Logger logger = Logger.getLogger(ValidateApiOpTests.class);
-    
+
     protected static final String MODIFIED = "modified";
     private static final String ADDED = "added";
     public static final String TEST_NAME = "Update";
 
     private static final String NON_EXISTING_PROP_NAME = "unsupportedAttributeName";
-    
+
     /**
-     * {@inheritDoc}     
+     * {@inheritDoc}
      */
     @Override
     public Set<Class<? extends APIOperation>> getAPIOperations() {
@@ -84,7 +84,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
         s.add(GetApiOp.class);
         return s;
     }
-    
+
     /**
      * {@inheritDoc}
      *
@@ -192,7 +192,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                         getOperationOptionsByOp(objectClass, GetApiOp.class));
                 assertNotNull(obj,"Cannot retrieve updated object.");
                 ConnectorHelper.checkObject(getObjectClassInfo(objectClass), obj, replaceAttributes);
-            }                        
+            }
         } finally {
             if (uid != null) {
                 // finally ... get rid of the object
@@ -200,10 +200,10 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                         false, getOperationOptionsByOp(objectClass, DeleteApiOp.class));
             }
         }
-    }   
-    
+    }
+
     /**
-     * The test verifies that connector doesn't throw NullPointerException or some other unexpected behavior when passed null as 
+     * The test verifies that connector doesn't throw NullPointerException or some other unexpected behavior when passed null as
      * attribute value. Test passes null values only for non-required non-special updateable attributes.
      *
      * Test procedure:
@@ -242,7 +242,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                         Set<Attribute> nullAttributes = new HashSet<Attribute>();
                         Attribute attr = AttributeBuilder.build(attInfo.getName());
                         nullAttributes.add(attr);
-                        
+
                         try {
                             Uid newUid = getConnectorFacade().update(
                                 objectClass, uid, nullAttributes,
@@ -250,18 +250,18 @@ public class UpdateApiOpTests extends ObjectClassRunner {
 
                             logger.info(
                                     "No exception was thrown, attributes should be either removed or their values set to null.");
-                            
+
                             // update uid
                             if (!uid.equals(newUid)) {
                                 uid = newUid;
                             }
-                            
+
                             // verify the change
                             obj = getConnectorFacade().getObject(objectClass, uid,
                                     getOperationOptionsByOp(objectClass, GetApiOp.class));
                             assertNotNull(obj,"Cannot retrieve updated object.");
-                            
-                            // check that nulled attributes were removed or set to null             
+
+                            // check that nulled attributes were removed or set to null
                             if (ConnectorHelper.isReadable(getObjectClassInfo(objectClass), attr)) {
                                 // null in case attribute is not present
                                 Attribute checkedAttribute = obj.getAttributeByName(attInfo.getName());
@@ -278,9 +278,9 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                                     attInfo.getName()));
                             logger.info(String.format("RuntimeException was thrown when trying to update '%s' to null.",
                                     attInfo.getName()));
-                        }  
+                        }
                     }
-                }               
+                }
             } finally {
                 if (uid != null) {
                     // finally ... get rid of the object
@@ -294,43 +294,43 @@ public class UpdateApiOpTests extends ObjectClassRunner {
             logger.info(LOG_SEPARATOR);
         }
     }
-    
+
     /**
      * Tests create of two different objects and then update one to the same
-     * attributes as the second. Test that updated object did not update uid to the same value as the first object. 
+     * attributes as the second. Test that updated object did not update uid to the same value as the first object.
      */
     @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testUpdateToSameAttributes(ObjectClass objectClass) {
         if (ConnectorHelper.operationsSupported(getConnectorFacade(), objectClass, getAPIOperations())) {
             Uid uid1 = null;
             Uid uid2 = null;
-            
+
             try {
                 // create two new objects
                 Set<Attribute> attrs1 = ConnectorHelper.getCreateableAttributes(getDataProvider(),
                         getObjectClassInfo(objectClass), getTestName(), 1, true, false);
                 uid1 = getConnectorFacade().create(objectClass, attrs1, null);
                 assertNotNull(uid1,"Create returned null uid.");
-                
+
                 // get the object to make sure it exist now
                 ConnectorObject obj1 = getConnectorFacade().getObject(objectClass,
                         uid1, getOperationOptionsByOp(objectClass, GetApiOp.class));
-                
+
                 // compare requested attributes to retrieved attributes
                 ConnectorHelper.checkObject(getObjectClassInfo(objectClass), obj1, attrs1);
-                
+
                 Set<Attribute> attrs2 = ConnectorHelper.getCreateableAttributes(getDataProvider(),
                         getObjectClassInfo(objectClass), getTestName(), 2, true, false);
                 uid2 = getConnectorFacade().create(objectClass, attrs2, null);
                 assertNotNull(uid2,"Create returned null uid.");
-                
+
                 // get the object to make sure it exist now
                 ConnectorObject obj2 = getConnectorFacade().getObject(objectClass,
                         uid2, getOperationOptionsByOp(objectClass, GetApiOp.class));
-                
+
                 // compare requested attributes to retrieved attributes
                 ConnectorHelper.checkObject(getObjectClassInfo(objectClass), obj2, attrs2);
-                                
+
                 // update second object with updateable attributes of first object
                 Set<Attribute> replaceAttributes = new HashSet<Attribute>();
                 for (Attribute attr : attrs1) {
@@ -339,16 +339,16 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                     }
                 }
                 replaceAttributes.add(uid2);
-                
+
                 try {
                     Uid newUid = getConnectorFacade().update(
                         objectClass, uid2, AttributeUtil.filterUid(replaceAttributes), getOperationOptionsByOp(objectClass, UpdateApiOp.class));
-                
+
                     if (!uid2.equals(newUid)) {
                         uid2 = newUid;
                     }
 
-                
+
                     assertFalse(uid1.equals(uid2),"Update returned the same uid when tried to update to the same " +
                 		"attributes as another object.");
                 }
@@ -379,10 +379,10 @@ public class UpdateApiOpTests extends ObjectClassRunner {
     public String getTestName() {
         return TEST_NAME;
     }
-    
+
     /**
      * Tests update method with invalid Attribute, RuntimeException is expected
-     * 
+     *
      * connector developers can set the value of unsupported attribute
      * using test property: <code>testsuite.Create.unsupportedAttributeName</code>
      */
@@ -464,7 +464,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
             logger.info(LOG_SEPARATOR);
         }
     }
-    
+
     /**
      * Returns new attribute set which contains all attributes from both sets. If attribute with the same name is present
      * in both sets then its values are merged.
@@ -497,8 +497,8 @@ public class UpdateApiOpTests extends ObjectClassRunner {
 
         return attrs;
     }
-    
-    
+
+
     @SuppressWarnings("unchecked")
     protected static Collection<String> getSkippedAttributesForUpdateToNullValue(){
         Object skippedAttributes = null;

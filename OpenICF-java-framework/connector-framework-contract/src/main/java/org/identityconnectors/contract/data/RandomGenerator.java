@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -51,7 +51,7 @@ import java.util.TreeSet;
  * Backslash is used to escape any character. For instance pattern "###\\.##"
  * prints a floating point random number
  * </p>
- * 
+ *
  * <p>
  * org.identityconnectors.contract.data.macro.RandomMacro -- written by Dan
  * Vernon, the original source of random generating functionality.
@@ -60,9 +60,9 @@ import java.util.TreeSet;
  * Note: This is just a helper class. Users will directly use methods get() and
  * random() of class {@link org.identityconnectors.contract.data.groovy.Lazy}.
  * </p>
- * 
+ *
  * @author David Adam, Zdenek Louzensky
- * 
+ *
  */
 public class RandomGenerator {
 
@@ -85,7 +85,7 @@ public class RandomGenerator {
      * generates a random string based on given pattern, finally tries to call
      * constructor on the given class accepting a string argument.
      * </p>
-     * 
+     *
      * @param pattern
      *            see the definition in class header
      * @return object initialized with random string
@@ -123,7 +123,7 @@ public class RandomGenerator {
 
     /**
      * Creates characters map
-     * 
+     *
      * @return
      */
     private static Map<Character, Set<Character>> getDefaultCharacterSetMap() {
@@ -165,7 +165,7 @@ public class RandomGenerator {
 
     /**
      * Fills the Set with Characters
-     * 
+     *
      * @param s
      *            {@link Set} to be filled
      * @param min
@@ -185,7 +185,7 @@ public class RandomGenerator {
 
     /**
      * Gets random character from the set
-     * 
+     *
      * @param rnd
      * @param validChars
      * @return
@@ -203,7 +203,7 @@ public class RandomGenerator {
 
     /**
      * Generates random character
-     * 
+     *
      * @param pattern
      * @param characterSetMap
      * @return

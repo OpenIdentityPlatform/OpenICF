@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright © 2011 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2011-2013 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -21,6 +21,7 @@
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
+
 package org.forgerock.openicf.framework.impl.api.osgi.internal;
 
 import java.util.Hashtable;
@@ -39,9 +40,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Sample Class Doc
  * 
- * @author $author$
- * @version $Revision$ $Date$
- * @since 1.1.0.0
+ * @author Laszlo Hordos
+ * @since 1.1
  */
 public class Activator implements BundleActivator {
 

@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -28,56 +28,52 @@ import java.util.Set;
 
 import org.identityconnectors.common.CollectionUtil;
 
-
 /**
  * A ConnectorObject represents an object (e.g., an Account or a Group) on the
  * target resource. Each ConnectorObject represents a resource object as a UID
  * and a bag of attributes.
- * 
+ *
  * The developer of a Connector will use a {@link ConnectorObjectBuilder} to
  * construct instances of ConnectorObject.
  */
 public final class ConnectorObject {
-    final ObjectClass _objectClass;
-    final Map<String, Attribute> attrs;
+    final ObjectClass objectClass;
+    final Map<String, Attribute> attributeMap;
 
     /**
      * Public only for serialization; please use {@link ConnectorObjectBuilder}.
-     * 
+     *
      * @throws IllegalArgumentException
-     *             iff {@link Name} or {@link Uid} is missing from the set.
+     *             if {@link Name} or {@link Uid} is missing from the set.
      */
-    public ConnectorObject(ObjectClass objectClass,
-            Set<? extends Attribute> set) {
+    public ConnectorObject(ObjectClass objectClass, Set<? extends Attribute> set) {
         if (objectClass == null) {
             throw new IllegalArgumentException("ObjectClass may not be null");
         }
         if (set == null || set.size() == 0) {
-            final String MSG = "The set can not be null or empty.";
-            throw new IllegalArgumentException(MSG);
+            throw new IllegalArgumentException("The set can not be null or empty.");
         }
-        _objectClass = objectClass;
+        this.objectClass = objectClass;
         // create an easy look map..
-        this.attrs = AttributeUtil.toMap(set);
+        this.attributeMap = AttributeUtil.toMap(set);
         // make sure the Uid was added..
-        if (!this.attrs.containsKey(Uid.NAME)) {
-            final String MSG = "The Attribute set must contain a 'Uid'.";
-            throw new IllegalArgumentException(MSG);
+        if (!this.attributeMap.containsKey(Uid.NAME)) {
+            throw new IllegalArgumentException("The Attribute set must contain a 'Uid'.");
         }
         // make sure the Name attribute was added..
-        if (!this.attrs.containsKey(Name.NAME)) {
-            final String MSG = "The Attribute set must contain a 'Name'.";
-            throw new IllegalArgumentException(MSG);
+        if (!this.attributeMap.containsKey(Name.NAME)) {
+            throw new IllegalArgumentException("The Attribute set must contain a 'Name'.");
         }
     }
 
     /**
-     * Get the set of attributes that represent this object. This includes the
-     * {@link Uid} and all {@link OperationalAttributes}.
+     * Get the set of attributes that represent this object.
+     *
+     * This includes the {@link Uid} and all {@link OperationalAttributes}.
      */
     public Set<Attribute> getAttributes() {
         // create a copy/unmodifiable set..
-        return CollectionUtil.newReadOnlySet(this.attrs.values());
+        return CollectionUtil.newReadOnlySet(this.attributeMap.values());
     }
 
     /**
@@ -85,38 +81,46 @@ public final class ConnectorObject {
      */
     public Attribute getAttributeByName(String name) {
         // no need to clone since it has no setters
-        return this.attrs.get(name);
+        return this.attributeMap.get(name);
     }
 
     /**
      * Get the native identifier for this object.
      */
     public Uid getUid() {
-        return (Uid) this.attrs.get(Uid.NAME);
+        final Attribute uid = this.attributeMap.get(Uid.NAME);
+        if (uid instanceof Uid) {
+            return (Uid) uid;
+        }
+        throw new IllegalArgumentException("__UID__ attribute must be instance of Uid");
     }
 
     /**
      * Gets the {@link Name} of the object.
      */
     public Name getName() {
-        return (Name) this.attrs.get(Name.NAME);
+        final Attribute name = this.attributeMap.get(Name.NAME);
+        if (name instanceof Name) {
+            return (Name) name;
+        }
+        throw new IllegalArgumentException("__NAME__ attribute must be instance of Name");
     }
 
     /**
      * Gets the {@link ObjectClass} for this object.
      */
     public ObjectClass getObjectClass() {
-        return _objectClass;
+        return objectClass;
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof ConnectorObject) {
-            ConnectorObject other = (ConnectorObject)obj;
-            if (!_objectClass.equals(other.getObjectClass())) {
+            ConnectorObject other = (ConnectorObject) obj;
+            if (!objectClass.equals(other.getObjectClass())) {
                 return false;
             }
-            return CollectionUtil.equals(getAttributes(),other.getAttributes());                       
+            return CollectionUtil.equals(getAttributes(), other.getAttributes());
         }
         return false;
     }

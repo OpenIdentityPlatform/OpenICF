@@ -1,33 +1,33 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
 package org.identityconnectors.common;
 
-import static org.testng.AssertJUnit.assertNull;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
-import org.testng.annotations.Test;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
+
 import org.testng.Assert;
-import org.identityconnectors.common.Version;
+import org.testng.annotations.Test;
 
 public class VersionTests {
 
@@ -84,17 +84,17 @@ public class VersionTests {
     @Test
     public void testComponents() {
         Version v = Version.parse("1.2.3.4");
-        assertEquals(Integer.valueOf(1), v.getMajor());
-        assertEquals(Integer.valueOf(2), v.getMinor());
-        assertEquals(Integer.valueOf(3), v.getMicro());
-        assertEquals(Integer.valueOf(4), v.getRevision());
+        assertEquals(v.getMajor(), Integer.valueOf(1));
+        assertEquals(v.getMinor(), Integer.valueOf(2));
+        assertEquals(v.getMicro(), Integer.valueOf(3));
+        assertEquals(v.getRevision(), Integer.valueOf(4));
     }
 
     @Test
     public void testCornerCases() {
         Version v = Version.parse("1.0");
-        assertEquals(Integer.valueOf(1), v.getMajor());
-        assertEquals(Integer.valueOf(0), v.getMinor());
+        assertEquals(v.getMajor(), Integer.valueOf(1));
+        assertEquals(v.getMinor(), Integer.valueOf(0));
         assertNull(v.getMicro());
         assertNull(v.getRevision());
 
@@ -130,7 +130,7 @@ public class VersionTests {
 
     @Test
     public void testToString() {
-        assertEquals("Version[1.2.3]", Version.parse("1.2.3").toString());
+        assertEquals(Version.parse("1.2.3").toString(), "Version[1.2.3]");
     }
 
     private void assertCompEq(Version v1, Version v2) {

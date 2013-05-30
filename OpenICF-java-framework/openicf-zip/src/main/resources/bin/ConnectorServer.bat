@@ -2,22 +2,22 @@
 rem -- START LICENSE
 rem ====================
 rem DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
-rem 
-rem Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
-rem 
-rem The contents of this file are subject to the terms of the Common Development 
-rem and Distribution License("CDDL") (the "License").  You may not use this file 
+rem
+rem Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+rem
+rem The contents of this file are subject to the terms of the Common Development
+rem and Distribution License("CDDL") (the "License").  You may not use this file
 rem except in compliance with the License.
-rem 
-rem You can obtain a copy of the License at 
-rem http://IdentityConnectors.dev.java.net/legal/license.txt
-rem See the License for the specific language governing permissions and limitations 
-rem under the License. 
-rem 
+rem
+rem You can obtain a copy of the License at
+rem http://opensource.org/licenses/cddl1.php
+rem See the License for the specific language governing permissions and limitations
+rem under the License.
+rem
 rem When distributing the Covered Code, include this CDDL Header Notice in each file
-rem and include the License file at identityconnectors/legal/license.txt.
-rem If applicable, add the following below this CDDL Header, with the fields 
-rem enclosed by brackets [] replaced by your own identifying information: 
+rem and include the License file at http://opensource.org/licenses/cddl1.php.
+rem If applicable, add the following below this CDDL Header, with the fields
+rem enclosed by brackets [] replaced by your own identifying information:
 rem "Portions Copyrighted [year] [name of copyright owner]"
 rem ====================
 rem
@@ -78,7 +78,7 @@ echo %CP%
 
 rem SET MISC PROPERTIES
 rem Architecture, can be i386 or amd64 or ia64 (it is basically the directory name
-rem   where the binaries are stored, if not set this script will try to 
+rem   where the binaries are stored, if not set this script will try to
 rem   find the value automatically based on environment variables)
 set ARCH=
 rem find out the architecture
@@ -114,7 +114,7 @@ echo.
 echo example:
 echo     ConnectorServer.bat /run "-J-Djavax.net.ssl.keyStore=mykeystore.jks" "-J-Djavax.net.ssl.keyStorePassword=changeit"
 echo        - this will run connector server with SSL
-echo.    
+echo.
 echo     ConnectorServer.bat /run "-J-Xdebug" "-J-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
 echo        - this will run connector server in debug mode
 goto :EOF
@@ -128,7 +128,7 @@ for %%P in (%*) do (
     set T=%%P
     if "!T:~1,2!" == "%JVM_OPTION_IDENTIFIER%" (
       set JAVA_OPTS_PARAM=!JAVA_OPTS_PARAM!!JAVA_OPTS_DELIM!!T:~3,-1!
-      set JAVA_OPTS_DELIM= 
+      set JAVA_OPTS_DELIM=
     )
 )
 cd "%CONNECTOR_SERVER_HOME%"
@@ -143,7 +143,7 @@ shift
 if not ""%1"" == """" goto keyOk
 echo Please provide key you want to set.
 goto exit
-:keyOk 
+:keyOk
 set key=%1
 rem Sets key in the Identity Connectors Server properties file
 %JAVA% %JAVA_OPTS% -classpath %CP% %MAIN_CLASS% -setkey -key %key% %SERVER_PROPERTIES_KEY% %SERVER_PROPERTIES%
@@ -176,7 +176,7 @@ goto :EOF
 
 :srvUninstall
 shift
-if not ""%1"" == """" ( 
+if not ""%1"" == """" (
     set SERVICE_NAME=%1
 ) else (
     set SERVICE_NAME=OpenICFConnectorServerJava

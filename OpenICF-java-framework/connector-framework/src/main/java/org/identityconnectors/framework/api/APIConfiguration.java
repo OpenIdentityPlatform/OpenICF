@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -29,39 +29,40 @@ import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.operations.SearchOp;
 
-
 /**
  * Interface to show the configuration properties from both the SPI/API based on
- * the {@link Connector} makeup. Before this is passed into the
- * {@link ConnectorFacadeFactory} one must call {@link #getConfigurationProperties()}
- * and configure accordingly.
+ * the {@link Connector} makeup.
+ *
+ * Before this is passed into the {@link ConnectorFacadeFactory} one must call
+ * {@link #getConfigurationProperties()} and configure accordingly.
  */
 public interface APIConfiguration {
 
     /**
-     * Gets instance of the configuration properties. These are initialized
-     * to their default values based on meta information. Caller can then 
-     * modify the properties as needed.
+     * Gets instance of the configuration properties.
+     *
+     * These are initialized to their default values based on meta information.
+     * Caller can then modify the properties as needed.
      */
     public ConfigurationProperties getConfigurationProperties();
 
     /**
      * Determines if this {@link Connector} uses the framework's connector
      * pooling.
-     * 
-     * @return true iff the {@link Connector} uses the framework's connector
+     *
+     * @return true if the {@link Connector} uses the framework's connector
      *         pooling feature.
      */
     boolean isConnectorPoolingSupported();
 
     /**
-     * Gets the connector pooling configuration. This is initialized to 
-     * the default values. Caller can then 
-     * modify the properties as needed.
+     * Gets the connector pooling configuration.
+     *
+     * This is initialized to the default values. Caller can then modify the
+     * properties as needed.
      */
     ObjectPoolConfiguration getConnectorPoolConfiguration();
 
-        
     // =======================================================================
     // Operational Support Set
     // =======================================================================
@@ -70,13 +71,12 @@ public interface APIConfiguration {
      */
     Set<Class<? extends APIOperation>> getSupportedOperations();
 
-
     // =======================================================================
     // Framework Configuration..
     // =======================================================================
     /**
-     * Sets the timeout value for the operation provided. 
-     * 
+     * Sets the timeout value for the operation provided.
+     *
      * @param operation
      *            particular operation that requires a timeout.
      * @param timeout
@@ -88,7 +88,7 @@ public interface APIConfiguration {
 
     /**
      * Gets the timeout in milliseconds based on the operation provided.
-     * 
+     *
      * @param operation
      *            particular operation to get a timeout for.
      * @return milliseconds to wait for an operation to complete before throwing
@@ -99,7 +99,7 @@ public interface APIConfiguration {
     /**
      * Sets the size of the buffer for {@link Connector} the support
      * {@link SearchOp} and what the results of the producer buffered.
-     * 
+     *
      * @param size
      *            default is 100, if size is set to zero or less will disable
      *            buffering.
@@ -112,7 +112,8 @@ public interface APIConfiguration {
     int getProducerBufferSize();
 
     /**
-     * Get the configuration of the ResultsHandler chain of the Search operation.
+     * Get the configuration of the ResultsHandler chain of the Search
+     * operation.
      */
     ResultsHandlerConfiguration getResultsHandlerConfiguration();
 

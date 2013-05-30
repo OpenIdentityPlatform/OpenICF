@@ -1,48 +1,28 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  *
- * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- *
- * Portions Copyrighted 2012 ForgeRock Inc.
- *
- * The contents of this file are subject to the terms
- * of the Common Development and Distribution License
- * (the License). You may not use this file except in
- * compliance with the License.
- *
- * You can obtain a copy of the License at
- * http://forgerock.org/license/CDDLv1.0.html
- * See the License for the specific language governing
- * permission and limitations under the License.
- *
- * When distributing Covered Code, include this CDDL
- * Header Notice in each file and include the License file
- * at http://forgerock.org/license/CDDLv1.0.html
- * If applicable, add the following below the CDDL Header,
- * with the fields enclosed by brackets [] replaced by
- * your own identifying information:
- * "Portions Copyrighted [year] [name of copyright owner]"
- *
+ * Portions Copyrighted  2012 ForgeRock Inc.
  */
+
 package org.identityconnectors.framework.impl.api.local;
 
 import org.identityconnectors.common.pooling.ObjectPoolConfiguration;
@@ -64,7 +44,7 @@ public interface ObjectPoolHandler<T> {
      * Makes the first instance of the pool.
      * <p/>
      * The pool calls this method when the pool is empty.
-     * 
+     *
      * @return new instance of T.
      */
     public T makeFirstObject();
@@ -73,7 +53,7 @@ public interface ObjectPoolHandler<T> {
      * Makes a new instance of the pooled object.
      * <p/>
      * This method is called whenever a new instance is needed.
-     * 
+     *
      * @return new instance of T.
      */
     public T makeObject();
@@ -83,7 +63,7 @@ public interface ObjectPoolHandler<T> {
      * <p/>
      * This method is invoked on head instances to make sure they can be
      * borrowed from the pool.
-     * 
+     *
      * @param object
      *            the pooled object.
      */
@@ -95,7 +75,7 @@ public interface ObjectPoolHandler<T> {
      * This method is invoked on every instance when it is being "dropped" from
      * the pool (whether due to the response from {@link #testObject(Object)},
      * or for reasons specific to the pool implementation.)
-     * 
+     *
      * @param object
      *            The "dropped" object.
      */
@@ -105,7 +85,7 @@ public interface ObjectPoolHandler<T> {
      * Disposes the last object from the pool.
      * <p/>
      * The pool calls this method when the pool is empty.
-     * 
+     *
      * @param object
      *            The "dropped" object.
      */

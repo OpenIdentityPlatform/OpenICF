@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -65,26 +65,29 @@ import org.identityconnectors.framework.spi.PoolableConnector;
 
 public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
 
-    private static final Log _log = Log.getLog(LocalConnectorInfoManagerImpl.class);
-    
-    private List<ConnectorInfo> _connectorInfo;
-    
-    public LocalConnectorInfoManagerImpl(List<URL> bundleURLs, ClassLoader bundleParentClassLoader) throws ConfigurationException {
-        List<WorkingBundleInfo> workingInfo = expandBundles(bundleURLs);
+    private static final Log LOG = Log.getLog(LocalConnectorInfoManagerImpl.class);
+
+    private List<ConnectorInfo> connectorInfos;
+
+    public LocalConnectorInfoManagerImpl(final List<URL> bundleURLs,
+            final ClassLoader bundleParentClassLoader)
+            throws ConfigurationException {
+        final List<WorkingBundleInfo> workingInfo = expandBundles(bundleURLs);
         WorkingBundleInfo.resolve(workingInfo);
-        _connectorInfo = createConnectorInfo(workingInfo, bundleParentClassLoader);
+        connectorInfos = createConnectorInfo(workingInfo, bundleParentClassLoader);
     }
-    
+
     /**
      * First pass - expand bundles as needed. populates
      * originalURL, parsedManifest, libContents, and topLevelContents
      */
-    private static List<WorkingBundleInfo> expandBundles (List<URL> bundleURLs) throws ConfigurationException {
-        List<WorkingBundleInfo> rv = new ArrayList<WorkingBundleInfo>();
+    private static List<WorkingBundleInfo> expandBundles(final List<URL> bundleURLs)
+            throws ConfigurationException {
+        final List<WorkingBundleInfo> rv = new ArrayList<WorkingBundleInfo>();
         for (URL url : bundleURLs) {
             WorkingBundleInfo info;
             try {
-                File file = new File(url.toURI()); //getFile() fails when the url contains space
+                final File file = new File(url.toURI()); //getFile() fails when the url contains space
                 if ("file".equals(url.getProtocol()) && file.isDirectory()) {
                     info = processDirectory(file);
                 } else {
@@ -97,12 +100,12 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         }
         return rv;
     }
-    
-    private static WorkingBundleInfo processDirectory(File dir) throws ConfigurationException {
-        WorkingBundleInfo info = new WorkingBundleInfo(dir.getAbsolutePath());
+
+    private static WorkingBundleInfo processDirectory(final File dir) throws ConfigurationException {
+        final WorkingBundleInfo info = new WorkingBundleInfo(dir.getAbsolutePath());
         try {
             //easy case - nothing needs to be copied
-            File manifest = new File(dir,"META-INF/MANIFEST.MF");
+            final File manifest = new File(dir, "META-INF/MANIFEST.MF");
             InputStream in = null;
             try {
                 in = new FileInputStream(manifest);
@@ -110,32 +113,28 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
                 ConnectorBundleManifestParser parser = new ConnectorBundleManifestParser(
                         info.getOriginalLocation(), rawManifest);
                 info.setManifest(parser.parse());
-            }
-            finally {
+            } finally {
                 IOUtil.quietClose(in);
             }
             info.getImmediateClassPath().add(dir.toURI().toURL());
-            List<String> bundleContents = listBundleContents(dir);
+            final List<String> bundleContents = listBundleContents(dir);
             info.getImmediateBundleContents().addAll(bundleContents);
-            File libDir = new File(dir, "lib");
-            if ( libDir.exists() ) {
-                List<URL> libURLs = BundleLibSorter.getSortedURLs(libDir);
+            final File libDir = new File(dir, "lib");
+            if (libDir.exists()) {
+                final List<URL> libURLs = BundleLibSorter.getSortedURLs(libDir);
                 for (URL lib : libURLs) {
-                    WorkingBundleInfo embedded = processURL(lib,false);
-                    info.getEmbeddedBundles().add(embedded);
+                    info.getEmbeddedBundles().add(processURL(lib, false));
                 }
             }
-            File nativeDir = new File(dir, "native");
-            if ( nativeDir.exists() ) {
+            final File nativeDir = new File(dir, "native");
+            if (nativeDir.exists()) {
                 for (File file : BundleLibSorter.getSortedFiles(nativeDir)) {
-                    if ( file.isFile() ) {
-                        String localName = file.getName();
-                        info.getImmediateNativeLibraries().put(localName, file.getAbsolutePath());
+                    if (file.isFile()) {
+                        info.getImmediateNativeLibraries().put(file.getName(), file.getAbsolutePath());
                     }
                 }
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new ConfigurationException(e);
         }
         return info;
@@ -146,15 +145,16 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
      * Result will be given as a list of forward-slash separated
      * relative paths
      */
-    private static List<String> listBundleContents(File dir) {
-        List<String> rv = new ArrayList<String>();
+    private static List<String> listBundleContents(final File dir) {
+        final List<String> rv = new ArrayList<String>();
         for (File file : dir.listFiles()) {
-            listBundleContents2("",file,rv);
+            listBundleContents2("", file, rv);
         }
         return rv;
     }
-    
-    private static void listBundleContents2(String prefix, File file, List<String> result) {
+
+    private static void listBundleContents2(final String prefix, final File file,
+            final List<String> result) {
         String path = prefix + file.getName();
         result.add(path);
         if (file.isDirectory()) {
@@ -163,104 +163,100 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
             }
         }
     }
-    
-    private static WorkingBundleInfo processURL(URL url, boolean topLevel) throws ConfigurationException {
-        WorkingBundleInfo info = new WorkingBundleInfo(url.toString());
-        BundleTempDirectory tempDir = new BundleTempDirectory();
+
+    private static WorkingBundleInfo processURL(final URL url, final boolean topLevel)
+            throws ConfigurationException {
+        final WorkingBundleInfo info = new WorkingBundleInfo(url.toString());
+        final BundleTempDirectory tempDir = new BundleTempDirectory();
 
         try {
             JarInputStream stream = null;
-            if ( url.getProtocol().equals("file") ) {
+            if (url.getProtocol().equals("file")) {
                 info.getImmediateClassPath().add(url);
-            }
-            else {
+            } else {
                 //if we're in a WAR, this might not be the kind of URL
                 //that URLClassLoader can handle, so copy it as well
                 InputStream stream2 = null;
                 try {
                     stream2 = url.openStream();
                     info.getImmediateClassPath().add(tempDir.copyStreamToFile(stream2).toURI().toURL());
-                }
-                finally {
+                } finally {
                     IOUtil.quietClose(stream2);
-                }            
+                }
             }
-            TreeMap<String,URL> libURLs = new TreeMap<String,URL>();
+            final TreeMap<String, URL> libURLs = new TreeMap<String, URL>();
             try {
                 stream = new JarInputStream(url.openStream());
                 //only parse the manifest for top-level bundles
                 //other bundles may not be bundles - they might be
                 //jars instead
-                if ( topLevel ) {
-                    Manifest rawManifest = stream.getManifest();
-                    ConnectorBundleManifestParser parser = new ConnectorBundleManifestParser(
+                if (topLevel) {
+                    final Manifest rawManifest = stream.getManifest();
+                    final ConnectorBundleManifestParser parser = new ConnectorBundleManifestParser(
                             info.getOriginalLocation(), rawManifest);
                     info.setManifest(parser.parse());
                 }
-                
+
                 JarEntry entry = null;
-                while ( ( entry = stream.getNextJarEntry()) != null ) {
-                    String name = entry.getName();
+                while ((entry = stream.getNextJarEntry()) != null) {
+                    final String name = entry.getName();
                     info.getImmediateBundleContents().add(name);
-                    if ( name.startsWith("lib/") && !entry.isDirectory() ) {
-                        String localName = name.substring("lib/".length());
-                        URL tempurl = tempDir.copyStreamToFile(stream, name).toURI().toURL();
+                    if (name.startsWith("lib/") && !entry.isDirectory()) {
+                        final String localName = name.substring("lib/".length());
+                        final URL tempurl = tempDir.copyStreamToFile(stream, name).toURI().toURL();
                         libURLs.put(localName, tempurl);
                     }
-                    if ( name.startsWith("native/") && !entry.isDirectory() ) {
-                        String localName = name.substring("native/".length());
+                    if (name.startsWith("native/") && !entry.isDirectory()) {
+                        final String localName = name.substring("native/".length());
                         // It is important that the name of the native library be preserved!
-                        File tempFile = tempDir.copyStreamToFile(stream, name);
+                        final File tempFile = tempDir.copyStreamToFile(stream, name);
                         info.getImmediateNativeLibraries().put(localName, tempFile.getAbsolutePath());
                     }
                 }
-            }
-            finally {
+            } finally {
                 IOUtil.quietClose(stream);
             }
             for (URL lib : libURLs.values()) {
-                WorkingBundleInfo embedded = processURL(lib,false);
-                info.getEmbeddedBundles().add(embedded);
+                info.getEmbeddedBundles().add(processURL(lib, false));
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new ConfigurationException(e);
         }
         return info;
     }
-    
+
     /**
      * Final pass - create connector infos
      */
-    private static List<ConnectorInfo> 
-    createConnectorInfo(Collection<WorkingBundleInfo> parsed, ClassLoader bundleParentClassLoader) throws ConfigurationException {
-        List<ConnectorInfo> rv = new ArrayList<ConnectorInfo>();
-        for (WorkingBundleInfo bundleInfo : parsed ) {
-            ClassLoader loader = new BundleClassLoader(bundleInfo.getEffectiveClassPath(), 
+    private static List<ConnectorInfo> createConnectorInfo(
+            final Collection<WorkingBundleInfo> parsed, final ClassLoader bundleParentClassLoader)
+            throws ConfigurationException {
+        final List<ConnectorInfo> rv = new ArrayList<ConnectorInfo>();
+        for (WorkingBundleInfo bundleInfo : parsed) {
+            final ClassLoader loader = new BundleClassLoader(bundleInfo.getEffectiveClassPath(),
                     bundleInfo.getEffectiveNativeLibraries(), bundleParentClassLoader);
             for (String name : bundleInfo.getImmediateBundleContents()) {
                 Class<?> connectorClass = null;
                 ConnectorClass options = null;
-                if ( name.endsWith(".class") ) {
-                    String className = name.substring(0, name.length()-".class".length());
+                if (name.endsWith(".class")) {
+                    String className = name.substring(0, name.length() - ".class".length());
                     className = className.replace('/', '.');
                     try {
                         connectorClass = loader.loadClass(className);
                         options = connectorClass.getAnnotation(ConnectorClass.class);
-                    }
-                    catch (Throwable e) {
+                    } catch (Throwable e) {
                         //probe for the class. this might not be an error since it might be from a bundle
                         //fragment ( a bundle only included by other bundles ). However, we should definitely warn
-                        _log.warn(e, "Unable to load class {0} from bundle {1}. Class will be ignored and will not be listed in list of connectors.",
+                        LOG.warn(e, "Unable to load class {0} from bundle {1}. Class will be ignored and will not be listed in list of connectors.",
                                 className, bundleInfo.getOriginalLocation());
                     }
                 }
-                if ( connectorClass != null && options != null ) {
+                if (connectorClass != null && options != null) {
                     if (!Connector.class.isAssignableFrom(connectorClass)) {
-                        String message = "Class " + connectorClass + " does not implement " + Connector.class.getName();
-                        throw new ConfigurationException(message);
+                        throw new ConfigurationException("Class " + connectorClass
+                                + " does not implement " + Connector.class.getName());
                     }
-                    LocalConnectorInfoImpl info = new LocalConnectorInfoImpl();
+                    final LocalConnectorInfoImpl info = new LocalConnectorInfoImpl();
                     info.setConnectorClass(connectorClass.asSubclass(Connector.class));
                     info.setConnectorConfigurationClass(options.configurationClass());
                     info.setConnectorDisplayNameKey(options.displayNameKey());
@@ -269,7 +265,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
                             bundleInfo.getManifest().getBundleName(),
                             bundleInfo.getManifest().getBundleVersion(),
                             connectorClass.getName()));
-                    ConnectorMessagesImpl messages = loadMessageCatalog(
+                    final ConnectorMessagesImpl messages = loadMessageCatalog(
                             bundleInfo.getEffectiveContents(),
                             loader,
                             info.getConnectorClass());
@@ -286,15 +282,16 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
      * Create an instance of the {@link APIConfiguration} object to setup the
      * framework etc..
      */
-    private static APIConfigurationImpl 
-    createDefaultAPIConfiguration(LocalConnectorInfoImpl localInfo) {
-        //setup classloader since we are going to construct the config bean
-        ThreadClassLoaderManager.getInstance().pushClassLoader(localInfo.getConnectorClass().getClassLoader());
+    private static APIConfigurationImpl createDefaultAPIConfiguration(
+            final LocalConnectorInfoImpl localInfo) {
+        // setup classloader since we are going to construct the config bean
+        ThreadClassLoaderManager.getInstance().pushClassLoader(
+                localInfo.getConnectorClass().getClassLoader());
         try {
-            Class<? extends Connector> connectorClass = localInfo.getConnectorClass();
-            APIConfigurationImpl rv = new APIConfigurationImpl();
-            Configuration config = localInfo.getConnectorConfigurationClass().newInstance();
-            boolean pooling = PoolableConnector.class.isAssignableFrom(connectorClass);
+            final Class<? extends Connector> connectorClass = localInfo.getConnectorClass();
+            final APIConfigurationImpl rv = new APIConfigurationImpl();
+            final Configuration config = localInfo.getConnectorConfigurationClass().newInstance();
+            final boolean pooling = PoolableConnector.class.isAssignableFrom(connectorClass);
             rv.setConnectorPoolingSupported(pooling);
             rv.setConfigurationProperties(JavaClassProperties.createConfigurationProperties(config));
             rv.setConnectorInfo(localInfo);
@@ -302,90 +299,84 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
             return rv;
         } catch (Exception e) {
             throw ConnectorException.wrap(e);
-        }
-        finally {
+        } finally {
             ThreadClassLoaderManager.getInstance().popClassLoader();
         }
     }
-        
-    private static ConnectorMessagesImpl 
-    loadMessageCatalog(Set<String> bundleContents, ClassLoader loader, Class<? extends Connector> connector) 
-    throws ConfigurationException {
+
+    private static ConnectorMessagesImpl loadMessageCatalog(final Set<String> bundleContents,
+            final ClassLoader loader, final Class<? extends Connector> connector)
+            throws ConfigurationException {
         try {
-            final String [] prefixes = getBundleNamePrefixes(connector);
+            final String[] prefixes = getBundleNamePrefixes(connector);
             final String suffix = ".properties";
-            ConnectorMessagesImpl rv = new ConnectorMessagesImpl();
+            final ConnectorMessagesImpl rv = new ConnectorMessagesImpl();
             //iterate last to first so that first one wins
-            for (int i = prefixes.length - 1; i >=0; i--) {
+            for (int i = prefixes.length - 1; i >= 0; i--) {
                 String prefix = prefixes[i];
                 for (String path : bundleContents) {
-                    if ( path.startsWith(prefix) ) {
+                    if (path.startsWith(prefix)) {
                         String localeStr = path.substring(prefix.length());
-                        if ( localeStr.endsWith(suffix) ) {
-                            localeStr = localeStr.substring(0, localeStr.length()-suffix.length());
-                            Locale locale = parseLocale(localeStr);
+                        if (localeStr.endsWith(suffix)) {
+                            localeStr = localeStr.substring(0, localeStr.length() - suffix.length());
+                            final Locale locale = parseLocale(localeStr);
                             Properties properties = IOUtil.getResourceAsProperties(loader, path);
                             //get or create map
-                            Map<String,String> map = rv.getCatalogs().get(locale);
-                            if ( map == null ) {
-                                map = new HashMap<String,String>();
+                            Map<String, String> map = rv.getCatalogs().get(locale);
+                            if (map == null) {
+                                map = new HashMap<String, String>();
                                 rv.getCatalogs().put(locale, map);
                             }
                             //merge properties into map, overwriting
-                            //any that already exist 
+                            //any that already exist
                             map.putAll(CollectionUtil.newMap(properties));
                         }
                     }
                 }
             }
             return rv;
-        }
-        catch (RuntimeException e) {
+        } catch (RuntimeException e) {
             throw e;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new ConfigurationException(e);
         }
     }
-        
-    private static Locale parseLocale(String str) {
+
+    private static Locale parseLocale(final String str) {
         String lang = null;
         String country = null;
         String variant = null;
-        StringTokenizer tok = new StringTokenizer(str,"_",false);
-        if ( tok.hasMoreTokens() ) {
+        final StringTokenizer tok = new StringTokenizer(str, "_", false);
+        if (tok.hasMoreTokens()) {
             lang = tok.nextToken();
         }
-        if ( tok.hasMoreTokens() ) {
+        if (tok.hasMoreTokens()) {
             country = tok.nextToken();
         }
-        if ( tok.hasMoreTokens() ) {
+        if (tok.hasMoreTokens()) {
             variant = tok.nextToken();
         }
-        if ( variant != null ) {
-            return new Locale(lang,country,variant);
-        }
-        else if ( country != null ) {
-            return new Locale(lang,country);
-        }
-        else if ( lang != null ) {
+        if (variant != null) {
+            return new Locale(lang, country, variant);
+        } else if (country != null) {
+            return new Locale(lang, country);
+        } else if (lang != null) {
             return new Locale(lang);
-        }
-        else {
+        } else {
             return new Locale("");
         }
     }
-    
-    private static String [] getBundleNamePrefixes(Class<? extends Connector> connector) {
+
+    private static String[] getBundleNamePrefixes(final Class<? extends Connector> connector) {
         // figure out the message catalog..
-        ConnectorClass configOpts = connector.getAnnotation(ConnectorClass.class);
-        String [] paths = null;
-        if ( configOpts != null ) {
+        final ConnectorClass configOpts = connector.getAnnotation(ConnectorClass.class);
+        String[] paths = null;
+        if (configOpts != null) {
             paths = configOpts.messageCatalogPaths();
         }
-        if ( paths == null || paths.length == 0 ) {
-            String pkage = ReflectionUtil.getPackage(connector);
-            String messageCatalog = pkage + ".Messages";
+        if (paths == null || paths.length == 0) {
+            final String pkage = ReflectionUtil.getPackage(connector);
+            final String messageCatalog = pkage + ".Messages";
             paths = new String[]{messageCatalog};
         }
         for (int i = 0; i < paths.length; i++) {
@@ -393,10 +384,10 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         }
         return paths;
     }
-    
-    public ConnectorInfo findConnectorInfo(ConnectorKey key) {
-        for (ConnectorInfo info : _connectorInfo) {
-            if ( info.getConnectorKey().equals(key)) {
+
+    public ConnectorInfo findConnectorInfo(final ConnectorKey key) {
+        for (ConnectorInfo info : connectorInfos) {
+            if (info.getConnectorKey().equals(key)) {
                 return info;
             }
         }
@@ -404,36 +395,37 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
     }
 
     public List<ConnectorInfo> getConnectorInfos() {
-        return Collections.unmodifiableList(_connectorInfo);
+        return Collections.unmodifiableList(connectorInfos);
     }
 
     private static final class BundleTempDirectory {
 
-        private final Random _random = new Random(System.currentTimeMillis());;
+        private final Random _random = new Random(System.currentTimeMillis());
+
         private File _bundleTempDir;
-        
-        public File copyStreamToFile(InputStream stream) throws IOException {
-            File bundleDir = getBundleTempDir();
+
+        public File copyStreamToFile(final InputStream stream) throws IOException {
+            final File bundleDir = getBundleTempDir();
             File candidate;
             do {
                 candidate = new File(bundleDir, "file-" + nextRandom());
-            } while ( !candidate.createNewFile() );
+            } while (!candidate.createNewFile());
             candidate.deleteOnExit();
             copyStream(stream, candidate);
             return candidate;
         }
-        
-        public File copyStreamToFile(InputStream stream, String name) throws IOException {
-            File bundleDir = getBundleTempDir();
-            File newFile = new File(bundleDir, name);
-            if ( newFile.exists() ) {
+
+        public File copyStreamToFile(final InputStream stream, final String name) throws IOException {
+            final File bundleDir = getBundleTempDir();
+            final File newFile = new File(bundleDir, name);
+            if (newFile.exists()) {
                 throw new IOException("File " + newFile + " already exists");
             }
             File parent = newFile.getParentFile();
-            if ( !parent.exists() && !parent.mkdirs() ) {
-                throw new IOException("Could not create directory " + parent); 
+            if (!parent.exists() && !parent.mkdirs()) {
+                throw new IOException("Could not create directory " + parent);
             }
-            while ( !parent.equals(bundleDir) ) {
+            while (!parent.equals(bundleDir)) {
                 parent.deleteOnExit();
                 parent = parent.getParentFile();
             }
@@ -441,35 +433,33 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
             copyStream(stream, newFile);
             return newFile;
         }
-        
-        private void copyStream(InputStream stream, File toFile) throws IOException {
-            FileOutputStream out = new FileOutputStream(toFile);
+
+        private void copyStream(final InputStream stream, final File toFile) throws IOException {
+            final FileOutputStream out = new FileOutputStream(toFile);
             try {
                 IOUtil.copyFile(stream, out);
-            }
-            finally {
+            } finally {
                 out.close();
             }
         }
-        
+
         private File getBundleTempDir() throws IOException {
-            if ( _bundleTempDir != null ) {
+            if (_bundleTempDir != null) {
                 return _bundleTempDir;
             }
-            File tempDir = new File(System.getProperty("java.io.tmpdir"));
-            if ( !tempDir.exists() ) {
+            final File tempDir = new File(System.getProperty("java.io.tmpdir"));
+            if (!tempDir.exists()) {
                 throw new IOException("Temporary directory " + tempDir + " does not exist");
             }
             File candidate;
             do {
                 candidate = new File(tempDir, "bundle-" + nextRandom());
-            }
-            while ( !candidate.mkdir() );
+            } while (!candidate.mkdir());
             candidate.deleteOnExit();
             _bundleTempDir = candidate;
             return candidate;
         }
-        
+
         private int nextRandom() {
             return _random.nextInt() & 0x7fffffff; // Want only positive numbers.
         }

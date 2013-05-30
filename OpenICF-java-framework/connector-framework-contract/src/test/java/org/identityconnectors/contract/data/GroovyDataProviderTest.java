@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -25,7 +25,11 @@ package org.identityconnectors.contract.data;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 import org.testng.annotations.BeforeMethod;
-import org.testng.AssertJUnit;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
 import groovy.util.ConfigObject;
 import groovy.util.ConfigSlurper;
 
@@ -45,11 +49,11 @@ import org.identityconnectors.framework.common.objects.Attribute;
 
 /**
  * unit test for GroovyDataProvider
- * 
+ *
  * @author David Adam
- * 
+ *
  * Note: if getting MissingMethodException, update imports in configfile.groovy
- * 
+ *
  */
 public class GroovyDataProviderTest {
     private static final String NON_EXISTING_PROPERTY = "abcdefghi123asiosfjds";
@@ -73,84 +77,82 @@ public class GroovyDataProviderTest {
     @Test
     public void testListAcquire() throws Exception {
         Object o = getProperty(gdp, "sampleFooBarList");
-        AssertJUnit.assertNotNull(o);
-        AssertJUnit.assertTrue(o instanceof List<?>);
-        AssertJUnit.assertTrue(((List<?>) o).size() == 3);
+        assertNotNull(o);
+        assertTrue(o instanceof List<?>);
+        assertTrue(((List<?>) o).size() == 3);
         @SuppressWarnings("unchecked") // because of list retyping to List<Object>
         List<Object> l = (List<Object>) o;
         int iter = 0;
         for (Object object : l) {
             switch(iter) {
-            case 0: AssertJUnit.assertTrue(object.equals("a")); break;
-            case 1: AssertJUnit.assertTrue(object.equals("b")); break;
-            case 2: AssertJUnit.assertTrue(object.equals("b")); break;
+            case 0: assertTrue(object.equals("a")); break;
+            case 1: assertTrue(object.equals("b")); break;
+            case 2: assertTrue(object.equals("b")); break;
             }
             iter++;
         }
     }
-    
+
     @Test
     public void testListAcquireWithLazy() throws Exception {
         Object o = getProperty(gdp, "sampleFooBarListWithLazy");
-        AssertJUnit.assertNotNull(o);
-        AssertJUnit.assertTrue(o instanceof List<?>);
-        AssertJUnit.assertTrue(((List<?>) o).size() == 3);
+        assertNotNull(o);
+        assertTrue(o instanceof List<?>);
+        assertTrue(((List<?>) o).size() == 3);
         @SuppressWarnings("unchecked") // collection retyping
         List<Object> l = (List<Object>) o;
         int iter = 0;
         for (Object object : l) {
             switch(iter) {
-            case 0: AssertJUnit.assertTrue(object.equals("a")); break;
-            case 1: AssertJUnit.assertTrue(object.equals("b")); break;
+            case 0: assertTrue(object.equals("a")); break;
+            case 1: assertTrue(object.equals("b")); break;
             case 2:
-                AssertJUnit.assertTrue(object instanceof String);
-                AssertJUnit.assertTrue(object.toString().contains("X"));
+                assertTrue(object instanceof String);
+                assertTrue(object.toString().contains("X"));
             break;
             }
             iter++;
         }
     }
-    
+
     @Test
     public void testSimpleStr() throws Exception {
-        AssertJUnit
-                .assertEquals(
-                        "If you think you can do a thing or think you can't do a thing, you're right. (H. Ford)",
-                        gdp.get("aSimpleString", "string", true));
+        assertEquals(gdp.get("aSimpleString", "string", true),
+                "If you think you can do a thing or think you can't do a thing, you're right. (H. Ford)");
     }
-    
+
     @Test
     public void testProperDefaulting() {
         Object o = get("nonexistingAttribute");
-        AssertJUnit.assertNotNull(o);
-        AssertJUnit.assertTrue(o instanceof String);
+        assertNotNull(o);
+        assertTrue(o instanceof String);
         String nonExistingAttribute = (String) o;
 
         Object o2 = get("nonexistingAttribute");
-        AssertJUnit.assertNotNull(o2);
-        AssertJUnit.assertTrue(o2 instanceof String);
+        assertNotNull(o2);
+        assertTrue(o2 instanceof String);
         String nonExistingAttribute2 = (String) o2;
 
         final String message = "if we query the same attribute twice, it should return the same default value";
-        AssertJUnit.assertTrue(message, nonExistingAttribute
-                .equals(nonExistingAttribute2));
+        assertTrue(nonExistingAttribute
+                .equals(nonExistingAttribute2),message);
 
         Object o3 = get("anotherNonExistingAttribute");
-        AssertJUnit.assertNotNull(o3);
-        AssertJUnit.assertTrue(o3 instanceof String);
+        assertNotNull(o3);
+        assertTrue(o3 instanceof String);
         String anotherNonExistingAttribute = (String) o3;
 
-        AssertJUnit.assertTrue(
-                "different properties should return different 'generated' values!",
-                !anotherNonExistingAttribute.equals(nonExistingAttribute));
+        assertTrue(
+                !anotherNonExistingAttribute.equals(nonExistingAttribute),
+                "different properties should return different 'generated' values!");
 
         Object o4 = get("anotherNonExistingAttribute");
-        AssertJUnit.assertNotNull(o4);
-        AssertJUnit.assertTrue(o4 instanceof String);
+        assertNotNull(o4);
+        assertTrue(o4 instanceof String);
         String anotherNonExistingAttribute2 = (String) o4;
 
-        AssertJUnit.assertTrue(message, anotherNonExistingAttribute
-                .equals(anotherNonExistingAttribute2));
+        assertTrue(anotherNonExistingAttribute
+                .equals(anotherNonExistingAttribute2),message);
     }
 
     /** helper method of {@link GroovyDataProviderTest#testProperDefaulting()};
@@ -159,45 +161,45 @@ public class GroovyDataProviderTest {
     private Object get(String string) {
         return gdp.get(String.class, string, "foocomponent");
     }
-    
+
     @SuppressWarnings("unchecked") // collection retyping
-    @Test 
+    @Test
     public void testProperDefaultingMulti() {
         Object o = getMulti("nonexistingAttribute");
-        AssertJUnit.assertNotNull(o);
-        AssertJUnit.assertTrue(o instanceof List && ((List<Object>) o).get(0) instanceof String);
+        assertNotNull(o);
+        assertTrue(o instanceof List && ((List<Object>) o).get(0) instanceof String);
         List<Object> nonExistingAttribute = (List<Object>) o;
 
         Object o2 = getMulti("nonexistingAttribute");
-        AssertJUnit.assertNotNull(o2);
-        AssertJUnit.assertTrue(o2 instanceof List && ((List<Object>) o2).get(0) instanceof String);
+        assertNotNull(o2);
+        assertTrue(o2 instanceof List && ((List<Object>) o2).get(0) instanceof String);
         List<Object> nonExistingAttribute2 = (List<Object>) o2;
 
         final String message = "if we query the same attribute twice, it should return the same default value";
-        AssertJUnit.assertTrue(message, nonExistingAttribute
-                .equals(nonExistingAttribute2));
+        assertTrue(nonExistingAttribute
+                .equals(nonExistingAttribute2), message);
 
         Object o3 = getMulti("anotherNonExistingAttribute");
-        AssertJUnit.assertNotNull(o3);
-        AssertJUnit.assertTrue(o3 instanceof List && ((List<Object>) o3).get(0) instanceof String);
+        assertNotNull(o3);
+        assertTrue(o3 instanceof List && ((List<Object>) o3).get(0) instanceof String);
         List<Object> anotherNonExistingAttribute = (List<Object>) o3;
 
         //TODO fix problem with uniform unique values.
-        AssertJUnit.assertTrue(
-                "different properties should return different 'generated' values!",
-                !anotherNonExistingAttribute.equals(nonExistingAttribute));
+        assertTrue(
+                !anotherNonExistingAttribute.equals(nonExistingAttribute),
+                "different properties should return different 'generated' values!");
 
         Object o4 = getMulti("anotherNonExistingAttribute");
-        AssertJUnit.assertNotNull(o4);
-        AssertJUnit.assertTrue(o4 instanceof List && ((List<Object>) o4).get(0) instanceof String);
+        assertNotNull(o4);
+        assertTrue(o4 instanceof List && ((List<Object>) o4).get(0) instanceof String);
         List<Object> anotherNonExistingAttribute2 = (List<Object>) o4;
 
-        AssertJUnit.assertTrue(message, anotherNonExistingAttribute
-                .equals(anotherNonExistingAttribute2));
+        assertTrue(anotherNonExistingAttribute
+                .equals(anotherNonExistingAttribute2),message);
     }
 
     /** helper method of {@link GroovyDataProviderTest#testProperDefaultingMulti()
-     * in case of missing value should return default one. 
+     * in case of missing value should return default one.
      */
     private Object getMulti(String string) {
         return gdp.get(String.class, string, "foocomponent", 0, true);
@@ -206,27 +208,27 @@ public class GroovyDataProviderTest {
     @Test(expectedExceptions = ObjectNotFoundException.class)
     public void testNonExistingProperty() throws Exception {
         Object o = getProperty(gdp, NON_EXISTING_PROPERTY);
-        AssertJUnit.assertNotNull(o);
-        AssertJUnit.assertTrue(o instanceof ConfigObject);
+        assertNotNull(o);
+        assertTrue(o instanceof ConfigObject);
         if (o instanceof ConfigObject) {
             ConfigObject co = (ConfigObject) o;
-            AssertJUnit.assertEquals(0, co.size());
+            assertEquals(co.size(), 0);
         }
     }
 
     @Test
     public void testSimpleMapAcquire() throws Exception {
         Object o = getProperty(gdp, "sampleMap");
-        AssertJUnit.assertNotNull(o);
-        AssertJUnit.assertTrue(o instanceof Map<?,?>);
+        assertNotNull(o);
+        assertTrue(o instanceof Map<?,?>);
         printMap(o);
     }
 
     @Test
     public void testDotInNameMapAcquire() throws Exception {
         Object o = getProperty(gdp, "sampleMap.foo.bar");
-        AssertJUnit.assertNotNull(o);
-        AssertJUnit.assertTrue(o instanceof Map<?,?>);
+        assertNotNull(o);
+        assertTrue(o instanceof Map<?,?>);
         printMap(o);
     }
 
@@ -237,33 +239,33 @@ public class GroovyDataProviderTest {
         // name (divided by .)
         // and find "abc"
         Object o = getProperty(gdp, "foo.abc");
-        AssertJUnit.assertNotNull(o);
-        AssertJUnit.assertEquals("abc", o.toString());
+        assertNotNull(o);
+        assertEquals(o.toString(), "abc");
         printMap(o);
     }
 
     @Test
     public void testDotNameString() throws Exception {
         Object o = getProperty(gdp, "eggs.spam.sausage");
-        AssertJUnit.assertNotNull(o);
-        AssertJUnit.assertTrue(o instanceof String);
-        AssertJUnit.assertEquals("the spanish inquisition", o.toString());
+        assertNotNull(o);
+        assertTrue(o instanceof String);
+        assertEquals(o.toString(), "the spanish inquisition");
     }
 
     @Test
     public void testRandom() throws Exception {
         Object o = getProperty(gdp, "random");
         Object o2 = getProperty(gdp, "random");
-        AssertJUnit.assertNotNull(o);
-        AssertJUnit.assertEquals(o, o2);
+        assertNotNull(o);
+        assertEquals(o, o2);
     }
 
     @Test
     public void testRandomHierarchicalName() throws Exception {
         Object o = getProperty(gdp, "foo.bla.horror.random");
         Object o2 = getProperty(gdp, "foo.bla.horror.random");
-        AssertJUnit.assertNotNull(o);
-        AssertJUnit.assertEquals(o, o2);
+        assertNotNull(o);
+        assertEquals(o, o2);
     }
 
     @Test
@@ -300,11 +302,11 @@ public class GroovyDataProviderTest {
         Object o = getProperty(gdp, "randomNewAge");
         Object o2 = getProperty(gdp, "remus");
 
-        AssertJUnit.assertNotNull(o);
-        AssertJUnit.assertNotNull(o2);
+        assertNotNull(o);
+        assertNotNull(o2);
 
-        AssertJUnit.assertTrue(o instanceof Long);
-        AssertJUnit.assertTrue(o2 instanceof Integer);
+        assertTrue(o instanceof Long);
+        assertTrue(o2 instanceof Integer);
 
         System.out.println("long value: " + o.toString() + "   int value: "
                 + o2.toString());
@@ -315,30 +317,30 @@ public class GroovyDataProviderTest {
 
         {
             Object o = getProperty(gdp, "attributeMap.string");
-            AssertJUnit.assertNotNull(o);
-            AssertJUnit.assertTrue(o instanceof String);
-            AssertJUnit.assertTrue(o.toString() == "Good morning!");
+            assertNotNull(o);
+            assertTrue(o instanceof String);
+            assertTrue(o.toString() == "Good morning!");
         }
 
         {
             Object o = getProperty(gdp, "attributeMapSecond.stringSec");
-            AssertJUnit.assertNotNull(o);
-            AssertJUnit.assertTrue(o instanceof String);
-            AssertJUnit.assertTrue(o.toString() == "Good morning Mrs. Smith!");
+            assertNotNull(o);
+            assertTrue(o instanceof String);
+            assertTrue(o.toString() == "Good morning Mrs. Smith!");
         }
 
         {
             Object o = getProperty(gdp, "Delete.account.__NAME__.string");
-            AssertJUnit.assertNotNull(o);
-            AssertJUnit.assertTrue(o instanceof String);
-            AssertJUnit.assertTrue(o.toString() == "blaf");
+            assertNotNull(o);
+            assertTrue(o instanceof String);
+            assertTrue(o.toString() == "blaf");
         }
 
         {
             Object o = getProperty(gdp, "account.__NAME__.string");
-            AssertJUnit.assertNotNull(o);
-            AssertJUnit.assertTrue(o instanceof String);
-            AssertJUnit.assertTrue(o.toString() == "blaf blaf");
+            assertNotNull(o);
+            assertTrue(o instanceof String);
+            assertTrue(o.toString() == "blaf blaf");
         }
 
     }
@@ -347,9 +349,9 @@ public class GroovyDataProviderTest {
     public void literalsMacroReplacementTest() throws Exception {
         {
             Object o = getProperty(gdp, "Tfloat");
-            AssertJUnit.assertNotNull(o);
+            assertNotNull(o);
             System.out.println(o.getClass().getName() + " " + o.toString());
-            AssertJUnit.assertTrue(o instanceof Float);
+            assertTrue(o instanceof Float);
         }
     }
 
@@ -358,22 +360,22 @@ public class GroovyDataProviderTest {
 
         // multi.Tstring=[Lazy.random("AAAAA##") , Lazy.random("AAAAA##")]
         Object o = getProperty(gdp, "multi.Tstring");
-        AssertJUnit.assertNotNull(o);
-        AssertJUnit.assertTrue(o instanceof List<?>);
+        assertNotNull(o);
+        assertTrue(o instanceof List<?>);
         if (o instanceof List<?>) {
             @SuppressWarnings("unchecked")
             List<Object> l = (List<Object>) o;
             printList(l);
             System.out.println();
-            Object previous = null; 
+            Object previous = null;
             for (Object object : l) {
 
                 String msg = String.format("default value for Random multiString should contain Strings only, but found different type: ", object.getClass().getName());
-                AssertJUnit.assertTrue(msg, object instanceof String);
-                
+                assertTrue( object instanceof String, msg);
+
                 if (previous != null) {
                     msg = String.format("two objects on the randomized list should differ, but there are two equal values: %s = %s", previous, object);
-                    AssertJUnit.assertTrue(msg, !previous.equals(object));
+                    assertTrue(!previous.equals(object), msg);
                 }
                 previous = object;
             }
@@ -384,8 +386,8 @@ public class GroovyDataProviderTest {
     public void multiStringRecursiveTest() throws Exception {
 
         Object o = getProperty(gdp, "multi.recursive.Tstring", false);
-        AssertJUnit.assertNotNull(o);
-        AssertJUnit.assertTrue(o instanceof List<?>);
+        assertNotNull(o);
+        assertTrue(o instanceof List<?>);
         if (o instanceof List<?>) {
             @SuppressWarnings("unchecked") // collection retyping
             List<Object> l = (List<Object>) o;
@@ -405,8 +407,8 @@ public class GroovyDataProviderTest {
                     }
                 }
             }
-            AssertJUnit.assertTrue(recursiveListPresent);
-            AssertJUnit.assertTrue(recursiveListPresent2);
+            assertTrue(recursiveListPresent);
+            assertTrue(recursiveListPresent2);
 
             printList(l);
             System.out.println("\n");
@@ -416,8 +418,8 @@ public class GroovyDataProviderTest {
     @Test
     public void testByteArray() throws Exception {
         Object o = getProperty(gdp, "byteArray.test");
-        AssertJUnit.assertNotNull(o);
-        AssertJUnit.assertTrue(o instanceof byte[]);
+        assertNotNull(o);
+        assertTrue(o instanceof byte[]);
         if (o instanceof byte[]) {
             byte[] barr = (byte[]) o;
             System.out.println("Byte Array values:");
@@ -431,8 +433,8 @@ public class GroovyDataProviderTest {
     @Test
     public void characterTest() throws Exception {
         Object o = getProperty(gdp, "charTest");
-        AssertJUnit.assertNotNull(o);
-        AssertJUnit.assertTrue(o instanceof Character);
+        assertNotNull(o);
+        assertTrue(o instanceof Character);
     }
 
     @Test(expectedExceptions = ObjectNotFoundException.class)
@@ -444,29 +446,29 @@ public class GroovyDataProviderTest {
     @Test
     public void testNestedPropertyQuery() throws Exception {
         Object o = getProperty(gdp, "SchemaXX.sample");
-        AssertJUnit.assertNotNull(o);
-        AssertJUnit.assertTrue(o instanceof String
+        assertNotNull(o);
+        assertTrue(o instanceof String
                 && o.toString() == "Mysterious universe");
     }
 
     @Test
     public void testAtAtPropertyNamesQuery() throws Exception {
         Object o = getProperty(gdp, "Schema.__NAME__.attribute.account");
-        AssertJUnit.assertNotNull(o);
-        AssertJUnit.assertTrue(o instanceof String && o.toString() == "Ahoj ship!");
+        assertNotNull(o);
+        assertTrue(o instanceof String && o.toString() == "Ahoj ship!");
     }
-    
+
     /**
      * tests {@link GroovyDataProvider#getShortTypeName(Class)} method.
      */
     @Test
     public void testGetShortTypeName() {
-        AssertJUnit.assertTrue(GroovyDataProvider.getShortTypeName(String.class).equals("Tstring"));
+        assertTrue(GroovyDataProvider.getShortTypeName(String.class).equals("Tstring"));
         byte[] barr = new byte[0];
-        AssertJUnit.assertTrue(GroovyDataProvider.getShortTypeName(barr.getClass()).equals("Tbytearray"));
-        AssertJUnit.assertTrue(GroovyDataProvider.getShortTypeName(GuardedString.class).equals("Tguardedstring"));
+        assertTrue(GroovyDataProvider.getShortTypeName(barr.getClass()).equals("Tbytearray"));
+        assertTrue(GroovyDataProvider.getShortTypeName(GuardedString.class).equals("Tguardedstring"));
     }
-    
+
     @Test
     /**
      * test {@link GroovyDataProvider#get(String)}
@@ -474,10 +476,10 @@ public class GroovyDataProviderTest {
      */
     public void testSimpleGet() {
         DataProvider dp = (DataProvider) gdp;
-        AssertJUnit.assertTrue(dp.get("aaa.bbb.xxx").equals("ahoj"));
-        AssertJUnit.assertTrue(dp.get("param", 9).equals("foobar"));
+        assertTrue(dp.get("aaa.bbb.xxx").equals("ahoj"));
+        assertTrue(dp.get("param", 9).equals("foobar"));
     }
-    
+
     @Test
     /**
      * Test queries for non-existing parameter "foo.bar"
@@ -488,48 +490,48 @@ public class GroovyDataProviderTest {
     public void testDefaultValues() {
         DataProvider dp = (DataProvider) gdp;
         Object o = dp.get(String.class, "bar", "foo", -1, true);
-        AssertJUnit.assertNotNull(o);
-        AssertJUnit.assertTrue(o instanceof List && ((List<Object>) o).size() > 0);
+        assertNotNull(o);
+        assertTrue(o instanceof List && ((List<Object>) o).size() > 0);
         List<Object> l = (List<Object>) o;
-        AssertJUnit.assertTrue(l.get(0) instanceof String);
+        assertTrue(l.get(0) instanceof String);
     }
-    
+
     /**
      * Tests the resolving of Lazy values inside map
      */
     @Test
     public void testLazyMap() {
         Object o = ((DataProvider) gdp).get("mapWithLazyCalls");
-        AssertJUnit.assertNotNull(o);
-        AssertJUnit.assertTrue(o instanceof Map<?,?>);
+        assertNotNull(o);
+        assertTrue(o instanceof Map<?,?>);
         @SuppressWarnings("unchecked") // collection retyping
         Map<Object, Object> m = (Map<Object, Object>) o;
         int cntr = 0;
         for (Iterator<Map.Entry<Object, Object>> iterator = m.entrySet().iterator(); iterator.hasNext();) {
             Map.Entry<Object, Object> current = iterator.next();
             if (cntr == 0 || cntr == 1) {
-                AssertJUnit.assertTrue(current.getValue() instanceof String);
+                assertTrue(current.getValue() instanceof String);
                 //System.out.println("k: " + current.getKey().toString() + " v: " + current.getValue().toString());
             } else {
-                AssertJUnit.fail("should not be more than two items in the map");
+                fail("should not be more than two items in the map");
             }
         }
     }
-    
+
     /**
      * test acquiring a map all at once (good for unit tests)
      */
     @Test
     public void testAcquireMap() {
         Object o = ((DataProvider) gdp).get("abcAccount.all");
-        AssertJUnit.assertNotNull(o);
-        AssertJUnit.assertTrue(o instanceof Map<?,?>);
+        assertNotNull(o);
+        assertTrue(o instanceof Map<?,?>);
         @SuppressWarnings("unchecked") // collection retyping
         Map<Object, Object> m = (Map<Object, Object>) o;
-        AssertJUnit.assertTrue(m.get("__NAME__") instanceof String);
-        AssertJUnit.assertTrue(((String) m.get("__NAME__")).startsWith("CONUSR-"));
-        AssertJUnit.assertTrue(m.get("__PASSWORD__") instanceof String);
-        AssertJUnit.assertTrue(((String) m.get("__PASSWORD__")).equals("tstpwd"));
+        assertTrue(m.get("__NAME__") instanceof String);
+        assertTrue(((String) m.get("__NAME__")).startsWith("CONUSR-"));
+        assertTrue(m.get("__PASSWORD__") instanceof String);
+        assertTrue(((String) m.get("__PASSWORD__")).equals("tstpwd"));
     }
 
     /* ************* UTILITY METHODS ***************** */
@@ -563,7 +565,7 @@ public class GroovyDataProviderTest {
 
     /**
      * just call the get, and do some println for neat output.
-     * 
+     *
      * @param gdp2
      * @param propertyName
      * @return
@@ -602,13 +604,13 @@ public class GroovyDataProviderTest {
         return o;
     }
     /* *********************** SNAPSHOT GENERATING FEATURE TESTS ************************** */
-    
+
     /** Test of Lazy.get() and Lazy.random()*/
     @Test
     public void getPropertyTest() {
-        AssertJUnit.assertTrue(gdp.get("rumulus", null, false).equals(
+        assertTrue(gdp.get("rumulus", null, false).equals(
                 gdp.get("rumulus", null, false)));
-        AssertJUnit.assertTrue(gdp.get("remus", null, false).equals(
+        assertTrue(gdp.get("remus", null, false).equals(
                 gdp.get("rumulus", null, false)));
     }
 
@@ -627,95 +629,95 @@ public class GroovyDataProviderTest {
         // output, might comment this out
         // System.out.println(o.toString());
     }
-    
+
     @Test
     public void testCombinedLazyValue() {
         String firstName = (String) gdp.get("Xfirst");
-        AssertJUnit.assertNotNull(firstName);
+        assertNotNull(firstName);
         String lastName = (String) gdp.get("Xlast");
-        AssertJUnit.assertNotNull(firstName);
+        assertNotNull(firstName);
         String fullName = (String) gdp.get("Xfull");
-        AssertJUnit.assertNotNull(firstName);
-        
+        assertNotNull(firstName);
+
         String msg = String.format("Error, doesn't fulfill the concatenation: \n firstname: '%s' lastname: '%s' fullname: '%s'", firstName, lastName, fullName);
-        AssertJUnit.assertTrue(msg, String.format("%s %s", firstName, lastName).equals(fullName));
+        assertTrue(String.format("%s %s", firstName, lastName).equals(fullName), msg);
     }
-    
+
 
     @Test
     public void testGetAttributeSet() throws Exception {
         Set<Attribute> as = gdp.getAttributeSet("abcAccount.tst");
 
-        AssertJUnit.assertNotNull(as);
-        AssertJUnit.assertTrue(as.size() == 5);
-        
+        assertNotNull(as);
+        assertTrue(as.size() == 5);
+
         for (Attribute attr : as) {
             if ( attr.getName().equals("name")) {
-                AssertJUnit.assertEquals("String", attr.getValue().get(0));
+                assertEquals(attr.getValue().get(0), "String");
             } else if ( attr.getName().equals("id")) {
-                AssertJUnit.assertEquals(15, attr.getValue().get(0));
-                
+                assertEquals( attr.getValue().get(0), 15);
+
             } else if ( attr.getName().equals("arl")) {
-                AssertJUnit.assertEquals(2, attr.getValue().size());                
-                AssertJUnit.assertEquals("elm1", attr.getValue().get(0));                
-                AssertJUnit.assertEquals("elm2", attr.getValue().get(1));                
+                assertEquals(attr.getValue().size(), 2);
+                assertEquals( attr.getValue().get(0), "elm1");
+                assertEquals(attr.getValue().get(1), "elm2");
             } else if ( attr.getName().equals("ara")) {
-                AssertJUnit.assertEquals(2, attr.getValue().size());                
-                AssertJUnit.assertEquals("elm1", attr.getValue().get(0));                
-                AssertJUnit.assertEquals("elm2", attr.getValue().get(1));              
+                assertEquals(attr.getValue().size(), 2);
+                assertEquals(attr.getValue().get(0), "elm1");
+                assertEquals(attr.getValue().get(1), "elm2");
             } else if ( attr.getName().equals("bool")) {
-                AssertJUnit.assertEquals(true, attr.getValue().get(0));                
+                assertEquals(attr.getValue().get(0), true);
             } else {
-                AssertJUnit.fail("Unexpected attribute");
+                fail("Unexpected attribute");
             }
         }
     }
-    
+
     @Test
     public void testGuardedStringDefaulting() {
         Object defaultedValue = ((DataProvider) gdp).get(GuardedString.class, "nonexistingAttributeFooBarBaz", "");
-        AssertJUnit.assertNotNull(defaultedValue);
-        AssertJUnit.assertTrue(defaultedValue instanceof GuardedString);
+        assertNotNull(defaultedValue);
+        assertTrue(defaultedValue instanceof GuardedString);
         GuardedString gs = (GuardedString) defaultedValue;
         gs.access(new GuardedString.Accessor() {
             public void access(char[] clearChars) {
                  String result = new String(clearChars);
-                 AssertJUnit.assertTrue(result.length() > 0);
+                 assertTrue(result.length() > 0);
             }
         });
     }
-    
+
     @Test
     public void testGuardedStringSuccess() {
         Object seekedValue = ((DataProvider) gdp).get(GuardedString.class, "generatedPassword", "");
-        AssertJUnit.assertNotNull(seekedValue);
-        AssertJUnit.assertTrue(seekedValue instanceof GuardedString);
+        assertNotNull(seekedValue);
+        assertTrue(seekedValue instanceof GuardedString);
         GuardedString gs = (GuardedString) seekedValue;
         gs.access(new GuardedString.Accessor() {
             public void access(char[] clearChars) {
                  String result = new String(clearChars);
-                 AssertJUnit.assertTrue(result.length() > 0 && result.endsWith("ahoj"));
+                 assertTrue(result.length() > 0 && result.endsWith("ahoj"));
             }
         });
     }
-    
+
     @Test
     public void testGuardedStringUniqueness() {
         Object defaultedValue1 = ((DataProvider) gdp).get(GuardedString.class, "nonexistingAttributeFooBarBaz_123", "");
         Object defaultedValue2 = ((DataProvider) gdp).get(GuardedString.class, "nonexistingAttributeFooBarBaz_456", "");
         // second query should return the same value
-        AssertJUnit.assertEquals(defaultedValue1, ((DataProvider) gdp).get(GuardedString.class, "nonexistingAttributeFooBarBaz_123", ""));
-        AssertJUnit.assertEquals(defaultedValue2, ((DataProvider) gdp).get(GuardedString.class, "nonexistingAttributeFooBarBaz_456", ""));
+        assertEquals(((DataProvider) gdp).get(GuardedString.class, "nonexistingAttributeFooBarBaz_123", ""), defaultedValue1);
+        assertEquals(((DataProvider) gdp).get(GuardedString.class, "nonexistingAttributeFooBarBaz_456", ""), defaultedValue2);
         // the two passwords should be unique
-        AssertJUnit.assertFalse(defaultedValue1.equals(defaultedValue2));
+        assertFalse(defaultedValue1.equals(defaultedValue2));
     }
 
     /**
      * method controls, if single parameters are correctly quoted, and multi
      * params.
-     * 
+     *
      * Correct quotation means: foo."bar"."boo" = "baa" bar = "baa"
-     * 
+     *
      * @param lines
      */
     private void parseAndControl(List<String> lines) {
@@ -725,20 +727,20 @@ public class GroovyDataProviderTest {
                 String[] arr = currentLine.split(GroovyDataProvider.ASSIGNMENT_MARK);
                 if (arr.length == 2) {
                     String leftPart = arr[0];
-                    AssertJUnit.assertTrue(!leftPart.equals(""));
+                    assertTrue(!leftPart.equals(""));
 
                     // split the left side based on "." separators
                     String[] subparts = leftPart.split(GroovyDataProvider.PROPERTY_SEPARATOR);
                     for (int i = 0; i < subparts.length; i++) {
                         if (i == 0) {
-                            AssertJUnit.assertTrue(!subparts[i]
+                            assertTrue(!subparts[i]
                                     .startsWith(GroovyDataProvider.PROPERTY_SEPARATOR));
-                            AssertJUnit.assertTrue(!subparts[i]
+                            assertTrue(!subparts[i]
                                     .endsWith(GroovyDataProvider.PROPERTY_SEPARATOR));
                         } else {
-                            AssertJUnit.assertTrue(subparts[i]
+                            assertTrue(subparts[i]
                                     .startsWith(GroovyDataProvider.PROPERTY_SEPARATOR));
-                            AssertJUnit.assertTrue(subparts[i]
+                            assertTrue(subparts[i]
                                     .endsWith(GroovyDataProvider.PROPERTY_SEPARATOR));
                         }
                     }

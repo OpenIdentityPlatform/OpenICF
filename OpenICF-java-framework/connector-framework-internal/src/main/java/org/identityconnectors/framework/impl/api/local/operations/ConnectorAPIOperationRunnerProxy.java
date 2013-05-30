@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -42,19 +42,19 @@ import org.identityconnectors.framework.spi.PoolableConnector;
  */
 public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
 
-    private static final Log _log = Log.getLog(ConnectorAPIOperationRunnerProxy.class);
-    
+    private static final Log LOG = Log.getLog(ConnectorAPIOperationRunnerProxy.class);
+
     /**
      * The operational context
      */
-    private final ConnectorOperationalContext _context;
-    
+    private final ConnectorOperationalContext context;
+
     /**
      * The implementation constructor. The instance is lazily created upon
      * invocation
      */
-    private final Constructor<? extends APIOperationRunner> _runnerImplConstructor;
-    
+    private final Constructor<? extends APIOperationRunner> runnerImplConstructor;
+
     /**
      * Create an APIOperationRunnerProxy
      * @param context The operational context
@@ -63,10 +63,10 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
      */
     public ConnectorAPIOperationRunnerProxy(ConnectorOperationalContext context,
             Constructor<? extends APIOperationRunner> runnerImplConstructor) {
-        _context = context;
-        _runnerImplConstructor = runnerImplConstructor;
+        this.context = context;
+        this.runnerImplConstructor = runnerImplConstructor;
     }
-    
+
     public Object invoke(Object proxy, Method method, Object[] args)
             throws Throwable {
         //do not proxy equals, hashCode, toString
@@ -75,10 +75,10 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
         }
         Object ret = null;
         Connector connector = null;
-        ObjectPool<PoolableConnector> pool = _context.getPool();
+        ObjectPool<PoolableConnector> pool = context.getPool();
         ObjectPoolEntry<PoolableConnector> poolEntry = null;
         // get the connector class..
-        Class<? extends Connector> connectorClazz = _context.getConnectorClass();
+        Class<? extends Connector> connectorClazz = context.getConnectorClass();
         try {
             // pooling is implemented get one..
             if (pool != null) {
@@ -89,17 +89,17 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
                 // get a new instance of the connector..
                 connector = connectorClazz.newInstance();
                 // initialize the connector..
-                connector.init(_context.getConfiguration());
+                connector.init(context.getConfiguration());
             }
-            APIOperationRunner runner = 
-                _runnerImplConstructor.newInstance(_context,connector);
+            APIOperationRunner runner =
+                runnerImplConstructor.newInstance(context,connector);
             ret = method.invoke(runner, args);
             // call out to the operation..
         } catch (InvocationTargetException e) {
             Throwable root = e.getCause();
             throw root;
         } finally {
-            
+
             // make sure dispose of the connector properly
             if (connector != null) {
                 // determine if there was a pool..
@@ -115,7 +115,7 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
                     } catch (Exception e) {
                         //don't let pool exceptions propogate or mask
                         //other exceptions. do log it though.
-                        _log.error(e, null);
+                        LOG.error(e, null);
                     }
                 }
                 //not pooled - just dispose
@@ -128,14 +128,11 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
                         connector.dispose();
                     } catch (Exception e) {
                         //log this though
-                        _log.error(e, null);
-                    }                    
+                        LOG.error(e, null);
+                    }
                 }
             }
         }
         return ret;
     }
-    
-
-
 }

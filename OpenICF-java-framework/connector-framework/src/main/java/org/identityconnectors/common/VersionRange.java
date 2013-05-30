@@ -29,10 +29,10 @@ package org.identityconnectors.common;
  * <p/>
  * A range has a left (lower) endpoint and a right (upper) endpoint. Each
  * endpoint can be open (excluded from the set) or closed (included in the set).
- * 
+ *
  * <p>
  * {@code VersionRange} objects are immutable.
- * 
+ *
  * @author Laszlo Hordos
  * @Immutable
  */
@@ -73,7 +73,7 @@ public class VersionRange {
 
     /**
      * Parse version component into a Version.
-     * 
+     *
      * @param version
      *            version component string
      * @param range
@@ -91,10 +91,10 @@ public class VersionRange {
 
     /**
      * Creates a version range from the specified string.
-     * 
+     *
      * <p>
      * Version range string grammar:
-     * 
+     *
      * <pre>
      * range ::= interval | at least
      * interval ::= ( '[' | '(' ) left ',' right ( ']' | ')' )
@@ -102,7 +102,7 @@ public class VersionRange {
      * right ::= version
      * at least ::= version
      * </pre>
-     * 
+     *
      * @param range
      *            String representation of the version range. The versions in
      *            the range must contain no whitespace. Other whitespace in the
@@ -187,7 +187,7 @@ public class VersionRange {
 
     /**
      * Returns whether this version range contains only a single version.
-     * 
+     *
      * @return {@code true} if this version range contains only a single
      *         version; {@code false} otherwise.
      */
@@ -228,7 +228,7 @@ public class VersionRange {
     /**
      * Returns whether this version range is empty. A version range is empty if
      * the set of versions defined by the interval is empty.
-     * 
+     *
      * @return {@code true} if this version range is empty; {@code false}
      *         otherwise.
      */
@@ -238,7 +238,7 @@ public class VersionRange {
 
     /**
      * Internal isEmpty behavior.
-     * 
+     *
      * @return {@code true} if this version range is empty; {@code false}
      *         otherwise.
      */

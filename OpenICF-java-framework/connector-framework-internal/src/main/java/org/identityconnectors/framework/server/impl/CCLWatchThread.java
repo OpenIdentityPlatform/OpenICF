@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -30,7 +30,7 @@ import org.identityconnectors.common.logging.Log;
  */
 public class CCLWatchThread extends Thread {
 
-    private static final Log _log = Log.getLog(CCLWatchThread.class);
+    private static final Log LOG = Log.getLog(CCLWatchThread.class);
 
     public CCLWatchThread(String name) {
         super(name);
@@ -44,19 +44,19 @@ public class CCLWatchThread extends Thread {
 
     private void checkCCL() {
         if (getContextClassLoader() == null) {
-            _log.error(new Throwable(), "The CCL of thread ''{0}'' was null after initialization. The CCL of current thread ''{1}'' is {2}",
+            LOG.error(new Throwable(), "The CCL of thread ''{0}'' was null after initialization. The CCL of current thread ''{1}'' is {2}",
                     getName(),
                     Thread.currentThread().getName(),
                     Thread.currentThread().getContextClassLoader());
         } else {
-            _log.info("Creating thread ''{0}'' with a non-null CCL", getName());
+            LOG.info("Creating thread ''{0}'' with a non-null CCL", getName());
         }
     }
 
     @Override
     public void setContextClassLoader(ClassLoader cl) {
         if (cl == null) {
-            _log.error(new Throwable(), "Attempting to set the CCL of thread ''{0}'' to null", getName());
+            LOG.error(new Throwable(), "Attempting to set the CCL of thread ''{0}'' to null", getName());
         }
         super.setContextClassLoader(cl);
     }

@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  *
@@ -74,7 +74,7 @@ import org.testng.log4testng.Logger;
  * <li>update of non-updateable attribute will fail</li>
  * <li>required attributes must be creatable</li>
  * </ul>
- * 
+ *
  * @author David Adam
  */
 @Test(testName = AttributeTests.TEST_NAME)
@@ -85,7 +85,7 @@ public class AttributeTests extends ObjectClassRunner {
      */
     private static final Logger logger = Logger.getLogger(ValidateApiOpTests.class);
     public static final String TEST_NAME = "Attribute";
-    
+
     @Override
     public Set<Class<? extends APIOperation>> getAPIOperations() {
         Set<Class<? extends APIOperation>> res = new HashSet<Class<? extends APIOperation>>();
@@ -194,11 +194,11 @@ public class AttributeTests extends ObjectClassRunner {
             printSkipTestMsg("testReturnedByDefault", objectClass);
         }
     }
-    
+
     /**
      * Update of non-updateable attribute is not acceptable.
      * Connector should throw a RuntimeException.
-     * 
+     *
      * <p>
      * API operations for acquiring attributes: {@link GetApiOp}
      * </p>
@@ -271,10 +271,10 @@ public class AttributeTests extends ObjectClassRunner {
                     printSkipTestMsg("testNonUpdateable", objectClass);
                     return;
                 }
-                
+
             } catch (RuntimeException ex) {
                 /*
-                 * Expected behavior: 
+                 * Expected behavior:
                  * in case non-updateable attribute is updated, Runtime exception
                  * should be thrown.
                  */
@@ -287,7 +287,7 @@ public class AttributeTests extends ObjectClassRunner {
                             getOperationOptionsByOp(objectClass, DeleteApiOp.class));
                 }
             }
-            
+
             // in case no exception is thrown:
             if (!exceptionCaught) {
                 fail(String.format("No exception thrown when update is performed on non-updateable attribute(s). (hint: throw a RuntimeException) %s", ((logInfo != null)?logInfo.toString():"")));
@@ -295,9 +295,9 @@ public class AttributeTests extends ObjectClassRunner {
         } else {
             printSkipTestMsg("testNonUpdateable", objectClass);
         }
-        
+
     }
-    
+
     /**
      * return the Non-Updateable attributes for currently tested objectclass
      * @param schema the schema of currently tested connector
@@ -307,12 +307,12 @@ public class AttributeTests extends ObjectClassRunner {
     private Set<Attribute> getNonUpdateableAttributes(Schema schema,
             ObjectClass objectClass) {
         Set<Attribute> result = new HashSet<Attribute>();
-        
+
         //objectClass that we search for
         ObjectClassInfoBuilder oib = new ObjectClassInfoBuilder();
         oib.setType(objectClass.getObjectClassValue());
         ObjectClassInfo ocToFind = oib.build();
-        
+
         Set<ObjectClassInfo> oci = schema.getObjectClassInfo();
         for (ObjectClassInfo objectClassInfo : oci) {
             if (objectClassInfo.getType().equals(ocToFind.getType())) {
@@ -330,14 +330,14 @@ public class AttributeTests extends ObjectClassRunner {
                 }
             }
         }
-        
+
         return (result.size() == 0)? null : result;
     }
-    
+
     /**
      * prints log message when skipping
      * {@link AttributeTests#testNonUpdateable(ObjectClass)} test
-     * 
+     *
      * @param testName the name of the test to print
      */
     private void printSkipTestMsg(String testName, ObjectClass objectClass) {
@@ -405,19 +405,19 @@ public class AttributeTests extends ObjectClassRunner {
     /* ******************** HELPER METHODS ******************** */
     /**
      * {@link AttributeTests#testReturnedByDefault(ObjectClass)}
-     * 
+     *
      * @param apiOp
      *            the type of ApiOperation, that shall be tested.
      */
     private void testReturnedByDefault(ApiOperations apiOp, ObjectClass objectClass) {
         /** marker in front of every assert message */
         String testMarkMsg = String.format("[testReturnedByDefault/%s]", apiOp);
-        
+
         // run the contract test only if <strong>apiOp</strong> APIOperation is
         // supported
         if (ConnectorHelper.operationSupported(getConnectorFacade(),
                 objectClass, apiOp.getClazz())) {
-            
+
             // start synchronizing from now
             SyncToken token = null;
             if (apiOp.equals(ApiOperations.SYNC)) { // just for SyncApiOp test
@@ -430,7 +430,7 @@ public class AttributeTests extends ObjectClassRunner {
 
                 /*
                  * CREATE a new user
-                 */ 
+                 */
                 Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(
                         getDataProvider(), oci, getTestName(), 3, true, false);
                 // should throw UnsupportedObjectClass if not supported
@@ -516,7 +516,7 @@ public class AttributeTests extends ObjectClassRunner {
                             "[testReturnedByDefault / %s]Attribute %s returned. However it is _not_ returned by default.",
                             apiOp, attr.getName());
             /*
-             * this is a hack that skips control of UID, as it is presently 
+             * this is a hack that skips control of UID, as it is presently
              * non returned by default, however it is automatically returned.
              * see discussion in Issue mailing list -- Issue #334
              * future TODO: after joining UID to schema, erase the condition.
@@ -529,7 +529,7 @@ public class AttributeTests extends ObjectClassRunner {
 
     /**
      * test sync
-     * 
+     *
      * @param token
      *            initialized token
      * @param attrs
@@ -690,12 +690,12 @@ class LogInfo {
 
     /** object class */
     private ObjectClass oc;
-    
+
     public LogInfo(ObjectClass oc, Set<Attribute> attrSet) {
         this.oc = oc;
         this.attrSet = attrSet;
     }
-    
+
     public Set<Attribute> getAttrSet() {
         return attrSet;
     }
@@ -703,7 +703,7 @@ class LogInfo {
     public ObjectClass getOc() {
         return oc;
     }
-    
+
     public String toString() {
         return " \n ObjectClass: " + oc.toString() + "\n AttributeSet: " + attrSet.toString();
     }

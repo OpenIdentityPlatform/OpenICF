@@ -1,28 +1,28 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2011-2013 ForgeRock
  */
-/*
- * Portions Copyrighted  2012 ForgeRock Inc.
- */
+
 package org.identityconnectors.framework.server.impl;
 
 import java.io.EOFException;
@@ -68,179 +68,153 @@ import org.identityconnectors.framework.impl.api.remote.messages.OperationRespon
 import org.identityconnectors.framework.impl.api.remote.messages.OperationResponsePause;
 import org.identityconnectors.framework.server.ConnectorServer;
 
-
 public class ConnectionProcessor implements Runnable {
 
-    private static final Log _log = Log.getLog(ConnectionListener.class);
+    private static final Log LOG = Log.getLog(ConnectionListener.class);
 
-    private static class RemoteResultsHandler 
-    implements ObjectStreamHandler {
+    private static class RemoteResultsHandler implements ObjectStreamHandler {
         private static final int PAUSE_INTERVAL = 200;
 
-        private final RemoteFrameworkConnection _connection;
-        private long _count = 0;
+        private final RemoteFrameworkConnection connection;
+        private long count = 0;
+
         public RemoteResultsHandler(RemoteFrameworkConnection conn) {
-            _connection = conn;
+            connection = conn;
         }
-                
+
         public boolean handle(Object obj) {
             try {
-                OperationResponsePart part = 
-                    new OperationResponsePart(null,obj);
-                _connection.writeObject(part);
-                _count++;
-                if ( _count % PAUSE_INTERVAL == 0 ) {
-                    _connection.writeObject(new OperationResponsePause());
-                    Object message = 
-                        _connection.readObject();
-                    return message instanceof OperationRequestMoreData;      
-                }
-                else {
+                OperationResponsePart part = new OperationResponsePart(null, obj);
+                connection.writeObject(part);
+                count++;
+                if (count % PAUSE_INTERVAL == 0) {
+                    connection.writeObject(new OperationResponsePause());
+                    Object message = connection.readObject();
+                    return message instanceof OperationRequestMoreData;
+                } else {
                     return true;
                 }
-            }
-            catch (RuntimeException e) {
-                if ( e.getCause() instanceof IOException ) {
-                    throw new BrokenConnectionException((IOException)e.getCause());
-                }
-                else {
+            } catch (RuntimeException e) {
+                if (e.getCause() instanceof IOException) {
+                    throw new BrokenConnectionException((IOException) e.getCause());
+                } else {
                     throw e;
                 }
             }
         }
 
     }
-    
-    private final ConnectorServer _server;
-    private final RemoteFrameworkConnection _connection;
-    
-    public ConnectionProcessor(ConnectorServer server,
-            Socket socket) {
-        _server = server;
-        _connection = new RemoteFrameworkConnection(socket);
+
+    private final ConnectorServer connectorServer;
+    private final RemoteFrameworkConnection connection;
+
+    public ConnectionProcessor(ConnectorServer server, Socket socket) {
+        connectorServer = server;
+        connection = new RemoteFrameworkConnection(socket);
     }
-    
+
     public void run() {
         try {
             try {
-                while ( true ) {
+                while (true) {
                     boolean keepGoing = processRequest();
                     if (!keepGoing) {
                         break;
                     }
                 }
-            }
-            finally {
+            } finally {
                 try {
-                    _connection.close();
-                }
-                catch (Exception e) {
-                    _log.error(e, null);
+                    connection.close();
+                } catch (Exception e) {
+                    LOG.error(e, null);
                 }
             }
-        }
-        catch (Throwable e) {
-            _log.error(e, null);
+        } catch (Throwable e) {
+            LOG.error(e, null);
         }
     }
-    
-    private boolean processRequest() 
-        throws Exception {
+
+    private boolean processRequest() throws Exception {
         Locale locale;
         try {
-            locale = (Locale)_connection.readObject();
-        }
-        catch (RuntimeException e) {
-            if ( e.getCause() instanceof EOFException ) {
+            locale = (Locale) connection.readObject();
+        } catch (RuntimeException e) {
+            if (e.getCause() instanceof EOFException) {
                 return false;
             }
             throw e;
         }
         CurrentLocale.set(locale);
-        GuardedString key = (GuardedString)_connection.readObject();
-        
+        GuardedString key = (GuardedString) connection.readObject();
+
         boolean authorized;
         try {
-            authorized = key.verifyBase64SHA1Hash(_server.getKeyHash());
-        }
-        finally {
+            authorized = key.verifyBase64SHA1Hash(connectorServer.getKeyHash());
+        } finally {
             key.dispose();
         }
         InvalidCredentialException authException = null;
         if (!authorized) {
-            authException =
-                new InvalidCredentialException("Remote framework key is invalid");
+            authException = new InvalidCredentialException("Remote framework key is invalid");
 
         }
-        Object requestObject = _connection.readObject();
-        if ( requestObject instanceof HelloRequest ) {
+        Object requestObject = connection.readObject();
+        if (requestObject instanceof HelloRequest) {
             if (authException != null) {
-                HelloResponse response =
-                    new HelloResponse(authException,null,null,null);
-                _connection.writeObject(response);
+                HelloResponse response = new HelloResponse(authException, null, null, null);
+                connection.writeObject(response);
+            } else {
+                HelloResponse response = processHelloRequest((HelloRequest) requestObject);
+                connection.writeObject(response);
             }
-            else {
-                HelloResponse response = 
-                    processHelloRequest((HelloRequest)requestObject);
-                _connection.writeObject(response);
+        } else if (requestObject instanceof OperationRequest) {
+            if (authException != null) {
+                OperationResponsePart part = new OperationResponsePart(authException, null);
+                connection.writeObject(part);
+            } else {
+                OperationRequest opRequest = (OperationRequest) requestObject;
+                OperationResponsePart part = processOperationRequest(opRequest);
+                connection.writeObject(part);
             }
-        }
-        else if ( requestObject instanceof OperationRequest ) {
-            if ( authException != null ) {
-                OperationResponsePart part =
-                    new OperationResponsePart(authException,null);
-                _connection.writeObject(part);
-            }
-            else {
-                OperationRequest opRequest =
-                    (OperationRequest)requestObject;
-                OperationResponsePart part =
-                    processOperationRequest(opRequest);
-                _connection.writeObject(part);
-            }
-        }
-        else if (requestObject instanceof EchoMessage) {
-            if ( authException != null ) {
-                //echo message probably doesn't need auth, but
-                //it couldn't hurt - actually it does for test connection
-                EchoMessage part =
-                    new EchoMessage(authException,null);
-                _connection.writeObject(part);
-            }
-            else {                    
-                EchoMessage message = (EchoMessage)requestObject;
+        } else if (requestObject instanceof EchoMessage) {
+            if (authException != null) {
+                // echo message probably doesn't need auth, but
+                // it couldn't hurt - actually it does for test connection
+                EchoMessage part = new EchoMessage(authException, null);
+                connection.writeObject(part);
+            } else {
+                EchoMessage message = (EchoMessage) requestObject;
                 Object obj = message.getObject();
                 String xml = message.getXml();
-                if ( xml != null ) {
-                    Object xmlClone =
-                        SerializerUtil.deserializeXmlObject(xml,true);
-                    xml =
-                        SerializerUtil.serializeXmlObject(xmlClone,true);                    
+                if (xml != null) {
+                    Object xmlClone = SerializerUtil.deserializeXmlObject(xml, true);
+                    xml = SerializerUtil.serializeXmlObject(xmlClone, true);
                 }
-                EchoMessage message2 = new EchoMessage(obj,xml);
-                _connection.writeObject(message2);
+                EchoMessage message2 = new EchoMessage(obj, xml);
+                connection.writeObject(message2);
             }
-        }
-        else {
-            throw new ConnectorException("Unexpected request: "+requestObject);
+        } else {
+            throw new ConnectorException("Unexpected request: " + requestObject);
         }
         return true;
     }
-    
+
     private ConnectorInfoManager getConnectorInfoManager() {
-        ConnectorInfoManagerFactoryImpl factory = (ConnectorInfoManagerFactoryImpl) ConnectorInfoManagerFactory.getInstance();
-        return factory.getLocalManager(_server.getBundleURLs(), _server.getBundleParentClassLoader());
+        ConnectorInfoManagerFactoryImpl factory =
+                (ConnectorInfoManagerFactoryImpl) ConnectorInfoManagerFactory.getInstance();
+        return factory.getLocalManager(connectorServer.getBundleURLs(), connectorServer
+                .getBundleParentClassLoader());
     }
-    
+
     private HelloResponse processHelloRequest(HelloRequest request) {
         List<RemoteConnectorInfoImpl> connectorInfo = null;
         List<ConnectorKey> connectorKeys = null;
-        Map<String,Object> serverInfo = null;
+        Map<String, Object> serverInfo = null;
         Exception exception = null;
         try {
             serverInfo = new HashMap<String, Object>(1);
             if (request.isServerInfo()) {
-                serverInfo.put(HelloResponse.SERVER_START_TIME, _server.getStartTime());
+                serverInfo.put(HelloResponse.SERVER_START_TIME, connectorServer.getStartTime());
             }
             if (request.isConnectorKeys()) {
                 ConnectorInfoManager manager = getConnectorInfoManager();
@@ -252,45 +226,41 @@ public class ConnectionProcessor implements Runnable {
                 if (request.isConnectorInfo()) {
                     connectorInfo = new ArrayList<RemoteConnectorInfoImpl>();
                     for (ConnectorInfo localInfo : localInfos) {
-                        LocalConnectorInfoImpl localInfoImpl =
-                                (LocalConnectorInfoImpl) localInfo;
-                        RemoteConnectorInfoImpl remoteInfo =
-                                localInfoImpl.toRemote();
+                        LocalConnectorInfoImpl localInfoImpl = (LocalConnectorInfoImpl) localInfo;
+                        RemoteConnectorInfoImpl remoteInfo = localInfoImpl.toRemote();
                         connectorInfo.add(remoteInfo);
                     }
                 }
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             exception = e;
             connectorInfo = null;
         }
-        return new HelloResponse(exception,serverInfo,connectorKeys,connectorInfo);
+        return new HelloResponse(exception, serverInfo, connectorKeys, connectorInfo);
     }
-        
+
     private Method getOperationMethod(OperationRequest request) {
-        Method [] methods = 
-            request.getOperation().getDeclaredMethods();
+        Method[] methods = request.getOperation().getDeclaredMethods();
         Method found = null;
-        for (Method m : methods ) {
-            if ( m.getName().equalsIgnoreCase(request.getOperationMethodName())) {
-                if ( found != null) {
+        for (Method m : methods) {
+            if (m.getName().equalsIgnoreCase(request.getOperationMethodName())) {
+                if (found != null) {
                     throw new ConnectorException("APIOperations are expected "
-                            +"to have exactly one method of a given name: "+request.getOperation());
+                            + "to have exactly one method of a given name: "
+                            + request.getOperation());
                 }
                 found = m;
             }
         }
-        if ( found == null) {
+        if (found == null) {
             throw new ConnectorException("APIOperations are expected "
-                    +"to have exactly one method of a given name: "+request.getOperation());
+                    + "to have exactly one method of a given name: " + request.getOperation());
         }
         return found;
     }
-    
-    private OperationResponsePart 
-    processOperationRequest(OperationRequest request) 
-    throws IOException {
+
+    private OperationResponsePart processOperationRequest(OperationRequest request)
+            throws IOException {
         Object result;
         Throwable exception = null;
         try {
@@ -298,95 +268,81 @@ public class ConnectionProcessor implements Runnable {
             APIOperation operation = getAPIOperation(request);
             List<Object> arguments = request.getArguments();
             List<Object> argumentsAndStreamHandlers =
-                populateStreamHandlers(method.getParameterTypes(),
-                        arguments);
+                    populateStreamHandlers(method.getParameterTypes(), arguments);
             try {
                 result = method.invoke(operation, argumentsAndStreamHandlers.toArray());
-            }
-            catch (InvocationTargetException e) {
+            } catch (InvocationTargetException e) {
                 throw e.getCause();
             }
-            boolean anyStreams =
-                argumentsAndStreamHandlers.size() > arguments.size();
-            if ( anyStreams ) {
+            boolean anyStreams = argumentsAndStreamHandlers.size() > arguments.size();
+            if (anyStreams) {
                 try {
-                    _connection.writeObject(new OperationResponseEnd());
-                }
-                catch (RuntimeException e) {
-                    if ( e.getCause() instanceof IOException ) {
-                        throw new BrokenConnectionException((IOException)e.getCause());
-                    }
-                    else {
+                    connection.writeObject(new OperationResponseEnd());
+                } catch (RuntimeException e) {
+                    if (e.getCause() instanceof IOException) {
+                        throw new BrokenConnectionException((IOException) e.getCause());
+                    } else {
                         throw e;
                     }
                 }
             }
-        }
-        catch (BrokenConnectionException w) {
-            //at this point the stream is broken - just give up
+        } catch (BrokenConnectionException w) {
+            // at this point the stream is broken - just give up
             throw w.getIOException();
-        }
-        catch (Throwable e) {
-            _log.error(e, null);
+        } catch (Throwable e) {
+            LOG.error(e, null);
             exception = e;
             result = null;
         }
-        return new OperationResponsePart(exception,result);
+        return new OperationResponsePart(exception, result);
     }
-    
-    private List<Object> populateStreamHandlers(Class<?> [] paramTypes, List<Object> arguments) {
+
+    private List<Object> populateStreamHandlers(Class<?>[] paramTypes, List<Object> arguments) {
         List<Object> rv = new ArrayList<Object>();
         boolean firstStream = true;
         Iterator<Object> argIt = arguments.iterator();
         for (Class<?> paramType : paramTypes) {
-            if ( StreamHandlerUtil.isAdaptableToObjectStreamHandler(paramType) ) {
+            if (StreamHandlerUtil.isAdaptableToObjectStreamHandler(paramType)) {
                 if (!firstStream) {
-                    throw new UnsupportedOperationException("At most one stream handler is supported");
+                    throw new UnsupportedOperationException(
+                            "At most one stream handler is supported");
                 }
-                ObjectStreamHandler osh =
-                    new RemoteResultsHandler(_connection);
+                ObjectStreamHandler osh = new RemoteResultsHandler(connection);
                 rv.add(StreamHandlerUtil.adaptFromObjectStreamHandler(paramType, osh));
                 firstStream = false;
-            }
-            else {
+            } else {
                 rv.add(argIt.next());
             }
         }
         return rv;
     }
-        
-    private APIOperation getAPIOperation(OperationRequest request)
-        throws Exception {
-        ConnectorInfoManager manager =
-            getConnectorInfoManager();
-        ConnectorInfo info = manager.findConnectorInfo(
-                request.getConnectorKey());
-        if ( info == null ) {
-            throw new ConnectorException("No such connector: "
-                    +request.getConnectorKey()+" ");
+
+    private APIOperation getAPIOperation(OperationRequest request) throws Exception {
+        ConnectorInfoManager manager = getConnectorInfoManager();
+        ConnectorInfo info = manager.findConnectorInfo(request.getConnectorKey());
+        if (info == null) {
+            throw new ConnectorException("No such connector: " + request.getConnectorKey() + " ");
         }
-        APIConfigurationImpl config = 
-            request.getConfiguration();
-        
-        //re-wire the configuration with its connector info
-        config.setConnectorInfo((AbstractConnectorInfo)info);
-        
-        ConnectorFacade facade = 
-            ConnectorFacadeFactory.getInstance().newInstance(config);
-        
+        APIConfigurationImpl config = request.getConfiguration();
+
+        // re-wire the configuration with its connector info
+        config.setConnectorInfo((AbstractConnectorInfo) info);
+
+        ConnectorFacade facade = ConnectorFacadeFactory.getInstance().newInstance(config);
+
         return facade.getOperation(request.getOperation());
     }
-    
+
     private static class BrokenConnectionException extends ConnectorException {
-        
+
         static final long serialVersionUID = 0L;
-        
+
         public BrokenConnectionException(IOException ex) {
             super(ex);
         }
-        
+
         public IOException getIOException() {
-            return (IOException)getCause();
+            return (IOException) getCause();
         }
     }
 

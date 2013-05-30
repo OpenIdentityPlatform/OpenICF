@@ -2,7 +2,7 @@
 <!--
  DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
- Copyright (c) 2011-2012 ForgeRock Inc. All rights reserved.
+ Copyright (c) 2011-2013 ForgeRock Inc. All rights reserved.
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -42,7 +42,10 @@
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.easytesting</groupId>
+            <artifactId>fest-assert-core</artifactId>
         </dependency>
     </dependencies>
 
@@ -69,7 +72,6 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Package>org.identityconnectors.*;version=${project.version}</Export-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
                     </instructions>
                 </configuration>

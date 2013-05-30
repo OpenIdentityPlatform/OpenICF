@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -32,69 +32,67 @@ import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.framework.common.serializer.SerializerUtil;
 
-
 /**
  * Extension of Attribute to distinguish it from a regular attribute.
- * 
+ *
  * @author Will Droste
- * @version $Revision: 1.1 $
  * @since 1.0
  */
 public final class ObjectClassInfo {
 
-    private final String _type;
-    private final Set<AttributeInfo> _info;
-    private final boolean _isContainer;
+    private final String type;
+    private final Set<AttributeInfo> attributeInfos;
+    private final boolean isContainer;
 
     /**
      * Public only for serialization; Use ObjectClassInfoBuilder instead.
-     * @param type The name of the object class
-     * @param attrInfo The attributes of the object class.
-     * @param isContainer True if this can contain other object classes.
+     *
+     * @param type
+     *            The name of the object class
+     * @param attrInfo
+     *            The attributes of the object class.
+     * @param isContainer
+     *            True if this can contain other object classes.
      */
-    public ObjectClassInfo(String type, 
-            Set<AttributeInfo> attrInfo,
-            boolean isContainer)
-    {        
+    public ObjectClassInfo(String type, Set<AttributeInfo> attrInfo, boolean isContainer) {
         Assertions.nullCheck(type, "type");
-        _type = type;
-        _info = CollectionUtil.newReadOnlySet(attrInfo);
-        _isContainer = isContainer;
+        this.type = type;
+        attributeInfos = CollectionUtil.newReadOnlySet(attrInfo);
+        this.isContainer = isContainer;
         // check to make sure name exists and if not throw
         Map<String, AttributeInfo> map = AttributeInfoUtil.toMap(attrInfo);
         if (!map.containsKey(Name.NAME)) {
-            final String MSG = "Missing 'Name' attribute info.";
-            throw new IllegalArgumentException(MSG);
+            throw new IllegalArgumentException("Missing 'Name' attribute info.");
         }
     }
-    
+
     public boolean isContainer() {
-        return _isContainer;
+        return isContainer;
     }
 
     public Set<AttributeInfo> getAttributeInfo() {
-        return CollectionUtil.newReadOnlySet(_info);
+        return CollectionUtil.newReadOnlySet(attributeInfos);
     }
 
     public String getType() {
-        return _type;
+        return type;
     }
 
     /**
      * Determines if the 'name' matches this {@link ObjectClassInfo}.
-     * 
+     *
      * @param name
-     *            case-insensitive string representation of the ObjectClassInfo's
-     *            type.
-     * @return <code>true</code> if the case insensitive type is equal to
-     *         that of the one in this {@link ObjectClassInfo}.
+     *            case-insensitive string representation of the
+     *            ObjectClassInfo's type.
+     * @return <code>true</code> if the case insensitive type is equal to that
+     *         of the one in this {@link ObjectClassInfo}.
      */
-    public final boolean is(String name) {
-        return namesEqual(_type, name);
+    public boolean is(String name) {
+        return namesEqual(type, name);
     }
-    
+
     @Override
-    public final boolean equals(Object obj) {
+    public boolean equals(Object obj) {
         // test identity
         if (this == obj) {
             return true;
@@ -107,17 +105,16 @@ public final class ObjectClassInfo {
         if (!(getClass().equals(obj.getClass()))) {
             return false;
         }
-        
-        ObjectClassInfo other = (ObjectClassInfo)obj;
-        
-        if(!is(other.getType())) {
+
+        ObjectClassInfo other = (ObjectClassInfo) obj;
+
+        if (!is(other.getType())) {
             return false;
         }
-        if (!CollectionUtil.equals(getAttributeInfo(),
-                                      other.getAttributeInfo())) {
+        if (!CollectionUtil.equals(getAttributeInfo(), other.getAttributeInfo())) {
             return false;
         }
-        if (!_isContainer == other._isContainer) {
+        if (!isContainer == other.isContainer) {
             return false;
         }
         return true;
@@ -125,9 +122,8 @@ public final class ObjectClassInfo {
 
     @Override
     public int hashCode() {
-        return nameHashCode(_type);
+        return nameHashCode(type);
     }
-
 
     @Override
     public String toString() {

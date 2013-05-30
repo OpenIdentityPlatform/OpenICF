@@ -1,34 +1,38 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2011-2013 ForgeRock
  */
-/*
- * Portions Copyrighted  2012 ForgeRock Inc.
- */
+
 package org.identityconnectors.framework.impl.serializer;
 
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.testng.AssertJUnit;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.math.BigDecimal;
@@ -126,120 +130,120 @@ public class ObjectSerializationTests {
     public void testBoolean() throws Exception {
         Boolean v1 = true;
         Boolean v2 = (Boolean)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
 
         v1 = false;
         v2 = (Boolean)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
     }
 
     @Test
     public void testCharacter() throws Exception {
         Character v1 = 'h';
         Character v2 = (Character)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
     }
 
     @Test
     public void testInteger() throws Exception {
         Integer v1 = 12345;
         Integer v2 = (Integer)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
 
         v1 = Integer.MIN_VALUE;
         v2 = (Integer)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
 
         v1 = Integer.MAX_VALUE;
         v2 = (Integer)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
 
         v1 = -1;
         v2 = (Integer)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
    }
 
     @Test
     public void testLong() throws Exception {
         Long v1 = 12345L;
         Long v2 = (Long)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
 
         v1 = Long.MIN_VALUE;
         v2 = (Long)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
 
         v1 = Long.MAX_VALUE;
         v2 = (Long)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
 
         v1 = -1L;
         v2 = (Long)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
     }
 
     @Test
     public void testFloat() throws Exception {
         Float v1 = 1.1F;
         Float v2 = (Float)cloneObject(v1);
-        AssertJUnit.assertTrue(v1!=v2);
-        AssertJUnit.assertEquals(v1, v2);
+        assertTrue(v1!=v2);
+        assertEquals(v1, v2);
 
         v1 = Float.MAX_VALUE;
         v2 = (Float)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
 
         v1 = -Float.MAX_VALUE;
         v2 = (Float)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
 
         v1 = Float.MIN_VALUE;
         v2 = (Float)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
 
         v1 = Float.NaN;
         v2 = (Float)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
 
         v1 = Float.NEGATIVE_INFINITY;
         v2 = (Float)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
 
         v1 = Float.POSITIVE_INFINITY;
         v2 = (Float)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
     }
 
     @Test
     public void testDouble() throws Exception {
         Double v1 = 1.1;
         Double v2 = (Double)cloneObject(v1);
-        AssertJUnit.assertTrue(v1!=v2);
-        AssertJUnit.assertEquals(v1, v2);
+        assertTrue(v1!=v2);
+        assertEquals(v1, v2);
 
         v1 = Double.MAX_VALUE;
         v2 = (Double)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
 
         v1 = -Double.MAX_VALUE;
         v2 = (Double)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
 
         v1 = Double.MIN_VALUE;
         v2 = (Double)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
 
         v1 = Double.NaN;
         v2 = (Double)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
 
         v1 = Double.NEGATIVE_INFINITY;
         v2 = (Double)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
 
         v1 = Double.POSITIVE_INFINITY;
         v2 = (Double)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
 
     }
 
@@ -247,76 +251,76 @@ public class ObjectSerializationTests {
     public void testString() throws Exception {
         String v1 = "abcd";
         String v2 = (String)cloneObject(v1);
-        AssertJUnit.assertTrue(v1!=v2);
-        AssertJUnit.assertEquals(v1, v2);
+        assertTrue(v1!=v2);
+        assertEquals(v1, v2);
     }
 
     @Test
     public void testURI() throws Exception {
         URI v1 = new URI("mailto:java-net@java.sun.com");
         URI v2 = (URI)cloneObject(v1);
-        AssertJUnit.assertTrue(v1!=v2);
-        AssertJUnit.assertEquals(v1, v2);
+        assertTrue(v1!=v2);
+        assertEquals(v1, v2);
     }
 
     @Test
     public void testFile() throws Exception {
         File v1 = new File("c:/foo.txt");
         File v2 = (File)cloneObject(v1);
-        AssertJUnit.assertTrue(v1!=v2);
-        AssertJUnit.assertEquals(v1, v2);
+        assertTrue(v1!=v2);
+        assertEquals(v1, v2);
     }
 
     @Test
     public void testBigInteger() throws Exception {
         BigInteger v1 = new BigInteger("983423442347324324324");
         BigInteger v2 = (BigInteger)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
     }
 
     @Test
     public void testBigDecimal() throws Exception {
         BigDecimal v1 = new BigDecimal(new BigInteger("9847324324324"),45);
         BigDecimal v2 = (BigDecimal)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
     }
 
     @Test
     public void testByteArray() throws Exception {
         byte [] v1 = {1,2,3};
         byte [] v2 = (byte[])cloneObject(v1);
-        AssertJUnit.assertEquals(3, v2.length);
-        AssertJUnit.assertEquals(1,v2[0]);
-        AssertJUnit.assertEquals(2,v2[1]);
-        AssertJUnit.assertEquals(3,v2[2]);
+        assertEquals(3, v2.length);
+        assertEquals(1,v2[0]);
+        assertEquals(2,v2[1]);
+        assertEquals(3,v2[2]);
     }
 
     @Test
     public void testClasses() throws Exception {
-        AssertJUnit.assertEquals(int.class,
+        assertEquals(int.class,
                 cloneObject(int.class));
-        AssertJUnit.assertEquals(int[].class,
+        assertEquals(int[].class,
                 cloneObject(int[].class));
-        AssertJUnit.assertEquals(int[][][].class,
+        assertEquals(int[][][].class,
                 cloneObject(int[][][].class));
-        AssertJUnit.assertEquals(long.class,
+        assertEquals(long.class,
                 cloneObject(long.class));
-        AssertJUnit.assertEquals(float.class,
+        assertEquals(float.class,
                 cloneObject(float.class));
-        AssertJUnit.assertEquals(double.class,
+        assertEquals(double.class,
                 cloneObject(double.class));
-        AssertJUnit.assertEquals(char.class,
+        assertEquals(char.class,
                 cloneObject(char.class));
         //if this fails, we have added a new type and we need to add
         //a serializer for it
-        AssertJUnit.assertEquals(FrameworkUtil.getAllSupportedConfigTypes(),
+        assertEquals(FrameworkUtil.getAllSupportedConfigTypes(),
                 cloneObject(FrameworkUtil.getAllSupportedConfigTypes()));
         //if this fails, we have added a new type and we need to add
         //a serializer for it
-        AssertJUnit.assertEquals(FrameworkUtil.getAllSupportedAttributeTypes(),
+        assertEquals(FrameworkUtil.getAllSupportedAttributeTypes(),
                 cloneObject(FrameworkUtil.getAllSupportedAttributeTypes()));
         //if this fails, need to add to the OperationMappings class
-        AssertJUnit.assertEquals(FrameworkUtil.allAPIOperations(),
+        assertEquals(FrameworkUtil.allAPIOperations(),
                 cloneObject(FrameworkUtil.allAPIOperations()));
     }
 
@@ -324,10 +328,10 @@ public class ObjectSerializationTests {
     public void testArrays() throws Exception {
         int [] v1 = {1,2,3};
         int [] v2 = (int[])cloneObject(v1);
-        AssertJUnit.assertEquals(3, v2.length);
-        AssertJUnit.assertEquals(1,v2[0]);
-        AssertJUnit.assertEquals(2,v2[1]);
-        AssertJUnit.assertEquals(3,v2[2]);
+        assertEquals(3, v2.length);
+        assertEquals(1,v2[0]);
+        assertEquals(2,v2[1]);
+        assertEquals(3,v2[2]);
     }
 
 
@@ -335,10 +339,10 @@ public class ObjectSerializationTests {
     public void testObjectArrays() throws Exception {
         Object [] v1 = {"1","2","3"};
         Object [] v2 = (Object[])cloneObject(v1);
-        AssertJUnit.assertEquals(3, v2.length);
-        AssertJUnit.assertEquals("1",v2[0]);
-        AssertJUnit.assertEquals("2",v2[1]);
-        AssertJUnit.assertEquals("3",v2[2]);
+        assertEquals(3, v2.length);
+        assertEquals("1",v2[0]);
+        assertEquals("2",v2[1]);
+        assertEquals("3",v2[2]);
     }
 
     @Test
@@ -347,7 +351,7 @@ public class ObjectSerializationTests {
         map.put("key1", "val1");
         map.put("key2", "val2");
         Map<?,?> map2 = (Map<?,?>)cloneObject(map);
-        AssertJUnit.assertEquals(map, map2);
+        assertEquals(map, map2);
     }
 
     @Test
@@ -356,12 +360,12 @@ public class ObjectSerializationTests {
         set.add(AttributeBuilder.build("foo1"));
         set.add(AttributeBuilder.build("foo2"));
         Map<String,Attribute> map = AttributeUtil.toMap(set);
-        AssertJUnit.assertTrue(map.containsKey("Foo1"));
-        AssertJUnit.assertTrue(map.containsKey("Foo2"));
+        assertTrue(map.containsKey("Foo1"));
+        assertTrue(map.containsKey("Foo2"));
         @SuppressWarnings("unchecked")
         Map<String,Attribute> map2 = (Map)cloneObject(map);
-        AssertJUnit.assertTrue(map2.containsKey("Foo1"));
-        AssertJUnit.assertTrue(map2.containsKey("Foo2"));
+        assertTrue(map2.containsKey("Foo1"));
+        assertTrue(map2.containsKey("Foo2"));
     }
 
     @Test
@@ -370,7 +374,7 @@ public class ObjectSerializationTests {
         v1.add("val1");
         v1.add("val2");
         List<?> v2 = (List<?>)cloneObject(v1);
-        AssertJUnit.assertEquals(v1,v2);
+        assertEquals(v1,v2);
     }
 
     @Test
@@ -379,7 +383,7 @@ public class ObjectSerializationTests {
         v1.add("val1");
         v1.add("val2");
         Set<?> v2 = (Set<?>)cloneObject(v1);
-        AssertJUnit.assertEquals(v1,v2);
+        assertEquals(v1,v2);
     }
 
     @Test
@@ -388,19 +392,19 @@ public class ObjectSerializationTests {
         v1.add("foo");
         v1.add("foo2");
         Set<?> v2 = (Set<?>)cloneObject(v1);
-        AssertJUnit.assertTrue(v2.contains("Foo"));
-        AssertJUnit.assertTrue(v2.contains("Foo2"));
+        assertTrue(v2.contains("Foo"));
+        assertTrue(v2.contains("Foo2"));
     }
 
     @Test
     public void testLocale() throws Exception {
         Locale v1 = new Locale("no","NO","NY");
         Locale v2 = (Locale)cloneObject(v1);
-        AssertJUnit.assertEquals(v1,v2);
+        assertEquals(v1,v2);
 
         v1 = new Locale("");
         v2 = (Locale)cloneObject(v1);
-        AssertJUnit.assertEquals(v1,v2);
+        assertEquals(v1,v2);
     }
 
 
@@ -415,14 +419,14 @@ public class ObjectSerializationTests {
 
         ObjectPoolConfiguration v2 =
             (ObjectPoolConfiguration)cloneObject(v1);
-        AssertJUnit.assertTrue(v1 != v2);
+        assertTrue(v1 != v2);
 
-        AssertJUnit.assertEquals(v1,v2);
-        AssertJUnit.assertEquals(1, v2.getMaxObjects());
-        AssertJUnit.assertEquals(2, v2.getMaxIdle());
-        AssertJUnit.assertEquals(3, v2.getMaxWait());
-        AssertJUnit.assertEquals(4, v2.getMinEvictableIdleTimeMillis());
-        AssertJUnit.assertEquals(5, v2.getMinIdle());
+        assertEquals(v1,v2);
+        assertEquals(1, v2.getMaxObjects());
+        assertEquals(2, v2.getMaxIdle());
+        assertEquals(3, v2.getMaxWait());
+        assertEquals(4, v2.getMinEvictableIdleTimeMillis());
+        assertEquals(5, v2.getMinIdle());
     }
 
     @Test
@@ -441,16 +445,16 @@ public class ObjectSerializationTests {
 
         ConfigurationPropertyImpl v2 = (ConfigurationPropertyImpl)
             cloneObject(v1);
-        AssertJUnit.assertEquals(1, v2.getOrder());
-        AssertJUnit.assertTrue(v2.isConfidential());
-        AssertJUnit.assertTrue(v2.isRequired());
-        AssertJUnit.assertEquals("foo", v2.getName());
-        AssertJUnit.assertEquals("help key", v2.getHelpMessageKey());
-        AssertJUnit.assertEquals("display key", v2.getDisplayMessageKey());
-        AssertJUnit.assertEquals("group key", v2.getGroupMessageKey());
-        AssertJUnit.assertEquals("bar", v2.getValue());
-        AssertJUnit.assertEquals(String.class, v2.getType());
-        AssertJUnit.assertEquals(FrameworkUtil.allAPIOperations(), v2.getOperations());
+        assertEquals(1, v2.getOrder());
+        assertTrue(v2.isConfidential());
+        assertTrue(v2.isRequired());
+        assertEquals("foo", v2.getName());
+        assertEquals("help key", v2.getHelpMessageKey());
+        assertEquals("display key", v2.getDisplayMessageKey());
+        assertEquals("group key", v2.getGroupMessageKey());
+        assertEquals("bar", v2.getValue());
+        assertEquals(String.class, v2.getType());
+        assertEquals(FrameworkUtil.allAPIOperations(), v2.getOperations());
     }
 
     @Test
@@ -473,7 +477,7 @@ public class ObjectSerializationTests {
 
         ConfigurationPropertiesImpl v2 = (ConfigurationPropertiesImpl)
             cloneObject(v1);
-        AssertJUnit.assertEquals("bar", v2.getProperty("foo").getValue());
+        assertEquals("bar", v2.getProperty("foo").getValue());
     }
 
     @Test
@@ -505,16 +509,16 @@ public class ObjectSerializationTests {
 
         APIConfigurationImpl v2 = (APIConfigurationImpl)
             cloneObject(v1);
-        AssertJUnit.assertTrue(v1 != v2);
-        AssertJUnit.assertNotNull(v2.getConnectorPoolConfiguration());
-        AssertJUnit.assertNotNull(v2.getConfigurationProperties());
-        AssertJUnit.assertEquals(v1.getConnectorPoolConfiguration(),v2.getConnectorPoolConfiguration());
-        AssertJUnit.assertEquals(v1.getConfigurationProperties(),v2.getConfigurationProperties());
-        AssertJUnit.assertTrue(v2.isConnectorPoolingSupported());
-        AssertJUnit.assertEquals(200, v2.getProducerBufferSize());
-        AssertJUnit.assertEquals(FrameworkUtil.allAPIOperations(),
+        assertTrue(v1 != v2);
+        assertNotNull(v2.getConnectorPoolConfiguration());
+        assertNotNull(v2.getConfigurationProperties());
+        assertEquals(v1.getConnectorPoolConfiguration(),v2.getConnectorPoolConfiguration());
+        assertEquals(v1.getConfigurationProperties(),v2.getConfigurationProperties());
+        assertTrue(v2.isConnectorPoolingSupported());
+        assertEquals(200, v2.getProducerBufferSize());
+        assertEquals(FrameworkUtil.allAPIOperations(),
                 v2.getSupportedOperations());
-        AssertJUnit.assertEquals(map, v2.getTimeoutMap());
+        assertEquals(map, v2.getTimeoutMap());
     }
 
     @Test
@@ -530,7 +534,7 @@ public class ObjectSerializationTests {
 
         ConnectorMessagesImpl v2 = (ConnectorMessagesImpl)
             cloneObject(v1);
-        AssertJUnit.assertEquals(messages,v2.getCatalogs());
+        assertEquals(messages,v2.getCatalogs());
     }
 
     @Test
@@ -550,20 +554,20 @@ public class ObjectSerializationTests {
         RemoteConnectorInfoImpl v2 = (RemoteConnectorInfoImpl)
             cloneObject(v1);
 
-        AssertJUnit.assertNotNull(v2.getMessages());
-        AssertJUnit.assertEquals("my bundle", v2.getConnectorKey().getBundleName());
-        AssertJUnit.assertEquals("my version", v2.getConnectorKey().getBundleVersion());
-        AssertJUnit.assertEquals("my connector", v2.getConnectorKey().getConnectorName());
-        AssertJUnit.assertEquals("mykey", v2.getConnectorDisplayNameKey());
+        assertNotNull(v2.getMessages());
+        assertEquals("my bundle", v2.getConnectorKey().getBundleName());
+        assertEquals("my version", v2.getConnectorKey().getBundleVersion());
+        assertEquals("my connector", v2.getConnectorKey().getConnectorName());
+        assertEquals("mykey", v2.getConnectorDisplayNameKey());
         Assert.assertEquals(v2.getConnectorCategoryKey(), "LDAP");
-        AssertJUnit.assertNotNull(v2.getDefaultAPIConfiguration());
+        assertNotNull(v2.getDefaultAPIConfiguration());
     }
 
     @Test
     public void testAttribute() {
         Attribute v1 = AttributeBuilder.build("foo", "val1", "val2");
         Attribute v2 = (Attribute)cloneObject(v1);
-        AssertJUnit.assertEquals(v1,v2);
+        assertEquals(v1,v2);
     }
 
     @Test
@@ -578,20 +582,20 @@ public class ObjectSerializationTests {
         builder.setReturnedByDefault(false);
         AttributeInfo v1 = builder.build();
         AttributeInfo v2 = (AttributeInfo)cloneObject(v1);
-        AssertJUnit.assertEquals(v1,v2);
-        AssertJUnit.assertEquals("foo", v2.getName());
-        AssertJUnit.assertEquals(String.class, v2.getType());
-        AssertJUnit.assertTrue(v2.isMultiValued());
-        AssertJUnit.assertTrue(v2.isReadable());
-        AssertJUnit.assertTrue(v2.isRequired());
-        AssertJUnit.assertTrue(v2.isCreateable());
-        AssertJUnit.assertFalse(v2.isUpdateable());
-        AssertJUnit.assertFalse(v2.isReturnedByDefault());
+        assertEquals(v1,v2);
+        assertEquals("foo", v2.getName());
+        assertEquals(String.class, v2.getType());
+        assertTrue(v2.isMultiValued());
+        assertTrue(v2.isReadable());
+        assertTrue(v2.isRequired());
+        assertTrue(v2.isCreateable());
+        assertFalse(v2.isUpdateable());
+        assertFalse(v2.isReturnedByDefault());
 
         builder.setFlags(EnumSet.allOf(Flags.class));
         v1 = builder.build();
         v2 = (AttributeInfo)cloneObject(v1);
-        AssertJUnit.assertEquals(v1,v2);
+        assertEquals(v1,v2);
 
     }
 
@@ -604,21 +608,21 @@ public class ObjectSerializationTests {
         ConnectorObject v1 = bld.build();
         ConnectorObject v2 = (ConnectorObject)cloneObject(v1);
 
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
     }
 
     @Test
     public void testName() {
         Name v1 = new Name("test");
         Name v2 = (Name)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
     }
 
     @Test
     public void testObjectClass() {
         ObjectClass v1 = new ObjectClass("test");
         ObjectClass v2 = (ObjectClass)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
     }
 
     @Test
@@ -633,15 +637,15 @@ public class ObjectSerializationTests {
         obld.setContainer(true);
         ObjectClassInfo v1 = obld.build();
         ObjectClassInfo v2 = (ObjectClassInfo)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
-        AssertJUnit.assertTrue(v2.isContainer());
+        assertEquals(v1, v2);
+        assertTrue(v2.isContainer());
     }
 
     @Test
     public void testUid() {
         Uid v1 = new Uid("test");
         Uid v2 = (Uid)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
     }
 
     @Test
@@ -650,7 +654,7 @@ public class ObjectSerializationTests {
             new OperationOptionInfo("name",Integer.class);
         OperationOptionInfo v2 =
             (OperationOptionInfo)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
     }
 
     @Test
@@ -673,18 +677,18 @@ public class ObjectSerializationTests {
                 map,
                 map2);
         Schema v2 = (Schema)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
-        AssertJUnit.assertEquals(info, v2.getObjectClassInfo().iterator().next());
-        AssertJUnit.assertEquals(1, v2.getSupportedObjectClassesByOperation().size());
-        AssertJUnit.assertEquals(1, v2.getSupportedOptionsByOperation().size());
-        AssertJUnit.assertEquals(1, v2.getOperationOptionInfo().size());
+        assertEquals(v1, v2);
+        assertEquals(info, v2.getObjectClassInfo().iterator().next());
+        assertEquals(1, v2.getSupportedObjectClassesByOperation().size());
+        assertEquals(1, v2.getSupportedOptionsByOperation().size());
+        assertEquals(1, v2.getOperationOptionInfo().size());
     }
 
     @Test
     public void testContainsFilter() {
         ContainsFilter v1 = new ContainsFilter(AttributeBuilder.build("foo", "bar"));
         ContainsFilter v2 = (ContainsFilter)cloneObject(v1);
-        AssertJUnit.assertEquals(v1.getAttribute(), v2.getAttribute());
+        assertEquals(v1.getAttribute(), v2.getAttribute());
     }
 
     @Test
@@ -695,50 +699,50 @@ public class ObjectSerializationTests {
         AndFilter v2 = (AndFilter)cloneObject(v1);
         ContainsFilter left2 = (ContainsFilter)v2.getLeft();
         ContainsFilter right2 = (ContainsFilter)v2.getRight();
-        AssertJUnit.assertEquals(left1.getAttribute(),left2.getAttribute());
-        AssertJUnit.assertEquals(right1.getAttribute(),right2.getAttribute());
+        assertEquals(left1.getAttribute(),left2.getAttribute());
+        assertEquals(right1.getAttribute(),right2.getAttribute());
     }
 
     @Test
     public void testEndsWithFilter() {
         EndsWithFilter v1 = new EndsWithFilter(AttributeBuilder.build("foo", "bar"));
         EndsWithFilter v2 = (EndsWithFilter)cloneObject(v1);
-        AssertJUnit.assertEquals(v1.getAttribute(), v2.getAttribute());
+        assertEquals(v1.getAttribute(), v2.getAttribute());
     }
 
     @Test
     public void testEqualsFilter() {
         EqualsFilter v1 = new EqualsFilter(AttributeBuilder.build("foo", "bar"));
         EqualsFilter v2 = (EqualsFilter)cloneObject(v1);
-        AssertJUnit.assertEquals(v1.getAttribute(), v2.getAttribute());
+        assertEquals(v1.getAttribute(), v2.getAttribute());
     }
 
     @Test
     public void testGreaterThanFilter() {
         GreaterThanFilter v1 = new GreaterThanFilter(AttributeBuilder.build("foo", "bar"));
         GreaterThanFilter v2 = (GreaterThanFilter)cloneObject(v1);
-        AssertJUnit.assertEquals(v1.getAttribute(), v2.getAttribute());
+        assertEquals(v1.getAttribute(), v2.getAttribute());
     }
 
     @Test
     public void testGreaterThanOrEqualFilter() {
         GreaterThanOrEqualFilter v1 = new GreaterThanOrEqualFilter(AttributeBuilder.build("foo", "bar"));
         GreaterThanOrEqualFilter v2 = (GreaterThanOrEqualFilter)cloneObject(v1);
-        AssertJUnit.assertEquals(v1.getAttribute(), v2.getAttribute());
+        assertEquals(v1.getAttribute(), v2.getAttribute());
     }
 
     @Test
     public void testLessThanFilter() {
         LessThanFilter v1 = new LessThanFilter(AttributeBuilder.build("foo", "bar"));
         LessThanFilter v2 = (LessThanFilter)cloneObject(v1);
-        AssertJUnit.assertEquals(v1.getAttribute(), v2.getAttribute());
+        assertEquals(v1.getAttribute(), v2.getAttribute());
     }
 
     @Test
     public void testLessThanOrEqualFilter() {
         LessThanOrEqualFilter v1 = new LessThanOrEqualFilter(AttributeBuilder.build("foo", "bar"));
         LessThanOrEqualFilter v2 = (LessThanOrEqualFilter)cloneObject(v1);
-        AssertJUnit.assertEquals(v1.getAttribute(), v2.getAttribute());
+        assertEquals(v1.getAttribute(), v2.getAttribute());
     }
 
     @Test
@@ -747,7 +751,7 @@ public class ObjectSerializationTests {
         NotFilter v1 = new NotFilter(left1);
         NotFilter v2 = (NotFilter)cloneObject(v1);
         ContainsFilter left2 = (ContainsFilter)v2.getFilter();
-        AssertJUnit.assertEquals(left1.getAttribute(),left2.getAttribute());
+        assertEquals(left1.getAttribute(),left2.getAttribute());
     }
 
     @Test
@@ -758,22 +762,22 @@ public class ObjectSerializationTests {
         OrFilter v2 = (OrFilter)cloneObject(v1);
         ContainsFilter left2 = (ContainsFilter)v2.getLeft();
         ContainsFilter right2 = (ContainsFilter)v2.getRight();
-        AssertJUnit.assertEquals(left1.getAttribute(),left2.getAttribute());
-        AssertJUnit.assertEquals(right1.getAttribute(),right2.getAttribute());
+        assertEquals(left1.getAttribute(),left2.getAttribute());
+        assertEquals(right1.getAttribute(),right2.getAttribute());
     }
 
     @Test
     public void testStartsWithFilter() {
         StartsWithFilter v1 = new StartsWithFilter(AttributeBuilder.build("foo", "bar"));
         StartsWithFilter v2 = (StartsWithFilter)cloneObject(v1);
-        AssertJUnit.assertEquals(v1.getAttribute(), v2.getAttribute());
+        assertEquals(v1.getAttribute(), v2.getAttribute());
     }
 
     @Test
     public void testContainsAllValuesFilter() {
         ContainsAllValuesFilter v1 = new ContainsAllValuesFilter(AttributeBuilder.build("foo", "a", "b"));
         ContainsAllValuesFilter v2 = (ContainsAllValuesFilter)cloneObject(v1);
-        AssertJUnit.assertEquals(v1.getAttribute(), v2.getAttribute());
+        assertEquals(v1.getAttribute(), v2.getAttribute());
     }
 
     @Test
@@ -781,103 +785,103 @@ public class ObjectSerializationTests {
         {
             AlreadyExistsException v1 = new AlreadyExistsException("ex");
             AlreadyExistsException v2 = (AlreadyExistsException)cloneObject(v1);
-            AssertJUnit.assertEquals("ex",v2.getMessage());
+            assertEquals("ex",v2.getMessage());
         }
 
         {
             ConfigurationException v1 = new ConfigurationException("ex");
             ConfigurationException v2 = (ConfigurationException)cloneObject(v1);
-            AssertJUnit.assertEquals("ex",v2.getMessage());
+            assertEquals("ex",v2.getMessage());
         }
 
         {
             ConnectionBrokenException v1 = new ConnectionBrokenException("ex");
             ConnectionBrokenException v2 = (ConnectionBrokenException)cloneObject(v1);
-            AssertJUnit.assertEquals("ex",v2.getMessage());
+            assertEquals("ex",v2.getMessage());
         }
 
         {
             ConnectionFailedException v1 = new ConnectionFailedException("ex");
             ConnectionFailedException v2 = (ConnectionFailedException)cloneObject(v1);
-            AssertJUnit.assertEquals("ex",v2.getMessage());
+            assertEquals("ex",v2.getMessage());
         }
 
         {
             ConnectorException v1 = new ConnectorException("ex");
             ConnectorException v2 = (ConnectorException)cloneObject(v1);
-            AssertJUnit.assertEquals("ex",v2.getMessage());
+            assertEquals("ex",v2.getMessage());
         }
         {
             ConnectorIOException v1 = new ConnectorIOException("ex");
             ConnectorIOException v2 = (ConnectorIOException)cloneObject(v1);
-            AssertJUnit.assertEquals("ex",v2.getMessage());
+            assertEquals("ex",v2.getMessage());
         }
         {
             ConnectorSecurityException v1 = new ConnectorSecurityException("ex");
             ConnectorSecurityException v2 = (ConnectorSecurityException)cloneObject(v1);
-            AssertJUnit.assertEquals("ex",v2.getMessage());
+            assertEquals("ex",v2.getMessage());
         }
 
         {
             InvalidCredentialException v1 = new InvalidCredentialException("ex");
             InvalidCredentialException v2 = (InvalidCredentialException)cloneObject(v1);
-            AssertJUnit.assertEquals("ex",v2.getMessage());
+            assertEquals("ex",v2.getMessage());
         }
 
         {
             InvalidPasswordException v1 = new InvalidPasswordException("ex");
             InvalidPasswordException v2 = (InvalidPasswordException)cloneObject(v1);
-            AssertJUnit.assertEquals("ex",v2.getMessage());
+            assertEquals("ex",v2.getMessage());
         }
 
         {
             PasswordExpiredException v1 = new PasswordExpiredException("ex");
             v1.initUid(new Uid("myuid"));
             PasswordExpiredException v2 = (PasswordExpiredException)cloneObject(v1);
-            AssertJUnit.assertEquals("ex",v2.getMessage());
-            AssertJUnit.assertEquals("myuid", v2.getUid().getUidValue());
+            assertEquals("ex",v2.getMessage());
+            assertEquals("myuid", v2.getUid().getUidValue());
         }
 
         {
             OperationTimeoutException v1 = new OperationTimeoutException();
             OperationTimeoutException v2 = (OperationTimeoutException)cloneObject(v1);
-            AssertJUnit.assertNotNull(v2);
+            assertNotNull(v2);
         }
 
         {
             PermissionDeniedException v1 = new PermissionDeniedException("ex");
             PermissionDeniedException v2 = (PermissionDeniedException)cloneObject(v1);
-            AssertJUnit.assertEquals("ex",v2.getMessage());
+            assertEquals("ex",v2.getMessage());
         }
 
         {
             UnknownUidException v1 = new UnknownUidException("ex");
             UnknownUidException v2 = (UnknownUidException)cloneObject(v1);
-            AssertJUnit.assertEquals("ex",v2.getMessage());
+            assertEquals("ex",v2.getMessage());
         }
 
         {
             IllegalArgumentException v1 = new IllegalArgumentException("my msg");
             IllegalArgumentException v2 = (IllegalArgumentException)cloneObject(v1);
-            AssertJUnit.assertEquals("my msg", v2.getMessage());
+            assertEquals("my msg", v2.getMessage());
         }
 
         {
         	RuntimeException v1 = new RuntimeException("my msg");
             RuntimeException v2 = (RuntimeException)cloneObject(v1);
-            AssertJUnit.assertEquals("my msg", v2.getMessage());
+            assertEquals("my msg", v2.getMessage());
         }
 
         {
             Exception v1 = new Exception("my msg2");
             Exception v2 = (Exception)cloneObject(v1);
-            AssertJUnit.assertEquals("my msg2", v2.getMessage());
+            assertEquals("my msg2", v2.getMessage());
         }
 
         {
             Throwable v1 = new Throwable("my msg3");
             Exception v2 = (Exception)cloneObject(v1);
-            AssertJUnit.assertEquals("my msg3", v2.getMessage());
+            assertEquals("my msg3", v2.getMessage());
         }
 
     }
@@ -913,7 +917,7 @@ public class ObjectSerializationTests {
         Assert.assertNotNull(v2.getConnectorKeys().iterator().next());
         Assert.assertNotNull(v2.getConnectorInfos().iterator().next());
     }
-    
+
     @Test
     public void testOperationRequest() {
         ConfigurationPropertiesImpl configProperties = new ConfigurationPropertiesImpl();
@@ -933,59 +937,59 @@ public class ObjectSerializationTests {
                 "mymethodName",
                 args);
         OperationRequest v2 = (OperationRequest)cloneObject(v1);
-        AssertJUnit.assertEquals("my bundle", v2.getConnectorKey().getBundleName());
-        AssertJUnit.assertEquals("my version", v2.getConnectorKey().getBundleVersion());
-        AssertJUnit.assertEquals("my connector", v2.getConnectorKey().getConnectorName());
-        AssertJUnit.assertNotNull(v2.getConfiguration());
-        AssertJUnit.assertEquals(CreateApiOp.class, v2.getOperation());
-        AssertJUnit.assertEquals("mymethodName", v2.getOperationMethodName());
-        AssertJUnit.assertEquals(args, v2.getArguments());
+        assertEquals("my bundle", v2.getConnectorKey().getBundleName());
+        assertEquals("my version", v2.getConnectorKey().getBundleVersion());
+        assertEquals("my connector", v2.getConnectorKey().getConnectorName());
+        assertNotNull(v2.getConfiguration());
+        assertEquals(CreateApiOp.class, v2.getOperation());
+        assertEquals("mymethodName", v2.getOperationMethodName());
+        assertEquals(args, v2.getArguments());
     }
-    
+
     @Test
     public void testOperationResponseEnd() {
         OperationResponseEnd v1 = new OperationResponseEnd();
         OperationResponseEnd v2 = (OperationResponseEnd)cloneObject(v1);
-        AssertJUnit.assertNotNull(v2);
+        assertNotNull(v2);
     }
     @Test
     public void testOperationResponsePart() {
         RuntimeException ex = new RuntimeException("foo");
         OperationResponsePart v1 = new OperationResponsePart(ex,"bar");
         OperationResponsePart v2 = (OperationResponsePart)cloneObject(v1);
-        AssertJUnit.assertNotNull(v2.getException());
-        AssertJUnit.assertEquals("bar", v2.getResult());
+        assertNotNull(v2.getException());
+        assertEquals("bar", v2.getResult());
     }
-    
+
     @Test
     public void testOperationResponsePause() {
         OperationResponsePause v1 = new OperationResponsePause();
         OperationResponsePause v2 = (OperationResponsePause)cloneObject(v1);
-        AssertJUnit.assertNotNull(v2);
+        assertNotNull(v2);
     }
 
     @Test
     public void testOperationRequestMoreData() {
         OperationRequestMoreData v1 = new OperationRequestMoreData();
         OperationRequestMoreData v2 = (OperationRequestMoreData)cloneObject(v1);
-        AssertJUnit.assertNotNull(v2);
+        assertNotNull(v2);
     }
-    
+
     @Test
     public void testOperationRequestStopData() {
         OperationRequestStopData v1 = new OperationRequestStopData();
         OperationRequestStopData v2 = (OperationRequestStopData)cloneObject(v1);
-        AssertJUnit.assertNotNull(v2);
+        assertNotNull(v2);
     }
-    
+
     @Test
     public void testEchoMessage() {
         EchoMessage v1 = new EchoMessage("test","xml");
         EchoMessage v2 = (EchoMessage)cloneObject(v1);
-        AssertJUnit.assertEquals("test", v2.getObject());
-        AssertJUnit.assertEquals("xml", v2.getXml());
+        assertEquals("test", v2.getObject());
+        assertEquals("xml", v2.getXml());
     }
-    
+
     @Test
     public void testOperationOptions() {
         OperationOptionsBuilder builder = new OperationOptionsBuilder();
@@ -993,11 +997,11 @@ public class ObjectSerializationTests {
         builder.setOption("foo2", "bar2");
         OperationOptions v1 = builder.build();
         OperationOptions v2 = (OperationOptions)cloneObject(v1);
-        AssertJUnit.assertEquals(2,v2.getOptions().size());
-        AssertJUnit.assertEquals("bar",v2.getOptions().get("foo"));
-        AssertJUnit.assertEquals("bar2",v2.getOptions().get("foo2"));
+        assertEquals(2,v2.getOptions().size());
+        assertEquals("bar",v2.getOptions().get("foo"));
+        assertEquals("bar2",v2.getOptions().get("foo2"));
     }
-    
+
     @Test
     public void testScript() {
         ScriptBuilder builder = new ScriptBuilder();
@@ -1005,10 +1009,10 @@ public class ObjectSerializationTests {
         builder.setScriptText("text");
         Script v1 = builder.build();
         Script v2 = (Script)cloneObject(v1);
-        AssertJUnit.assertEquals("language",v2.getScriptLanguage());
-        AssertJUnit.assertEquals("text",v2.getScriptText());
+        assertEquals("language",v2.getScriptLanguage());
+        assertEquals("text",v2.getScriptText());
     }
-    
+
     @Test
     public void testScriptContext() {
         ScriptContextBuilder builder = new ScriptContextBuilder();
@@ -1018,28 +1022,28 @@ public class ObjectSerializationTests {
         builder.addScriptArgument("foo2", "bar2");
         ScriptContext v1 = builder.build();
         ScriptContext v2 = (ScriptContext)cloneObject(v1);
-        AssertJUnit.assertEquals(2,v2.getScriptArguments().size());
-        AssertJUnit.assertEquals("bar",v2.getScriptArguments().get("foo"));
-        AssertJUnit.assertEquals("bar2",v2.getScriptArguments().get("foo2"));
-        AssertJUnit.assertEquals("language",v2.getScriptLanguage());
-        AssertJUnit.assertEquals("text",v2.getScriptText());
+        assertEquals(2,v2.getScriptArguments().size());
+        assertEquals("bar",v2.getScriptArguments().get("foo"));
+        assertEquals("bar2",v2.getScriptArguments().get("foo2"));
+        assertEquals("language",v2.getScriptLanguage());
+        assertEquals("text",v2.getScriptText());
     }
-    
+
     @Test
     public void testSyncDeltaType() {
         SyncDeltaType v1 = SyncDeltaType.DELETE;
         SyncDeltaType v2 = (SyncDeltaType)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
+        assertEquals(v1, v2);
     }
-    
+
     @Test
     public void testSyncToken() {
         SyncToken v1 = new SyncToken("mytoken");
         SyncToken v2 = (SyncToken)cloneObject(v1);
-        AssertJUnit.assertEquals(v1.getValue(),v2.getValue());
-        AssertJUnit.assertEquals(v1,v2);
+        assertEquals(v1.getValue(),v2.getValue());
+        assertEquals(v1,v2);
     }
-    
+
     @Test
     public void testSyncDelta() {
         ConnectorObjectBuilder bld = new ConnectorObjectBuilder();
@@ -1052,44 +1056,44 @@ public class ObjectSerializationTests {
         builder.setToken(new SyncToken("mytoken"));
         SyncDelta v1 = builder.build();
         SyncDelta v2 = (SyncDelta)cloneObject(v1);
-        AssertJUnit.assertEquals(new Uid("previous"),v2.getPreviousUid());
-        AssertJUnit.assertEquals(new Uid("foo"),v2.getObject().getUid());
-        AssertJUnit.assertEquals(new SyncToken("mytoken"),v2.getToken());
-        AssertJUnit.assertEquals(SyncDeltaType.CREATE_OR_UPDATE,v2.getDeltaType());
-        AssertJUnit.assertEquals(v1,v2);
+        assertEquals(new Uid("previous"),v2.getPreviousUid());
+        assertEquals(new Uid("foo"),v2.getObject().getUid());
+        assertEquals(new SyncToken("mytoken"),v2.getToken());
+        assertEquals(SyncDeltaType.CREATE_OR_UPDATE,v2.getDeltaType());
+        assertEquals(v1,v2);
     }
-    
+
     @Test
     public void testNull() {
         Object v1 = null;
         Object v2 = cloneObject(v1);
-        AssertJUnit.assertNull(v2);
+        assertNull(v2);
     }
-    
+
     @Test
     public void testGuardedString() {
         GuardedString v1 = new GuardedString("foobar".toCharArray());
         GuardedString v2 = (GuardedString)cloneObject(v1);
-        AssertJUnit.assertEquals("foobar", decryptToString(v2));
+        assertEquals("foobar", decryptToString(v2));
     }
-    
+
     @Test
     public void testGuardedByteArray() {
         GuardedByteArray v1 = new GuardedByteArray(new byte[] { 0x00, 0x01, 0x02, 0x03 });
         GuardedByteArray v2 = (GuardedByteArray)cloneObject(v1);
-        AssertJUnit.assertTrue(Arrays.equals(new byte[] { 0x00, 0x01, 0x02, 0x03 }, decryptToBytes(v2)));
+        assertTrue(Arrays.equals(new byte[] { 0x00, 0x01, 0x02, 0x03 }, decryptToBytes(v2)));
     }
-    
+
     @Test
     public void testQualifiedUid() {
         QualifiedUid v1 = new QualifiedUid(new ObjectClass("myclass"),
                 new Uid("myuid"));
         QualifiedUid v2 = (QualifiedUid)cloneObject(v1);
-        AssertJUnit.assertEquals(v1, v2);
-        AssertJUnit.assertTrue(v2.getObjectClass().is("myclass"));
-        AssertJUnit.assertEquals("myuid", v2.getUid().getUidValue());
+        assertEquals(v1, v2);
+        assertTrue(v2.getObjectClass().is("myclass"));
+        assertEquals("myuid", v2.getUid().getUidValue());
     }
-    
+
     /**
      * Highly insecure method! Do not do this in production
      * code. This is only for test purposes
@@ -1100,11 +1104,11 @@ public class ObjectSerializationTests {
                 new GuardedString.Accessor() {
                     public void access(char [] chars) {
                         buf.append(chars);
-                    }                    
+                    }
                 });
         return buf.toString();
     }
-    
+
     /**
      * Highly insecure method! Do not do this in production
      * code. This is only for test purposes
@@ -1115,7 +1119,7 @@ public class ObjectSerializationTests {
                 new GuardedByteArray.Accessor() {
                     public void access(byte[] bytes) {
                         out.write(bytes, 0, bytes.length);
-                    }                    
+                    }
                 });
         return out.toByteArray();
     }
@@ -1123,6 +1127,6 @@ public class ObjectSerializationTests {
     protected Object cloneObject(Object o) {
         return SerializerUtil.cloneObject(o);
     }
-    
-    
+
+
 }

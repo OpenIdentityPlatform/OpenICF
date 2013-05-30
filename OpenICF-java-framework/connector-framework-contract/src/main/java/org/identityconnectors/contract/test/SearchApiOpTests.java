@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  *
@@ -56,7 +56,7 @@ import org.testng.annotations.Test;
 import org.testng.log4testng.Logger;
 
 /**
- * Contract test of {@link SearchApiOp} 
+ * Contract test of {@link SearchApiOp}
  */
 @Test(testName =  SearchApiOpTests.TEST_NAME)
 public class SearchApiOpTests extends ObjectClassRunner {
@@ -75,7 +75,7 @@ public class SearchApiOpTests extends ObjectClassRunner {
     private static final String COMPARE_BY_UID_ONLY = "compareExistingObjectsByUidOnly";
 
     /**
-     * {@inheritDoc}     
+     * {@inheritDoc}
      */
     @Override
     public Set<Class<? extends APIOperation>> getAPIOperations() {
@@ -88,7 +88,7 @@ public class SearchApiOpTests extends ObjectClassRunner {
     }
 
     /**
-     * {@inheritDoc}      
+     * {@inheritDoc}
      */
     @Override
     protected void testRun(ObjectClass objectClass) {
@@ -122,7 +122,7 @@ public class SearchApiOpTests extends ObjectClassRunner {
             List<ConnectorObject> coAll = ConnectorHelper.search(getConnectorFacade(),
                     objectClass, null, getOperationOptionsByOp(objectClass, SearchApiOp.class));
 
-            //search by id 
+            //search by id
             uid = uids.get(0);
             Filter fltUid = FilterBuilder.equalTo(uid);
             List<ConnectorObject> coObjects = ConnectorHelper.search(getConnectorFacade(),
@@ -160,7 +160,7 @@ public class SearchApiOpTests extends ObjectClassRunner {
                     filteredAttrs.add(attribute);
                 }
             }
-            // skip test when there are no non-special readable attributes 
+            // skip test when there are no non-special readable attributes
             // (results in null filter - tested explicitly)
             if (fltAllAtts != null) {
                 // find how many object should pass filter
@@ -275,7 +275,7 @@ public class SearchApiOpTests extends ObjectClassRunner {
     }
 
     /**
-     * {@inheritDoc}     
+     * {@inheritDoc}
      */
     @Override
     public String getTestName() {
@@ -285,7 +285,7 @@ public class SearchApiOpTests extends ObjectClassRunner {
     /* ***************** CASE INSENSITIVE SEARCH ********************* */
     /**
      * Test case <strong>insensitive</strong> search for UID attribute.
-     * 
+     *
      * There is twice Search performed, once with changed case. The results should be identical.
      */
     @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
@@ -407,7 +407,7 @@ public class SearchApiOpTests extends ObjectClassRunner {
      * Returns true if tests are configured to enable case insensitive tests
      * {@link SearchApiOpTests#testCaseInsensitiveSearch(ObjectClass)}.
      * </p>
-     * 
+     *
      * <p>
      * Returns true if tests are configured to test connector's sync after
      * specified operation. Some connectors implement sync but are not capable
@@ -431,7 +431,7 @@ public class SearchApiOpTests extends ObjectClassRunner {
     }
 
     /**
-     * Returns true if tests should compare already existing objects by uid only. 
+     * Returns true if tests should compare already existing objects by uid only.
      */
     protected static boolean compareExistingObjectsByUidOnly() {
         // by default it's supposed that all attributes all compared

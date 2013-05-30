@@ -31,14 +31,14 @@ package org.identityconnectors.common.event;
  * <p/>
  * A ConnectorEventHandler receives notification when a connector bundle is
  * registered or unregistered.
- * 
+ *
  * @author Laszlo Hordos
  * @since 1.2
  */
 public interface ConnectorEventHandler {
     /**
      * TODO: Description
-     * 
+     *
      * @param event
      *            The {@code ConnectorEvent} object.
      */

@@ -2,7 +2,7 @@
 <!--
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
- Copyright © 2011-2012 ForgeRock AS. All rights reserved.
+ Copyright (c) 2011-2013 ForgeRock AS. All rights reserved.
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -40,16 +40,12 @@
     <dependencies>
         <dependency>
             <groupId>org.forgerock.openicf.framework</groupId>
-            <artifactId>connector-framework</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
             <artifactId>connector-framework-internal</artifactId>
         </dependency>
         <dependency>
             <groupId>org.ops4j.pax.swissbox</groupId>
             <artifactId>pax-swissbox-extender</artifactId>
-            <version>1.5.1</version>
+            <version>1.6.0</version>
         </dependency>
 
         <!-- Provided Dependencies -->
@@ -74,7 +70,6 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Private-Package>org.forgerock.openicf.framework.impl.api.osgi.internal.*</Private-Package>
                         <Bundle-Activator>org.forgerock.openicf.framework.impl.api.osgi.internal.Activator</Bundle-Activator>
                     </instructions>
                 </configuration>

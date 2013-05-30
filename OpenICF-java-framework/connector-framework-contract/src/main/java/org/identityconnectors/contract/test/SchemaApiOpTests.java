@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -44,7 +44,7 @@ import org.testng.annotations.Test;
 
 /**
  * Contract test of {@link SchemaApiOp} operation.
- * 
+ *
  * @author Zdenek Louzensky
  *
  */
@@ -52,7 +52,7 @@ import org.testng.annotations.Test;
 public class SchemaApiOpTests extends ContractTestBase {
 
     public static final String TEST_NAME = "Schema";
-    
+
     /*
      * Properties prefixes:
      * it's added .testsuite.${type.name} after the prefix
@@ -71,7 +71,7 @@ public class SchemaApiOpTests extends ContractTestBase {
     private static final String ATTRIBUTE_FIELD_UPDATEABLE = "updateable";
     private static final String ATTRIBUTE_FILED_READABLE = "readable";
     private static final String ATTRIBUTE_FIELD_TYPE = "type";
-    
+
     /**
      * {@inheritDoc}
      */
@@ -82,7 +82,7 @@ public class SchemaApiOpTests extends ContractTestBase {
         s.add(SchemaApiOp.class);
         return s;
     }
-    
+
     /**
      * Tests that the schema doesn't contain {@link Uid}
      */
@@ -98,7 +98,7 @@ public class SchemaApiOpTests extends ContractTestBase {
             }
         }
     }
-    
+
     /**
      * Tests that every object class contains {@link Name} among its attributes.
      */
@@ -109,15 +109,15 @@ public class SchemaApiOpTests extends ContractTestBase {
         for (ObjectClassInfo ocInfo : ocInfos) {
             Set<AttributeInfo> attInfos = ocInfo.getAttributeInfo();
             // ensure there is NAME present
-            boolean found = false;            
-            for (AttributeInfo attInfo : attInfos) {               
+            boolean found = false;
+            for (AttributeInfo attInfo : attInfos) {
                 if (attInfo.is(Name.NAME)) found = true;
             }
             final String MSG = "Name is not present among attributes of object class '%s'.";
             assertTrue(found,String.format(MSG, ocInfo.getType()));
         }
     }
-        
+
     /**
      * List of all operations which must be supported by all object classes when
      * supported at all.
@@ -158,7 +158,7 @@ public class SchemaApiOpTests extends ContractTestBase {
     public void testSchemaExpected() {
         final Schema schema = getConnectorFacade().schema();
         String msg = null;
-        
+
         Boolean strictCheck = getStrictCheckProperty();
 
         // list of expected object classes
@@ -188,7 +188,7 @@ public class SchemaApiOpTests extends ContractTestBase {
             List<String> expAttrs = (List<String>) getTestPropertyOrFail(List.class.getName(),
                     "attributes." + ocInfo.getType() + "."
                             + SUPPORTED_OBJECT_CLASSES_PROPERTY_PREFIX, strictCheck);
-            
+
             // check object class attributes
             for (AttributeInfo attr : ocInfo.getAttributeInfo()) {
                 if (strictCheck) {
@@ -209,17 +209,17 @@ public class SchemaApiOpTests extends ContractTestBase {
                     checkAttributeValues(ocInfo, attr, expAttrValues);
                 }
             }
-            
-            
+
+
             // check that all expected attributes are in schema
             for (String expAttr : expAttrs) {
                 msg = "Schema doesn't contain expected attribute '%s' in object class '%s'.";
                 assertNotNull(AttributeInfoUtil.find(expAttr, ocInfo.getAttributeInfo()),
                         String.format(msg, expAttr, ocInfo.getType()));
             }
-            
+
         }
-        
+
         Set<String> notFoundOClasses = new HashSet<String>(expOClasses);
         notFoundOClasses.removeAll(testedOClasses);
         if (!notFoundOClasses.isEmpty()) {
@@ -269,7 +269,7 @@ public class SchemaApiOpTests extends ContractTestBase {
 
                 testedOClassesForOp.add(ocInfo.getType());
             }
-            
+
             Set<String> notFoundOClassesForOp = new HashSet<String>(expOClassesForOp);
             notFoundOClassesForOp.removeAll(testedOClassesForOp);
             if (!notFoundOClassesForOp.isEmpty()) {
@@ -277,7 +277,7 @@ public class SchemaApiOpTests extends ContractTestBase {
                 fail(String.format(msg, operation.getSimpleName(), notFoundOClassesForOp.iterator().next()));
             }
         }
-        
+
         Set<String> notFoundOps = new HashSet<String>(expOperations.keySet());
         notFoundOps.removeAll(testedOps);
         if (!notFoundOps.isEmpty()) {
@@ -291,7 +291,7 @@ public class SchemaApiOpTests extends ContractTestBase {
      * Checks that attribute values are the same as expectedValues.
      */
     private void checkAttributeValues(ObjectClassInfo ocInfo, AttributeInfo attribute,
-            Map<String, Object> expectedValues) {        
+            Map<String, Object> expectedValues) {
         // check that all attributes are provided
         String msg = "Missing property definition for field '%s' of attribute '" + attribute.getName()
                         + "' in object class " + ocInfo.getType();
@@ -304,7 +304,7 @@ public class SchemaApiOpTests extends ContractTestBase {
         assertNotNull(expectedValues.get(ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT),String.format(msg, ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT));
 
         msg = "Object class '" + ocInfo.getType() + "', attribute '" + attribute.getName()
-                + "': field '%s' expected value is '%s', but returned '%s'.";        
+                + "': field '%s' expected value is '%s', but returned '%s'.";
         assertEquals(attribute.getType(), expectedValues.get(ATTRIBUTE_FIELD_TYPE), String.format(msg, ATTRIBUTE_FIELD_TYPE, expectedValues
                 .get(ATTRIBUTE_FIELD_TYPE), attribute.getType().getName()));
         assertEquals(attribute.isReadable(), expectedValues.get(ATTRIBUTE_FILED_READABLE), String.format(msg, ATTRIBUTE_FILED_READABLE, expectedValues
@@ -320,7 +320,7 @@ public class SchemaApiOpTests extends ContractTestBase {
         assertEquals(attribute.isReturnedByDefault(), expectedValues.get(ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT), String.format(msg, ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT,
                 expectedValues.get(ATTRIBUTE_FIELD_RETURNED_BY_DEFAULT), attribute.isReturnedByDefault()));
     }
-    
+
     /**
      * Returns strictCheck property value.
      * When property is not defined true is assumed.
@@ -333,10 +333,10 @@ public class SchemaApiOpTests extends ContractTestBase {
         catch (ObjectNotFoundException ex) {
             // ok - property not defined
         }
-        
+
         return strict;
     }
-    
+
     /**
      * Returns property value or fails test if property is not defined.
      */

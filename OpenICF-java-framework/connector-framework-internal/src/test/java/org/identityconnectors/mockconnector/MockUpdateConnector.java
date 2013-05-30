@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -36,33 +36,33 @@ import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.AbstractFilterTranslator;
-import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.operations.SearchOp;
 import org.identityconnectors.framework.spi.operations.UpdateOp;
 
-
 public class MockUpdateConnector implements Connector, UpdateOp, SearchOp<String> {
 
-    private Configuration _cfg;
-    
+    private Configuration configuration;
+
     public void dispose() {
         // nothing to do this is a mock connector..
     }
 
     public void init(Configuration cfg) {
-        _cfg = cfg;
+        configuration = cfg;
     }
+
     public Configuration getConfiguration() {
-        return _cfg;
+        return configuration;
     }
 
     // =======================================================================
     // Test Data
     // =======================================================================
     private static List<ConnectorObject> objects = new ArrayList<ConnectorObject>();
+
     static {
         ConnectorObjectBuilder bld = new ConnectorObjectBuilder();
         for (int i = 0; i < 100; i++) {
@@ -77,10 +77,13 @@ public class MockUpdateConnector implements Connector, UpdateOp, SearchOp<String
     // =======================================================================
     /**
      * This will do a basic replace.
-     * 
-     * @see UpdateOp#update(ConnectorObject)
+     *
+     * @see UpdateOp#update(org.identityconnectors.framework.common.objects.ObjectClass,
+     *      org.identityconnectors.framework.common.objects.Uid, java.util.Set,
+     *      org.identityconnectors.framework.common.objects.OperationOptions)
      */
-    public Uid update(ObjectClass objclass, Uid uid, Set<Attribute> attrs, OperationOptions options) {
+    public Uid update(ObjectClass objectClass, Uid uid, Set<Attribute> attrs,
+            OperationOptions options) {
         String val = AttributeUtil.getAsStringValue(uid);
         int idx = Integer.valueOf(val).intValue();
         // get out the object..
@@ -92,20 +95,26 @@ public class MockUpdateConnector implements Connector, UpdateOp, SearchOp<String
         objects.set(idx, obj);
         return obj.getUid();
     }
-    
-    public FilterTranslator<String> createFilterTranslator(ObjectClass oclass, OperationOptions options) {
-        //no translation - ok since this is just for tests
-        return new AbstractFilterTranslator<String>(){};
+
+    public FilterTranslator<String> createFilterTranslator(ObjectClass objectClass,
+            OperationOptions options) {
+        // no translation - ok since this is just for tests
+        return new AbstractFilterTranslator<String>() {
+        };
     }
 
     /**
      * Simply return everything don't bother optimizing.
-     * 
-     * @see SearchOp#search(Filter)
+     *
+     * @see SearchOp#executeQuery(org.identityconnectors.framework.common.objects.ObjectClass,
+     *      Object,
+     *      org.identityconnectors.framework.common.objects.ResultsHandler,
+     *      org.identityconnectors.framework.common.objects.OperationOptions)
      */
-    public void executeQuery(ObjectClass oclass, String query, ResultsHandler handler, OperationOptions options) {
+    public void executeQuery(ObjectClass objectClass, String query, ResultsHandler handler,
+            OperationOptions options) {
         Iterator<ConnectorObject> iter = objects.iterator();
-        while ( iter.hasNext() ) {
+        while (iter.hasNext()) {
             if (!handler.handle(iter.next())) {
                 break;
             }

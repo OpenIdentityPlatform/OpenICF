@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  *
@@ -80,10 +80,10 @@ public abstract class ObjectClassRunner extends ContractTestBase {
         _objectClassInfo = null;
         super.dispose();
     }
-    
+
     /**
      * Main contract test entry point, it calls {@link #testRun(ObjectClass)} method
-     * in configured number of iterations, runs the iteration only if the 
+     * in configured number of iterations, runs the iteration only if the
      * operation is supported by the connector
      */
     @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
@@ -117,7 +117,7 @@ public abstract class ObjectClassRunner extends ContractTestBase {
         }
     }
 
-    
+
     /**
      * This method will be called configured number of times
      */
@@ -164,7 +164,7 @@ public abstract class ObjectClassRunner extends ContractTestBase {
             return null;
         }
     }
-    
+
     /**
      * Always returns supported object class by connector operation.
      * If currently tested object class is supported then is returned otherwise not.
@@ -173,27 +173,27 @@ public abstract class ObjectClassRunner extends ContractTestBase {
     /*public ObjectClass getSupportedObjectClass(ObjectClass objectClass) {
         return _supportedObjectClass;
     }*/
-    
+
     //=================================================================
     // Helper methods
     //=================================================================
 
     /**
-     * Need a schema 
+     * Need a schema
      */
     public Schema getSchema() {
         return getConnectorFacade().schema();
     }
-    
+
     /**
      * Gets Test name
      * @return Test Name
      */
     public abstract String getTestName();
-    
+
     /**
      * Gets {@link ObjectClassInfo} for object class returned by {@link ObjectClassRunner}.
-     * 
+     *
      * @return {@link ObjectClassInfo}
      */
     public ObjectClassInfo getObjectClassInfo(ObjectClass objectClass) {
@@ -235,36 +235,36 @@ public abstract class ObjectClassRunner extends ContractTestBase {
         }
         return false;
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
     public OperationOptions getOperationOptionsByOp(ObjectClass objectClass, Class<? extends APIOperation> clazz) {
         if (clazz.equals(SearchApiOp.class) || clazz.equals(GetApiOp.class) || clazz.equals(SyncApiOp.class)) {
-            
+
             // names of readable attributes
             ObjectClassInfo info = getObjectClassInfo(objectClass);
             Set<String> readableAttrs = ConnectorHelper.getReadableAttributesNames(info);
-            
+
             // all *readable* object class attributes as attrsToGet
             Collection<String> attrNames = new ArrayList<String>();
             for (AttributeInfo attrInfo : info.getAttributeInfo()) {
-                
+
                 if (readableAttrs.contains(attrInfo.getName())) {
                     attrNames.add(attrInfo.getName());
                 }
-                
+
             }
-            
+
             OperationOptionsBuilder opOptionsBuilder = new OperationOptionsBuilder();
             opOptionsBuilder.setAttributesToGet(attrNames);
             OperationOptions attrsToGet = opOptionsBuilder.build();
-            
+
             return attrsToGet;
         }
-        
+
         return super.getOperationOptionsByOp(objectClass, clazz);
-    }        
+    }
 
 }

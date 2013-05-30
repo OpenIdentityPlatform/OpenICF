@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -37,21 +37,24 @@ import java.util.Set;
  * {@link Collection} based objects.
  */
 public final class EqualsHashCodeBuilder {
-    private final List<Object> _members;
+
+    private final List<Object> members;
 
     /**
      * Construct the builder.
      */
     public EqualsHashCodeBuilder() {
-        _members = new ArrayList<Object>();
+        members = new ArrayList<Object>();
     }
 
     /**
      * Appends the field value to an ArrayList to help facilitate equality
      * testing.
-     * 
+     *
+     * @param object
+     * @return
      * @throws IllegalArgumentException
-     *             iff a collection is passed since collections do <b>not</b>
+     *             if a collection is passed since collections do <b>not</b>
      *             support value based equality. Sets, Lists, and Maps will work
      *             since they support value based equality.
      */
@@ -99,17 +102,17 @@ public final class EqualsHashCodeBuilder {
                     bld.append(o);
                 }
             }
-            _members.add(bld);
+            members.add(bld);
         } else if (object instanceof Set || object instanceof List) {
             // sets and lists are okay because they are value based equality
-            _members.add(object);
+            members.add(object);
         } else if (object instanceof Collection) {
             // collections only support identity based equality..
-            final String ERR = "Collections are not accepted!";
-            throw new IllegalArgumentException(ERR);
+            final String err = "Collections are not accepted!";
+            throw new IllegalArgumentException(err);
         } else {
             // this is just a regular object..
-            _members.add(object);
+            members.add(object);
         }
         return this;
     }
@@ -137,8 +140,7 @@ public final class EqualsHashCodeBuilder {
             }
             // determine if the name starts w/ get[A-Z]..
             String name = m.getName();
-            if (!name.startsWith("get")
-                    || Character.isLowerCase(name.charAt(3))) {
+            if (!name.startsWith("get") || Character.isLowerCase(name.charAt(3))) {
                 continue;
             }
             // determine if there's a corresponding set..
@@ -162,7 +164,11 @@ public final class EqualsHashCodeBuilder {
     /**
      * Determine equality based on the value of the members append to the
      * builder.
-     * 
+     *
+     * @param obj
+     *            the reference object with which to compare.
+     * @return <code>true</code> if this object is the same as the obj argument;
+     *         <code>false</code> otherwise.
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
@@ -170,28 +176,30 @@ public final class EqualsHashCodeBuilder {
         boolean ret = false;
         if (obj instanceof EqualsHashCodeBuilder) {
             EqualsHashCodeBuilder bld = (EqualsHashCodeBuilder) obj;
-            ret = _members.equals(bld._members);
+            ret = members.equals(bld.members);
         }
         return ret;
     }
 
     /**
      * Determine the hashcode based on the various members.
-     * 
+     *
+     * @return a hash code value for this object.
      * @see java.lang.Object#hashCode()
      */
     @Override
     public int hashCode() {
-        return _members.hashCode();
+        return members.hashCode();
     }
 
     /**
      * Show the contents that make up the key.
-     * 
+     *
+     * @return a string representation of the object.
      * @see java.lang.Object#toString()
      */
     @Override
     public String toString() {
-        return _members.toString();
+        return members.toString();
     }
 }

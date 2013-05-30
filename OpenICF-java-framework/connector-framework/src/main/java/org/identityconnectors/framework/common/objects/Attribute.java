@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -34,62 +34,56 @@ import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.security.GuardedString;
 
-
 /**
- * Represents a named collection of values within a target object, although
- * the simplest case is a name-value pair (e.g., email, employeeID). Values can
- * be empty, null, or set with various types. Empty and null are supported
- * because it makes a difference on some resources (in particular database
- * resources).
+ * Represents a named collection of values within a target object, although the
+ * simplest case is a name-value pair (e.g., email, employeeID). Values can be
+ * empty, null, or set with various types. Empty and null are supported because
+ * it makes a difference on some resources (in particular database resources).
  * <p>
  * The developer of a Connector should use an {@link AttributeBuilder} to
  * construct an instance of Attribute.
  * <p>
- * The precise meaning of an instance of {@code Attribute} depends 
- * on the context in which it occurs.
+ * The precise meaning of an instance of {@code Attribute} depends on the
+ * context in which it occurs.
  * <ul>
- *  <li>When 
- *      {@linkplain org.identityconnectors.framework.api.operations.GetApiOp#getObject 
- *      an object is read} or is returned by 
- *      {@linkplain org.identityconnectors.framework.api.operations.SearchApiOp#search search},
- *      an {@code Attribute} represents the <i>complete state</i> of an attribute 
- *      of the target object, current as of the point in time that the object was read.
- *  </li>
- *  <li>When an {@code Attribute} is supplied to 
- *      {@linkplain org.identityconnectors.framework.api.operations.UpdateApiOp 
- *      the update operation},
- *      the {@code Attribute} represents a change 
- *      to the corresponding attribute of the target object:
- *      <ul>
- *      <li>For calls to 
- *          {@link org.identityconnectors.framework.api.operations.UpdateApiOp#update(ObjectClass, Uid, java.util.Set, OperationOptions) update},
- *          the {@code Attribute} contains the <i>complete, intended state</i> of the attribute.
- *      </li>
- *      <li>When the update type is 
- *          {@link org.identityconnectors.framework.api.operations.UpdateApiOp#addAttributeValues(ObjectClass, Uid, java.util.Set, OperationOptions) addAttributeValues},
- *          the {@code Attribute} contains <i>values to append</i>.
- *      </li>
- *      <li>When the update type is 
- *          {@link org.identityconnectors.framework.api.operations.UpdateApiOp#removeAttributeValues(ObjectClass, Uid, java.util.Set, OperationOptions) removeAttributeValues},
- *          the {@code Attribute} contains <i>values to remove</i>.
- *      </li>
- *      </ul>
- *  </li>
- *  <li>When an {@code Attribute} is used to build a 
- *      {@link org.identityconnectors.framework.common.objects.filter.Filter Filter} 
- *      that is an argument to 
- *      {@linkplain org.identityconnectors.framework.api.operations.SearchApiOp#search search},
- *      an {@code Attribute} represents a <i>subset of the current state</i> of an attribute
- *      that will be used as a search criterion.
- *      Specifically, the {@code Attribute} {@linkplain #getName() names the attribute to match}
- *      and {@linkplain #getValue() contains the values to match}.
- *  </li>
+ * <li>When
+ * {@linkplain org.identityconnectors.framework.api.operations.GetApiOp#getObject
+ * an object is read} or is returned by
+ * {@linkplain org.identityconnectors.framework.api.operations.SearchApiOp#search
+ * search}, an {@code Attribute} represents the <i>complete state</i> of an
+ * attribute of the target object, current as of the point in time that the
+ * object was read.</li>
+ * <li>When an {@code Attribute} is supplied to
+ * {@linkplain org.identityconnectors.framework.api.operations.UpdateApiOp the
+ * update operation}, the {@code Attribute} represents a change to the
+ * corresponding attribute of the target object:
+ * <ul>
+ * <li>For calls to
+ * {@link org.identityconnectors.framework.api.operations.UpdateApiOp#update(ObjectClass, Uid, java.util.Set, OperationOptions)
+ * update}, the {@code Attribute} contains the <i>complete, intended state</i>
+ * of the attribute.</li>
+ * <li>When the update type is
+ * {@link org.identityconnectors.framework.api.operations.UpdateApiOp#addAttributeValues(ObjectClass, Uid, java.util.Set, OperationOptions)
+ * addAttributeValues}, the {@code Attribute} contains <i>values to append</i>.</li>
+ * <li>When the update type is
+ * {@link org.identityconnectors.framework.api.operations.UpdateApiOp#removeAttributeValues(ObjectClass, Uid, java.util.Set, OperationOptions)
+ * removeAttributeValues}, the {@code Attribute} contains <i>values to
+ * remove</i>.</li>
  * </ul>
- * 
+ * </li>
+ * <li>When an {@code Attribute} is used to build a
+ * {@link org.identityconnectors.framework.common.objects.filter.Filter Filter}
+ * that is an argument to
+ * {@linkplain org.identityconnectors.framework.api.operations.SearchApiOp#search
+ * search}, an {@code Attribute} represents a <i>subset of the current state</i>
+ * of an attribute that will be used as a search criterion. Specifically, the
+ * {@code Attribute} {@linkplain #getName() names the attribute to match} and
+ * {@linkplain #getValue() contains the values to match}.</li>
+ * </ul>
+ *
  * TODO: define the set of allowed values
- * 
+ *
  * @author Will Droste
- * @version $Revision: 1.7 $
  * @since 1.0
  */
 public class Attribute {
@@ -114,12 +108,11 @@ public class Attribute {
                 || OperationalAttributes.CURRENT_PASSWORD_NAME.equals(name)) {
             // check the value..
             if (value == null || value.size() != 1) {
-                final String MSG = "Must be a single value.";
-                throw new IllegalArgumentException(MSG);
+                throw new IllegalArgumentException("Must be a single value.");
             }
             if (!(value.get(0) instanceof GuardedString)) {
-                final String MSG = "Password value must be an instance of GuardedString";
-                throw new IllegalArgumentException(MSG);
+                throw new IllegalArgumentException(
+                        "Password value must be an instance of GuardedString");
             }
         }
         // make this case insensitive
@@ -133,18 +126,17 @@ public class Attribute {
     }
 
     public List<Object> getValue() {
-        return (this.value == null) ? null : Collections
-                .unmodifiableList(this.value);
+        return (this.value == null) ? null : Collections.unmodifiableList(this.value);
     }
 
     /**
      * Determines if the 'name' matches this {@link Attribute}.
-     * 
+     *
      * @param name
      *            case insensitive string representation of the attribute's
      *            name.
-     * @return <code>true</code> iff the case insentitive name is equal to
-     *         that of the one in {@link Attribute}.
+     * @return <code>true</code> if the case insentitive name is equal to that
+     *         of the one in {@link Attribute}.
      */
     public boolean is(String name) {
         return namesEqual(this.name, name);
@@ -189,7 +181,7 @@ public class Attribute {
         if (!is(other.name)) {
             return false;
         }
-        
+
         if (!CollectionUtil.equals(value, other.value)) {
             return false;
         }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright © 2011 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2011-2013 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -20,44 +20,50 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
- *
- * $Id$
  */
+
 package org.forgerock.openicf.common.logging.slf4j;
 
-import org.testng.annotations.Test;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.List;
+import static org.testng.Assert.assertEquals;
+
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CyclicBarrier;
 
-import static org.testng.Assert.*;
+import org.identityconnectors.common.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.Test;
 
 public class SLF4JLogTests {
 
+    private static final Logger logger = LoggerFactory.getLogger(SLF4JLogTests.class);
+
     @Test
     public void testMultithreaded() {
-        final SLF4JLog logger = new SLF4JLog();
+        final SLF4JLog log = new SLF4JLog();
         int size = 100;
         CyclicBarrier barier = new CyclicBarrier(size);
         List<Thread> threads = new ArrayList<Thread>(size);
         Set<String> keys = new HashSet<String>();
+        keys.add(SLF4JLogTests.class.getName());
         for (int i = 0; i < 100; i++) {
             String key = "" + i % 10;
             keys.add(key);
-            Thread thread = new Thread(new CreateLogger(barier, logger, key));
+            Thread thread = new Thread(new CreateLogger(barier, log, key));
             threads.add(thread);
             thread.start();
         }
         for (Thread thread : threads) {
             try {
                 thread.join();
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
+                /* ignore */
             }
         }
-        assertEquals(keys, logger.getMap().keySet());
+        assertEquals(keys, log.getMap().keySet());
     }
 
     private static class CreateLogger implements Runnable {
@@ -74,9 +80,11 @@ public class SLF4JLogTests {
 
         public void run() {
             try {
+                logger.log(SLF4JLogTests.class, "run", Log.Level.INFO, "Failed with:",
+                        new IllegalArgumentException(new RuntimeException("Cause")));
                 barier.await();
-            }
-            catch (Exception e1) {
+            } catch (Exception e1) {
+                /* ignore */
             }
             logger.getSLF4JLogger(key);
         }

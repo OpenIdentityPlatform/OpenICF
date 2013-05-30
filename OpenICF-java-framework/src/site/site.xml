@@ -46,10 +46,9 @@
             <item name="Mailing Lists" href="mail-lists.html" />
             <item name="Support" href="http://forgerock.com/what-we-offer/subscriptions/" />
             <item name="Partners" href="http://forgerock.com/partners/" />
-            <item name="Wiki" href="https://wikis.forgerock.org/confluence/display/OPENIDM/Home" />
             <item name="Connectors" href="./connectors/index.html"/>
-            <item name="Builds" href="http://forgerock.org/openidm.html" />
-            <item name="Archives" href="http://forgerock.org/openidm-archive.html" />
+            <item name="Builds" href="http://forgerock.org/openicf.html" />
+            <item name="Archives" href="http://forgerock.org/openicf-archive.html" />
             <item name="Enterprise Downloads" href="http://www.forgerock.com/download-stack/" />
         </menu>
 
@@ -57,6 +56,7 @@
             <item name="All Formats" href="docs.html" />
             <item name="Release Notes" href="./doc/release-notes/index.html" />
             <item name="Developer Guide" href="./doc/dev-guide/index.html" />
+            <item name="Javadoc" href="./apidocs/index.html" />
         </menu>
 
         <menu name="OpenICF Development" img="images/arrow_right.png">
@@ -67,7 +67,6 @@
             <item name="Contribute" href="http://www.forgerock.org/get_involved.html"/>
             <item name="Developments" href="development.html"/>
             <item name="Connector Archetype" href="connector-archetype"/>
-            <item name="Design" href="design.html"/>
             <item name="Modules" href="#">
                 <item name="Framework" href="connector-framework"/>
                 <item name="Framework - Internal" href="connector-framework-internal"/>

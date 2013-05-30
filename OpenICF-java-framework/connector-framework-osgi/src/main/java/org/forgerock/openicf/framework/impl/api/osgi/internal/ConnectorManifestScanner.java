@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright © 2011 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2011-2013 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -37,11 +37,10 @@ import org.ops4j.pax.swissbox.extender.ManifestEntry;
 import org.osgi.framework.Bundle;
 
 /**
- * Sample Class Doc
+ * The ConnectorManifestScanner ...
  * 
- * @author $author$
- * @version $Revision$ $Date$
- * @since 1.0.0
+ * @author Laszlo Hordos
+ * @since 1.1
  */
 public class ConnectorManifestScanner implements BundleScanner<ManifestEntry> {
 
@@ -57,7 +56,7 @@ public class ConnectorManifestScanner implements BundleScanner<ManifestEntry> {
     }
 
     /**
-     * {@inheritDoc }
+     * {@inheritDoc}
      */
     public List<ManifestEntry> scan(Bundle bundle) {
         NullArgumentException.validateNotNull(bundle, "Bundle");

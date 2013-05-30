@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -59,13 +59,13 @@ import org.identityconnectors.testcommon.TstCommon;
     categoryKey="TestConnector.category",
     configurationClass=TstConnectorConfig.class)
 public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, SearchOp<String>, SyncOp {
-   
+
     private static int _connectionCount = 0;
     private MyTstConnection _myConnection;
     private TstConnectorConfig _config;
-    
+
     public static void checkClassLoader() {
-        if (Thread.currentThread().getContextClassLoader() != 
+        if (Thread.currentThread().getContextClassLoader() !=
             TstConnector.class.getClassLoader()) {
             throw new IllegalStateException("Unexpected classloader");
         }
@@ -75,7 +75,7 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
         checkClassLoader();
     }
 
-    public Uid create(ObjectClass oclass, Set<Attribute> attrs, OperationOptions options) {
+    public Uid create(ObjectClass objectClass, Set<Attribute> createAttributes, OperationOptions options) {
         checkClassLoader();
         Integer delay = (Integer)options.getOptions().get("delay");
         if ( delay != null ) {
@@ -122,12 +122,12 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
         return s1+s2;
     }
 
-    public FilterTranslator<String> createFilterTranslator(ObjectClass oclass, OperationOptions options) {
+    public FilterTranslator<String> createFilterTranslator(ObjectClass objectClass, OperationOptions options) {
          checkClassLoader();
          //no translation - ok since this is just for tests
          return new AbstractFilterTranslator<String>(){};
     }
-    public void executeQuery(ObjectClass oclass, String query, ResultsHandler handler, OperationOptions options) {
+    public void executeQuery(ObjectClass objectClass, String query, ResultsHandler handler, OperationOptions options) {
         checkClassLoader();
         for (int i = 0; i < _config.getNumResults(); i++ ) {
             Integer delay = (Integer)options.getOptions().get("delay");
@@ -138,18 +138,18 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
                 new ConnectorObjectBuilder();
             builder.setUid(Integer.toString(i));
             builder.setName(Integer.toString(i));
-            builder.setObjectClass(oclass);
+            builder.setObjectClass(objectClass);
             for ( int j = 0; j < 50; j++ ) {
                 builder.addAttribute("myattribute"+j,"myvaluevaluevalue"+j);
             }
-        
+
             ConnectorObject rv = builder.build();
             if (!handler.handle(rv)) {
                 break;
             }
         }
     }
-    public void sync(ObjectClass objClass, SyncToken token,
+    public void sync(ObjectClass objectClass, SyncToken token,
                      SyncResultsHandler handler,
                      OperationOptions options) {
         checkClassLoader();
@@ -158,7 +158,7 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
                 new ConnectorObjectBuilder();
             obuilder.setUid(Integer.toString(i));
             obuilder.setName(Integer.toString(i));
-            obuilder.setObjectClass(objClass);
+            obuilder.setObjectClass(objectClass);
 
             SyncDeltaBuilder builder =
                 new SyncDeltaBuilder();
@@ -172,7 +172,7 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
             }
         }
     }
-    public SyncToken getLatestSyncToken(ObjectClass objClass) {
+    public SyncToken getLatestSyncToken(ObjectClass objectClass) {
         checkClassLoader();
         return new SyncToken("mylatest");
     }
@@ -185,7 +185,7 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
             classBuilder.setType("class"+i);
             for ( int j = 0; j < 200; j++) {
                 classBuilder.addAttributeInfo(AttributeInfoBuilder.build("attributename"+j, String.class));
-            }            
+            }
             builder.defineObjectClass(classBuilder.build());
         }
         return builder.build();

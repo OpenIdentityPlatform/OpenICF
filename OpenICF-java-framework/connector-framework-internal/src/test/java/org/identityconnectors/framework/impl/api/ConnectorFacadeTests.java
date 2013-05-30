@@ -1,33 +1,31 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
 package org.identityconnectors.framework.impl.api;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
-import org.testng.annotations.Test;
-import org.testng.annotations.BeforeMethod;
-import org.testng.AssertJUnit;
 import static org.identityconnectors.framework.common.objects.ObjectClass.ACCOUNT;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -55,10 +53,12 @@ import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.mockconnector.MockAllOpsConnector;
 import org.identityconnectors.mockconnector.MockConfiguration;
 import org.identityconnectors.mockconnector.MockConnector;
-import org.identityconnectors.mockconnector.MockUpdateConnector;
 import org.identityconnectors.mockconnector.MockConnector.Call;
+import org.identityconnectors.mockconnector.MockUpdateConnector;
 import org.identityconnectors.test.common.TestHelpers;
-
+import static org.testng.Assert.fail;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 public class ConnectorFacadeTests {
 
@@ -66,7 +66,7 @@ public class ConnectorFacadeTests {
     // Setup/Tear down
     // =======================================================================
     @BeforeMethod
-	public void setup() {
+    public void setup() {
         // always reset the call patterns..
         MockConnector.reset();
     }
@@ -89,17 +89,16 @@ public class ConnectorFacadeTests {
 
     /**
      * Test the pattern of the common operations.
-     * 
+     *
      * @throws ClassNotFoundException
      */
     @Test(enabled = false)
-	private void testCallPattern(TestOperationPattern pattern) {
+    private void testCallPattern(TestOperationPattern pattern) {
         testCallPattern(pattern, MockAllOpsConnector.class);
     }
 
     @Test(enabled = false)
-	private void testCallPattern(TestOperationPattern pattern,
-            Class<? extends Connector> clazz) {
+    private void testCallPattern(TestOperationPattern pattern, Class<? extends Connector> clazz) {
         Configuration config = new MockConfiguration(false);
         ConnectorFacadeFactory factory = ConnectorFacadeFactory.getInstance();
         // **test only**
@@ -111,9 +110,9 @@ public class ConnectorFacadeTests {
         // check the call structure..
         List<MockConnector.Call> calls = MockConnector.getCallPattern();
         // check the call pattern..
-        assertEquals("init", calls.remove(0).getMethodName());
+        assertEquals(calls.remove(0).getMethodName(), "init");
         pattern.checkCalls(calls);
-        assertEquals("dispose", calls.remove(0).getMethodName());
+        assertEquals(calls.remove(0).getMethodName(), "dispose");
         assertTrue(calls.isEmpty());
     }
 
@@ -129,39 +128,36 @@ public class ConnectorFacadeTests {
         Configuration config = new MockConfiguration(false);
         Class<? extends Connector> clazz = MockConnector.class;
         ConnectorFacadeFactory factory = ConnectorFacadeFactory.getInstance();
-        APIConfiguration impl = TestHelpers.createTestConfiguration(clazz,
-                config);
+        APIConfiguration impl = TestHelpers.createTestConfiguration(clazz, config);
         ConnectorFacade facade;
         facade = factory.newInstance(impl);
-        facade.authenticate(ObjectClass.ACCOUNT, "fadf", new GuardedString("fadsf".toCharArray()),null);
+        facade.authenticate(ObjectClass.ACCOUNT, "fadf", new GuardedString("fadsf".toCharArray()),
+                null);
     }
-    
+
     @Test
     public void runScriptOnConnectorCallPattern() {
         testCallPattern(new TestOperationPattern() {
             public void makeCall(ConnectorFacade facade) {
-                facade.runScriptOnConnector(
-                        new ScriptContextBuilder("lang","script").build(), 
+                facade.runScriptOnConnector(new ScriptContextBuilder("lang", "script").build(),
                         null);
             }
 
             public void checkCalls(List<Call> calls) {
-                assertEquals("runScriptOnConnector", calls.remove(0).getMethodName());
+                assertEquals(calls.remove(0).getMethodName(), "runScriptOnConnector");
             }
         });
     }
-    
+
     @Test
     public void runScriptOnResourceCallPattern() {
         testCallPattern(new TestOperationPattern() {
             public void makeCall(ConnectorFacade facade) {
-                facade.runScriptOnResource(
-                        new ScriptContextBuilder("lang","script").build(), 
-                        null);
+                facade.runScriptOnResource(new ScriptContextBuilder("lang", "script").build(), null);
             }
 
             public void checkCalls(List<Call> calls) {
-                assertEquals("runScriptOnResource", calls.remove(0).getMethodName());
+                assertEquals(calls.remove(0).getMethodName(), "runScriptOnResource");
             }
         });
     }
@@ -177,7 +173,7 @@ public class ConnectorFacadeTests {
             }
 
             public void checkCalls(List<Call> calls) {
-                assertEquals("schema", calls.remove(0).getMethodName());
+                assertEquals(calls.remove(0).getMethodName(), "schema");
             }
         });
     }
@@ -186,11 +182,12 @@ public class ConnectorFacadeTests {
     public void authenticateCallPattern() {
         testCallPattern(new TestOperationPattern() {
             public void makeCall(ConnectorFacade facade) {
-                facade.authenticate(ObjectClass.ACCOUNT, "dfadf", new GuardedString("fadfkj".toCharArray()),null);
+                facade.authenticate(ObjectClass.ACCOUNT, "dfadf", new GuardedString("fadfkj"
+                        .toCharArray()), null);
             }
 
             public void checkCalls(List<Call> calls) {
-                assertEquals("authenticate", calls.remove(0).getMethodName());
+                assertEquals(calls.remove(0).getMethodName(), "authenticate");
             }
         });
     }
@@ -203,7 +200,7 @@ public class ConnectorFacadeTests {
             }
 
             public void checkCalls(List<Call> calls) {
-                assertEquals("resolveUsername", calls.remove(0).getMethodName());
+                assertEquals(calls.remove(0).getMethodName(), "resolveUsername");
             }
         });
     }
@@ -212,40 +209,42 @@ public class ConnectorFacadeTests {
     public void createCallPattern() {
         testCallPattern(new TestOperationPattern() {
             public void makeCall(ConnectorFacade facade) {
-                Set<Attribute> attrs = CollectionUtil.<Attribute>newReadOnlySet();
-                facade.create(ObjectClass.ACCOUNT,attrs,null);
+                Set<Attribute> attrs = CollectionUtil.<Attribute> newReadOnlySet();
+                facade.create(ObjectClass.ACCOUNT, attrs, null);
             }
 
             public void checkCalls(List<Call> calls) {
-                assertEquals("create", calls.remove(0).getMethodName());
+                assertEquals(calls.remove(0).getMethodName(), "create");
             }
         });
     }
-    
-    @Test( expectedExceptions = NullPointerException.class )
+
+    @Test(expectedExceptions = NullPointerException.class)
     public void createWithOutObjectClassPattern() {
         testCallPattern(new TestOperationPattern() {
             public void makeCall(ConnectorFacade facade) {
                 Set<Attribute> attrs = new HashSet<Attribute>();
-                facade.create(null,attrs,null);
+                facade.create(null, attrs, null);
             }
+
             public void checkCalls(List<Call> calls) {
-                AssertJUnit.fail("Should not get here..");
+                fail("Should not get here..");
             }
         });
     }
-    
-    @Test( expectedExceptions = IllegalArgumentException.class )
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void createDuplicatAttributesPattern() {
         testCallPattern(new TestOperationPattern() {
             public void makeCall(ConnectorFacade facade) {
                 Set<Attribute> attrs = new HashSet<Attribute>();
                 attrs.add(AttributeBuilder.build("abc", 1));
                 attrs.add(AttributeBuilder.build("abc", 2));
-                facade.create(ObjectClass.ACCOUNT,attrs,null);
+                facade.create(ObjectClass.ACCOUNT, attrs, null);
             }
+
             public void checkCalls(List<Call> calls) {
-                AssertJUnit.fail("Should not get here..");
+                fail("Should not get here..");
             }
         });
     }
@@ -260,7 +259,7 @@ public class ConnectorFacadeTests {
             }
 
             public void checkCalls(List<Call> calls) {
-                assertEquals("update", calls.remove(0).getMethodName());
+                assertEquals(calls.remove(0).getMethodName(), "update");
             }
         });
     }
@@ -269,11 +268,11 @@ public class ConnectorFacadeTests {
     public void deleteCallPattern() {
         testCallPattern(new TestOperationPattern() {
             public void makeCall(ConnectorFacade facade) {
-                facade.delete(ObjectClass.ACCOUNT, newUid(0),null);
+                facade.delete(ObjectClass.ACCOUNT, newUid(0), null);
             }
 
             public void checkCalls(List<Call> calls) {
-                assertEquals("delete", calls.remove(0).getMethodName());
+                assertEquals(calls.remove(0).getMethodName(), "delete");
             }
         });
     }
@@ -293,8 +292,8 @@ public class ConnectorFacadeTests {
             }
 
             public void checkCalls(List<Call> calls) {
-                assertEquals("createFilterTranslator", calls.remove(0).getMethodName());
-                assertEquals("executeQuery", calls.remove(0).getMethodName());
+                assertEquals(calls.remove(0).getMethodName(), "createFilterTranslator");
+                assertEquals(calls.remove(0).getMethodName(), "executeQuery");
             }
         });
     }
@@ -309,12 +308,12 @@ public class ConnectorFacadeTests {
             }
 
             public void checkCalls(List<Call> calls) {
-                assertEquals("createFilterTranslator", calls.remove(0).getMethodName());
-                assertEquals("executeQuery", calls.remove(0).getMethodName());
+                assertEquals(calls.remove(0).getMethodName(), "createFilterTranslator");
+                assertEquals(calls.remove(0).getMethodName(), "executeQuery");
             }
         });
     }
-    
+
     @Test
     public void testOpCallPattern() {
         testCallPattern(new TestOperationPattern() {
@@ -323,11 +322,11 @@ public class ConnectorFacadeTests {
             }
 
             public void checkCalls(List<Call> calls) {
-                assertEquals("test", calls.remove(0).getMethodName());
+                assertEquals(calls.remove(0).getMethodName(), "test");
             }
         });
     }
-    
+
     @Test
     public void updateMergeTests() {
         Attribute expected, actual;
@@ -342,7 +341,7 @@ public class ConnectorFacadeTests {
         ConnectorFacade facade = factory.newInstance(impl);
         // sniff test to make sure we can get an object..
         ConnectorObject obj = facade.getObject(ACCOUNT, newUid(1), null);
-        assertEquals(newUid(1), obj.getUid());
+        assertEquals(obj.getUid(), newUid(1));
         // ok lets add an attribute that doesn't exist..
         final String ADDED = "somthing to add to the object";
         final String ATTR_NAME = "added";
@@ -351,37 +350,45 @@ public class ConnectorFacadeTests {
         addAttrSet.add(AttributeBuilder.build(ATTR_NAME, ADDED));
         Name name = obj.getName();
         addAttrSet.remove(name);
-        Uid uid = facade.addAttributeValues(ACCOUNT, obj.getUid(), AttributeUtil.filterUid(addAttrSet), null);
+        Uid uid =
+                facade.addAttributeValues(ACCOUNT, obj.getUid(), AttributeUtil
+                        .filterUid(addAttrSet), null);
         // get back the object and see if there are the same..
         addAttrSet.add(name);
         ConnectorObject addO = new ConnectorObject(ACCOUNT, addAttrSet);
         obj = facade.getObject(ObjectClass.ACCOUNT, newUid(1), null);
-        assertEquals(addO, obj);
+        assertEquals(obj, addO);
         // attempt to add on to an existing attribute..
         addAttrSet.remove(name);
-        uid = facade.addAttributeValues(ACCOUNT, obj.getUid(), AttributeUtil.filterUid(addAttrSet), null);
+        uid =
+                facade.addAttributeValues(ACCOUNT, obj.getUid(), AttributeUtil
+                        .filterUid(addAttrSet), null);
         // get the object back out and check on it..
         obj = facade.getObject(ObjectClass.ACCOUNT, uid, null);
         expected = AttributeBuilder.build(ATTR_NAME, ADDED, ADDED);
         actual = obj.getAttributeByName(ATTR_NAME);
-        assertEquals(expected, actual);
+        assertEquals(actual, expected);
         // attempt to delete a value from an attribute..
         Set<Attribute> deleteAttrs = CollectionUtil.newSet(addO.getAttributes());
         deleteAttrs.remove(name);
-        uid = facade.removeAttributeValues(ACCOUNT, addO.getUid(), AttributeUtil.filterUid(deleteAttrs), null);
+        uid =
+                facade.removeAttributeValues(ACCOUNT, addO.getUid(), AttributeUtil
+                        .filterUid(deleteAttrs), null);
         obj = facade.getObject(ObjectClass.ACCOUNT, uid, null);
         expected = AttributeBuilder.build(ATTR_NAME, ADDED);
         actual = obj.getAttributeByName(ATTR_NAME);
-        assertEquals(expected, actual);
+        assertEquals(actual, expected);
         // attempt to delete an attribute that doesn't exist..
         Set<Attribute> nonExist = new HashSet<Attribute>();
         nonExist.add(newUid(1));
         nonExist.add(AttributeBuilder.build("does not exist", "asdfe"));
-        uid = facade.removeAttributeValues(ACCOUNT, addO.getUid(), AttributeUtil.filterUid(nonExist), null);
+        uid =
+                facade.removeAttributeValues(ACCOUNT, addO.getUid(), AttributeUtil
+                        .filterUid(nonExist), null);
         obj = facade.getObject(ObjectClass.ACCOUNT, newUid(1), null);
         assertTrue(obj.getAttributeByName("does not exist") == null);
     }
-    
+
     static Uid newUid(int id) {
         return new Uid(Integer.toString(id));
     }

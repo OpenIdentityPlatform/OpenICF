@@ -36,7 +36,7 @@ import org.identityconnectors.framework.api.ConnectorKey;
  * version. Use carefully, this package may change before the final 1.2.0.0
  * release.
  * <p/>
- * 
+ *
  * @author Laszlo Hordos
  * @since 1.2
  */
@@ -67,7 +67,7 @@ public class ConnectorEvent extends EventObject {
 
     /**
      * Constructs a prototypical Event.
-     * 
+     *
      * @param source
      *            The object on which the Event initially occurred.
      * @throws IllegalArgumentException
@@ -84,7 +84,7 @@ public class ConnectorEvent extends EventObject {
 
     /**
      * Copy Constructor.
-     * 
+     *
      * @param source
      */
     public ConnectorEvent(ConnectorEvent source) {

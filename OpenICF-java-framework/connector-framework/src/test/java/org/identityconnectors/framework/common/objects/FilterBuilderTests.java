@@ -1,38 +1,33 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
 package org.identityconnectors.framework.common.objects;
 
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertTrue;
-import org.testng.annotations.Test;
-import org.identityconnectors.framework.common.objects.Attribute;
-import org.identityconnectors.framework.common.objects.AttributeBuilder;
-import org.identityconnectors.framework.common.objects.ConnectorObject;
-import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
-
-
+import org.testng.annotations.Test;
 
 public class FilterBuilderTests {
 
@@ -151,7 +146,6 @@ public class FilterBuilderTests {
         assertTrue(f.accept(bld.build()));
         bld.addAttribute("name", "fasdfklj");
         assertFalse(f.accept(bld.build()));
-        
     }
 
     @Test
@@ -175,10 +169,11 @@ public class FilterBuilderTests {
         bld.setUid("1");
         bld.setName(Integer.toString(1));
         bld.addAttribute("name", "fredrick");
-        assertTrue(f.accept(bld.build()));        
+        assertTrue(f.accept(bld.build()));
         bld.addAttribute("name", "falkjfklj");
-        assertFalse(f.accept(bld.build()));        
+        assertFalse(f.accept(bld.build()));
     }
+
     // =======================================================================
     // Binary Operators
     // =======================================================================
@@ -220,9 +215,9 @@ public class FilterBuilderTests {
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void illegalArgument() {
-        FilterBuilder.lessThan((Attribute)null);
+        FilterBuilder.lessThan((Attribute) null);
     }
-    
+
     // =======================================================================
     // Set Contains Filters
     // =======================================================================
@@ -236,7 +231,7 @@ public class FilterBuilderTests {
         f = FilterBuilder.containsAllValues(AttributeBuilder.build("a", "a"));
         assertTrue(f.accept(bld.build()));
     }
-    
+
     @Test
     public void containsAllValuesFilterFalse() {
         Filter f = null;
@@ -249,6 +244,7 @@ public class FilterBuilderTests {
         f = FilterBuilder.containsAllValues(AttributeBuilder.build("a", "d"));
         assertFalse(f.accept(bld.build()));
     }
+
     // =======================================================================
     // Filters
     // =======================================================================

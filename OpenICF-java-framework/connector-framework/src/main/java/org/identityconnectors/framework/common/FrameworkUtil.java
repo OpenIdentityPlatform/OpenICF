@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -77,7 +77,6 @@ import org.identityconnectors.framework.spi.operations.TestOp;
 import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
 import org.identityconnectors.framework.spi.operations.UpdateOp;
 
-
 public final class FrameworkUtil {
 
     private static final String PROP_FRAMEWORK_VERSION = "framework.version";
@@ -117,12 +116,11 @@ public final class FrameworkUtil {
     /**
      * Converts a {@link SPIOperation} to an set of {@link APIOperation}.
      */
-    public static Set<Class<? extends APIOperation>> spi2apis(
-            Class<? extends SPIOperation> spi) {
+    public static Set<Class<? extends APIOperation>> spi2apis(Class<? extends SPIOperation> spi) {
         Set<Class<? extends APIOperation>> set = new HashSet<Class<? extends APIOperation>>();
         set.add(SPI_TO_API.get(spi));
         // add GetApiOp if search is available..
-        if (spi == SearchOp.class ) {
+        if (spi == SearchOp.class) {
             set.add(GetApiOp.class);
         }
         return set;
@@ -164,29 +162,30 @@ public final class FrameworkUtil {
                 ret.addAll(spi2apis(spi));
             }
         }
-        //finally add unconditionally supported ops
+        // finally add unconditionally supported ops
         ret.addAll(getUnconditionallySupportedOperations());
         return ret;
     }
-    
+
     /**
-     * Returns the set of operations that are always supported
+     * Returns the set of operations that are always supported.
+     *
      * @return the set of operations that are always supported
      */
     public static Set<Class<? extends APIOperation>> getUnconditionallySupportedOperations() {
         Set<Class<? extends APIOperation>> ret;
         ret = new HashSet<Class<? extends APIOperation>>();
-        //add validate api op always
+        // add validate api op always
         ret.add(ValidateApiOp.class);
-        //add ScriptOnConnectorApiOp always
+        // add ScriptOnConnectorApiOp always
         ret.add(ScriptOnConnectorApiOp.class);
-        return ret;        
+        return ret;
     }
 
     /**
      * Supported types for configuration properties.
      */
-    private static Set<Class<? extends Object>> CONFIG_SUPPORTED_TYPES;
+    private static final Set<Class<? extends Object>> CONFIG_SUPPORTED_TYPES;
     static {
         CONFIG_SUPPORTED_TYPES = new HashSet<Class<?>>();
         CONFIG_SUPPORTED_TYPES.add(String.class);
@@ -208,23 +207,22 @@ public final class FrameworkUtil {
         CONFIG_SUPPORTED_TYPES.add(GuardedString.class);
         CONFIG_SUPPORTED_TYPES.add(Script.class);
     }
-    
+
     public static Set<Class<? extends Object>> getAllSupportedConfigTypes() {
         return Collections.unmodifiableSet(CONFIG_SUPPORTED_TYPES);
     }
 
     /**
      * Determines if the class is a supported configuration type.
-     * 
+     *
      * @param clazz
      *            the type to check against the list of supported types.
      * @return true if the type is in the list otherwise false.
      */
     public static boolean isSupportedConfigurationType(Class<?> clazz) {
-        if ( clazz.isArray() ) {
+        if (clazz.isArray()) {
             return isSupportedConfigurationType(clazz.getComponentType());
-        }
-        else {
+        } else {
             return CONFIG_SUPPORTED_TYPES.contains(clazz);
         }
     }
@@ -256,15 +254,14 @@ public final class FrameworkUtil {
         ATTR_SUPPORTED_TYPES.add(GuardedByteArray.class);
         ATTR_SUPPORTED_TYPES.add(GuardedString.class);
     }
-    
+
     public static Set<Class<? extends Object>> getAllSupportedAttributeTypes() {
         return Collections.unmodifiableSet(ATTR_SUPPORTED_TYPES);
     }
 
-
     /**
      * Determines if the class is a supported attribute type.
-     * 
+     *
      * @param clazz
      *            the type to check against a supported list of types.
      * @return true if the type is on the supported list otherwise false.
@@ -276,7 +273,7 @@ public final class FrameworkUtil {
     /**
      * Determines if the class is a supported attribute type. If not it throws
      * an {@link IllegalArgumentException}.
-     * 
+     *
      * <ul>
      * <li>String.class</li>
      * <li>long.class</li>
@@ -297,73 +294,85 @@ public final class FrameworkUtil {
      * <li>BigDecimal.class</li>
      * <li>BigInteger.class</li>
      * </ul>
-     * 
+     *
      * @param clazz
      *            type to check against the support list of types.
      * @throws IllegalArgumentException
-     *             iff the type is not on the supported list.
+     *             if the type is not on the supported list.
      */
     public static void checkAttributeType(final Class<?> clazz) {
         if (!FrameworkUtil.isSupportedAttributeType(clazz)) {
-            final String MSG = "Attribute type ''{0}'' is not supported.";
-            throw new IllegalArgumentException(MessageFormat.format(MSG, clazz));
+            throw new IllegalArgumentException(MessageFormat.format(
+                    "Attribute type ''{0}'' is not supported.", clazz));
         }
     }
+
     /**
-     * Determines if the class of the object is a supported attribute type.
-     * If not it throws an {@link IllegalArgumentException}.
-     * @param value The value to check or null.
+     * Determines if the class of the object is a supported attribute type. If
+     * not it throws an {@link IllegalArgumentException}.
+     *
+     * @param value
+     *            The value to check or null.
+     * @throws IllegalArgumentException
+     *             If the class of the object is a supported attribute type.
      */
     public static void checkAttributeValue(Object value) {
-        if ( value != null ) {
+        if (value != null) {
             checkAttributeType(value.getClass());
         }
     }
+
     /**
-     * Determines if the class is a supported type for an OperationOption. If not it throws
-     * an {@link IllegalArgumentException}.
-     * 
+     * Determines if the class is a supported type for an OperationOption. If
+     * not it throws an {@link IllegalArgumentException}.
+     *
      * @param clazz
      *            type to check against the support list of types.
      * @throws IllegalArgumentException
-     *             iff the type is not on the supported list.
+     *             if the type is not on the supported list.
      */
     public static void checkOperationOptionType(final Class<?> clazz) {
-        //the set of supported operation option types
-        //is the same as that for configuration beans plus Name,
-        //ObjectClass, Uid, and QualifiedUid
-        
-        if ( clazz.isArray() ) {
+        // the set of supported operation option types
+        // is the same as that for configuration beans plus Name,
+        // ObjectClass, Uid, and QualifiedUid
+
+        if (clazz.isArray()) {
             checkOperationOptionType(clazz.getComponentType());
             return;
         }
-                
+
         if (FrameworkUtil.isSupportedConfigurationType(clazz)) {
-            return; //ok
+            return; // ok
         }
 
         if (ObjectClass.class.isAssignableFrom(clazz)) {
-            return; //ok
+            return; // ok
         }
-        
+
         if (Uid.class.isAssignableFrom(clazz)) {
-            return; //ok
+            return; // ok
         }
-        
+
         if (QualifiedUid.class.isAssignableFrom(clazz)) {
-            return; //ok
+            return; // ok
         }
-        
-        final String MSG = "ConfigurationOption type '+"+clazz.getName()+"+' is not supported.";
-        throw new IllegalArgumentException(MSG);
+
+        throw new IllegalArgumentException("ConfigurationOption type '" + clazz.getName()
+                + "' is not supported.");
     }
+
     /**
-     * Determines if the class of the object is a supported attribute type.
-     * If not it throws an {@link IllegalArgumentException}.
-     * @param value The value to check or null.
+     * Determines if the class of the object is a supported attribute type. If
+     * not it throws an {@link IllegalArgumentException}.
+     *
+     * @param value
+     *            The value to check or null.
+     * @throws IllegalArgumentException
+     *             if the class of the object is a supported attribute type
+     *
      */
     public static void checkOperationOptionValue(Object value) {
-        if ( value != null ) {
+        if (value != null) {
             checkOperationOptionType(value.getClass());
         }
     }
@@ -393,10 +402,13 @@ public final class FrameworkUtil {
             props.load(stream);
             String version = props.getProperty(PROP_FRAMEWORK_VERSION);
             if (version == null) {
-                throw new IllegalStateException("connectors-framework.properties does not contain a " + PROP_FRAMEWORK_VERSION + " property");
+                throw new IllegalStateException(
+                        "connectors-framework.properties does not contain a "
+                                + PROP_FRAMEWORK_VERSION + " property");
             }
             if (StringUtil.isBlank(version)) {
-                throw new IllegalStateException("connectors-framework.properties specifies a blank version");
+                throw new IllegalStateException(
+                        "connectors-framework.properties specifies a blank version");
             }
             return Version.parse(version);
         } finally {

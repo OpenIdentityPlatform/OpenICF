@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright © 2011 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2011-2013 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -20,13 +20,14 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
- *
- * $Id$
  */
+
 package org.identityconnectors.framework.api;
 
 /**
- * SPI search operation has a default {@link ResultsHandler}-chain as:
+ * SPI search operation has a default
+ * {@link org.identityconnectors.framework.common.objects.ResultsHandler}-chain
+ * as:
  * <ul>
  * <li>NormalizingResultsHandler</li>
  * <li>FilteredResultsHandler</li>
@@ -35,17 +36,20 @@ package org.identityconnectors.framework.api;
  * This configuration allow to overconfigure the chain.
  *
  * @author $author$
- * @version $Revision$ $Date$
  * @since 1.1
  */
 public class ResultsHandlerConfiguration {
 
     /**
-     * Enables the {@link NormalizingResultsHandler} in the handler chain.
+     * Enables the
+     * {@link org.identityconnectors.framework.impl.api.local.operations.NormalizingResultsHandler}
+     * in the handler chain.
      */
     boolean enableNormalizingResultsHandler = true;
     /**
-     * Enables the {@link FilteredResultsHandler} in the handler chain.
+     * Enables the
+     * {@link org.identityconnectors.framework.impl.api.local.operations.FilteredResultsHandler}
+     * in the handler chain.
      */
     boolean enableFilteredResultsHandler = true;
     /**
@@ -53,33 +57,38 @@ public class ResultsHandlerConfiguration {
      */
     boolean enableCaseInsensitiveFilter = false;
     /**
-     * Enables the {@link AttributesToGetSearchResultsHandler} in the handler chain.
+     * Enables the
+     * {@link org.identityconnectors.framework.impl.api.local.operations.SearchImpl.AttributesToGetSearchResultsHandler}
+     * in the handler chain.
      */
     boolean enableAttributesToGetSearchResultsHandler = true;
 
     /**
-     * default empty constructor
+     * default empty constructor.
      */
     public ResultsHandlerConfiguration() {
     }
 
     /**
-     * Copy constructor
+     * Copy constructor.
      *
-     * @param source configuration that copied to.
+     * @param source
+     *            configuration that copied to.
      */
     public ResultsHandlerConfiguration(ResultsHandlerConfiguration source) {
         this.enableNormalizingResultsHandler = source.isEnableNormalizingResultsHandler();
         this.enableFilteredResultsHandler = source.isEnableFilteredResultsHandler();
         this.enableCaseInsensitiveFilter = source.isEnableCaseInsensitiveFilter();
-        this.enableAttributesToGetSearchResultsHandler = source.isEnableAttributesToGetSearchResultsHandler();
+        this.enableAttributesToGetSearchResultsHandler =
+                source.isEnableAttributesToGetSearchResultsHandler();
     }
 
     public boolean isEnableAttributesToGetSearchResultsHandler() {
         return enableAttributesToGetSearchResultsHandler;
     }
 
-    public void setEnableAttributesToGetSearchResultsHandler(boolean enableAttributesToGetSearchResultsHandler) {
+    public void setEnableAttributesToGetSearchResultsHandler(
+            boolean enableAttributesToGetSearchResultsHandler) {
         this.enableAttributesToGetSearchResultsHandler = enableAttributesToGetSearchResultsHandler;
     }
 
@@ -134,15 +143,19 @@ public class ResultsHandlerConfiguration {
     @Override
     public int hashCode() {
         int hash = 3;
-        hash = 79 * hash + ( this.enableNormalizingResultsHandler ? 1 : 0 );
-        hash = 79 * hash + ( this.enableFilteredResultsHandler ? 1 : 0 );
-        hash = 79 * hash + ( this.enableCaseInsensitiveFilter ? 1 : 0 );
-        hash = 79 * hash + ( this.enableAttributesToGetSearchResultsHandler ? 1 : 0 );
+        hash = 79 * hash + (this.enableNormalizingResultsHandler ? 1 : 0);
+        hash = 79 * hash + (this.enableFilteredResultsHandler ? 1 : 0);
+        hash = 79 * hash + (this.enableCaseInsensitiveFilter ? 1 : 0);
+        hash = 79 * hash + (this.enableAttributesToGetSearchResultsHandler ? 1 : 0);
         return hash;
     }
 
     @Override
     public String toString() {
-        return "ResultsHandlerConfiguration{" + "enableNormalizingResultsHandler=" + enableNormalizingResultsHandler + "\nenableFilteredResultsHandler=" + enableFilteredResultsHandler + "\nenableCaseInsensitiveFilter=" + enableCaseInsensitiveFilter + "\nenableAttributesToGetSearchResultsHandler=" + enableAttributesToGetSearchResultsHandler + '}';
+        return "ResultsHandlerConfiguration{" + "enableNormalizingResultsHandler="
+                + enableNormalizingResultsHandler + "\nenableFilteredResultsHandler="
+                + enableFilteredResultsHandler + "\nenableCaseInsensitiveFilter="
+                + enableCaseInsensitiveFilter + "\nenableAttributesToGetSearchResultsHandler="
+                + enableAttributesToGetSearchResultsHandler + '}';
     }
 }

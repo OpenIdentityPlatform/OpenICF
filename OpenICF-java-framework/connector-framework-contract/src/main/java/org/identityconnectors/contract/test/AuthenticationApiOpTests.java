@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  *
@@ -72,13 +72,13 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
     public static final String TEST_NAME = "Authentication";
     static final String USERNAME_PROP = "username";
     private static final String WRONG_PASSWORD_PROP = "wrong.password";
-    
+
     private static final String MAX_ITERATIONS = "maxIterations";
     private static final String SLEEP_MILLISECONDS = "sleepMilliseconds";
 
-    
+
     /**
-     * {@inheritDoc}     
+     * {@inheritDoc}
      */
     @Override
     public Set<Class<? extends APIOperation>> getAPIOperations() {
@@ -89,34 +89,34 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
         requiredOps.add(GetApiOp.class);
         return requiredOps;
     }
-    
+
     /**
-     * {@inheritDoc}     
+     * {@inheritDoc}
      */
     @Override
     protected void testRun(ObjectClass objectClass) {
 
         Uid uid = null;
-        
+
         try {
             // create a user
             Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
                     getObjectClassInfo(objectClass), getTestName(), 0, true, false);
 
-            // Remove enabled and password_expired, connector must create valid account then  
+            // Remove enabled and password_expired, connector must create valid account then
             for (Iterator<Attribute> i = attrs.iterator(); i.hasNext();) {
                 Attribute attr = i.next();
-                if (attr.is(OperationalAttributes.PASSWORD_EXPIRED_NAME) 
+                if (attr.is(OperationalAttributes.PASSWORD_EXPIRED_NAME)
                         || attr.is(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME)
                         || attr.is(OperationalAttributes.ENABLE_DATE_NAME)
                         || attr.is(OperationalAttributes.ENABLE_NAME)) {
-                    
+
                     if (!ConnectorHelper.isRequired(getObjectClassInfo(objectClass), attr)) {
                         i.remove();
                     }
                 }
             }
-            
+
             uid = getConnectorFacade().create(objectClass, attrs, getOperationOptionsByOp(objectClass, CreateApiOp.class));
 
             // get the user to make sure it exists now
@@ -141,12 +141,12 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
 
             // now try with the right password
             GuardedString password = (GuardedString) ConnectorHelper.get(getDataProvider(), getTestName(), GuardedString.class, OperationalAttributes.PASSWORD_NAME, objectClass.getObjectClassValue(), 0, false);
-            
+
             Uid authenticatedUid = authenticateExpectingSuccess(objectClass, name, password);
 
             String MSG = "Authenticate returned wrong Uid, expected: %s, returned: %s.";
             assertEquals(uid, authenticatedUid,String.format(MSG, uid, authenticatedUid));
-            
+
             // test that PASSWORD change works, CURRENT_PASSWORD should be set
             // to old password value if supported
             if (isOperationalAttributeUpdateable(objectClass, OperationalAttributes.PASSWORD_NAME)) {
@@ -186,7 +186,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                     logger.info("Skipping LAST_PASSWORD_CHANGE_DATE test.");
                 }
             }
-            
+
             // LAST_LOGIN_DATE
             if (ConnectorHelper.isAttrSupported(getObjectClassInfo(objectClass), PredefinedAttributes.LAST_LOGIN_DATE_NAME)) {
                 logger.info("LAST_LOGIN_DATE test.");
@@ -194,26 +194,26 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                 // add LAST_LOGIN_DATE to ATTRS_TO_GET
                 OperationOptionsBuilder builder = new OperationOptionsBuilder();
                 builder.setAttributesToGet(PredefinedAttributes.LAST_LOGIN_DATE_NAME);
-                
+
                 ConnectorObject lastLogin = getConnectorFacade().getObject(objectClass, uid,
                         builder.build());
-                
+
                 // check that LAST_LOGIN_DATE was set to some value
                 assertNotNull(lastLogin.getAttributeByName(PredefinedAttributes.LAST_LOGIN_DATE_NAME),"LAST_LOGIN_DATE attribute is null.");
             }
             else {
                 logger.info("Skipping LAST_LOGIN_DATE test.");
-            }                                                                       
+            }
         } finally {
             if (uid != null) {
                 // delete the object
                 ConnectorHelper.deleteObject(getConnectorFacade(), objectClass, uid,
                         false, getOperationOptionsByOp(objectClass, DeleteApiOp.class));
             }
-            
+
         }
     }
-    
+
     /**
      * Tests that disabled user cannot authenticate.
      * RuntimeException should be thrown.
@@ -229,23 +229,23 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                 // create an user
                 Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
                         getObjectClassInfo(objectClass), getTestName(), 0, true, false);
-                
+
                 // Remove enabled and password_expired, connector must create valid account then
                 for (Iterator<Attribute> i = attrs.iterator(); i.hasNext();) {
                     Attribute attr = i.next();
                     if (attr.is(OperationalAttributes.PASSWORD_EXPIRED_NAME)
                             || attr.is(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME)
                             || attr.is(OperationalAttributes.ENABLE_DATE_NAME)) {
-                        
+
                         if (!ConnectorHelper.isRequired(getObjectClassInfo(objectClass), attr)) {
                             i.remove();
                         }
                     }
                 }
-                
+
                 uid = getConnectorFacade().create(objectClass, attrs,
                         getOperationOptionsByOp(objectClass, CreateApiOp.class));
-                
+
                 // get username
                 String name = (String) getDataProvider().getTestSuiteAttribute(objectClass.getObjectClassValue() + "." + USERNAME_PROP,
                         TEST_NAME);
@@ -259,11 +259,11 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                 if (!uid.equals(newUid) && newUid != null) {
                     uid = newUid;
                 }
-                
+
                 // get the right password
                 GuardedString password = (GuardedString) ConnectorHelper.get(getDataProvider(), getTestName(), GuardedString.class, OperationalAttributes.PASSWORD_NAME, getObjectClassInfo(objectClass).getType(), 0, false);
 
-                // and now authenticate   
+                // and now authenticate
                 assertTrue(authenticateExpectingRuntimeException(objectClass, name, password),"Authenticate must throw for disabled account");
 
             } finally {
@@ -275,7 +275,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
             logger.info("Skipping testOpEnable test.");
         }
     }
-    
+
     /**
      * Tests that PasswordExpiredException is thrown in case PasswordExpirationDate is set to today.
      */
@@ -286,27 +286,27 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
         if (ConnectorHelper.operationsSupported(getConnectorFacade(), objectClass, getAPIOperations())
                 && isOperationalAttributeUpdateable(objectClass, OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME)) {
             Uid uid = null;
-            try {                
+            try {
                 // create an user
                 Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
                         getObjectClassInfo(objectClass), getTestName(), 0, true, false);
-                
+
                 // Remove enabled and password_expired, connector must create valid account then
                 for (Iterator<Attribute> i = attrs.iterator(); i.hasNext();) {
                     Attribute attr = i.next();
                     if (attr.is(OperationalAttributes.ENABLE_NAME)
                             || attr.is(OperationalAttributes.ENABLE_DATE_NAME)
                             || attr.is(OperationalAttributes.PASSWORD_EXPIRED_NAME)) {
-                        
+
                         if (!ConnectorHelper.isRequired(getObjectClassInfo(objectClass), attr)) {
                             i.remove();
                         }
                     }
                 }
-                
+
                 uid = getConnectorFacade().create(objectClass, attrs,
                         getOperationOptionsByOp(objectClass, CreateApiOp.class));
-                
+
                 // get username
                 String name = (String) getDataProvider().getTestSuiteAttribute(objectClass.getObjectClassValue() + "." + USERNAME_PROP,
                         TEST_NAME);
@@ -320,14 +320,14 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                 if (!uid.equals(newUid) && newUid != null) {
                     uid = newUid;
                 }
-                
+
                 // get the right password
                 GuardedString password = (GuardedString) ConnectorHelper.get(getDataProvider(), getTestName(), GuardedString.class, OperationalAttributes.PASSWORD_NAME, getObjectClassInfo(objectClass).getType(), 0, false);
 
                 // and now authenticate
                 PasswordExpiredException pwe = authenticateExpectingPasswordExpired(objectClass, name, password);
                 assertNotNull(pwe,"Authenticate should throw PasswordExpiredException.");
-                
+
                 final String MSG = "PasswordExpiredException contains wrong Uid, expected: %s, returned: %s";
                 assertEquals(uid, pwe.getUid(),String.format(MSG, uid, pwe.getUid()));
 
@@ -341,7 +341,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
             logger.info("Skipping testOpPasswordExpirationDate test.");
         }
     }
-    
+
     /**
      * Tests that PasswordExpiredException is thrown in case PasswordExpired is updated to true.
      */
@@ -352,27 +352,27 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
         if (ConnectorHelper.operationsSupported(getConnectorFacade(), objectClass, getAPIOperations())
                 && isOperationalAttributeUpdateable(objectClass, OperationalAttributes.PASSWORD_EXPIRED_NAME)) {
             Uid uid = null;
-            try {                
+            try {
                 // create an user
                 Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
                         getObjectClassInfo(objectClass), getTestName(), 0, true, false);
-                        
-                // Remove enabled and password_expired, connector must create valid account then  
+
+                // Remove enabled and password_expired, connector must create valid account then
                 for (Iterator<Attribute> i = attrs.iterator(); i.hasNext();) {
                     Attribute attr = i.next();
                     if (attr.is(OperationalAttributes.ENABLE_NAME)
                             || attr.is(OperationalAttributes.ENABLE_DATE_NAME)
                             || attr.is(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME)) {
-                        
+
                         if (!ConnectorHelper.isRequired(getObjectClassInfo(objectClass), attr)) {
                             i.remove();
                         }
                     }
                 }
-                        
+
                 uid = getConnectorFacade().create(objectClass, attrs,
                         getOperationOptionsByOp(objectClass, CreateApiOp.class));
-                
+
                 // get username
                 String name = (String) getDataProvider().getTestSuiteAttribute(objectClass.getObjectClassValue() + "." + USERNAME_PROP,
                         TEST_NAME);
@@ -386,7 +386,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                 if (!uid.equals(newUid) && newUid != null) {
                     uid = newUid;
                 }
-                
+
                 // get the right password
                 GuardedString password = (GuardedString) ConnectorHelper.get(getDataProvider(), getTestName(), GuardedString.class, OperationalAttributes.PASSWORD_NAME, getObjectClassInfo(objectClass).getType(), 0, false);
 
@@ -406,7 +406,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
             throw new SkipException("Skipping testOpPasswordExpired test.");
         }
     }
-    
+
     /**
      * Tests that connector respects order of PASSWORD and PASSWORD_EXPIRED
      * attributes during update. PASSWORD should be performed before
@@ -423,30 +423,30 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                 // create an user
                 Set<Attribute> attrs = ConnectorHelper.getCreateableAttributes(getDataProvider(),
                         getObjectClassInfo(objectClass), getTestName(), 0, true, false);
-                
-                // Remove enabled and password_expired, connector must create valid account then  
+
+                // Remove enabled and password_expired, connector must create valid account then
                 for (Iterator<Attribute> i = attrs.iterator(); i.hasNext();) {
                     Attribute attr = i.next();
                     if (attr.is(OperationalAttributes.ENABLE_NAME)
                             || attr.is(OperationalAttributes.ENABLE_DATE_NAME)
                             || attr.is(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME)) {
-                        
+
                         if (!ConnectorHelper.isRequired(getObjectClassInfo(objectClass), attr)) {
                             i.remove();
                         }
                     }
                 }
-                
+
                 uid = getConnectorFacade().create(objectClass, attrs,
                         getOperationOptionsByOp(objectClass, CreateApiOp.class));
-                
+
                 // get username
                 String name = (String) getDataProvider().getTestSuiteAttribute(objectClass.getObjectClassValue() + "." + USERNAME_PROP,
                         TEST_NAME);
-                                                
+
                 // get new password
                 GuardedString newpassword = (GuardedString) ConnectorHelper.get(getDataProvider(), getTestName(), GuardedString.class, OperationalAttributes.PASSWORD_NAME, UpdateApiOpTests.MODIFIED, getObjectClassInfo(objectClass).getType(), 0, false);
-                
+
                 // change password and expire password
                 Set<Attribute> replaceAttrs = new HashSet<Attribute>();
                 replaceAttrs.add(AttributeBuilder.buildPassword(newpassword));
@@ -455,7 +455,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                 if (ConnectorHelper.isAttrSupported(getObjectClassInfo(objectClass), OperationalAttributes.CURRENT_PASSWORD_NAME)) {
                     // get old password
                     GuardedString password = (GuardedString) ConnectorHelper.get(getDataProvider(), getTestName(), GuardedString.class, OperationalAttributes.PASSWORD_NAME, getObjectClassInfo(objectClass).getType(), 0, false);
-                    
+
                     // CURRENT_PASSWORD must be set to old password
                     replaceAttrs.add(AttributeBuilder.buildCurrentPassword(password));
                 }
@@ -464,9 +464,9 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
                         uid, replaceAttrs, getOperationOptionsByOp(objectClass, UpdateApiOp.class));
 
                 PasswordExpiredException pwe = authenticateExpectingPasswordExpired(objectClass, name, newpassword);
-                
+
                 assertNotNull(pwe,"Authenticate should throw PasswordExpiredException.");
-                
+
             } finally {
                 // delete the object
                 ConnectorHelper.deleteObject(getConnectorFacade(), objectClass, uid,
@@ -477,7 +477,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
             logger.info("Skipping test ''testPasswordBeforePasswordExpired'' for object class "+objectClass);
         }
     }
-    
+
     /**
      * Returns true if operational attribute is supported and updateable.
      */
@@ -499,10 +499,10 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
     public String getTestName() {
         return TEST_NAME;
     }
-    
+
     private long getLongTestParam(String name, long defaultValue) {
     	long longValue = defaultValue;
-    	
+
         try {
             Object valueObject =  getDataProvider().getTestSuiteAttribute(name,
                 TEST_NAME);
@@ -511,21 +511,21 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
             }
         } catch (ObjectNotFoundException ex) {
         }
-        
+
         return longValue;
     }
-    
+
     private void sleepIngoringInterruption(long sleepTime) {
     	try {
     		Thread.sleep(sleepTime);
     	} catch (InterruptedException e) {
-    		
+
     	}
     }
-    
+
     private boolean authenticateExpectingRuntimeException(ObjectClass objectClass, String name, GuardedString password) {
     	boolean authenticateFailed = false;
-    	
+
     	for(int i=0;i<getLongTestParam(MAX_ITERATIONS, 1);i++) {
             try {
                 getConnectorFacade().authenticate(ObjectClass.ACCOUNT, name,password,
@@ -538,13 +538,13 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
         	logger.info(String.format("Retrying authentication - iteration %d", i));
             sleepIngoringInterruption(getLongTestParam(SLEEP_MILLISECONDS, 0));
         }
-    	
+
     	return authenticateFailed;
     }
-    
+
     private boolean authenticateExpectingInvalidCredentials(ObjectClass objectClass, String name, GuardedString password) {
     	boolean authenticateFailed = false;
-    	
+
     	for(int i=0;i<getLongTestParam(MAX_ITERATIONS, 1);i++) {
             try {
                 getConnectorFacade().authenticate(ObjectClass.ACCOUNT, name, password,
@@ -557,14 +557,14 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
         	logger.info(String.format("Retrying authentication - iteration %d", i));
             sleepIngoringInterruption(getLongTestParam(SLEEP_MILLISECONDS, 0));
         }
-    	
+
     	return authenticateFailed;
     }
-    
+
     private Uid authenticateExpectingSuccess(ObjectClass objectClass, String name, GuardedString password) {
     	Uid authenticatedUid = null;
     	RuntimeException lastException = null;
-    	
+
     	for(int i=0;i<getLongTestParam(MAX_ITERATIONS, 1);i++) {
             try {
                 authenticatedUid = getConnectorFacade().authenticate(ObjectClass.ACCOUNT, name,password,
@@ -574,21 +574,21 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
             } catch (RuntimeException e) {
             	lastException = e;
             	logger.info(String.format("Retrying authentication - iteration %d", i));
-                sleepIngoringInterruption(getLongTestParam(SLEEP_MILLISECONDS, 0));                
-            }            
+                sleepIngoringInterruption(getLongTestParam(SLEEP_MILLISECONDS, 0));
+            }
         }
-    	
+
     	if(lastException != null) {
     		throw lastException;
     	}
-    	
+
     	return authenticatedUid;
     }
-    
+
     private PasswordExpiredException authenticateExpectingPasswordExpired(ObjectClass objectClass, String name, GuardedString password) {
     	PasswordExpiredException passwordExpiredException = null;
     	RuntimeException lastException = null;
-    	
+
     	for(int i=0;i<getLongTestParam(MAX_ITERATIONS, 1);i++) {
             try {
                 getConnectorFacade().authenticate(ObjectClass.ACCOUNT, name,password,
@@ -604,11 +604,11 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
         	logger.info(String.format("Retrying authentication - iteration %d", i));
             sleepIngoringInterruption(getLongTestParam(SLEEP_MILLISECONDS, 0));
         }
-    	
+
     	if(lastException != null) {
     		throw lastException;
     	}
-    	
+
     	return passwordExpiredException;
     }
 

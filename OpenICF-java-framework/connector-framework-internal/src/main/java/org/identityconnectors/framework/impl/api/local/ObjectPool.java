@@ -1,28 +1,28 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2011-2013 ForgeRock
  */
-/*
- * Portions Copyrighted  2012 ForgeRock Inc.
- */
+
 package org.identityconnectors.framework.impl.api.local;
 
 import java.io.IOException;
@@ -39,118 +39,115 @@ import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.pooling.ObjectPoolConfiguration;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
-
 public class ObjectPool<T> {
 
-    private static final Log _log = Log.getLog(ObjectPool.class);
+    private static final Log LOG = Log.getLog(ObjectPool.class);
 
     /**
      * Statistics bean
      */
     public static final class Statistics {
-        private final int _numIdle;
-        private final int _numActive;
-        
-        private Statistics(int numIdle, int numActive) {
-            _numIdle = numIdle;
-            _numActive = numActive;
+        private final int numIdle;
+        private final int numActive;
+
+        private Statistics(final int numIdle, final int numActive) {
+            this.numIdle = numIdle;
+            this.numActive = numActive;
         }
-        
+
         /**
          * Returns the number of idle objects
          */
         public int getNumIdle() {
-            return _numIdle;
+            return numIdle;
         }
-        
+
         /**
          * Returns the number of active objects
          */
         public int getNumActive() {
-            return _numActive - _numIdle;
+            return numActive - numIdle;
         }
     }
-    
+
     /**
-     * An object plus additional book-keeping
-     * information about the object
+     * An object plus additional book-keeping information about the object
      */
-    private  class PooledObject implements ObjectPoolEntry<T>{
+    private class PooledObject implements ObjectPoolEntry<T> {
         /**
-         * The underlying object 
+         * The underlying object
          */
-        private final T _object;
-        
+        private final T object;
+
         /**
-         * True if this is currently active, false if
-         * it is idle
+         * True if this is currently active, false if it is idle
          */
-        private boolean _isActive;
-        
+        private boolean isActive;
+
         /**
-         * Last state change (change from active to
-         * idle or vice-versa)
+         * Last state change (change from active to idle or vice-versa)
          */
-        private long _lastStateChangeTimestamp;
-        
+        private long lastStateChangeTimestamp;
+
         /**
          * Is this a freshly created object (never been pooled)?
          */
-        private boolean _isNew;
-        
-        public PooledObject(T object) {
-            _object = object;
-            _isNew = true;
+        private boolean isNew;
+
+        public PooledObject(final T object) {
+            this.object = object;
+            isNew = true;
             touch();
         }
-        
+
         public T getPooledObject() {
-            return _object;
+            return object;
         }
 
         public void close() throws IOException {
             try {
-            returnObject(this);
-            } catch (InterruptedException e){
-                _log.error(e,"Failed to close/dispose PooledObject object");
+                returnObject(this);
+            } catch (InterruptedException e) {
+                LOG.error(e, "Failed to close/dispose PooledObject object");
             }
         }
 
         public boolean isNew() {
-            return _isNew;
+            return isNew;
         }
-        
-        public void setNew(boolean n) {
-            _isNew = n;
+
+        public void setNew(final boolean n) {
+            isNew = n;
         }
-        
-        public void setActive(boolean v) {
-            if (_isActive != v) {
+
+        public void setActive(final boolean v) {
+            if (isActive != v) {
                 touch();
-                _isActive = v;
+                isActive = v;
             }
         }
-        
+
         private void touch() {
-            _lastStateChangeTimestamp = System.currentTimeMillis();
+            lastStateChangeTimestamp = System.currentTimeMillis();
         }
 
         public boolean isOlderThan(long maxAge) {
-            return maxAge < (System.currentTimeMillis() - _lastStateChangeTimestamp);
+            return maxAge < (System.currentTimeMillis() - lastStateChangeTimestamp);
         }
     }
 
     /**
-     * Set contains all the PooledObject was made by this pool.
-     * It contains all idle and borrowed(active) objects.
+     * Set contains all the PooledObject was made by this pool. It contains all
+     * idle and borrowed(active) objects.
      */
     private Set<PooledObject> activeObjects;
 
     /**
-     * Queue of idle objects. The one that has
-     * been idle for the longest comes first in the queue
+     * Queue of idle objects. The one that has been idle for the longest comes
+     * first in the queue
      */
-    private ConcurrentLinkedQueue<PooledObject> _idleObjects =  new ConcurrentLinkedQueue<PooledObject>();
+    private final ConcurrentLinkedQueue<PooledObject> idleObjects =
+            new ConcurrentLinkedQueue<PooledObject>();
 
     /**
      * Limits the maximum available pooled object in the pool.
@@ -169,34 +166,36 @@ public class ObjectPool<T> {
     /**
      * ObjectPoolHandler we use for managing object lifecycle
      */
-    private final ObjectPoolHandler<T> _handler;
-    
+    private final ObjectPoolHandler<T> handler;
+
     /**
      * Configuration for this pool.
      */
-    private final ObjectPoolConfiguration _config;
+    private final ObjectPoolConfiguration poolConfiguration;
 
     /**
      * Is the pool shutdown
      */
-    private volatile boolean _isShutdown = false;
-    
+    private volatile boolean isShutdown = false;
+
     /**
      * Create a new ObjectPool
-     * @param handler Handler for objects
-     * @param config Configuration for the pool
+     *
+     * @param handler
+     *            Handler for objects
+     * @param config
+     *            Configuration for the pool
      */
-    public ObjectPool(ObjectPoolHandler<T> handler,
-            ObjectPoolConfiguration config) {
-        
+    public ObjectPool(final ObjectPoolHandler<T> handler, final ObjectPoolConfiguration config) {
+
         Assertions.nullCheck(handler, "handler");
         Assertions.nullCheck(config, "config");
-        
-        _handler = handler;
-        //clone it
-        _config = _handler.validate(config);
-        activeObjects = new HashSet<PooledObject>(_config.getMaxObjects());
-        totalPermit = new Semaphore(_config.getMaxObjects());
+
+        this.handler = handler;
+        // clone it
+        poolConfiguration = this.handler.validate(config);
+        activeObjects = new HashSet<PooledObject>(poolConfiguration.getMaxObjects());
+        totalPermit = new Semaphore(poolConfiguration.getMaxObjects());
     }
 
     /**
@@ -205,22 +204,23 @@ public class ObjectPool<T> {
      * @return true if the {@link #shutdown()} method was called before.
      */
     public boolean isShutdown() {
-        return _isShutdown;
+        return isShutdown;
     }
 
     /**
      * Return an object to the pool
+     *
      * @param pooled
      */
     private void returnObject(PooledObject pooled) throws InterruptedException {
-        if (isShutdown() || _config.getMaxIdle() < 1) {
+        if (isShutdown() || poolConfiguration.getMaxIdle() < 1) {
             dispose(pooled);
         } else {
             try {
-                for (PooledObject entry : _idleObjects) {
-                    if ((_config.getMaxIdle() <= _idleObjects.size()) || entry
-                            .isOlderThan(_config.getMinEvictableIdleTimeMillis())) {
-                        if (_idleObjects.remove(entry)) {
+                for (PooledObject entry : idleObjects) {
+                    if ((poolConfiguration.getMaxIdle() <= idleObjects.size())
+                            || entry.isOlderThan(poolConfiguration.getMinEvictableIdleTimeMillis())) {
+                        if (idleObjects.remove(entry)) {
                             dispose(entry);
                         }
                     }
@@ -228,14 +228,15 @@ public class ObjectPool<T> {
             } finally {
                 pooled.setActive(false);
                 pooled.setNew(false);
-                _idleObjects.add(pooled);
+                idleObjects.add(pooled);
                 signalNotEmpty();
             }
         }
     }
-    
+
     /**
      * Borrow an object from the pool.
+     *
      * @return An object
      */
     public ObjectPoolEntry borrowObject() {
@@ -244,12 +245,12 @@ public class ObjectPool<T> {
             do {
                 rv = borrowObjectNoTest();
                 try {
-                    _handler.testObject(rv.getPooledObject());
+                    handler.testObject(rv.getPooledObject());
                 } catch (Exception e) {
                     if (null != rv) {
                         dispose(rv);
-                        //if it's a new object, break out of the loop
-                        //immediately
+                        // if it's a new object, break out of the loop
+                        // immediately
                         if (rv.isNew()) {
                             throw ConnectorException.wrap(e);
                         }
@@ -259,16 +260,16 @@ public class ObjectPool<T> {
             } while (null == rv);
             rv.setActive(true);
         } catch (InterruptedException e) {
-            _log.error(e, "Failed to borrow object from pool.");
+            LOG.error(e, "Failed to borrow object from pool.");
             throw ConnectorException.wrap(e);
         }
         return rv;
     }
 
     /**
-     * Borrow an object from the pool, but don't test
-     * it (it gets tested by the caller *outside* of
-     * synchronization)
+     * Borrow an object from the pool, but don't test it (it gets tested by the
+     * caller *outside* of synchronization)
+     *
      * @return the object
      */
     private PooledObject borrowObjectNoTest() throws InterruptedException {
@@ -279,20 +280,22 @@ public class ObjectPool<T> {
         // First borrow from the idle pool
         PooledObject pooledConn = borrowIdleObject();
         if (null == pooledConn) {
-            long nanos = TimeUnit.SECONDS.toNanos(_config.getMaxWait());
+            long nanos = TimeUnit.SECONDS.toNanos(poolConfiguration.getMaxWait());
             final ReentrantLock lock = this.takeLock;
             lock.lockInterruptibly();
             try {
                 do {
                     if (totalPermit.tryAcquire()) {
-                        //If the pool is empty and there are available permits then create a new instance.
+                        // If the pool is empty and there are available permits
+                        // then create a new instance.
                         return makeObject();
                     } else {
                         // Wait for permit or object to became available
                         try {
                             nanos = notEmpty.awaitNanos(nanos);
                         } catch (InterruptedException ie) {
-                            notEmpty.signal(); // propagate to non-interrupted thread
+                            notEmpty.signal(); // propagate to non-interrupted
+                                               // thread
                             throw ConnectorException.wrap(ie);
                         }
 
@@ -316,17 +319,19 @@ public class ObjectPool<T> {
     /**
      * Polls the head object from the queue.
      * <p/>
-     * Polls the head object and before it returns it checks the {@code MaxIdle} size and the {@code
-     * MinEvictableIdleTime} before accepts the object.
+     * Polls the head object and before it returns it checks the {@code MaxIdle}
+     * size and the {@code MinEvictableIdleTime} before accepts the object.
      *
      * @return null if there was no fresh/new object in the queue.
      * @throws InterruptedException
      */
     private PooledObject borrowIdleObject() throws InterruptedException {
-        for (PooledObject pooledConn = _idleObjects.poll(); pooledConn != null; pooledConn = _idleObjects.poll()) {
-            int size = _idleObjects.size();
-            if (_config.getMinIdle() < size + 1 && ((_config.getMaxIdle() < size) || pooledConn
-                    .isOlderThan(_config.getMinEvictableIdleTimeMillis()))) {
+        for (PooledObject pooledConn = idleObjects.poll(); pooledConn != null; pooledConn =
+                idleObjects.poll()) {
+            int size = idleObjects.size();
+            if (poolConfiguration.getMinIdle() < size + 1
+                    && ((poolConfiguration.getMaxIdle() < size) || pooledConn
+                            .isOlderThan(poolConfiguration.getMinEvictableIdleTimeMillis()))) {
                 dispose(pooledConn);
             } else {
                 return pooledConn;
@@ -338,31 +343,31 @@ public class ObjectPool<T> {
     /**
      * Closes any idle objects in the pool.
      * <p/>
-     * Existing active objects will remain alive and
-     * be allowed to shutdown gracefully, but no more 
-     * objects will be allocated.
+     * Existing active objects will remain alive and be allowed to shutdown
+     * gracefully, but no more objects will be allocated.
      */
     public void shutdown() {
-        _isShutdown = true;
-        //just evict idle objects
-        //if there are any active objects still
-        //going, leave them alone so they can return
-        //gracefully
-        for (PooledObject entry = _idleObjects.poll(); entry != null; entry = _idleObjects.poll()) {
+        isShutdown = true;
+        // just evict idle objects
+        // if there are any active objects still
+        // going, leave them alone so they can return
+        // gracefully
+        for (PooledObject entry = idleObjects.poll(); entry != null; entry = idleObjects.poll()) {
             try {
                 dispose(entry);
             } catch (InterruptedException e) {
-                _log.error(e, "Failed to dispose PooledObject object");
+                LOG.error(e, "Failed to dispose PooledObject object");
             }
         }
     }
-    
+
     /**
      * Gets a snapshot of the pool's stats at a point in time.
+     *
      * @return The statistics
      */
     public Statistics getStatistics() {
-        return new Statistics(_idleObjects.size(), activeObjects.size());
+        return new Statistics(idleObjects.size(), activeObjects.size());
     }
 
     /**
@@ -370,12 +375,13 @@ public class ObjectPool<T> {
      * <p/>
      *
      * @throws ConnectorException
-     *         if something happens.
+     *             if something happens.
      */
     private PooledObject makeObject() {
         synchronized (activeObjects) {
-            PooledObject pooledConn = new PooledObject(
-                    (activeObjects.size() > 0) ? _handler.makeObject() : _handler.makeFirstObject());
+            PooledObject pooledConn =
+                    new PooledObject((activeObjects.size() > 0) ? handler.makeObject() : handler
+                            .makeFirstObject());
             activeObjects.add(pooledConn);
             return pooledConn;
         }
@@ -386,20 +392,21 @@ public class ObjectPool<T> {
      *
      * @param entry
      */
-    private void dispose(PooledObject entry) throws InterruptedException {
+    private void dispose(final PooledObject entry) throws InterruptedException {
         final ReentrantLock lock = this.takeLock;
         lock.lockInterruptibly();
         try {
             synchronized (activeObjects) {
-                //Make sure the disposed object was the last item in the activeObjects
+                // Make sure the disposed object was the last item in the
+                // activeObjects
                 if (activeObjects.remove(entry) && activeObjects.isEmpty()) {
-                    _handler.disposeLastObject(entry.getPooledObject());
+                    handler.disposeLastObject(entry.getPooledObject());
                 } else {
-                    _handler.disposeObject(entry.getPooledObject());
+                    handler.disposeObject(entry.getPooledObject());
                 }
             }
         } catch (Exception e) {
-            _log.warn(e, "disposeObject() is not supposed to throw");
+            LOG.warn(e, "disposeObject() is not supposed to throw");
         } finally {
             totalPermit.release();
             notEmpty.signal();

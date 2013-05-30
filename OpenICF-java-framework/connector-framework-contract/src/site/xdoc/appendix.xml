@@ -55,7 +55,7 @@
                 <p>Random generator uses a pattern to generate a random sequence based on given pattern. The supported characters are (can appear in pattern string):</p>
 
                 <ul>
-                    <li>&nbsp;# - numeric</li>
+                    <li> # - numeric</li>
                     <li>a - lowercase letter</li>
                     <li>A - uppercase letter </li>
                     <li>? - lowercase and uppercase letter</li>
@@ -63,7 +63,7 @@
                 </ul>
 Any other character inside the pattern is directly printed to the
 output. 
-                <span style="font-weight: bold;">Backslash &nbsp;</span>( \ )&nbsp;is used to escape any character. For instance pattern "###\\.##" prints a floating point random number
+                <span style="font-weight: bold;">Backslash  </span>( \ ) is used to escape any character. For instance pattern "###\\.##" prints a floating point random number
             </section>
             <section name="A.2 Database table connector Groovy configuration files" href="attachdbtableconfig">
 

@@ -1,30 +1,30 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
 package org.identityconnectors.test.common;
 
-import static org.testng.AssertJUnit.assertEquals;
-import org.testng.annotations.Test;
-import org.testng.AssertJUnit;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertSame;
+
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -42,13 +42,16 @@ import java.util.Properties;
 
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
+import org.testng.annotations.Test;
 
 public class TestHelpersTest {
 
     @Test
     public void testLoadGroovyConfigFileIssue393() {
-        Map<?, ?> props = TestHelpers.loadGroovyConfigFile(TestHelpersTest.class.getResource("properties.groovy"));
-        assertEquals(Integer.class, props.get("prop.integerclass"));
+        Map<?, ?> props =
+                TestHelpers.loadGroovyConfigFile(TestHelpersTest.class
+                        .getResource("properties.groovy"));
+        assertEquals(props.get("prop.integerclass"), Integer.class);
     }
 
     @Test
@@ -56,10 +59,13 @@ public class TestHelpersTest {
         String oldTestConfig = System.getProperty("testConfig");
         System.setProperty("testConfig", "myconfig");
         try {
-            PropertyBag properties1 = TestHelpers.getProperties(DummyConnector.class, new ConfigClassLoader());
+            PropertyBag properties1 =
+                    TestHelpers.getProperties(DummyConnector.class, new ConfigClassLoader());
             checkProperties(properties1);
-            PropertyBag properties2 = TestHelpers.getProperties(DummyConnector.class, new ConfigClassLoader());
-            AssertJUnit.assertSame("TestHepers must create same PropertyBag for same connector", properties1, properties2);
+            PropertyBag properties2 =
+                    TestHelpers.getProperties(DummyConnector.class, new ConfigClassLoader());
+            assertSame(properties1, properties2,
+                    "TestHepers must create same PropertyBag for same connector");
         } finally {
             if (oldTestConfig == null) {
                 System.getProperties().remove("testConfig");
@@ -78,7 +84,7 @@ public class TestHelpersTest {
         valid.setProperty("override1", "bar1");
         valid.setProperty("override2", "bar2");
         valid.setProperty("override3", "bar3");
-        assertEquals("Expected test properties not equal", valid, bag.toMap());
+        assertEquals(bag.toMap(), valid, "Expected test properties not equal");
     }
 
     static class DummyConnector implements Connector {
@@ -161,8 +167,10 @@ public class TestHelpersTest {
 
                     @Override
                     public InputStream getInputStream() throws IOException {
-                        // Here we store properties to stream, we cannot use Properties.store(), because
-                        // this method adds comment # character which would not be parsable by Groovy
+                        // Here we store properties to stream, we cannot use
+                        // Properties.store(), because
+                        // this method adds comment # character which would not
+                        // be parsable by Groovy
                         ByteArrayOutputStream baos = new ByteArrayOutputStream();
                         BufferedWriter bfw = new BufferedWriter(new OutputStreamWriter(baos));
                         for (Map.Entry<Object, Object> entry : properties.entrySet()) {

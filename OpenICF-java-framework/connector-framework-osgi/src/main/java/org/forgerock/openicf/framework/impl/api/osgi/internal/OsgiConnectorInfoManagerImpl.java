@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2011-2013 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -40,6 +40,7 @@ import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.Pair;
 import org.identityconnectors.common.ReflectionUtil;
 import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.common.event.ConnectorEvent;
 import org.identityconnectors.common.event.ConnectorEventHandler;
 import org.identityconnectors.common.event.ConnectorEventPublisher;
 import org.identityconnectors.framework.api.APIConfiguration;
@@ -48,7 +49,6 @@ import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.api.ConnectorInfoManager;
 import org.identityconnectors.framework.api.ConnectorKey;
-import org.identityconnectors.common.event.ConnectorEvent;
 import org.identityconnectors.framework.common.FrameworkUtil;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -72,7 +72,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The OsgiConnectorInfoManagerImpl ...
+ * The OSGi ConnectorInfoManager Implementation ...
  * <p/>
  * 
  * @author Laszlo Hordos
@@ -87,7 +87,7 @@ public class OsgiConnectorInfoManagerImpl extends ConnectorFacadeFactory impleme
     private static final Logger logger = LoggerFactory
             .getLogger(OsgiConnectorInfoManagerImpl.class);
     /**
-     * Connector Cache
+     * Connector Cache.
      */
     private final HashMap<String, Pair<Bundle, List<ConnectorInfo>>> connectorInfoCache =
             new HashMap<String, Pair<Bundle, List<ConnectorInfo>>>();
@@ -175,14 +175,17 @@ public class OsgiConnectorInfoManagerImpl extends ConnectorFacadeFactory impleme
      * {@inheritDoc}
      */
     public void addConnectorEventHandler(ConnectorEventHandler hook) {
-        if (hook == null)
+        if (hook == null) {
             throw new NullPointerException();
+        }
         if (!eventHandlers.contains(hook)) {
-            //TODO: hook is not wired to the listeners and it's not called if a new connector registered meanwhile
-            for (Map.Entry<String, Pair<Bundle, List<ConnectorInfo>>> entry: connectorInfoCache.entrySet()){
-                for (ConnectorInfo connectorInfo: entry.getValue().second) {
-                    hook.handleEvent(buildEvent(ConnectorEvent.CONNECTOR_REGISTERED, entry.getValue().first,
-                            connectorInfo.getConnectorKey()));
+            // TODO: hook is not wired to the listeners and it's not called if a
+            // new connector registered meanwhile
+            for (Map.Entry<String, Pair<Bundle, List<ConnectorInfo>>> entry : connectorInfoCache
+                    .entrySet()) {
+                for (ConnectorInfo connectorInfo : entry.getValue().second) {
+                    hook.handleEvent(buildEvent(ConnectorEvent.CONNECTOR_REGISTERED, entry
+                            .getValue().first, connectorInfo.getConnectorKey()));
                 }
             }
             eventHandlers.addElement(hook);
@@ -210,7 +213,7 @@ public class OsgiConnectorInfoManagerImpl extends ConnectorFacadeFactory impleme
     }
 
     /**
-     * Final pass - create connector infos
+     * Final pass - create connector infos.
      */
     private List<ConnectorInfo> createConnectorInfo(Bundle parsed,
             List<ManifestEntry> manifestEnties) {
@@ -306,7 +309,7 @@ public class OsgiConnectorInfoManagerImpl extends ConnectorFacadeFactory impleme
     }
 
     private ConnectorMessagesImpl loadMessageCatalog(Enumeration<URL> propertyFiles, Bundle loader,
-            Class<? extends Connector> connector) throws ConfigurationException {
+            Class<? extends Connector> connector) {
         try {
             final String[] prefixes = getBundleNamePrefixes(connector);
             final String suffix = ".properties";
@@ -421,11 +424,12 @@ public class OsgiConnectorInfoManagerImpl extends ConnectorFacadeFactory impleme
          */
         Object[] arrLocal = eventHandlers.toArray();
 
-        for (int i = arrLocal.length - 1; i >= 0; i--)
+        for (int i = arrLocal.length - 1; i >= 0; i--) {
             try {
                 ((ConnectorEventHandler) arrLocal[i]).handleEvent(new ConnectorEvent(event));
             } catch (Throwable t) {
                 /* ignore */
             }
+        }
     }
 }

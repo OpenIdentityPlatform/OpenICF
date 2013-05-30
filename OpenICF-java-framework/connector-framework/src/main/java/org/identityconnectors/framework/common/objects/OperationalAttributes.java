@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -29,7 +29,6 @@ import java.util.Set;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.operations.CreateOp;
-
 
 /**
  * Operational attributes have special meaning and cannot be represented by pure
@@ -44,34 +43,45 @@ import org.identityconnectors.framework.spi.operations.CreateOp;
  */
 public final class OperationalAttributes {
 
+    private OperationalAttributes() {
+    }
+
     /**
      * Gets/sets the enable status of an object.
      */
     public static final String ENABLE_NAME = createSpecialName("ENABLE");
+
     /**
      * Gets/sets the enable date for an object.
      */
     public static final String ENABLE_DATE_NAME = createSpecialName("ENABLE_DATE");
+
     /**
      * Gets/sets the disable date for an object.
      */
     public static final String DISABLE_DATE_NAME = createSpecialName("DISABLE_DATE");
+
     /**
      * Gets/sets the lock out attribute for an object.
      */
     public static final String LOCK_OUT_NAME = createSpecialName("LOCK_OUT");
+
     /**
      * Gets/sets the password expiration date for an object.
      */
-    public static final String PASSWORD_EXPIRATION_DATE_NAME = createSpecialName("PASSWORD_EXPIRATION_DATE");
+    public static final String PASSWORD_EXPIRATION_DATE_NAME =
+            createSpecialName("PASSWORD_EXPIRATION_DATE");
+
     /**
      * Gets/sets the password expired for an object.
      */
     public static final String PASSWORD_EXPIRED_NAME = createSpecialName("PASSWORD_EXPIRED");
+
     /**
      * Normally this is a write-only attribute. Sets the password for an object.
      */
     public static final String PASSWORD_NAME = createSpecialName("PASSWORD");
+
     /**
      * Used in conjunction with password to do an account level password change.
      * This is for a non-administrator change of the password and therefore
@@ -82,17 +92,10 @@ public final class OperationalAttributes {
     // =======================================================================
     // Helper Methods..
     // =======================================================================
-    public final static Set<String> OPERATIONAL_ATTRIBUTE_NAMES = 
-        CollectionUtil.newReadOnlySet(
-            LOCK_OUT_NAME, 
-            ENABLE_NAME, 
-            ENABLE_DATE_NAME,
-            DISABLE_DATE_NAME, 
-            PASSWORD_EXPIRATION_DATE_NAME,
-            PASSWORD_NAME, 
-            CURRENT_PASSWORD_NAME, 
-            PASSWORD_EXPIRED_NAME
-        );
+    public final static Set<String> OPERATIONAL_ATTRIBUTE_NAMES = CollectionUtil.newReadOnlySet(
+            LOCK_OUT_NAME, ENABLE_NAME, ENABLE_DATE_NAME, DISABLE_DATE_NAME,
+            PASSWORD_EXPIRATION_DATE_NAME, PASSWORD_NAME, CURRENT_PASSWORD_NAME,
+            PASSWORD_EXPIRED_NAME);
 
     public static Set<String> getOperationalAttributeNames() {
         return CollectionUtil.newReadOnlySet(OPERATIONAL_ATTRIBUTE_NAMES);

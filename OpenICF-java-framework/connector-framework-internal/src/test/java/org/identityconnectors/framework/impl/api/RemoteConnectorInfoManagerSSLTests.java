@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -67,17 +67,19 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
             throw ConnectorException.wrap(e);
         }
     }
-    
+
     private class MyTrustManager implements X509TrustManager {
         private String _keyStoreName;
-        
+
         public MyTrustManager(String name) {
             _keyStoreName = name;
         }
-        
+
         public int hashCode() {
             return 0;
         }
+
+        @Override
         public boolean equals(Object o) {
             if ( o instanceof MyTrustManager ) {
                 MyTrustManager other = (MyTrustManager)o;
@@ -85,18 +87,24 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
             }
             return false;
         }
-        public void checkClientTrusted(X509Certificate[] chain, String authType) 
+
+        @Override
+        public void checkClientTrusted(X509Certificate[] chain, String authType)
             throws CertificateException {
             checkTrusted(chain);
         }
-        public void checkServerTrusted(X509Certificate[] chain, String authType) 
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] chain, String authType)
             throws CertificateException {
-            checkTrusted(chain);            
+            checkTrusted(chain);
         }
+
+        @Override
         public X509Certificate[] getAcceptedIssuers() {
             return new X509Certificate[0];
         }
-        private void checkTrusted(X509Certificate[] chain) 
+        private void checkTrusted(X509Certificate[] chain)
         throws CertificateException {
             KeyStore store = loadKeyStoreResource(_keyStoreName);
             try {
@@ -115,15 +123,19 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
     }
 
     private class MyKeyManager implements X509KeyManager {
+
         private String _keyStoreName;
-        
+
         public MyKeyManager(String name) {
             _keyStoreName = name;
         }
-        
+
+        @Override
         public int hashCode() {
             return 0;
         }
+
+        @Override
         public boolean equals(Object o) {
             if ( o instanceof MyKeyManager ) {
                 MyKeyManager other = (MyKeyManager)o;
@@ -131,12 +143,18 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
             }
             return false;
         }
+
+        @Override
         public String chooseClientAlias(String[] keyType, Principal[] issuers, Socket socket) {
             return "mykey";
         }
+
+        @Override
         public String chooseServerAlias(String keyType, Principal[] issuers, Socket socket) {
-            return "mykey";            
+            return "mykey";
         }
+
+        @Override
         public X509Certificate[] getCertificateChain(String a) {
             try {
                 KeyStore store = loadKeyStoreResource(_keyStoreName);
@@ -148,9 +166,13 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
                 throw ConnectorException.wrap(e);
             }
         }
+
+        @Override
         public String[] getClientAliases(String keyType, Principal[] issuers) {
             return new String[]{"myalias"};
         }
+
+        @Override
         public PrivateKey getPrivateKey(String a) {
             try {
                 KeyStore store = loadKeyStoreResource(_keyStoreName);
@@ -158,23 +180,24 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
                 return (PrivateKey)store.getKey(
                         alias,
                         "changeit".toCharArray());
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 throw ConnectorException.wrap(e);
             }
         }
+
+        @Override
         public String[] getServerAliases(String keyType, Principal[] issuers) {
-            return new String[]{"mykey"};            
+            return new String[]{"mykey"};
         }
 
 
     }
 
-    
+
     private static ConnectorServer _server;
-    
-    
-    
+
+
+
     /**
      * To be overridden by subclasses to get different ConnectorInfoManagers
      * @return
@@ -183,7 +206,7 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
     @Override
     protected ConnectorInfoManager getConnectorInfoManager() throws Exception {
         List<URL> urls = getTestBundles();
-        
+
         final int PORT = 8761;
 
         TrustManager clientTrustManager =
@@ -204,19 +227,19 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
             }
         }
         ConnectorInfoManagerFactory fact = ConnectorInfoManagerFactory.getInstance();
-        
+
         RemoteFrameworkConnectionInfo connInfo = new
         RemoteFrameworkConnectionInfo("127.0.0.1",PORT,
                 new GuardedString("changeit".toCharArray()),
                 true,
                 CollectionUtil.newList(clientTrustManager),
                 60000);
-        
+
         ConnectorInfoManager manager = fact.getRemoteManager(connInfo);
-        
+
         return manager;
     }
-    
+
     @Override
     protected void shutdownConnnectorInfoManager() {
         synchronized (RemoteConnectorInfoManagerSSLTests.class) {
@@ -225,9 +248,9 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
                 _server = null;
             }
         }
-        // These are initialized by the connector server.    
+        // These are initialized by the connector server.
         ConnectorFacadeFactory.getInstance().dispose();
         ConnectorInfoManagerFactory.getInstance().clearLocalCache();
     }
-    
+
 }

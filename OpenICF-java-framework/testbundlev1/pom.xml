@@ -2,7 +2,7 @@
 <!--
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
- Copyright © 2011-2012 ForgeRock AS. All rights reserved.
+ Copyright (c) 2011-2013 ForgeRock AS. All rights reserved.
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -31,7 +31,7 @@
     </parent>
     <artifactId>testbundlev1</artifactId>
     <name>testbundlev1</name>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
 
     <dependencies>
         <dependency>
@@ -42,60 +42,40 @@
         <dependency>
             <groupId>org.forgerock.openicf.framework</groupId>
             <artifactId>testcommonv1</artifactId>
-            <version>${project.version}</version>
+            <version>1.1.2.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
 
     <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <artifactId>maven-site-plugin</artifactId>
-                    <configuration>
-                        <generateReports>false</generateReports>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
         <plugins>
             <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
                 <configuration>
-                    <archive>
-                        <manifest>
-                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-                        </manifest>
-                        <manifestEntries>
-                            <ConnectorBundle-FrameworkVersion>1.0</ConnectorBundle-FrameworkVersion>
-                            <ConnectorBundle-Name>${project.artifactId}</ConnectorBundle-Name>
-                            <ConnectorBundle-Version>1.0.0.0</ConnectorBundle-Version>
-                            <Subversion-Revision>1</Subversion-Revision>
-                        </manifestEntries>
-                    </archive>
+                    <instructions>
+                        <Embed-Dependency>testcommonv1</Embed-Dependency>
+                        <Embed-Directory>lib</Embed-Directory>
+                        <ConnectorBundle-FrameworkVersion>1.0</ConnectorBundle-FrameworkVersion>
+                        <ConnectorBundle-Name>${project.artifactId}</ConnectorBundle-Name>
+                        <ConnectorBundle-Version>1.0.0.0</ConnectorBundle-Version>
+                        <Subversion-Revision>1</Subversion-Revision>
+                    </instructions>
                 </configuration>
             </plugin>
             <plugin>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-dependencies</id>
-                        <phase>process-classes</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.forgerock.openicf.framework</groupId>
-                                    <artifactId>testcommonv1</artifactId>
-                                </artifactItem>
-                            </artifactItems>
-                            <outputDirectory>${project.build.outputDirectory}/lib</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
+                <artifactId>maven-site-plugin</artifactId>
+                <configuration>
+                    <generateReports>false</generateReports>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
             </plugin>
         </plugins>
     </build>

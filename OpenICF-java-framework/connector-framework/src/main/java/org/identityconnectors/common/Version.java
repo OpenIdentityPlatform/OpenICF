@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -28,14 +28,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Encapsulates a version number. A version number is composed of up to four components:
- * major, minor, micro and specification number.
- * 
+ * Encapsulates a version number. A version number is composed of up to four
+ * components: major, minor, micro and specification number.
+ *
  * @since 1.1
  */
 public final class Version implements Comparable<Version> {
 
-    private static final Pattern PATTERN = Pattern.compile("(\\d+)(\\.(\\d+))?(\\.(\\d+))?(\\.(\\d+))?(-\\w+)?");
+    private static final Pattern PATTERN = Pattern
+            .compile("(\\d+)(\\.(\\d+))?(\\.(\\d+))?(\\.(\\d+))?(-\\w+)?");
     // The indexes of the version component groups in the above pattern.
     private static final int[] GROUPS = { 1, 3, 5, 7 };
 
@@ -49,19 +50,20 @@ public final class Version implements Comparable<Version> {
     private final Integer[] components;
 
     /**
-     * Parses the passed version string. The string can contain up to
-     * four numeric component separated by a dot, followed by an alphanumberic
+     * Parses the passed version string. The string can contain up to four
+     * numeric component separated by a dot, followed by an alphanumberic
      * qualifier prepended by a dash. For example, the following are valid
      * versions:
      * <ul>
-     *   <li>1</li>
-     *   <li>1.1</li>
-     *   <li>1.1.0</li>
-     *   <li>1.2.3-alpha</li>
-     *   <li>1.2.3.4-SNAPSHOT</li>
+     * <li>1</li>
+     * <li>1.1</li>
+     * <li>1.1.0</li>
+     * <li>1.2.3-alpha</li>
+     * <li>1.2.3.4-SNAPSHOT</li>
      * </ul>
      *
-     * @param version the version string.
+     * @param version
+     *            the version string.
      */
     public static Version parse(String version) {
         return new Version(parseInternal(version));
@@ -70,14 +72,15 @@ public final class Version implements Comparable<Version> {
     /**
      * Creates a new version from components.
      *
-     * @param components the components
+     * @param components
+     *            the components
      */
     public static Version create(Integer... components) {
         return new Version(components);
     }
 
     private static Integer[] parseInternal(String version) {
-        Assertions.nullCheck(version, "version");        
+        Assertions.nullCheck(version, "version");
         Matcher matcher = PATTERN.matcher(version.trim());
         if (!matcher.matches()) {
             throw new IllegalArgumentException(String.format("Invalid version number %s", version));
@@ -85,11 +88,13 @@ public final class Version implements Comparable<Version> {
         List<Integer> components = new ArrayList<Integer>(MAX_COMPONENTS);
         for (int group : GROUPS) {
             String text = matcher.group(group);
-            if (text != null && !text.startsWith("-")) { // That would be the qualifier.
+            if (text != null && !text.startsWith("-")) { // That would be the
+                                                         // qualifier.
                 try {
                     components.add(Integer.valueOf(text));
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException(String.format("Non-numeric version component %s", text));
+                    throw new IllegalArgumentException(String.format(
+                            "Non-numeric version component %s", text));
                 }
             }
         }
@@ -125,8 +130,8 @@ public final class Version implements Comparable<Version> {
     /**
      * Returns this version number's minor component.
      *
-     * @return the minor component or <code>null</code> if this version
-     *         number doesn't have a minor component.
+     * @return the minor component or <code>null</code> if this version number
+     *         doesn't have a minor component.
      */
     public Integer getMinor() {
         return getComponent(MINOR);
@@ -135,8 +140,8 @@ public final class Version implements Comparable<Version> {
     /**
      * Returns this version number's minor component.
      *
-     * @return the minor component or <code>null</code> if this version
-     *         number doesn't have a minor component.
+     * @return the minor component or <code>null</code> if this version number
+     *         doesn't have a minor component.
      */
     public Integer getMicro() {
         return getComponent(MICRO);
@@ -145,8 +150,8 @@ public final class Version implements Comparable<Version> {
     /**
      * Returns this version number's minor component.
      *
-     * @return the minor component or <code>null</code> if this version
-     *         number doesn't have a revision component.
+     * @return the minor component or <code>null</code> if this version number
+     *         doesn't have a revision component.
      */
     public Integer getRevision() {
         return getComponent(REVISION);
@@ -162,9 +167,9 @@ public final class Version implements Comparable<Version> {
      * @return this version as a string.
      */
     public String getVersion() {
-        StringBuilder buffer = new StringBuilder();
-        appendTo(buffer);
-        return buffer.toString();
+        StringBuilder builder = new StringBuilder();
+        appendTo(builder);
+        return builder.toString();
     }
 
     @Override
@@ -198,18 +203,18 @@ public final class Version implements Comparable<Version> {
 
     @Override
     public String toString() {
-        StringBuilder buf = new StringBuilder();
-        buf.append("Version[");
-        appendTo(buf);
-        buf.append(']');
-        return buf.toString();
+        StringBuilder builder = new StringBuilder();
+        builder.append("Version[");
+        appendTo(builder);
+        builder.append(']');
+        return builder.toString();
     }
 
-    private void appendTo(StringBuilder buffer) {
+    private void appendTo(StringBuilder builder) {
         for (int i = 0; i < components.length; i++) {
-            buffer.append(components[i]);
+            builder.append(components[i]);
             if (i < components.length - 1) {
-                buffer.append('.');
+                builder.append('.');
             }
         }
     }

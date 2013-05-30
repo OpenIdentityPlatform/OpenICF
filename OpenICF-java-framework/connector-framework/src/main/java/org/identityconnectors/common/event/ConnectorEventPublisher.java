@@ -29,7 +29,7 @@ package org.identityconnectors.common.event;
  * version. Use carefully, this package may change before the final 1.2.0.0
  * release.
  * <p/>
- * 
+ *
  * @author Laszlo Hordos
  * @since 1.2
  */
@@ -40,7 +40,7 @@ public interface ConnectorEventPublisher {
      * it is not the same as some observer already in the set. The order in
      * which notifications will be delivered to multiple observers is not
      * specified. See the class comment.
-     * 
+     *
      * @param handler
      *            an observer to be added.
      * @throws NullPointerException
@@ -51,7 +51,7 @@ public interface ConnectorEventPublisher {
     /**
      * Deletes an observer from the set of observers of this object. Passing
      * {@code null} to this method will have no effect.
-     * 
+     *
      * @param handler
      *            the observer to be deleted.
      */

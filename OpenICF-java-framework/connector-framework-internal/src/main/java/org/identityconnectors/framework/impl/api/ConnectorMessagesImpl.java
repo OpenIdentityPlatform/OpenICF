@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -32,7 +32,6 @@ import java.util.ResourceBundle;
 import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.framework.common.objects.ConnectorMessages;
 
-
 public class ConnectorMessagesImpl implements ConnectorMessages {
 
     /**
@@ -42,26 +41,21 @@ public class ConnectorMessagesImpl implements ConnectorMessages {
      * C# and one for Java, I have a single implementation
      * for both.
      */
-    
-    private Map<Locale, Map<String, String>> _catalogs = new HashMap<Locale, Map<String, String>>();
-    
+    private Map<Locale, Map<String, String>> catalogs = new HashMap<Locale, Map<String, String>>();
+
     public ConnectorMessagesImpl() {
     }
-    
+
     public String format(String key, String dflt, Object... args) {
-        if ( key == null ) {
+        if (key == null) {
             return dflt;
         }
-        
-        Locale locale = CurrentLocale.get();
-        if ( locale == null ) {
-            locale = Locale.getDefault();
-        }
-        
-        if ( dflt == null ) {
+        if (dflt == null) {
             dflt = key;
         }
-        
+
+        Locale locale = CurrentLocale.get();
+
         //first look for most-specific catalog
         String message = getCatalogMessage(locale, key);
         if ( message == null ) {
@@ -87,12 +81,12 @@ public class ConnectorMessagesImpl implements ConnectorMessages {
             return formater.format(args, new StringBuffer(), null).toString();
         }
     }
-    
+
     private String getCatalogMessage(Locale locale, String key) {
-        Map<String, String> catalog = _catalogs.get(locale);
+        Map<String, String> catalog = catalogs.get(locale);
         return catalog != null ? catalog.get(key) : null;
     }
-    
+
     private String getFrameworkMessage(Locale locale, String key) {
         final String baseName = ConnectorMessagesImpl.class.getPackage().getName() + ".Messages";
         //this will throw if not there, but there should always be
@@ -100,21 +94,20 @@ public class ConnectorMessagesImpl implements ConnectorMessages {
         final ResourceBundle bundle = ResourceBundle.getBundle(baseName, locale);
         try {
             return bundle.getString(key);
-        }
-        catch (MissingResourceException e) {
+        } catch (MissingResourceException e) {
             return null;
         }
     }
-        
+
     public Map<Locale, Map<String, String>> getCatalogs() {
-        return _catalogs;
+        return catalogs;
     }
-    
+
     public void setCatalogs(Map<Locale, Map<String, String>> catalogs) {
         if ( catalogs == null ) {
             catalogs = new HashMap<Locale, Map<String, String>>();
         }
-        _catalogs = catalogs;
+        this.catalogs = catalogs;
     }
 
 }

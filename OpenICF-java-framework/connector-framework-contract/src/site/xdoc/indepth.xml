@@ -78,7 +78,7 @@ i0.Create.__ACCOUNT__.DEPARTMENT="some value"
                         <tr>
 
                             <td style="vertical-align: top; background-color: rgb(239, 239, 239);">
-                                <span style="font-weight: bold;">&nbsp;Note:</span>
+                                <span style="font-weight: bold;"> Note:</span>
                             </td>
 
                             <td>
@@ -112,16 +112,16 @@ Properties are searched recursively. If a test looks for the property
 and does not find its definition,
 it trys to look for
                 <code>i1.wrong.login</code>.
-If&nbsp;nothing is found, it trys
+If nothing is found, it trys
                 <code>wrong.login</code>
 and so on. After the last iteration, the GroovyDataProvider sets the
 default value according
-to the&nbsp;property type.
+to the property type.
                 <br/>
 
                 <p>Property values are evaluated during the initial
 parsing of the property files. The only exception is if either
-the&nbsp;
+the
                     <span style="font-family: monospace;">Lazy.random()</span>or
                     <span style="font-family: monospace;">Lazy.get()</span>
 static util methods, which specify lazy evaluation, are used. If lazy
@@ -136,7 +136,7 @@ for
                     <code style="color: rgb(51, 51, 255);">connector.i1.wrong.login</code>
 and
 recursively finds the
-                    <strong>value</strong> of&nbsp;
+                    <strong>value</strong> of
                     <code style="color: rgb(0, 102, 0);">wrong.login</code>.
 This
                     <strong>value</strong>
@@ -156,7 +156,7 @@ types
                 <p>Any Java type can be used. (For more information, see
                     <a href="index.html#stdgroovyimports">standard imports</a>.)
 If additional types are needed, these can be imported.
-&nbsp;
+
                 </p>
 
                 <p>
@@ -176,21 +176,21 @@ Tlong= Lazy.random("#####", Long.class)
                 </pre>
 
                 <p>Properties that have not been defined are
-assigned&nbsp;default
+assigned default
 values by GroovyDataProvider. For example, the test looks
-for the&nbsp;undefined property
+for the undefined property
                     <code>i0.Create.__ACCOUNT__.DEPARTMENT</code>
 as follows:
                 </p>
 
                 <ol>
 
-                    <li>The test uses&nbsp;recursive lookup and determines
+                    <li>The test uses recursive lookup and determines
 there
-is no such&nbsp;property&nbsp;
+is no such property
                     </li>
 
-                    <li>Because&nbsp;
+                    <li>Because
                         <code>i0.Create.__ACCOUNT__.DEPARTMENT</code>
 is a String,
 we return the default value
@@ -204,7 +204,7 @@ The expression to the right of the =
 operator
 is dynamically evaluated and a random string is created
 following the pattern four uppercase letters
-concatenated with two digits (for example,&nbsp;JRIW87).
+concatenated with two digits (for example, JRIW87).
                     </li>
 
                 </ol>
@@ -231,7 +231,7 @@ Path
 
                 <p>After it is compiled, the path to the connector distribution
 JAR file
-is&nbsp;
+is
                     <code>${project.name}/dist</code>.
                 </p>
 
@@ -347,7 +347,7 @@ default values
                         </span>. Default values of properties:
                         <code>connector.*</code>,
 and 
-                        <code>testsuite.*</code> is defined as&nbsp;
+                        <code>testsuite.*</code> is defined as
                         <code>ObjectNotFoundException</code>
 for
 integer, float, double and string types to protect generation of random
@@ -361,7 +361,7 @@ values when configuration property definition is
                         <span style="font-weight: bold;">Supplied
 default values
                         </span>. Default values for iterative properties
-(for example,&nbsp;
+(for example,
                         <code>connector.i1.wrong.host</code>)
 are listed here (and in
                         <code>bootstrap.groovy</code>):
@@ -562,7 +562,7 @@ testsuite.Schema.attributes.__ACCOUNT__.oclasses=['__NAME__',
 line)
                     <br/>
 
-&nbsp;&nbsp;
+
 'FIRSTNAME', 'LASTNAME', 'EMAIL', 'DEPARTMENT', 'TITLE', 'AGE',
 'SALARY', 'JPEGPHOTO']
                 </code>
@@ -586,37 +586,37 @@ attribute __NAME__ of object class ACCOUNT for databse table connector
 testsuite.Schema.__NAME__.attribute.__ACCOUNT__.oclasses=[
                     <br/>
 
-&nbsp;&nbsp;
+
 type:
 java.lang.String.class,
                     <br/>
 
-&nbsp;&nbsp;
+
 readable:
 true,
                     <br/>
 
-&nbsp;&nbsp;
+
 createable:
 true,
                     <br/>
 
-&nbsp;&nbsp;
+
 updateable:
 true,
                     <br/>
 
-&nbsp;&nbsp;
+
 required:
 true,
                     <br/>
 
-&nbsp;&nbsp;
+
 multiValue:
 false,
                     <br/>
 
-&nbsp;&nbsp;
+
 returnedByDefault: true
                 </code>
                 <br/>
@@ -645,47 +645,47 @@ classes supported by operations for database table connector
 testsuite.Schema.operations=[
                     <br/>
 
-&nbsp;&nbsp;
+
 GetApiOp: ['__ACCOUNT__'],
                     <br/>
 
-&nbsp;&nbsp;
+
 SchemaApiOp: ['__ACCOUNT__'],
                     <br/>
 
-&nbsp;&nbsp;
+
 ValidateApiOp: ['__ACCOUNT__'],
                     <br/>
 
-&nbsp;&nbsp;
+
 CreateApiOp: ['__ACCOUNT__'],
                     <br/>
 
-&nbsp;&nbsp;
+
 SearchApiOp: ['__ACCOUNT__'],
                     <br/>
 
-&nbsp;&nbsp;
+
 DeleteApiOp: ['__ACCOUNT__'],
                     <br/>
 
-&nbsp;&nbsp;
+
 ScriptOnConnectorApiOp: ['__ACCOUNT__'],
                     <br/>
 
-&nbsp;&nbsp;
+
 UpdateApiOp: ['__ACCOUNT__'],
                     <br/>
 
-&nbsp;&nbsp;
+
 AuthenticationApiOp: ['__ACCOUNT__'],
                     <br/>
 
-&nbsp;&nbsp;
+
 TestApiOp: ['__ACCOUNT__'],
                     <br/>
 
-&nbsp;&nbsp;
+
 SyncApiOp: []
                     <br/>
 
@@ -703,7 +703,7 @@ ScriptOnConnectorApiOpTests Properties
 
 To be able to run ScriptOnResource and/or ScriptOnConnector tests, it
 is
-necessary to set the following properties. If some&nbsp;properties
+necessary to set the following properties. If some properties
 are not
 set, the test is skipped.
                 <pre>
@@ -751,7 +751,7 @@ The
 the
 following
                 <code>OperationOptions</code>. If none are
-set,&nbsp;
+set,
                 <code>OperationOptions</code> is set to
                 <code>null</code>.
 If one or both are set,
@@ -779,11 +779,11 @@ Some tests (Search, Multi) create more than one identity per test:
 
                 <ul>
 
-                    <li>&nbsp;
+                    <li>
                         <code>
                             <span style="color: rgb(51, 102, 255);">i</span>{$identityNumber}
                         </code>
-is the serial number of the identity&nbsp;
+is the serial number of the identity
                         <code></code>
                     </li>
 
@@ -791,13 +791,13 @@ is the serial number of the identity&nbsp;
                         <code>{</code>
                         <code>$test.name}</code>
 is the name of the test (Search, Create, ..., see
-                        <code>*ApiOpTests#TEST_NAME</code>)&nbsp;
+                        <code>*ApiOpTests#TEST_NAME</code>)
                         <code></code>
                     </li>
 
                     <li>
                         <code>{$oclass.name}</code> is the type of
-object class&nbsp;
+object class
                         <code></code>
                     </li>
 
@@ -835,7 +835,7 @@ the
                 <code>UpdateApiOpTests</code>
 is created identity
 updated with new values. The following properties are used
-for&nbsp;those new values:
+for those new values:
                 <pre>
 ${attribute.name}=${value}
                     <span class="codeComment">// old value</span>

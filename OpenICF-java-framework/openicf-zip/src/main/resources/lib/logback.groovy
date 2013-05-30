@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011 ForgeRock Inc. All Rights Reserved
+// Copyright (c) 2011-2013 ForgeRock Inc. All Rights Reserved
 
 // The contents of this file are subject to the terms
 // of the Common Development and Distribution License

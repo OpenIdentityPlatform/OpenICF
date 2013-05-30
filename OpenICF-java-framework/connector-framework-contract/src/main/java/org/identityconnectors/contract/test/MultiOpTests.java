@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  *
@@ -71,7 +71,7 @@ import org.testng.log4testng.Logger;
 
 /**
  * Tests which use many APIOperations to do the test scenario
- * 
+ *
  * @author Tomas Knappek
  * @author Zdenek Louzensky
  */
@@ -82,7 +82,7 @@ public class MultiOpTests extends ObjectClassRunner {
      * Logging..
      */
     private static final Logger logger = Logger.getLogger(ValidateApiOpTests.class);
-    
+
     public static final String TEST_NAME = "Multi";
     private static final String MODIFIED = "modified";
     private static final String LOCKOUT_PREFIX = "lockout";
@@ -91,26 +91,26 @@ public class MultiOpTests extends ObjectClassRunner {
     /**
      * Scenario test - test positive cases. {@inheritDoc} Test assumes that
      * Schema,Create,Search and Delete are supported operations.
-     * 
+     *
      */
     @Override
     protected void testRun(ObjectClass objectClass) {
         // initial number of objects to be created
         final int recordCount = 10;
-        
+
         List<Uid> uids = new ArrayList<Uid>();
         List<Set<Attribute>> attrs = new ArrayList<Set<Attribute>>();
 
         // objects stored in connector resource before test
-        Map<Uid, ConnectorObject> coBeforeTest = null;        
-        
+        Map<Uid, ConnectorObject> coBeforeTest = null;
+
         // sync variables
         SyncToken token = null;
         List<SyncDelta> deltas = null;
-        
+
         // variable for assert messages
         String msg = null;
-        
+
         try {
             /* SearchApiOp - get objects stored in connector resource before test */
             if (ConnectorHelper.operationSupported(getConnectorFacade(), objectClass, SearchApiOp.class)) {
@@ -118,7 +118,7 @@ public class MultiOpTests extends ObjectClassRunner {
                 coBeforeTest = ConnectorHelper.search2Map(getConnectorFacade(), objectClass,
                         null, getOperationOptionsByOp(objectClass, SearchApiOp.class));
             }
-            
+
             /* SyncApiOp - start synchronizing from now */
             if (ConnectorHelper.operationSupported(getConnectorFacade(), objectClass, SyncApiOp.class)) {
                 // start synchronizing from now
@@ -133,8 +133,8 @@ public class MultiOpTests extends ObjectClassRunner {
                 assertNotNull(luid,"Create returned null uid.");
                 attrs.add(attr);
                 uids.add(luid);
-            }            
-            
+            }
+
             /* GetApiOp - check that objects were created with attributes as requested */
             if (ConnectorHelper.operationSupported(getConnectorFacade(), objectClass, GetApiOp.class)) {
                 for (int i = 0; i < recordCount; i++) {
@@ -175,7 +175,7 @@ public class MultiOpTests extends ObjectClassRunner {
             /* DeleteApiOp - delete one object */
             Uid deleteUid = uids.remove(0);
             attrs.remove(0);
-            
+
             // delete it and check that it was really deleted
             ConnectorHelper.deleteObject(getConnectorFacade(), objectClass, deleteUid, true,
                     getOperationOptionsByOp(objectClass, DeleteApiOp.class));
@@ -201,22 +201,22 @@ public class MultiOpTests extends ObjectClassRunner {
                         else {
                             assertTrue(coBeforeTest.containsValue(obj),
                                     "Search with null filter returned unexpected object " + obj + ", objects were compared by Uid.");
-                        }                        
+                        }
                     }
                 }
             }
 
             /* UpdateApiOp - update one object */
             Uid updateUid = null;
-            Set<Attribute> replaceAttributes = null; 
+            Set<Attribute> replaceAttributes = null;
             if (ConnectorHelper.operationSupported(getConnectorFacade(), objectClass, UpdateApiOp.class)) {
                 updateUid = uids.remove(0);
                 attrs.remove(0);
                 replaceAttributes = ConnectorHelper.getUpdateableAttributes(getDataProvider(),
                         getObjectClassInfo(objectClass), getTestName(), MODIFIED, 0, false, false);
-                
+
                 // update only in case there is something to update
-                if (replaceAttributes.size() > 0) {                    
+                if (replaceAttributes.size() > 0) {
                     // Uid must be present in attributes
                     replaceAttributes.add(updateUid);
                     Uid newUid = getConnectorFacade().update(
@@ -224,11 +224,11 @@ public class MultiOpTests extends ObjectClassRunner {
                             updateUid,
                             AttributeUtil.filterUid(replaceAttributes), getOperationOptionsByOp(objectClass, UpdateApiOp.class));
                     replaceAttributes.remove(updateUid);
-                    
+
                     if (!updateUid.equals(newUid)) {
                         updateUid = newUid;
                     }
-                    
+
                     attrs.add(replaceAttributes);
                     uids.add(updateUid);
                 }
@@ -243,14 +243,14 @@ public class MultiOpTests extends ObjectClassRunner {
                                     + coFound.size());
                     ConnectorHelper.checkObject(getObjectClassInfo(objectClass), coFound.get(0),
                             replaceAttributes);
-                }                
+                }
             }
-            
+
             /* SyncApiOp - sync after one delete and one possible update */
             if (ConnectorHelper.operationSupported(getConnectorFacade(), objectClass, SyncApiOp.class)) {
                 if (SyncApiOpTests.canSyncAfterOp(DeleteApiOp.class)
                         || SyncApiOpTests.canSyncAfterOp(UpdateApiOp.class)) {
-                    
+
                     deltas = ConnectorHelper.sync(getConnectorFacade(), objectClass,
                             token, getOperationOptionsByOp(objectClass, SyncApiOp.class));
                     // one deleted, one updated (if existed attributes to
@@ -268,11 +268,11 @@ public class MultiOpTests extends ObjectClassRunner {
                         else {
                             ConnectorHelper.checkSyncDelta(getObjectClassInfo(objectClass), delta,
                                     deleteUid, null, SyncDeltaType.DELETE, true);
-                        }                        
-                        
+                        }
+
                         // remember last token
                         token = delta.getToken();
-                    }                      
+                    }
                 }
             }
 
@@ -296,7 +296,7 @@ public class MultiOpTests extends ObjectClassRunner {
                 ConnectorObject obj = getConnectorFacade().getObject(objectClass, createUid,
                         getOperationOptionsByOp(objectClass, GetApiOp.class));
                 assertNotNull(obj,"Unable to retrieve newly created object");
-    
+
                 // compare requested attributes to retrieved attributes
                 ConnectorHelper.checkObject(getObjectClassInfo(objectClass), obj, attrs11);
             }
@@ -320,7 +320,7 @@ public class MultiOpTests extends ObjectClassRunner {
 
                     for (int i = 0; i < deltas.size(); i++) {
                         SyncDelta delta = deltas.get(i);
-                                                
+
                         if (SyncDeltaType.CREATE_OR_UPDATE.equals(delta.getDeltaType())) {
                             ConnectorHelper.checkSyncDelta(getObjectClassInfo(objectClass), delta,
                                     createUid, attrs11, SyncDeltaType.CREATE_OR_UPDATE, true);
@@ -329,13 +329,13 @@ public class MultiOpTests extends ObjectClassRunner {
                             ConnectorHelper.checkSyncDelta(getObjectClassInfo(objectClass), delta,
                                     deleteUid, null, SyncDeltaType.DELETE, true);
                         }
-                        
+
                         // remember last token
                         token = delta.getToken();
-                    }                    
+                    }
                 }
             }
-            
+
             /* DeleteApiOp - delete all objects */
             for (int i = 0; i < uids.size(); i++) {
                 ConnectorHelper.deleteObject(getConnectorFacade(), objectClass, uids.get(i),
@@ -357,7 +357,7 @@ public class MultiOpTests extends ObjectClassRunner {
                 }
             }
 
-        } finally {           
+        } finally {
             // cleanup
             for (Uid deluid : uids) {
                 try {
@@ -370,9 +370,9 @@ public class MultiOpTests extends ObjectClassRunner {
         }
 
     }
-    
+
     /**
-     * {@inheritDoc}     
+     * {@inheritDoc}
      */
     @Override
     public Set<Class<? extends APIOperation>> getAPIOperations() {
@@ -384,7 +384,7 @@ public class MultiOpTests extends ObjectClassRunner {
     }
 
     /**
-     * {@inheritDoc}     
+     * {@inheritDoc}
      */
     @Override
     public String getTestName() {
@@ -396,9 +396,9 @@ public class MultiOpTests extends ObjectClassRunner {
      * OPERATIONAL ATTRIBUTES TESTS:
      * *****************************
      */
-    
+
     /**
-     * Tests ENABLE attribute contract 
+     * Tests ENABLE attribute contract
      */
     @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testEnableOpAttribute(ObjectClass objectClass) {
@@ -417,21 +417,21 @@ public class MultiOpTests extends ObjectClassRunner {
             logger.info("----------------------------------------------------------------------------------------");
         }
     }
-    
+
     /**
-     * Tests ENABLE_DATE attribute contract 
+     * Tests ENABLE_DATE attribute contract
      */
     @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testEnableDateOpAttribute(ObjectClass objectClass) {
         if (isObjectClassSupported(objectClass)
                 && ConnectorHelper.isCRU(getObjectClassInfo(objectClass), OperationalAttributes.ENABLE_DATE_NAME)) {
-        	
+
         	// try to retrieve the optional contract tests property for setting the dates, otherwise use the default values
         	//"now"
             final long createValue = getDateProperty(OperationalAttributes.ENABLE_DATE_NAME, (new Date()).getTime(), false);
             //"1.1.1970"
             final long updateValue = getDateProperty(OperationalAttributes.ENABLE_DATE_NAME, (new Date(0)).getTime(), true);
-            
+
             // check ENABLE_DATE for "now" and "1.1.1970"
             checkOpAttribute(objectClass, OperationalAttributes.ENABLE_DATE_NAME, createValue,
                     updateValue, Long.class);
@@ -442,22 +442,22 @@ public class MultiOpTests extends ObjectClassRunner {
             logger.info("----------------------------------------------------------------------------------------");
         }
     }
-    
+
     /**
-     * Tests DISABLE_DATE attribute contract 
+     * Tests DISABLE_DATE attribute contract
      */
     @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testDisableDateOpAttribute(ObjectClass objectClass) {
         if (isObjectClassSupported(objectClass)
                 && ConnectorHelper.isCRU(getObjectClassInfo(objectClass), OperationalAttributes.DISABLE_DATE_NAME)) {
 
-        	
+
         	// try to retrieve the optional contract tests property for setting the dates, otherwise use the default values
         	//"now"
             final long createValue = getDateProperty(OperationalAttributes.DISABLE_DATE_NAME, (new Date()).getTime(), false);
             //"1.1.1970"
             final long updateValue = getDateProperty(OperationalAttributes.DISABLE_DATE_NAME, (new Date(0)).getTime(), true);
-            
+
 			// check DISABLE_DATE for "now" and "1.1.1970"
             checkOpAttribute(objectClass, OperationalAttributes.DISABLE_DATE_NAME, createValue ,
                     updateValue, Long.class);
@@ -468,10 +468,10 @@ public class MultiOpTests extends ObjectClassRunner {
             logger.info("----------------------------------------------------------------------------------------");
         }
     }
-    
+
     /**
 	 * helper method for {@link MultiOpTests#testDisableDateOpAttribute(ObjectClass)}
-	 * 
+	 *
 	 * @param defaultValue
 	 *            in case property is not found, this value is used
 	 * @param isModified
@@ -482,7 +482,7 @@ public class MultiOpTests extends ObjectClassRunner {
 			if (isModified) {
 				propName = String.format("%s.%s", MODIFIED, propName);
 			}
-			
+
 			Object obj = getDataProvider().getTestSuiteAttribute(propName, getTestName());
 			if (obj instanceof Long) {
 				return (Long) obj;
@@ -498,7 +498,7 @@ public class MultiOpTests extends ObjectClassRunner {
 
 
 	/**
-     * Tests LOCK_OUT attribute contract 
+     * Tests LOCK_OUT attribute contract
      */
     @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testLockOutOpAttribute(ObjectClass objectClass) {
@@ -517,9 +517,9 @@ public class MultiOpTests extends ObjectClassRunner {
             logger.info("----------------------------------------------------------------------------------------");
         }
     }
-    
+
     /**
-     * Tests PASSWORD_EXPIRATION_DATE attribute contract 
+     * Tests PASSWORD_EXPIRATION_DATE attribute contract
      */
     @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testPasswordExpirationDateOpAttribute(ObjectClass objectClass) {
@@ -536,9 +536,9 @@ public class MultiOpTests extends ObjectClassRunner {
             logger.info("----------------------------------------------------------------------------------------");
         }
     }
-    
+
     /**
-     * Tests PASSWORD_EXPIRED attribute contract 
+     * Tests PASSWORD_EXPIRED attribute contract
      */
     @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testPasswordExpiredOpAttribute(ObjectClass objectClass) {
@@ -554,9 +554,9 @@ public class MultiOpTests extends ObjectClassRunner {
             logger.info("----------------------------------------------------------------------------------------");
         }
     }
-    
+
     /**
-     * Tests PASSWORD_CHANGE_INTERVAL attribute contract 
+     * Tests PASSWORD_CHANGE_INTERVAL attribute contract
      */
     @Test(dataProvider = OBJECTCLASS_DATAPROVIDER)
     public void testPasswordChangeIntervalPredAttribute(ObjectClass objectClass) {
@@ -575,7 +575,7 @@ public class MultiOpTests extends ObjectClassRunner {
 
     /**
      * Method to check the attrName's attribute contract
-     * 
+     *
      * @param attrName attribute to be checked
      * @param createValue value used for create
      * @param updateValue value used for update
@@ -611,10 +611,10 @@ public class MultiOpTests extends ObjectClassRunner {
 
             // clear attrs
             attrs.clear();
-            
+
             //add update value
             attrs.add(AttributeBuilder.build(attrName, updateValue));
-            
+
             if (addPassword) {
                 // add the same password, that was created before in the following update
                 GuardedString password = (GuardedString) ConnectorHelper.get(getDataProvider(),
@@ -627,7 +627,7 @@ public class MultiOpTests extends ObjectClassRunner {
 
             // add uid for update
             attrs.add(uid);
-            
+
             //update
             uid = getConnectorFacade().update(objectClass, uid,
                     AttributeUtil.filterUid(attrs), null);
@@ -639,7 +639,7 @@ public class MultiOpTests extends ObjectClassRunner {
             ConnectorHelper.deleteObject(getConnectorFacade(), objectClass, uid, false, null);
         }
     }
-    
+
     /**
      * {@link MultiOpTests#checkOpAttribute(ObjectClass, String, Object, Object, Class, boolean)}
      */
@@ -650,7 +650,7 @@ public class MultiOpTests extends ObjectClassRunner {
     /**
      * Gets the ConnectorObject and check the value of attribute is as
      * expected
-     * 
+     *
      * @param uid Uid of object to get
      * @param expValue expected value of the attribute
      * @param type expected type of the attribute
@@ -669,13 +669,13 @@ public class MultiOpTests extends ObjectClassRunner {
                 assertEquals(type, val.getClass(),String.format(
                         "Operational attribute %s value type must be %s, but is %s.", attrName,
                         type.getSimpleName(), val.getClass().getSimpleName()));
-                
+
                 assertEquals(expValue, val,String.format("Operational attribute %s value is different, expected: %s, returned: %s",
                         attrName, expValue, val));
             }
         }
     }
-    
+
     /**
      * Tests GROUPS attribute contract
      */
@@ -694,7 +694,7 @@ public class MultiOpTests extends ObjectClassRunner {
             try {
                 // create 1st group
                 Set<Attribute> groupAttrs1 = ConnectorHelper.getCreateableAttributes(
-                        getDataProvider(), groupInfo, getTestName(), 0, true, false);                
+                        getDataProvider(), groupInfo, getTestName(), 0, true, false);
                 groupUid1 = getConnectorFacade().create(ObjectClass.GROUP, groupAttrs1, null);
 
                 // create an account with GROUPS set to created GROUP
@@ -708,14 +708,14 @@ public class MultiOpTests extends ObjectClassRunner {
                 }
                 accountAttrs1.add(AttributeBuilder.build(PredefinedAttributes.GROUPS_NAME,
                         AttributeUtil.getStringValue(groupUid1)));
-                
+
                 accountUid1 = getConnectorFacade().create(ObjectClass.ACCOUNT, accountAttrs1, null);
 
                 // build attributes to get
-                OperationOptionsBuilder oob = new OperationOptionsBuilder();                                
+                OperationOptionsBuilder oob = new OperationOptionsBuilder();
                 oob.setAttributesToGet(ConnectorHelper.getReadableAttributesNames(accountInfo));
                 OperationOptions attrsToGet = oob.build();
-                
+
                 // get the account to make sure it exists now
                 ConnectorObject obj = getConnectorFacade().getObject(ObjectClass.ACCOUNT,
                         accountUid1, attrsToGet);
@@ -728,7 +728,7 @@ public class MultiOpTests extends ObjectClassRunner {
                         UpdateApiOp.class) && ConnectorHelper.isMultiValue(accountInfo, PredefinedAttributes.GROUPS_NAME)) {
                     // create another group
                     Set<Attribute> groupAttrs2 = ConnectorHelper.getCreateableAttributes(
-                            getDataProvider(), groupInfo, getTestName(), 1, true, false);                    
+                            getDataProvider(), groupInfo, getTestName(), 1, true, false);
                     groupUid2 = getConnectorFacade().create(ObjectClass.GROUP, groupAttrs2, null);
 
                     // update account to contain both groups
@@ -762,8 +762,8 @@ public class MultiOpTests extends ObjectClassRunner {
             logger.info("----------------------------------------------------------------------------------------");
         }
     }
-    
-    
+
+
     /**
      * Returns ObjectClassInfo stored in connector schema for object class.
      */
@@ -774,16 +774,16 @@ public class MultiOpTests extends ObjectClassRunner {
                 return oinfo;
             }
         }
-        
+
         return null;
     }
-    
+
     /**
      * <p>
      * Returns true if tests are configured to lockout tests
      * {@link MultiOpTests#testLockOutOpAttribute(ObjectClass)}.
      * </p>
-     * 
+     *
      * <p>
      * Returns true if tests are configured to test connector's lockout
      * operation. Some connectors implement lockout but are capable

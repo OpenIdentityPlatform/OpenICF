@@ -1,11 +1,11 @@
 package org.identityconnectors.common.logging.impl;
 
-import static org.testng.AssertJUnit.assertSame;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNotSame;
-import static org.testng.AssertJUnit.assertNotNull;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.testng.Assert.assertSame;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotSame;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 import org.testng.annotations.Test;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -44,9 +44,9 @@ public class JDKLoggerTests {
             }
         });
         logger.log(JDKLoggerTests.class, "method1", Level.ERROR, "Msg", new Exception());
-        assertEquals("Must log one record", 1, records.size());
-        assertEquals("method1", records.get(0).getSourceMethodName());
-        assertEquals("Msg", records.get(0).getMessage());
+        assertEquals(records.size(), 1, "Must log one record");
+        assertEquals(records.get(0).getSourceMethodName(), "method1");
+        assertEquals(records.get(0).getMessage(), "Msg");
         assertNotNull(records.get(0).getThrown());
     }
 
@@ -56,15 +56,15 @@ public class JDKLoggerTests {
         Logger jdkLogger = logger.getJDKLogger(JDKLoggerTests.class.getName());
 
         LogManager.getLoggingMXBean().setLoggerLevel(JDKLoggerTests.class.getName(), java.util.logging.Level.INFO.getName());
-        assertEquals(java.util.logging.Level.INFO, jdkLogger.getLevel());
+        assertEquals(jdkLogger.getLevel(), java.util.logging.Level.INFO);
         assertTrue(logger.isLoggable(JDKLoggerTests.class, Level.INFO));
 
         LogManager.getLoggingMXBean().setLoggerLevel(JDKLoggerTests.class.getName(), java.util.logging.Level.WARNING.getName());
-        assertEquals(java.util.logging.Level.WARNING, jdkLogger.getLevel());
+        assertEquals(jdkLogger.getLevel(), java.util.logging.Level.WARNING);
         assertTrue(logger.isLoggable(JDKLoggerTests.class, Level.WARN));
 
         LogManager.getLoggingMXBean().setLoggerLevel(JDKLoggerTests.class.getName(), java.util.logging.Level.INFO.getName());
-        assertEquals(java.util.logging.Level.INFO, jdkLogger.getLevel());
+        assertEquals(jdkLogger.getLevel(), java.util.logging.Level.INFO);
         assertFalse(logger.isLoggable(JDKLoggerTests.class, Level.OK));
 
         LogManager.getLoggingMXBean().setLoggerLevel(JDKLoggerTests.class.getName(), java.util.logging.Level.OFF.getName());

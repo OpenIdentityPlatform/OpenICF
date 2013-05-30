@@ -31,7 +31,7 @@ package org.identityconnectors.framework.spi;
  * <p/>
  * A connector instance can create a custom connection pool and share it with
  * the other instances withing the same pool.
- * 
+ *
  * @author Laszlo Hordos
  * @since 1.2
  */

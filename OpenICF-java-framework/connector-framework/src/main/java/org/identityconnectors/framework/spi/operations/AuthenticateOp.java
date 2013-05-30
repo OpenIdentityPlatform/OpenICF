@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -49,21 +49,24 @@ public interface AuthenticateOp extends SPIOperation {
      * informative exception as possible. In that regards there are several
      * exceptions provided in the exceptions package. For instance one of the
      * most common is {@link InvalidPasswordException}.
-     * @param objectClass The object class to use for authenticate.
-     * Will typically be an account. Must not be null.
+     *
+     * @param objectClass
+     *            The object class to use for authenticate. Will typically be an
+     *            account. Must not be null.
      * @param username
      *            the name based credential for authentication.
      * @param password
      *            the password based credential for authentication.
      * @param options
      *            additional options that impact the way this operation is run.
-     *            If the caller passes null, the framework will convert this into
-     *            an empty set of options, so SPI need not worry
-     *            about this ever being null.
+     *            If the caller passes null, the framework will convert this
+     *            into an empty set of options, so SPI need not worry about this
+     *            ever being null.
      * @return Uid The uid of the account that was used to authenticate
      * @throws RuntimeException
-     *             iff native authentication fails. If a native exception if
+     *             if native authentication fails. If a native exception if
      *             available attempt to throw it.
      */
-    Uid authenticate(ObjectClass objectClass, final String username, final GuardedString password, final OperationOptions options);
+    Uid authenticate(ObjectClass objectClass, final String username, final GuardedString password,
+            final OperationOptions options);
 }

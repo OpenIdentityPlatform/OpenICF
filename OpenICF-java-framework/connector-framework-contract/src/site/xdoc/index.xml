@@ -49,13 +49,13 @@ scripting language (parsed by
                 <a href="http://groovy.codehaus.org/ConfigSlurper">ConfigSlurper</a>).
 Groovy features a Java-like and most Java code will work in Groovy
 without
-modification.&nbsp;For
+modification. For
 more information on Groovy, see
                 <a href="http://groovy.codehaus.org/">http://groovy.codehaus.org</a>.
                 <a name="Introduction_to_Groovy"></a>
                 <section name="1.1 Introduction to Groovy" href="Support">
                     <p>Take a moment to familiarize yourself with the
-following&nbsp;Groovy constructs.
+following Groovy constructs.
                     </p>
 
                     <table style="text-align: left; width: 90%;" border="1" cellpadding="8" cellspacing="0">
@@ -72,10 +72,10 @@ following&nbsp;Groovy constructs.
 
                             <tr>
 
-                                <td>To create a map&nbsp;</td>
+                                <td>To create a map </td>
 
                                 <td>
-                                    <pre>map = [key1 :&nbsp;value1, key2 : value2]</pre>
+                                    <pre>map = [key1 : value1, key2 : value2]</pre>
 
                                 </td>
 
@@ -88,7 +88,7 @@ following&nbsp;Groovy constructs.
                                 <td>
                                     <pre>list = [item1, item2]</pre>
 
-&nbsp;
+
                                 </td>
 
                             </tr>
@@ -131,7 +131,7 @@ Note: These methods are evaluated at the time of the user query.
                             <tr>
 
                                 <td style="vertical-align: top; background-color: rgb(239, 239, 239);">
-                                    <span style="font-weight: bold;">&nbsp;Tip:</span>&nbsp;
+                                    <span style="font-weight: bold;"> Tip:</span>
                                 </td>
 
                                 <td>
@@ -165,21 +165,21 @@ statements inside of curly braces.
 
                                     </a>
                                     <pre>testsuite {
-                                        <br/>&nbsp;&nbsp;&nbsp;
-                                        <span class="codeComment">// path to bundle jar - property is set by ant - leave it as it is</span>
-                                        <br/>&nbsp;&nbsp;&nbsp; bundleJar=System.getProperty("bundleJar")
                                         <br/>
-                                        <br/>&nbsp;&nbsp;&nbsp;
+                                        <span class="codeComment">// path to bundle jar - property is set by ant - leave it as it is</span>
+                                        <br/>    bundleJar=System.getProperty("bundleJar")
+                                        <br/>
+                                        <br/>
                                         <span class="codeComment">// ValidateApiOpTests</span>
-                                        <br/>&nbsp;&nbsp;&nbsp; Validate.iterations="3"
+                                        <br/>    Validate.iterations="3"
                                         <br/>}
                                     </pre>
 
-There is a limitation, however: A&nbsp;prefix can only be defined
+There is a limitation, however: A prefix can only be defined
 this way once per configuration file. So in the previous example, there
 cannot be more than one block in the file with
                                     <span class="literal" style="font-family: monospace;">testsuite</span> as
-the prefix. For example, the following is invalid:&nbsp;
+the prefix. For example, the following is invalid:
                                     <span style="font-family: monospace;" class="literal">testsuite{...}
 testsuite{...}
                                     </span>
@@ -204,7 +204,7 @@ Also note that
 of properties in Groovy scripts are defined implicitly, so
 there is no need to type
                     <span class="literal">java.util.Map</span>
-or&nbsp;
+or
                     <span class="literal">List</span>.
                     <br/>
 
@@ -272,12 +272,12 @@ follows:
                     <ul>
 
                         <li>Set
-                            <span style="font-family: monospace;" class="literal">connectorName</span>&nbsp;to
-a full qualified name of your connector e.g &nbsp;
+                            <span style="font-family: monospace;" class="literal">connectorName</span> to
+a full qualified name of your connector e.g
                             <span style="font-family: monospace;" class="literal">org.identityconnectors.ldap.LDAPConnector</span>
                         </li>
 
-                        <li>Replace&nbsp;
+                        <li>Replace
                             <span style="font-family: monospace;" class="literal">{</span>
                             <span style="font-family: monospace;" class="literal">$</span>
                             <span style="font-family: monospace;" class="literal">configuration}</span>
@@ -301,10 +301,10 @@ configuration, the folder name would be
                             <tr>
 
                                 <td style="vertical-align: top; background-color: rgb(239, 239, 239);">
-                                    <span style="font-weight: bold;">&nbsp;Note:</span>
+                                    <span style="font-weight: bold;"> Note:</span>
                                 </td>
 
-                                <td>Properties&nbsp;defined
+                                <td>Properties defined
 in
                                     <span style="color: rgb(0, 153, 0);">Main</span>
 configuration files
@@ -327,7 +327,7 @@ JARs
 Proprietary JARs should not be checked in
 to a versioning system. They
 are located in
-                    <span style="font-family: monospace;" class="literal">&nbsp;/lib</span>&nbsp;directories
+                    <span style="font-family: monospace;" class="literal"> /lib</span> directories
 in configuration-specific folders:
                     <br/>
 
@@ -367,7 +367,7 @@ configuration files
 
                     <ol>
 
-                        <li>Define the&nbsp;
+                        <li>Define the
                             <span style="font-family: monospace;" class="literal">testsuite.bundleJar</span>
 property:
                             <br/>
@@ -376,7 +376,7 @@ property:
 
                             <span class="literal codeComment">//
 path to
-bundleJar&nbsp;property is set by ant - leave it as it is
+bundleJar property is set by ant - leave it as it is
                             </span>
                             <br/>
 
@@ -452,7 +452,7 @@ testsuite.connectorName="org.identityconnectors.mysqluser.MySQLUserConnector"
                         </li>
 
                         <li>Define
-                            <span class="literal">connector.{$property.name}</span>&nbsp;for
+                            <span class="literal">connector.{$property.name}</span> for
 each annotated connector configuration bean property (in the class
                             <span class="literal">Configuration</span>
 interface).
@@ -509,12 +509,12 @@ connector.password="
 
                                         <td>
                                             <span style="background-color: rgb(204, 204, 204); font-weight: bold;">For
-more information&nbsp;
+more information
                                             </span>
-                                            <div style="margin: 10px;">See&nbsp;
+                                            <div style="margin: 10px;">See
                                                 <a href="indepth.html#connconfprop">connector
 configuration properties
-                                                </a> and&nbsp;
+                                                </a> and
                                                 <a href="indepth.html#properties">defining
 properties
                                                 </a> in the
@@ -523,7 +523,7 @@ Guide
                                                 </span> to learn
                                                 <ul>
 
-                                                    <li>how&nbsp;properties lookup works</li>
+                                                    <li>how properties lookup works</li>
 
                                                     <li>how to define properties values using
                                                         <span class="literal">static/lazy
@@ -531,7 +531,7 @@ init
                                                         </span>
                                                     </li>
 
-                                                    <li>what&nbsp;properties types are possible</li>
+                                                    <li>what properties types are possible</li>
 
                                                 </ul>
 
@@ -572,44 +572,44 @@ Validate.iterations="3"
                                 <br/>
 
                                 <span class="codeComment">// Incorrect
-connector&nbsp;configuration for ValidateApiOpTests
+connector configuration for ValidateApiOpTests
                                 </span>
                                 <br/>
 
                                 <br/>
 
-&nbsp;&nbsp;
+
                                 <span class="codeComment">//
 The following
 property will be used in the first iteration (must be at least one)
                                 </span>
                                 <br/>
 
-&nbsp;&nbsp;connector.i1.wrong.host=""
+  connector.i1.wrong.host=""
                                 <br/>
 
                                 <br/>
 
-&nbsp;&nbsp;
+
                                 <span class="codeComment">//
 The following
 property will be used in the second iteration 
                                 </span>
                                 <br/>
 
-&nbsp;&nbsp;connector.i2.wrong.login=""
+  connector.i2.wrong.login=""
                                 <br/>
 
                                 <br/>
 
-&nbsp;&nbsp;
+
                                 <span class="codeComment">//
 The following
 property will be used in the third iteration
                                 </span>
                                 <br/>
 
-&nbsp;&nbsp;connector.i3.wrong.password=""
+  connector.i3.wrong.password=""
                             </div>
 
                             <br/>
@@ -673,7 +673,7 @@ line)
                                         </span>
                                         <br/>
 
-&nbsp;&nbsp;
+
 'FIRSTNAME', 'LASTNAME', 'EMAIL', 'DEPARTMENT', 'TITLE', 'AGE',
 'SALARY', 'JPEGPHOTO']
                                     </div>
@@ -701,37 +701,37 @@ connector
 testsuite.Schema.__NAME__.attribute.__ACCOUNT__.oclasses=[
                                     <br/>
 
-&nbsp;&nbsp;
+
 type:
 java.lang.String.class,
                                     <br/>
 
-&nbsp;&nbsp;
+
 readable:
 true,
                                     <br/>
 
-&nbsp;&nbsp;
+
 createable:
 true,
                                     <br/>
 
-&nbsp;&nbsp;
+
 updateable:
 true,
                                     <br/>
 
-&nbsp;&nbsp;
+
 required:
 true,
                                     <br/>
 
-&nbsp;&nbsp;
+
 multiValue:
 false,
                                     <br/>
 
-&nbsp;&nbsp;
+
 returnedByDefault: true
                                     <br/>
 
@@ -758,47 +758,47 @@ classes supported by operations for database table connector
 Schema.operations=[
                                         <br/>
 
-&nbsp;&nbsp;
+
 GetApiOp: ['__ACCOUNT__'],
                                         <br/>
 
-&nbsp;&nbsp;
+
 SchemaApiOp: ['__ACCOUNT__'],
                                         <br/>
 
-&nbsp;&nbsp;
+
 ValidateApiOp: ['__ACCOUNT__'],
                                         <br/>
 
-&nbsp;&nbsp;
+
 CreateApiOp: ['__ACCOUNT__'],
                                         <br/>
 
-&nbsp;&nbsp;
+
 SearchApiOp: ['__ACCOUNT__'],
                                         <br/>
 
-&nbsp;&nbsp;
+
 DeleteApiOp: ['__ACCOUNT__'],
                                         <br/>
 
-&nbsp;&nbsp;
+
 ScriptOnConnectorApiOp: ['__ACCOUNT__'],
                                         <br/>
 
-&nbsp;&nbsp;
+
 UpdateApiOp: ['__ACCOUNT__'],
                                         <br/>
 
-&nbsp;&nbsp;
+
 AuthenticationApiOp: ['__ACCOUNT__'],
                                         <br/>
 
-&nbsp;&nbsp;
+
 TestApiOp: ['__ACCOUNT__'],
                                         <br/>
 
-&nbsp;&nbsp;
+
 SyncApiOp: []
                                         <br/>
 
@@ -851,7 +851,7 @@ will compile the Framework and Connector classes.
                         <li>To run tests, type the command
                             <code>ant
 run-contract-tests
-                            </code>&nbsp;from the connector directory
+                            </code> from the connector directory
 (for example, 
                             <code>/bundles/fooconnector</code>).
                         </li>
@@ -871,7 +871,7 @@ subdirectory.
                                 <tr>
 
                                     <td style="vertical-align: top; background-color: rgb(239, 239, 239);">
-                                        <span style="font-weight: bold;">&nbsp;Note:</span>
+                                        <span style="font-weight: bold;"> Note:</span>
                                     </td>
 
                                     <td>
@@ -884,7 +884,7 @@ directory. This
 newly created JAR file contains
 all the connector classes (except JUnit tests), all JARs from the
                                         <code>${bundle.dir}/lib</code>
-directory, and proprietary JARs from the&nbsp;
+directory, and proprietary JARs from the
                                         <code>${user.home}/.connectors/bundle-name/lib</code>
                                         <a href="#Proprietary_jars">
                                             <code></code>
@@ -935,16 +935,16 @@ names must be valid Java identifiers.
                                             <span style="font-weight: bold;">Verify the following standard
 Groovy imports
                                             </span>.
-Groovy contract tests support the creation of&nbsp;special object
+Groovy contract tests support the creation of special object
 types. By default Groovy imports six packages and two
 classes:
                                             <span class="literal">java.lang.*,
-&nbsp;java.util.*, &nbsp;java.io.*,
-&nbsp;java.net.*, &nbsp;groovy.lang.*, groovy.util.*,
+ java.util.*,  java.io.*,
+ java.net.*,  groovy.lang.*, groovy.util.*,
 java.math.BigInteger, java.math.BigDecimal
-                                            </span>. &nbsp;If
-you want &nbsp;to use additional types, add an
-import statement your&nbsp;configuration file.
+                                            </span>.  If
+you want  to use additional types, add an
+import statement your configuration file.
                                             <br/>
 
                                             <br/>
@@ -959,7 +959,7 @@ the following
 imports
                                             </span>. Don't forget to add the following
 imports when you use Lazy property evaluation. (You can optionally
-add&nbsp;additional types.)
+add additional types.)
                                             <br/>
 
                                             <pre>import org.identityconnectors.contract.data.groovy.Lazy;
@@ -998,7 +998,7 @@ contract tests
 are built by
                             <span class="literal">
 ant
-                            </span>.&nbsp;A&nbsp;
+                            </span>. A
                             <span class="literal">/dist</span>
 folder is created as a result.
                         </li>
@@ -1007,7 +1007,7 @@ folder is created as a result.
                             <code>fooconnector/build.xml</code>
 or
                             <code>fooconnector/build.properties</code> contains
-the line&nbsp;
+the line
                             <code style="font-weight: bold;">contracts.run=true</code>.
 This line enables contract tests to start.
                         </li>
@@ -1016,7 +1016,7 @@ This line enables contract tests to start.
 
                     <h4>Basic Usage</h4>
 
-Run the contract test suite&nbsp;from&nbsp;the connector
+Run the contract test suite from the connector
 directory with the
 following command:
                     <br/>
@@ -1087,7 +1087,7 @@ runner
 
                     <br/>
 
-                    <p>On the&nbsp;
+                    <p>On the
                         <strong>Arguments</strong> tab,
 add the following
                         <strong>VM
@@ -1098,14 +1098,14 @@ arguments
                     <ul>
 
                         <li>
-                            <code>-DtestConfig=mysql</code> &nbsp;-
-Optional argument. Only set if&nbsp;you want to run particular
+                            <code>-DtestConfig=mysql</code>  -
+Optional argument. Only set if you want to run particular
 configuration.
                         </li>
 
                         <li>
                             <code>-DconnectorName=org.identityconnectors.databasetable.DatabaseTableConnector</code>
-&nbsp;- This is the project name from 
+ - This is the project name from
                             <code>build.properties</code>.
                         </li>
 
@@ -1113,7 +1113,7 @@ configuration.
                             <code>-</code>
                             <code>DbundleJar=dist/org.identityconnectors.databasetable-1.0.x.jar</code>
                             <code></code>
-&nbsp;- Set the relative path to the tested connector JAR. The path
+ - Set the relative path to the tested connector JAR. The path
 is relative to the working directory.
                         </li>
 
@@ -1121,12 +1121,12 @@ is relative to the working directory.
                             <code>-DbundleName=org.identityconnectors.databasetable</code>
                             <code></code>
                             <code></code>
-&nbsp;- Set the bundle name, that should be specified in 
+ - Set the bundle name, that should be specified in
                             <code>build.properties</code>.
                         </li>
 
                         <li>
-                            <code>-DbundleVersion=1.0.x&nbsp;</code>-
+                            <code>-DbundleVersion=1.0.x </code>-
 Set the version in the following format: 
                             <code>MAJOR.MINOR.SVN_REVISION</code>
                             <br/>
@@ -1136,7 +1136,7 @@ In case
 
                     </ul>
 
-                    <span style="color: rgb(255, 0, 0); font-weight: bold;">Important!</span>&nbsp;
+                    <span style="color: rgb(255, 0, 0); font-weight: bold;">Important!</span>
 Do not forget to change the
                     <strong>Working directory</strong>
 to the tested connector project.
@@ -1185,9 +1185,9 @@ proprietary JARs.
                                         <li>Add
                                             <code>testsuite.serverHost,
 testsuite.serverPort, testsuite.serverKey
-                                            </code> to the private configuration &nbsp;(
+                                            </code> to the private configuration  (
                                             <code>${user.home}/.connectors/bundle-name/config/${connectorName}/config-private/config.groovy</code>).
-The rest of configuration is the same as&nbsp;
+The rest of configuration is the same as
                                             <a href="#A_Configuring_a_local_Connector">steps 2 through
 5 for local connectors
                                             </a>.
@@ -1214,7 +1214,7 @@ directory
                                             <br/>
                                         </pre>
 
-                                        <li>Run the test using&nbsp;
+                                        <li>Run the test using
                                             <code>ant
 run-cs-contract-tests
                                             </code>
@@ -1237,33 +1237,33 @@ run-cs-contract-tests
                     </span>In this
 section
                     <span style="font-style: italic;">Connector Server</span>
-(formely called Gateway) will be referred as the&nbsp;Server. The
+(formely called Gateway) will be referred as the Server. The
 Server contains connectors that are called by the connector
 framework through a
                     <span style="font-style: italic;">remote
 facade
-                    </span>. (The facade&nbsp;handles remote calls
+                    </span>. (The facade handles remote calls
 transparently.)
                     <br/>
 
                     <br/>
 
-                    <p>First&nbsp;please review the
+                    <p>First please review the
                         <a href="#Quick_start_guide">Quick
 start guide
-                        </a>&nbsp;(if you have not done that already).
+                        </a> (if you have not done that already).
                     </p>
 
                     <p>
 To run tests against connectors running behind the Server, it is
 necessary
-to create a new configuration. (The&nbsp;
+to create a new configuration. (The
                         <code>framework/test-contract</code>
 project is recommended, but it is generally possible to configure it
 for every project
 which has
                         <code>build.xml</code> and imports
-                        <code>connector_build.xml</code>.)&nbsp;
+                        <code>connector_build.xml</code>.)
                     </p>
 
                     <p>Set the following properties in
@@ -1322,12 +1322,12 @@ a connector behind the Server, because there must be
 running
                         <code>ant</code>
 from within
-                        <code>framework/test-contract</code>.&nbsp;This
-step is necessary because&nbsp;the
+                        <code>framework/test-contract</code>. This
+step is necessary because the
                         <code>run-contract-tests</code>
-ant target&nbsp;creates a new
+ant target creates a new
                         <code>connector.jar</code>
-that includes&nbsp;proprietary JARs. This is not necessary for
+that includes proprietary JARs. This is not necessary for
 Connector Server
 testing and it will be updated in the near future.
                         <br/>
@@ -1339,13 +1339,13 @@ in the
 properties, and that the connector is running behind the Server. All
 libraries
 upon which the connector depends must be available to the
-Server&nbsp;on the
+Server on the
 Server classpath.
                         <br/>
 
                         <br/>
 
-Tests are run&nbsp;from the bundle's
+Tests are run from the bundle's
 directory using command:
                     </p>
 

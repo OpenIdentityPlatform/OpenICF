@@ -1,31 +1,31 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
 package org.identityconnectors.common;
 
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
-import org.testng.annotations.Test;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,11 +33,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 
-import org.identityconnectors.common.CollectionUtil;
-import org.identityconnectors.common.IOUtil;
-import org.identityconnectors.common.StringPrintWriter;
-import org.identityconnectors.common.StringUtil;
-
+import org.testng.annotations.Test;
 
 public class StringUtilTests {
     // ========================================================================
@@ -54,13 +50,13 @@ public class StringUtilTests {
         final String TEST3 = "fa323jf4af";
 
         test = StringUtil.indexOfDigit(TEST0);
-        assertEquals(-1, test);
+        assertEquals(test, -1);
         test = StringUtil.indexOfDigit(TEST1);
-        assertEquals(-1, test);
+        assertEquals(test, -1);
         test = StringUtil.indexOfDigit(TEST2);
-        assertEquals(4, test);
+        assertEquals(test, 4);
         test = StringUtil.indexOfDigit(TEST3);
-        assertEquals(2, test);
+        assertEquals(test, 2);
     }
 
     /**
@@ -74,13 +70,13 @@ public class StringUtilTests {
         final String TEST3 = "32323aa323435";
 
         test = StringUtil.indexOfNonDigit(TEST0);
-        assertEquals(-1, test);
+        assertEquals(test, -1);
         test = StringUtil.indexOfNonDigit(TEST1);
-        assertEquals(-1, test);
+        assertEquals(test, -1);
         test = StringUtil.indexOfNonDigit(TEST2);
-        assertEquals(5, test);
+        assertEquals(test, 5);
         test = StringUtil.indexOfNonDigit(TEST3);
-        assertEquals(5, test);
+        assertEquals(test, 5);
     }
 
     /**
@@ -95,12 +91,14 @@ public class StringUtilTests {
     public void testStripXmlAttribute() {
         final String DATA[][] = {
                 // source, attr, result
-                { null, null, null }, { "attr='fads'", "attr", "" },
-                { "at1='fasd' at1=''", "at1", "" } };
+                { null, null, null },
+                { "attr='fads'", "attr", "" },
+                { "at1='fasd' at1=''", "at1", "" }
+        };
         String tst = null;
         for (int i = 0; i < DATA.length; i++) {
             tst = StringUtil.stripXmlAttribute(DATA[i][0], DATA[i][1]);
-            assertEquals(DATA[i][2], tst);
+            assertEquals(tst, DATA[i][2]);
         }
     }
 
@@ -116,7 +114,7 @@ public class StringUtilTests {
         String tmp;
         for (String[] data : TESTS) {
             tmp = StringUtil.stripNewlines(data[0]);
-            assertEquals(data[1], tmp);
+            assertEquals(tmp, data[1]);
         }
     }
 
@@ -137,7 +135,7 @@ public class StringUtilTests {
         String tst = null;
         for (int i = 0; i < DATA.length; i++) {
             tst = StringUtil.stripXmlComments(DATA[i][0]);
-            assertEquals(DATA[i][1], tst);
+            assertEquals(tst, DATA[i][1]);
         }
     }
 
@@ -176,7 +174,7 @@ public class StringUtilTests {
         assertTrue(StringUtil.isNotBlank("bob"));
         assertTrue(StringUtil.isNotBlank("  bob  "));
     }
-    
+
     private static final String TEMPLATE = "StringUtilTests_template.js";
 
     private static final String PAUSE_TEXT = "pause.text";
@@ -229,7 +227,7 @@ public class StringUtilTests {
     @Test
     public void testParseLine() {
         List<Object> values;
-        values = CollectionUtil.<Object>newReadOnlyList("bob", "george", 4, 23, 230948);
+        values = CollectionUtil.<Object> newReadOnlyList("bob", "george", 4, 23, 230948);
         parseLineTest(TEXTQ, FEILDD, values);
 
     }
@@ -238,7 +236,7 @@ public class StringUtilTests {
     public void testRandomParseLine() {
         // try random stuff..
         final Random r = new Random(17);
-        final char[] replace = new char[] {TEXTQ, FEILDD};
+        final char[] replace = new char[] { TEXTQ, FEILDD };
         for (int i = 0; i < 100; i++) {
             final List<Object> values = randomList(r, 10, replace, 'a');
             parseLineTest(TEXTQ, FEILDD, values);
@@ -249,18 +247,16 @@ public class StringUtilTests {
      * Tests the {@link StringUtil#parseLine(String, char, char)} methods on the
      * arguments provided.
      */
-    static void parseLineTest(final char textQ, final char fieldD,
-            final List<Object> values) {
+    static void parseLineTest(final char textQ, final char fieldD, final List<Object> values) {
         String csv = createCSVLine(textQ, fieldD, values);
         List<String> parsedValues = StringUtil.parseLine(csv, fieldD, textQ);
-        assertEquals(toStringList(values), parsedValues);
+        assertEquals(parsedValues, toStringList(values));
     }
 
     /**
      * Create a CSV line based on the values provided.
      */
-    static String createCSVLine(final char textQ, final char fieldD,
-            final List<Object> values) {
+    static String createCSVLine(final char textQ, final char fieldD, final List<Object> values) {
         StringBuilder bld = new StringBuilder();
         boolean first = true;
         for (Object o : values) {
@@ -294,8 +290,8 @@ public class StringUtilTests {
         return ret;
     }
 
-    static List<Object> randomList(final Random r, final int size,
-            final char[] invalid, final char valid) {
+    static List<Object> randomList(final Random r, final int size, final char[] invalid,
+            final char valid) {
         List<Object> ret = new ArrayList<Object>();
         for (int i = 0; i < size; i++) {
             final Object add;
@@ -315,27 +311,27 @@ public class StringUtilTests {
         }
         return ret;
     }
-    
+
     @Test
     public void testRandomString() {
         // just execute it because it doesn't really matter..
         String s = StringUtil.randomString();
         assertTrue(s.length() < 257);
     }
-    
+
     @Test
     public void testEndsWith() {
         assertTrue(StringUtil.endsWith("afdsf", 'f'));
         assertFalse(StringUtil.endsWith(null, 'f'));
         assertFalse(StringUtil.endsWith("fadsfkj", 'f'));
     }
-    
+
     private static final String PROP_TEST[] = {
       "# Some comment",
       "prop1=SomeProp",
       "prop2=OtherProp"
     };
-    
+
     @Test
     public void testToProperties() {
         StringPrintWriter wrt = new StringPrintWriter();
@@ -343,7 +339,7 @@ public class StringUtilTests {
         wrt.flush();
         String inp = wrt.getString();
         Properties prop = StringUtil.toProperties(inp);
-        assertEquals("SomeProp", prop.get("prop1"));
-        assertEquals("OtherProp", prop.get("prop2"));
+        assertEquals(prop.get("prop1"), "SomeProp");
+        assertEquals(prop.get("prop2"), "OtherProp");
     }
 }

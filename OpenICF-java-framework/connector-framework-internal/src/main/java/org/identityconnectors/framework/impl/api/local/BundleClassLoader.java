@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -30,36 +30,36 @@ import java.util.List;
 import java.util.Map;
 
 class BundleClassLoader extends URLClassLoader {
-    
+
     private static final String FRAMEWORK_PACKAGE = "org.identityconnectors.framework";
-    
+
     // The set of packages a connector is allowed to access from the
     // parent class loader.
-    private static final String [] ALLOWED_FRAMEWORK_PACKAGES = {
-        FRAMEWORK_PACKAGE+".api",
-        FRAMEWORK_PACKAGE+".common",
-        FRAMEWORK_PACKAGE+".spi"
+    private static final String[] ALLOWED_FRAMEWORK_PACKAGES = {
+        FRAMEWORK_PACKAGE + ".api",
+        FRAMEWORK_PACKAGE + ".common",
+        FRAMEWORK_PACKAGE + ".spi"
     };
-    
+
     private final Map<String, String> nativeLibs;
-    
-    public BundleClassLoader(List<URL> urls, Map<String, String> nativeLibs, ClassLoader parent) {
+
+    public BundleClassLoader(final List<URL> urls, final Map<String, String> nativeLibs, final ClassLoader parent) {
         super(urls.toArray(new URL[urls.size()]), parent);
         this.nativeLibs = newReadOnlyMap(nativeLibs);
     }
-    
+
     /**
      * Overrides <code>super.loadClass()</code>, to change loading model to
      * child-first and to restrict access to certain classes.
      */
     @Override
-    public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+    public Class<?> loadClass(final String name, final boolean resolve) throws ClassNotFoundException {
         Class<?> c = findLoadedClass(name);
         if (c == null) {
             try {
                 //try to find it in the bundle's class loader
                 //anything there is considered accessible
-                c = findClass(name);     
+                c = findClass(name);
             }
             catch (ClassNotFoundException ex) {
                 // Hack for OIM: the framework is loaded by OIM's tcADPClassLoader, whose
@@ -72,7 +72,7 @@ class BundleClassLoader extends URLClassLoader {
                 // The hack sets the thread context class loader to its initial value when
                 // BundleClassLoader delegates to its parent.
                 if (runningInOIM()) {
-                    List<ClassLoader> loaders = ThreadClassLoaderManager.getInstance().popAll();
+                    final List<ClassLoader> loaders = ThreadClassLoaderManager.getInstance().popAll();
                     try {
                         // check parents class loader
                         c = getParent().loadClass(name);
@@ -91,22 +91,22 @@ class BundleClassLoader extends URLClassLoader {
         }
         if (resolve) {
             resolveClass(c);
-        }        
+        }
         return c;
     }
 
     private boolean runningInOIM() {
-        ClassLoader loader = this.getClass().getClassLoader();
+        final ClassLoader loader = this.getClass().getClassLoader();
         return loader != null && loader.getClass().getName().contains("tcADPClassLoader");
     }
 
-    private void checkAccessAllowed(Class<?> c) throws ClassNotFoundException {
-        String name = c.getName();
-        if ( !name.startsWith(FRAMEWORK_PACKAGE+".") ) {
+    private void checkAccessAllowed(final Class<?> c) throws ClassNotFoundException {
+        final String name = c.getName();
+        if (!name.startsWith(FRAMEWORK_PACKAGE + ".")) {
             return;
         }
         for (String pack : ALLOWED_FRAMEWORK_PACKAGES) {
-            if ( name.startsWith(pack+".") ) {
+            if (name.startsWith(pack + ".")) {
                 return;
             }
         }
@@ -117,8 +117,7 @@ class BundleClassLoader extends URLClassLoader {
     }
 
     @Override
-    protected String findLibrary(String libname) {
+    protected String findLibrary(final String libname) {
         return nativeLibs.get(System.mapLibraryName(libname));
     }
-    
 }

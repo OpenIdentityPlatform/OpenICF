@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -39,7 +39,7 @@ import org.identityconnectors.framework.impl.api.ConnectorMessagesImpl;
 import org.identityconnectors.framework.impl.api.remote.RemoteConnectorInfoImpl;
 
 /**
- * Serialization handles for APIConfiguration and dependencies
+ * Serialization handles for APIConfiguration and dependencies.
  */
 class APIConfigurationHandlers {
 
@@ -47,13 +47,11 @@ class APIConfigurationHandlers {
 
     static {
 
-        HANDLERS.add(
-
-        new AbstractObjectSerializationHandler(ObjectPoolConfiguration.class,
+        HANDLERS.add(new AbstractObjectSerializationHandler(ObjectPoolConfiguration.class,
                 "ObjectPoolConfiguration") {
 
-            public Object deserialize(ObjectDecoder decoder) {
-                ObjectPoolConfiguration rv = new ObjectPoolConfiguration();
+            public Object deserialize(final ObjectDecoder decoder) {
+                final ObjectPoolConfiguration rv = new ObjectPoolConfiguration();
                 rv.setMaxObjects(decoder.readIntField("maxObjects", rv.getMaxObjects()));
                 rv.setMaxIdle(decoder.readIntField("maxIdle", rv.getMaxIdle()));
                 rv.setMaxWait(decoder.readLongField("maxWait", rv.getMaxWait()));
@@ -63,7 +61,7 @@ class APIConfigurationHandlers {
                 return rv;
             }
 
-            public void serialize(Object object, ObjectEncoder encoder) {
+            public void serialize(final Object object, final ObjectEncoder encoder) {
                 ObjectPoolConfiguration val = (ObjectPoolConfiguration) object;
                 encoder.writeIntField("maxObjects", val.getMaxObjects());
                 encoder.writeIntField("maxIdle", val.getMaxIdle());
@@ -78,7 +76,7 @@ class APIConfigurationHandlers {
         HANDLERS.add(new AbstractObjectSerializationHandler(ResultsHandlerConfiguration.class,
                 "ResultsHandlerConfiguration") {
 
-            public Object deserialize(ObjectDecoder decoder) {
+            public Object deserialize(final ObjectDecoder decoder) {
                 ResultsHandlerConfiguration rv = new ResultsHandlerConfiguration();
                 rv.setEnableNormalizingResultsHandler(decoder.readBooleanField(
                         "enableNormalizingResultsHandler", rv.isEnableNormalizingResultsHandler()));
@@ -92,7 +90,7 @@ class APIConfigurationHandlers {
                 return rv;
             }
 
-            public void serialize(Object object, ObjectEncoder encoder) {
+            public void serialize(final Object object, final ObjectEncoder encoder) {
                 ResultsHandlerConfiguration val = (ResultsHandlerConfiguration) object;
                 encoder.writeBooleanField("enableNormalizingResultsHandler", val
                         .isEnableNormalizingResultsHandler());
@@ -105,12 +103,11 @@ class APIConfigurationHandlers {
             }
         });
 
-        HANDLERS.add(
-
-        new AbstractObjectSerializationHandler(ConfigurationPropertyImpl.class,
+        HANDLERS.add(new AbstractObjectSerializationHandler(ConfigurationPropertyImpl.class,
                 "ConfigurationProperty") {
-            public Object deserialize(ObjectDecoder decoder) {
-                ConfigurationPropertyImpl rv = new ConfigurationPropertyImpl();
+
+            public Object deserialize(final ObjectDecoder decoder) {
+                final ConfigurationPropertyImpl rv = new ConfigurationPropertyImpl();
 
                 rv.setOrder(decoder.readIntField("order", 0));
                 rv.setRequired(decoder.readBooleanField("required", false));
@@ -128,8 +125,8 @@ class APIConfigurationHandlers {
                 return rv;
             }
 
-            public void serialize(Object object, ObjectEncoder encoder) {
-                ConfigurationPropertyImpl val = (ConfigurationPropertyImpl) object;
+            public void serialize(final Object object, final ObjectEncoder encoder) {
+                final ConfigurationPropertyImpl val = (ConfigurationPropertyImpl) object;
                 encoder.writeIntField("order", val.getOrder());
                 encoder.writeBooleanField("confidential", val.isConfidential());
                 encoder.writeBooleanField("required", val.isRequired());
@@ -141,17 +138,16 @@ class APIConfigurationHandlers {
                 encoder.writeObjectField("value", val.getValue(), false);
                 encoder.writeObjectField("operations", val.getOperations(), true);
             }
-
         });
 
-        HANDLERS.add(
-
-        new AbstractObjectSerializationHandler(ConfigurationPropertiesImpl.class,
+        HANDLERS.add(new AbstractObjectSerializationHandler(ConfigurationPropertiesImpl.class,
                 "ConfigurationProperties") {
-            public Object deserialize(ObjectDecoder decoder) {
-                ConfigurationPropertiesImpl rv = new ConfigurationPropertiesImpl();
-                List<ConfigurationPropertyImpl> props = new ArrayList<ConfigurationPropertyImpl>();
-                int count = decoder.getNumSubObjects();
+
+            public Object deserialize(final ObjectDecoder decoder) {
+                final ConfigurationPropertiesImpl rv = new ConfigurationPropertiesImpl();
+                final List<ConfigurationPropertyImpl> props =
+                        new ArrayList<ConfigurationPropertyImpl>();
+                final int count = decoder.getNumSubObjects();
                 for (int i = 0; i < count; i++) {
                     props.add((ConfigurationPropertyImpl) decoder.readObjectContents(i));
                 }
@@ -159,20 +155,19 @@ class APIConfigurationHandlers {
                 return rv;
             }
 
-            public void serialize(Object object, ObjectEncoder encoder) {
-                ConfigurationPropertiesImpl val = (ConfigurationPropertiesImpl) object;
+            public void serialize(final Object object, final ObjectEncoder encoder) {
+                final ConfigurationPropertiesImpl val = (ConfigurationPropertiesImpl) object;
                 for (ConfigurationPropertyImpl prop : val.getProperties()) {
                     encoder.writeObjectContents(prop);
                 }
             }
-
         });
 
-        HANDLERS.add(
+        HANDLERS.add(new AbstractObjectSerializationHandler(APIConfigurationImpl.class,
+                "APIConfiguration") {
 
-        new AbstractObjectSerializationHandler(APIConfigurationImpl.class, "APIConfiguration") {
-            public Object deserialize(ObjectDecoder decoder) {
-                APIConfigurationImpl rv = new APIConfigurationImpl();
+            public Object deserialize(final ObjectDecoder decoder) {
+                final APIConfigurationImpl rv = new APIConfigurationImpl();
                 rv.setConnectorPoolingSupported(decoder.readBooleanField(
                         "connectorPoolingSupported", false));
                 rv.setConnectorPoolConfiguration((ObjectPoolConfiguration) decoder.readObjectField(
@@ -194,8 +189,8 @@ class APIConfigurationHandlers {
                 return rv;
             }
 
-            public void serialize(Object object, ObjectEncoder encoder) {
-                APIConfigurationImpl val = (APIConfigurationImpl) object;
+            public void serialize(final Object object, final ObjectEncoder encoder) {
+                final APIConfigurationImpl val = (APIConfigurationImpl) object;
                 encoder.writeIntField("producerBufferSize", val.getProducerBufferSize());
                 encoder.writeBooleanField("connectorPoolingSupported", val
                         .isConnectorPoolingSupported());
@@ -208,56 +203,51 @@ class APIConfigurationHandlers {
                 encoder.writeObjectField("timeoutMap", val.getTimeoutMap(), false);
                 encoder.writeObjectField("SupportedOperations", val.getSupportedOperations(), true);
             }
-
         });
 
-        HANDLERS.add(
+        HANDLERS.add(new AbstractObjectSerializationHandler(ConnectorMessagesImpl.class,
+                "ConnectorMessages") {
 
-        new AbstractObjectSerializationHandler(ConnectorMessagesImpl.class, "ConnectorMessages") {
-            public Object deserialize(ObjectDecoder decoder) {
-                ConnectorMessagesImpl rv = new ConnectorMessagesImpl();
+            public Object deserialize(final ObjectDecoder decoder) {
+                final ConnectorMessagesImpl rv = new ConnectorMessagesImpl();
                 @SuppressWarnings("unchecked")
-                Map<Locale, Map<String, String>> catalogs =
+                final Map<Locale, Map<String, String>> catalogs =
                         (Map) decoder.readObjectField("catalogs", null, null);
                 rv.setCatalogs(catalogs);
                 return rv;
             }
 
-            public void serialize(Object object, ObjectEncoder encoder) {
-                ConnectorMessagesImpl val = (ConnectorMessagesImpl) object;
+            public void serialize(final Object object, final ObjectEncoder encoder) {
+                final ConnectorMessagesImpl val = (ConnectorMessagesImpl) object;
                 encoder.writeObjectField("catalogs", val.getCatalogs(), false);
             }
-
         });
-        HANDLERS.add(
 
-        new AbstractObjectSerializationHandler(ConnectorKey.class, "ConnectorKey") {
-            public Object deserialize(ObjectDecoder decoder) {
+        HANDLERS.add(new AbstractObjectSerializationHandler(ConnectorKey.class, "ConnectorKey") {
 
-                String bundleName = decoder.readStringField("bundleName", null);
-                String bundleVersion = decoder.readStringField("bundleVersion", null);
-                String connectorName = decoder.readStringField("connectorName", null);
+            public Object deserialize(final ObjectDecoder decoder) {
+                final String bundleName = decoder.readStringField("bundleName", null);
+                final String bundleVersion = decoder.readStringField("bundleVersion", null);
+                final String connectorName = decoder.readStringField("connectorName", null);
                 return new ConnectorKey(bundleName, bundleVersion, connectorName);
             }
 
-            public void serialize(Object object, ObjectEncoder encoder) {
-                ConnectorKey val = (ConnectorKey) object;
+            public void serialize(final Object object, final ObjectEncoder encoder) {
+                final ConnectorKey val = (ConnectorKey) object;
                 encoder.writeStringField("bundleName", val.getBundleName());
                 encoder.writeStringField("bundleVersion", val.getBundleVersion());
                 encoder.writeStringField("connectorName", val.getConnectorName());
             }
-
         });
 
-        HANDLERS.add(
+        HANDLERS.add(new AbstractObjectSerializationHandler(RemoteConnectorInfoImpl.class,
+                "ConnectorInfo") {
 
-        new AbstractObjectSerializationHandler(RemoteConnectorInfoImpl.class, "ConnectorInfo") {
-            public Object deserialize(ObjectDecoder decoder) {
+            public Object deserialize(final ObjectDecoder decoder) {
                 RemoteConnectorInfoImpl rv = new RemoteConnectorInfoImpl();
                 rv.setConnectorDisplayNameKey(decoder.readStringField("connectorDisplayNameKey",
                         null));
-                rv.setConnectorCategoryKey(decoder.readStringField("connectorCategoryKey",
-                        null));
+                rv.setConnectorCategoryKey(decoder.readStringField("connectorCategoryKey", null));
                 rv.setConnectorKey((ConnectorKey) decoder.readObjectField("ConnectorKey",
                         ConnectorKey.class, null));
                 rv.setMessages((ConnectorMessagesImpl) decoder.readObjectField("ConnectorMessages",
@@ -267,8 +257,8 @@ class APIConfigurationHandlers {
                 return rv;
             }
 
-            public void serialize(Object object, ObjectEncoder encoder) {
-                RemoteConnectorInfoImpl val = (RemoteConnectorInfoImpl) object;
+            public void serialize(final Object object, final ObjectEncoder encoder) {
+                final RemoteConnectorInfoImpl val = (RemoteConnectorInfoImpl) object;
                 encoder.writeStringField("connectorDisplayNameKey", val
                         .getConnectorDisplayNameKey());
                 encoder.writeStringField("connectorCategoryKey", val.getConnectorCategoryKey());
@@ -276,8 +266,6 @@ class APIConfigurationHandlers {
                 encoder.writeObjectField("ConnectorMessages", val.getMessages(), true);
                 encoder.writeObjectField("APIConfiguration", val.getDefaultAPIConfiguration(), true);
             }
-
         });
-
     }
 }

@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  *
@@ -45,19 +45,19 @@ import org.testng.log4testng.Logger;
  * Contract test of {@link TestApiOp}. Positive test for test() is performed
  * everytime connector facade is created and connector supports the operation.
  * Test uses the same configuration as ValidateApiOpTest.
- * 
+ *
  * Currently there is not ability in API to test contract in case connection is lost.
  */
 @Test(testName =  TestApiOpTests.TEST_NAME)
 public class TestApiOpTests extends ContractTestBase {
-    
+
     /**
      * Logging..
      */
     private static final Logger logger = Logger.getLogger(ValidateApiOpTests.class);
     public static final String TEST_NAME = "Test";
     private static final String PROPERTY_NAME_INVALID_CONFIG = "invalidConfig";
-    
+
     /**
      * Tests test() with configuration that should NOT be correct. Expects a RuntimeException to be thrown.
      */
@@ -65,7 +65,7 @@ public class TestApiOpTests extends ContractTestBase {
     public void testTestFail() {
         final String testPropertyName = "testsuite." + TEST_NAME + "."
         + PROPERTY_NAME_INVALID_CONFIG;
-        
+
         // run test only in case operation is supported
         if (ConnectorHelper.operationsSupported(getConnectorFacade(), getAPIOperations())) {
             // READ THE TEST PROPERTY WITH WRONG CONFIGURATIONS THAT OVERRIDE THE DEFAULT CONFIGURATION
@@ -75,19 +75,19 @@ public class TestApiOpTests extends ContractTestBase {
             } catch (ObjectNotFoundException ex) {
                 fail(String.format("Missing test property: '%s'", testPropertyName));
             }
-            
+
             if (!(o instanceof List<?>)) {
                 fail(String.format("Test property '%s' should be of type List", testPropertyName));
             }
-            
+
             final List<?> wrongConfigList = (List<?>) o;
-            
+
             for (Object currentWrongConfigMap : wrongConfigList) {
                 if (!(currentWrongConfigMap instanceof Map<?,?>)) {
                     fail(String.format("Test property '%s' contains other than Map properties.", testPropertyName));
                 }
                 Map<?,?> currentWrongMapConfig = (Map<?,?>) currentWrongConfigMap;
-                
+
                 _connFacade = ConnectorHelper
                         .createConnectorFacadeWithWrongConfiguration(
                                 getDataProvider(), currentWrongMapConfig);
@@ -107,9 +107,9 @@ public class TestApiOpTests extends ContractTestBase {
             logger.info("--------------------------------");
         }
     }
-    
+
     /**
-     * {@inheritDoc}     
+     * {@inheritDoc}
      */
     @Override
     public Set<Class<? extends APIOperation>> getAPIOperations() {
