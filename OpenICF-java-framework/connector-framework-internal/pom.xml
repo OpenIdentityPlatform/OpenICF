@@ -95,6 +95,13 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Export-Package>org.identityconnectors.*;version=${project.version}</Export-Package>
+                        <Import-Package>
+                            org.identityconnectors.*;provide:=true,
+                            org.codehaus.groovy*;version="[1.8,3)",
+                            groovy*;version="[1.8,3)",
+                            *
+                        </Import-Package>
                         <Main-Class>org.identityconnectors.framework.server.Main</Main-Class>
                         <Fragment-Host>org.forgerock.openicf.framework.connector-framework</Fragment-Host>
                     </instructions>
