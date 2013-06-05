@@ -27,26 +27,33 @@
  */
 package org.forgerock.openicf.csvfile;
 
+import org.forgerock.openicf.csvfile.util.CSVSchemaException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+
 import static org.testng.Assert.*;
+
 import org.forgerock.openicf.csvfile.util.TestUtils;
+
 import java.util.Set;
-import org.identityconnectors.framework.common.objects.AttributeBuilder;
+
 import org.forgerock.openicf.csvfile.util.Utils;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
+
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.testng.annotations.Test;
 
 /**
- *
  * @author Viliam Repan (lazyman)
  */
 public class UpdateAttributeValuesOpTest {
@@ -207,5 +214,33 @@ public class UpdateAttributeValuesOpTest {
         String result = TestUtils.compareFiles(TestUtils.getTestFile("update-attribute.csv"),
                 TestUtils.getTestFile("update-attribute-result-remove-multi.csv"));
         assertNull(result, "File updated incorrectly: " + result);
+    }
+
+    @Test(expectedExceptions = CSVSchemaException.class)
+    public void addNameWhenUniqueEqualsNamingAttribute() throws Exception {
+        Set<Attribute> attributes = new HashSet<Attribute>();
+
+        attributes.add(new Name("troll"));
+        try {
+            connector.addAttributeValues(ObjectClass.ACCOUNT, new Uid("vilo"), attributes, null);
+        } finally {
+            String result = TestUtils.compareFiles(TestUtils.getTestFile("update-attribute.csv"),
+                    TestUtils.getTestFile("update-attribute-backup.csv"));
+            assertNull(result, "File updated incorrectly: " + result);
+        }
+    }
+
+    @Test(expectedExceptions = CSVSchemaException.class)
+    public void removeNameWhenUniqueEqualsNamingAttribute() throws Exception {
+        Set<Attribute> attributes = new HashSet<Attribute>();
+
+        attributes.add(new Name("vilo"));
+        try {
+            connector.removeAttributeValues(ObjectClass.ACCOUNT, new Uid("vilo"), attributes, null);
+        } finally {
+            String result = TestUtils.compareFiles(TestUtils.getTestFile("update-attribute.csv"),
+                    TestUtils.getTestFile("update-attribute-backup.csv"));
+            assertNull(result, "File updated incorrectly: " + result);
+        }
     }
 }

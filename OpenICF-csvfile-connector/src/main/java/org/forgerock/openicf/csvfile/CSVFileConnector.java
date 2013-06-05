@@ -20,10 +20,10 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
- * 
+ *
  * Portions Copyrighted 2011 Viliam Repan (lazyman)
  * Portions Copyrighted 2011 Radovan Semancik
- * 
+ *
  * $Id$
  */
 package org.forgerock.openicf.csvfile;
@@ -63,7 +63,7 @@ import static org.forgerock.openicf.csvfile.util.Utils.*;
  * @version $Revision$ $Date$
  */
 @ConnectorClass(displayNameKey = "UI_CONNECTOR_NAME",
-configurationClass = CSVFileConfiguration.class)
+        configurationClass = CSVFileConfiguration.class)
 public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsernameOp, CreateOp, DeleteOp, SchemaOp,
         ScriptOnConnectorOp, ScriptOnResourceOp, SearchOp<String>, SyncOp, TestOp, UpdateAttributeValuesOp {
 
@@ -77,6 +77,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
 
         DELETE, UPDATE, ADD_ATTR_VALUE, REMOVE_ATTR_VALUE;
     }
+
     private static final Object lock = new Object();
     private static final DateFormat FORMAT = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
     private Pattern linePattern;
@@ -201,16 +202,14 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                 fis.close();
 
                 writer = createWriter(true);
-                if (chars[0] != 10) { // 10 is the decimal value for \n 
+                if (chars[0] != 10) { // 10 is the decimal value for \n
                     writer.write('\n');
                 }
                 writer.append(record);
                 writer.append('\n');
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 handleGenericException(ex, "Couldn't create account");
-            }
-            finally {
+            } finally {
                 lock.notify();
                 closeWriter(writer, null);
             }
@@ -242,11 +241,9 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                 reader = createReader(configuration);
                 headers = readHeader(reader, linePattern, configuration);
                 testHeader(headers);
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 handleGenericException(ex, "Couldn't create schema");
-            }
-            finally {
+            } finally {
                 lock.notify();
                 closeReader(reader, null);
             }
@@ -321,11 +318,9 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                         break;
                     }
                 }
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 handleGenericException(ex, "Can't execute query");
-            }
-            finally {
+            } finally {
                 lock.notify();
                 closeReader(reader, null);
             }
@@ -347,11 +342,9 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
         synchronized (lock) {
             try {
                 copyAndReplace(configuration.getFilePath(), syncFile);
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 handleGenericException(ex, "Couldn't create file copy for sync");
-            }
-            finally {
+            } finally {
                 lock.notify();
             }
         }
@@ -398,24 +391,22 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
     }
 
     private void syncReal(long tokenLongValue, SyncResultsHandler handler) {
-            long timestamp = configuration.getFilePath().lastModified();
+        long timestamp = configuration.getFilePath().lastModified();
         log.info("Next last sync token value will be {0} ({1}).", timestamp, FORMAT.format(new Date(timestamp)));
         File syncFile = new File(configuration.getFilePath().getParentFile(),
                 configuration.getFilePath().getName() + "." + timestamp + TMP_EXTENSION);
         synchronized (lock) {
             try {
                 copyAndReplace(configuration.getFilePath(), syncFile);
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 handleGenericException(ex, "Could not create file copy for sync");
-            }
-            finally {
+            } finally {
                 lock.notify();
             }
         }
 
         File tokenSyncFile = new File(configuration.getFilePath().getParent(), configuration.getFilePath().getName()
-                    + "." + tokenLongValue);
+                + "." + tokenLongValue);
         log.info("Diff actual file {0} with last file based on token {1}.", syncFile.getName(), tokenSyncFile.getName());
         InMemoryDiff memoryDiff = new InMemoryDiff(tokenSyncFile, syncFile, linePattern, configuration);
         try {
@@ -441,8 +432,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
             syncFile.renameTo(newFile);
 
             cleanupOldTokenFiles();
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             handleGenericException(ex, "Couldn't finish sync operation");
         }
     }
@@ -534,12 +524,10 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
 
                 List<String> headers = readHeader(reader, linePattern, configuration);
                 testHeader(headers);
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 log.error("Test configuration was unsuccessful, reason: {0}.", ex.getMessage());
                 handleGenericException(ex, "Test configuration was unsuccessful");
-            }
-            finally {
+            } finally {
                 log.info("Closing file input stream.");
                 lock.notify();
                 closeReader(reader, null);
@@ -554,9 +542,9 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
      * {@inheritDoc}
      */
     public Uid update(ObjectClass objectClass,
-            Uid uid,
-            Set<Attribute> replaceAttributes,
-            OperationOptions options) {
+                      Uid uid,
+                      Set<Attribute> replaceAttributes,
+                      OperationOptions options) {
         log.info("update::begin");
         uid = doUpdate(Operation.UPDATE, objectClass, uid, replaceAttributes, options);
         log.info("update::end");
@@ -567,9 +555,9 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
      * {@inheritDoc}
      */
     public Uid addAttributeValues(ObjectClass objectClass,
-            Uid uid,
-            Set<Attribute> valuesToAdd,
-            OperationOptions options) {
+                                  Uid uid,
+                                  Set<Attribute> valuesToAdd,
+                                  OperationOptions options) {
         log.info("addAttributeValues::begin");
         uid = doUpdate(Operation.ADD_ATTR_VALUE, objectClass, uid, valuesToAdd, options);
         log.info("addAttributeValues::end");
@@ -580,9 +568,9 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
      * {@inheritDoc}
      */
     public Uid removeAttributeValues(ObjectClass objectClass,
-            Uid uid,
-            Set<Attribute> valuesToRemove,
-            OperationOptions options) {
+                                     Uid uid,
+                                     Set<Attribute> valuesToRemove,
+                                     OperationOptions options) {
         log.info("removeAttributeValues::begin");
         uid = doUpdate(Operation.REMOVE_ATTR_VALUE, objectClass, uid, valuesToRemove, options);
         log.info("removeAttributeValues::end");
@@ -612,8 +600,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                 writer.close();
             }
             unlock(lock);
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             throw new ConnectorException("Couldn't close writer, reason: " + ex.getMessage(), ex);
         }
     }
@@ -627,8 +614,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                 }
             }
             file.createNewFile();
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             throw new ConnectorIOException("Couldn't create tmp file '" + file.getAbsolutePath()
                     + "', reason: " + ex.getMessage(), ex);
         }
@@ -637,7 +623,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
     private CsvItem findAccount(BufferedReader reader, List<String> header, String username) throws IOException {
         int lineNumber = 1;
         String line;
-        while (( line = reader.readLine() ) != null) {
+        while ((line = reader.readLine()) != null) {
             lineNumber++;
             if (isEmptyOrComment(line)) {
                 continue;
@@ -826,13 +812,11 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                     throw new UnknownUidException("Unique atribute doesn't have value for account '" + username + "'.");
                 }
                 return new Uid(uidAttribute);
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 handleGenericException(ex, "Can't authenticate '" + username + "'");
                 //it won't go here
                 return null;
-            }
-            finally {
+            } finally {
                 lock.notify();
                 closeReader(reader, null);
 
@@ -859,10 +843,11 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                 writer = createWriter(tmpFile, true);
                 List<String> header = readHeader(reader, writer, linePattern, configuration);
 
-                boolean found = readAndUpdateFile(reader, writer, header, operation, uid, attributes);
-                if (!found) {
+                ConnectorObject changed = readAndUpdateFile(reader, writer, header, operation, uid, attributes);
+                if (changed == null) {
                     throw new UnknownUidException("Uid '" + uid.getUidValue() + "' not found in file.");
                 }
+                uid = changed.getUid();
 
                 closeReader(reader, null);
                 closeWriter(writer, null);
@@ -875,11 +860,9 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                     throw new ConnectorException("Couldn't delete old file '" + configuration.getFilePath().getAbsolutePath()
                             + "' and replace it by new file '" + tmpFile.getAbsolutePath() + "'.");
                 }
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 handleGenericException(ex, "Couldn't do " + operation + " on account '" + uid.getUidValue() + "'");
-            }
-            finally {
+            } finally {
                 lock.notify();
                 closeReader(reader, null);
                 closeWriter(writer, null);
@@ -889,8 +872,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                     if (tmpFile.exists()) {
                         tmpFile.delete();
                     }
-                }
-                catch (Exception ex) {
+                } catch (Exception ex) {
                     //only try to cleanup tmp file, it will be replaced later, if exists
                 }
             }
@@ -900,13 +882,14 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
         return uid;
     }
 
-    private boolean readAndUpdateFile(BufferedReader reader, BufferedWriter writer, List<String> header,
-            Operation operation, Uid uid, Set<Attribute> attributes) throws IOException {
-        boolean found = false;
+    private ConnectorObject readAndUpdateFile(BufferedReader reader, BufferedWriter writer, List<String> header,
+                                              Operation operation, Uid uid, Set<Attribute> attributes) throws IOException {
+        ConnectorObject changed = null;
+
         String line;
         int lineNumber = 1;
         CsvItem item;
-        while (( line = reader.readLine() ) != null) {
+        while ((line = reader.readLine()) != null) {
             lineNumber++;
             if (isEmptyOrComment(line)) {
                 writer.write(line);
@@ -918,15 +901,17 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
             int fieldIndex = header.indexOf(configuration.getUniqueAttribute());
             String value = item.getAttribute(fieldIndex);
             if (!StringUtil.isEmpty(value) && value.equals(uid.getUidValue())) {
-                found = true;
-
                 switch (operation) {
                     case UPDATE:
                     case ADD_ATTR_VALUE:
                     case REMOVE_ATTR_VALUE:
                         line = updateLine(operation, header, item, attributes);
+
+                        changed = createConnectorObject(header, Utils.createCsvItem(header, line, lineNumber,
+                                linePattern, configuration));
                         break;
                     case DELETE:
+                        changed = createConnectorObject(header, item);
                         continue;
                 }
             }
@@ -934,24 +919,29 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
             writer.write(line);
             writer.write('\n');
         }
-        return found;
+
+        return changed;
     }
 
     private String appendValues(String attributeName, List<Object> values) {
+        if (configuration.getUniqueAttribute().equals(attributeName)) {
+            if (values.size() > 1) {
+                throw new CSVSchemaException("Can't store unique attribute '" + attributeName
+                        + "' with multiple values (" + values.size() + ").");
+            } else if (values == null || values.isEmpty()) {
+                throw new CSVSchemaException("Can't store unique attribute '" + attributeName + "' without values.");
+            }
+        }
+
         final StringBuilder builder = new StringBuilder();
         if (values == null || values.isEmpty()) {
             return null;
         }
+
         for (int i = 0; i < values.size(); i++) {
             Object object = values.get(i);
-
             if (object == null) {
                 return null;
-            }
-            //for unique attribute insert first value (not multivalue)
-            if (configuration.getUniqueAttribute().equals(attributeName)) {
-                builder.append(object.toString());
-                break;
             }
 
             if (i != 0) {
@@ -974,7 +964,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
     }
 
     private String appendMergedValues(String attributeName, final List<String> oldValues,
-            List<Object> newValues, Operation operation) {
+                                      List<Object> newValues, Operation operation) {
         List<Object> values = new ArrayList<Object>();
         if (!configuration.isUsingMultivalue()) {
             switch (operation) {
@@ -985,7 +975,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
                     break;
             }
         } else {
-            if (operation == Operation.REMOVE_ATTR_VALUE && ( newValues == null || newValues.isEmpty() )) {
+            if (operation == Operation.REMOVE_ATTR_VALUE && (newValues == null || newValues.isEmpty())) {
                 return null;
             }
 

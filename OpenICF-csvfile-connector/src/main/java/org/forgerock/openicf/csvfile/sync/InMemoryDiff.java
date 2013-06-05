@@ -22,7 +22,7 @@
  * "Portions Copyrighted 2010 [name of copyright owner]"
  *
  * Portions Copyrighted 2011 Viliam Repan (lazyman)
- * 
+ *
  * $Id$
  */
 package org.forgerock.openicf.csvfile.sync;
@@ -101,7 +101,7 @@ public class InMemoryDiff {
                 createOneTypeChanges(newRecordSet, uidIndex, changes, Change.Type.CREATE);
             }
         } catch (IOException ex) {
-            throw new ConnectorIOException(ex);
+            throw new ConnectorIOException(ex.getMessage(), ex);
         } catch (ConnectorException ex) {
             throw ex;
         } catch (Exception ex) {

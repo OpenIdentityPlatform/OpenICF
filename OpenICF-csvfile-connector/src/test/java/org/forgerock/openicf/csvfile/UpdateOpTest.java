@@ -42,6 +42,7 @@ import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.testng.annotations.Test;
 
@@ -141,6 +142,20 @@ public class UpdateOpTest {
 
         String result = TestUtils.compareFiles(TestUtils.getTestFile("update.csv"),
                 TestUtils.getTestFile("update-result-add.csv"));
+        assertNull(result, "File updated incorrectly: " + result);
+    }
+
+    @Test
+    public void renameWhenUniqueEqualsNamingAttribute() throws Exception {
+        Set<Attribute> attributes = new HashSet<Attribute>();
+
+        attributes.add(new Name("troll"));
+        Uid uid = connector.update(ObjectClass.ACCOUNT, new Uid("vilo"), attributes, null);
+        assertNotNull(uid);
+        assertEquals(uid.getUidValue(), "troll");
+
+        String result = TestUtils.compareFiles(TestUtils.getTestFile("update.csv"),
+                TestUtils.getTestFile("update-result-rename.csv"));
         assertNull(result, "File updated incorrectly: " + result);
     }
 }
