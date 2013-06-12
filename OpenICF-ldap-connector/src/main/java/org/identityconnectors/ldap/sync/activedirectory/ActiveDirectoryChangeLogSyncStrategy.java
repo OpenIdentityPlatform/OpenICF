@@ -234,12 +234,18 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                 filter.append(oclasses[i]);
                 filter.append(")");
             }
+            if (conn.getConfiguration().getAccountSynchronizationFilter() != null){
+                filter.append(conn.getConfiguration().getAccountSynchronizationFilter());
+            }
         } else if (ObjectClass.GROUP.equals(oc)) {
             String[] oclasses = conn.getConfiguration().getGroupObjectClasses();
             for (int i = 0; i < oclasses.length; i++) {
                 filter.append("(objectClass=");
                 filter.append(oclasses[i]);
                 filter.append(")");
+            }
+            if (conn.getConfiguration().getGroupSynchronizationFilter() != null){
+                filter.append(conn.getConfiguration().getGroupSynchronizationFilter());
             }
         } else { // we use the ObjectClass value as the filter...
             filter.append("(objectClass=");

@@ -59,7 +59,6 @@ import com.sun.jndi.ldap.ctl.PasswordExpiredResponseControl;
 public class LdapConnection {
 
     // TODO: SASL authentication, "dn:entryDN" user name.
-
     // The LDAP attributes with a byte array syntax.
     private static final Set<String> LDAP_BINARY_SYNTAX_ATTRS;
     // The LDAP attributes which require the binary option for transfer.
@@ -96,17 +95,14 @@ public class LdapConnection {
         LDAP_BINARY_OPTION_ATTRS.add("certificateRevocationList");
         LDAP_BINARY_OPTION_ATTRS.add("crossCertificatePair");
         LDAP_BINARY_OPTION_ATTRS.add("supportedAlgorithms");
-        
+
         // MS-AD ObjectGUID
         LDAP_BINARY_SYNTAX_ATTRS.add(LdapConstants.MS_GUID_ATTR);
     }
-
     private static final String LDAP_CTX_FACTORY = "com.sun.jndi.ldap.LdapCtxFactory";
     private static final Log log = Log.getLog(LdapConnection.class);
-
     private final LdapConfiguration config;
     private final LdapSchemaMapping schemaMapping;
-
     private LdapContext initCtx;
     private Set<String> supportedControls;
     private ServerType serverType;
@@ -285,7 +281,7 @@ public class LdapConnection {
 
     public void checkAlive() {
         try {
-            Attributes attrs = getInitialContext().getAttributes("", new String[] { "subschemaSubentry" } );
+            Attributes attrs = getInitialContext().getAttributes("", new String[]{"subschemaSubentry"});
             attrs.get("subschemaSubentry");
         } catch (NamingException e) {
             throw new ConnectorException(e);
@@ -303,7 +299,7 @@ public class LdapConnection {
     private Set<String> getSupportedControls() {
         if (supportedControls == null) {
             try {
-                Attributes attrs = getInitialContext().getAttributes("", new String[] { "supportedControl" });
+                Attributes attrs = getInitialContext().getAttributes("", new String[]{"supportedControl"});
                 supportedControls = unmodifiableSet(getStringAttrValues(attrs, "supportedControl"));
             } catch (NamingException e) {
                 log.warn(e, "Exception while retrieving the supported controls");
@@ -322,7 +318,7 @@ public class LdapConnection {
 
     private ServerType detectServerType() {
         try {
-            Attributes attrs = getInitialContext().getAttributes("", new String[] { "vendorVersion", "vendorName", "isGlobalCatalogReady" });
+            Attributes attrs = getInitialContext().getAttributes("", new String[]{"vendorVersion", "vendorName", "isGlobalCatalogReady"});
             String vendorName = getStringAttrValue(attrs, "vendorName");
             if (null != vendorName && vendorName.toLowerCase().contains("ibm")) {
                 log.info("IBM Directory server has been detected");
@@ -343,11 +339,18 @@ public class LdapConnection {
                     log.info("Sun DSEE Directory server has been detected");
                     return ServerType.SUN_DSEE;
                 }
-            }
-            else{
-                if (getStringAttrValue(attrs, "isGlobalCatalogReady") != null){
-                    log.info("MS Active Directory server has been detected");
-                    return ServerType.MSAD;
+            } else {
+                String isGc = getStringAttrValue(attrs, "isGlobalCatalogReady");
+                if (isGc != null) {
+                    // A DC may also be a GC so having the isGlobalCatalogReady = TRUE is not sufficient.
+                    // We check the port number as well. Not using the standard 389|636 is a good sign.
+                    if (isGc.equalsIgnoreCase("TRUE") && (config.getPort() != 389) && (config.getPort() != 636)) {
+                        log.info("MS Active Directory Global Catalog server has been detected");
+                        return ServerType.MSAD_GC;
+                    } else {
+                        log.info("MS Active Directory server has been detected");
+                        return ServerType.MSAD;
+                    }
                 }
             }
         } catch (NamingException e) {
@@ -424,6 +427,7 @@ public class LdapConnection {
     }
 
     public enum ServerType {
-        SUN_DSEE, OPENDS, OPENDJ, IBM, MSAD, UNKNOWN
+
+        SUN_DSEE, OPENDS, OPENDJ, IBM, MSAD, MSAD_GC, UNKNOWN
     }
 }

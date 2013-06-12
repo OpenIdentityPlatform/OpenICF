@@ -187,6 +187,8 @@ public class LdapSearch {
         String userFilter = null;
         if (oclass.equals(ObjectClass.ACCOUNT)) {
             userFilter = conn.getConfiguration().getAccountSearchFilter();
+        } else if (oclass.equals(ObjectClass.GROUP)) {
+            userFilter = conn.getConfiguration().getGroupSearchFilter();
         }
         String nativeFilter = filter != null ? filter.getNativeFilter() : null;
         return new LdapInternalSearch(conn, getSearchFilter(optionsFilter, nativeFilter, userFilter), baseDNs, strategy, controls);

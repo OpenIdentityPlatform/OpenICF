@@ -30,7 +30,6 @@ import java.util.Set;
 import javax.naming.NamingException;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
@@ -61,6 +60,7 @@ import org.identityconnectors.ldap.search.LdapSearch;
 import org.identityconnectors.ldap.sync.activedirectory.ActiveDirectoryChangeLogSyncStrategy;
 import org.identityconnectors.ldap.sync.ibm.IBMDSChangeLogSyncStrategy;
 import org.identityconnectors.ldap.sync.sunds.SunDSChangeLogSyncStrategy;
+import org.identityconnectors.ldap.sync.timestamps.TimestampsSyncStrategy;
 
 @ConnectorClass(configurationClass = LdapConfiguration.class, displayNameKey = "LdapConnector")
 public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, SearchOp<LdapFilter>, AuthenticateOp, ResolveUsernameOp, CreateOp, DeleteOp,
@@ -172,11 +172,13 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
     public SyncToken getLatestSyncToken(ObjectClass oclass) {
         switch (conn.getServerType()) {
             case UNKNOWN:
-                throw new ConnectorException("SYNC not available for Unknown directory type");
+                return new TimestampsSyncStrategy(conn, oclass).getLatestSyncToken();
             case IBM:
                 return new IBMDSChangeLogSyncStrategy(conn, oclass).getLatestSyncToken();
             case MSAD:
                 return new ActiveDirectoryChangeLogSyncStrategy(conn, oclass).getLatestSyncToken();
+            case MSAD_GC:
+                return new TimestampsSyncStrategy(conn, oclass).getLatestSyncToken();
             default:
                 return new SunDSChangeLogSyncStrategy(conn, oclass).getLatestSyncToken();
         }
@@ -185,12 +187,16 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
     public void sync(ObjectClass oclass, SyncToken token, SyncResultsHandler handler, OperationOptions options) {
         switch (conn.getServerType()) {
             case UNKNOWN:
-                throw new ConnectorException("SYNC not available for Unknown directory type");
+                new TimestampsSyncStrategy(conn, oclass).sync(token, handler, options);
+                break;
             case IBM:
                 new IBMDSChangeLogSyncStrategy(conn, oclass).sync(token, handler, options);
                 break;
             case MSAD:
                 new ActiveDirectoryChangeLogSyncStrategy(conn, oclass).sync(token, handler, options);
+                break;
+            case MSAD_GC:
+                new TimestampsSyncStrategy(conn, oclass).sync(token, handler, options);
                 break;
             default:
                 new SunDSChangeLogSyncStrategy(conn, oclass).sync(token, handler, options);

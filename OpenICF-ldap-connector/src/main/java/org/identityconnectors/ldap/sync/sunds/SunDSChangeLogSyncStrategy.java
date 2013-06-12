@@ -401,6 +401,8 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
     private String getModifiedEntrySearchFilter() {
         if (oclass.equals(ObjectClass.ACCOUNT)) {
             return conn.getConfiguration().getAccountSynchronizationFilter();
+        } else if (oclass.equals(ObjectClass.GROUP)) {
+            return conn.getConfiguration().getGroupSynchronizationFilter();
         }
         return null;
     }

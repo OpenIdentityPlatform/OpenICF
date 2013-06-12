@@ -118,6 +118,11 @@ public class LdapConfiguration extends AbstractConfiguration {
      * A search filter that any account needs to match in order to be returned.
      */
     private String accountSearchFilter = null;
+    
+    /**
+     * A search filter that any group needs to match in order to be returned.
+     */
+    private String groupSearchFilter = null;
 
     /**
      * The LDAP attribute holding the member for non-POSIX static groups.
@@ -193,6 +198,8 @@ public class LdapConfiguration extends AbstractConfiguration {
     private String[] modifiersNamesToFilterOut = { };
 
     private String accountSynchronizationFilter;
+    
+    private String groupSynchronizationFilter;
 
     private int changeLogBlockSize = 100;
 
@@ -467,6 +474,14 @@ public class LdapConfiguration extends AbstractConfiguration {
     public void setAccountSearchFilter(String accountSearchFilter) {
         this.accountSearchFilter = accountSearchFilter;
     }
+    
+    public String getGroupSearchFilter() {
+        return groupSearchFilter;
+    }
+
+    public void setGroupSearchFilter(String groupSearchFilter) {
+        this.groupSearchFilter = groupSearchFilter;
+    }
 
     public String[] getGroupObjectClasses() {
         List<String> ldapClasses = groupConfig.getLdapClasses();
@@ -618,6 +633,15 @@ public class LdapConfiguration extends AbstractConfiguration {
 
     public void setAccountSynchronizationFilter(String accountSynchronizationFilter) {
         this.accountSynchronizationFilter = accountSynchronizationFilter;
+    }
+
+    @ConfigurationProperty(operations = { SyncOp.class })
+    public String getGroupSynchronizationFilter() {
+        return groupSynchronizationFilter;
+    }
+
+    public void setGroupSynchronizationFilter(String groupSynchronizationFilter) {
+        this.groupSynchronizationFilter = groupSynchronizationFilter;
     }
 
     @ConfigurationProperty(operations = { SyncOp.class }, required = true)
