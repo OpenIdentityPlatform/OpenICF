@@ -194,20 +194,26 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
             }
             String uidAttr = conn.getSchemaMapping().getLdapUidAttribute(oclass);            
             if (!LdapEntry.isDNAttribute(uidAttr)) {
+                String guid = null;
                 if ("entryUUID".equalsIgnoreCase(uidAttr)) {
-                    // This is "entryUUID" by default but the "targetDN" is not a UUID
-                    String entryUUID = getStringAttrValue(changeLogEntry.getAttributes(), "targetEntryUUID");
-                    if (null == entryUUID) {
-                        entryUUID = getStringAttrValue(changeLogEntry.getAttributes(), "targetUniqueID");
-                    }
-                    if (null != entryUUID) {
-                        syncDeltaBuilder.setUid(new Uid(entryUUID));
-                    } else {
-                        log.error("Failed the read the entryUUID attribute from Changelog entry. Neither 'targetEntryUUID' nor 'targetUniqueID' has the value");
-                        throw new ConnectorException("Unable to find entryUUID in targetEntryUUID or targetUniqueID attribute");
-                    }
+                    guid = getStringAttrValue(changeLogEntry.getAttributes(), "targetEntryUUID");
+                } else if ("nsUniqueId".equalsIgnoreCase(uidAttr)) {
+                    // SunDS/ODSEE
+                    guid = getStringAttrValue(changeLogEntry.getAttributes(), "targetUniqueID");
                 } else {
-                    throw new ConnectorException("Unsupported Uid attribute " + uidAttr);
+                    // try to see if we're not dealing with the RDN here...
+                    String[] elements = targetDN.split(",");
+                    String[] rdn = elements[0].split("=");
+                    if (rdn[0].equalsIgnoreCase(uidAttr)){
+                        guid = rdn[1];
+                    }
+                }
+                
+                if (null != guid) {
+                    syncDeltaBuilder.setUid(new Uid(guid));
+                } else {
+                    log.error("Failed to read the {0} attribute from Changelog entry.",uidAttr);
+                    throw new ConnectorException("Unsupported Uid attribute: " + uidAttr);
                 }
             } else {
                 syncDeltaBuilder.setUid(new Uid(targetDN));
