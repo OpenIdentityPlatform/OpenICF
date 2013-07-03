@@ -1,31 +1,35 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
 package org.identityconnectors.dbcommon;
 
-import static org.testng.AssertJUnit.assertEquals;
-import org.testng.annotations.Test;
 import static org.identityconnectors.framework.common.objects.AttributeBuilder.build;
-import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.*;
+import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.equalTo;
+import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.greaterThan;
+import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.greaterThanOrEqualTo;
+import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.lessThan;
+import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.lessThanOrEqualTo;
+import static org.testng.AssertJUnit.assertEquals;
+
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +40,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
-
+import org.testng.annotations.Test;
 
 /**
  * Attempts to test the Connector with the framework.
@@ -44,14 +48,17 @@ import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 public class DatabaseFilterTranslatorTests {
 
     /**
-     * Test method for {@link org.identityconnectors.dbcommon.DatabaseFilterTranslator}.
+     * Test method for
+     * {@link org.identityconnectors.dbcommon.DatabaseFilterTranslator}.
+     *
      * @throws Exception
      */
     @Test
     public void testUnaryFilters() throws Exception {
         Attribute attr = build("count", 2);
-        Filter filters[] = new Filter[] { equalTo(attr), greaterThan(attr), greaterThanOrEqualTo(attr), lessThan(attr),
-                lessThanOrEqualTo(attr) };
+        Filter filters[] =
+                new Filter[] { equalTo(attr), greaterThan(attr), greaterThanOrEqualTo(attr),
+                    lessThan(attr), lessThanOrEqualTo(attr) };
         String ops[] = new String[] { "=", ">", ">=", "<", "<=" };
         List<SQLParam> expected = new ArrayList<SQLParam>();
         expected.add(new SQLParam("count", 2, Types.INTEGER));
@@ -67,7 +74,9 @@ public class DatabaseFilterTranslatorTests {
     }
 
     /**
-     * Test method for {@link org.identityconnectors.dbcommon.DatabaseFilterTranslator}.
+     * Test method for
+     * {@link org.identityconnectors.dbcommon.DatabaseFilterTranslator}.
+     *
      * @throws Exception
      */
     @Test
@@ -80,7 +89,7 @@ public class DatabaseFilterTranslatorTests {
 
         // test and
         Filter f = FilterBuilder.and(lf, rf);
-        DatabaseFilterTranslator tr = getDatabaseFilterTranslator();        
+        DatabaseFilterTranslator tr = getDatabaseFilterTranslator();
         List<FilterWhereBuilder> blist = tr.translate(f);
         assertEquals(1, blist.size());
         FilterWhereBuilder b = blist.get(0);
@@ -88,7 +97,7 @@ public class DatabaseFilterTranslatorTests {
         // test or
         assertEquals(expected.size(), b.getParams().size());
         f = FilterBuilder.or(lf, rf);
-        DatabaseFilterTranslator tr2 = getDatabaseFilterTranslator();     
+        DatabaseFilterTranslator tr2 = getDatabaseFilterTranslator();
         blist = tr2.translate(f);
         assertEquals(1, blist.size());
         b = blist.get(0);
@@ -99,7 +108,9 @@ public class DatabaseFilterTranslatorTests {
     }
 
     /**
-     * Test method for {@link org.identityconnectors.dbcommon.DatabaseFilterTranslator}.
+     * Test method for
+     * {@link org.identityconnectors.dbcommon.DatabaseFilterTranslator}.
+     *
      * @throws Exception
      */
     @Test
@@ -113,7 +124,7 @@ public class DatabaseFilterTranslatorTests {
         // test and
         Filter f = FilterBuilder.or(lf, rf);
         Filter not = FilterBuilder.not(f);
-        DatabaseFilterTranslator tr = getDatabaseFilterTranslator();     
+        DatabaseFilterTranslator tr = getDatabaseFilterTranslator();
         List<FilterWhereBuilder> blist = tr.translate(not);
         assertEquals(1, blist.size());
         final FilterWhereBuilder b = blist.get(0);
@@ -122,7 +133,9 @@ public class DatabaseFilterTranslatorTests {
     }
 
     /**
-     * Test method for {@link org.identityconnectors.dbcommon.DatabaseFilterTranslator}.
+     * Test method for
+     * {@link org.identityconnectors.dbcommon.DatabaseFilterTranslator}.
+     *
      * @throws Exception
      */
     @Test
@@ -137,7 +150,7 @@ public class DatabaseFilterTranslatorTests {
         // test and
         Filter f12 = FilterBuilder.or(f1, f2);
         Filter f = FilterBuilder.and(f12, f3);
-        DatabaseFilterTranslator tr = getDatabaseFilterTranslator();       
+        DatabaseFilterTranslator tr = getDatabaseFilterTranslator();
         List<FilterWhereBuilder> blist = tr.translate(f);
         assertEquals(1, blist.size());
         final FilterWhereBuilder b = blist.get(0);
@@ -146,7 +159,9 @@ public class DatabaseFilterTranslatorTests {
     }
 
     /**
-     * Test method for {@link org.identityconnectors.dbcommon.DatabaseFilterTranslator}.
+     * Test method for
+     * {@link org.identityconnectors.dbcommon.DatabaseFilterTranslator}.
+     *
      * @throws Exception
      */
     @Test
@@ -158,12 +173,12 @@ public class DatabaseFilterTranslatorTests {
         Filter f5 = equalTo(build("e", 1));
         Filter f6 = equalTo(build("f", 1));
         List<SQLParam> expected = new ArrayList<SQLParam>();
-        expected.add(new SQLParam("a",1));
-        expected.add(new SQLParam("b",1));
-        expected.add(new SQLParam("c",1));
-        expected.add(new SQLParam("d",1));
-        expected.add(new SQLParam("e",1));
-        expected.add(new SQLParam("f",1));
+        expected.add(new SQLParam("a", 1));
+        expected.add(new SQLParam("b", 1));
+        expected.add(new SQLParam("c", 1));
+        expected.add(new SQLParam("d", 1));
+        expected.add(new SQLParam("e", 1));
+        expected.add(new SQLParam("f", 1));
 
         // test and
         Filter f12 = FilterBuilder.or(f1, f2);
@@ -171,18 +186,19 @@ public class DatabaseFilterTranslatorTests {
         Filter f56 = FilterBuilder.or(f5, f6);
         Filter f1234 = FilterBuilder.and(f12, f34);
         Filter f = FilterBuilder.or(f1234, f56);
-        DatabaseFilterTranslator tr = getDatabaseFilterTranslator();    
+        DatabaseFilterTranslator tr = getDatabaseFilterTranslator();
         List<FilterWhereBuilder> blist = tr.translate(f);
         assertEquals(1, blist.size());
         final FilterWhereBuilder b = blist.get(0);
-        assertEquals(
-                "( ( a = ? OR b = ? ) AND ( c = ? AND d = ? ) ) OR ( e = ? OR f = ? )", b
-                        .getWhereClause());
+        assertEquals("( ( a = ? OR b = ? ) AND ( c = ? AND d = ? ) ) OR ( e = ? OR f = ? )", b
+                .getWhereClause());
         assertEquals(expected, b.getParams());
     }
 
     /**
-     * Test method for {@link org.identityconnectors.dbcommon.DatabaseFilterTranslator}.
+     * Test method for
+     * {@link org.identityconnectors.dbcommon.DatabaseFilterTranslator}.
+     *
      * @throws Exception
      */
     @Test
@@ -199,7 +215,7 @@ public class DatabaseFilterTranslatorTests {
         Filter f1o2 = FilterBuilder.or(f1, f2);
         Filter fn3 = FilterBuilder.not(f3);
         Filter f = FilterBuilder.and(f1o2, fn3);
-        DatabaseFilterTranslator tr = getDatabaseFilterTranslator();      
+        DatabaseFilterTranslator tr = getDatabaseFilterTranslator();
         List<FilterWhereBuilder> blist = tr.translate(f);
         assertEquals(1, blist.size());
         final FilterWhereBuilder b = blist.get(0);
@@ -208,7 +224,9 @@ public class DatabaseFilterTranslatorTests {
     }
 
     /**
-     * Test method for {@link org.identityconnectors.dbcommon.DatabaseFilterTranslator}.
+     * Test method for
+     * {@link org.identityconnectors.dbcommon.DatabaseFilterTranslator}.
+     *
      * @throws Exception
      */
     @Test
@@ -216,7 +234,7 @@ public class DatabaseFilterTranslatorTests {
         Filter gt = greaterThan(build("count", 4));
         Filter f = FilterBuilder.not(gt);
 
-        DatabaseFilterTranslator tr = getDatabaseFilterTranslator();  
+        DatabaseFilterTranslator tr = getDatabaseFilterTranslator();
         List<FilterWhereBuilder> blist = tr.translate(f);
         assertEquals(1, blist.size());
         final FilterWhereBuilder b = blist.get(0);
@@ -225,13 +243,15 @@ public class DatabaseFilterTranslatorTests {
         expected.add(new SQLParam("count", 4, Types.INTEGER));
         assertEquals(expected.size(), b.getParams().size());
     }
-    
+
     DatabaseFilterTranslator getDatabaseFilterTranslator() {
         return new DatabaseFilterTranslator(ObjectClass.ACCOUNT, null) {
 
             @Override
-            protected SQLParam getSQLParam(Attribute attribute, ObjectClass oclass, OperationOptions options) {
-                return new SQLParam(attribute.getName(), AttributeUtil.getSingleValue(attribute),Types.NULL);
+            protected SQLParam getSQLParam(Attribute attribute, ObjectClass objectClass,
+                    OperationOptions options) {
+                return new SQLParam(attribute.getName(), AttributeUtil.getSingleValue(attribute),
+                        Types.NULL);
             }
 
         };

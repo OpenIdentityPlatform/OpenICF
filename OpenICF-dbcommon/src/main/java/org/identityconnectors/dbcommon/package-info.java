@@ -20,11 +20,17 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
-package org.identityconnectors.dbcommon;
 
-abstract class DBMessages {
-    static final String ASSERT_NULL = "assert.null";
-    static final String ASSERT_NOT_NULL = "assert.notNull";
-    static final String ASSERT_BLANK = "assert.blank";
-    static final String ASSERT_NOT_BLANK = "assert.notBlank";
-}
+/**
+ * <p>
+ * This is a generic bundle that contains many of the utilities needed for any
+ * sort of database connector, such as query builders, connection wrappers, and
+ * other SQL utilities.
+ * </p>
+ * <p>
+ * <b>Note:</b> The "Framework Version" listed is the <b><i>minimum</i></b>
+ * required framework version for that version of the connector. Newer framework
+ * versions are backwards compatible and will support previous connectors.
+ * </p>
+ */
+package org.identityconnectors.dbcommon;

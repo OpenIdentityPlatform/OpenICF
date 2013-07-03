@@ -2,7 +2,7 @@
 <!--
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
- Copyright © 2011 ForgeRock AS. All rights reserved.
+ Copyright (c) 2011-2013 ForgeRock AS. All rights reserved.
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -25,25 +25,30 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.forgerock.openicf.connectors</groupId>
-        <artifactId>connectors-parent</artifactId>
+        <groupId>org.forgerock.openicf.framework</groupId>
+        <artifactId>framework</artifactId>
         <version>1.1.1.0</version>
     </parent>
-    <groupId>org.forgerock.openicf.connectors.misc</groupId>
+    <groupId>org.forgerock.openicf.misc</groupId>
     <artifactId>dbcommon</artifactId>
-    <packaging>jar</packaging>
+    <version>1.1.1.0-SNAPSHOT</version>
+    <packaging>bundle</packaging>
     <name>Database Common</name>
     <description>This is a generic bundle that contains many of the utilities needed for any sort of database connector, such as query builders, connection wrappers, and other SQL utilities.</description>
     <url>http://openicf.forgerock.org/connectors/dbcommon</url>
+    <issueManagement>
+        <system>jira</system>
+        <url>https://bugster.forgerock.org/jira/browse/OPENICF/component/10831</url>
+    </issueManagement>
+    <ciManagement>
+        <system>jenkins</system>
+        <url>http://builds.forgerock.org/job/OpenICF - Database Common</url>
+    </ciManagement>
     <scm>
         <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/connectors/java/dbcommon</connection>
         <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/connectors/java/dbcommon</developerConnection>
         <url>http://sources.forgerock.org/browse/openicf/trunk/connectors/java/dbcommon</url>
     </scm>
-    <properties>
-        <skipTests>false</skipTests>
-        <contracts.skip>true</contracts.skip>
-    </properties>
     <repositories>
         <repository>
             <id>forgerock-staging-repository</id>
@@ -64,11 +69,24 @@
     </repositories>
     <dependencies>
         <dependency>
-            <groupId>org.apache.derby</groupId>
-            <artifactId>derby</artifactId>
-            <version>10.7.1.1</version>
+            <groupId>org.forgerock.openicf.framework</groupId>
+            <artifactId>connector-framework</artifactId>
+        </dependency>
+
+        <!-- Test Dependencies -->
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
-
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

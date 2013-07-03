@@ -1,33 +1,31 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
 package org.identityconnectors.dbcommon;
 
-
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertTrue;
-import org.testng.annotations.Test;
-import org.testng.Assert;
+
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.sql.Blob;
@@ -51,73 +49,78 @@ import javax.naming.NamingException;
 import javax.naming.spi.InitialContextFactory;
 import javax.sql.DataSource;
 
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 /**
  * The SQL util tests
- * @version $Revision 1.0$
+ *
  * @since 1.0
  */
 public class SQLUtilTests {
- 
+
     /**
      * Test method for {@link SQLUtil#closeQuietly(Connection)}.
+     *
      * @throws Exception
      */
     @Test
     public void quietConnectionClose() throws Exception {
         ExpectProxy<Connection> tp = new ExpectProxy<Connection>();
-        tp.expectAndReturn("isClosed",Boolean.FALSE); 
-        tp.expectAndThrow("close",new SQLException("expected")); 
+        tp.expectAndReturn("isClosed", Boolean.FALSE);
+        tp.expectAndThrow("close", new SQLException("expected"));
         Connection c = tp.getProxy(Connection.class);
         DatabaseConnection dbc = new DatabaseConnection(c);
         SQLUtil.closeQuietly(dbc);
-        Assert.assertTrue(tp.isDone(),"close not called");
-        
+        Assert.assertTrue(tp.isDone(), "close not called");
+
         tp = new ExpectProxy<Connection>();
-        tp.expectAndReturn("isClosed",Boolean.TRUE); 
+        tp.expectAndReturn("isClosed", Boolean.TRUE);
         c = tp.getProxy(Connection.class);
         dbc = new DatabaseConnection(c);
         SQLUtil.closeQuietly(dbc);
-        Assert.assertTrue(tp.isDone(),"isClosed not called");
-        
-        //null tests
+        Assert.assertTrue(tp.isDone(), "isClosed not called");
+
+        // null tests
         dbc = null;
         SQLUtil.closeQuietly(dbc);
     }
-    
+
     /**
      * Test method for {@link SQLUtil#rollbackQuietly(Connection)}.
+     *
      * @throws Exception
      */
     @Test
     public void quietConnectionRolback() throws Exception {
         ExpectProxy<Connection> tp = new ExpectProxy<Connection>();
-        tp.expectAndReturn("isClosed",Boolean.FALSE); 
-        tp.expectAndThrow("rollback",new SQLException("expected")); 
+        tp.expectAndReturn("isClosed", Boolean.FALSE);
+        tp.expectAndThrow("rollback", new SQLException("expected"));
         Connection s = tp.getProxy(Connection.class);
         DatabaseConnection dbc = new DatabaseConnection(s);
         SQLUtil.rollbackQuietly(dbc);
-        Assert.assertTrue(tp.isDone(),"rollback not called");
-        
+        Assert.assertTrue(tp.isDone(), "rollback not called");
+
         tp = new ExpectProxy<Connection>();
-        tp.expectAndReturn("isClosed",Boolean.TRUE); 
+        tp.expectAndReturn("isClosed", Boolean.TRUE);
         s = tp.getProxy(Connection.class);
         dbc = new DatabaseConnection(s);
         SQLUtil.rollbackQuietly(dbc);
         Assert.assertTrue(tp.isDone());
-        
-        //null tests
+
+        // null tests
         dbc = null;
-        SQLUtil.rollbackQuietly(dbc);                
+        SQLUtil.rollbackQuietly(dbc);
     }
-    
 
     /**
      * Test method for {@link SQLUtil#closeQuietly(Statement)}.
      */
     @Test
+    @SuppressWarnings("deprecation")
     public void quietStatementClose() {
-        ExpectProxy<Statement> tp = new ExpectProxy<Statement>().expectAndThrow("close",new SQLException("expected")); 
+        ExpectProxy<Statement> tp =
+                new ExpectProxy<Statement>().expectAndThrow("close", new SQLException("expected"));
         Statement s = tp.getProxy(Statement.class);
         SQLUtil.closeQuietly(s);
         Assert.assertTrue(tp.isDone());
@@ -127,122 +130,133 @@ public class SQLUtilTests {
      * Test method for {@link SQLUtil#closeQuietly(ResultSet)}.
      */
     @Test
+    @SuppressWarnings("deprecation")
     public void quietResultSetClose() {
-        ExpectProxy<ResultSet> tp = new ExpectProxy<ResultSet>().expectAndThrow("close",new SQLException("expected")); 
+        ExpectProxy<ResultSet> tp =
+                new ExpectProxy<ResultSet>().expectAndThrow("close", new SQLException("expected"));
         ResultSet c = tp.getProxy(ResultSet.class);
         SQLUtil.closeQuietly(c);
         Assert.assertTrue(tp.isDone());
     }
 
     /**
-     * Test method for {@link SQLUtil#closeQuietly(Connection)}.
-     * Test method for {@link SQLUtil#closeQuietly(ResultSet)}.
-     * Test method for {@link SQLUtil#closeQuietly(Statement)}.
+     * Test method for {@link SQLUtil#closeQuietly(Connection)}. Test method for
+     * {@link SQLUtil#closeQuietly(ResultSet)}. Test method for
+     * {@link SQLUtil#closeQuietly(Statement)}.
      */
     @Test
+    @SuppressWarnings("deprecation")
     public void withNull() {
         // attempt to close on a null..
-        SQLUtil.closeQuietly((Connection)null);
-        SQLUtil.closeQuietly((ResultSet)null);
-        SQLUtil.closeQuietly((Statement)null);
+        SQLUtil.closeQuietly((Connection) null);
+        SQLUtil.closeQuietly((ResultSet) null);
+        SQLUtil.closeQuietly((Statement) null);
     }
-    
+
     /**
      * Test method
-     * @throws SQLException 
+     *
+     * @throws SQLException
      */
-    @Test(expectedExceptions=NullPointerException.class)
+    @Test(expectedExceptions = NullPointerException.class)
     public void testBuildConnectorObjectBuilderNull() throws SQLException {
         SQLUtil.getColumnValues(null);
     }
-    
+
     /**
      * Test method
-     * @throws SQLException 
+     *
+     * @throws SQLException
      */
     @Test
     public void testConvertBlob() throws SQLException {
         ExpectProxy<Blob> tb = new ExpectProxy<Blob>();
-        byte[] expected = new byte[] {'a','h','o','j'};
+        byte[] expected = new byte[] { 'a', 'h', 'o', 'j' };
         final ByteArrayInputStream is = new ByteArrayInputStream(expected);
         tb.expectAndReturn("getBinaryStream", is);
         Blob blob = tb.getProxy(Blob.class);
-        final Object object = SQLUtil.jdbc2AttributeValue( blob);
+        final Object object = SQLUtil.jdbc2AttributeValue(blob);
         assertEquals(expected[0], ((byte[]) object)[0]);
         assertEquals(expected[3], ((byte[]) object)[3]);
         assertTrue("getBinaryStream not called", tb.isDone());
     }
-    
+
     /**
      * Test method
-     * @throws SQLException 
+     *
+     * @throws SQLException
      */
     @Test
     public void testConvertBooleanToAttribute() throws SQLException {
         String expected = "test";
         final Object object = SQLUtil.jdbc2AttributeValue(expected);
         assertEquals(expected, object);
-    }    
+    }
 
     /**
      * Test method
-     * @throws SQLException 
+     *
+     * @throws SQLException
      */
     @Test
     public void testConvertDateToAttribute() throws SQLException {
         java.sql.Date src = new java.sql.Date(System.currentTimeMillis());
-        final Object object = SQLUtil.jdbc2AttributeValue( src);
+        final Object object = SQLUtil.jdbc2AttributeValue(src);
         assertEquals(src.toString(), object);
-    }    
+    }
 
-    
     /**
      * Test method
-     * @throws SQLException 
+     *
+     * @throws SQLException
      */
     @Test
     public void testString2Timestamp() throws SQLException {
         final String src = "2008-12-31 23:59:59.999999999";
         final Timestamp timestamp = SQLUtil.string2Timestamp(src);
         assertEquals(src, SQLUtil.timestamp2String(timestamp));
-    }    
-    
+    }
+
     /**
      * Test method
-     * @throws SQLException 
+     *
+     * @throws SQLException
      */
     @Test
     public void testString2Date() throws SQLException {
         final String src = "2008-12-31";
         final Date date = SQLUtil.string2Date(src);
         assertEquals(src, SQLUtil.date2String(date));
-    }      
-    
+    }
+
     /**
      * Test method
-     * @throws SQLException 
+     *
+     * @throws SQLException
      */
     @Test
     public void testString2Time() throws SQLException {
         final String src = "23:59:59";
         final Time time = SQLUtil.string2Time(src);
         assertEquals(src, SQLUtil.time2String(time));
-    }         
-    
+    }
+
     /**
      * Test method
-     * @throws SQLException 
+     *
+     * @throws SQLException
      */
     @Test
     public void testConvertTimestampToAttribute() throws SQLException {
         Timestamp src = new Timestamp(System.currentTimeMillis());
-        final Object object = SQLUtil.jdbc2AttributeValue( src);
+        final Object object = SQLUtil.jdbc2AttributeValue(src);
         assertEquals(src.toString(), object);
-    }    
-    
+    }
+
     /**
      * Test method
-     * @throws SQLException 
+     *
+     * @throws SQLException
      */
     @Test
     public void testConvertTimestampToJDBC() {
@@ -252,11 +266,12 @@ public class SQLUtilTests {
         assertNotNull(actual);
         assertEquals(expected.getClass(), actual.getClass());
         assertEquals(expected, actual);
-    }    
-    
+    }
+
     /**
      * Test method
-     * @throws SQLException 
+     *
+     * @throws SQLException
      */
     @Test
     public void testConvertSqlDateToJDBC() {
@@ -266,54 +281,59 @@ public class SQLUtilTests {
         assertNotNull(actual);
         assertEquals(expected.getClass(), actual.getClass());
         assertEquals(expected.toString(), actual.toString());
-    }  
+    }
 
     /**
      * Test method
-     * @throws SQLException 
+     *
+     * @throws SQLException
      */
     @Test
     public void testNormalizeNullValues() {
         final String sql = "insert into table values(?, ?, ?)";
         final List<SQLParam> params = new ArrayList<SQLParam>();
         params.add(new SQLParam("test", "test"));
-        params.add(new SQLParam("null", null)); //Null unspecified should be normalized
-        params.add(new SQLParam("null2", null, Types.VARCHAR)); //Null typed should remain
+        params.add(new SQLParam("null", null)); // Null unspecified should be
+                                                // normalized
+        params.add(new SQLParam("null2", null, Types.VARCHAR)); // Null typed
+                                                                // should remain
         final List<SQLParam> out = new ArrayList<SQLParam>();
         String actual = SQLUtil.normalizeNullValues(sql, params, out);
-        assertNotNull("sql",actual);
-        assertEquals("sql","insert into table values(?, null, ?)", actual);
+        assertNotNull("sql", actual);
+        assertEquals("sql", "insert into table values(?, null, ?)", actual);
         assertEquals("out value", 2, out.size());
-    }    
+    }
 
     /**
      * Test method
-     * @throws SQLException 
+     *
+     * @throws SQLException
      */
     @Test
     public void testNormalizeNullValuesSame() {
         final String sql = "insert into table values(?, ?, ?)";
         final List<SQLParam> params = new ArrayList<SQLParam>();
         params.add(new SQLParam("test1", "test"));
-        params.add(new SQLParam("test2", 1)); 
-        params.add(new SQLParam("test3", 5, Types.VARCHAR)); 
+        params.add(new SQLParam("test2", 1));
+        params.add(new SQLParam("test3", 5, Types.VARCHAR));
         final List<SQLParam> out = new ArrayList<SQLParam>();
         String actual = SQLUtil.normalizeNullValues(sql, params, out);
-        assertNotNull("sql",actual);
-        assertEquals("sql","insert into table values(?, ?, ?)", actual);
+        assertNotNull("sql", actual);
+        assertEquals("sql", "insert into table values(?, ?, ?)", actual);
         assertEquals("out value", 3, out.size());
-    }  
-    
+    }
+
     /**
      * Test method
-     * @throws SQLException 
+     *
+     * @throws SQLException
      */
     @Test
     public void testNormalizeNullValuesLess() {
         final String sql = "insert into table values(?, ?, ?)";
         final List<SQLParam> params = new ArrayList<SQLParam>();
         params.add(new SQLParam("test1", "test"));
-        params.add(new SQLParam("test2", 3)); 
+        params.add(new SQLParam("test2", 3));
         final List<SQLParam> out = new ArrayList<SQLParam>();
         try {
             SQLUtil.normalizeNullValues(sql, params, out);
@@ -322,17 +342,19 @@ public class SQLUtilTests {
             // expected
         }
         params.add(new SQLParam("test3", 3));
-        params.add(new SQLParam("test4", 3)); 
+        params.add(new SQLParam("test4", 3));
         try {
             SQLUtil.normalizeNullValues(sql, params, out);
             Assert.fail("IllegalStateException expected");
         } catch (IllegalStateException expected) {
             // expected
         }
-    } 
+    }
+
     /**
      * GetAttributeSet test method
-     * @throws SQLException 
+     *
+     * @throws SQLException
      */
     @Test
     public void testGetAttributeSet() throws SQLException {
@@ -341,23 +363,23 @@ public class SQLUtilTests {
         final String TEST2 = "test2";
         final String TEST_VAL2 = "testValue2";
 
-        //Resultset
+        // Resultset
         final ExpectProxy<ResultSet> trs = new ExpectProxy<ResultSet>();
         ResultSet resultSetProxy = trs.getProxy(ResultSet.class);
-        
-        //Metadata
+
+        // Metadata
         final ExpectProxy<ResultSetMetaData> trsmd = new ExpectProxy<ResultSetMetaData>();
         ResultSetMetaData metaDataProxy = trsmd.getProxy(ResultSetMetaData.class);
 
-        trs.expectAndReturn("getMetaData",metaDataProxy);
+        trs.expectAndReturn("getMetaData", metaDataProxy);
         trsmd.expectAndReturn("getColumnCount", 2);
         trsmd.expectAndReturn("getColumnName", TEST1);
         trsmd.expectAndReturn("getColumnType", Types.VARCHAR);
         trs.expectAndReturn("getString", TEST_VAL1);
-        trsmd.expectAndReturn("getColumnName", TEST2);        
+        trsmd.expectAndReturn("getColumnName", TEST2);
         trsmd.expectAndReturn("getColumnType", Types.VARCHAR);
         trs.expectAndReturn("getString", TEST_VAL2);
-        
+
         final Map<String, SQLParam> actual = SQLUtil.getColumnValues(resultSetProxy);
         assertTrue("getString not called", trs.isDone());
         assertTrue("getColumnType not called", trsmd.isDone());
@@ -366,11 +388,12 @@ public class SQLUtilTests {
         assertNotNull(actual.get(TEST2));
         assertEquals(TEST_VAL1, actual.get(TEST1).getValue());
         assertEquals(TEST_VAL2, actual.get(TEST2).getValue());
-     }
-    
+    }
+
     /**
      * GetAttributeSet test method
-     * @throws SQLException 
+     *
+     * @throws SQLException
      */
     @Test
     public void testGetSQLParam() throws SQLException {
@@ -379,63 +402,63 @@ public class SQLUtilTests {
         final Date TEST_DATE = new Date(System.currentTimeMillis());
         final Time TEST_TIME = new Time(System.currentTimeMillis());
 
-        //Resultset
+        // Resultset
         final ExpectProxy<ResultSet> trs = new ExpectProxy<ResultSet>();
         ResultSet resultSetProxy = trs.getProxy(ResultSet.class);
-        
-        trs.expectAndReturn("getObject", TEST_STR);        
+
+        trs.expectAndReturn("getObject", TEST_STR);
         SQLParam actual = SQLUtil.getSQLParam(resultSetProxy, 0, TEST_STR, Types.NULL);
         assertTrue("getObject not called", trs.isDone());
         assertNotNull(actual);
         assertEquals(TEST_STR, actual.getValue());
-        
+
         trs.expectAndReturn("getString", TEST_STR);
         actual = SQLUtil.getSQLParam(resultSetProxy, 0, TEST_STR, Types.VARCHAR);
         assertTrue("getString not called", trs.isDone());
         assertNotNull(actual);
         assertEquals(TEST_STR, actual.getValue());
-        
+
         trs.expectAndReturn("getObject", TEST_STR);
         actual = SQLUtil.getSQLParam(resultSetProxy, 0, TEST_STR, Types.DOUBLE);
         assertTrue("getObject not called", trs.isDone());
         assertNotNull(actual);
         assertEquals(TEST_STR, actual.getValue());
-        
+
         trs.expectAndReturn("getObject", TEST_STR);
         actual = SQLUtil.getSQLParam(resultSetProxy, 0, TEST_STR, Types.BLOB);
         assertTrue("getObject not called", trs.isDone());
         assertNotNull(actual);
-        assertEquals(TEST_STR, actual.getValue());        
-        
+        assertEquals(TEST_STR, actual.getValue());
+
         trs.expectAndReturn("getTimestamp", TEST_TMS);
         actual = SQLUtil.getSQLParam(resultSetProxy, 0, TEST_STR, Types.TIMESTAMP);
         assertTrue("getTimestamp not callled", trs.isDone());
         assertNotNull(actual);
-        assertEquals(TEST_TMS, actual.getValue());     
-        
+        assertEquals(TEST_TMS, actual.getValue());
+
         trs.expectAndReturn("getDate", TEST_DATE);
         actual = SQLUtil.getSQLParam(resultSetProxy, 0, TEST_STR, Types.DATE);
         assertTrue("getDate not called", trs.isDone());
         assertNotNull(actual);
-        assertEquals(TEST_DATE, actual.getValue()); 
-        
+        assertEquals(TEST_DATE, actual.getValue());
+
         trs.expectAndReturn("getTime", TEST_TIME);
         actual = SQLUtil.getSQLParam(resultSetProxy, 0, TEST_STR, Types.TIME);
         assertTrue("getTime not callled", trs.isDone());
         assertNotNull(actual);
-        assertEquals(TEST_TIME, actual.getValue()); 
-        
+        assertEquals(TEST_TIME, actual.getValue());
+
         trs.expectAndReturn("getBoolean", Boolean.TRUE);
         actual = SQLUtil.getSQLParam(resultSetProxy, 0, TEST_STR, Types.BOOLEAN);
         assertTrue("getBoolean not called", trs.isDone());
         assertNotNull(actual);
-        assertEquals(Boolean.TRUE, actual.getValue());         
-     }    
-    
-    
+        assertEquals(Boolean.TRUE, actual.getValue());
+    }
+
     /**
      * GetAttributeSet test method
-     * @throws SQLException 
+     *
+     * @throws SQLException
      */
     @Test
     public void testSetSQLParam() throws SQLException {
@@ -444,45 +467,43 @@ public class SQLUtilTests {
         final Date TEST_DATE = new Date(System.currentTimeMillis());
         final Time TEST_TIME = new Time(System.currentTimeMillis());
 
-        //Resultset
+        // Resultset
         final ExpectProxy<PreparedStatement> trs = new ExpectProxy<PreparedStatement>();
         PreparedStatement resultSetProxy = trs.getProxy(PreparedStatement.class);
-        
-        trs.expect("setNull");        
+
+        trs.expect("setNull");
         SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_STR, null, Types.CHAR));
         assertTrue("setNull not called", trs.isDone());
-        
-        trs.expect("setObject");        
+
+        trs.expect("setObject");
         SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_STR, TEST_STR));
         assertTrue("setObject not called", trs.isDone());
-        
-        trs.expect("setString");        
+
+        trs.expect("setString");
         SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_STR, TEST_STR, Types.CHAR));
         assertTrue("setString not called", trs.isDone());
-        
-        trs.expect("setBoolean");        
+
+        trs.expect("setBoolean");
         SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_STR, Boolean.TRUE, Types.BOOLEAN));
         assertTrue("setBoolean not called", trs.isDone());
-        
-        trs.expect("setTimestamp");        
+
+        trs.expect("setTimestamp");
         SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_STR, TEST_TMS, Types.TIMESTAMP));
         assertTrue("setTimestamp not callled", trs.isDone());
-        
-        trs.expect("setTime");        
+
+        trs.expect("setTime");
         SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_STR, TEST_TIME, Types.TIME));
         assertTrue("setTime not callled", trs.isDone());
-        
-        trs.expect("setDate");        
+
+        trs.expect("setDate");
         SQLUtil.setSQLParam(resultSetProxy, 0, new SQLParam(TEST_STR, TEST_DATE, Types.DATE));
-        assertTrue("setDate not callled", trs.isDone());        
-     }        
-    
-    
-    
-    
+        assertTrue("setDate not callled", trs.isDone());
+    }
+
     /**
      * GetAttributeSet test method
-     * @throws SQLException 
+     *
+     * @throws SQLException
      */
     @Test
     public void testGetSQLAttributeType() {
@@ -505,10 +526,11 @@ public class SQLUtilTests {
         assertEquals(String.class, SQLUtil.getSQLAttributeType(Types.CLOB));
         assertEquals(String.class, SQLUtil.getSQLAttributeType(Types.VARCHAR));
     }
-    
+
     /**
      * GetAttributeSet test method
-     * @throws SQLException 
+     *
+     * @throws SQLException
      */
     @Test
     public void testJdbc2Attribute() throws SQLException {
@@ -527,7 +549,7 @@ public class SQLUtilTests {
 
         actual = SQLUtil.jdbc2AttributeValue(TEST_TIME);
         assertEquals(TEST_TIME.toString(), actual);
-        
+
         actual = SQLUtil.jdbc2AttributeValue(1);
         assertEquals(1, actual);
 
@@ -536,18 +558,18 @@ public class SQLUtilTests {
 
         actual = SQLUtil.jdbc2AttributeValue(1d);
         assertEquals(1d, actual);
-        
+
         actual = SQLUtil.jdbc2AttributeValue(1f);
         assertEquals(1f, actual);
-        
+
         actual = SQLUtil.jdbc2AttributeValue(true);
-        assertEquals(true, actual);        
+        assertEquals(true, actual);
     }
-        
-    
+
     /**
      * GetAttributeSet test method
-     * @throws SQLException 
+     *
+     * @throws SQLException
      */
     @Test
     public void testAttribute2JdbcValue() throws SQLException {
@@ -555,51 +577,53 @@ public class SQLUtilTests {
         final Timestamp TEST_TMS = new Timestamp(System.currentTimeMillis());
         final Date TEST_DATE = new Date(System.currentTimeMillis());
         final Time TEST_TIME = new Time(System.currentTimeMillis());
-        
+
         Object actual = SQLUtil.attribute2jdbcValue(TEST_STR, Types.CHAR);
         assertEquals(TEST_STR, actual);
-        
+
         actual = SQLUtil.attribute2jdbcValue(TEST_TMS.toString(), Types.TIMESTAMP);
         assertEquals(TEST_TMS, actual);
-        
+
         actual = SQLUtil.attribute2jdbcValue(TEST_TIME.toString(), Types.TIME);
-        assertEquals(TEST_TIME.toString(), actual.toString());        
+        assertEquals(TEST_TIME.toString(), actual.toString());
 
         actual = SQLUtil.attribute2jdbcValue(TEST_DATE.toString(), Types.DATE);
-        assertEquals(TEST_DATE.toString(), actual.toString());        
+        assertEquals(TEST_DATE.toString(), actual.toString());
 
         actual = SQLUtil.attribute2jdbcValue("55.55", Types.DOUBLE);
-        assertEquals(55.55d, actual);       
-        
+        assertEquals(55.55d, actual);
 
         actual = SQLUtil.attribute2jdbcValue("true", Types.BIT);
-        assertEquals(true, actual);     
+        assertEquals(true, actual);
     }
-    
-	/**
-	 * We need this helper class as InitialContextFactory class name value to Hashtable into InitialContext.
-	 * We must use instantiable classname and class must be accessible
-	 * @author kitko
-	 *
-	 */
-    public static class MockContextFactory implements InitialContextFactory{
-		public Context getInitialContext(Hashtable<?, ?> environment) throws NamingException {
-			ExpectProxy<DataSource> dsProxy = new ExpectProxy<DataSource>();
-			dsProxy.expectAndReturn("getConnection", new ExpectProxy<Connection>().getProxy(Connection.class));
-			ExpectProxy<Context> ctxProxy = new ExpectProxy<Context>();
-			ctxProxy.expectAndReturn("lookup", dsProxy.getProxy(DataSource.class));
-			return ctxProxy.getProxy(Context.class);
-		}
-	}
-    
+
+    /**
+     * We need this helper class as InitialContextFactory class name value to
+     * Hashtable into InitialContext. We must use instantiable classname and
+     * class must be accessible
+     *
+     * @author kitko
+     *
+     */
+    public static class MockContextFactory implements InitialContextFactory {
+        public Context getInitialContext(Hashtable<?, ?> environment) throws NamingException {
+            ExpectProxy<DataSource> dsProxy = new ExpectProxy<DataSource>();
+            dsProxy.expectAndReturn("getConnection", new ExpectProxy<Connection>()
+                    .getProxy(Connection.class));
+            ExpectProxy<Context> ctxProxy = new ExpectProxy<Context>();
+            ctxProxy.expectAndReturn("lookup", dsProxy.getProxy(DataSource.class));
+            return ctxProxy.getProxy(Context.class);
+        }
+    }
+
     /**
      * Tests getting connection from dataSource
      */
     @Test
-    public void testGetConnectionFromDS(){
-    	Hashtable<String,String> properties = new Hashtable<String, String>();
-    	properties.put("java.naming.factory.initial",MockContextFactory.class.getName());
-    	final Connection conn = SQLUtil.getDatasourceConnection("",properties);
-    	assertNotNull("Connection returned from datasource is null",conn);
+    public void testGetConnectionFromDS() {
+        Hashtable<String, String> properties = new Hashtable<String, String>();
+        properties.put("java.naming.factory.initial", MockContextFactory.class.getName());
+        final Connection conn = SQLUtil.getDatasourceConnection("", properties);
+        assertNotNull("Connection returned from datasource is null", conn);
     }
 }

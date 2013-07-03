@@ -1,22 +1,22 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
@@ -55,14 +55,13 @@ import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
-
 /**
- * The SQL helper/util class
- * @version $Revision 1.0$
+ * The SQL helper/util class.
+ *
  * @since 1.0
  */
 public final class SQLUtil {
-   
+
     /**
      * Never allow this to be instantiated.
      */
@@ -71,12 +70,15 @@ public final class SQLUtil {
     }
 
     /**
-     * Get the connection from the datasource
-     * @param datasourceName 
-     * @param env propertyHastable 
+     * Get the connection from the datasource.
+     *
+     * @param datasourceName
+     * @param env
+     *            propertyHastable
      * @return the connection get from default jndi context
      */
-    public static Connection getDatasourceConnection(final String datasourceName, final Hashtable<?, ?> env) {
+    public static Connection getDatasourceConnection(final String datasourceName,
+            final Hashtable<?, ?> env) {
         try {
             javax.naming.InitialContext ic = getInitialContext(env);
             DataSource ds = (DataSource) ic.lookup(datasourceName);
@@ -87,15 +89,19 @@ public final class SQLUtil {
     }
 
     /**
-     * Get the connection from the dataSource with specified user and password
-     * @param datasourceName 
-     * @param user DB user 
-     * @param password DB password 
-     * @param env propertyHastable 
+     * Get the connection from the dataSource with specified user and password.
+     *
+     * @param datasourceName
+     * @param user
+     *            DB user
+     * @param password
+     *            DB password
+     * @param env
+     *            propertyHastable
      * @return the connection get from dataSource
      */
-    public static Connection getDatasourceConnection(final String datasourceName, final String user,
-            GuardedString password, final Hashtable<?, ?> env) {
+    public static Connection getDatasourceConnection(final String datasourceName,
+            final String user, final GuardedString password, final Hashtable<?, ?> env) {
         try {
             javax.naming.InitialContext ic = getInitialContext(env);
             final DataSource ds = (DataSource) ic.lookup(datasourceName);
@@ -105,7 +111,8 @@ public final class SQLUtil {
                     try {
                         ret[0] = ds.getConnection(user, new String(clearChars));
                     } catch (SQLException e) {
-                        // checked exception are not allowed in the access method 
+                        // checked exception are not allowed in the access
+                        // method
                         // Lets use the exception softening pattern
                         throw new RuntimeException(e);
                     }
@@ -116,53 +123,67 @@ public final class SQLUtil {
             throw ConnectorException.wrap(e);
         }
     }
-    /**
-     * Get the connection from the dataSource with specified user and password
-     * @param datasourceName 
-     * @param user DB user 
-     * @param password DB password 
-     * @param env propertyHastable 
-     * @return the connection get from dataSource
-     */
-    public static Connection getDatasourceConnection(final String datasourceName,final String user,GuardedString password) {        
-        return getDatasourceConnection(datasourceName, user, password, null);
-    }    
 
     /**
-     * Get the initial context method
-     * @param env environment hastable is null or empty aware  
+     * Get the connection from the dataSource with specified user and password.
+     *
+     * @param datasourceName
+     * @param user
+     *            DB user
+     * @param password
+     *            DB password
+     * @return the connection get from dataSource
+     */
+    public static Connection getDatasourceConnection(final String datasourceName,
+            final String user, GuardedString password) {
+        return getDatasourceConnection(datasourceName, user, password, null);
+    }
+
+    /**
+     * Get the initial context method.
+     *
+     * @param env
+     *            environment hastable is null or empty aware
      * @return The Context
      * @throws NamingException
      */
-    private static javax.naming.InitialContext getInitialContext(final Hashtable<?, ?> env) throws NamingException {
+    private static javax.naming.InitialContext getInitialContext(final Hashtable<?, ?> env)
+            throws NamingException {
         javax.naming.InitialContext ic = null;
-        if(env == null || env.size() == 0) {
-            //Default context
+        if (env == null || env.size() == 0) {
+            // Default context
             ic = new javax.naming.InitialContext();
         } else {
             ic = new javax.naming.InitialContext(env);
         }
         return ic;
     }
-    
+
     /**
-     * Get the connection from the datasource
-     * @param datasourceName 
+     * Get the connection from the datasource.
+     *
+     * @param datasourceName
      * @return the connection get from default jndi context
      */
     public static Connection getDatasourceConnection(final String datasourceName) {
         return getDatasourceConnection(datasourceName, null);
-    }        
+    }
+
     /**
      * Gets a {@link java.sql.Connection} using the basic driver manager.
-     * @param driver jdbc driver name
-     * @param url jdbc connection url
-     * @param login jdbc login name
-     * @param password jdbc password
+     *
+     * @param driver
+     *            jdbc driver name
+     * @param url
+     *            jdbc connection url
+     * @param login
+     *            jdbc login name
+     * @param password
+     *            jdbc password
      * @return a valid connection
      */
-    public static Connection getDriverMangerConnection(final String driver, final String url, final String login,
-            final GuardedString password) {
+    public static Connection getDriverMangerConnection(final String driver, final String url,
+            final String login, final GuardedString password) {
         // create the connection base on the configuration..
         final Connection[] ret = new Connection[1];
         try {
@@ -175,9 +196,11 @@ public final class SQLUtil {
                 password.access(new GuardedString.Accessor() {
                     public void access(char[] clearChars) {
                         try {
-                            ret[0] = DriverManager.getConnection(url, login, new String(clearChars));
+                            ret[0] =
+                                    DriverManager.getConnection(url, login, new String(clearChars));
                         } catch (SQLException e) {
-                            // checked exception are not allowed in the access method 
+                            // checked exception are not allowed in the access
+                            // method
                             // Lets use the exception softening pattern
                             throw new RuntimeException(e);
                         }
@@ -192,12 +215,12 @@ public final class SQLUtil {
             throw ConnectorException.wrap(e);
         }
         return ret[0];
-    }    
-    
+    }
+
     /**
      * Ignores any exception thrown by the {@link Connection} parameter when
      * closed, it also checks for {@code null}.
-     * 
+     *
      * @param conn
      *            JDBC connection to rollback.
      */
@@ -207,14 +230,14 @@ public final class SQLUtil {
                 conn.rollback();
             }
         } catch (SQLException expected) {
-            //expected
+            // expected
         }
-    }  
-    
+    }
+
     /**
-     * Ignores any exception thrown by the {@link DatabaseConnection} parameter when
-     * closed, it also checks for {@code null}.
-     * 
+     * Ignores any exception thrown by the {@link DatabaseConnection} parameter
+     * when closed, it also checks for {@code null}.
+     *
      * @param conn
      *            DatabaseConnection to rollback.
      */
@@ -222,76 +245,85 @@ public final class SQLUtil {
         if (conn != null) {
             rollbackQuietly(conn.getConnection());
         }
-    }       
+    }
 
     /**
      * Ignores any exception thrown by the {@link Connection} parameter when
      * closed, it also checks for {@code null}.
-     * 
-     * @param conn
+     *
+     * @param connection
      *            JDBC connection to close.
+     * @deprecated @see {@link
+     *             org.identityconnectors.common.IOUtil.quietClose(Statement);}
      */
-    public static void closeQuietly(Connection conn) {
+    @SuppressWarnings("dep-ann")
+    public static void closeQuietly(final Connection connection) {
         try {
-            if (conn != null && !conn.isClosed()) {
-                conn.close();
+            if (connection != null && !connection.isClosed()) {
+                connection.close();
             }
         } catch (SQLException expected) {
-            //expected
+            // expected
         }
     }
 
-    
     /**
-     * Ignores any exception thrown by the {@link Connection} parameter when closed, 
-     * it also checks for {@code null}.
-     * 
+     * Ignores any exception thrown by the {@link Connection} parameter when
+     * closed, it also checks for {@code null}.
+     *
      * @param conn
      *            DatabaseConnection to close.
      */
-    public static void closeQuietly(DatabaseConnection conn) {
+    public static void closeQuietly(final DatabaseConnection conn) {
         if (conn != null) {
             closeQuietly(conn.getConnection());
         }
     }
-        
 
     /**
      * Ignores any exception thrown by the {@link Statement#close()} method.
-     * 
-     * @param stmt
+     *
+     * @param statement
      *            {@link Statement} to close.
+     * @deprecated @see {@link
+     *             org.identityconnectors.common.IOUtil.quietClose(Statement);}
      */
-    public static void closeQuietly(Statement stmt) {
+    @SuppressWarnings("dep-ann")
+    public static void closeQuietly(final Statement statement) {
         try {
-            if (stmt != null) {
-                stmt.close();
+            if (statement != null) {
+                statement.close();
             }
         } catch (SQLException expected) {
-            //expected
+            // expected
         }
     }
 
     /**
      * Closes the {@link ResultSet} and ignores any {@link Exception} that may
      * be thrown by the {@link ResultSet#close()} method.
-     * 
-     * @param rset
+     *
+     * @param resultSet
      *            {@link ResultSet} to close quitely.
+     * @deprecated @see {@link
+     *             org.identityconnectors.common.IOUtil.quietClose(ResultSet);}
      */
-    public static void closeQuietly(ResultSet rset) {
+    @SuppressWarnings("dep-ann")
+    public static void closeQuietly(final ResultSet resultSet) {
         try {
-            if (rset != null) {
-                rset.close();
+            if (resultSet != null) {
+                resultSet.close();
             }
         } catch (SQLException expected) {
-            //expected
+            // expected
         }
     }
-    
+
     /**
-     * Date to string
-     * @param value Date value
+     * Date to string.
+     *
+     * @param value
+     *            Date value
      * @return String value
      */
     public static String date2String(final java.sql.Date value) {
@@ -299,29 +331,35 @@ public final class SQLUtil {
     }
 
     /**
-     * Time to String format
-     * @param value Time value
+     * Time to String format.
+     *
+     * @param value
+     *            Time value
      * @return String value
      */
-    public static String time2String(final java.sql.Time value) {      
+    public static String time2String(final java.sql.Time value) {
         return value.toString();
     }
 
     /**
-     * Convert timestamp to string
-     * @param value <code>Timestamp</code> 
+     * Convert timestamp to string.
+     *
+     * @param value
+     *            <code>Timestamp</code>
      * @return the string value
      */
     public static String timestamp2String(final java.sql.Timestamp value) {
         return value.toString();
-    }    
+    }
 
     /**
-     * String to Time
-     * @param param String
+     * String to Time.
+     *
+     * @param param
+     *            String
      * @return the Time value
      */
-    public static java.sql.Time string2Time(String param) {      
+    public static java.sql.Time string2Time(String param) {
         final DateFormat dfmt = DateFormat.getTimeInstance();
         java.sql.Time parsedTime;
         try {
@@ -338,8 +376,10 @@ public final class SQLUtil {
     }
 
     /**
-     * String to Date
-     * @param param the String value
+     * String to Date.
+     *
+     * @param param
+     *            the String value
      * @return Date value
      */
     public static java.sql.Date string2Date(String param) {
@@ -358,14 +398,16 @@ public final class SQLUtil {
                 } catch (ParseException e1) {
                     throw new IllegalArgumentException(e1);
                 }
-            }            
+            }
         }
         return parsedDate;
     }
 
     /**
-     * Convert string to Timestamp
-     * @param param String value
+     * Convert string to Timestamp.
+     *
+     * @param param
+     *            String value
      * @return Timestamp value
      */
     public static java.sql.Timestamp string2Timestamp(String param) {
@@ -379,9 +421,9 @@ public final class SQLUtil {
                 parsedTms = new java.sql.Timestamp(new Long(param));
             } catch (NumberFormatException expected) {
                 // Locale parsed date, possible lost of precision
-                try {                    
+                try {
                     parsedTms = new java.sql.Timestamp(dfmt.parse(param).getTime());
-                } catch (ParseException e1) {                                      
+                } catch (ParseException e1) {
                     throw new IllegalArgumentException(e1);
                 }
             }
@@ -389,54 +431,61 @@ public final class SQLUtil {
         return parsedTms;
     }
 
-
     /**
-     * Convert String to boolean
-     * @param val string value
+     * Convert String to boolean.
+     *
+     * @param val
+     *            string value
      * @return Boolean value
      */
     public static Boolean string2Boolean(String val) {
-        if( val == null ) {
+        if (val == null) {
             return Boolean.FALSE;
         }
         return Boolean.valueOf(val);
     }
-    
+
     /**
-     * The null param vlaue normalizator
+     * The null param value normalizer.
+     *
      * @param sql
-     * @param params list
-     * @param out out param list
+     * @param params
+     *            list
+     * @param out
+     *            out param list
      * @return the modified string
      */
-    public static String normalizeNullValues(final String sql, final List<SQLParam> params, List<SQLParam> out) {
+    public static String normalizeNullValues(final String sql, final List<SQLParam> params,
+            List<SQLParam> out) {
         StringBuilder ret = new StringBuilder();
         int size = (params == null) ? 0 : params.size();
-        //extend for extra space
-        final String sqlext = sql+" ";
-        String[] values = sqlext.split("\\?"); 
-        if(values.length != (size + 1 )) throw new IllegalStateException("bind.params.count.not.same");
+        // extend for extra space
+        final String sqlext = sql + " ";
+        String[] values = sqlext.split("\\?");
+        if (values.length != (size + 1)) {
+            throw new IllegalStateException("bind.params.count.not.same");
+        }
         for (int i = 0; i < values.length; i++) {
             String string = values[i];
             ret.append(string);
-            if(params != null && i < params.size()) {
+            if (params != null && i < params.size()) {
                 final SQLParam param = params.get(i);
                 if (param == null || (param.getValue() == null && param.getSqlType() == Types.NULL)) {
-                  ret.append("null");
+                    ret.append("null");
                 } else {
-                  ret.append("?");
-                  out.add(param);
+                    ret.append("?");
+                    out.add(param);
                 }
             }
         }
-        //return sql less the extra space
-        return ret.substring(0, ret.length()-1);
+        // return sql less the extra space
+        return ret.substring(0, ret.length() - 1);
 
-    }    
+    }
 
     /**
-     * Make a blob conversion
-     * 
+     * Make a blob conversion.
+     *
      * @param blobValue
      *            blob
      * @return a converted value
@@ -455,106 +504,131 @@ public final class SQLUtil {
 
         return newValue;
     }
-    
-        
-    
 
     /**
+     *
+     * This method binds the "?" markers in SQL statement with the parameters
+     * given as <i>values</i>.
      * <p>
-     * This method binds the "?" markers in SQL statement with the parameters given as <i>values</i>. It
-     * concentrates the replacement of all params. <code>GuardedString</code> are handled so the password is never
-     * visible.
+     * It concentrates the replacement of all params. <code>GuardedString</code>
+     * are handled so the password is never visible.
      * </p>
-     * 
+     *
      * @param statement
-     * @param params a <CODE>List</CODE> of the object arguments
-     * @param sqlTypes 
-     * @throws SQLException an exception in statement
+     * @param params
+     *            a <CODE>List</CODE> of the object arguments
+     * @throws SQLException
+     *             an exception in statement
      */
-    public static void setParams(final PreparedStatement statement, final List<SQLParam> params) throws SQLException {
-        if(statement == null || params == null) {
+    public static void setParams(final PreparedStatement statement, final List<SQLParam> params)
+            throws SQLException {
+        if (statement == null || params == null) {
             return;
         }
         for (int i = 0; i < params.size(); i++) {
             final int idx = i + 1;
             final SQLParam parm = params.get(i);
             final int sqlType = parm.getSqlType();
-            final SQLParam val =  new SQLParam(parm.getName(), attribute2jdbcValue(parm.getValue(), sqlType),sqlType);
+            final SQLParam val =
+                    new SQLParam(parm.getName(), attribute2jdbcValue(parm.getValue(), sqlType),
+                            sqlType);
             setParam(statement, idx, val);
         }
     }
 
     /**
+     * This method binds the "?" markers in SQL statement with the parameters
+     * given as <i>values</i>.
      * <p>
-     * This method binds the "?" markers in SQL statement with the parameters given as <i>values</i>. It
-     * concentrates the replacement of all params. <code>GuardedString</code> are handled so the password is never
-     * visible.
+     * It concentrates the replacement of all params. <code>GuardedString</code>
+     * are handled so the password is never visible.
      * </p>
-     * 
+     *
      * @param statement
-     * @param params a <CODE>List</CODE> of the object arguments
-     * @throws SQLException an exception in statement
+     * @param params
+     *            a <CODE>List</CODE> of the object arguments
+     * @throws SQLException
+     *             an exception in statement
      */
-    public static void setParams(final CallableStatement statement, final List<SQLParam> params) throws SQLException {
-        //The same as for prepared statements
-        setParams( (PreparedStatement) statement, params);
-    }    
+    public static void setParams(final CallableStatement statement, final List<SQLParam> params)
+            throws SQLException {
+        // The same as for prepared statements
+        setParams((PreparedStatement) statement, params);
+    }
 
     /**
-     * Set the statement parameter
-     * <p> It is ready for overloading if necessary</p>
-     * @param stmt a <CODE>PreparedStatement</CODE> to set the params
-     * @param idx an index of the parameter
-     * @param parm a parameter Value
-     * @throws SQLException a SQL exception 
+     * Set the statement parameter.
+     * <p>
+     * It is ready for overloading if necessary
+     * </p>
+     *
+     * @param stmt
+     *            a <CODE>PreparedStatement</CODE> to set the params
+     * @param idx
+     *            an index of the parameter
+     * @param parm
+     *            a parameter Value
+     * @throws SQLException
+     *             a SQL exception
      */
-    static void setParam(final PreparedStatement stmt, final int idx, SQLParam parm) throws SQLException {
+    static void setParam(final PreparedStatement stmt, final int idx, SQLParam parm)
+            throws SQLException {
         // Guarded string conversion
         if (parm.getValue() instanceof GuardedString) {
             setGuardedStringParam(stmt, idx, (GuardedString) parm.getValue());
         } else {
-          setSQLParam(stmt, idx, parm);
-        }       
+            setSQLParam(stmt, idx, parm);
+        }
     }
 
     /**
-     * Read one row from database result set and convert a columns to attribute set.  
-     * @param resultSet database data
+     * Read one row from database result set and convert a columns to attribute
+     * set.
+     *
+     * @param resultSet
+     *            database data
      * @return The transformed attribute set
-     * @throws SQLException 
+     * @throws SQLException
      */
     public static Map<String, SQLParam> getColumnValues(ResultSet resultSet) throws SQLException {
-        Assertions.nullCheck(resultSet,"resultSet");
-        Map<String, SQLParam> ret = CollectionUtil.<SQLParam>newCaseInsensitiveMap();
+        Assertions.nullCheck(resultSet, "resultSet");
+        Map<String, SQLParam> ret = CollectionUtil.<SQLParam> newCaseInsensitiveMap();
         final ResultSetMetaData meta = resultSet.getMetaData();
         int count = meta.getColumnCount();
         for (int i = 1; i <= count; i++) {
             final String name = meta.getColumnName(i);
             final int sqlType = meta.getColumnType(i);
-            final SQLParam param = getSQLParam(resultSet, i, name, sqlType);            
+            final SQLParam param = getSQLParam(resultSet, i, name, sqlType);
             ret.put(name, param);
         }
         return ret;
     }
 
     /**
-     * Retrieve the SQL value from result set
-     * @param resultSet the result set
-     * @param i index
-     * @param name param name
-     * @param sqlType expected SQL type or  Types.NULL for generic
+     * Retrieve the SQL value from result set.
+     *
+     * @param resultSet
+     *            the result set
+     * @param i
+     *            index
+     * @param name
+     *            param name
+     * @param sqlType
+     *            expected SQL type or Types.NULL for generic
      * @return the object return the retrieved object
-     * @throws SQLException any SQL error
+     * @throws SQLException
+     *             any SQL error
      */
-    public static SQLParam getSQLParam(ResultSet resultSet, int i, String name, final int sqlType) throws SQLException {
+    public static SQLParam getSQLParam(ResultSet resultSet, int i, String name, final int sqlType)
+            throws SQLException {
         Assertions.nullCheck(resultSet, "resultSet");
         Object object;
-        
+
         switch (sqlType) {
-        //Known conversions
+        // Known conversions
         case Types.NULL:
             object = resultSet.getObject(i);
-            break;        
+            break;
         case Types.DECIMAL:
         case Types.NUMERIC:
             object = resultSet.getBigDecimal(i);
@@ -564,9 +638,11 @@ public final class SQLUtil {
         case Types.REAL:
         case Types.INTEGER:
         case Types.BIGINT:
-//          object = resultSet.getDouble(i); double does not support update to null
-//          object = resultSet.getFloat(i); float does not support update to null
-//          object = resultSet.getInt(i); int does not support update to null
+            // object = resultSet.getDouble(i); double does not support update
+            // to null
+            // object = resultSet.getFloat(i); float does not support update to
+            // null
+            // object = resultSet.getInt(i); int does not support update to null
             object = resultSet.getObject(i);
             break;
         case Types.TINYINT:
@@ -582,24 +658,25 @@ public final class SQLUtil {
             object = resultSet.getTimestamp(i);
             break;
         case Types.DATE:
-             object = resultSet.getDate(i);
+            object = resultSet.getDate(i);
             break;
         case Types.TIME:
-             object = resultSet.getTime(i);
+            object = resultSet.getTime(i);
             break;
         case Types.BIT:
         case Types.BOOLEAN:
             object = resultSet.getBoolean(i);
             break;
-        default:   
+        default:
             object = resultSet.getString(i);
         }
         return new SQLParam(name, object, sqlType);
     }
-    
+
     /**
-     * Convert database type to connector supported set of attribute types
-     * Can be redefined for different databases
+     * Convert database type to connector supported set of attribute types Can
+     * be redefined for different databases.
+     *
      * @param sqlType
      *            #{@link Types}
      * @return a connector supported class
@@ -607,7 +684,7 @@ public final class SQLUtil {
     public static Class<?> getSQLAttributeType(int sqlType) {
         Class<?> ret;
         switch (sqlType) {
-        //Known conversions
+        // Known conversions
         case Types.DECIMAL:
         case Types.NUMERIC:
             ret = BigDecimal.class;
@@ -643,35 +720,43 @@ public final class SQLUtil {
         }
         return ret;
     }
-    
+
     /**
-     * Set a parameter to statement. The conversion to required database type is expected to be done
-     * @param stmt the statement to set
-     * @param idx index of the parameter 
-     * @param parm the <CODE>SQLParam</CODE> value
-     * @throws SQLException something wrong
+     * Set a parameter to statement.
+     *
+     * The conversion to required database type is expected to be done.
+     *
+     * @param stmt
+     *            the statement to set
+     * @param idx
+     *            index of the parameter
+     * @param parm
+     *            the <CODE>SQLParam</CODE> value
+     * @throws SQLException
+     *             something wrong
      */
-    public static void setSQLParam(final PreparedStatement stmt, final int idx, SQLParam parm) throws SQLException {
+    public static void setSQLParam(final PreparedStatement stmt, final int idx, SQLParam parm)
+            throws SQLException {
         Assertions.nullCheck(stmt, "statement");
         Assertions.nullCheck(parm, "parm");
         // Handle the null value
-        
-        final int sqlType = parm.getSqlType();        
-        final Object val = parm.getValue();        
-        
-        //Set the null value
-        if( val == null ) {
+
+        final int sqlType = parm.getSqlType();
+        final Object val = parm.getValue();
+
+        // Set the null value
+        if (val == null) {
             stmt.setNull(idx, sqlType);
             return;
         }
-        
-        //Set the generics 
-        if ( sqlType == Types.NULL) {
-            stmt.setObject(idx, val);  
+
+        // Set the generics
+        if (sqlType == Types.NULL) {
+            stmt.setObject(idx, val);
             return;
         }
-        
-        //Set specific object
+
+        // Set specific object
         if (val instanceof BigDecimal) {
             stmt.setBigDecimal(idx, (BigDecimal) val);
         } else if (val instanceof Double) {
@@ -710,9 +795,12 @@ public final class SQLUtil {
     }
 
     /**
-     * The conversion to required attribute type
-     * @param value to be converted to an attribute 
-     * @throws SQLException something is not ok
+     * The conversion to required attribute type.
+     *
+     * @param value
+     *            to be converted to an attribute
+     * @throws SQLException
+     *             something is not ok
      * @return a attribute's supported object
      */
     public static Object jdbc2AttributeValue(final Object value) throws SQLException {
@@ -720,7 +808,7 @@ public final class SQLUtil {
         if (value == null) {
             return ret;
         }
-        
+
         if (value instanceof Blob) {
             ret = blob2ByteArray((Blob) value);
         } else if (value instanceof java.sql.Timestamp) {
@@ -730,137 +818,140 @@ public final class SQLUtil {
         } else if (value instanceof java.sql.Date) {
             ret = date2String((java.sql.Date) value);
         } else if (value instanceof java.util.Date) {
-            //convert date to String
+            // convert date to String
             ret = ((java.util.Date) value).toString();
-        /*} else if (value instanceof Long) {
-            ret = value;
-        } else if (value instanceof Character) {
-            ret = value;
-        } else if (value instanceof Double) {
-            ret = value;
-        } else if (value instanceof Float) {
-            ret = value;
-        } else if (value instanceof Integer) {
-            ret = value;
-        } else if (value instanceof Boolean) {
-            ret = value;
-        } else if (value instanceof Byte[]) {
-            ret = value;
-        } else if (value instanceof BigDecimal) {
-            ret = value;
-        } else if (value instanceof BigInteger) {
-            ret = value;*/
+            /*
+             * } else if (value instanceof Long) { ret = value; } else if (value
+             * instanceof Character) { ret = value; } else if (value instanceof
+             * Double) { ret = value; } else if (value instanceof Float) { ret =
+             * value; } else if (value instanceof Integer) { ret = value; } else
+             * if (value instanceof Boolean) { ret = value; } else if (value
+             * instanceof Byte[]) { ret = value; } else if (value instanceof
+             * BigDecimal) { ret = value; } else if (value instanceof
+             * BigInteger) { ret = value;
+             */
         } else {
             // converted to string leads to error in contract tests
-            // TODO figure out, which type fail. It could be Character[] 
+            // TODO figure out, which type fail. It could be Character[]
             ret = value;
         }
         return ret;
-    }   
-    
+    }
+
     /**
-     * Convert the attribute to expected jdbc type using java conversions 
-     * Some database strategy sets all attributes as string, other convert them first and than set as native
-     * @param value the value to be converted 
-     * @param sqlType the target sql type
+     * Convert the attribute to expected jdbc type using java conversions.
+     *
+     * Some database strategy sets all attributes as string, other convert them
+     * first and than set as native.
+     *
+     * @param value
+     *            the value to be converted
+     * @param sqlType
+     *            the target sql type
      * @return the converted object value
      * @throws SQLException
      */
     public static Object attribute2jdbcValue(final Object value, int sqlType) throws SQLException {
-        if (value == null ) {
+        if (value == null) {
             return null;
-        }        
+        }
         switch (sqlType) {
-        //Known conversions
+        // Known conversions
         case Types.DECIMAL:
         case Types.NUMERIC:
         case Types.DOUBLE:
-            if( value instanceof BigDecimal) {
+            if (value instanceof BigDecimal) {
                 return value;
-            } else if( value instanceof Double) {
+            } else if (value instanceof Double) {
                 return value;
-            } else if( value instanceof Float) {
+            } else if (value instanceof Float) {
                 return value;
-            } else if( value instanceof String) {
+            } else if (value instanceof String) {
                 return Double.valueOf((String) value);
             } else {
                 return Double.valueOf(value.toString());
-            }  
+            }
         case Types.FLOAT:
         case Types.REAL:
-            if( value instanceof BigDecimal) {
+            if (value instanceof BigDecimal) {
                 return value;
-            } else if( value instanceof Float) {
+            } else if (value instanceof Float) {
                 return value;
-            } else if( value instanceof Double) {
+            } else if (value instanceof Double) {
                 return value;
-            } else if( value instanceof String) {
+            } else if (value instanceof String) {
                 return Float.valueOf((String) value);
             } else {
                 return Float.valueOf(value.toString());
-            }  
+            }
         case Types.INTEGER:
         case Types.BIGINT:
-            if( value instanceof BigInteger) {
-                return value; 
-            } else if( value instanceof Long) {
+            if (value instanceof BigInteger) {
                 return value;
-            } else if( value instanceof Integer) {
+            } else if (value instanceof Long) {
                 return value;
-            } else if( value instanceof String) {
+            } else if (value instanceof Integer) {
+                return value;
+            } else if (value instanceof String) {
                 return Long.valueOf((String) value);
             } else {
                 return Long.valueOf(value.toString());
-            } 
+            }
         case Types.TIMESTAMP:
-            if( value instanceof String) {
+            if (value instanceof String) {
                 return string2Timestamp((String) value);
-            } 
+            }
             break;
         case Types.DATE:
-            if( value instanceof String) {
+            if (value instanceof String) {
                 return string2Date((String) value);
-            } 
+            }
             break;
         case Types.TIME:
-            if( value instanceof String) {
+            if (value instanceof String) {
                 return string2Time((String) value);
             }
             break;
         case Types.BIT:
         case Types.BOOLEAN:
-            if( value instanceof String) {
+            if (value instanceof String) {
                 return string2Boolean((String) value);
-            } 
+            }
             break;
         case Types.LONGVARCHAR:
         case Types.VARCHAR:
         case Types.CHAR:
-            if( value instanceof String) {
+            if (value instanceof String) {
                 return value;
-            } 
+            }
             return value.toString();
-        }        
+        }
         return value;
-    }      
-    
+    }
+
     /**
-     * The helper guardedString bind method
-     * @param stmt to bind to
-     * @param idx index of the object
-     * @param guard a <CODE>GuardedString</CODE> parameter
+     * The helper guardedString bind method.
+     *
+     * @param stmt
+     *            to bind to
+     * @param idx
+     *            index of the object
+     * @param guard
+     *            a <CODE>GuardedString</CODE> parameter
      * @throws SQLException
      */
-    public static void setGuardedStringParam(final PreparedStatement stmt, final int idx, GuardedString guard)
-            throws SQLException {
+    public static void setGuardedStringParam(final PreparedStatement stmt, final int idx,
+            GuardedString guard) throws SQLException {
         try {
             guard.access(new GuardedString.Accessor() {
                 public void access(char[] clearChars) {
                     try {
-                        //Never use setString, the DB2 database will fail for secured columns
+                        // Never use setString, the DB2 database will fail for
+                        // secured columns
                         stmt.setObject(idx, new String(clearChars));
                     } catch (SQLException e) {
-                        // checked exception are not allowed in the access method 
+                        // checked exception are not allowed in the access
+                        // method
                         // Lets use the exception softening pattern
                         throw new RuntimeException(e);
                     }
@@ -874,93 +965,107 @@ public final class SQLUtil {
             throw e;
         }
     }
-    
+
     /**
      * Selects single value (first column) from select.
-     * It fetches only first row, does not check whether more rows are returned by select.
-     * If no row is returned, returns null
-     * @param conn JDBC connection
-     * @param sql Select statement with or without parameters
-     * @param params Parameters to use in statement
-     * @return first row and first column value 
+     *
+     * It fetches only first row, does not check whether more rows are returned
+     * by select. If no row is returned, returns null
+     *
+     * @param conn
+     *            JDBC connection
+     * @param sql
+     *            Select statement with or without parameters
+     * @param params
+     *            Parameters to use in statement
+     * @return first row and first column value
      * @throws SQLException
      */
-    public static Object selectSingleValue(Connection conn, String sql, SQLParam ...params) throws SQLException{
+    public static Object selectSingleValue(Connection conn, String sql, SQLParam... params)
+            throws SQLException {
         PreparedStatement st = null;
         ResultSet rs = null;
-        try{
+        try {
             st = conn.prepareStatement(sql);
             setParams(st, Arrays.asList(params));
             rs = st.executeQuery();
             Object value = null;
-            if(rs.next()){
-                //If needed , switch to getSQLParam
+            if (rs.next()) {
+                // If needed , switch to getSQLParam
                 value = rs.getObject(1);
                 return value;
             }
             return null;
-        }
-        finally{
+        } finally {
             closeQuietly(rs);
             closeQuietly(st);
         }
     }
-    
+
     /**
      * Selects all rows from select.
-     * It uses {@link ResultSet#getMetaData()} to find columns count and use {@link ResultSet#getObject(int)} to retrieve
-     * column value.  
-     * @param conn JDBC connection
-     * @param sql SQL select with or without params
+     *
+     * It uses {@link ResultSet#getMetaData()} to find columns count and use
+     * {@link ResultSet#getObject(int)} to retrieve column value.
+     *
+     * @param conn
+     *            JDBC connection
+     * @param sql
+     *            SQL select with or without params
      * @param params
      * @return list of selected rows
      * @throws SQLException
      */
-    public static List<Object[]> selectRows(Connection conn, String sql, SQLParam ...params) throws SQLException{
+    public static List<Object[]> selectRows(Connection conn, String sql, SQLParam... params)
+            throws SQLException {
         PreparedStatement st = null;
         ResultSet rs = null;
         List<Object[]> rows = new ArrayList<Object[]>();
-        try{
+        try {
             st = conn.prepareStatement(sql);
             setParams(st, Arrays.asList(params));
             rs = st.executeQuery();
             final ResultSetMetaData metaData = rs.getMetaData();
-            while(rs.next()){
+            while (rs.next()) {
                 Object[] row = new Object[metaData.getColumnCount()];
-                for(int i = 0; i < row.length;i++){
-                    final SQLParam param = getSQLParam(rs, i + 1, metaData.getColumnName(i + 1), metaData.getColumnType(i + 1));
+                for (int i = 0; i < row.length; i++) {
+                    final SQLParam param =
+                            getSQLParam(rs, i + 1, metaData.getColumnName(i + 1), metaData
+                                    .getColumnType(i + 1));
                     row[i] = jdbc2AttributeValue(param.getValue());
 
                 }
                 rows.add(row);
             }
             return rows;
-        }
-        finally{
+        } finally {
             closeQuietly(rs);
             closeQuietly(st);
         }
     }
-    
+
     /**
-     * Executes DML sql statement. This can be useful to execute insert/update/delete or some
-     * database specific statement in one call
+     * Executes DML sql statement.
+     *
+     * This can be useful to execute insert/update/delete or some database
+     * specific statement in one call
+     *
      * @param conn
      * @param sql
      * @param params
-     * @return number of rows affected as defined by {@link PreparedStatement#executeUpdate()}
+     * @return number of rows affected as defined by
+     *         {@link PreparedStatement#executeUpdate()}
      * @throws SQLException
      */
-    public static int executeUpdateStatement(Connection conn, String sql, SQLParam ...params) throws SQLException{
+    public static int executeUpdateStatement(Connection conn, String sql, SQLParam... params)
+            throws SQLException {
         PreparedStatement st = null;
-        try{
+        try {
             st = conn.prepareStatement(sql);
             setParams(st, Arrays.asList(params));
             return st.executeUpdate();
-        }
-        finally{
+        } finally {
             closeQuietly(st);
         }
     }
 }
-

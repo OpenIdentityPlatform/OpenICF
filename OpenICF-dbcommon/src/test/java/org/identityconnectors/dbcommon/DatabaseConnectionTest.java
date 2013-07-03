@@ -1,41 +1,44 @@
 /*
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
- * 
- * The contents of this file are subject to the terms of the Common Development 
- * and Distribution License("CDDL") (the "License").  You may not use this file 
+ *
+ * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Common Development
+ * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
- * 
- * You can obtain a copy of the License at 
- * http://IdentityConnectors.dev.java.net/legal/license.txt
- * See the License for the specific language governing permissions and limitations 
- * under the License. 
- * 
+ *
+ * You can obtain a copy of the License at
+ * http://opensource.org/licenses/cddl1.php
+ * See the License for the specific language governing permissions and limitations
+ * under the License.
+ *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at identityconnectors/legal/license.txt.
- * If applicable, add the following below this CDDL Header, with the fields 
- * enclosed by brackets [] replaced by your own identifying information: 
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
+ * If applicable, add the following below this CDDL Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
 package org.identityconnectors.dbcommon;
 
-import static org.testng.AssertJUnit.assertSame;
 import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.assertSame;
 import static org.testng.AssertJUnit.assertTrue;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.Test;
-import org.testng.annotations.BeforeMethod;
+
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
 /**
  * DatabaseConnection test class
+ *
  * @version $Revision 1.0$
  * @since 1.0
  */
@@ -44,37 +47,39 @@ public class DatabaseConnectionTest {
     private static final String LOGIN = "login";
     private static final String NAME = "name";
     private static final String TEST_SQL_STATEMENT = "SELECT * FROM dummy";
-    private static final String SELECT_SQL_STATEMENT = "SELECT * FROM dummy WHERE login = ? and name = ?";
-    
+    private static final String SELECT_SQL_STATEMENT =
+            "SELECT * FROM dummy WHERE login = ? and name = ?";
+
     private List<SQLParam> values;
 
     /**
      * @throws java.lang.Exception
      */
     @BeforeMethod
-	public void setUp() throws Exception {
+    public void setUp() throws Exception {
         values = new ArrayList<SQLParam>();
-        values.add(new SQLParam(LOGIN, LOGIN)); 
-        values.add(new SQLParam(NAME, NAME)); 
+        values.add(new SQLParam(LOGIN, LOGIN));
+        values.add(new SQLParam(NAME, NAME));
     }
 
     /**
      * @throws java.lang.Exception
      */
     @AfterMethod
-	public void tearDown() throws Exception {
-        // not used yet 
+    public void tearDown() throws Exception {
+        // not used yet
     }
 
     /**
-     * Test method for {@link DatabaseConnection#DatabaseConnection(java.lang.String, java.lang.String, java.lang.String, java.lang.String)}.
+     * Test method for
+     * {@link DatabaseConnection#DatabaseConnection(java.sql.Connection)} .
      */
     @Test
     public void testDatabaseConnection() {
         ExpectProxy<Connection> tp = new ExpectProxy<Connection>();
         DatabaseConnection dbc = new DatabaseConnection(tp.getProxy(Connection.class));
-        assertNotNull(dbc);         
-        assertNotNull(dbc.getConnection());          
+        assertNotNull(dbc);
+        assertNotNull(dbc.getConnection());
     }
 
     /**
@@ -89,13 +94,13 @@ public class DatabaseConnectionTest {
         DatabaseConnection dbc = new DatabaseConnection(xc);
         dbc.dispose();
         assertTrue("close called", tp.isDone());
-        
+
         tp = new ExpectProxy<Connection>();
         xc = tp.getProxy(Connection.class);
         tp.expectAndReturn("isClosed", Boolean.TRUE);
         dbc = new DatabaseConnection(xc);
         dbc.dispose();
-        assertTrue("close called", tp.isDone());         
+        assertTrue("close called", tp.isDone());
     }
 
     /**
@@ -112,7 +117,7 @@ public class DatabaseConnectionTest {
         DatabaseConnection dbc = new DatabaseConnection(tp.getProxy(Connection.class));
         dbc.test();
         assertTrue("test called", tp.isDone());
-        
+
     }
 
     /**
@@ -131,11 +136,14 @@ public class DatabaseConnectionTest {
     }
 
     /**
-     * Test method for {@link DatabaseConnection#prepareStatement(java.lang.String, java.util.List)}.
-     * @throws Exception 
+     * Test method for
+     * {@link DatabaseConnection#prepareStatement(java.lang.String, java.util.List)}
+     * .
+     *
+     * @throws Exception
      */
     @Test
-    public void testPrepareStatementNullValues() throws Exception{
+    public void testPrepareStatementNullValues() throws Exception {
         final ExpectProxy<Connection> tpc = new ExpectProxy<Connection>();
         final ExpectProxy<PreparedStatement> tps = new ExpectProxy<PreparedStatement>();
         final PreparedStatement xps = tps.getProxy(PreparedStatement.class);
@@ -147,13 +155,16 @@ public class DatabaseConnectionTest {
         assertTrue("statement created", tpc.isDone());
         assertTrue("value binded", tps.isDone());
     }
-    
+
     /**
-     * Test method for {@link DatabaseConnection#prepareStatement(java.lang.String, java.util.List)}.
-     * @throws Exception 
+     * Test method for
+     * {@link DatabaseConnection#prepareStatement(java.lang.String, java.util.List)}
+     * .
+     *
+     * @throws Exception
      */
     @Test
-    public void testPrepareStatementEmptyValues() throws Exception{
+    public void testPrepareStatementEmptyValues() throws Exception {
         final ExpectProxy<Connection> tpc = new ExpectProxy<Connection>();
         final ExpectProxy<PreparedStatement> tps = new ExpectProxy<PreparedStatement>();
         final PreparedStatement xps = tps.getProxy(PreparedStatement.class);
@@ -163,14 +174,17 @@ public class DatabaseConnectionTest {
         dbc.prepareStatement(TEST_SQL_STATEMENT, new ArrayList<SQLParam>());
         assertTrue("statement created", tpc.isDone());
         assertTrue("value binded", tps.isDone());
-    }    
+    }
 
     /**
-     * Test method for {@link DatabaseConnection#prepareStatement(java.lang.String, java.util.List)}.
-     * @throws Exception 
+     * Test method for
+     * {@link DatabaseConnection#prepareStatement(java.lang.String, java.util.List)}
+     * .
+     *
+     * @throws Exception
      */
     @Test
-    public void testPrepareStatement() throws Exception{
+    public void testPrepareStatement() throws Exception {
         final ExpectProxy<Connection> tpc = new ExpectProxy<Connection>();
         final ExpectProxy<PreparedStatement> tps = new ExpectProxy<PreparedStatement>();
         final PreparedStatement xps = tps.getProxy(PreparedStatement.class);
@@ -182,18 +196,20 @@ public class DatabaseConnectionTest {
         DatabaseConnection dbc = new DatabaseConnection(tpc.getProxy(Connection.class));
         final PreparedStatement ps = dbc.prepareStatement(SELECT_SQL_STATEMENT, values);
         ps.execute();
-       
+
         assertTrue("statement created", tpc.isDone());
         assertTrue("value binded", tps.isDone());
-    }       
-    
-    
+    }
+
     /**
-     * Test method for {@link DatabaseConnection#prepareStatement(java.lang.String, java.util.List)}.
-     * @throws Exception 
+     * Test method for
+     * {@link DatabaseConnection#prepareStatement(java.lang.String, java.util.List)}
+     * .
+     *
+     * @throws Exception
      */
     @Test
-    public void testPrepareCall() throws Exception{
+    public void testPrepareCall() throws Exception {
         final ExpectProxy<Connection> tpc = new ExpectProxy<Connection>();
         final ExpectProxy<CallableStatement> tps = new ExpectProxy<CallableStatement>();
         final CallableStatement cs = tps.getProxy(CallableStatement.class);
@@ -205,12 +221,14 @@ public class DatabaseConnectionTest {
         DatabaseConnection dbc = new DatabaseConnection(tpc.getProxy(Connection.class));
         final PreparedStatement ps = dbc.prepareStatement(SELECT_SQL_STATEMENT, values);
         ps.execute();
-       
+
         assertTrue("statement created", tpc.isDone());
         assertTrue("value binded", tps.isDone());
-    }         
+    }
+
     /**
-     * Test method for {@link DatabaseConnection#commit(org.identityconnectors.common.logging.Log)}.
+     * Test method for
+     * {@link org.identityconnectors.dbcommon.DatabaseConnection#commit()} .
      */
     @Test
     public void testCommit() {
