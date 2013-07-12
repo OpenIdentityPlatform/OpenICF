@@ -260,15 +260,15 @@
                         <td>
                             <a href="./db2-connector/openicf-report.html">
                                 Maven</a>,
-                            <a href="./db2-connector/doc/OpenICF-DB2-Connector-1.1.0.0-Snapshot.epub">
+                            <a href="./db2-connector/doc/OpenICF-Db2-Connector-1.1.0.0-Snapshot.epub">
                                 EPUB</a>,
                             <a href="./db2-connector/doc/db2-connector-1.1.0.0-SNAPSHOT/index.html">HTML
                                 (single page)</a>,
                             <a href="./db2-connector/doc/db2-connector-1.1.0.0-SNAPSHOT/index/index.html">
                                 HTML (1 page/chapter)</a>,
-                            <a href="./db2-connector/doc/OpenICF-DB2-Connector-1.1.0.0-Snapshot.pdf">
+                            <a href="./db2-connector/doc/OpenICF-Db2-Connector-1.1.0.0-Snapshot.pdf">
                                 PDF</a>,
-                            <a href="./db2-connector/doc/OpenICF-DB2-Connector-1.1.0.0-Snapshot.rtf">
+                            <a href="./db2-connector/doc/OpenICF-Db2-Connector-1.1.0.0-Snapshot.rtf">
                                 RTF
                             </a>
                         </td>
@@ -380,15 +380,15 @@
                         <td>
                             <a href="./flatfile-connector/openicf-report.html">
                                 Maven</a>,
-                            <a href="./flatfile-connector/doc/OpenICF-FlatFile-Connector-1.1.0.0-Snapshot.epub">
+                            <a href="./flatfile-connector/doc/OpenICF-Flatfile-Connector-1.1.0.0-Snapshot.epub">
                                 EPUB</a>,
                             <a href="./flatfile-connector/doc/flatfile-connector-1.1.0.0-SNAPSHOT/index.html">HTML
                                 (single page)</a>,
                             <a href="./flatfile-connector/doc/flatfile-connector-1.1.0.0-SNAPSHOT/index/index.html">
                                 HTML (1 page/chapter)</a>,
-                            <a href="./flatfile-connector/doc/OpenICF-FlatFile-Connector-1.1.0.0-Snapshot.pdf">
+                            <a href="./flatfile-connector/doc/OpenICF-Flatfile-Connector-1.1.0.0-Snapshot.pdf">
                                 PDF</a>,
-                            <a href="./flatfile-connector/doc/OpenICF-FlatFile-Connector-1.1.0.0-Snapshot.rtf">
+                            <a href="./flatfile-connector/doc/OpenICF-Flatfile-Connector-1.1.0.0-Snapshot.rtf">
                                 RTF
                             </a>
                         </td>
@@ -604,15 +604,15 @@
                         <td>
                             <a href="./mysqluser-connector/openicf-report.html">
                                 Maven</a>,
-                            <a href="./mysqluser-connector/doc/OpenICF-MySQLUser-Connector-1.1.0.0-Snapshot.epub">
+                            <a href="./mysqluser-connector/doc/OpenICF-Mysqluser-Connector-1.1.0.0-Snapshot.epub">
                                 EPUB</a>,
                             <a href="./mysqluser-connector/doc/mysqluser-connector-1.1.0.0-SNAPSHOT/index.html">HTML
                                 (single page)</a>,
                             <a href="./mysqluser-connector/doc/mysqluser-connector-1.1.0.0-SNAPSHOT/index/index.html">
                                 HTML (1 page/chapter)</a>,
-                            <a href="./mysqluser-connector/doc/OpenICF-MySQLUser-Connector-1.1.0.0-Snapshot.pdf">
+                            <a href="./mysqluser-connector/doc/OpenICF-Mysqluser-Connector-1.1.0.0-Snapshot.pdf">
                                 PDF</a>,
-                            <a href="./mysqluser-connector/doc/OpenICF-MySQLUser-Connector-1.1.0.0-Snapshot.rtf">
+                            <a href="./mysqluser-connector/doc/OpenICF-Mysqluser-Connector-1.1.0.0-Snapshot.rtf">
                                 RTF
                             </a>
                         </td>
@@ -948,15 +948,15 @@
                         <td>
                             <a href="./webtimesheet-connector/openicf-report.html">
                                 Maven</a>,
-                            <a href="./webtimesheet-connector/doc/OpenICF-WebTimeSheet-Connector-1.1.0.0-Snapshot.epub">
+                            <a href="./webtimesheet-connector/doc/OpenICF-Webtimesheet-Connector-1.1.0.0-Snapshot.epub">
                                 EPUB</a>,
                             <a href="./webtimesheet-connector/doc/webtimesheet-connector-1.1.0.0-SNAPSHOT/index.html">HTML
                                 (single page)</a>,
                             <a href="./webtimesheet-connector/doc/webtimesheet-connector-1.1.0.0-SNAPSHOT/index/index.html">
                                 HTML (1 page/chapter)</a>,
-                            <a href="./webtimesheet-connector/doc/OpenICF-WebTimeSheet-Connector-1.1.0.0-Snapshot.pdf">
+                            <a href="./webtimesheet-connector/doc/OpenICF-Webtimesheet-Connector-1.1.0.0-Snapshot.pdf">
                                 PDF</a>,
-                            <a href="./webtimesheet-connector/doc/OpenICF-WebTimeSheet-Connector-1.1.0.0-Snapshot.rtf">
+                            <a href="./webtimesheet-connector/doc/OpenICF-Webtimesheet-Connector-1.1.0.0-Snapshot.rtf">
                                 RTF
                             </a>
                         </td>
