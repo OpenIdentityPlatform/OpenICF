@@ -64,7 +64,7 @@
         <ConnectorBundle-FrameworkVersion>${framework.compatibilityVersion}</ConnectorBundle-FrameworkVersion>
         <ConnectorBundle-Name>${project.groupId}.${project.artifactId}</ConnectorBundle-Name>
         <ConnectorBundle-Version>${project.version}</ConnectorBundle-Version>
-        <!-- 
+        <!--
             These are the variables needs to define in order to a proper test coverage.
         -->
         <!-- These two properties must be set in the connector project -->
@@ -146,6 +146,11 @@
             <artifactId>connector-framework-contract</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-all</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -180,7 +185,7 @@
                         <links>
                             <link>http://download.oracle.com/javase/6/docs/api/</link>
                             <link>http://groovy.codehaus.org/api/</link>
-                            <link>http://openicf.forgerock.org/connector-framework/apidocs/</link>
+                            <link>http://openicf.forgerock.org/apidocs/</link>
                         </links>
                     </configuration>
                 </plugin>
@@ -195,6 +200,7 @@
                             </configuration>
                         </plugin-->
                 <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
                     <configuration>
                         <stagingSiteURL>
@@ -276,6 +282,7 @@
                     </executions>
                 </plugin>
                 <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
                     <executions>
 
@@ -389,6 +396,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-failsafe-plugin</artifactId>
+                        <version>2.15</version>
                         <executions>
                             <execution>
                                 <id>integration-test</id>
@@ -483,6 +491,7 @@
                         <configuration>
                             <projectName>OpenICF</projectName>
                             <googleAnalyticsId>${googleAnalyticsAccountId}</googleAnalyticsId>
+                            <useGeneratedSources>false</useGeneratedSources>
                             <docbkxSourceDirectory>${project.build.directory}/openicf-docbkx</docbkxSourceDirectory>
                         </configuration>
                         <executions>

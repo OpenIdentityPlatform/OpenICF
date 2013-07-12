@@ -243,7 +243,7 @@
             <dependency>
                 <groupId>org.codehaus.groovy</groupId>
                 <artifactId>groovy-all</artifactId>
-                <version>2.1.3</version>
+                <version>2.1.6</version>
                 <scope>provided</scope>
             </dependency>
 
@@ -264,7 +264,7 @@
             <dependency>
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
-                <version>6.8.1</version>
+                <version>6.8.5</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -282,7 +282,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.14.1</version>
+                    <version>2.15</version>
                     <configuration>
                         <includes>
                             <include>**/Test*.java</include>
@@ -295,6 +295,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
+                    <version>2.2.1</version>
                     <executions>
                         <execution>
                             <id>attach-sources</id>
@@ -307,11 +308,12 @@
                 <plugin>
                     <groupId>org.forgerock.commons</groupId>
                     <artifactId>forgerock-doc-maven-plugin</artifactId>
-                    <version>1.2.0</version>
+                    <version>2.0.0-SNAPSHOT</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.9.1</version>
                     <configuration>
                         <docfilessubdirs>true</docfilessubdirs>
                         <source>${maven.compiler.source}</source>
@@ -344,6 +346,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-remote-resources-plugin</artifactId>
+                <version>1.4</version>
                 <executions>
                     <execution>
                         <goals>
@@ -392,6 +395,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
+                <version>3.3</version>
                 <executions>
                     <execution>
                         <id>attach-descriptor</id>
@@ -437,7 +441,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-project-info-reports-plugin</artifactId>
-                <version>2.6</version>
+                <version>2.7</version>
                 <reportSets>
                     <reportSet>
                         <reports>
@@ -446,15 +450,15 @@
                             <report>dependency-convergence</report>
                             <report>dependency-info</report>
                             <report>dependency-management</report>
-                            <report>distribution-management</report>
+                            <!--<report>distribution-management</report>-->
                             <report>index</report>
                             <report>issue-tracking</report>
                             <report>license</report>
                             <report>mailing-list</report>
-                            <report>modules</report>
+                            <!--<report>modules</report>
                             <report>plugin-management</report>
                             <report>plugins</report>
-                            <!--report>project-team</report-->
+                            <report>project-team</report>-->
                             <report>scm</report>
                             <report>summary</report>
                         </reports>
@@ -465,7 +469,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9</version>
+                <version>2.9.1</version>
                 <reportSets>
                     <reportSet>
                         <id>html</id>
@@ -496,7 +500,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-report-plugin</artifactId>
-                <version>2.14.1</version>
+                <version>2.15</version>
                 <reportSets>
                     <reportSet>
                         <id>${project.artifactId}-test-report-only</id>
