@@ -240,6 +240,7 @@ public class LdapSearch {
             } else if (oclass.equals(ObjectClass.ACCOUNT) && OperationalAttributes.OPERATIONAL_ATTRIBUTE_NAMES.contains(attrName)){
                 try {
                     switch (conn.getServerType()) {
+                        case MSAD_GC:
                         case MSAD:
                             String controls = entry.getAttributes().get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR).get().toString();
                             if (OperationalAttributeInfos.ENABLE.is(attrName)) {
