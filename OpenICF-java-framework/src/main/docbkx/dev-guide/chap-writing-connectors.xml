@@ -21,7 +21,7 @@
   ! CCPL HEADER END
   !
   !      Copyright 2012 ForgeRock AS
-  !    
+  !
 -->
 <chapter xml:id='chap-writing-connectors'
  xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
@@ -55,22 +55,22 @@
  <para>To get started with the Connector Archtetype, first execute the following
  command to import the archetype and generate a new connector project.</para>
 
- <screen>$ mvn archetype:generate
- -DarchetypeGroupId=org.forgerock.openicf
- -DarchetypeArtifactId=connector-archetype
- -DarchetypeVersion=1.0.0-SNAPSHOT
- -DremoteRepositories=http://maven.forgerock.org/repo/snapshots
- -DarchetypeRepository=http://maven.forgerock.org/repo/snapshots
- -DgroupId=org.forgerock.openicf.connectors.misc
- -DartifactId=sample
- -Dversion=1.0-SNAPSHOT
- -Dpackage=org.forgerock.openicf.sample
- -Dconnector_name=Sample</screen>
+ <screen>$ mvn mvn archetype:generate \
+     -DarchetypeGroupId=org.forgerock.openicf \
+     -DarchetypeArtifactId=connector-archetype \
+     -DarchetypeVersion=1.0.0-SNAPSHOT \
+     -DremoteRepositories=http://maven.forgerock.org/repo/snapshots \
+     -DarchetypeRepository=http://maven.forgerock.org/repo/snapshots \
+     -DgroupId=org.forgerock.openicf.connectors \
+     -DartifactId=sample-connector \
+     -Dversion=0.0-SNAPSHOT \
+     -Dpackage=org.forgerock.openicf.connectors.sample \
+     -DconnectorName=Sample</screen>
 
- <para>You can customize <literal>-DartifactId=sample</literal>,
- <literal>-Dversion=1.0-SNAPSHOT</literal>,
- <literal>-Dpackage=org.forgerock.openicf.sample</literal>, and
- <literal>-Dconnector_name=Sample</literal>.</para>
+ <para>You can customize <literal>-DartifactId=sample-connector</literal>,
+ <literal>-Dversion=0.0-SNAPSHOT</literal>,
+ <literal>-Dpackage=org.forgerock.openicf.connectors.sample</literal>, and
+ <literal>-DconnectorName=Sample</literal>.</para>
 
  <para>After you import the archetype, you can use the local version.</para>
 

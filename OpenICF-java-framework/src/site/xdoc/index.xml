@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ! CCPL HEADER START
+  !
+  ! This work is licensed under the Creative Commons
+  ! Attribution-NonCommercial-NoDerivs 3.0 Unported License.
+  ! To view a copy of this license, visit
+  ! http://creativecommons.org/licenses/by-nc-nd/3.0/
+  ! or send a letter to Creative Commons, 444 Castro Street,
+  ! Suite 900, Mountain View, California, 94041, USA.
+  !
+  ! You can also obtain a copy of the license at
+  ! trunk/openicf-license/src/main/resources/legal-notices/CC-BY-NC-ND.txt.
+  ! See the License for the specific language governing permissions
+  ! and limitations under the License.
+  !
+  ! If applicable, add the following below this CCPL HEADER, with the fields
+  ! enclosed by brackets "[]" replaced with your own identifying information:
+  !      Portions Copyright [yyyy] [name of copyright owner]
+  !
+  ! CCPL HEADER END
+  !
+  !      Copyright 2011-2013 ForgeRock AS
+  !
+-->
+<document
+ xmlns="http://maven.apache.org/XDOC/2.0"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://maven.apache.org/XDOC/2.0 http://maven.apache.org/xsd/xdoc-2.0.xsd">
+ <properties>
+  <title>The open source LDAP directory services in Java</title>
+  <author email="openicf-dev@forgerock.org">ForgeRock AS</author>
+ </properties>
+ <body>
+  <section name="About the OpenICF Project">
+   <p>An ICF Connector allows provisioning software such as OpenIDM
+       to manage identities maintained by a specific identity provider.
+       ICF connectors provide a consistent layer between target resources
+       and applications and expose a set of programming functions for the
+       full lifecycle of an identity. ICF connectors are by design compatible with OpenIDM,
+       Sun Identity Manager and Oracle Waveset as well as Brinqa GRC Platform.</p>
+
+   <p>Coming soon on the <a
+   href="https://bugster.forgerock.org/jira/browse/OPENICF?selectedTab=com.atlassian.jira.plugin.system.project%3Aroadmap-panel"
+   >OpenICF Roadmap</a>.</p>
+  </section>
+  <section name="Welcome Users">
+   <p>The OpenICF community shares an interest in improving and extending
+   OpenICF software, and in adapting OpenICF to best fit our needs.</p>
+   <p>You are welcome to join us. Here are some ways to get started.</p>
+   <ul>
+    <li>Download and install a build from the <a
+    href="http://www.forgerock.org/openicf.html">download page</a>.</li>
+    <li>Join the <a
+    href="https://lists.forgerock.org/mailman/listinfo/openicf">OpenICF
+    mailing list</a> to ask questions, make suggestions, and tell us what
+    you think of OpenICF.</li>
+    <li><a
+    href="https://sso.forgerock.org/openam/UI/Login?gx_charset=UTF-8">Register
+    to join the community</a>.</li>
+    <li>Read and edit <a
+    href="https://wikis.forgerock.org/confluence/display/OPENIDM/Home"
+    >OpenIDM Wiki documentation</a>.</li>
+   </ul>
+   <p>Looking forward to hearing from you.</p>
+  </section>
+  <section name="Welcome Developers">
+   <p>If you are a Java or .Net developer interested in OpenICF, there are plenty of
+   ways you can get actively involved in the community in addition to joining
+   as an OpenICF user.</p>
+   <ul>
+    <li>Get the source. See instructions in the <a
+    href="source-repository.html"
+    >Guide to OpenICF Subversion</a>.</li>
+    <li>Make sure you <a
+    href="https://sso.forgerock.org/openam/UI/Login?gx_charset=UTF-8">register
+    to join the community</a>, thus also registering to <a
+    href="https://bugster.forgerock.org/jira/browse/OPENICF">report issues, and
+    describe requests for enhancements</a>, as well as to edit <a
+    href="https://wikis.forgerock.org/confluence/display/OPENIDM/Home"
+    >OpenIDM Wiki documentation</a>.</li>
+    <li>Participate and discuss your work on the <a
+    href="https://lists.forgerock.org/mailman/listinfo/openicf-dev">OpenICF
+    developer mailing list</a> in addition to the <a
+    href="https://lists.forgerock.org/mailman/listinfo/openicf">OpenICF
+    mailing list</a>.</li>
+   </ul>
+  </section>
+  <section name="Welcome Partners">
+   <p>Want to partner with other OpenICF community members to bring solutions
+   based on OpenICF to your customers?</p>
+   <ul>
+    <li>Come show off your expertise on the <a
+    href="https://lists.forgerock.org/mailman/listinfo/openicf">mailing
+    list</a>.</li>
+    <li>Post your success stories and white papers on the <a
+    href="https://wikis.forgerock.org/confluence/display/OPENIDM/Home"
+    >OpenIDM Wiki</a>.</li>
+   </ul>
+  </section>
+ </body>
+</document>

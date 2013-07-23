@@ -519,6 +519,34 @@
                         </td>
                         <td>20121216</td>
                     </tr>
+                    <tr class="b">
+                        <td>
+                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=releases%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fldap-connector%2F1.1.0.2"
+                               target="_blank">
+                                1.1.0.2
+                            </a>
+                        </td>
+                        <td>
+                            <a href="./ldap-connector-1.1.0.2/openicf-report.html">
+                                Maven</a>,
+                            <a href="./ldap-connector-1.1.0.2/doc/OpenICF-Ldap-Connector-1.1.0.2.epub">
+                                EPUB</a>,
+                            <a href="./ldap-connector-1.1.0.2/doc/ldap-connector-1.1.0.2/index.html">HTML
+                                (single page)</a>,
+                            <a href="./ldap-connector-1.1.0.2/doc/ldap-connector-1.1.0.2/index/index.html">
+                                HTML (1 page/chapter)</a>,
+                            <a href="./ldap-connector-1.1.0.2/doc/OpenICF-Ldap-Connector-1.1.0.2.pdf">
+                                PDF</a>,
+                            <a href="./ldap-connector-1.1.0.2/doc/OpenICF-Ldap-Connector-1.1.0.2.rtf">
+                                RTF
+                            </a>
+                        </td>
+                        <td>trunk</td>
+                        <td>
+                            <img src="./images/forgerock_supported.png" align="middle"/>
+                        </td>
+                        <td>20130712</td>
+                    </tr>
                 </tbody>
             </table>
             <br/>
@@ -546,13 +574,13 @@
                                 Maven</a>,
                             <a href="./ldap-connector/doc/OpenICF-Ldap-Connector-1.1.0.1-Snapshot.epub">
                                 EPUB</a>,
-                            <a href="./ldap-connector/doc/ldap-connector-1.1.0.1-SNAPSHOT/index.html">HTML
+                            <a href="./ldap-connector/doc/ldap-connector-1.1.1.0-SNAPSHOT/index.html">HTML
                                 (single page)</a>,
-                            <a href="./ldap-connector/doc/ldap-connector-1.1.0.1-SNAPSHOT/index/index.html">
+                            <a href="./ldap-connector/doc/ldap-connector-1.1.1.0-SNAPSHOT/index/index.html">
                                 HTML (1 page/chapter)</a>,
-                            <a href="./ldap-connector/doc/OpenICF-Ldap-Connector-1.1.0.1-Snapshot.pdf">
+                            <a href="./ldap-connector/doc/OpenICF-Ldap-Connector-1.1.1.0-Snapshot.pdf">
                                 PDF</a>,
-                            <a href="./ldap-connector/doc/OpenICF-Ldap-Connector-1.1.0.1-Snapshot.rtf">
+                            <a href="./ldap-connector/doc/OpenICF-Ldap-Connector-1.1.1.0-Snapshot.rtf">
                                 RTF
                             </a>
                         </td>

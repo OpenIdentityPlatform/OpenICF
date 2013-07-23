@@ -35,13 +35,13 @@
     <version position="right"/>
     <body>
         <breadcrumbs>
-            <item name="Developer Community" href="http://www.forgerock.org" />
-            <item name="OpenICF" href="http://openicf.forgerock.org"/>
+            <item name="Developer Community" href="http://www.forgerock.org/" />
+            <item name="OpenICF" href="http://openicf.forgerock.org/"/>
         </breadcrumbs>
 
         <menu name="OpenICF">
             <item name="Welcome" href="index.html" />
-            <item name="Join" href="https://idp.forgerock.org/openam/UI/Login?service=register" />
+            <item name="Join" href="https://sso.forgerock.org/openam/UI/Login?gx_charset=UTF-8" />
             <item name="FAQ" href="faq.html" />
             <item name="Mailing Lists" href="mail-lists.html" />
             <item name="Support" href="http://forgerock.com/what-we-offer/subscriptions/" />
@@ -60,18 +60,18 @@
         </menu>
 
         <menu name="OpenICF Development" img="images/arrow_right.png">
-            <item name="Join" href="https://idp.forgerock.org/openam/UI/Login?service=register" />
+            <item name="Join" href="https://sso.forgerock.org/openam/UI/Login?gx_charset=UTF-8" />
             <item name="Issue Tracking" href="issue-tracking.html" />
             <item name="License" href="license.html" />
             <item name="Source Repository" href="source-repository.html" />
             <item name="Contribute" href="http://www.forgerock.org/get_involved.html"/>
             <item name="Developments" href="development.html"/>
-            <item name="Connector Archetype" href="connector-archetype"/>
+            <item name="Connector Archetype" href="connector-archetype/"/>
             <item name="Modules" href="#">
-                <item name="Framework" href="connector-framework"/>
-                <item name="Framework - Internal" href="connector-framework-internal"/>
-                <item name="Common Test Library" href="connector-test-common"/>
-                <item name="Contract Tests" href="connector-framework-contract"/>
+                <item name="Framework" href="connector-framework/"/>
+                <item name="Framework - Internal" href="connector-framework-internal/"/>
+                <item name="Common Test Library" href="connector-test-common/"/>
+                <item name="Contract Tests" href="connector-framework-contract/"/>
             </item>
         </menu>
 

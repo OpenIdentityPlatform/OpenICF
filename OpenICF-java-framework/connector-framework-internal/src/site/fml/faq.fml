@@ -17,7 +17,7 @@
                     Sync, Authenticate, and Scripting operations, as well as others.
                 </P>
                 <P>Connectors themselves are self-contained
-                    <a href="/connector_bundles.html">bundles</a> that ride on top of the Connectors Framework.
+                    <a href="/connectors/index.html">bundles</a> that ride on top of the Connectors Framework.
                     Applications are completely separated from the bundles, so that different implementations can be swapped in and out without affecting
                     the app or its dependencies.
                 </P>
