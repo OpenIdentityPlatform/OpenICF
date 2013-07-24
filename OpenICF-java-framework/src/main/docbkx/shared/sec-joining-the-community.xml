@@ -38,7 +38,7 @@
  version if you prefer.</para>
 
  <para>After you <link xlink:show="new"
- xlink:href='https://idp.forgerock.org/openam/UI/Login?service=register'
+ xlink:href='https://sso.forgerock.org/openam/UI/Login?gx_charset=UTF-8'
  >sign up</link> at ForgeRock, you can also login to the Wiki and the issue
  database to follow what is happening with the project.</para>
 

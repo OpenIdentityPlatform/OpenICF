@@ -66,7 +66,7 @@
             <answer>
                 <p>
 		To use Connectors in your application, start by downloading the
-                    <a href="https://download.forgerock.com/#/openidm">Connectors Framework</a> and placing the following jars on your classpath:
+                    <a href="https://download.forgerock.com/">Connectors Framework</a> and placing the following jars on your classpath:
                 </p>
                 <ul>
                     <li>
@@ -77,7 +77,7 @@
                     </li>
                 </ul>
                 <p>Then, download the
-                    <a href="https://download.forgerock.com/#/openidm">Connector Bundle(s)</a> you'd like to use and add them to the classpath as well. Now you are ready
+                    <a href="https://download.forgerock.com/">Connector Bundle(s)</a> you'd like to use and add them to the classpath as well. Now you are ready
 	to set up the ConnectorFacade and start programming to the API. See the
                     <a href="./connector-framework/faq.html">API Info</a> section for more details on this.
                 </p>

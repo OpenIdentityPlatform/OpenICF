@@ -49,7 +49,7 @@
             <item name="Connectors" href="./connectors/index.html"/>
             <item name="Builds" href="http://forgerock.org/openicf.html" />
             <item name="Archives" href="http://forgerock.org/openicf-archive.html" />
-            <item name="Enterprise Downloads" href="http://www.forgerock.com/download-stack/" />
+            <item name="Enterprise Downloads" href="http://forgerock.com/download-stack/" />
         </menu>
 
         <menu name="OpenICF Docs (in progress)">
