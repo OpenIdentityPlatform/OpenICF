@@ -179,6 +179,7 @@ public class LdapSchemaMapping {
         if (result == null && OperationalAttributes.OPERATIONAL_ATTRIBUTE_NAMES.contains(attrName)) {
             if (oclass.equals(ObjectClass.ACCOUNT)){
                switch (conn.getServerType()) {
+                   case MSAD_GC:
                    case MSAD:
                         result = ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR;
                        break;
