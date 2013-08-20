@@ -216,6 +216,8 @@ public class LdapConfiguration extends AbstractConfiguration {
     private GuardedByteArray passwordDecryptionKey;
     
     private GuardedByteArray passwordDecryptionInitializationVector;
+    
+    private boolean useTimestampsForSync = false;
 
     // Other state.
 
@@ -660,6 +662,15 @@ public class LdapConfiguration extends AbstractConfiguration {
 
     public void setChangeNumberAttribute(String changeNumberAttribute) {
         this.changeNumberAttribute = changeNumberAttribute;
+    }
+    
+    @ConfigurationProperty(operations = { SyncOp.class }, required = false)
+    public boolean isUseTimestampsForSync() {
+        return useTimestampsForSync;
+    }
+
+    public void setUseTimestampsForSync(boolean useTimestampsForSync) {
+        this.useTimestampsForSync = useTimestampsForSync;
     }
 
     @ConfigurationProperty(operations = { SyncOp.class })

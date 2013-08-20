@@ -68,11 +68,13 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
     private final String modifyTimestamp = "modifyTimestamp";
     private final LdapConnection conn;
     private final ObjectClass oclass;
+    private final ServerType server;
     private static final Log logger = Log.getLog(TimestampsSyncStrategy.class);
 
     public TimestampsSyncStrategy(LdapConnection conn, ObjectClass oclass) {
         this.conn = conn;
         this.oclass = oclass;
+        this.server = conn.getServerType();
     }
 
     public SyncToken getLatestSyncToken() {
@@ -89,7 +91,7 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
         SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
         controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
         controls.setDerefLinkFlag(false);
-        controls.setReturningAttributes(new String[]{"*", createTimestamp, modifyTimestamp});
+        controls.setReturningAttributes(new String[]{"*", createTimestamp, modifyTimestamp,conn.getConfiguration().getUidAttribute()});
 
         LdapInternalSearch search = new LdapInternalSearch(conn,
                 generateFilter(oclass, token),
@@ -110,7 +112,8 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
                     cob.setName(result.getNameInNamespace());
 
                     // Let's process ACCOUNT specifics...
-                    if (oclass.equals(ObjectClass.ACCOUNT) && conn.getServerType().equals(ServerType.MSAD_GC)) {
+                    if (ObjectClass.ACCOUNT.equals(oclass) && 
+                            (server.equals(ServerType.MSAD_GC) || server.equals(ServerType.MSAD))) {
                         javax.naming.directory.Attribute uac = attrs.get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR);
                         if (uac != null) {
                             String controls = uac.get().toString();
@@ -128,7 +131,7 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
                         while (vals.hasMore()) {
                             values.add(vals.next());
                         }
-                        if (conn.getConfiguration().isGetGroupMemberId() && oclass.equals(ObjectClass.GROUP) && id.equalsIgnoreCase("member")) {
+                        if (conn.getConfiguration().isGetGroupMemberId() && ObjectClass.GROUP.equals(oclass) && id.equalsIgnoreCase("member")) {
                             cob.addAttribute(buildMemberIdAttribute(conn, attr));
                         }
                         cob.addAttribute(AttributeBuilder.build(id, values));
@@ -152,12 +155,14 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
         }
     }
 
+    @SuppressWarnings("fallthrough")
     private String getNowTime() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
         sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
 
-        switch (conn.getServerType()) {
+        switch (server) {
             case MSAD_GC:
+            case MSAD:
                 return sdf.format(new Date()) + ".0Z";
             default:
                 return sdf.format(new Date()) + "Z";
@@ -171,11 +176,6 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
         if (token == null) {
             token = this.getLatestSyncToken();
         }
-        filter.append("(");
-        filter.append(modifyTimestamp);
-        filter.append(">=");
-        filter.append(token.getValue().toString());
-        filter.append(")");
         if (ObjectClass.ACCOUNT.equals(oc)) {
             String[] oclasses = conn.getConfiguration().getAccountObjectClasses();
             for (int i = 0; i < oclasses.length; i++) {
@@ -202,8 +202,18 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
             filter.append(")");
         }
 
+        filter.append("(|(");
+        filter.append(modifyTimestamp);
+        filter.append(">=");
+        filter.append(token.getValue().toString());
+        filter.append(")(");
+        filter.append(createTimestamp);
+        filter.append(">=");
+        filter.append(token.getValue().toString());
+        filter.append("))");
         filter.insert(0, "(&");
         filter.append(")");
+        logger.info("Using timestamp filter {0}",filter.toString());
         return filter.toString();
     }
 }

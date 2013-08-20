@@ -170,36 +170,44 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
     }
 
     public SyncToken getLatestSyncToken(ObjectClass oclass) {
-        switch (conn.getServerType()) {
-            case UNKNOWN:
-                return new TimestampsSyncStrategy(conn, oclass).getLatestSyncToken();
-            case IBM:
-                return new IBMDSChangeLogSyncStrategy(conn, oclass).getLatestSyncToken();
-            case MSAD:
-                return new ActiveDirectoryChangeLogSyncStrategy(conn, oclass).getLatestSyncToken();
-            case MSAD_GC:
-                return new TimestampsSyncStrategy(conn, oclass).getLatestSyncToken();
-            default:
-                return new SunDSChangeLogSyncStrategy(conn, oclass).getLatestSyncToken();
+        if (config.isUseTimestampsForSync()) {
+            return new TimestampsSyncStrategy(conn, oclass).getLatestSyncToken();
+        } else {
+            switch (conn.getServerType()) {
+                case UNKNOWN:
+                    return new TimestampsSyncStrategy(conn, oclass).getLatestSyncToken();
+                case IBM:
+                    return new IBMDSChangeLogSyncStrategy(conn, oclass).getLatestSyncToken();
+                case MSAD:
+                    return new ActiveDirectoryChangeLogSyncStrategy(conn, oclass).getLatestSyncToken();
+                case MSAD_GC:
+                    return new TimestampsSyncStrategy(conn, oclass).getLatestSyncToken();
+                default:
+                    return new SunDSChangeLogSyncStrategy(conn, oclass).getLatestSyncToken();
+            }
         }
     }
 
     public void sync(ObjectClass oclass, SyncToken token, SyncResultsHandler handler, OperationOptions options) {
-        switch (conn.getServerType()) {
-            case UNKNOWN:
-                new TimestampsSyncStrategy(conn, oclass).sync(token, handler, options);
-                break;
-            case IBM:
-                new IBMDSChangeLogSyncStrategy(conn, oclass).sync(token, handler, options);
-                break;
-            case MSAD:
-                new ActiveDirectoryChangeLogSyncStrategy(conn, oclass).sync(token, handler, options);
-                break;
-            case MSAD_GC:
-                new TimestampsSyncStrategy(conn, oclass).sync(token, handler, options);
-                break;
-            default:
-                new SunDSChangeLogSyncStrategy(conn, oclass).sync(token, handler, options);
+        if (config.isUseTimestampsForSync()) {
+            new TimestampsSyncStrategy(conn, oclass).sync(token, handler, options);
+        } else {
+            switch (conn.getServerType()) {
+                case UNKNOWN:
+                    new TimestampsSyncStrategy(conn, oclass).sync(token, handler, options);
+                    break;
+                case IBM:
+                    new IBMDSChangeLogSyncStrategy(conn, oclass).sync(token, handler, options);
+                    break;
+                case MSAD:
+                    new ActiveDirectoryChangeLogSyncStrategy(conn, oclass).sync(token, handler, options);
+                    break;
+                case MSAD_GC:
+                    new TimestampsSyncStrategy(conn, oclass).sync(token, handler, options);
+                    break;
+                default:
+                    new SunDSChangeLogSyncStrategy(conn, oclass).sync(token, handler, options);
+            }
         }
     }
 }
