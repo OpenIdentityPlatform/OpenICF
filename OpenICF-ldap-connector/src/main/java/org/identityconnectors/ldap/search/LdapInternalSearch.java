@@ -28,10 +28,12 @@ import java.io.IOException;
 import java.util.List;
 
 import javax.naming.NamingException;
+import javax.naming.PartialResultException;
 import javax.naming.directory.SearchControls;
 
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.ldap.LdapConnection;
+import org.identityconnectors.ldap.LdapConnection.ServerType;
 
 /**
  * A class to perform an LDAP search against a {@link LdapConnection}.
@@ -60,6 +62,12 @@ public class LdapInternalSearch {
             strategy.doSearch(conn.getInitialContext(), baseDNs, filter, controls, handler);
         } catch (IOException e) {
             throw new ConnectorException(e);
+        } catch (PartialResultException e) {
+            // AD issue: The default naming context on the DC is used  as the baseContexts, hence this PartialResultException.
+            // Let's just silently catch it. It is thrown at the end of the search anyway...
+            if (!(ServerType.MSAD.equals(conn.getServerType()) || ServerType.MSAD_GC.equals(conn.getServerType()))) {
+                throw new ConnectorException(e);
+            }
         } catch (NamingException e) {
             throw new ConnectorException(e);
         }
