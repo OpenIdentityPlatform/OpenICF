@@ -125,7 +125,12 @@ public abstract class LdapEntry {
         public LdapName getDN() {
             if (dn == null) {
                 if (result.isRelative()) {
-                    dn = join(result.getName(), baseDN);
+                    try {
+                        //dn = join(result.getName(), baseDN);
+                        dn = new LdapName(result.getNameInNamespace());
+                    } catch (InvalidNameException ex) {
+                         throw new ConnectorException(ex);
+                    }
                 } else {
                     // Striping the scheme and host, according to a comment in the adapter.
                     dn = join(getDNFromLdapUrl(result.getName()), null);
