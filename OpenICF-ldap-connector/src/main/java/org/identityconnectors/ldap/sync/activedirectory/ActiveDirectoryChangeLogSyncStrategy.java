@@ -57,6 +57,8 @@ import org.identityconnectors.ldap.search.LdapInternalSearch;
 import org.identityconnectors.ldap.search.SearchResultsHandler;
 import org.identityconnectors.ldap.search.SimplePagedSearchStrategy;
 import org.identityconnectors.ldap.sync.LdapSyncStrategy;
+import static org.identityconnectors.ldap.ADLdapUtil.objectGUIDtoString;
+
 
 /**
  *
@@ -109,17 +111,20 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
             search.execute(new SearchResultsHandler() {
                 public boolean handle(String baseDN, SearchResult result) throws NamingException {
                     Attributes attrs = result.getAttributes();
-                    NamingEnumeration<? extends javax.naming.directory.Attribute> attrsEnum =  attrs.getAll();
                     Uid uid = conn.getSchemaMapping().createUid(conn.getConfiguration().getUidAttribute(), attrs);
                     // build the object first
                     ConnectorObjectBuilder cob = new ConnectorObjectBuilder();
                     cob.setUid(uid);
                     cob.setObjectClass(oclass);
                     cob.setName(result.getNameInNamespace());
-                    // Make sure we remove the binaries
-                    attrs.remove(LdapConstants.MS_GUID_ATTR);
+                    if (attrs.get(LdapConstants.MS_GUID_ATTR) != null){
+                        cob.addAttribute(AttributeBuilder.build(LdapConstants.MS_GUID_ATTR, objectGUIDtoString(attrs.get(LdapConstants.MS_GUID_ATTR))));
+                        attrs.remove(LdapConstants.MS_GUID_ATTR);
+                    }
+                    // Make sure we remove the SID
                     attrs.remove(OBJSID_ATTR);
                     // Set all Attributes
+                    NamingEnumeration<? extends javax.naming.directory.Attribute> attrsEnum =  attrs.getAll();
                     while (attrsEnum.hasMore()) {
                         javax.naming.directory.Attribute attr = attrsEnum.next();
                         String id = attr.getID();

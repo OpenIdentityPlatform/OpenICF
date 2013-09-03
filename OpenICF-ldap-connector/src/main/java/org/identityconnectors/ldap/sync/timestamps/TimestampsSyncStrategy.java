@@ -45,10 +45,12 @@ import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
+import static org.identityconnectors.ldap.ADLdapUtil.objectGUIDtoString;
 import org.identityconnectors.ldap.LdapConnection;
 import static org.identityconnectors.ldap.LdapUtil.buildMemberIdAttribute;
 import org.identityconnectors.ldap.ADUserAccountControl;
 import org.identityconnectors.ldap.LdapConnection.ServerType;
+import org.identityconnectors.ldap.LdapConstants;
 import org.identityconnectors.ldap.search.LdapInternalSearch;
 import org.identityconnectors.ldap.search.SearchResultsHandler;
 import org.identityconnectors.ldap.search.SimplePagedSearchStrategy;
@@ -103,7 +105,6 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
             search.execute(new SearchResultsHandler() {
                 public boolean handle(String baseDN, SearchResult result) throws NamingException {
                     Attributes attrs = result.getAttributes();
-                    NamingEnumeration<? extends javax.naming.directory.Attribute> attrsEnum = attrs.getAll();
                     Uid uid = conn.getSchemaMapping().createUid(conn.getConfiguration().getUidAttribute(), attrs);
                     // build the object first
                     ConnectorObjectBuilder cob = new ConnectorObjectBuilder();
@@ -111,18 +112,25 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
                     cob.setObjectClass(oclass);
                     cob.setName(result.getNameInNamespace());
 
-                    // Let's process ACCOUNT specifics...
-                    if (ObjectClass.ACCOUNT.equals(oclass) && 
-                            (server.equals(ServerType.MSAD_GC) || server.equals(ServerType.MSAD))) {
-                        javax.naming.directory.Attribute uac = attrs.get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR);
-                        if (uac != null) {
-                            String controls = uac.get().toString();
-                            cob.addAttribute(AttributeBuilder.buildEnabled(!ADUserAccountControl.isAccountDisabled(controls)));
-                            cob.addAttribute(AttributeBuilder.buildLockOut(ADUserAccountControl.isAccountLockOut(controls)));
-                            cob.addAttribute(AttributeBuilder.buildPasswordExpired(ADUserAccountControl.isPasswordExpired(controls)));
+                    // Let's process AD specifics...
+                    if (ServerType.MSAD_GC.equals(server) || ServerType.MSAD.equals(server)) {
+                        if (ObjectClass.ACCOUNT.equals(oclass))  {
+                            javax.naming.directory.Attribute uac = attrs.get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR);
+                            if (uac != null) {
+                                String controls = uac.get().toString();
+                                cob.addAttribute(AttributeBuilder.buildEnabled(!ADUserAccountControl.isAccountDisabled(controls)));
+                                cob.addAttribute(AttributeBuilder.buildLockOut(ADUserAccountControl.isAccountLockOut(controls)));
+                                cob.addAttribute(AttributeBuilder.buildPasswordExpired(ADUserAccountControl.isPasswordExpired(controls)));
+                            }
+                        }
+                        javax.naming.directory.Attribute guid = attrs.get(LdapConstants.MS_GUID_ATTR);
+                        if (guid != null) {
+                            cob.addAttribute(AttributeBuilder.build(LdapConstants.MS_GUID_ATTR, objectGUIDtoString(guid)));
+                            attrs.remove(LdapConstants.MS_GUID_ATTR);
                         }
                     }
                     // Set all Attributes
+                    NamingEnumeration<? extends javax.naming.directory.Attribute> attrsEnum = attrs.getAll();
                     while (attrsEnum.hasMore()) {
                         javax.naming.directory.Attribute attr = attrsEnum.next();
                         String id = attr.getID();

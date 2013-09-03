@@ -63,6 +63,8 @@ import static org.identityconnectors.common.StringUtil.isBlank;
 import org.identityconnectors.framework.common.objects.OperationalAttributeInfos;
 import static org.identityconnectors.ldap.LdapUtil.buildMemberIdAttribute;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValues;
+import static org.identityconnectors.ldap.ADLdapUtil.objectGUIDtoString;
+
 
 /**
  * A class to perform an LDAP search against a {@link LdapConnection}.
@@ -237,6 +239,8 @@ public class LdapSearch {
                 attribute = AttributeBuilder.build(LdapConstants.POSIX_GROUPS_NAME, posixGroups);
             } else if (LdapConstants.PASSWORD.is(attrName)) {
                 attribute = AttributeBuilder.build(attrName, new GuardedString());
+            } else if (LdapConstants.MS_GUID_ATTR.equalsIgnoreCase(attrName)) {
+                attribute = AttributeBuilder.build(LdapConstants.MS_GUID_ATTR, objectGUIDtoString(entry.getAttributes().get(LdapConstants.MS_GUID_ATTR)));
             } else if (oclass.equals(ObjectClass.ACCOUNT) && OperationalAttributes.OPERATIONAL_ATTRIBUTE_NAMES.contains(attrName)){
                 try {
                     switch (conn.getServerType()) {
