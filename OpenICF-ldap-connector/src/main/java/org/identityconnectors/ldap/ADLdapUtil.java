@@ -23,10 +23,18 @@
  */
 package org.identityconnectors.ldap;
 
+import java.util.ArrayList;
+import java.util.List;
+import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
+import javax.naming.directory.SearchControls;
+import javax.naming.directory.SearchResult;
+import javax.naming.ldap.LdapContext;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.ldap.search.LdapInternalSearch;
 
 /**
  *
@@ -41,6 +49,10 @@ public class ADLdapUtil {
     
     private static final Log log = Log.getLog(ADLdapUtil.class);
     
+    /* 
+     * Maximum number of members retrieved from a group in one search 
+     */
+    public static final int GROUP_MEMBERS_MAXRANGE = 1500;
     
     static String AddLeadingZero(int k) {
             return (k<=0xF)?"0" + Integer.toHexString(k):Integer.toHexString(k);
@@ -158,5 +170,50 @@ public class ADLdapUtil {
         return bString.toString();
     }
     
+    public static List fetchGroupMembersByRange(LdapConnection conn, SearchResult result){
+        return fetchGroupMembersByRange(conn, LdapEntry.create(null, result));
+    }
     
+    /*
+     * This method returns the list of members when the group has over 1500 members.
+     * 
+     */
+    public static List fetchGroupMembersByRange(LdapConnection conn, LdapEntry entry){
+        boolean done = false;
+        int first = 0;
+        int last = GROUP_MEMBERS_MAXRANGE -1;
+        List members = new ArrayList();
+        // get the first slice (0-1499)
+        org.identityconnectors.framework.common.objects.Attribute range = conn.getSchemaMapping().createAttribute(ObjectClass.GROUP, String.format("member;range=%d-%d",first,last), entry, false);
+        if (range != null){
+            members.addAll(range.getValue());
+            first = last +1;
+            last = first + GROUP_MEMBERS_MAXRANGE -1;
+            
+            while (!done) {
+                try {
+                    SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
+                    controls.setSearchScope(SearchControls.OBJECT_SCOPE);
+                    controls.setReturningAttributes(new String[]{String.format("member;range=%d-%d", first, last)});
+                    LdapContext context = conn.getInitialContext().newInstance(null);
+                    NamingEnumeration<SearchResult> entries = context.search(entry.getDN(), "objectclass=*", controls);
+                    SearchResult res = entries.next();
+                    if (res != null) {
+                        range = conn.getSchemaMapping().createAttribute(ObjectClass.GROUP, String.format("member;range=%d-%d", first, last), LdapEntry.create(null,res), true);
+                        // we hit the last slice... so the range ends with an '*'
+                        if (range.getValue().isEmpty()) {
+                            range = conn.getSchemaMapping().createAttribute(ObjectClass.GROUP, String.format("member;range=%d-*", first), LdapEntry.create(null,res), true);
+                            done = true;
+                        }
+                        members.addAll(range.getValue());
+                    }
+                } catch (NamingException e) {
+                    log.error(e, "Error reading group member;range attribute");
+                }
+                first = last + 1;
+                last = first + GROUP_MEMBERS_MAXRANGE -1;
+            }
+        }
+        return members;
+    }
 }

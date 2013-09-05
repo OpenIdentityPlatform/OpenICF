@@ -36,6 +36,7 @@ import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -45,6 +46,7 @@ import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
+import static org.identityconnectors.ldap.ADLdapUtil.fetchGroupMembersByRange;
 import static org.identityconnectors.ldap.ADLdapUtil.objectGUIDtoString;
 import org.identityconnectors.ldap.LdapConnection;
 import static org.identityconnectors.ldap.LdapUtil.buildMemberIdAttribute;
@@ -123,6 +125,20 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
                                 cob.addAttribute(AttributeBuilder.buildPasswordExpired(ADUserAccountControl.isPasswordExpired(controls)));
                             }
                         }
+                        if (ObjectClass.GROUP.equals(oclass)) {
+                            // Make sure we're not hitting AD large group issue
+                            // see: http://msdn.microsoft.com/en-us/library/ms817827.aspx
+                            if (attrs.get("member;range=0-1499") != null) {
+                                // we're in the limitation
+                                Attribute range = AttributeBuilder.build("member", fetchGroupMembersByRange(conn, result));
+                                cob.addAttribute(range);
+                                if (conn.getConfiguration().isGetGroupMemberId()){
+                                    cob.addAttribute(buildMemberIdAttribute(conn, range));
+                                }
+                                attrs.remove("member;range=0-1499");
+                                attrs.remove("member");
+                            }
+                        }
                         javax.naming.directory.Attribute guid = attrs.get(LdapConstants.MS_GUID_ATTR);
                         if (guid != null) {
                             cob.addAttribute(AttributeBuilder.build(LdapConstants.MS_GUID_ATTR, objectGUIDtoString(guid)));
@@ -139,7 +155,8 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
                         while (vals.hasMore()) {
                             values.add(vals.next());
                         }
-                        if (conn.getConfiguration().isGetGroupMemberId() && ObjectClass.GROUP.equals(oclass) && id.equalsIgnoreCase("member")) {
+                        if (conn.getConfiguration().isGetGroupMemberId() && ObjectClass.GROUP.equals(oclass) 
+                                && id.equalsIgnoreCase(conn.getConfiguration().getGroupMemberAttribute())) {
                             cob.addAttribute(buildMemberIdAttribute(conn, attr));
                         }
                         cob.addAttribute(AttributeBuilder.build(id, values));

@@ -490,6 +490,25 @@ public class LdapUtil {
         }
     }
     
+    private static String getIDfromDN(LdapConnection conn, String dn) throws NamingException{
+                    if (isDNAttribute(conn.getConfiguration().getUidAttribute())) {
+                        return dn;
+                    } else {
+                        SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
+                        controls.setSearchScope(SearchControls.OBJECT_SCOPE);
+                        controls.setReturningAttributes(new String[]{conn.getConfiguration().getUidAttribute()});
+                        LdapContext context = conn.getInitialContext().newInstance(null);
+                        NamingEnumeration<SearchResult> entries = context.search(dn, "objectclass=*", controls);
+                        SearchResult res = entries.next();
+                        String uidAttr = conn.getConfiguration().getUidAttribute();
+                        if (LdapConstants.MS_GUID_ATTR.equalsIgnoreCase(uidAttr)) {
+                            return(ADLdapUtil.objectGUIDtoString(res.getAttributes().get(conn.getConfiguration().getUidAttribute())));
+                        } else {
+                            return(res.getAttributes().get(conn.getConfiguration().getUidAttribute()).get(0).toString());
+                        }
+                    }
+    }
+    
     // This function builds a _memberId attribute which is a helper
     // that contains the group members' GUID
     public static org.identityconnectors.framework.common.objects.Attribute buildMemberIdAttribute(LdapConnection conn, javax.naming.directory.Attribute attr) {
@@ -498,24 +517,21 @@ public class LdapUtil {
             if (attr != null) {
                 NamingEnumeration<?> vals = attr.getAll();
                 while (vals.hasMore()) {
-                    String entryDN = vals.next().toString();
-                    if (isDNAttribute(conn.getConfiguration().getUidAttribute())) {
-                        membersIds.add(entryDN);
-                    } else {
-                        SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
-                        controls.setSearchScope(SearchControls.OBJECT_SCOPE);
-                        LdapContext context = conn.getInitialContext().newInstance(null);
-                        NamingEnumeration<SearchResult> entries = context.search(entryDN, "objectclass=*", controls);
-                        SearchResult res = entries.next();
-                        String uidAttr = conn.getConfiguration().getUidAttribute();
-                        String id;
-                        if (LdapConstants.MS_GUID_ATTR.equalsIgnoreCase(uidAttr)) {
-                            id = ADLdapUtil.objectGUIDtoString(res.getAttributes().get(conn.getConfiguration().getUidAttribute()));
-                        } else {
-                            id = res.getAttributes().get(conn.getConfiguration().getUidAttribute()).get(0).toString();
-                        }
-                        membersIds.add(id);
-                    }
+                    membersIds.add(getIDfromDN(conn, vals.next().toString()));
+                }
+            }
+        } catch (NamingException e) {
+            log.error(e,"Error reading group member attribute");
+        }
+        return AttributeBuilder.build("_memberId", membersIds);
+    }
+
+    public static org.identityconnectors.framework.common.objects.Attribute buildMemberIdAttribute(LdapConnection conn, org.identityconnectors.framework.common.objects.Attribute attr) {
+        ArrayList<String> membersIds = new ArrayList<String>();
+        try {
+            if (attr != null) {
+                for(Object val: attr.getValue()){
+                    membersIds.add(getIDfromDN(conn, val.toString()));
                 }
             }
         } catch (NamingException e) {

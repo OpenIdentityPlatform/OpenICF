@@ -38,6 +38,7 @@ import javax.naming.ldap.Control;
 import javax.naming.ldap.LdapContext;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -58,6 +59,7 @@ import org.identityconnectors.ldap.search.SearchResultsHandler;
 import org.identityconnectors.ldap.search.SimplePagedSearchStrategy;
 import org.identityconnectors.ldap.sync.LdapSyncStrategy;
 import static org.identityconnectors.ldap.ADLdapUtil.objectGUIDtoString;
+import static org.identityconnectors.ldap.ADLdapUtil.fetchGroupMembersByRange;
 
 
 /**
@@ -117,14 +119,30 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                     cob.setUid(uid);
                     cob.setObjectClass(oclass);
                     cob.setName(result.getNameInNamespace());
-                    if (attrs.get(LdapConstants.MS_GUID_ATTR) != null){
+                    if (attrs.get(LdapConstants.MS_GUID_ATTR) != null) {
                         cob.addAttribute(AttributeBuilder.build(LdapConstants.MS_GUID_ATTR, objectGUIDtoString(attrs.get(LdapConstants.MS_GUID_ATTR))));
                         attrs.remove(LdapConstants.MS_GUID_ATTR);
                     }
                     // Make sure we remove the SID
                     attrs.remove(OBJSID_ATTR);
+
+                    // Make sure we're not hitting AD large group issue
+                    if (ObjectClass.GROUP.equals(oclass)) {
+                        // see: http://msdn.microsoft.com/en-us/library/ms817827.aspx
+                        if (attrs.get("member;range=0-1499") != null) {
+                            // we're in the limitation
+                            Attribute range = AttributeBuilder.build("member", fetchGroupMembersByRange(conn, result));
+                            cob.addAttribute(range);
+                            if (conn.getConfiguration().isGetGroupMemberId()) {
+                                cob.addAttribute(buildMemberIdAttribute(conn, range));
+                            }
+                            attrs.remove("member;range=0-1499");
+                            attrs.remove("member");
+                        }
+                    }
+                    
                     // Set all Attributes
-                    NamingEnumeration<? extends javax.naming.directory.Attribute> attrsEnum =  attrs.getAll();
+                    NamingEnumeration<? extends javax.naming.directory.Attribute> attrsEnum = attrs.getAll();
                     while (attrsEnum.hasMore()) {
                         javax.naming.directory.Attribute attr = attrsEnum.next();
                         String id = attr.getID();
@@ -135,13 +153,13 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                         }
                         cob.addAttribute(AttributeBuilder.build(id, values));
                         if (conn.getConfiguration().isGetGroupMemberId() && oclass.equals(ObjectClass.GROUP) && attr.getID().equalsIgnoreCase("member")) {
-                            cob.addAttribute(buildMemberIdAttribute(conn,attr));
+                            cob.addAttribute(buildMemberIdAttribute(conn, attr));
                         }
-                        if (oclass.equals(ObjectClass.ACCOUNT) && id.equalsIgnoreCase(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR)){
-                                String controls = values.get(0).toString();
-                                cob.addAttribute(AttributeBuilder.buildEnabled(!ADUserAccountControl.isAccountDisabled(controls)));
-                                cob.addAttribute(AttributeBuilder.buildLockOut(ADUserAccountControl.isAccountLockOut(controls)));
-                                cob.addAttribute(AttributeBuilder.buildPasswordExpired(ADUserAccountControl.isPasswordExpired(controls)));
+                        if (oclass.equals(ObjectClass.ACCOUNT) && id.equalsIgnoreCase(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR)) {
+                            String controls = values.get(0).toString();
+                            cob.addAttribute(AttributeBuilder.buildEnabled(!ADUserAccountControl.isAccountDisabled(controls)));
+                            cob.addAttribute(AttributeBuilder.buildLockOut(ADUserAccountControl.isAccountLockOut(controls)));
+                            cob.addAttribute(AttributeBuilder.buildPasswordExpired(ADUserAccountControl.isPasswordExpired(controls)));
                         }
                     }
                     String usnChanged = attrs.get(USN_CHANGED_ATTR).get().toString();
@@ -195,7 +213,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
         }
         // Changes are now ordered in the TreeMap according to usnChanged.
         for (Map.Entry<Integer, SyncDelta> entry : changes.entrySet()) {
-            if (!handler.handle(entry.getValue())){
+            if (!handler.handle(entry.getValue())) {
                 break;
             }
         }
@@ -239,7 +257,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                 filter.append(oclasses[i]);
                 filter.append(")");
             }
-            if (conn.getConfiguration().getAccountSynchronizationFilter() != null){
+            if (conn.getConfiguration().getAccountSynchronizationFilter() != null) {
                 filter.append(conn.getConfiguration().getAccountSynchronizationFilter());
             }
         } else if (ObjectClass.GROUP.equals(oc)) {
@@ -249,7 +267,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                 filter.append(oclasses[i]);
                 filter.append(")");
             }
-            if (conn.getConfiguration().getGroupSynchronizationFilter() != null){
+            if (conn.getConfiguration().getGroupSynchronizationFilter() != null) {
                 filter.append(conn.getConfiguration().getGroupSynchronizationFilter());
             }
         } else { // we use the ObjectClass value as the filter...

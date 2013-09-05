@@ -64,6 +64,8 @@ import org.identityconnectors.framework.common.objects.OperationalAttributeInfos
 import static org.identityconnectors.ldap.LdapUtil.buildMemberIdAttribute;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValues;
 import static org.identityconnectors.ldap.ADLdapUtil.objectGUIDtoString;
+import static org.identityconnectors.ldap.ADLdapUtil.fetchGroupMembersByRange;
+import org.identityconnectors.ldap.LdapConnection.ServerType;
 
 
 /**
@@ -74,7 +76,6 @@ import static org.identityconnectors.ldap.ADLdapUtil.objectGUIDtoString;
 public class LdapSearch {
 
     private static final Log log = Log.getLog(LdapSearch.class);
-
     private final LdapConnection conn;
     private final ObjectClass oclass;
     private final LdapFilter filter;
@@ -241,7 +242,7 @@ public class LdapSearch {
                 attribute = AttributeBuilder.build(attrName, new GuardedString());
             } else if (LdapConstants.MS_GUID_ATTR.equalsIgnoreCase(attrName)) {
                 attribute = AttributeBuilder.build(LdapConstants.MS_GUID_ATTR, objectGUIDtoString(entry.getAttributes().get(LdapConstants.MS_GUID_ATTR)));
-            } else if (oclass.equals(ObjectClass.ACCOUNT) && OperationalAttributes.OPERATIONAL_ATTRIBUTE_NAMES.contains(attrName)){
+            } else if (oclass.equals(ObjectClass.ACCOUNT) && OperationalAttributes.OPERATIONAL_ATTRIBUTE_NAMES.contains(attrName)) {
                 try {
                     switch (conn.getServerType()) {
                         case MSAD_GC:
@@ -259,21 +260,28 @@ public class LdapSearch {
                             log.warn("Special Attribute {0} of object class {1} is not mapped to an LDAP attribute",
                                     attrName, oclass.getObjectClassValue());
                     }
-                }
-                catch(NamingException e){
+                } catch (NamingException e) {
                     log.error(e, "Can't read " + ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR);
                 }
             } else {
                 attribute = conn.getSchemaMapping().createAttribute(oclass, attrName, entry, emptyAttrWhenNotFound);
             }
+            if (ObjectClass.GROUP.equals(oclass) && conn.getConfiguration().getGroupMemberAttribute().equalsIgnoreCase(attrName)) {
+                if (ServerType.MSAD.equals(conn.getServerType()) || ServerType.MSAD_GC.equals(conn.getServerType())) {
+                    // Make sure we're not hitting AD large group issue
+                    // see: http://msdn.microsoft.com/en-us/library/ms817827.aspx
+                    if (entry.getAttributes().get("member;range=0-1499") != null) {
+                        // we're in the limitation
+                        attribute = AttributeBuilder.build(attrName, fetchGroupMembersByRange(conn,entry));
+                    }
+                }
+                if (conn.getConfiguration().isGetGroupMemberId()) {
+                    // create an extra _memberId attr for groups
+                    builder.addAttribute(buildMemberIdAttribute(conn, attribute));
+                }
+            }
             if (attribute != null) {
                 builder.addAttribute(attribute);
-            }
-            if (conn.getConfiguration().isGetGroupMemberId()
-                    && oclass.equals(ObjectClass.GROUP) 
-                    && conn.getConfiguration().getGroupMemberAttribute().equalsIgnoreCase(attrName)) {
-                // create an extra _memberId attr for groups
-                builder.addAttribute(buildMemberIdAttribute(conn,entry.getAttributes().get(attrName)));
             }
         }
 
