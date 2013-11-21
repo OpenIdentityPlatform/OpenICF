@@ -360,21 +360,16 @@ public class LdapSearch {
 
     private LdapSearchStrategy getSearchStrategy() {
         LdapSearchStrategy strategy;
-        if (ObjectClass.ACCOUNT.equals(oclass)) {
-            // Only consider paged strategies for accounts, just as the adapter does.
 
-            boolean useBlocks = conn.getConfiguration().isUseBlocks();
-            boolean usePagedResultsControl = conn.getConfiguration().isUsePagedResultControl();
-            int pageSize = conn.getConfiguration().getBlockSize();
+        boolean useBlocks = conn.getConfiguration().isUseBlocks();
+        boolean usePagedResultsControl = conn.getConfiguration().isUsePagedResultControl();
+        int pageSize = conn.getConfiguration().getBlockSize();
 
-            if (useBlocks && !usePagedResultsControl && conn.supportsControl(VirtualListViewControl.OID)) {
-                String vlvSortAttr = conn.getConfiguration().getVlvSortAttribute();
-                strategy = new VlvIndexSearchStrategy(vlvSortAttr, pageSize);
-            } else if (useBlocks && conn.supportsControl(PagedResultsControl.OID)) {
-                strategy = new SimplePagedSearchStrategy(pageSize);
-            } else {
-                strategy = new DefaultSearchStrategy(false);
-            }
+        if (useBlocks && !usePagedResultsControl && conn.supportsControl(VirtualListViewControl.OID)) {
+            String vlvSortAttr = conn.getConfiguration().getVlvSortAttribute();
+            strategy = new VlvIndexSearchStrategy(vlvSortAttr, pageSize);
+        } else if (useBlocks && conn.supportsControl(PagedResultsControl.OID)) {
+            strategy = new SimplePagedSearchStrategy(pageSize);
         } else {
             strategy = new DefaultSearchStrategy(false);
         }
