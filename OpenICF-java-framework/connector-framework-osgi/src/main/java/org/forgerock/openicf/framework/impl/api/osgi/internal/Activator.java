@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2010-2013 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Sample Class Doc
- * 
+ *
  * @author Laszlo Hordos
  * @since 1.1
  */
@@ -56,8 +56,9 @@ public class Activator implements BundleActivator {
     /**
      *
      */
-    private ServiceRegistration connectorInfoManager;
+    private ServiceRegistration<?> connectorInfoManager;
 
+    @SuppressWarnings("unchecked")
     public void start(BundleContext context) throws Exception {
         LOG.debug("OpenICF OSGi Extender - Starting");
 

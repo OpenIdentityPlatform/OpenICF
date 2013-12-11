@@ -20,8 +20,8 @@
   !
   ! CCPL HEADER END
   !
-  !      Copyright 2012 ForgeRock AS
-  !    
+  !      Copyright 2012-2013 ForgeRock AS
+  !
 -->
 <preface xml:id='preface'
  xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
@@ -30,13 +30,13 @@
  xmlns:xlink='http://www.w3.org/1999/xlink'
  xmlns:xinclude='http://www.w3.org/2001/XInclude'>
  <title>Preface</title>
- 
+
  <para>This guide shows you how to work with and develop OpenICF connectors,
  which decouple applications from data resources.</para>
 
  <section>
   <title>Who Should Use this Guide</title>
-  
+
   <para>This guide is written for Java and web developers who use OpenICF to
   connect to resources from their applications, and who build OpenICF
   connectors and connector servers.</para>

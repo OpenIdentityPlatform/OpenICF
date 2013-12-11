@@ -1,7 +1,7 @@
 /*
  * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012. ForgeRock Inc. All rights reserved.
+ * Copyright (c) 2012-2013 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -25,7 +25,7 @@
 
 /* +---------------------------------------------------+
  *  ----------- Contract Tests configuration ------------
- *  +---------------------------------------------------+ 
+ *  +---------------------------------------------------+
  */
 
 //-DtestConfig=default -DconnectorName=org.forgerock.openicf.connectors.basic.BasicConnector -DbundleJar=target/basic-connector-1.1.0.0-SNAPSHOT.jar -DbundleName=org.forgerock.openicf.connectors.basic-connector -DbundleVersion=1.1.0.0-SNAPSHOT

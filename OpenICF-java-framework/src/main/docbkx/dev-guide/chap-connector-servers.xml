@@ -20,8 +20,8 @@
   !
   ! CCPL HEADER END
   !
-  !      Copyright 2012 ForgeRock AS
-  !    
+  !      Copyright 2012-2013 ForgeRock AS
+  !
 -->
 <chapter xml:id='chap-connector-servers'
  xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
@@ -156,14 +156,14 @@
   <para>Connector Servers use the .NET trace mechanism as described in
   Microsoft's .NET documentation for
   <literal>System.Diagnostics</literal>.</para>
-  
+
   <para>Start with default settings. For less tracing, change the
   <literal>EventTypeFilter</literal>'s <literal>initializeData</literal>
   to <literal>Warning</literal> or <literal>Error</literal>. For verbose
   logging, set the value to <literal>Verbose</literal> or
   <literal>All</literal>. Log level has a direct effect on Connector
   Server performance, so avoid verbose logging in production systems.</para>
-  
+
   <para>After making configuration changes, stop and restart the Connector
   Server for your changes to take effect.</para>
  </section>

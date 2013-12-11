@@ -35,6 +35,7 @@ package org.identityconnectors.common;
  *
  * @author Laszlo Hordos
  * @Immutable
+ * @since 1.4
  */
 public class VersionRange {
 

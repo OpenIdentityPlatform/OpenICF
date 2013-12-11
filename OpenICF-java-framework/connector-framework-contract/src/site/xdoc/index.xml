@@ -2,7 +2,7 @@
 <!--
   ~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
   ~
-  ~ Copyright © 2011. ForgeRock AS. All rights reserved.
+  ~ Copyright (c) 2010-2013 ForgeRock AS. All rights reserved.
   ~
   ~ The contents of this file are subject to the terms
   ~ of the Common Development and Distribution License
@@ -284,7 +284,7 @@ a full qualified name of your connector e.g
 with resource-specific configuration information. For example, a
                             <span style="font-family: monospace;" class="literal">databasetable</span>
 connector can run against various databases, and in the case of a MySQL
-configuration, the folder name would be 
+configuration, the folder name would be
                             <span style="font-family: monospace;" class="literal">.databasetable-mysql</span>.
                         </li>
                         <li>Connector build script copies the configuration files from your connector project folder(src/test/config) and default private configuration folder(user.home/.connectors/bundle-name/config) to be present on classpath of the unit and contract tests</li>
@@ -593,7 +593,7 @@ property will be used in the first iteration (must be at least one)
 
                                 <span class="codeComment">//
 The following
-property will be used in the second iteration 
+property will be used in the second iteration
                                 </span>
                                 <br/>
 
@@ -852,7 +852,7 @@ will compile the Framework and Connector classes.
                             <code>ant
 run-contract-tests
                             </code> from the connector directory
-(for example, 
+(for example,
                             <code>/bundles/fooconnector</code>).
                         </li>
 
@@ -875,7 +875,7 @@ subdirectory.
                                     </td>
 
                                     <td>
-When you type 
+When you type
                                         <code>ant report-junits</code> a new
                                         <code>connector.jar</code>
 is created in a
@@ -953,7 +953,7 @@ import statement your configuration file.
 
                                         <li>
                                             <span style="font-weight: bold;">Verify
-the following 
+the following
                                             </span>
                                             <span style="font-weight: bold;">contract-test-specific
 imports
@@ -1127,10 +1127,10 @@ is relative to the working directory.
 
                         <li>
                             <code>-DbundleVersion=1.0.x </code>-
-Set the version in the following format: 
+Set the version in the following format:
                             <code>MAJOR.MINOR.SVN_REVISION</code>
                             <br/>
-In case 
+In case
                             <code>SVN_REVISION</code> is not set, we can use 'x' instead.
                         </li>
 

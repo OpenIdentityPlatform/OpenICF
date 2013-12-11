@@ -1,7 +1,7 @@
 /*
  * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 ForgeRock Inc. All rights reserved.
+ * Copyright (c) 2012-2013 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -29,14 +29,14 @@ import java.io.IOException;
 
 /**
  * An ObjectPoolEntry is a borrowed object from pool.
- * 
+ *
  * @author Laszlo Hordos
  */
 public interface ObjectPoolEntry<T> extends Closeable {
 
     /**
      * Gets the object which is pooled.
-     * 
+     *
      * @return The pooled object instance.
      */
     public T getPooledObject();
@@ -45,6 +45,7 @@ public interface ObjectPoolEntry<T> extends Closeable {
      * Release the pooled object and puts back to the pool where is was borrowed
      * from.
      */
+    @Override
     public void close() throws IOException;
 
 }

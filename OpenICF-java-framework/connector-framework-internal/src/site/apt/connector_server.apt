@@ -7,7 +7,7 @@
 ~~
 ~~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 ~~
-~~ Copyright © 2011. ForgeRock AS. All rights reserved.
+~~ Copyright (c) 2010-2013 ForgeRock AS. All rights reserved.
 ~~
 ~~ The contents of this file are subject to the terms
 ~~ of the Common Development and Distribution License
@@ -51,7 +51,7 @@ Connector Server
     *.NET Framework 3.5 or higher but not 4.0 or above!
 
     *Refer to your .NET connector to determine if there are any additional requirements
-    
+
     []
 
     Execute <<ServiceInstall-1.1.0.xxxx.msi>>. Just follow the wizard. It will walk you through the whole process step by step. Upon completion, the Connector Server will be installed as a windows service.
@@ -63,7 +63,7 @@ Connector Server
 ---
 ConnectorServer /setkey <newkey>
 ---
-    
+
     where <newkey> is the value for the new key. This key is required by any client that connects to this Connector Server.
 
     Look through the configuration file and inspect all settings. The most common things to change would be the port, trace, and ssl settings.
@@ -91,7 +91,7 @@ ConnectorServer /setkey <newkey>
     *Connector server port
 
     *Connector server key
-    
+
     *Whether SSL is enabled
 
     []
@@ -283,4 +283,3 @@ connectorserver.key=lmA6bMfENJGlIDbfrVtklXFK32s\=
 ## Logger class.
 ##
 +---
-    

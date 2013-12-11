@@ -19,8 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- *
- * Portions Copyrighted 2011-2013 ForgeRock
+ * Portions Copyrighted 2010-2013 ForgeRock AS.
  */
 
 package org.identityconnectors.framework.server.impl;
@@ -45,6 +44,7 @@ public class ConnectorServerImpl extends ConnectorServer {
     private CountDownLatch stopLatch;
     private Long startDate = null;
 
+    @Override
     public Long getStartTime() {
         return startDate;
     }
@@ -126,7 +126,7 @@ public class ConnectorServerImpl extends ConnectorServer {
             startDate = null;
             listener = null;
         }
-        ConnectorFacadeFactory.getInstance().dispose();
+        ConnectorFacadeFactory.getManagedInstance().dispose();
     }
 
     @Override

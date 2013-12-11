@@ -1,7 +1,7 @@
 /*
- * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 ForgeRock Inc. All rights reserved.
+ * Copyright (c) 2013 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -22,19 +22,25 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
 
-package org.identityconnectors.framework.spi;
+package org.identityconnectors.testconnector;
 
-/**
- * An SharedPoolableConnector provides ThreadSafe access to shared resources
- * between different connector instances within the same
- * {@link org.identityconnectors.framework.impl.api.local.ObjectPool}.
- * <p/>
- * A connector instance can create a custom connection pool and share it with
- * the other instances withing the same pool.
- *
- * @author Laszlo Hordos
- * @since 1.2
- */
-public interface SharedPoolableConnector extends PoolableConnector {
+import java.util.UUID;
 
+import org.identityconnectors.framework.spi.StatefulConfiguration;
+
+public class TstStatefulConnectorConfig extends TstConnectorConfig implements StatefulConfiguration {
+
+    private UUID guid;
+
+    public synchronized UUID getGuid() {
+        if (null == guid) {
+            guid = UUID.randomUUID();
+        }
+        return guid;
+    }
+
+    @Override
+    public void release() {
+        guid = null;
+    }
 }

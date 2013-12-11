@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
- Copyright (c) 2011 ForgeRock Inc. All Rights Reserved
+ Copyright (c) 2010-2013 ForgeRock AS. All Rights Reserved
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -25,14 +25,14 @@
 
 <project xmlns="http://maven.apache.org/DECORATION/1.0.1"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/DECORATION/1.0.1 http://maven.apache.org/xsd/decoration-1.0.1.xsd">  
+    xsi:schemaLocation="http://maven.apache.org/DECORATION/1.0.1 http://maven.apache.org/xsd/decoration-1.0.1.xsd">
     <!--bannerRight>
         <name>OpenICF</name>
         <src>images/OpenIDM-web-transparent.png</src>
         <alt>OpenICF</alt>
         <href>https://wikis.forgerock.org/confluence/display/openicf/Home</href>
     </bannerRight-->
-    
+
     <body>
         <menu ref="parent"/>
         <menu name="Overview" img="images/arrow_right.png" inherit="top" inheritAsRef="true">

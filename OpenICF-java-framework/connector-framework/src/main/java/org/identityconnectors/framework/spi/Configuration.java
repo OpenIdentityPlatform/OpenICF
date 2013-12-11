@@ -23,7 +23,6 @@
 package org.identityconnectors.framework.spi;
 
 import org.identityconnectors.framework.common.FrameworkUtil;
-import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.ConnectorMessages;
 import org.identityconnectors.framework.spi.operations.TestOp;
 
@@ -77,7 +76,9 @@ public interface Configuration {
      *             if the configuration is not valid. Implementations are
      *             encouraged to throw the most specific exception available.
      *             When no specific exception is available, implementations can
-     *             throw {@link ConfigurationException}.
+     *             throw
+     *             {@link org.identityconnectors.framework.common.exceptions.ConfigurationException}
+     *             .
      */
     public void validate();
 

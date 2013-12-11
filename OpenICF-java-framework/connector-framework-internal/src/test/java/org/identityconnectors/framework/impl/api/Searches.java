@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2010-2013 ForgeRock AS.
  */
 package org.identityconnectors.framework.impl.api;
 
@@ -28,14 +29,17 @@ import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
+import org.identityconnectors.framework.common.objects.SearchResult;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
 public class Searches {
 
     static class EmptySearch implements SearchApiOp {
 
-        public void search(final ObjectClass objectClass, final Filter filter,
+        @Override
+        public SearchResult search(final ObjectClass objectClass, final Filter filter,
                 final ResultsHandler handler, final OperationOptions options) {
+            return new SearchResult();
 
         }
     }
@@ -51,7 +55,8 @@ public class Searches {
             this.limit = limit;
         }
 
-        public void search(final ObjectClass objectClass, final Filter filter,
+        @Override
+        public SearchResult search(final ObjectClass objectClass, final Filter filter,
                 final ResultsHandler handler, OperationOptions options) {
             for (int i = 0; i < limit; i++) {
                 beforeObject(i);
@@ -65,6 +70,7 @@ public class Searches {
                     break;
                 }
             }
+            return new SearchResult();
         }
 
         protected void beforeObject(int count) {

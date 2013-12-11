@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2010-2013 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -74,7 +74,7 @@ import org.slf4j.LoggerFactory;
 /**
  * The OSGi ConnectorInfoManager Implementation ...
  * <p/>
- * 
+ *
  * @author Laszlo Hordos
  * @since 1.1
  */
@@ -94,6 +94,7 @@ public class OsgiConnectorInfoManagerImpl extends ConnectorFacadeFactory impleme
 
     private final Vector<ConnectorEventHandler> eventHandlers = new Vector<ConnectorEventHandler>();
 
+    @Override
     public ConnectorInfo findConnectorInfo(ConnectorKey key) {
         for (Pair<Bundle, List<ConnectorInfo>> bundle : connectorInfoCache.values()) {
             for (ConnectorInfo info : bundle.second) {
@@ -105,6 +106,7 @@ public class OsgiConnectorInfoManagerImpl extends ConnectorFacadeFactory impleme
         return null;
     }
 
+    @Override
     public List<ConnectorInfo> getConnectorInfos() {
         List<ConnectorInfo> result = new ArrayList<ConnectorInfo>();
         for (Pair<Bundle, List<ConnectorInfo>> info : connectorInfoCache.values()) {
@@ -113,10 +115,12 @@ public class OsgiConnectorInfoManagerImpl extends ConnectorFacadeFactory impleme
         return CollectionUtil.newReadOnlyList(result);
     }
 
+    @Override
     public void dispose() {
         ConnectorPoolManager.dispose();
     }
 
+    @Override
     public ConnectorFacade newInstance(APIConfiguration config) {
         ConnectorFacade ret = null;
         APIConfigurationImpl impl = (APIConfigurationImpl) config;
@@ -138,6 +142,27 @@ public class OsgiConnectorInfoManagerImpl extends ConnectorFacadeFactory impleme
         return ret;
     }
 
+    @Override
+    public ConnectorFacade newInstance(ConnectorInfo connectorInfo, String config) {
+        ConnectorFacade ret = null;
+        if (connectorInfo instanceof LocalConnectorInfoImpl) {
+            LocalConnectorInfoImpl localInfo = (LocalConnectorInfoImpl) connectorInfo;
+            try {
+                // create a new Provisioner..
+                ret = new LocalConnectorFacadeImpl(localInfo, config);
+            } catch (Exception ex) {
+                String connector = connectorInfo.getConnectorKey().toString();
+                logger.error("Failed to create new connector facade: {}, {}", new Object[] {
+                        connector, config }, ex);
+                throw ConnectorException.wrap(ex);
+            }
+        } else {
+            throw new ConnectorException("RemoteConnector not supported!");
+        }
+        return ret;
+    }
+
+    @Override
     public void addingEntries(Bundle bundle, List<ManifestEntry> list) {
         NullArgumentException.validateNotNull(bundle, "Bundle");
         NullArgumentException.validateNotNull(list, "ManifestEntry");
@@ -156,6 +181,7 @@ public class OsgiConnectorInfoManagerImpl extends ConnectorFacadeFactory impleme
         }
     }
 
+    @Override
     public void removingEntries(Bundle bundle, List<ManifestEntry> list) {
         NullArgumentException.validateNotNull(bundle, "Bundle");
         synchronized (connectorInfoCache) {
@@ -174,6 +200,7 @@ public class OsgiConnectorInfoManagerImpl extends ConnectorFacadeFactory impleme
     /**
      * {@inheritDoc}
      */
+    @Override
     public void addConnectorEventHandler(ConnectorEventHandler hook) {
         if (hook == null) {
             throw new NullPointerException();
@@ -195,6 +222,7 @@ public class OsgiConnectorInfoManagerImpl extends ConnectorFacadeFactory impleme
     /**
      * {@inheritDoc}
      */
+    @Override
     public void deleteConnectorEventHandler(ConnectorEventHandler hook) {
         eventHandlers.removeElement(hook);
     }

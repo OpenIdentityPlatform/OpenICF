@@ -1,7 +1,7 @@
 /*
  * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 ForgeRock Inc. All rights reserved.
+ * Copyright (c) 2012-2013 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -27,7 +27,6 @@ package org.identityconnectors.contract.test;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import org.identityconnectors.common.StringUtil;
@@ -44,26 +43,40 @@ import com.google.inject.Injector;
 
 /**
  * A ContractITCase is the factory of the OpenICF connector contract tests.
- * 
+ *
  * @author Laszlo Hordos
  */
+@SuppressWarnings("rawtypes")
 public class ContractITCase {
 
-    public static final Class[] DEFAULT_TEST_CLASSES = new Class[] { AttributeTests.class,
-        AuthenticationApiOpTests.class, ConfigurationTests.class, CreateApiOpTests.class,
-        DeleteApiOpTests.class, GetApiOpTests.class, MultiOpTests.class, ResolveUsernameApiOpTests.class,SchemaApiOpTests.class,
-        ScriptOnConnectorApiOpTests.class, ScriptOnResourceApiOpTests.class,
-        SearchApiOpTests.class, SyncApiOpTests.class, TestApiOpTests.class, UpdateApiOpTests.class,
-        ValidateApiOpTests.class };
+    // @formatter:off
+    public static final Class[] DEFAULT_TEST_CLASSES = new Class[] {
+            AttributeTests.class,
+            AuthenticationApiOpTests.class,
+            ConfigurationTests.class,
+            CreateApiOpTests.class,
+            DeleteApiOpTests.class,
+            GetApiOpTests.class,
+            MultiOpTests.class,
+            ResolveUsernameApiOpTests.class,
+            SchemaApiOpTests.class,
+            ScriptOnConnectorApiOpTests.class,
+            ScriptOnResourceApiOpTests.class,
+            SearchApiOpTests.class,
+            SyncApiOpTests.class,
+            TestApiOpTests.class,
+            UpdateApiOpTests.class,
+            ValidateApiOpTests.class
+    };
+    // @formatter:on
 
     /*
-     * <pre>
-     * <testConfig>default</testConfig>
-     * <connectorName>org.forgerock.openicf.connectors.BasicConnector</connectorName>
+     * <pre> <testConfig>default</testConfig>
+     * <connectorName>org.forgerock.openicf
+     * .connectors.BasicConnector</connectorName>
      * <bundleJar>target/basic-connector-1.1.0.0-SNAPSHOT.jar</bundleJar>
      * <bundleName>org.forgerock.openicf.connectors.basic-connector</bundleName>
-     * <bundleVersion>1.1.0.0-SNAPSHOT</bundleVersion>
-     * </pre>
+     * <bundleVersion>1.1.0.0-SNAPSHOT</bundleVersion> </pre>
      */
     @Factory
     public Object[] createInstances(ITestContext context) {
@@ -72,7 +85,7 @@ public class ContractITCase {
         List<Object> result = new ArrayList<Object>();
         IObjectFactory objectFactory = null;
 
-        for (Class<?> testClass: getContractTestClasses(context)) {
+        for (Class<?> testClass : getContractTestClasses(context)) {
             Constructor constructor = null;
             try {
                 constructor = testClass.getConstructor(String.class);
@@ -86,6 +99,7 @@ public class ContractITCase {
         return result.toArray();
     }
 
+    @SuppressWarnings("rawtypes")
     public List<Class> getContractTestClasses(ITestContext context) {
         String testNames = System.getProperty("testClasses");
         if (StringUtil.isNotBlank(testNames)) {

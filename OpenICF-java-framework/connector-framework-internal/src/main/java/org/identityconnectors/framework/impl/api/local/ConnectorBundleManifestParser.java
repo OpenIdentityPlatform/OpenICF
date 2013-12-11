@@ -72,7 +72,7 @@ public final class ConnectorBundleManifestParser {
 
         if (FrameworkUtil.getFrameworkVersion().compareTo(Version.parse(frameworkVersion)) < 0) {
             String message =
-                    "Bundle " + fileName + " requests an unrecognized " + "framework version "
+                    "Bundle " + fileName + " requests an unrecognized framework version "
                             + frameworkVersion + " but available is "
                             + FrameworkUtil.getFrameworkVersion().getVersion();
             throw new ConfigurationException(message);

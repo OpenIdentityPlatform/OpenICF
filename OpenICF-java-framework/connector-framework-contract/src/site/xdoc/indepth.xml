@@ -2,7 +2,7 @@
 <!--
   ~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
   ~
-  ~ Copyright © 2011. ForgeRock AS. All rights reserved.
+  ~ Copyright (c) 2010-2013 ForgeRock AS. All rights reserved.
   ~
   ~ The contents of this file are subject to the terms
   ~ of the Common Development and Distribution License
@@ -239,7 +239,7 @@ is
                     <code>System.getProperty()</code> call to
 get the
                     <code>bundleJar</code>
-system property that is set by 
+system property that is set by
                     <code>ant</code>.
                 </p>
 
@@ -346,12 +346,12 @@ connector { ... }
 default values
                         </span>. Default values of properties:
                         <code>connector.*</code>,
-and 
+and
                         <code>testsuite.*</code> is defined as
                         <code>ObjectNotFoundException</code>
 for
 integer, float, double and string types to protect generation of random
-values when configuration property definition is 
+values when configuration property definition is
                         <span style="font-style: italic;">missing</span>.
                         <br/>
 
@@ -437,7 +437,7 @@ Where the following parameters should be adjusted based on the Connector:
                     </ul>
                 </p>
                 <p>
-For example in 
+For example in
                     <code>databasetable</code> connector we use the following setting for object class
                     <code>ACCOUNT</code> and
                     <code>username</code> attribute:
@@ -455,7 +455,7 @@ For Validate tests, it is necessary to define a dedicated test property. The fol
 testsuite.Validate.invalidConfig = [
     [ property1 : "invalidValue1" ],
     [ property2 : "invalidValue2" ],
-    [ property3 : "invalidValue3", property4 : "invalidValue4" ] 
+    [ property3 : "invalidValue3", property4 : "invalidValue4" ]
                     <span class="codeComment">
 // don't put more than 1 property per map
                     </span>
@@ -466,7 +466,7 @@ testsuite.Validate.invalidConfig = [
                 <p>
                     <strong>Validate test property explained</strong> --
                     <code>testsuite.Validate.invalidConfig</code> contains a list of maps. The test procedure is the following:
-(1) choose a map from the list, (2) get the 
+(1) choose a map from the list, (2) get the
                     <a href="#connconfprop">default connector configuration</a> (defined by
                     <code>connector.*</code>) and override
 the attributes that are given on the list. (3) perform Validate operation on connector. (4) repeat from step 1. with the next map from the list.
@@ -494,7 +494,7 @@ the attributes that are given on the list. (3) perform Validate operation on con
 testsuite.Test.invalidConfig = [
     [ attribute1 : "invalidValue1" ],
     [ attribute2 : "invalidValue2" ],
-    [ attribute3 : "invalidValue3", attribute4 : "invalidValue4" ] 
+    [ attribute3 : "invalidValue3", attribute4 : "invalidValue4" ]
                     <span class="codeComment">
 // don't put more than 1 property per map
                     </span>
@@ -570,7 +570,7 @@ line)
 
                 <br/>
 
-Define 
+Define
                 <strong>every</strong> attribute of
                 <strong>each</strong>
 object class:
@@ -892,7 +892,7 @@ testsuite.Search.compareExistingObjectsByUidOnly = false	// default
                 <h4>
                     <a name="MultiOpTests"></a>MultiOpTests#testLockOutOpAttribute()
                 </h4>
-To turn off 
+To turn off
                 <code>testLockOutOpAttribute</code> test add this line into
                 <code>config.groovy</code>:
                 <pre>
@@ -902,7 +902,7 @@ testsuite.Multi.skip.lockout=true
                 <h4>
                     <a name="MultiOpTests2"></a>MultiOpTests#testDisableDateOpAttribute()
                 </h4>
-Test method 
+Test method
                 <code>testDisableDateOpAttribute</code> uses two long date stamps for setting the
                 <code>__DISABLE_DATE__</code> specifal attribute (javadoc
                 <code>OperationalAttributes.DISABLE_DATE_NAME</code>) in

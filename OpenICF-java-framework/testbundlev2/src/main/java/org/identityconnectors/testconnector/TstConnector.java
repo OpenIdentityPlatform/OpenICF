@@ -28,7 +28,6 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
-import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.Configuration;
@@ -43,7 +42,7 @@ import org.identityconnectors.testcommon.TstCommon;
 public class TstConnector implements CreateOp, AuthenticateOp, Connector {
 
     private Configuration _config;
-
+    
     public Uid create(ObjectClass objectClass, Set<Attribute> createAttributes, OperationOptions options) {
         String version = TstCommon.getVersion();
         return new Uid(version);
@@ -52,6 +51,7 @@ public class TstConnector implements CreateOp, AuthenticateOp, Connector {
     public Uid authenticate(ObjectClass oclass, String username, GuardedString password, OperationOptions options) {
         // The native library is an empty file, so this should fail (and tests expect it).
         System.loadLibrary("native");
+
         throw new AssertionError("The loadLibrary call did not fail");
     }
 

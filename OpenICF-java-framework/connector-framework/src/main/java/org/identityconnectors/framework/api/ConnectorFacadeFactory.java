@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2010-2013 ForgeRock AS.
  */
 package org.identityconnectors.framework.api;
 
@@ -37,7 +38,11 @@ public abstract class ConnectorFacadeFactory {
     private static final String IMPL_NAME =
             "org.identityconnectors.framework.impl.api.ConnectorFacadeFactoryImpl";
 
+    private static final String IMPL_NAME_MANAGED =
+            "org.identityconnectors.framework.impl.api.ManagedConnectorFacadeFactoryImpl";
+
     private static ConnectorFacadeFactory instance;
+    private static ConnectorFacadeFactory managedInstance;
 
     /**
      * Get the singleton instance of the {@link ConnectorFacadeFactory}.
@@ -56,6 +61,25 @@ public abstract class ConnectorFacadeFactory {
     }
 
     /**
+     * Get the singleton instance of the stateful {@link ConnectorFacadeFactory}
+     * .
+     *
+     * @since 1.4
+     */
+    public static synchronized ConnectorFacadeFactory getManagedInstance() {
+        if (managedInstance == null) {
+            try {
+                final Class<?> clazz = Class.forName(IMPL_NAME_MANAGED);
+                final Object object = clazz.newInstance();
+                managedInstance = ConnectorFacadeFactory.class.cast(object);
+            } catch (Exception e) {
+                throw ConnectorException.wrap(e);
+            }
+        }
+        return managedInstance;
+    }
+
+    /**
      * Dispose of all connector pools, resources, etc.
      */
     public abstract void dispose();
@@ -69,4 +93,18 @@ public abstract class ConnectorFacadeFactory {
      * @return {@link ConnectorFacade} to call API operations against.
      */
     public abstract ConnectorFacade newInstance(APIConfiguration config);
+
+    /**
+     * Get a new instance of {@link ConnectorFacade}.
+     *
+     * @param connectorInfo
+     *            local or remote connector info used woth the {@code config}.
+     * @param config
+     *            all the configuration that the framework, connector, and
+     *            pooling needs. It's a Base64 serialised APIConfiguration
+     *            instance.
+     * @return {@link ConnectorFacade} to call API operations against.
+     * @since 1.4
+     */
+    public abstract ConnectorFacade newInstance(ConnectorInfo connectorInfo, String config);
 }

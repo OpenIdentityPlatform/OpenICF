@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
- Copyright (c) 2011 ForgeRock Inc. All Rights Reserved
+ Copyright (c) 2010-2013 ForgeRock AS. All Rights Reserved
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -31,7 +31,7 @@
         <menu name="Overview" img="images/arrow_right.png" inherit="top" inheritAsRef="true">
             <item name="Introduction" href="index.html"/>
             <item name="FAQ" href="faq.html"/>
-        </menu> 
+        </menu>
         <menu ref="reports"/>
     </body>
 </project>

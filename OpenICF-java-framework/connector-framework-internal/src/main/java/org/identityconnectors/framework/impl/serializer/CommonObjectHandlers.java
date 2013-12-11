@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2010-2013 ForgeRock AS.
  */
 package org.identityconnectors.framework.impl.serializer;
 
@@ -39,15 +40,20 @@ import org.identityconnectors.framework.common.exceptions.ConnectionFailedExcept
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 import org.identityconnectors.framework.common.exceptions.ConnectorSecurityException;
+import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.identityconnectors.framework.common.exceptions.InvalidPasswordException;
 import org.identityconnectors.framework.common.exceptions.OperationTimeoutException;
 import org.identityconnectors.framework.common.exceptions.PasswordExpiredException;
 import org.identityconnectors.framework.common.exceptions.PermissionDeniedException;
+import org.identityconnectors.framework.common.exceptions.PreconditionFailedException;
+import org.identityconnectors.framework.common.exceptions.PreconditionRequiredException;
+import org.identityconnectors.framework.common.exceptions.RetryableException;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
+import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
@@ -58,12 +64,14 @@ import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.QualifiedUid;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.ScriptContext;
+import org.identityconnectors.framework.common.objects.SearchResult;
+import org.identityconnectors.framework.common.objects.SortKey;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
 import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
+import org.identityconnectors.framework.impl.api.remote.RemoteWrappedException;
 
 /**
  * Serialization handles for APIConfiguration and dependencies.
@@ -121,7 +129,6 @@ class CommonObjectHandlers {
     }
 
     static {
-
 
         HANDLERS.add(new ThrowableHandler<AlreadyExistsException>(AlreadyExistsException.class,
                 "AlreadyExistsException") {
@@ -233,6 +240,67 @@ class CommonObjectHandlers {
 
             protected OperationTimeoutException createException(final String message) {
                 return new OperationTimeoutException(message);
+            }
+        });
+
+        HANDLERS.add(new ThrowableHandler<InvalidAttributeValueException>(
+                InvalidAttributeValueException.class, "InvalidAttributeValueException") {
+
+            protected InvalidAttributeValueException createException(final String message) {
+                return new InvalidAttributeValueException(message);
+            }
+        });
+
+        HANDLERS.add(new ThrowableHandler<PreconditionFailedException>(
+                PreconditionFailedException.class, "PreconditionFailedException") {
+
+            protected PreconditionFailedException createException(final String message) {
+                return new PreconditionFailedException(message);
+            }
+        });
+
+        HANDLERS.add(new ThrowableHandler<PreconditionRequiredException>(
+                PreconditionRequiredException.class, "PreconditionRequiredException") {
+
+            protected PreconditionRequiredException createException(final String message) {
+                return new PreconditionRequiredException(message);
+            }
+        });
+
+        HANDLERS.add(new ThrowableHandler<RetryableException>(RetryableException.class,
+                "RetryableException") {
+
+            protected RetryableException createException(final String message) {
+                return RetryableException.wrap(message, (Throwable) null);
+            }
+        });
+
+        HANDLERS.add(new AbstractObjectSerializationHandler(RemoteWrappedException.class,
+                "RemoteWrappedException") {
+
+            public Object deserialize(final ObjectDecoder decoder) {
+                String throwableClass =
+                        decoder.readStringField(RemoteWrappedException.FIELD_CLASS,
+                                ConnectorException.class.getName());
+                String message =
+                        decoder.readStringField(RemoteWrappedException.FIELD_MESSAGE, null);
+                RemoteWrappedException cause =
+                        (RemoteWrappedException) decoder.readObjectField("RemoteWrappedException", RemoteWrappedException.class,
+                                null);
+                String stackTrace =
+                        decoder.readStringField(RemoteWrappedException.FIELD_STACK_TRACE, null);
+
+                return new RemoteWrappedException(throwableClass, message, cause, stackTrace);
+            }
+
+            public void serialize(final Object object, final ObjectEncoder encoder) {
+                final RemoteWrappedException val = (RemoteWrappedException) object;
+                encoder.writeStringField(RemoteWrappedException.FIELD_CLASS, val
+                        .getExceptionClass());
+                encoder.writeStringField(RemoteWrappedException.FIELD_MESSAGE, val.getMessage());
+                encoder.writeObjectField("RemoteWrappedException", val.getCause(), true);
+                encoder.writeStringField(RemoteWrappedException.FIELD_STACK_TRACE, val
+                        .readStackTrace());
             }
         });
 
@@ -387,29 +455,29 @@ class CommonObjectHandlers {
                 @SuppressWarnings("unchecked")
                 final Set<ObjectClassInfo> objectClasses =
                         (Set) decoder.readObjectField("ObjectClassInfos", Set.class, null);
-                final Map<String, ObjectClassInfo> objectClassesByName = new HashMap<String, ObjectClassInfo>();
+                final Map<String, ObjectClassInfo> objectClassesByName =
+                        new HashMap<String, ObjectClassInfo>();
                 for (ObjectClassInfo info : objectClasses) {
                     objectClassesByName.put(info.getType(), info);
                 }
                 @SuppressWarnings("unchecked")
                 final Set<OperationOptionInfo> operationOptions =
                         (Set) decoder.readObjectField("OperationOptionInfos", Set.class, null);
-                final Map<String, OperationOptionInfo> optionsByName = new HashMap<String, OperationOptionInfo>();
+                final Map<String, OperationOptionInfo> optionsByName =
+                        new HashMap<String, OperationOptionInfo>();
                 for (OperationOptionInfo info : operationOptions) {
                     optionsByName.put(info.getName(), info);
                 }
                 @SuppressWarnings("unchecked")
-                final Map<Class<? extends APIOperation>,Set<String>>
-                   objectClassNamesByOperation =
-                       (Map)decoder.readObjectField("objectClassesByOperation",null,null);
+                final Map<Class<? extends APIOperation>, Set<String>> objectClassNamesByOperation =
+                        (Map) decoder.readObjectField("objectClassesByOperation", null, null);
                 @SuppressWarnings("unchecked")
-                final Map<Class<? extends APIOperation>,Set<String>>
-                optionsNamesByOperation =
-                       (Map)decoder.readObjectField("optionsByOperation",null,null);
-                final Map<Class<? extends APIOperation>,Set<ObjectClassInfo>>
-                objectClassesByOperation = new HashMap<Class<? extends APIOperation>,Set<ObjectClassInfo>>();
-                for (Map.Entry<Class<? extends APIOperation>, Set<String>>
-                entry : objectClassNamesByOperation.entrySet()) {
+                final Map<Class<? extends APIOperation>, Set<String>> optionsNamesByOperation =
+                        (Map) decoder.readObjectField("optionsByOperation", null, null);
+                final Map<Class<? extends APIOperation>, Set<ObjectClassInfo>> objectClassesByOperation =
+                        new HashMap<Class<? extends APIOperation>, Set<ObjectClassInfo>>();
+                for (Map.Entry<Class<? extends APIOperation>, Set<String>> entry : objectClassNamesByOperation
+                        .entrySet()) {
                     final Set<String> names = entry.getValue();
                     final Set<ObjectClassInfo> infos = new HashSet<ObjectClassInfo>();
                     for (String name : names) {
@@ -423,7 +491,8 @@ class CommonObjectHandlers {
 
                 final Map<Class<? extends APIOperation>, Set<OperationOptionInfo>> optionsByOperation =
                         new HashMap<Class<? extends APIOperation>, Set<OperationOptionInfo>>();
-                for (Map.Entry<Class<? extends APIOperation>, Set<String>> entry : optionsNamesByOperation.entrySet()) {
+                for (Map.Entry<Class<? extends APIOperation>, Set<String>> entry : optionsNamesByOperation
+                        .entrySet()) {
                     final Set<String> names = entry.getValue();
                     final Set<OperationOptionInfo> infos = new HashSet<OperationOptionInfo>();
                     for (String name : names) {
@@ -434,9 +503,7 @@ class CommonObjectHandlers {
                     }
                     optionsByOperation.put(entry.getKey(), infos);
                 }
-                return new Schema(objectClasses,
-                        operationOptions,
-                        objectClassesByOperation,
+                return new Schema(objectClasses, operationOptions, objectClassesByOperation,
                         optionsByOperation);
             }
 
@@ -445,14 +512,14 @@ class CommonObjectHandlers {
                 encoder.writeObjectField("ObjectClassInfos", val.getObjectClassInfo(), true);
                 encoder.writeObjectField("OperationOptionInfos", val.getOperationOptionInfo(), true);
 
-                final Map<Class<? extends APIOperation>,Set<String>>
-                objectClassNamesByOperation = new HashMap<Class<? extends APIOperation>,Set<String>>();
+                final Map<Class<? extends APIOperation>, Set<String>> objectClassNamesByOperation =
+                        new HashMap<Class<? extends APIOperation>, Set<String>>();
 
-                final Map<Class<? extends APIOperation>,Set<String>>
-                optionNamesByOperation = new HashMap<Class<? extends APIOperation>,Set<String>>();
+                final Map<Class<? extends APIOperation>, Set<String>> optionNamesByOperation =
+                        new HashMap<Class<? extends APIOperation>, Set<String>>();
 
-                for (Map.Entry<Class<? extends APIOperation>, Set<ObjectClassInfo>>
-                entry : val.getSupportedObjectClassesByOperation().entrySet()) {
+                for (Map.Entry<Class<? extends APIOperation>, Set<ObjectClassInfo>> entry : val
+                        .getSupportedObjectClassesByOperation().entrySet()) {
                     final Set<ObjectClassInfo> value = entry.getValue();
                     final Set<String> names = new HashSet<String>();
                     for (ObjectClassInfo info : value) {
@@ -460,8 +527,8 @@ class CommonObjectHandlers {
                     }
                     objectClassNamesByOperation.put(entry.getKey(), names);
                 }
-                for (Map.Entry<Class<? extends APIOperation>, Set<OperationOptionInfo>>
-                entry : val.getSupportedOptionsByOperation().entrySet()) {
+                for (Map.Entry<Class<? extends APIOperation>, Set<OperationOptionInfo>> entry : val
+                        .getSupportedOptionsByOperation().entrySet()) {
 
                     final Set<OperationOptionInfo> value = entry.getValue();
                     final Set<String> names = new HashSet<String>();
@@ -471,20 +538,27 @@ class CommonObjectHandlers {
                     optionNamesByOperation.put(entry.getKey(), names);
                 }
 
-                encoder.writeObjectField("objectClassesByOperation",objectClassNamesByOperation,false);
-                encoder.writeObjectField("optionsByOperation",optionNamesByOperation,false);
+                encoder.writeObjectField("objectClassesByOperation", objectClassNamesByOperation,
+                        false);
+                encoder.writeObjectField("optionsByOperation", optionNamesByOperation, false);
             }
         });
 
         HANDLERS.add(new AbstractObjectSerializationHandler(Uid.class, "Uid") {
             public Object deserialize(final ObjectDecoder decoder) {
-                final String val = decoder.readStringContents();
-                return new Uid(val);
+                final String val = decoder.readStringField("uid", null);
+                final String revision = decoder.readStringField("revision", null);
+                if (null == revision) {
+                    return new Uid(val);
+                } else {
+                    return new Uid(val, revision);
+                }
             }
 
             public void serialize(final Object object, final ObjectEncoder encoder) {
                 final Uid val = (Uid) object;
-                encoder.writeStringContents(val.getUidValue());
+                encoder.writeStringField("uid", val.getUidValue());
+                encoder.writeStringField("revision", val.getRevision());
             }
         });
 
@@ -530,7 +604,7 @@ class CommonObjectHandlers {
 
         HANDLERS.add(
 
-            new AbstractObjectSerializationHandler(OperationOptions.class,"OperationOptions") {
+        new AbstractObjectSerializationHandler(OperationOptions.class, "OperationOptions") {
 
             public Object deserialize(final ObjectDecoder decoder) {
                 @SuppressWarnings("unchecked")
@@ -542,6 +616,38 @@ class CommonObjectHandlers {
             public void serialize(final Object object, final ObjectEncoder encoder) {
                 final OperationOptions val = (OperationOptions) object;
                 encoder.writeObjectField("options", val.getOptions(), false);
+            }
+        });
+
+        HANDLERS.add(
+
+        new AbstractObjectSerializationHandler(SearchResult.class, "SearchResult") {
+
+            public Object deserialize(final ObjectDecoder decoder) {
+                return new SearchResult(decoder.readStringField("pagedResultsCookie", null),
+                        decoder.readIntField("remainingPagedResults", -1));
+            }
+
+            public void serialize(final Object object, final ObjectEncoder encoder) {
+                final SearchResult val = (SearchResult) object;
+                encoder.writeStringField("pagedResultsCookie", val.getPagedResultsCookie());
+                encoder.writeIntField("remainingPagedResults", val.getRemainingPagedResults());
+            }
+        });
+
+        HANDLERS.add(
+
+        new AbstractObjectSerializationHandler(SortKey.class, "SortKey") {
+
+            public Object deserialize(final ObjectDecoder decoder) {
+                return new SortKey(decoder.readStringField("field", null), decoder
+                        .readBooleanField("isAscending", true));
+            }
+
+            public void serialize(final Object object, final ObjectEncoder encoder) {
+                final SortKey val = (SortKey) object;
+                encoder.writeStringField("field", val.getField());
+                encoder.writeBooleanField("isAscending", val.isAscendingOrder());
             }
         });
 

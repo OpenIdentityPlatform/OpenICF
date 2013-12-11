@@ -19,43 +19,71 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2010-2013 ForgeRock AS.
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.ResultsHandlerConfiguration;
 import org.identityconnectors.framework.impl.api.APIConfigurationImpl;
 import org.identityconnectors.framework.impl.api.local.JavaClassProperties;
 import org.identityconnectors.framework.impl.api.local.LocalConnectorInfoImpl;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
-
+import org.identityconnectors.framework.spi.StatefulConfiguration;
 
 /**
- * OperationalContext - base class for operations that do not
- * require a connector instance.
+ * OperationalContext - base class for operations that do not require a
+ * connector instance.
  */
 public class OperationalContext {
+
+    private static final Log LOG = Log.getLog(OperationalContext.class);
 
     /**
      * ConnectorInfo
      */
-    private final LocalConnectorInfoImpl connectorInfo;
+    protected final LocalConnectorInfoImpl connectorInfo;
 
     /**
      * Contains the {@link Connector} {@link Configuration}.
      */
-    private final APIConfigurationImpl apiConfiguration;
+    protected final APIConfigurationImpl apiConfiguration;
 
+    private volatile Configuration configuration;
 
+    /**
+     * Creates a new OperationalContext but it does not initiates the
+     * Configuration because the {@link #getConnectorInfo()} method must do it
+     * when it's called from a block where the classloader of the Thread is set
+     * to Connector.
+     *
+     * @param connectorInfo
+     * @param apiConfiguration
+     */
     public OperationalContext(final LocalConnectorInfoImpl connectorInfo,
             final APIConfigurationImpl apiConfiguration) {
         this.connectorInfo = connectorInfo;
         this.apiConfiguration = apiConfiguration;
+
     }
 
+    /*
+     * This method must be called when the Bundle ClassLoader is the Thread
+     * Context ClassLoader.
+     */
     public Configuration getConfiguration() {
-        return JavaClassProperties.createBean(this.apiConfiguration.getConfigurationProperties(),
-                connectorInfo.getConnectorConfigurationClass());
+        if (null == configuration) {
+            synchronized (this) {
+                if (null == configuration) {
+                    this.configuration =
+                            JavaClassProperties.createBean(apiConfiguration
+                                    .getConfigurationProperties(), connectorInfo
+                                    .getConnectorConfigurationClass());
+                }
+            }
+        }
+        return configuration;
     }
 
     protected LocalConnectorInfoImpl getConnectorInfo() {
@@ -64,5 +92,20 @@ public class OperationalContext {
 
     public ResultsHandlerConfiguration getResultsHandlerConfiguration() {
         return new ResultsHandlerConfiguration(apiConfiguration.getResultsHandlerConfiguration());
+    }
+
+    public void dispose() {
+        if (configuration instanceof StatefulConfiguration) {
+            // dispose it not supposed to throw, but just in case,
+            // catch the exception and log it so we know about it
+            // but don't let the exception prevent additional
+            // cleanup that needs to happen
+            try {
+                ((StatefulConfiguration)configuration).release();
+            } catch (Exception e) {
+                // log this though
+                LOG.warn(e, null);
+            }
+        }
     }
 }

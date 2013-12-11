@@ -19,9 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- *
- * Portions Copyrighted 2012 ForgeRock AS
- *
+ * Portions Copyrighted 2010-2013 ForgeRock AS.
  */
 package org.identityconnectors.contract.test;
 
@@ -76,6 +74,7 @@ public abstract class ObjectClassRunner extends ContractTestBase {
      * Dispose the test environment, do the cleanup
      */
     @AfterTest
+    @Override
     public void dispose() {
         _objectClassInfo = null;
         super.dispose();

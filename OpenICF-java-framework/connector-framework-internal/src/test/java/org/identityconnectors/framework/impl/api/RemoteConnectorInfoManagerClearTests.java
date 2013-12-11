@@ -34,7 +34,6 @@ import org.identityconnectors.framework.api.ConnectorInfoManager;
 import org.identityconnectors.framework.api.ConnectorInfoManagerFactory;
 import org.identityconnectors.framework.api.RemoteFrameworkConnectionInfo;
 import org.identityconnectors.framework.impl.api.remote.RemoteConnectorInfoManagerImpl;
-import org.identityconnectors.framework.impl.api.remote.messages.HelloRequest;
 import org.identityconnectors.framework.impl.api.remote.messages.HelloResponse;
 import org.identityconnectors.framework.server.ConnectorServer;
 import org.testng.Assert;
@@ -69,7 +68,7 @@ public class RemoteConnectorInfoManagerClearTests extends ConnectorInfoManagerTe
         ConnectorInfoManagerFactory fact = ConnectorInfoManagerFactory.getInstance();
 
         RemoteFrameworkConnectionInfo connInfo = new
-        RemoteFrameworkConnectionInfo("127.0.0.1",PORT,new GuardedString("changeit".toCharArray()));
+        RemoteFrameworkConnectionInfo("127.0.0.1",PORT,new GuardedString("changeit".toCharArray()),false,null,0);
 
         ConnectorInfoManager manager = fact.getRemoteManager(connInfo);
 
@@ -96,6 +95,6 @@ public class RemoteConnectorInfoManagerClearTests extends ConnectorInfoManagerTe
         RemoteConnectorInfoManagerImpl mgr = new RemoteConnectorInfoManagerImpl(
                 new RemoteFrameworkConnectionInfo("127.0.0.1", PORT, new GuardedString("changeit".toCharArray())));
         Assert.assertNotNull(mgr.getServerInfo().get(HelloResponse.SERVER_START_TIME));
-        Assert.assertEquals(mgr.getConnectorKeys().size(),2);
+        Assert.assertEquals(mgr.getConnectorKeys().size(),4);
     }
 }

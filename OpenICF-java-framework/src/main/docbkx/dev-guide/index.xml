@@ -21,7 +21,7 @@
   ! CCPL HEADER END
   !
   !      Copyright 2012-2013 ForgeRock AS
-  !    
+  !
 -->
 <book xml:id='dev-guide'
  xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
@@ -88,7 +88,7 @@
              TAM
 
  For example:
- <xinclude:include href="../../../../target/maven-shared-archive-resources/openicf-scriptedsql-connector-1.1.2.0-SNAPSHOT/chap-scriptedsql-connector.xml" />
+ <xinclude:include href="../../../../target/maven-shared-archive-resources/openicf-scriptedsql-connector-1.4.0.0-SNAPSHOT/chap-scriptedsql-connector.xml" />
  -->
 
  <appendix xml:id="appendix-interface-stability">

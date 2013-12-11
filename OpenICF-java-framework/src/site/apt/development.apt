@@ -26,7 +26,7 @@
 ~~
 ~~ CCPL HEADER END
 ~~
-~~      Copyright 2011-2013 ForgeRock AS
+~~      Copyright 2010-2013 ForgeRock AS.
 ~~
 ~~
 
@@ -49,7 +49,7 @@ C:\build> cd framework
 C:\framework> mvn install
 +---
 
-    This command will install the 1.1.0.0-SNAPSHOT version of the OpenICF Framework. The same binaries are published to frequently to the {{{http://maven.forgerock.org/repo/snapshots/org/forgerock/openicf/}ForgeRock Snapshot Repository}}.
+    This command will install the 1.4.0.0-SNAPSHOT version of the OpenICF Framework. The same binaries are published to frequently to the {{{http://maven.forgerock.org/repo/snapshots/org/forgerock/openicf/}ForgeRock Snapshot Repository}}.
 
 *Developing .NET Connector Framework
 
@@ -97,8 +97,16 @@ ZipRelease | true
 
     {{{http://www.icsharpcode.net/OpenSource/SD/Download/#SharpDevelop4x}SharpDevelop}} free IDE to develop .NET applications with plus it includes most of the dependencies.
 
-    * .NET 4.0 Full runtime must be installed on your machine {{{http://www.microsoft.com/downloads/details.aspx?FamilyID=0a391abd-25c1-4fc0-919f-b21f31ab88b7&displaylang=en}Download}}
+    or
 
+    {{{http://www.microsoft.com/visualstudio/eng/products/visual-studio-2010-express}Visual Studio 2010}}
+
+    {{{http://testdriven.net/overview.aspx}TestDriven.Net}}
+    {{{http://www.jetbrains.com/resharper/}ReSharper}}
+    {{{http://submain.com/products/testmatrix.aspx}TestMatrix}}
+
+    {{{http://submain.com/products/ghostdoc.aspx}GhostDoc}}
+    {{{http://shfb.codeplex.com/}Sandcastle Help File Builder}}
 
 *Developing Java Connector Bundles
 
@@ -252,7 +260,7 @@ mvn archetype:generate \
 Developing .NET Connector Bundles
 
 
-~~    openicf-1.1.1.1-dotnet.msi
+~~    openicf-1.4.0.0-dotnet.msi
 
     Install OpenICF .Net Server from {{{http://www.forgerock.org/openicf.html}OpenICF download site}}:
 

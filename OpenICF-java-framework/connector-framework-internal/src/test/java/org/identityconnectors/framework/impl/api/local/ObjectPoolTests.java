@@ -56,6 +56,7 @@ public class ObjectPoolTests {
         private boolean _createBadConnection = false;
         private int _totalCreatedConnections = 0;
 
+        @Override
         public ObjectPoolConfiguration validate(ObjectPoolConfiguration original) {
             ObjectPoolConfiguration configuration = (ObjectPoolConfiguration) SerializerUtil.cloneObject(original);
             //validate it
@@ -63,10 +64,7 @@ public class ObjectPoolTests {
             return configuration;
         }
 
-        public MyTestConnection makeFirstObject() {
-            return makeObject();
-        }
-
+        @Override
         public MyTestConnection makeObject() {
             _totalCreatedConnections++;
             MyTestConnection rv = new MyTestConnection();
@@ -76,15 +74,13 @@ public class ObjectPoolTests {
             return rv;
         }
         @Test
+        @Override
 		public void testObject(MyTestConnection object) {
             object.test();
         }
+        @Override
         public void disposeObject(MyTestConnection object) {
             object.dispose();
-        }
-
-        public void disposeLastObject(MyTestConnection object) {
-            disposeObject(object);
         }
 
         public int getTotalCreatedConnections() {
@@ -96,6 +92,9 @@ public class ObjectPoolTests {
             _createBadConnection = v;
         }
 
+        @Override
+        public void shutdown() {
+        }
     }
 
     private class MyTestThread extends Thread {
@@ -107,6 +106,7 @@ public class ObjectPoolTests {
             _pool = pool;
             _numIterations = numIterations;
         }
+        @Override
         public void run() {
             try {
                 for ( int i = 0; i < _numIterations; i++ ) {

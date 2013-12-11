@@ -1,7 +1,7 @@
 /*
  * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 ForgeRock Inc. All rights reserved.
+ * Copyright (c) 2010-2013 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -25,19 +25,17 @@
 package org.identityconnectors.common.event;
 
 /**
- * NOTICE: This package is an early specification of the Events API for 1.2.x.x
- * version. Use carefully, this package may change before the final 1.2.0.0
- * release.
- * <p/>
  * A ConnectorEventHandler receives notification when a connector bundle is
  * registered or unregistered.
  *
  * @author Laszlo Hordos
- * @since 1.2
+ * @since 1.4
  */
 public interface ConnectorEventHandler {
     /**
-     * TODO: Description
+     * Called by the
+     * {@link org.identityconnectors.framework.impl.api.remote.RemoteConnectorInfoManagerImpl}
+     * service to notify the listener of an event.
      *
      * @param event
      *            The {@code ConnectorEvent} object.

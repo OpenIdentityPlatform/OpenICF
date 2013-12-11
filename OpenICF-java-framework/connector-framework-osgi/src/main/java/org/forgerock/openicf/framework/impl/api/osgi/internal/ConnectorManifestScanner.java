@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2010-2013 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -38,7 +38,7 @@ import org.osgi.framework.Bundle;
 
 /**
  * The ConnectorManifestScanner ...
- * 
+ *
  * @author Laszlo Hordos
  * @since 1.1
  */
@@ -65,9 +65,9 @@ public class ConnectorManifestScanner implements BundleScanner<ManifestEntry> {
         String bundleName = null;
         String bundleVersion = null;
 
-        final Dictionary bundleHeaders = bundle.getHeaders();
+        final Dictionary<?,?> bundleHeaders = bundle.getHeaders();
         if (bundleHeaders != null && !bundleHeaders.isEmpty()) {
-            final Enumeration keys = bundleHeaders.keys();
+            final Enumeration<?> keys = bundleHeaders.keys();
             while (keys.hasMoreElements()) {
                 final String key = (String) keys.nextElement();
                 if (ATT_FRAMEWORK_VERSION.equals(key)) {

@@ -2,7 +2,7 @@
 <!--
   ~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
   ~
-  ~ Copyright © 2011. ForgeRock AS. All rights reserved.
+  ~ Copyright (c) 2010-2013 ForgeRock AS. All rights reserved.
   ~
   ~ The contents of this file are subject to the terms
   ~ of the Common Development and Distribution License
@@ -62,7 +62,7 @@
                     <li>. - any character </li>
                 </ul>
 Any other character inside the pattern is directly printed to the
-output. 
+output.
                 <span style="font-weight: bold;">Backslash  </span>( \ ) is used to escape any character. For instance pattern "###\\.##" prints a floating point random number
             </section>
             <section name="A.2 Database table connector Groovy configuration files" href="attachdbtableconfig">
@@ -213,7 +213,7 @@ JPEGPHOTO=Lazy.random("????????????????????????????????????????", byte[].class)
                     <pre>
 /*  +---------------------------------------------------+
  *  ----------- Contract Tests configuration ------------
- *  +---------------------------------------------------+ 
+ *  +---------------------------------------------------+
  */
 
 import org.identityconnectors.contract.data.groovy.Lazy
@@ -235,7 +235,7 @@ connector{
                     <pre>
 /*  +---------------------------------------------------+
  *  ----------- Contract Tests configuration ------------
- *  +---------------------------------------------------+ 
+ *  +---------------------------------------------------+
  */
                     </pre>
                 </section>
@@ -246,7 +246,7 @@ connector{
                     <pre>
 /*  +---------------------------------------------------+
  *  ----------- Contract Tests configuration ------------
- *  +---------------------------------------------------+ 
+ *  +---------------------------------------------------+
  */
 
 import org.identityconnectors.contract.data.groovy.Lazy

@@ -1,7 +1,7 @@
 /*
  * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 ForgeRock Inc. All rights reserved.
+ * Copyright (c) 2012-2013 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -86,7 +86,7 @@ import org.identityconnectors.framework.spi.operations.UpdateOp;
 
 /**
  * Main implementation of the Basic Connector
- * 
+ *
  * @author $author$
  * @version $Revision$ $Date$
  */
@@ -123,7 +123,7 @@ public class BasicConnector implements PoolableConnector, AttributeNormalizer, A
 
     /**
      * Callback method to receive the {@link Configuration}.
-     * 
+     *
      * @see org.identityconnectors.framework.spi.Connector#init(org.identityconnectors.framework.spi.Configuration)
      */
     public void init(Configuration configuration1) {
@@ -133,7 +133,7 @@ public class BasicConnector implements PoolableConnector, AttributeNormalizer, A
 
     /**
      * Disposes of the {@link BasicConnector}'s resources.
-     * 
+     *
      * @see org.identityconnectors.framework.spi.Connector#dispose()
      */
     public void dispose() {
@@ -160,7 +160,7 @@ public class BasicConnector implements PoolableConnector, AttributeNormalizer, A
 
     /******************
      * SPI Operations
-     * 
+     *
      * Implement the following operations using the contract and description
      * found in the Javadoc for these methods.
      ******************/

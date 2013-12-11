@@ -19,39 +19,40 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2010-2013 ForgeRock AS.
  */
 package org.identityconnectors.testconnector;
 
 import java.util.Set;
 
 import org.identityconnectors.framework.common.objects.Attribute;
-import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
-import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
-import org.identityconnectors.framework.common.objects.SchemaBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
-import org.identityconnectors.framework.common.objects.filter.Filter;
-import org.identityconnectors.framework.common.objects.filter.AbstractFilterTranslator;
-import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Schema;
+import org.identityconnectors.framework.common.objects.SchemaBuilder;
+import org.identityconnectors.framework.common.objects.SearchResult;
 import org.identityconnectors.framework.common.objects.SyncDelta;
-import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
+import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.filter.AbstractFilterTranslator;
+import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 import org.identityconnectors.framework.spi.Configuration;
-import org.identityconnectors.framework.spi.PoolableConnector;
 import org.identityconnectors.framework.spi.ConnectorClass;
+import org.identityconnectors.framework.spi.PoolableConnector;
+import org.identityconnectors.framework.spi.SearchResultsHandler;
+import org.identityconnectors.framework.spi.SyncTokenResultsHandler;
 import org.identityconnectors.framework.spi.operations.CreateOp;
 import org.identityconnectors.framework.spi.operations.SchemaOp;
-import org.identityconnectors.framework.spi.operations.SyncOp;
 import org.identityconnectors.framework.spi.operations.SearchOp;
+import org.identityconnectors.framework.spi.operations.SyncOp;
 import org.identityconnectors.testcommon.TstCommon;
 
 @ConnectorClass(
@@ -75,6 +76,7 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
         checkClassLoader();
     }
 
+    @Override
     public Uid create(ObjectClass objectClass, Set<Attribute> createAttributes, OperationOptions options) {
         checkClassLoader();
         Integer delay = (Integer)options.getOptions().get("delay");
@@ -89,6 +91,7 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
             return new Uid(version);
         }
     }
+    @Override
     public void init(Configuration cfg) {
         checkClassLoader();
         _config = (TstConnectorConfig)cfg;
@@ -97,10 +100,12 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
         }
         _myConnection = new MyTstConnection(_connectionCount++);
     }
+    @Override
     public Configuration getConfiguration() {
         return _config;
     }
 
+    @Override
     public void dispose() {
         checkClassLoader();
         if (_myConnection != null) {
@@ -109,6 +114,7 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
         }
     }
 
+    @Override
     public void checkAlive() {
         checkClassLoader();
         _myConnection.test();
@@ -122,13 +128,16 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
         return s1+s2;
     }
 
+    @Override
     public FilterTranslator<String> createFilterTranslator(ObjectClass objectClass, OperationOptions options) {
          checkClassLoader();
          //no translation - ok since this is just for tests
          return new AbstractFilterTranslator<String>(){};
     }
+    @Override
     public void executeQuery(ObjectClass objectClass, String query, ResultsHandler handler, OperationOptions options) {
         checkClassLoader();
+        int remaining = _config.getNumResults();
         for (int i = 0; i < _config.getNumResults(); i++ ) {
             Integer delay = (Integer)options.getOptions().get("delay");
             if ( delay != null ) {
@@ -147,12 +156,19 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
             if (!handler.handle(rv)) {
                 break;
             }
+            remaining--;
+        }
+
+        if (handler instanceof SearchResultsHandler) {
+            ((SearchResultsHandler) handler).handleResult(new SearchResult("",remaining));
         }
     }
+    @Override
     public void sync(ObjectClass objectClass, SyncToken token,
                      SyncResultsHandler handler,
                      OperationOptions options) {
         checkClassLoader();
+        int remaining = _config.getNumResults();
         for (int i = 0; i < _config.getNumResults(); i++ ) {
             ConnectorObjectBuilder obuilder =
                 new ConnectorObjectBuilder();
@@ -170,13 +186,19 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
             if (!handler.handle(rv)) {
                 break;
             }
+            remaining--;
+        }
+        if (handler instanceof SyncTokenResultsHandler) {
+            ((SyncTokenResultsHandler) handler).handleResult(new SyncToken(remaining));
         }
     }
+    @Override
     public SyncToken getLatestSyncToken(ObjectClass objectClass) {
         checkClassLoader();
         return new SyncToken("mylatest");
     }
 
+    @Override
     public Schema schema() {
         checkClassLoader();
         SchemaBuilder builder = new SchemaBuilder(TstConnector.class);

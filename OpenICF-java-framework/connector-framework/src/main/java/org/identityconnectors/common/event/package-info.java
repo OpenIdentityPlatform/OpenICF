@@ -1,7 +1,7 @@
 /*
  * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 ForgeRock Inc. All rights reserved.
+ * Copyright (c) 2010-2013 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -23,14 +23,11 @@
  */
 
 /**
- * NOTICE: This package is an early specification of the Events API for 1.2.x.x version.
- * Use carefully, this package may change bifore the final 1.2.0.0 release.
- * <p/>
  * Classes and interfaces for asynchronous event based monitoring of the connectors.
  * The parent application can use these the check if a remote connector server status
  * has been changed or connectors has be added/removed.
  *
  * @author Laszlo Hordos
- * @since 1.2
+ * @since 1.4
  */
 package org.identityconnectors.common.event;

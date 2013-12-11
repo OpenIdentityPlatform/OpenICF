@@ -1,7 +1,7 @@
 /*
  * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 ForgeRock Inc. All rights reserved.
+ * Copyright (c) 2012-2013 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -56,7 +56,7 @@ public class BasicConnectorTests {
     private static final PropertyBag properties = TestHelpers.getProperties(BasicConnector.class);
     // Host is a public property read from public configuration file
     private static final String HOST = properties.getStringProperty("configuration.host");
-    // Login and password are private properties read from private configuration file 
+    // Login and password are private properties read from private configuration file
     private static final String REMOTE_USER = properties.getStringProperty("configuration.remoteUser");
     private static final GuardedString PASSWORD = properties.getProperty("configuration.password", GuardedString.class);
 

@@ -2,24 +2,25 @@
  * ====================
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright 2012 Tirasa. All rights reserved.
+ * Copyright 2012 ConnId. All rights reserved.
  *
  * The contents of this file are subject to the terms of the Common Development
  * and Distribution License("CDDL") (the "License").  You may not use this file
  * except in compliance with the License.
  *
  * You can obtain a copy of the License at
- * https://github.com/Tirasa/ConnId/blob/master/legal/license.txt
+ * http://opensource.org/licenses/cddl1.php
  * See the License for the specific language governing permissions and limitations
  * under the License.
  *
  * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at https://github.com/Tirasa/ConnId/blob/master/legal/license.txt.
+ * and include the License file at http://opensource.org/licenses/cddl1.php.
  * If applicable, add the following below this CDDL Header, with the fields
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  */
+
 package org.identityconnectors.common;
 
 import java.lang.reflect.Array;
@@ -52,6 +53,7 @@ public class PrettyStringBuilder {
     /**
      * Returns pretty value from object value.
      */
+    @SuppressWarnings("rawtypes")
     protected String toPrettyString(final Object obj) {
         deep++;
         if (obj == null) {
@@ -63,7 +65,7 @@ public class PrettyStringBuilder {
             return obj.toString();
         }
         final StringBuilder s = new StringBuilder();
-        final Class c = obj.getClass();
+        final Class<?> c = obj.getClass();
         if (c.isArray()) {
             final int arrayLen = Array.getLength(obj);
             final int len = Math.min(arrayLen, maxArrayLen);

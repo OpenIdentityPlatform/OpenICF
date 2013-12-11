@@ -1,7 +1,7 @@
 /*
  * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 ForgeRock Inc. All rights reserved.
+ * Copyright (c) 2012-2013 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -31,7 +31,7 @@ import org.identityconnectors.framework.spi.ConfigurationProperty;
 /**
  * Extends the {@link AbstractConfiguration} class to provide all the necessary
  * parameters to initialize the Basic Connector.
- * 
+ *
  * @author $author$
  * @version $Revision$ $Date$
  */

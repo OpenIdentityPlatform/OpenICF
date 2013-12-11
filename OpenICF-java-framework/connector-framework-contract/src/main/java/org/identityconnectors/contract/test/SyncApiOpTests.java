@@ -19,9 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- *
- * Portions Copyrighted 2012 ForgeRock AS
- *
+ * Portions Copyrighted 2010-2013 ForgeRock AS.
  */
 package org.identityconnectors.contract.test;
 
@@ -258,6 +256,7 @@ public class SyncApiOpTests extends ObjectClassRunner {
                 final LinkedList<SyncDelta> deltas = new LinkedList<SyncDelta>();
                 getConnectorFacade().sync(objectClass, latestToken, new SyncResultsHandler() {
 
+                    @Override
                     public boolean handle(SyncDelta delta) {
                         deltas.add(delta);
                         return true;
@@ -277,6 +276,7 @@ public class SyncApiOpTests extends ObjectClassRunner {
                 // should return one change this time
                 getConnectorFacade().sync(objectClass, latestToken, new SyncResultsHandler() {
 
+                    @Override
                     public boolean handle(SyncDelta delta) {
                         deltas.add(delta);
                         return true;

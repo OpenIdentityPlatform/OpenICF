@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2010-2013 ForgeRock AS.
  */
 package org.identityconnectors.framework.common;
 
@@ -58,9 +59,9 @@ import org.identityconnectors.framework.api.operations.SyncApiOp;
 import org.identityconnectors.framework.api.operations.TestApiOp;
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.api.operations.ValidateApiOp;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.QualifiedUid;
+import org.identityconnectors.framework.common.objects.SortKey;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
@@ -357,6 +358,10 @@ public final class FrameworkUtil {
             return; // ok
         }
 
+        if (SortKey.class.isAssignableFrom(clazz)){
+            return; // ok
+        }
+
         throw new IllegalArgumentException("ConfigurationOption type '" + clazz.getName()
                 + "' is not supported.");
     }
@@ -383,16 +388,10 @@ public final class FrameworkUtil {
      * @return the framework version; never null.
      */
     public static Version getFrameworkVersion() {
-        synchronized (FrameworkUtil.class) {
-            try {
-                if (frameworkVersion == null) {
-                    frameworkVersion = getFrameworkVersion(FrameworkUtil.class.getClassLoader());
-                }
-                return frameworkVersion;
-            } catch (IOException e) {
-                throw new ConnectorException(e);
-            }
+        if (frameworkVersion == null) {
+            frameworkVersion = Version.create(1, 4);
         }
+        return frameworkVersion;
     }
 
     static Version getFrameworkVersion(ClassLoader loader) throws IOException {

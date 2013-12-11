@@ -20,8 +20,8 @@
   !
   ! CCPL HEADER END
   !
-  !      Copyright 2012 ForgeRock AS
-  !    
+  !      Copyright 2012-2013 ForgeRock AS.
+  !
 -->
 <chapter xml:id='chap-compatibility'
  xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
@@ -36,19 +36,19 @@
 
  <section xml:id="major-changes">
   <title>Major Changes to Existing Functionality</title>
-  
+
   <para>This release includes no major changes affecting compatibility.</para>
  </section>
 
  <section xml:id="deprecation">
   <title>Deprecated Functionality</title>
-  
+
   <para>No functionality is deprecated in OpenICF <?eval ${docTargetVersion}?>.</para>
  </section>
 
  <section xml:id="removed-functionality">
   <title>Removed Functionality</title>
-  
+
   <para>No functionality has been removed in OpenICF <?eval ${docTargetVersion}?>.</para>
  </section>
 </chapter>

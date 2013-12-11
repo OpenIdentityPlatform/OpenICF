@@ -19,8 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- *
- * Portions Copyrighted 2011-2013 ForgeRock
+ * Portions Copyrighted 2010-2013 ForgeRock AS.
  */
 
 package org.identityconnectors.framework.impl.api.local;
@@ -100,10 +99,12 @@ public class ObjectPool<T> {
             touch();
         }
 
+        @Override
         public T getPooledObject() {
             return object;
         }
 
+        @Override
         public void close() throws IOException {
             try {
                 returnObject(this);
@@ -239,7 +240,7 @@ public class ObjectPool<T> {
      *
      * @return An object
      */
-    public ObjectPoolEntry borrowObject() {
+    public ObjectPoolEntry<T> borrowObject() {
         PooledObject rv = null;
         try {
             do {
@@ -352,12 +353,16 @@ public class ObjectPool<T> {
         // if there are any active objects still
         // going, leave them alone so they can return
         // gracefully
-        for (PooledObject entry = idleObjects.poll(); entry != null; entry = idleObjects.poll()) {
-            try {
-                dispose(entry);
-            } catch (InterruptedException e) {
-                LOG.error(e, "Failed to dispose PooledObject object");
+        try {
+            for (PooledObject entry = idleObjects.poll(); entry != null; entry = idleObjects.poll()) {
+                try {
+                    dispose(entry);
+                } catch (InterruptedException e) {
+                    LOG.error(e, "Failed to dispose PooledObject object");
+                }
             }
+        } finally {
+            handler.shutdown();
         }
     }
 
@@ -381,7 +386,7 @@ public class ObjectPool<T> {
         synchronized (activeObjects) {
             PooledObject pooledConn =
                     new PooledObject((activeObjects.size() > 0) ? handler.makeObject() : handler
-                            .makeFirstObject());
+                            .makeObject());
             activeObjects.add(pooledConn);
             return pooledConn;
         }
@@ -400,7 +405,7 @@ public class ObjectPool<T> {
                 // Make sure the disposed object was the last item in the
                 // activeObjects
                 if (activeObjects.remove(entry) && activeObjects.isEmpty()) {
-                    handler.disposeLastObject(entry.getPooledObject());
+                    handler.disposeObject(entry.getPooledObject());
                 } else {
                     handler.disposeObject(entry.getPooledObject());
                 }

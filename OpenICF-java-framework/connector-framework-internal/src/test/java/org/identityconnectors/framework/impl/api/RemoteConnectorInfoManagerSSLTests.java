@@ -75,6 +75,7 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
             _keyStoreName = name;
         }
 
+        @Override
         public int hashCode() {
             return 0;
         }
@@ -233,7 +234,7 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
                 new GuardedString("changeit".toCharArray()),
                 true,
                 CollectionUtil.newList(clientTrustManager),
-                60000);
+                0);
 
         ConnectorInfoManager manager = fact.getRemoteManager(connInfo);
 

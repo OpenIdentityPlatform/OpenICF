@@ -19,9 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- *
- * Portions Copyrighted 2012 ForgeRock AS
- *
+ * Portions Copyrighted 2010-2013 ForgeRock AS.
  */
 package org.identityconnectors.contract.test;
 
@@ -103,14 +101,17 @@ public class ValidateApiOpTests extends ContractTestBase {
         final Iterator<?> wrongConfigList = ((List<?>) o).iterator();
 
         return new Iterator<Object[]>() {
+            @Override
             public boolean hasNext() {
                 return wrongConfigList.hasNext();
             }
 
+            @Override
             public Object[] next() {
                 return new Object[]{wrongConfigList.next()};
             }
 
+            @Override
             public void remove() {
                 wrongConfigList.remove();
             }

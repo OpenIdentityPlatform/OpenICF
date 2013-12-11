@@ -21,7 +21,7 @@ rem enclosed by brackets [] replaced by your own identifying information:
 rem "Portions Copyrighted [year] [name of copyright owner]"
 rem ====================
 rem
-rem Portions Copyrighted 2012 ForgeRock AS
+rem Portions Copyrighted 2012-2013 ForgeRock AS
 rem
 rem -- END LICENSE
 
