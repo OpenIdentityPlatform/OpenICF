@@ -46,6 +46,12 @@ public class LdapConstants {
     public static final String OP_SEARCH_FILTER = "searchFilter";
     
     public static final String MS_GUID_ATTR = "objectGUID";
+    
+    public static final String MS_DS_USER_ACCOUNT_DISABLED = "msDS-UserAccountDisabled";
+    
+    public static final String MS_DS_USER_PASSWORD_EXPIRED = "msDS-UserPasswordExpired";
+    
+    public static final String MS_DS_USER_ACCOUNT_AUTOLOCKED = "ms-DS-UserAccountAutoLocked";
 
     /**
      * Overrides the framework-defined password because ours is readable:

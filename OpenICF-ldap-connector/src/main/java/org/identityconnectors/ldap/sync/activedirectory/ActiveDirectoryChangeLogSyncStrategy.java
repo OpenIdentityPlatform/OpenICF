@@ -140,7 +140,31 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                             attrs.remove("member");
                         }
                     }
-                    
+                    // Process Account specifics (ENABLE/PASSWORD_EXPIRED/LOCKOUT)
+                    if (oclass.equals(ObjectClass.ACCOUNT)) {
+                        switch (conn.getServerType()) {
+                            case MSAD_GC:
+                            case MSAD:
+                                if (attrs.get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR) != null) {
+                                    String controls = attrs.get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR).get(0).toString();
+                                    cob.addAttribute(AttributeBuilder.buildEnabled(!ADUserAccountControl.isAccountDisabled(controls)));
+                                    cob.addAttribute(AttributeBuilder.buildLockOut(ADUserAccountControl.isAccountLockOut(controls)));
+                                    cob.addAttribute(AttributeBuilder.buildPasswordExpired(ADUserAccountControl.isPasswordExpired(controls)));
+                                }
+                                break;
+                            case MSAD_LDS:
+                                if (attrs.get(LdapConstants.MS_DS_USER_ACCOUNT_DISABLED) != null) {
+                                    cob.addAttribute(AttributeBuilder.buildEnabled(!Boolean.parseBoolean(attrs.get(LdapConstants.MS_DS_USER_ACCOUNT_DISABLED).get().toString())));
+                                } else if (attrs.get(LdapConstants.MS_DS_USER_PASSWORD_EXPIRED) != null) {
+                                    cob.addAttribute(AttributeBuilder.buildPasswordExpired(Boolean.parseBoolean(attrs.get(LdapConstants.MS_DS_USER_PASSWORD_EXPIRED).get().toString())));
+                                } else if (attrs.get(LdapConstants.MS_DS_USER_ACCOUNT_AUTOLOCKED) != null) {
+                                    cob.addAttribute(AttributeBuilder.buildLockOut(Boolean.parseBoolean(attrs.get(LdapConstants.MS_DS_USER_ACCOUNT_AUTOLOCKED).get().toString())));
+                                }
+                                break;
+                            default:
+                        }
+                    }
+
                     // Set all Attributes
                     NamingEnumeration<? extends javax.naming.directory.Attribute> attrsEnum = attrs.getAll();
                     while (attrsEnum.hasMore()) {
@@ -155,15 +179,8 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                         if (conn.getConfiguration().isGetGroupMemberId() && oclass.equals(ObjectClass.GROUP) && attr.getID().equalsIgnoreCase("member")) {
                             cob.addAttribute(buildMemberIdAttribute(conn, attr));
                         }
-                        if (oclass.equals(ObjectClass.ACCOUNT) && id.equalsIgnoreCase(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR)) {
-                            String controls = values.get(0).toString();
-                            cob.addAttribute(AttributeBuilder.buildEnabled(!ADUserAccountControl.isAccountDisabled(controls)));
-                            cob.addAttribute(AttributeBuilder.buildLockOut(ADUserAccountControl.isAccountLockOut(controls)));
-                            cob.addAttribute(AttributeBuilder.buildPasswordExpired(ADUserAccountControl.isPasswordExpired(controls)));
-                        }
                     }
                     String usnChanged = attrs.get(USN_CHANGED_ATTR).get().toString();
-
                     SyncDeltaBuilder syncDeltaBuilder = new SyncDeltaBuilder();
                     syncDeltaBuilder.setToken(new SyncToken(usnChanged));
                     syncDeltaBuilder.setDeltaType(SyncDeltaType.CREATE_OR_UPDATE);
@@ -190,20 +207,24 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
             try {
                 Attributes rootAttrs = conn.getInitialContext().getAttributes("", new String[]{NAMING_CTX_ATTR});
                 String defaultContext = getStringAttrValue(rootAttrs, NAMING_CTX_ATTR);
-                LdapContext context = conn.getInitialContext().newInstance(new Control[]{new BasicControl(DELETE_CTRL)});
-                NamingEnumeration<SearchResult> deleted = context.search(DELETED_PREFIX + defaultContext, generateUSNChangedFilter(oclass, token, true), controls);
+                if (defaultContext != null) {
+                    LdapContext context = conn.getInitialContext().newInstance(new Control[]{new BasicControl(DELETE_CTRL)});
+                    NamingEnumeration<SearchResult> deleted = context.search(DELETED_PREFIX + defaultContext, generateUSNChangedFilter(oclass, token, true), controls);
 
-                while (deleted.hasMore()) {
-                    SearchResult entry = deleted.next();
-                    Attributes attrs = entry.getAttributes();
-                    Uid uid = conn.getSchemaMapping().createUid(conn.getConfiguration().getUidAttribute(), attrs);
-                    String usnChanged = attrs.get(USN_CHANGED_ATTR).get().toString();
+                    while (deleted.hasMore()) {
+                        SearchResult entry = deleted.next();
+                        Attributes attrs = entry.getAttributes();
+                        Uid uid = conn.getSchemaMapping().createUid(conn.getConfiguration().getUidAttribute(), attrs);
+                        String usnChanged = attrs.get(USN_CHANGED_ATTR).get().toString();
 
-                    SyncDeltaBuilder syncDeltaBuilder = new SyncDeltaBuilder();
-                    syncDeltaBuilder.setToken(new SyncToken(usnChanged));
-                    syncDeltaBuilder.setDeltaType(SyncDeltaType.DELETE);
-                    syncDeltaBuilder.setUid(uid);
-                    changes.put(Integer.parseInt(usnChanged), syncDeltaBuilder.build());
+                        SyncDeltaBuilder syncDeltaBuilder = new SyncDeltaBuilder();
+                        syncDeltaBuilder.setToken(new SyncToken(usnChanged));
+                        syncDeltaBuilder.setDeltaType(SyncDeltaType.DELETE);
+                        syncDeltaBuilder.setUid(uid);
+                        changes.put(Integer.parseInt(usnChanged), syncDeltaBuilder.build());
+                    }
+                } else if (LdapConnection.ServerType.MSAD_LDS.equals(conn.getServerType())) {
+                    logger.error("Active Directory Lightweight Directory Services is used but defaultNamingContext has not been set - impossible to detect deleted objects");
                 }
             } catch (NamingException e) {
                 logger.info(e.getExplanation());

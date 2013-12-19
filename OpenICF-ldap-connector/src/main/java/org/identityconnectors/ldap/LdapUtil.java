@@ -498,7 +498,7 @@ public class LdapUtil {
                         controls.setSearchScope(SearchControls.OBJECT_SCOPE);
                         controls.setReturningAttributes(new String[]{conn.getConfiguration().getUidAttribute()});
                         LdapContext context = conn.getInitialContext().newInstance(null);
-                        NamingEnumeration<SearchResult> entries = context.search(dn, "objectclass=*", controls);
+                        NamingEnumeration<SearchResult> entries = context.search(escapeDNValueOfJNDIReservedChars(dn), "objectclass=*", controls);
                         SearchResult res = entries.next();
                         String uidAttr = conn.getConfiguration().getUidAttribute();
                         if (LdapConstants.MS_GUID_ATTR.equalsIgnoreCase(uidAttr)) {

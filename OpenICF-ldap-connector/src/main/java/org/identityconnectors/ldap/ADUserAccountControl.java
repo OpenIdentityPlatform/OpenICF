@@ -41,6 +41,8 @@ public class ADUserAccountControl {
     // http://msdn.microsoft.com/en-us/library/ms677840.aspx
 
     public static final String MS_USR_ACCT_CTRL_ATTR = "userAccountControl";
+    
+    public static final String MSDS_USR_ACCT_CTRL_ATTR = "msDS-User-Account-Control-Computed";
     /*
      * The user account is disabled
      */

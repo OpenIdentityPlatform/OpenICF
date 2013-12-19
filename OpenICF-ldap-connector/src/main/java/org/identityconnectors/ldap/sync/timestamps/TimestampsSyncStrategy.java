@@ -115,14 +115,24 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
                     cob.setName(result.getNameInNamespace());
 
                     // Let's process AD specifics...
-                    if (ServerType.MSAD_GC.equals(server) || ServerType.MSAD.equals(server)) {
-                        if (ObjectClass.ACCOUNT.equals(oclass))  {
-                            javax.naming.directory.Attribute uac = attrs.get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR);
-                            if (uac != null) {
-                                String controls = uac.get().toString();
-                                cob.addAttribute(AttributeBuilder.buildEnabled(!ADUserAccountControl.isAccountDisabled(controls)));
-                                cob.addAttribute(AttributeBuilder.buildLockOut(ADUserAccountControl.isAccountLockOut(controls)));
-                                cob.addAttribute(AttributeBuilder.buildPasswordExpired(ADUserAccountControl.isPasswordExpired(controls)));
+                    if (ServerType.MSAD_GC.equals(server) || ServerType.MSAD.equals(server) || ServerType.MSAD_LDS.equals(server)) {
+                        if (ObjectClass.ACCOUNT.equals(oclass)) {
+                            if (ServerType.MSAD_LDS.equals(server)) {
+                                if (attrs.get(LdapConstants.MS_DS_USER_ACCOUNT_DISABLED) != null) {
+                                    cob.addAttribute(AttributeBuilder.buildEnabled(!Boolean.parseBoolean(attrs.get(LdapConstants.MS_DS_USER_ACCOUNT_DISABLED).get().toString())));
+                                } else if (attrs.get(LdapConstants.MS_DS_USER_PASSWORD_EXPIRED) != null) {
+                                    cob.addAttribute(AttributeBuilder.buildPasswordExpired(Boolean.parseBoolean(attrs.get(LdapConstants.MS_DS_USER_PASSWORD_EXPIRED).get().toString())));
+                                } else if (attrs.get(LdapConstants.MS_DS_USER_ACCOUNT_AUTOLOCKED) != null) {
+                                    cob.addAttribute(AttributeBuilder.buildLockOut(Boolean.parseBoolean(attrs.get(LdapConstants.MS_DS_USER_ACCOUNT_AUTOLOCKED).get().toString())));
+                                }
+                            } else {
+                                javax.naming.directory.Attribute uac = attrs.get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR);
+                                if (uac != null) {
+                                    String controls = uac.get().toString();
+                                    cob.addAttribute(AttributeBuilder.buildEnabled(!ADUserAccountControl.isAccountDisabled(controls)));
+                                    cob.addAttribute(AttributeBuilder.buildLockOut(ADUserAccountControl.isAccountLockOut(controls)));
+                                    cob.addAttribute(AttributeBuilder.buildPasswordExpired(ADUserAccountControl.isPasswordExpired(controls)));
+                                }
                             }
                         }
                         if (ObjectClass.GROUP.equals(oclass)) {
@@ -188,6 +198,7 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
         switch (server) {
             case MSAD_GC:
             case MSAD:
+            case MSAD_LDS:
                 return sdf.format(new Date()) + ".0Z";
             default:
                 return sdf.format(new Date()) + "Z";

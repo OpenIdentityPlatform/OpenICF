@@ -179,6 +179,7 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
                 case IBM:
                     return new IBMDSChangeLogSyncStrategy(conn, oclass).getLatestSyncToken();
                 case MSAD:
+                case MSAD_LDS:
                     return new ActiveDirectoryChangeLogSyncStrategy(conn, oclass).getLatestSyncToken();
                 case MSAD_GC:
                     return new TimestampsSyncStrategy(conn, oclass).getLatestSyncToken();
@@ -200,6 +201,7 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
                     new IBMDSChangeLogSyncStrategy(conn, oclass).sync(token, handler, options);
                     break;
                 case MSAD:
+                case MSAD_LDS:
                     new ActiveDirectoryChangeLogSyncStrategy(conn, oclass).sync(token, handler, options);
                     break;
                 case MSAD_GC:

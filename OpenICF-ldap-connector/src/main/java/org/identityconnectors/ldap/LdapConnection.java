@@ -318,7 +318,7 @@ public class LdapConnection {
 
     private ServerType detectServerType() {
         try {
-            Attributes attrs = getInitialContext().getAttributes("", new String[]{"vendorVersion", "vendorName", "isGlobalCatalogReady"});
+            Attributes attrs = getInitialContext().getAttributes("", new String[]{"vendorVersion", "vendorName", "highestCommittedUSN", "rootDomainNamingContext"});
             String vendorName = getStringAttrValue(attrs, "vendorName");
             if (null != vendorName && vendorName.toLowerCase().contains("ibm")) {
                 log.info("IBM Directory server has been detected");
@@ -340,17 +340,24 @@ public class LdapConnection {
                     return ServerType.SUN_DSEE;
                 }
             } else {
-                String isGc = getStringAttrValue(attrs, "isGlobalCatalogReady");
-                if (isGc != null) {
-                    // A DC may also be a GC so having the isGlobalCatalogReady = TRUE is not sufficient.
-                    // We check the port number as well. Not using the standard 389|636 is a good sign.
-                    if (isGc.equalsIgnoreCase("TRUE") && (config.getPort() != 389) && (config.getPort() != 636)) {
-                        log.info("MS Active Directory Global Catalog server has been detected");
-                        return ServerType.MSAD_GC;
-                    } else {
-                        log.info("MS Active Directory server has been detected");
-                        return ServerType.MSAD;
+                String hUSN = getStringAttrValue(attrs, "highestCommittedUSN");
+                String rDC = getStringAttrValue(attrs, "rootDomainNamingContext");
+                if (hUSN != null) {
+                // Windows Active Directory
+                    if (rDC != null) {
+                        // Only DCs and GCs have the rootDomainNamingContext
+                        // We check the port number as well. DC is using the standard 389|636 pair.
+                        if ((config.getPort() != 389) && (config.getPort() != 636)) {
+                            log.info("MS Active Directory Global Catalog server has been detected");
+                            return ServerType.MSAD_GC;
+                        } else {
+                            log.info("MS Active Directory server has been detected");
+                            return ServerType.MSAD;
+                        }
                     }
+                    // ADLDS does not have the rootDomainNamingContext...
+                    log.info("MS Active Directory Lightweight Directory Services server has been detected");
+                    return ServerType.MSAD_LDS;
                 }
             }
         } catch (NamingException e) {
@@ -428,6 +435,6 @@ public class LdapConnection {
 
     public enum ServerType {
 
-        SUN_DSEE, OPENDS, OPENDJ, IBM, MSAD, MSAD_GC, UNKNOWN
+        SUN_DSEE, OPENDS, OPENDJ, IBM, MSAD, MSAD_LDS, MSAD_GC, UNKNOWN
     }
 }

@@ -62,6 +62,7 @@ import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.ObjectClassUtil;
+import org.identityconnectors.framework.common.objects.OperationalAttributeInfos;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -181,7 +182,17 @@ public class LdapSchemaMapping {
                switch (conn.getServerType()) {
                    case MSAD_GC:
                    case MSAD:
-                        result = ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR;
+                       result = ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR;
+                       break;
+                   case MSAD_LDS:
+                       //result = ADUserAccountControl.MSDS_USR_ACCT_CTRL_ATTR;
+                       if (OperationalAttributeInfos.ENABLE.is(attrName)) {
+                           result = LdapConstants.MS_DS_USER_ACCOUNT_DISABLED;
+                       } else if (OperationalAttributeInfos.PASSWORD_EXPIRED.is(attrName)) {
+                           result = LdapConstants.MS_DS_USER_PASSWORD_EXPIRED;
+                       } else if (OperationalAttributeInfos.LOCK_OUT.is(attrName)) {
+                           result = LdapConstants.MS_DS_USER_ACCOUNT_AUTOLOCKED;
+                       }
                        break;
                    default:
                        log.warn("Special Attribute {0} of object class {1} is not mapped to an LDAP attribute",
@@ -256,6 +267,7 @@ public class LdapSchemaMapping {
             try{
                 //we do an exact search to get the DN as normalized by the server
                 NamingEnumeration<SearchResult> ne = conn.getInitialContext().search(entryDN, "objectclass=*", new SearchControls(SearchControls.OBJECT_SCOPE,0,0,null,false,false));
+                // TODO: ne might be null if entry can not be read back (ACI issues for instances)
                 SearchResult sr = ne.next();
                 return new Uid(sr.getNameInNamespace());
             } catch (NamingException e) {
