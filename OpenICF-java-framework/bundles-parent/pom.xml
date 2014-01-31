@@ -90,7 +90,7 @@
         <openicf.osgi.import.additional/>
 
         <openicf.osgi.import.pkg>
-            org.identityconnectors.*;${openicf.osgi.import.strict.version},
+            org.identityconnectors.*;${openicf.osgi.import.framework.version},
             ${openicf.osgi.import.before.defaults},
             ${openicf.osgi.import.defaults},
             ${openicf.osgi.import.additional},
