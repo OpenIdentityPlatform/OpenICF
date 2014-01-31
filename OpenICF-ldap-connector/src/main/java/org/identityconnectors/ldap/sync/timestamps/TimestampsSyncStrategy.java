@@ -34,6 +34,7 @@ import javax.naming.PartialResultException;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
+import javax.naming.ldap.PagedResultsControl;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -53,7 +54,9 @@ import static org.identityconnectors.ldap.LdapUtil.buildMemberIdAttribute;
 import org.identityconnectors.ldap.ADUserAccountControl;
 import org.identityconnectors.ldap.LdapConnection.ServerType;
 import org.identityconnectors.ldap.LdapConstants;
+import org.identityconnectors.ldap.search.DefaultSearchStrategy;
 import org.identityconnectors.ldap.search.LdapInternalSearch;
+import org.identityconnectors.ldap.search.LdapSearchStrategy;
 import org.identityconnectors.ldap.search.SearchResultsHandler;
 import org.identityconnectors.ldap.search.SimplePagedSearchStrategy;
 import org.identityconnectors.ldap.sync.LdapSyncStrategy;
@@ -92,16 +95,22 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
         // on other directories
 
         final String now = getNowTime();
+        LdapSearchStrategy strategy = null;
         SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
         controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
         controls.setDerefLinkFlag(false);
         controls.setReturningAttributes(new String[]{"*", createTimestamp, modifyTimestamp,conn.getConfiguration().getUidAttribute()});
+        
+        if (conn.getConfiguration().isUseBlocks() && conn.supportsControl(PagedResultsControl.OID)) {
+            strategy = new SimplePagedSearchStrategy(conn.getConfiguration().getBlockSize());
+        } else {
+            strategy = new DefaultSearchStrategy(false);
+        }
 
         LdapInternalSearch search = new LdapInternalSearch(conn,
                 generateFilter(oclass, token),
                 Arrays.asList(conn.getConfiguration().getBaseContextsToSynchronize()),
-                new SimplePagedSearchStrategy(conn.getConfiguration().getBlockSize()),
-                controls);
+                strategy, controls);
 
         try {
             search.execute(new SearchResultsHandler() {
