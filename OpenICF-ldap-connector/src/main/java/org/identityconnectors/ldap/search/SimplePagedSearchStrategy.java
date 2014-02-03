@@ -28,6 +28,7 @@ import java.util.List;
 
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
+import javax.naming.PartialResultException;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.Control;
@@ -60,15 +61,16 @@ public class SimplePagedSearchStrategy extends LdapSearchStrategy {
                 String baseDN = baseDNIter.next();
                 byte[] cookie = null;
                 do {
-                    ctx.setRequestControls(new Control[] { new PagedResultsControl(pageSize, cookie, Control.CRITICAL) });
+                    ctx.setRequestControls(new Control[]{new PagedResultsControl(pageSize, cookie, Control.CRITICAL)});
                     NamingEnumeration<SearchResult> results = ctx.search(baseDN, query, searchControls);
                     try {
                         while (proceed && results.hasMore()) {
                             proceed = handler.handle(baseDN, results.next());
                         }
-                    } finally {
+                    } catch (PartialResultException e) {
+                        log.ok("PartialResultException caught: {0}",e.getRemainingName());
                         results.close();
-                    }
+                    } 
                     cookie = getResponseCookie(ctx.getResponseControls());
                 } while (cookie != null);
             }
