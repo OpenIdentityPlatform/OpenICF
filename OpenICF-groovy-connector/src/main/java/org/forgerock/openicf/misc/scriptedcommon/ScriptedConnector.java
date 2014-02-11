@@ -137,7 +137,7 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
         syncExecutor = getScriptExecutor(configuration.getSyncScriptFileName());
         schemaExecutor = getScriptExecutor(configuration.getSchemaScriptFileName());
         testExecutor = getScriptExecutor(configuration.getTestScriptFileName());
-        log.ok("Scripts loaded");
+        log.info("Scripts loaded");
     }
 
     /**
@@ -224,6 +224,11 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
 
             final Map<String, Object> arguments = new HashMap<String, Object>();
 
+            Map<String, List> attrMap = new HashMap<String, List>();
+            for (Attribute attr : createAttributes) {
+                attrMap.put(attr.getName(), attr.getValue());
+            }
+            arguments.put("attributes", attrMap);
             arguments.put("connection", connection.getConnectionHandler());
             arguments.put("configuration", configuration);
             arguments.put("action", "CREATE");
@@ -231,16 +236,11 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
             arguments.put("objectClass", objectClass.getObjectClassValue());
             arguments.put("options", options.getOptions());
             // We give the id (name) as an argument, more friendly than dealing with __NAME__
-            arguments.put("id", AttributeUtil.getNameFromAttributes(createAttributes).getNameValue());
-
-            Map<String, List> attrMap = new HashMap<String, List>();
-            for (Attribute attr : createAttributes) {
-                attrMap.put(attr.getName(), attr.getValue());
+            arguments.put("id", null);
+            if (AttributeUtil.getNameFromAttributes(createAttributes) != null) {
+                arguments.put("id", AttributeUtil.getNameFromAttributes(createAttributes).getNameValue());
+                attrMap.remove("__NAME__");
             }
-            // let's get rid of __NAME__
-            attrMap.remove("__NAME__");
-            arguments.put("attributes", attrMap);
-
             // Password - if allowed we provide it in clear
             if (configuration.getClearTextPasswordToScript()) {
                 GuardedString gpasswd = AttributeUtil.getPasswordValue(createAttributes);
@@ -504,7 +504,7 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
     public Uid update(ObjectClass objectClass, Uid uid, Set<Attribute> replaceAttributes, OperationOptions options) {
         return genericUpdate("UPDATE", objectClass, uid, replaceAttributes, options);
     }
-    
+
     /**
      * {@inheritDoc}
      */
