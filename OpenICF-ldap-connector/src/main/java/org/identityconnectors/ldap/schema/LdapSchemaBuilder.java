@@ -36,7 +36,10 @@ import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.SchemaBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
+import org.identityconnectors.framework.spi.operations.CreateOp;
+import org.identityconnectors.framework.spi.operations.DeleteOp;
 import org.identityconnectors.framework.spi.operations.SyncOp;
+import org.identityconnectors.framework.spi.operations.UpdateOp;
 import org.identityconnectors.ldap.LdapAttributeType;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapConnector;
@@ -103,6 +106,19 @@ class LdapSchemaBuilder {
             if (conn.getServerType() == ServerType.OPENDS) {
                 schemaBld.removeSupportedObjectClass(SyncOp.class, oci);
             }
+        }
+        
+        // Specific SERVER INFORMATION "fake" object class
+        if (conn.getConfiguration().getServerInformationObjectClass() != null){
+            ObjectClassInfoBuilder objClassBld = new ObjectClassInfoBuilder();
+            objClassBld.setType(conn.getConfiguration().getServerInformationObjectClass());
+            ObjectClassInfo oci = objClassBld.build();
+            schemaBld.defineObjectClass(oci);
+            schemaBld.removeSupportedObjectClass(AuthenticateOp.class, oci);
+            schemaBld.removeSupportedObjectClass(CreateOp.class, oci);
+            schemaBld.removeSupportedObjectClass(UpdateOp.class, oci);
+            schemaBld.removeSupportedObjectClass(DeleteOp.class, oci);
+            schemaBld.removeSupportedObjectClass(SyncOp.class, oci);
         }
 
         schema = schemaBld.build();

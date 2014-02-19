@@ -145,7 +145,11 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
     }
 
     public void executeQuery(ObjectClass oclass, LdapFilter query, ResultsHandler handler, OperationOptions options) {
-        new LdapSearch(conn, oclass, query, options).execute(handler);
+        if ((conn.getConfiguration().getServerInformationObjectClass() != null) && oclass.is(conn.getConfiguration().getServerInformationObjectClass())) {
+            LdapUtil.getServerInfo(conn, handler);
+        } else {
+            new LdapSearch(conn, oclass, query, options).execute(handler);
+        }
     }
 
     public Uid create(ObjectClass oclass, Set<Attribute> attrs, OperationOptions options) {

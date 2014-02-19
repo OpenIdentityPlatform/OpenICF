@@ -47,6 +47,9 @@ import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
+import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.ResultsHandler;
 import static org.identityconnectors.ldap.LdapEntry.isDNAttribute;
 import org.identityconnectors.ldap.search.LdapInternalSearch;
 
@@ -540,6 +543,12 @@ public class LdapUtil {
         return AttributeBuilder.build("_memberId", membersIds);
     }
         
-        
+   public static void getServerInfo(LdapConnection conn, ResultsHandler handler){
+       ConnectorObjectBuilder builder = new ConnectorObjectBuilder();
+        builder.setObjectClass(new ObjectClass(conn.getConfiguration().getServerInformationObjectClass()));
+        builder.setUid(conn.getServerType().name());
+        builder.setName(conn.getServerType().name());
+        handler.handle(builder.build());
+   }     
         
 }

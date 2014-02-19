@@ -218,6 +218,8 @@ public class LdapConfiguration extends AbstractConfiguration {
     private GuardedByteArray passwordDecryptionInitializationVector;
     
     private boolean useTimestampsForSync = false;
+    
+    private String serverInformationObjectClass = "SERVER_INFO";
 
     // Other state.
 
@@ -588,6 +590,14 @@ public class LdapConfiguration extends AbstractConfiguration {
 
     public void setReadSchema(boolean readSchema) {
         this.readSchema = readSchema;
+    }
+    
+    public String getServerInformationObjectClass() {
+        return serverInformationObjectClass;
+    }
+
+    public void setServerInformationObjectClass(String serverInformationObjectClass) {
+        this.serverInformationObjectClass = serverInformationObjectClass;
     }
 
     // Sync properties getters and setters.
