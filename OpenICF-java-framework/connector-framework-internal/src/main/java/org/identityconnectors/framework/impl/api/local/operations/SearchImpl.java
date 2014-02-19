@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.identityconnectors.common.Assertions;
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.ResultsHandlerConfiguration;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
@@ -42,6 +43,8 @@ import org.identityconnectors.framework.spi.SearchResultsHandler;
 import org.identityconnectors.framework.spi.operations.SearchOp;
 
 public class SearchImpl extends ConnectorAPIOperationRunner implements SearchApiOp {
+
+    private static final Log logger = Log.getLog(SearchImpl.class);
 
     /**
      * Initializes the operation works.
@@ -63,6 +66,10 @@ public class SearchImpl extends ConnectorAPIOperationRunner implements SearchApi
     public SearchResult search(ObjectClass objectClass, Filter originalFilter,
             ResultsHandler handler, OperationOptions options) {
         Assertions.nullCheck(objectClass, "objectClass");
+        if (ObjectClass.ALL.equals(objectClass)) {
+            throw new UnsupportedOperationException(
+                    "Operation is not allowed on __ALL__ object class");
+        }
         Assertions.nullCheck(handler, "handler");
         // cast null as empty
         if (options == null) {
@@ -74,15 +81,12 @@ public class SearchImpl extends ConnectorAPIOperationRunner implements SearchApi
                 null != getOperationalContext() ? getOperationalContext()
                         .getResultsHandlerConfiguration() : new ResultsHandlerConfiguration();
 
-        // actualFilter is used for chaining filters - it points to the filter
-        // where new filters should be chained
-        Filter actualFilter = originalFilter;
+        Filter actualFilter = originalFilter;               // actualFilter is used for chaining filters - it points to the filter where new filters should be chained
 
-        if (hdlCfg.isEnableFilteredResultsHandler() && hdlCfg.isEnableCaseInsensitiveFilter()
-                && actualFilter != null) {
-            ObjectNormalizerFacade caseNormalizer =
-                    new ObjectNormalizerFacade(objectClass, new CaseNormalizer());
-            actualFilter = new NormalizingFilter(actualFilter, caseNormalizer);
+        if (hdlCfg.isEnableFilteredResultsHandler() && hdlCfg.isEnableCaseInsensitiveFilter() && actualFilter != null) {
+            logger.ok("Creating case insensitive filter");
+            ObjectNormalizerFacade normalizer = new ObjectNormalizerFacade(objectClass, new CaseNormalizer());
+            actualFilter = new NormalizingFilter(actualFilter, normalizer);
         }
 
         if (hdlCfg.isEnableNormalizingResultsHandler()) {
@@ -105,7 +109,8 @@ public class SearchImpl extends ConnectorAPIOperationRunner implements SearchApi
             handler = new FilteredResultsHandler(handler, actualFilter);
         }
         // chain an attributes to get handler..
-        if (hdlCfg.isEnableAttributesToGetSearchResultsHandler()) {
+        String[] attrsToGet = options.getAttributesToGet();
+        if (attrsToGet != null && attrsToGet.length > 0 && hdlCfg.isEnableAttributesToGetSearchResultsHandler()) {
             handler = getAttributesToGetResutlsHandler(handler, options);
         }
 

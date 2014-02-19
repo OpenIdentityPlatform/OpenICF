@@ -19,7 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- * Portions Copyrighted 2010-2013 ForgeRock AS.
+ * Portions Copyrighted 2010-2014 ForgeRock AS.
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -58,6 +58,10 @@ public class CreateImpl extends ConnectorAPIOperationRunner implements
     public Uid create(final ObjectClass objectClass, final Set<Attribute> createAttributes,
             OperationOptions options) {
         Assertions.nullCheck(objectClass, "objectClass");
+        if (ObjectClass.ALL.equals(objectClass)) {
+            throw new UnsupportedOperationException(
+                    "Operation is not allowed on __ALL__ object class");
+        }
         Assertions.nullCheck(createAttributes, "createAttributes");
         // check to make sure there's not a uid..
         if (AttributeUtil.getUidAttribute(createAttributes) != null) {
@@ -71,7 +75,7 @@ public class CreateImpl extends ConnectorAPIOperationRunner implements
         final Set<String> dups = new HashSet<String>();
         for (Attribute attr : createAttributes) {
             if (dups.contains(attr.getName())) {
-                throw new InvalidAttributeValueException("Duplicated named attributes: " + attr.getName());
+                throw new InvalidAttributeValueException("Duplicate attribute name exits: " + attr.getName());
             }
             // add for the detection..s
             dups.add(attr.getName());
@@ -79,9 +83,9 @@ public class CreateImpl extends ConnectorAPIOperationRunner implements
 
         final Connector connector = getConnector();
         final ObjectNormalizerFacade normalizer = getNormalizer(objectClass);
-        // create the object..
         final Set<Attribute> normalizedAttributes =
                 normalizer.normalizeAttributes(createAttributes);
+        // create the object..
         final Uid ret = ((CreateOp) connector).create(objectClass, normalizedAttributes, options);
         return (Uid) normalizer.normalizeAttribute(ret);
     }

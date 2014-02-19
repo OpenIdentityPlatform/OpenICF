@@ -101,7 +101,9 @@ public class OperationalContext {
             // but don't let the exception prevent additional
             // cleanup that needs to happen
             try {
-                ((StatefulConfiguration)configuration).release();
+                StatefulConfiguration config = (StatefulConfiguration) configuration;
+                configuration = null;
+                config.release();
             } catch (Exception e) {
                 // log this though
                 LOG.warn(e, null);

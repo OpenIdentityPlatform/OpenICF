@@ -48,6 +48,7 @@ public final class Main {
     private static final String PROP_SSL  = "connectorserver.usessl";
     private static final String PROP_IFADDRESS = "connectorserver.ifaddress";
     private static final String PROP_KEY = "connectorserver.key";
+    private static final String PROP_FACADE_LIFETIME = "connectorserver.maxFacadeLifeTime";
     private static final String PROP_LOGGER_CLASS = "connectorserver.loggerClass";
 
     private static final String DEFAULT_LOG_SPI = "org.identityconnectors.common.logging.StdOutLogger";
@@ -129,6 +130,7 @@ public final class Main {
         String useSSLStr = properties.getProperty(PROP_SSL);
         String ifAddress = properties.getProperty(PROP_IFADDRESS);
         String keyHash = properties.getProperty(PROP_KEY);
+        String facadeLifeTime = properties.getProperty(PROP_FACADE_LIFETIME);
         String loggerClass = properties.getProperty(PROP_LOGGER_CLASS);
         if (portStr == null) {
             throw new ConnectorException("connectorserver.properties is missing " + PROP_PORT);
@@ -168,6 +170,9 @@ public final class Main {
         }
         if (ifAddress != null) {
             connectorServer.setIfAddress(InetAddress.getByName(ifAddress));
+        }
+        if (facadeLifeTime != null) {
+            connectorServer.setMaxFacadeLifeTime(Long.parseLong(facadeLifeTime));
         }
         connectorServer.start();
         getLog().info("Connector server listening on port " + port);

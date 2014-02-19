@@ -31,6 +31,7 @@ import java.util.List;
 import javax.net.ssl.KeyManager;
 
 import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 /**
@@ -41,6 +42,8 @@ public abstract class ConnectorServer {
     // At some point we might make this pluggable, but for now, hard-code
     private static final String IMPL_NAME =
             "org.identityconnectors.framework.server.impl.ConnectorServerImpl";
+
+    protected Log logger = Log.getLog(ConnectorServer.class);
 
     /**
      * The port to listen on;
@@ -66,6 +69,11 @@ public abstract class ConnectorServer {
      * The maximum number of worker threads
      */
     private int maxWorkers = 100;
+
+    /**
+     * The maximum time in minutes a facade can be inactive.
+     */
+    private long maxFacadeLifeTime = 60;
 
     /**
      * The network interface address to use.
@@ -192,6 +200,32 @@ public abstract class ConnectorServer {
     public void setMinWorkers(final int minWorkers) {
         assertNotStarted();
         this.minWorkers = minWorkers;
+    }
+
+    /**
+     * Returns the max inactive lifetime of
+     * {@link org.identityconnectors.framework.api.ConnectorFacade} to allow.
+     *
+     * @return The max inactive lifetime of
+     *         {@link org.identityconnectors.framework.api.ConnectorFacade} to
+     *         allow.
+     */
+    public long getMaxFacadeLifeTime() {
+        return maxFacadeLifeTime;
+    }
+
+    /**
+     * Sets the max inactive lifetime of
+     * {@link org.identityconnectors.framework.api.ConnectorFacade} to allow.
+     *
+     * @param maxFacadeLifeTime
+     *            The max inactive lifetime of
+     *            {@link org.identityconnectors.framework.api.ConnectorFacade}
+     *            to allow.
+     */
+    public void setMaxFacadeLifeTime(long maxFacadeLifeTime) {
+        assertNotStarted();
+        this.maxFacadeLifeTime = maxFacadeLifeTime;
     }
 
     /**

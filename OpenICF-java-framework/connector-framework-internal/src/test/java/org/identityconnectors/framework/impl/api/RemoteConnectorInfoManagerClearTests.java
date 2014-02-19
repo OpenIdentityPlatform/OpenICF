@@ -22,14 +22,19 @@
  */
 package org.identityconnectors.framework.impl.api;
 
-
 import java.net.InetAddress;
 import java.net.URL;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.common.security.SecurityUtil;
+import org.identityconnectors.framework.api.APIConfiguration;
+import org.identityconnectors.framework.api.ConfigurationProperties;
+import org.identityconnectors.framework.api.ConfigurationProperty;
+import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
+import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.api.ConnectorInfoManager;
 import org.identityconnectors.framework.api.ConnectorInfoManagerFactory;
 import org.identityconnectors.framework.api.RemoteFrameworkConnectionInfo;
@@ -39,21 +44,21 @@ import org.identityconnectors.framework.server.ConnectorServer;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-
 public class RemoteConnectorInfoManagerClearTests extends ConnectorInfoManagerTestBase {
 
     private static ConnectorServer _server;
 
     final int PORT = 8759;
+
     /**
      * To be overridden by subclasses to get different ConnectorInfoManagers
+     *
      * @return
      * @throws Exception
      */
     @Override
     protected ConnectorInfoManager getConnectorInfoManager() throws Exception {
         List<URL> urls = getTestBundles();
-
 
         synchronized (RemoteConnectorInfoManagerClearTests.class) {
             if (_server == null) {
@@ -67,8 +72,9 @@ public class RemoteConnectorInfoManagerClearTests extends ConnectorInfoManagerTe
         }
         ConnectorInfoManagerFactory fact = ConnectorInfoManagerFactory.getInstance();
 
-        RemoteFrameworkConnectionInfo connInfo = new
-        RemoteFrameworkConnectionInfo("127.0.0.1",PORT,new GuardedString("changeit".toCharArray()),false,null,0);
+        RemoteFrameworkConnectionInfo connInfo =
+                new RemoteFrameworkConnectionInfo("127.0.0.1", PORT, new GuardedString("changeit"
+                        .toCharArray()), false, null, 0);
 
         ConnectorInfoManager manager = fact.getRemoteManager(connInfo);
 
@@ -88,13 +94,57 @@ public class RemoteConnectorInfoManagerClearTests extends ConnectorInfoManagerTe
         ConnectorInfoManagerFactory.getInstance().clearLocalCache();
     }
 
-
     @Test
     public void testRemoteHelloRequest() throws Exception {
         getConnectorInfoManager();
-        RemoteConnectorInfoManagerImpl mgr = new RemoteConnectorInfoManagerImpl(
-                new RemoteFrameworkConnectionInfo("127.0.0.1", PORT, new GuardedString("changeit".toCharArray())));
+        RemoteConnectorInfoManagerImpl mgr =
+                new RemoteConnectorInfoManagerImpl(new RemoteFrameworkConnectionInfo("127.0.0.1",
+                        PORT, new GuardedString("changeit".toCharArray())));
         Assert.assertNotNull(mgr.getServerInfo().get(HelloResponse.SERVER_START_TIME));
-        Assert.assertEquals(mgr.getConnectorKeys().size(),4);
+        Assert.assertEquals(mgr.getConnectorKeys().size(), 4);
+    }
+
+    @Test
+    public void testFacadeEviction() throws Exception {
+        ConnectorServer server = ConnectorServer.newInstance();
+        try {
+            server.setKeyHash(SecurityUtil.computeBase64SHA1Hash("changeit".toCharArray()));
+            server.setBundleURLs(getTestBundles());
+            server.setPort(8760);
+            server.setIfAddress(InetAddress.getByName("127.0.0.1"));
+            server.setMaxFacadeLifeTime(1);
+            server.start();
+
+            RemoteFrameworkConnectionInfo connInfo =
+                    new RemoteFrameworkConnectionInfo("127.0.0.1", 8760, new GuardedString(
+                            "changeit".toCharArray()), false, null, 0);
+
+            final ConnectorInfoManager remoteManager =
+                    ConnectorInfoManagerFactory.getInstance().getRemoteManager(connInfo);
+
+            final ConnectorInfo remoteInfo =
+                    findConnectorInfo(remoteManager, "1.0.0.0",
+                            "org.identityconnectors.testconnector.TstConnector");
+
+            APIConfiguration api = remoteInfo.createDefaultAPIConfiguration();
+            // api.getConfigurationProperties().getProperty("resetConnectionCount").setValue(true);
+            ConnectorFacade remoteFacade =
+                    ConnectorFacadeFactory.getInstance().newInstance(
+                            remoteInfo.createDefaultAPIConfiguration());
+
+            ManagedConnectorFacadeFactoryImpl managedFactory =
+                    (ManagedConnectorFacadeFactoryImpl) ConnectorFacadeFactory.getManagedInstance();
+
+            // Assert it's empty
+            Assert.assertNull(managedFactory.find(remoteFacade.getConnectorFacadeKey()));
+            remoteFacade.schema();
+            // Assert it has one item
+            Assert.assertNotNull(managedFactory.find(remoteFacade.getConnectorFacadeKey()));
+            Thread.sleep(TimeUnit.MINUTES.toMillis(2));
+            // Assert it's empty
+            Assert.assertNull(managedFactory.find(remoteFacade.getConnectorFacadeKey()));
+        } finally {
+            server.stop();
+        }
     }
 }

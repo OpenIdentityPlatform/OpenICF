@@ -25,7 +25,11 @@
 package org.identityconnectors.framework.server.impl;
 
 import java.net.ServerSocket;
+import java.util.Date;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.KeyManager;
@@ -36,6 +40,7 @@ import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.api.ConnectorInfoManagerFactory;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.impl.api.ConnectorInfoManagerFactoryImpl;
+import org.identityconnectors.framework.impl.api.ManagedConnectorFacadeFactoryImpl;
 import org.identityconnectors.framework.server.ConnectorServer;
 
 public class ConnectorServerImpl extends ConnectorServer {
@@ -43,6 +48,7 @@ public class ConnectorServerImpl extends ConnectorServer {
     private ConnectionListener listener;
     private CountDownLatch stopLatch;
     private Long startDate = null;
+    private ScheduledExecutorService executorService = null;
 
     @Override
     public Long getStartTime() {
@@ -76,6 +82,9 @@ public class ConnectorServerImpl extends ConnectorServer {
         stopLatch = new CountDownLatch(1);
         startDate = System.currentTimeMillis();
         this.listener = listener;
+        executorService = Executors.newSingleThreadScheduledExecutor();
+        executorService.schedule(new FacadeDisposer(getMaxFacadeLifeTime(), TimeUnit.MINUTES), Math
+                .min(getMaxFacadeLifeTime(), 10), TimeUnit.MINUTES);
     }
 
     private ServerSocket createServerSocket() {
@@ -126,12 +135,35 @@ public class ConnectorServerImpl extends ConnectorServer {
             startDate = null;
             listener = null;
         }
+        if (null != executorService) {
+            executorService.shutdown();
+            executorService = null;
+        }
         ConnectorFacadeFactory.getManagedInstance().dispose();
     }
 
     @Override
     public void awaitStop() throws InterruptedException {
         stopLatch.await();
+    }
+
+    private class FacadeDisposer implements Runnable {
+        private final long delay;
+        private final TimeUnit unit;
+
+        public FacadeDisposer(long time, TimeUnit unit) {
+            this.delay = time;
+            this.unit = unit;
+
+        }
+
+        public void run() {
+            logger.ok("Invoking Managed ConnectorFacade Disposer");
+            ConnectorFacadeFactory factory = ConnectorFacadeFactory.getManagedInstance();
+            if (factory instanceof ManagedConnectorFacadeFactoryImpl) {
+                ((ManagedConnectorFacadeFactoryImpl) factory).evictIdle(delay, unit);
+            }
+        }
     }
 
 }
