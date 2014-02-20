@@ -154,7 +154,7 @@
         <maven.compiler.target>1.5</maven.compiler.target>
         <maven.compiler.source>1.6</maven.compiler.source>
         <framework.compatibilityVersion>1.4</framework.compatibilityVersion>
-        <licenseResourceBundle>org.forgerock.openicf:openicf-license:1.1.0-SNAPSHOT</licenseResourceBundle>
+        <licenseResourceBundle>org.forgerock.openicf:openicf-license:1.1.0</licenseResourceBundle>
         <siteDistributionURL>scp://forgerock.org/var/www/vhosts/openicf.forgerock.org/httpdocs</siteDistributionURL>
 
         <!-- forgerock-build-tools stylesheet org/forgerock/javadoc/javadoc.css
