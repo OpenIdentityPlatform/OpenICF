@@ -2,7 +2,7 @@
 <!--
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
- Copyright (c) 2010-2013 ForgeRock AS. All rights reserved.
+ Copyright (c) 2010-2014 ForgeRock AS. All rights reserved.
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -396,7 +396,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-failsafe-plugin</artifactId>
-                        <version>2.15</version>
+                        <version>2.16</version>
                         <executions>
                             <execution>
                                 <id>integration-test</id>
@@ -409,8 +409,10 @@
                                         <suiteXmlFile>${basedir}/src/test/resources/it-testng.xml</suiteXmlFile>
                                     </suiteXmlFiles>
                                     <!--test>${contract.suiteName}</test-->
-                                    <testSourceDirectory>${project.build.directory}/contractSources</testSourceDirectory>
-                                    <testClassesDirectory>${project.build.directory}/contractClasses</testClassesDirectory>
+                                    <testSourceDirectory>${project.build.directory}/contractSources
+                                    </testSourceDirectory>
+                                    <testClassesDirectory>${project.build.directory}/contractClasses
+                                    </testClassesDirectory>
                                     <additionalClasspathElements>
                                         <additionalClasspathElement>
                                             ${project.build.testOutputDirectory}
@@ -441,7 +443,8 @@
                                 </goals>
                                 <configuration>
                                     <testFailureIgnore>true</testFailureIgnore>
-                                    <reportsDirectory>${project.build.directory}/site/failsafe-reports</reportsDirectory>
+                                    <reportsDirectory>${project.build.directory}/site/failsafe-reports
+                                    </reportsDirectory>
                                     <!--summaryFiles>
                                         <summaryFile>target/failsafe-reports/failsafe-summary-default.xml</summaryFile>
                                         <summaryFile>target/failsafe-reports/failsafe-summary-other.xml</summaryFile>

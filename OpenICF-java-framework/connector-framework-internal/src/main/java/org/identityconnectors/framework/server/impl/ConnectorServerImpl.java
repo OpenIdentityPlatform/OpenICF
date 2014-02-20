@@ -26,6 +26,8 @@ package org.identityconnectors.framework.server.impl;
 
 import java.net.ServerSocket;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -47,8 +49,8 @@ public class ConnectorServerImpl extends ConnectorServer {
 
     private ConnectionListener listener;
     private CountDownLatch stopLatch;
+    private Timer timer = null;
     private Long startDate = null;
-    private ScheduledExecutorService executorService = null;
 
     @Override
     public Long getStartTime() {
@@ -82,9 +84,12 @@ public class ConnectorServerImpl extends ConnectorServer {
         stopLatch = new CountDownLatch(1);
         startDate = System.currentTimeMillis();
         this.listener = listener;
-        executorService = Executors.newSingleThreadScheduledExecutor();
-        executorService.schedule(new FacadeDisposer(getMaxFacadeLifeTime(), TimeUnit.MINUTES), Math
-                .min(getMaxFacadeLifeTime(), 10), TimeUnit.MINUTES);
+
+        // Create an inferred delegate that invokes methods for the timer.
+        FacadeDisposer statusChecker = new FacadeDisposer(getMaxFacadeLifeTime(), TimeUnit.MINUTES);
+        timer = new Timer();
+        timer.scheduleAtFixedRate(statusChecker, new Date(), TimeUnit.MINUTES.toMillis(Math.min(
+                getMaxFacadeLifeTime(), 10)));
     }
 
     private ServerSocket createServerSocket() {
@@ -135,9 +140,9 @@ public class ConnectorServerImpl extends ConnectorServer {
             startDate = null;
             listener = null;
         }
-        if (null != executorService) {
-            executorService.shutdown();
-            executorService = null;
+        if (null != timer) {
+            timer.cancel();
+            timer = null;
         }
         ConnectorFacadeFactory.getManagedInstance().dispose();
     }
@@ -147,7 +152,7 @@ public class ConnectorServerImpl extends ConnectorServer {
         stopLatch.await();
     }
 
-    private class FacadeDisposer implements Runnable {
+    private class FacadeDisposer extends TimerTask {
         private final long delay;
         private final TimeUnit unit;
 
@@ -157,6 +162,7 @@ public class ConnectorServerImpl extends ConnectorServer {
 
         }
 
+        @Override
         public void run() {
             logger.ok("Invoking Managed ConnectorFacade Disposer");
             ConnectorFacadeFactory factory = ConnectorFacadeFactory.getManagedInstance();

@@ -135,12 +135,18 @@ public class RemoteConnectorInfoManagerClearTests extends ConnectorInfoManagerTe
             ManagedConnectorFacadeFactoryImpl managedFactory =
                     (ManagedConnectorFacadeFactoryImpl) ConnectorFacadeFactory.getManagedInstance();
 
+            managedFactory.dispose();
             // Assert it's empty
             Assert.assertNull(managedFactory.find(remoteFacade.getConnectorFacadeKey()));
             remoteFacade.schema();
             // Assert it has one item
             Assert.assertNotNull(managedFactory.find(remoteFacade.getConnectorFacadeKey()));
-            Thread.sleep(TimeUnit.MINUTES.toMillis(2));
+            for (int i = 0; i <= 3; i++) {
+                Thread.sleep(TimeUnit.MINUTES.toMillis(1));
+                if (null == managedFactory.find(remoteFacade.getConnectorFacadeKey())) {
+                    break;
+                }
+            }
             // Assert it's empty
             Assert.assertNull(managedFactory.find(remoteFacade.getConnectorFacadeKey()));
         } finally {
