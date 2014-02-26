@@ -26,7 +26,6 @@ package org.forgerock.openicf.misc.scriptedcommon;
 import java.io.File;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.spi.AbstractConfiguration;
-import org.identityconnectors.framework.spi.ConfigurationProperty;
 
 /**
  * Extends the {@link AbstractConfiguration} class to provide all the necessary

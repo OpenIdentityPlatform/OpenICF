@@ -127,17 +127,6 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
     public void init(final Configuration config) {
         this.configuration = (ScriptedConfiguration) config;
         this.factory = ScriptExecutorFactory.newInstance("GROOVY");
-
-        // Evaluate and compile every executors
-        authenticateExecutor = getScriptExecutor(configuration.getAuthenticateScriptFileName());
-        createExecutor = getScriptExecutor(configuration.getCreateScriptFileName());
-        updateExecutor = getScriptExecutor(configuration.getUpdateScriptFileName());
-        deleteExecutor = getScriptExecutor(configuration.getDeleteScriptFileName());
-        searchExecutor = getScriptExecutor(configuration.getSearchScriptFileName());
-        syncExecutor = getScriptExecutor(configuration.getSyncScriptFileName());
-        schemaExecutor = getScriptExecutor(configuration.getSchemaScriptFileName());
-        testExecutor = getScriptExecutor(configuration.getTestScriptFileName());
-        log.info("Scripts loaded");
     }
 
     /**
@@ -164,9 +153,9 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
      * {@inheritDoc}
      */
     public Uid authenticate(ObjectClass objectClass, String username, GuardedString password, OperationOptions options) {
-        if (configuration.isReloadScriptOnExecution()) {
+        if (authenticateExecutor == null || configuration.isReloadScriptOnExecution()) {
             authenticateExecutor = getScriptExecutor(configuration.getAuthenticateScriptFileName());
-            log.ok("Authenticate script reloaded");
+            log.ok("Authenticate script loaded");
         }
         if (authenticateExecutor != null) {
             log.ok("Object class: {0}", objectClass.getObjectClassValue());
@@ -215,9 +204,9 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
     }
 
     public Uid create(final ObjectClass objectClass, final Set<Attribute> createAttributes, final OperationOptions options) {
-        if (configuration.isReloadScriptOnExecution()) {
+        if (createExecutor == null || configuration.isReloadScriptOnExecution()) {
             createExecutor = getScriptExecutor(configuration.getCreateScriptFileName());
-            log.ok("Create script reloaded");
+            log.ok("Create script loaded");
         }
         if (createExecutor != null) {
             log.ok("Object class: {0}", objectClass.getObjectClassValue());
@@ -277,9 +266,9 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
      */
     @Override
     public void delete(final ObjectClass objectClass, final Uid uid, final OperationOptions options) {
-        if (configuration.isReloadScriptOnExecution()) {
+        if (deleteExecutor == null || configuration.isReloadScriptOnExecution()) {
             deleteExecutor = getScriptExecutor(configuration.getDeleteScriptFileName());
-            log.ok("Delete script reloaded");
+            log.ok("Delete script loaded");
         }
         if (deleteExecutor != null) {
             log.ok("Object class: {0}", objectClass.getObjectClassValue());
@@ -311,9 +300,9 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
      */
     public Schema schema() {
         SchemaBuilder scmb = new SchemaBuilder(ScriptedConnector.class);
-        if (configuration.isReloadScriptOnExecution()) {
+        if (schemaExecutor == null || configuration.isReloadScriptOnExecution()) {
             schemaExecutor = getScriptExecutor(configuration.getSchemaScriptFileName());
-            log.ok("Schema script reloaded");
+            log.ok("Schema script loaded");
         }
         if (schemaExecutor != null) {
             final Map<String, Object> arguments = new HashMap<String, Object>();
@@ -346,9 +335,9 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
      * {@inheritDoc}
      */
     public void executeQuery(ObjectClass objectClass, Map query, ResultsHandler handler, OperationOptions options) {
-        if (configuration.isReloadScriptOnExecution()) {
+        if (searchExecutor == null || configuration.isReloadScriptOnExecution()) {
             searchExecutor = getScriptExecutor(configuration.getSearchScriptFileName());
-            log.ok("Search script reloaded");
+            log.ok("Search script loaded");
         }
 
         if (searchExecutor != null) {
@@ -378,9 +367,9 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
      * {@inheritDoc}
      */
     public void sync(ObjectClass objectClass, SyncToken token, SyncResultsHandler handler, final OperationOptions options) {
-        if (configuration.isReloadScriptOnExecution()) {
+        if (syncExecutor == null || configuration.isReloadScriptOnExecution()) {
             syncExecutor = getScriptExecutor(configuration.getSyncScriptFileName());
-            log.ok("Sync script reloaded");
+            log.ok("Sync script loaded");
         }
 
         if (syncExecutor != null) {
@@ -411,9 +400,9 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
      */
     @Override
     public SyncToken getLatestSyncToken(ObjectClass objectClass) {
-        if (configuration.isReloadScriptOnExecution()) {
+        if (syncExecutor == null || configuration.isReloadScriptOnExecution()) {
             syncExecutor = getScriptExecutor(configuration.getSyncScriptFileName());
-            log.ok("Sync script reloaded");
+            log.ok("Sync script loaded");
         }
         if (syncExecutor != null) {
             SyncToken st = null;
@@ -448,12 +437,16 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
      */
     @Override
     public void test() {
-        configuration.validate();
-
-        if (configuration.isReloadScriptOnExecution()) {
-            testExecutor = getScriptExecutor(configuration.getTestScriptFileName());
-            log.ok("Test script reloaded");
-        }
+        log.info("Evaluate and compile every scripts") ;
+        authenticateExecutor = getScriptExecutor(configuration.getAuthenticateScriptFileName());
+        createExecutor = getScriptExecutor(configuration.getCreateScriptFileName());
+        updateExecutor = getScriptExecutor(configuration.getUpdateScriptFileName());
+        deleteExecutor = getScriptExecutor(configuration.getDeleteScriptFileName());
+        searchExecutor = getScriptExecutor(configuration.getSearchScriptFileName());
+        syncExecutor = getScriptExecutor(configuration.getSyncScriptFileName());
+        schemaExecutor = getScriptExecutor(configuration.getSchemaScriptFileName());
+        testExecutor = getScriptExecutor(configuration.getTestScriptFileName());
+        log.info("Scripts loaded");
 
         if (testExecutor != null) {
             final Map<String, Object> arguments = new HashMap<String, Object>();
@@ -523,9 +516,9 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
 
     // Private
     private Uid genericUpdate(String method, ObjectClass objClass, Uid uid, Set<Attribute> attrs, OperationOptions options) {
-        if (configuration.isReloadScriptOnExecution()) {
+        if (updateExecutor == null || configuration.isReloadScriptOnExecution()) {
             updateExecutor = getScriptExecutor(configuration.getUpdateScriptFileName());
-            log.ok("Update ({0}) script reloaded", method);
+            log.ok("Update ({0}) script loaded", method);
         }
         if (updateExecutor != null) {
             log.ok("Object class: {0}", objClass.getObjectClassValue());
