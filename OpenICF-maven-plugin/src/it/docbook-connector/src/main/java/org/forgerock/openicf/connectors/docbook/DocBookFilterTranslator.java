@@ -1,7 +1,7 @@
 /*
  * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 ForgeRock Inc. All rights reserved.
+ * Copyright (c) 2012-2014 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -54,10 +54,10 @@ public class DocBookFilterTranslator extends AbstractFilterTranslator<String> {
      */
     @Override
     protected String createContainsExpression(ContainsFilter filter, boolean not) {
-        /* 
+        /*
          * Example implementation:
          * You may define the format of the queries for your connector, but
-         * you must make sure that the executeQuery() (if you implemented Search) 
+         * you must make sure that the executeQuery() (if you implemented Search)
          * method handles it appropriately.
          */
         String name = filter.getAttribute().getName();

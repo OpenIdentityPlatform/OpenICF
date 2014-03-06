@@ -1,7 +1,7 @@
 /*
  * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 ForgeRock Inc. All rights reserved.
+ * Copyright (c) 2012-2014 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -55,6 +55,7 @@ import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 import org.identityconnectors.framework.spi.AttributeNormalizer;
 import org.identityconnectors.framework.spi.Configuration;
+import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.PoolableConnector;
 import org.identityconnectors.framework.spi.ConnectorClass;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
@@ -74,41 +75,18 @@ import org.identityconnectors.framework.spi.operations.UpdateOp;
  * Main implementation of the DocBook Connector
  *
  * @author $author$
- * @version $Revision$ $Date$
  */
-@ConnectorClass(
-        displayNameKey = "DocBook.connector.display",
-        categoryKey="${connector_family}.category",
+@ConnectorClass(displayNameKey = "DocBook.connector.display",
+        categoryKey = "sample1.category",
         configurationClass = DocBookConfiguration.class)
-public class DocBookConnector implements
-        PoolableConnector
-        ,AttributeNormalizer
-        ,AuthenticateOp
-        ,CreateOp
-        ,DeleteOp
-        ,ResolveUsernameOp
-        ,SchemaOp
-        ,ScriptOnConnectorOp
-        ,ScriptOnResourceOp
-        ,SearchOp<String>
-        ,SyncOp
-        ,TestOp
-        ,UpdateAttributeValuesOp
-        ,UpdateOp
-    {
-    /**
-     * Setup logging for the {@link DocBookConnector}.
-     */
-    private static final Log LOGGER = Log.getLog(DocBookConnector.class);
-
-    /**
-     * Place holder for the Connection created in the init method
-     */
-    private DocBookConnection connection;
+public class DocBookConnector implements Connector, AttributeNormalizer, AuthenticateOp, CreateOp,
+        DeleteOp, ResolveUsernameOp, SchemaOp, ScriptOnConnectorOp, ScriptOnResourceOp,
+        SearchOp<String>, SyncOp, TestOp, UpdateAttributeValuesOp, UpdateOp {
 
     /**
      * Place holder for the {@link Configuration} passed into the init() method
-     * {@link DocBookConnector#init(org.identityconnectors.framework.spi.Configuration)}.
+     * {@link DocBookConnector#init(org.identityconnectors.framework.spi.Configuration)}
+     * .
      */
     private DocBookConfiguration configuration;
 
@@ -126,7 +104,6 @@ public class DocBookConnector implements
      */
     public void init(Configuration configuration1) {
         this.configuration = (DocBookConfiguration) configuration1;
-        this.connection = new DocBookConnection(this.configuration);
     }
 
     /**
@@ -136,32 +113,20 @@ public class DocBookConnector implements
      */
     public void dispose() {
         configuration = null;
-        if (connection != null) {
-            connection.dispose();
-            connection = null;
-        }
     }
 
     /**
-    *  {@inheritDoc}
-    */
-    public void checkAlive() {
-        connection.test();
-    }
-
-    /**
-    *  {@inheritDoc}
-    */
+     * {@inheritDoc}
+     */
     public Attribute normalizeAttribute(ObjectClass oclass, Attribute attribute) {
         return attribute;
     }
 
-
     /******************
      * SPI Operations
      *
-     * Implement the following operations using the contract and
-     * description found in the Javadoc for these methods.
+     * Implement the following operations using the contract and description
+     * found in the Javadoc for these methods.
      ******************/
 
     /**
@@ -191,8 +156,7 @@ public class DocBookConnector implements
     /**
      * {@inheritDoc}
      */
-    public void delete(final ObjectClass objectClass, final Uid uid,
-            final OperationOptions options) {
+    public void delete(final ObjectClass objectClass, final Uid uid, final OperationOptions options) {
         throw new UnsupportedOperationException();
     }
 
@@ -213,7 +177,8 @@ public class DocBookConnector implements
         schemaBuilder.defineOperationOption("_OperationOption-FileArray", File[].class);
         schemaBuilder.defineOperationOption("_OperationOption-float", float.class);
         schemaBuilder.defineOperationOption("_OperationOption-Float", Float.class);
-        schemaBuilder.defineOperationOption("_OperationOption-GuardedByteArray", GuardedByteArray.class);
+        schemaBuilder.defineOperationOption("_OperationOption-GuardedByteArray",
+                GuardedByteArray.class);
         schemaBuilder.defineOperationOption("_OperationOption-GuardedString", GuardedString.class);
         schemaBuilder.defineOperationOption("_OperationOption-int", int.class);
         schemaBuilder.defineOperationOption("_OperationOption-Integer", Integer.class);
@@ -227,17 +192,16 @@ public class DocBookConnector implements
         schemaBuilder.defineOperationOption("_OperationOption-Uid ", Uid.class);
         schemaBuilder.defineOperationOption("_OperationOption-URI", URI.class);
 
-
         ObjectClassInfoBuilder ocBuilder = new ObjectClassInfoBuilder();
 
         // Users
         ocBuilder = new ObjectClassInfoBuilder();
         ocBuilder.setType(ObjectClass.ACCOUNT_NAME);
-        //The name of the object
-        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build(Name.NAME, String.class, EnumSet
-                .of(AttributeInfo.Flags.REQUIRED, AttributeInfo.Flags.NOT_UPDATEABLE)));
+        // The name of the object
+        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build(Name.NAME, String.class, EnumSet.of(
+                AttributeInfo.Flags.REQUIRED, AttributeInfo.Flags.NOT_UPDATEABLE)));
 
-        //All Predefined Attribute Info
+        // All Predefined Attribute Info
         ocBuilder.addAttributeInfo(PredefinedAttributeInfos.DESCRIPTION);
         ocBuilder.addAttributeInfo(PredefinedAttributeInfos.GROUPS);
         ocBuilder.addAttributeInfo(PredefinedAttributeInfos.LAST_LOGIN_DATE);
@@ -245,7 +209,7 @@ public class DocBookConnector implements
         ocBuilder.addAttributeInfo(PredefinedAttributeInfos.PASSWORD_CHANGE_INTERVAL);
         ocBuilder.addAttributeInfo(PredefinedAttributeInfos.SHORT_NAME);
 
-        //All Operational Attribute Info
+        // All Operational Attribute Info
         ocBuilder.addAttributeInfo(OperationalAttributeInfos.CURRENT_PASSWORD);
         ocBuilder.addAttributeInfo(OperationalAttributeInfos.DISABLE_DATE);
         ocBuilder.addAttributeInfo(OperationalAttributeInfos.ENABLE);
@@ -255,28 +219,41 @@ public class DocBookConnector implements
         ocBuilder.addAttributeInfo(OperationalAttributeInfos.PASSWORD_EXPIRATION_DATE);
         ocBuilder.addAttributeInfo(OperationalAttributeInfos.PASSWORD_EXPIRED);
 
-        //All possible attribute types and flags
-        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-BigDecimal", BigDecimal.class));
-        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-BigInteger", BigInteger.class));
+        // All possible attribute types and flags
+        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-BigDecimal",
+                BigDecimal.class));
+        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-BigInteger",
+                BigInteger.class));
         ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-boolean", boolean.class));
         ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-Boolean", Boolean.class));
-        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-byte[]", byte[].class, EnumSet.of(AttributeInfo.Flags.NOT_RETURNED_BY_DEFAULT, AttributeInfo.Flags.NOT_UPDATEABLE)));
+        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-byte", byte.class));
+        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-Byte", Byte.class));
+        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-byte[]", byte[].class,
+                EnumSet.of(AttributeInfo.Flags.NOT_RETURNED_BY_DEFAULT,
+                        AttributeInfo.Flags.NOT_UPDATEABLE)));
         ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-char", char.class));
-        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-Character", Character.class));
+        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-Character",
+                Character.class));
         ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-double", double.class));
         ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-Double", Double.class));
         ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-float", float.class));
         ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-Float", Float.class));
-        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-GuardedByteArray", GuardedByteArray.class, EnumSet.of(AttributeInfo.Flags.REQUIRED, AttributeInfo.Flags.NOT_UPDATEABLE)));
-        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-GuardedString", GuardedString.class, EnumSet.of(AttributeInfo.Flags.REQUIRED, AttributeInfo.Flags.NOT_UPDATEABLE)));
+        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-GuardedByteArray",
+                GuardedByteArray.class, EnumSet.of(AttributeInfo.Flags.REQUIRED,
+                        AttributeInfo.Flags.NOT_UPDATEABLE)));
+        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-GuardedString",
+                GuardedString.class, EnumSet.of(AttributeInfo.Flags.REQUIRED,
+                        AttributeInfo.Flags.NOT_UPDATEABLE)));
         ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-int", int.class));
         ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-Integer", Integer.class));
-        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-long", long.class, EnumSet.of(AttributeInfo.Flags.NOT_RETURNED_BY_DEFAULT, AttributeInfo.Flags.NOT_READABLE, AttributeInfo.Flags.NOT_UPDATEABLE)));
-        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-Long", Long.class, EnumSet.of(AttributeInfo.Flags.NOT_CREATABLE, AttributeInfo.Flags.NOT_UPDATEABLE)));
-        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-String", String.class, EnumSet.of(AttributeInfo.Flags.MULTIVALUED, AttributeInfo.Flags.NOT_UPDATEABLE)));
+        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-long", long.class,
+                EnumSet.of(AttributeInfo.Flags.NOT_RETURNED_BY_DEFAULT,
+                        AttributeInfo.Flags.NOT_READABLE, AttributeInfo.Flags.NOT_UPDATEABLE)));
+        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-Long", Long.class,
+                EnumSet.of(AttributeInfo.Flags.NOT_CREATABLE, AttributeInfo.Flags.NOT_UPDATEABLE)));
+        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-String", String.class,
+                EnumSet.of(AttributeInfo.Flags.MULTIVALUED, AttributeInfo.Flags.NOT_UPDATEABLE)));
         schemaBuilder.defineObjectClass(ocBuilder.build());
-
-
 
         ocBuilder = new ObjectClassInfoBuilder();
         ocBuilder.setType(ObjectClass.GROUP_NAME);
@@ -288,7 +265,8 @@ public class DocBookConnector implements
         ocBuilder.setType("organization");
         ocBuilder.setContainer(true);
         ocBuilder.addAttributeInfo(Name.INFO);
-        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("members", String.class, EnumSet.of(AttributeInfo.Flags.MULTIVALUED, AttributeInfo.Flags.NOT_UPDATEABLE)));
+        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("members", String.class, EnumSet.of(
+                AttributeInfo.Flags.MULTIVALUED, AttributeInfo.Flags.NOT_UPDATEABLE)));
         ocBuilder.addAttributeInfo(PredefinedAttributeInfos.DESCRIPTION);
         schemaBuilder.defineObjectClass(ocBuilder.build());
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 ForgeRock Inc. All rights reserved.
+ * Copyright (c) 2012-2014 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -23,32 +23,16 @@
  */
 package org.forgerock.openicf.connectors.docbook;
 
+import org.identityconnectors.framework.spi.StatefulConfiguration;
+
 /**
  * Class to represent a DocBook Connection
  *
- * @author $author$
- * @version $Revision$ $Date$
  */
-public class DocBookConnection {
+public class DocBookStatefulConfiguration extends DocBookConfiguration implements
+        StatefulConfiguration {
 
-    private DocBookConfiguration configuration;
+    public void release() {
 
-    public DocBookConnection(DocBookConfiguration configuration) {
-        this.configuration = configuration;
     }
-
-    /**
-     * Release internal resources
-     */
-    public void dispose() {
-        //implementation
-    }
-
-    /**
-     * If internal connection is not usable, throw IllegalStateException
-     */
-    public void test() {
-        //implementation
-    }
-
 }

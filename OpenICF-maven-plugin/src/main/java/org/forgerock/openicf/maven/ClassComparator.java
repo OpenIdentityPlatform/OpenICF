@@ -1,7 +1,7 @@
 /*
  * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 ForgeRock Inc. All rights reserved.
+ * Copyright (c) 2012-2014 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -29,7 +29,7 @@ import java.util.Comparator;
 
 /**
  * A ClassComparator compares the name (CASE_INSENSITIVE) of {@link Class}.
- * 
+ *
  * @author Laszlo Hordos
  */
 public class ClassComparator implements Comparator<Class> {
