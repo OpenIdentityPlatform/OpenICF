@@ -45,6 +45,13 @@
             <item name="Introduction" href="openicf-report.html"/>
             <item name="FAQ" href="faq.html"/>
         </menu>
+
+        <menu name="DocBook Core Docs">
+            <!--item name="All Formats" href="docs.html" /-->
+            <!--item name="Release Notes" href="./doc/release-notes/index.html" /-->
+            <item name="Developer Guide" href="./doc/docbook-connector-1.4.0.0-SNAPSHOT/index.html" />
+        </menu>
+
         <menu ref="reports"/>
     </body>
     <custom>

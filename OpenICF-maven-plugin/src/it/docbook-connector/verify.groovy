@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 ForgeRock AS. All Rights Reserved
+ * Copyright (c) 2012-2014 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -23,13 +23,10 @@
  */
 
 assert new File( basedir, 'target/openicf-docbkx' ).exists();
-//assert new File( basedir, 'target/surefire-reports/org.apache.maven.plugins.site.its.AppTest.txt' ).exists();
-//content = new File( basedir, 'target/surefire-reports/org.apache.maven.plugins.site.its.AppTest.txt' ).text;
+assert new File( basedir, 'target/docbkx/pdf/OpenICF-Docbook-Connector-1.4.0.0-Snapshot.pdf' ).exists();
+content = new File( basedir, 'target/docbkx/html/docbook-connector-1.4.0.0-SNAPSHOT/index.html' ).text;
 
-//assert content.contains( 'Test set: org.apache.maven.plugins.site.its.AppTest' );
-
-//assert content.contains( 'Tests run: 1, Failures: 0, Errors: 0, Skipped: 0' );
-
+assert content.contains( '"connectorName" : "org.forgerock.openicf.connectors.docbook.DocBookConnector"' );
 
 
 sitedir = new File( basedir, 'target/site' );
