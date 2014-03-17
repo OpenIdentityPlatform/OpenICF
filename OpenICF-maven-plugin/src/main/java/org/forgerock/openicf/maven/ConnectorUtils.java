@@ -27,6 +27,7 @@ package org.forgerock.openicf.maven;
 import java.lang.reflect.Array;
 import java.util.Locale;
 
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.ConfigurationProperty;
 import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
@@ -58,7 +59,10 @@ public class ConnectorUtils {
                     sb.append(",\n");
                 }
                 Object item = Array.get(property.getValue(), i);
-                sb.append("'").append(item.toString()).append("'");
+                if (item instanceof GuardedString || item instanceof GuardedString) {
+                    item = "*****";
+                }
+                sb.append("'").append(String.valueOf(item)).append("'");
             }
             value = sb.append("]").toString();
         } else {

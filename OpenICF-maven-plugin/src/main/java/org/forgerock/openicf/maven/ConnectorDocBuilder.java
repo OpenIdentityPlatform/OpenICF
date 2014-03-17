@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 ForgeRock AS. All Rights Reserved
+ * Copyright (c) 2012-2014 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.velocity.Template;
@@ -51,13 +52,14 @@ import org.identityconnectors.framework.api.ConnectorInfoManagerFactory;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.Schema;
+import org.identityconnectors.framework.impl.api.APIConfigurationImpl;
 import org.identityconnectors.framework.impl.api.local.LocalConnectorInfoImpl;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.operations.SchemaOp;
 
 /**
  * A ConnectorDocBuilder does ...
- * 
+ *
  * @author Laszlo Hordos
  */
 public class ConnectorDocBuilder {
@@ -70,7 +72,7 @@ public class ConnectorDocBuilder {
 
     /**
      * Execute the generation of the report.
-     * 
+     *
      * @throws org.apache.maven.reporting.MavenReportException
      *             if any
      */
@@ -94,7 +96,7 @@ public class ConnectorDocBuilder {
 
                 APIConfiguration config = info.createDefaultAPIConfiguration();
                 context.put("APIConfiguration", config);
-
+                context.put("connectorName", info.getConnectorKey().getConnectorName().substring(info.getConnectorKey().getConnectorName().lastIndexOf('.') + 1).toLowerCase());
                 Class<? extends Connector> connectorClass = null;
 
                 try {
@@ -102,18 +104,22 @@ public class ConnectorDocBuilder {
                     if (SchemaOp.class.isAssignableFrom(connectorClass)) {
                         Schema schema = null;
                         try {
-                            // TODO: Configure the connector
+                            APIConfiguration facadeConfig = info.createDefaultAPIConfiguration();
+                            if (null != handler.getConfigurationProperties()) {
+                                handler.getConfigurationProperties().mergeConfigurationProperties(
+                                        facadeConfig.getConfigurationProperties());
+                            }
                             schema =
-                                    ConnectorFacadeFactory.getInstance().newInstance(config)
+                                    ConnectorFacadeFactory.getInstance().newInstance(facadeConfig)
                                             .schema();
                         } catch (Throwable t) {
-                            handler.getLog().error("Getting Schema with ConnectorFacade", t);
+                            handler.getLog().debug("Getting Schema with ConnectorFacade", t);
                         }
                         try {
                             SchemaOp connector = (SchemaOp) connectorClass.newInstance();
                             schema = connector.schema();
                         } catch (Throwable t) {
-                            handler.getLog().error("Getting Schema with Connector Instance", t);
+                            handler.getLog().debug("Getting Schema with Connector Instance", t);
                         }
 
                         if (null != schema) {
@@ -148,8 +154,8 @@ public class ConnectorDocBuilder {
 
                 try {
                     Set<String> interfaces = new TreeSet<String>();
-                    for (Class clazz : connectorClass.getInterfaces()) {
-                        interfaces.add(clazz.getSimpleName());
+                    for (Object clazz : ClassUtils.getAllInterfaces(connectorClass)) {
+                        interfaces.add(((Class) clazz).getSimpleName());
                     }
                     context.put("connectorInterfaces", interfaces);
                 } catch (Throwable e) {
@@ -220,7 +226,7 @@ public class ConnectorDocBuilder {
 
     /**
      * Create the velocity template
-     * 
+     *
      * @param context
      *            velocity context that has the parameter values
      * @param templateName

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 ForgeRock AS. All Rights Reserved
+ * Copyright (c) 2012-2014 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -55,11 +55,12 @@ import org.identityconnectors.framework.spi.Connector;
  * <p/>
  * To debug execute this command:
  * {@code mvnDebug org.forgerock.maven.plugins:openicf-maven-plugin:connector-info}
- * 
+ *
  * @author Laszlo Hordos
  */
 @Mojo(name = "connector-info", defaultPhase = LifecyclePhase.SITE,
-        requiresDependencyResolution = ResolutionScope.TEST, requiresReports = true)
+        requiresDependencyResolution = ResolutionScope.TEST, requiresReports = true,
+        configurator = "override")
 public class ConnectorInfoReportMojo extends AbstractMavenReport implements ConnectorMojoBridge {
 
     /**
@@ -110,8 +111,11 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
      * Map of custom parameters for the connector. This Map will be passed to
      * the template.
      */
+    //@Parameter
+    //private Map connectorParameters;
+
     @Parameter
-    private Map connectorParameters;
+    private PropertyBag configurationProperties;
 
     /**
      * The Maven Project
@@ -167,6 +171,10 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
         return project;
     }
 
+    public PropertyBag getConfigurationProperties() {
+        return configurationProperties;
+    }
+
     //
 
     /**
@@ -189,7 +197,7 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
      * the effective output directory for the report. The later method will
      * eventually fallback to this method if the mojo is not run as part of a
      * site generation.
-     * 
+     *
      * @return The path to the output directory as specified in the plugin
      *         configuration for this report.
      */
@@ -208,7 +216,7 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
 
     /**
      * Get the base name used to create report's output file(s).
-     * 
+     *
      * @return the output name of this report.
      */
     public String getOutputName() {
@@ -217,7 +225,7 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
 
     /**
      * Get the localized report name.
-     * 
+     *
      * @param locale
      *            the wanted locale to return the report's name, could be null.
      * @return the name of this report.
@@ -228,7 +236,7 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
 
     /**
      * Get the localized report description.
-     * 
+     *
      * @param locale
      *            the wanted locale to return the report's description, could be
      *            null.
@@ -260,7 +268,7 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
 
     /**
      * Execute the generation of the report.
-     * 
+     *
      * @param locale
      *            the wanted locale to return the report's description, could be
      *            null.

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright © 2012 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2012-2014 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -20,7 +20,6 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
- * $Id$
  */
 
 package org.forgerock.openicf.maven;
@@ -50,6 +49,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.apache.velocity.context.Context;
@@ -70,10 +70,12 @@ import org.identityconnectors.framework.spi.Connector;
  * <p/>
  * To debug execute this command:
  * {@code mvnDebug org.forgerock.maven.plugins:openicf-maven-plugin:docbkx}
- * 
+ *
  * @author Laszlo Hordos
+ * @configurator override
  */
-@Mojo(name = "docbkx", defaultPhase = LifecyclePhase.PACKAGE, threadSafe = true)
+@Mojo(name = "docbkx", defaultPhase = LifecyclePhase.PACKAGE, threadSafe = true,
+        requiresDependencyResolution = ResolutionScope.TEST, configurator = "override")
 public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBridge {
 
     private static final String[] DEFAULT_INCLUDES = new String[] { "**/*.txt", "**/*.vm", };
@@ -179,11 +181,14 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
 
     /**
      * Set this to 'true' to bypass artifact deploy
-     * 
+     *
      * @since 1.0.0
      */
     @Parameter(property = "maven.remoteresource.skip", defaultValue = "false")
     private boolean skip;
+
+    @Parameter
+    private PropertyBag configurationProperties;
 
     // ----------------------------------------------------------------------
     // Mojo components
@@ -244,6 +249,10 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
         return project;
     }
 
+    public PropertyBag getConfigurationProperties() {
+        return configurationProperties;
+    }
+
     public void generate(ConnectorDocBuilder builder, Context context,
             Class<? extends Connector> connectorClass) throws MojoExecutionException {
         try {
@@ -287,7 +296,7 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
 
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (skip) {
-            getLog().info("Skipping docbkx generation");
+            getLog().info("Skipping docbook generation");
             return;
         }
 
@@ -410,7 +419,7 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
 
     /**
      * Method that creates the jar file
-     * 
+     *
      * @param docbkxFiles
      *            the directory where the generated jar file will be put
      * @param jarFileName
@@ -463,19 +472,6 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
         return docbkxJar;
     }
 
-    /**
-     * Logs an error with throwable content only if in debug.
-     * 
-     * @param message
-     * @param t
-     */
-    protected void logError(String message, Throwable t) {
-        if (getLog().isDebugEnabled()) {
-            getLog().error(message, t);
-        } else {
-            getLog().error(message);
-        }
-    }
 
     protected void failOnError(String prefix, Exception e) throws MojoExecutionException {
         if (failOnError) {

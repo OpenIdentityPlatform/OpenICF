@@ -3,7 +3,7 @@
 <!--
   ~ DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
   ~
-  ~ Copyright (c) 2012. ForgeRock Inc. All rights reserved.
+  ~ Copyright (c) 2012-2014 ForgeRock AS. All rights reserved.
   ~
   ~ The contents of this file are subject to the terms
   ~ of the Common Development and Distribution License
@@ -52,6 +52,92 @@
         <jira.fixVersionIds>0</jira.fixVersionIds>
     </properties>
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.forgerock.maven.plugins</groupId>
+                    <artifactId>openicf-maven-plugin</artifactId>
+                    <version>@project.version@</version>
+                    <configuration>
+                        <!-- http://jira.codehaus.org/browse/MSITE-516 -->
+                        <configurationProperties>
+                            <string>value1</string>
+                            <stringArray>
+                                <value>value1</value>
+                                <value>value2</value>
+                                <value>value3</value>
+                            </stringArray>
+                            <long>9223372036854775807</long>
+                            <longArray>
+                                <value>9223372036854775807</value>
+                            </longArray>
+                            <longObject></longObject>
+                            <longObjectArray></longObjectArray>
+                            <char>a</char>
+                            <charArray>Password</charArray>
+                            <character></character>
+                            <characterArray/>
+                            <double>3.141592653589793</double>
+                            <doubleArray>
+                                <value>141592653589793</value>
+                            </doubleArray>
+                            <doubleObject></doubleObject>
+                            <doubleObjectArray>
+                                <value></value>
+                            </doubleObjectArray>
+                            <float>3.1415927</float>
+                            <floatArray>
+                                <value>3.1415927</value>
+                            </floatArray>
+                            <floatObject>3.1415927</floatObject>
+                            <floatObjectArray>
+                                <value>3.1415927</value>
+                            </floatObjectArray>
+                            <int>42</int>
+                            <intArray/>
+                            <integer></integer>
+                            <integerArray>
+                                <value>42</value>
+                                <value>43</value>
+                            </integerArray>
+                            <boolean>true</boolean>
+                            <booleanArray>
+                                <value>false</value>
+                            </booleanArray>
+                            <booleanObject>false</booleanObject>
+                            <booleanObjectArray>
+                                <vale></vale>
+                            </booleanObjectArray>
+                            <URI>sample/case1</URI>
+                            <URIArray>
+                                <value>sample/case1</value>
+                                <value>sample/case2</value>
+                            </URIArray>
+                            <file>sample/case1/readme.txt</file>
+                            <fileArray/>
+                            <guardedByteArray>Passw0rd</guardedByteArray>
+                            <guardedByteArrayArray>
+                                <value>Passw0rd</value>
+                                <value>Passw1rd</value>
+                            </guardedByteArrayArray>
+                            <guardedString>Passw0rd</guardedString>
+                            <guardedStringArray>
+                                <value>Passw0rd</value>
+                                <value>Passw1rd</value>
+                            </guardedStringArray>
+                            <script scriptLanguage="Groovy">
+                                def name = 'name'
+                                println name
+                            </script>
+                            <scriptArray>
+                                <value scriptLanguage="Groovy">println 'Hello'</value>
+                                <value scriptLanguage="Groovy">println 'Bye'</value>
+                            </scriptArray>
+                        </configurationProperties>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -60,7 +146,6 @@
             <plugin>
                 <groupId>org.forgerock.maven.plugins</groupId>
                 <artifactId>openicf-maven-plugin</artifactId>
-                <version>@project.version@</version>
                 <executions>
                     <execution>
                         <goals>
@@ -77,7 +162,6 @@
             <plugin>
                 <groupId>org.forgerock.maven.plugins</groupId>
                 <artifactId>openicf-maven-plugin</artifactId>
-                <version>@project.version@</version>
                 <!--reportSets>
                     <reportSet>
                         <reports>
@@ -85,6 +169,83 @@
                         </reports>
                     </reportSet>
                 </reportSets-->
+                <configuration>
+                    <!-- http://jira.codehaus.org/browse/MSITE-516 -->
+                    <configurationProperties>
+                        <string>value1</string>
+                        <stringArray>
+                            <value>value1</value>
+                            <value>value2</value>
+                            <value>value3</value>
+                        </stringArray>
+                        <long>9223372036854775807</long>
+                        <longArray>
+                            <value>9223372036854775807</value>
+                        </longArray>
+                        <longObject></longObject>
+                        <longObjectArray></longObjectArray>
+                        <char>a</char>
+                        <charArray>Password</charArray>
+                        <character></character>
+                        <characterArray/>
+                        <double>3.141592653589793</double>
+                        <doubleArray>
+                            <value>141592653589793</value>
+                        </doubleArray>
+                        <doubleObject></doubleObject>
+                        <doubleObjectArray>
+                            <value></value>
+                        </doubleObjectArray>
+                        <float>3.1415927</float>
+                        <floatArray>
+                            <value>3.1415927</value>
+                        </floatArray>
+                        <floatObject>3.1415927</floatObject>
+                        <floatObjectArray>
+                            <value>3.1415927</value>
+                        </floatObjectArray>
+                        <int>42</int>
+                        <intArray/>
+                        <integer></integer>
+                        <integerArray>
+                            <value>42</value>
+                            <value>43</value>
+                        </integerArray>
+                        <boolean>true</boolean>
+                        <booleanArray>
+                            <value>false</value>
+                        </booleanArray>
+                        <booleanObject>false</booleanObject>
+                        <booleanObjectArray>
+                            <vale></vale>
+                        </booleanObjectArray>
+                        <URI>sample/case1</URI>
+                        <URIArray>
+                            <value>sample/case1</value>
+                            <value>sample/case2</value>
+                        </URIArray>
+                        <file>sample/case1/readme.txt</file>
+                        <fileArray/>
+                        <guardedByteArray>Passw0rd</guardedByteArray>
+                        <guardedByteArrayArray>
+                            <value>Passw0rd</value>
+                            <value>Passw1rd</value>
+                        </guardedByteArrayArray>
+                        <guardedString>Passw0rd</guardedString>
+                        <guardedStringArray>
+                            <value>Passw0rd</value>
+                            <value>Passw1rd</value>
+                        </guardedStringArray>
+                        <script scriptLanguage="Groovy">
+                            def name = 'name'
+                            println name
+                        </script>
+                        <scriptArray>
+                            <value scriptLanguage="Groovy">println 'Hello'</value>
+                            <value scriptLanguage="Groovy">println 'Bye'</value>
+                        </scriptArray>
+                    </configurationProperties>
+                </configuration>
             </plugin>
         </plugins>
     </reporting>

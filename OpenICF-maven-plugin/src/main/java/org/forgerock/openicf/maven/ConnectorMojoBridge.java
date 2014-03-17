@@ -37,7 +37,7 @@ import org.identityconnectors.framework.spi.Connector;
 /**
  * A ConnectorMojoBridge is a common interface for different report Mojos using
  * the same ConnectorInfo.
- * 
+ *
  * @author Laszlo Hordos
  */
 public interface ConnectorMojoBridge extends Mojo, ContextEnabled {
@@ -53,6 +53,8 @@ public interface ConnectorMojoBridge extends Mojo, ContextEnabled {
     public I18N getI18N();
 
     public MavenProject getMavenProject();
+
+    public PropertyBag getConfigurationProperties();
 
     public void generate(ConnectorDocBuilder builder, Context context,
             Class<? extends Connector> connectorClass) throws MojoExecutionException;

@@ -180,7 +180,7 @@
     #end
     </variablelist>
 
-    <section xml:id="configuration-properties-os400-connector">
+    <section xml:id="configuration-properties-${connectorName}">
         <title>Configuration Properties</title>
 
         <para>The ${connectorDisplayName} has the following configuration properties.</para>
