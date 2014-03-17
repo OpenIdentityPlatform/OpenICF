@@ -20,7 +20,7 @@
   !
   ! CCPL HEADER END
   !
-  !      Copyright 2011-2013 ForgeRock AS
+  !      Copyright 2011-2014 ForgeRock AS
   !
 -->
  <section xml:id="install-scriptedcommon"
@@ -29,9 +29,9 @@
  xsi:schemaLocation='http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd'
  xmlns:xlink='http://www.w3.org/1999/xlink'
  xmlns:xinclude='http://www.w3.org/2001/XInclude'>
- <title>Installing the ScriptedREST Connector</title>
+ <title>Installing the Scripted Groovy Connector</title>
 
- <para>This section describes how to install the ScriptedREST Connector.</para>
+ <para>This section describes how to install the Scripted Groovy Connector.</para>
 
  <!--
  The rest of this section must be written by hand, as specific

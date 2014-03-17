@@ -1,7 +1,7 @@
 /*
- * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2014 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -21,30 +21,20 @@
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
-package org.forgerock.openicf.misc.scriptedcommon;
+
+package org.forgerock.openicf.connectors.groovy
+
+import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration
+import org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase
+import org.identityconnectors.framework.spi.Connector
+import org.identityconnectors.framework.spi.ConnectorClass
 
 /**
+ * A ScriptedConnector is a generic Groovy Connector.
  *
- * @author Gael Allioux <gael.allioux@forgerock.com>
+ * @author Laszlo Hordos
  */
-public interface ScriptedConnection {
-
-    /**
-     * Release internal resources.
-     */
-    public void dispose();
-
-    /**
-     * If internal connection is not usable, throw IllegalStateException.
-     */
-    public void test();
-
-    /**
-     * The connection needs to provide a generic handler object
-     * that will be used by every scripts to connect to the remote system
-     *
-     * @return the connection handler generic Object
-     */
-    public Object getConnectionHandler();
-
+@ConnectorClass(displayNameKey = "groovy.connector.display",
+        configurationClass = ScriptedConfiguration.class)
+class ScriptedConnector extends ScriptedConnectorBase<ScriptedConfiguration> implements Connector {
 }

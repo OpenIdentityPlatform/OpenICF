@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2013 ForgeRock Inc. All Rights Reserved
+ * Copyright (c) 2013-2014 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -19,7 +19,7 @@
  * If applicable, add the following below the CDDL Header,
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
- * "Portions Copyrighted 2010 [name of copyright owner]"
+ * "Portions Copyrighted [year] [name of copyright owner]"
  *
  * @author Gael Allioux <gael.allioux@forgerock.com>
  */
@@ -29,11 +29,11 @@
 // connection : handler to the connector's connection object
 // configuration : handler to the connector's configuration object
 // action: a string describing the action ("TEST" here)
-// log: a handler to the connector's Logger facility
+// logger: a handler to the connector's Logger facility
 
 log.info("Entering "+action+" Script");
 try{
-    
+
 }
 catch(Exception e){
     throw e

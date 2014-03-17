@@ -1,7 +1,7 @@
 /**
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 ForgeRock AS. All Rights Reserved
+ * Copyright (c) 2013-2014 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -20,7 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
- * 
+ *
  * @author Gael Allioux <gael.allioux@forgerock.com>
  *
  */
@@ -35,7 +35,7 @@ import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
 // connection : handler to the connector's connection object
 // configuration : handler to the connector's configuration object
 // action: a string describing the action ("SCHEMA" here)
-// log: a handler to the connector's Logger facility
+// logger: a handler to the connector's Logger facility
 // builder: SchemaBuilder instance for the connector
 //
 // The connector will make the final call to builder.build()

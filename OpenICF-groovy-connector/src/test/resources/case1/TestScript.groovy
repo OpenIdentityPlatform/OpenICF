@@ -1,7 +1,7 @@
 /*
- * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2014 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -21,30 +21,17 @@
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
-package org.forgerock.openicf.misc.scriptedcommon;
 
-/**
- *
- * @author Gael Allioux <gael.allioux@forgerock.com>
- */
-public interface ScriptedConnection {
+import org.forgerock.openicf.misc.scriptedcommon.Logger
+import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration
+import org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase.Action
 
-    /**
-     * Release internal resources.
-     */
-    public void dispose();
 
-    /**
-     * If internal connection is not usable, throw IllegalStateException.
-     */
-    public void test();
+def action = action as Action
+def configuration = configuration as ScriptedConfiguration
+def log = log as Logger
 
-    /**
-     * The connection needs to provide a generic handler object
-     * that will be used by every scripts to connect to the remote system
-     *
-     * @return the connection handler generic Object
-     */
-    public Object getConnectionHandler();
 
-}
+log.infoLocale("TEST", "This is TestScript")
+
+throw new MissingResourceException("Test Failed", action.name(), "")

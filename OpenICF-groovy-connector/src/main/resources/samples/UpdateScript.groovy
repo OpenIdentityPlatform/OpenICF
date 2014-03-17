@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2013 ForgeRock Inc. All Rights Reserved
+ * Copyright (c) 2013-2014 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -19,7 +19,7 @@
  * If applicable, add the following below the CDDL Header,
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
- * "Portions Copyrighted 2010 [name of copyright owner]"
+ * "Portions Copyrighted [year] [name of copyright owner]"
  *
  * @author Gael Allioux <gael.allioux@forgerock.com>
  */
@@ -37,7 +37,7 @@
 //   - REMOVE_ATTRIBUTE_VALUES: For each attribute that the input set contains, remove from the current values
 //     of that attribute in the target object any value that matches one of the values of the attribute from the input set.
 
-// log: a handler to the connector's Logger facility
+// logger: a handler to the connector's Logger facility
 // objectClass: a String describing the Object class (__ACCOUNT__ / __GROUP__ / other)
 // uid: a String representing the entry uid
 // attributes: an Attribute Map, containg the <String> attribute name as a key

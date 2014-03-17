@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2013 ForgeRock Inc. All Rights Reserved
+ * Copyright (c) 2013-2014 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -19,10 +19,10 @@
  * If applicable, add the following below the CDDL Header,
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
- * "Portions Copyrighted 2010 [name of copyright owner]"
+ * "Portions Copyrighted [year] [name of copyright owner]"
  *
  * @author Gael Allioux <gael.allioux@forgerock.com>
- * 
+ *
  */
 // Parameters:
 // The connector sends the following:
@@ -30,7 +30,7 @@
 // configuration : handler to the connector's configuration object
 // objectClass: a String describing the Object class (__ACCOUNT__ / __GROUP__ / other)
 // action: a string describing the action ("SEARCH" here)
-// log: a handler to the connector's Logger facility
+// logger: a handler to the connector's Logger facility
 // options: a handler to the OperationOptions Map
 // query: the Query Map
 //
@@ -62,6 +62,6 @@ if (query != null){
 
 }
 else{ // null query, return all ids
-    
+
 }
 return result;

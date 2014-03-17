@@ -2,7 +2,7 @@
 <!--
   ~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
   ~
-  ~ Copyright (c) 2013 ForgeRock AS. All Rights Reserved
+  ~ Copyright (c) 2013-2014 ForgeRock AS. All Rights Reserved
   ~
   ~ The contents of this file are subject to the terms
   ~ of the Common Development and Distribution License
@@ -29,15 +29,15 @@
  xmlns:xlink='http://www.w3.org/1999/xlink'
  xmlns:xinclude='http://www.w3.org/2001/XInclude'>
 <!--
- What follows here is an example for the ScriptedREST Connector.
+ What follows here is an example for the Scripted Groovy Connector.
 
  This section assumes the following names:
  * connector-display-name: Scripted common
  * connector-name: scriptedcommon
 -->
- <title>ScriptedREST Connector Reference</title>
+ <title>Scripted Groovy Connector Reference</title>
 
- <para>This chapter covers installation and configuration of the ScriptedREST  Connector.</para>
+ <para>This chapter covers installation and configuration of the Scripted Groovy Connector.</para>
 
  <!--
  This chapter has at least a section on installing the connector, and another
@@ -58,6 +58,13 @@
 
  <!-- The rest of the sections in this chapter are generated from source. -->
 
- <xinclude:include href="sec-config-scriptedcommon.xml" />
- <!--xinclude:include href="sec-schema-scriptedcommon.xml" /-->
+ <xinclude:include href="sec-config-scriptedconnector.xml" />
+ <xinclude:include href="sec-config-scriptedpoolableconnector.xml" />
+ <!--xinclude:include href="sec-schema-scriptedcommon.xml" >
+     <fallback>
+         <para>
+             <emphasis>Connector does not generate Default Schema.</emphasis>
+         </para>
+     </fallback>
+ </xinclude:include-->
 </chapter>

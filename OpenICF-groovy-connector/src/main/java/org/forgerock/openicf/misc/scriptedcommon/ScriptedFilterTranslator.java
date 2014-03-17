@@ -1,7 +1,7 @@
 /*
  * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 ForgeRock Inc. All rights reserved.
+ * Copyright (c) 2013-2014 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -21,17 +21,19 @@
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
+
 package org.forgerock.openicf.misc.scriptedcommon;
 
-import java.util.HashMap;
-import java.util.Map;
-import org.identityconnectors.common.StringUtil;
-import org.identityconnectors.framework.common.objects.AttributeUtil;
+import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.and;
+import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.not;
+import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.or;
+
 import org.identityconnectors.framework.common.objects.filter.AbstractFilterTranslator;
-import org.identityconnectors.framework.common.objects.filter.AttributeFilter;
+import org.identityconnectors.framework.common.objects.filter.ContainsAllValuesFilter;
 import org.identityconnectors.framework.common.objects.filter.ContainsFilter;
 import org.identityconnectors.framework.common.objects.filter.EndsWithFilter;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
+import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.GreaterThanFilter;
 import org.identityconnectors.framework.common.objects.filter.GreaterThanOrEqualFilter;
 import org.identityconnectors.framework.common.objects.filter.LessThanFilter;
@@ -43,124 +45,97 @@ import org.identityconnectors.framework.common.objects.filter.StartsWithFilter;
  * @author Gael Allioux <gael.allioux@forgerock.com>
  *
  */
-public class ScriptedFilterTranslator extends AbstractFilterTranslator<Map> {
+public class ScriptedFilterTranslator extends AbstractFilterTranslator<Filter> {
+
+    public static final AbstractFilterTranslator<Filter> INSTANCE = new ScriptedFilterTranslator();
 
     /**
      * {@inheritDoc}
      */
-// The Query map describes the filter used.
-//
-// query = [ operation: "CONTAINS", left: attribute, right: "value", not: true/false ]
-// query = [ operation: "ENDSWITH", left: attribute, right: "value", not: true/false ]
-// query = [ operation: "STARTSWITH", left: attribute, right: "value", not: true/false ]
-// query = [ operation: "EQUALS", left: attribute, right: "value", not: true/false ]
-// query = [ operation: "GREATERTHAN", left: attribute, right: "value", not: true/false ]
-// query = [ operation: "GREATERTHANOREQUAL", left: attribute, right: "value", not: true/false ]
-// query = [ operation: "LESSTHAN", left: attribute, right: "value", not: true/false ]
-// query = [ operation: "LESSTHANOREQUAL", left: attribute, right: "value", not: true/false ]
-// query = null : then we assume we fetch everything
-//
-// AND and OR filter just embed a left/right couple of queries.
-// query = [ operation: "AND", left: query1, right: query2 ]
-// query = [ operation: "OR", left: query1, right: query2 ]
-//
-    private Map<String,Object> createMap(String operation, AttributeFilter filter, boolean not) {
-        Map<String,Object> map = new HashMap<String,Object>();
-        String name = filter.getAttribute().getName();
-        String value = AttributeUtil.getAsStringValue(filter.getAttribute());
-        if (StringUtil.isBlank(value)) {
-            return null;
-        } else {
-            map.put("not", not);
-            map.put("operation", operation);
-            map.put("left", name);
-            map.put("right", value);
-            return map;
-        }
-    }
-
     @Override
-    protected Map<String,Object> createContainsExpression(ContainsFilter filter, boolean not) {
-        return createMap("CONTAINS", filter, not);
+    protected Filter createAndExpression(final Filter leftExpression, final Filter rightExpression) {
+        return and(leftExpression, rightExpression);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected Map<String,Object> createEndsWithExpression(EndsWithFilter filter, boolean not) {
-        return createMap("ENDSWITH", filter, not);
+    protected Filter createContainsAllValuesExpression(final ContainsAllValuesFilter filter,
+            boolean not) {
+        return not ? not(filter) : filter;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected Map<String,Object> createStartsWithExpression(StartsWithFilter filter, boolean not) {
-        return createMap("STARTSWITH", filter, not);
+    protected Filter createContainsExpression(final ContainsFilter filter, boolean not) {
+        return not ? not(filter) : filter;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected Map<String,Object> createEqualsExpression(EqualsFilter filter, boolean not) {
-        return createMap("EQUALS", filter, not);
+    protected Filter createEndsWithExpression(final EndsWithFilter filter, boolean not) {
+        return super.createEndsWithExpression(filter, not);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected Map<String,Object> createAndExpression(Map leftExpression, Map rightExpression) {
-        Map<String,Object> map = new HashMap<String,Object>();
-        map.put("operation", "AND");
-        map.put("left", leftExpression);
-        map.put("right", rightExpression);
-        return map;
+    protected Filter createEqualsExpression(final EqualsFilter filter, boolean not) {
+        return not ? not(filter) : filter;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected Map<String,Object> createOrExpression(Map leftExpression, Map rightExpression) {
-        Map<String,Object> map = new HashMap<String,Object>();
-        map.put("operation", "OR");
-        map.put("left", leftExpression);
-        map.put("right", rightExpression);
-        return map;
+    protected Filter createGreaterThanExpression(final GreaterThanFilter filter, boolean not) {
+        return not ? not(filter) : filter;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected Map<String,Object> createGreaterThanExpression(GreaterThanFilter filter, boolean not) {
-        return createMap("GREATERTHAN", filter, not);
+    protected Filter createGreaterThanOrEqualExpression(final GreaterThanOrEqualFilter filter,
+            boolean not) {
+        return not ? not(filter) : filter;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected Map<String,Object> createGreaterThanOrEqualExpression(GreaterThanOrEqualFilter filter, boolean not) {
-        return createMap("GREATERTHANOREQUAL", filter, not);
+    protected Filter createLessThanExpression(final LessThanFilter filter, boolean not) {
+        return not ? not(filter) : filter;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected Map<String,Object> createLessThanExpression(LessThanFilter filter, boolean not) {
-        return createMap("LESSTHAN", filter, not);
+    protected Filter createLessThanOrEqualExpression(final LessThanOrEqualFilter filter, boolean not) {
+        return not ? not(filter) : filter;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected Map<String,Object> createLessThanOrEqualExpression(LessThanOrEqualFilter filter, boolean not) {
-        return createMap("LESSTHANOREQUAL", filter, not);
+    protected Filter createOrExpression(final Filter leftExpression, final Filter rightExpression) {
+        return or(leftExpression, rightExpression);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Filter createStartsWithExpression(final StartsWithFilter filter, boolean not) {
+        return not ? not(filter) : filter;
     }
 }
