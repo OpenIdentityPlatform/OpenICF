@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2014 ForgeRock AS.
  */
 package org.identityconnectors.framework.common.objects;
 
@@ -28,11 +29,11 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import org.testng.annotations.Test;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-
 
 public class AttributeBuilderTests {
 
@@ -62,7 +63,7 @@ public class AttributeBuilderTests {
         testAttributes(attr1, attr2, attr3);
     }
 
-	void testAttributes(Attribute attr1, Attribute attr2, Attribute attr3) {
+    void testAttributes(Attribute attr1, Attribute attr2, Attribute attr3) {
         assertEquals(attr1, attr2);
         assertEquals(attr1, attr1);
         assertFalse(attr1.equals(null));
@@ -78,10 +79,12 @@ public class AttributeBuilderTests {
     public void uidFromBuilderInteger() {
         AttributeBuilder.build(Uid.NAME, 1);
     }
+
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void uidFromBuilderLong() {
         AttributeBuilder.build(Uid.NAME, 1L);
     }
+
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void uidFromBuilderDouble() {
         AttributeBuilder.build(Uid.NAME, 1.0);
@@ -99,5 +102,58 @@ public class AttributeBuilderTests {
         assertEquals(actual, new Name("stuff"));
         // throw the exception at the end..
         AttributeBuilder.build(Name.NAME);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void mapNullAttribute() {
+        HashMap<Object, Object> map = new HashMap<Object, Object>();
+        map.put(null, "NOK");
+
+        AttributeBuilder.build("map", map);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void mapIntegerAttribute() {
+        HashMap<Object, Object> map = new HashMap<Object, Object>();
+        map.put(1, "NOK");
+
+        AttributeBuilder bld = new AttributeBuilder();
+        bld.addValue(map);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void mapShortAttribute() {
+        HashMap<Object, Object> map1 = new HashMap<Object, Object>();
+        map1.put("string", "NOK");
+
+        HashMap<Object, Object> map2 = new HashMap<Object, Object>();
+        map2.put("map1", map1);
+        map2.put("list", Arrays.asList(1, 2, 3, new Short("5")));
+
+        HashMap<Object, Object> map3 = new HashMap<Object, Object>();
+        map3.put("map2", map2);
+
+        HashMap<Object, Object> map4 = new HashMap<Object, Object>();
+        map4.put("map3", map3);
+
+        AttributeBuilder.build("map", map4);
+    }
+
+    @Test
+    public void mapAttribute() {
+        HashMap<Object, Object> map1 = new HashMap<Object, Object>();
+        map1.put("string", "OK");
+
+        HashMap<Object, Object> map2 = new HashMap<Object, Object>();
+        map2.put("map1", map1);
+        map2.put("list", Arrays.asList(1, 2, 3));
+
+        HashMap<Object, Object> map3 = new HashMap<Object, Object>();
+        map3.put("map2", map2);
+
+        HashMap<Object, Object> map4 = new HashMap<Object, Object>();
+        map4.put("map3", map3);
+
+        AttributeBuilder.build("map", map4);
     }
 }

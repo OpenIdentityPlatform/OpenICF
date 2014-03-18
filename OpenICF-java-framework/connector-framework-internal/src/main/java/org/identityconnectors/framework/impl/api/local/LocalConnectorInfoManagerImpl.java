@@ -290,7 +290,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
      * Create an instance of the {@link APIConfiguration} object to setup the
      * framework etc..
      */
-    private static APIConfigurationImpl createDefaultAPIConfiguration(
+    public static APIConfigurationImpl createDefaultAPIConfiguration(
             final LocalConnectorInfoImpl localInfo) {
         // setup classloader since we are going to construct the config bean
         ThreadClassLoaderManager.getInstance().pushClassLoader(
@@ -312,7 +312,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         }
     }
 
-    private static ConnectorMessagesImpl loadMessageCatalog(final Set<String> bundleContents,
+    public static ConnectorMessagesImpl loadMessageCatalog(final Set<String> bundleContents,
             final ClassLoader loader, final Class<? extends Connector> connector)
             throws ConfigurationException {
         try {

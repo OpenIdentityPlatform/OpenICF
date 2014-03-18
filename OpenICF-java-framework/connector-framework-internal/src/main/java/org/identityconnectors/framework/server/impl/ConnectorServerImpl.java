@@ -19,7 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- * Portions Copyrighted 2010-2013 ForgeRock AS.
+ * Portions Copyrighted 2010-2014 ForgeRock AS.
  */
 
 package org.identityconnectors.framework.server.impl;
@@ -29,8 +29,6 @@ import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ServerSocketFactory;
@@ -86,10 +84,13 @@ public class ConnectorServerImpl extends ConnectorServer {
         this.listener = listener;
 
         // Create an inferred delegate that invokes methods for the timer.
-        FacadeDisposer statusChecker = new FacadeDisposer(getMaxFacadeLifeTime(), TimeUnit.MINUTES);
-        timer = new Timer();
-        timer.scheduleAtFixedRate(statusChecker, new Date(), TimeUnit.MINUTES.toMillis(Math.min(
-                getMaxFacadeLifeTime(), 10)));
+        if (getMaxFacadeLifeTime() > 0) {
+            FacadeDisposer statusChecker =
+                    new FacadeDisposer(getMaxFacadeLifeTime(), TimeUnit.MINUTES);
+            timer = new Timer();
+            timer.scheduleAtFixedRate(statusChecker, new Date(), TimeUnit.MINUTES.toMillis(Math
+                    .min(getMaxFacadeLifeTime(), 10)));
+        }
     }
 
     private ServerSocket createServerSocket() {

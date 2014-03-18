@@ -34,10 +34,13 @@ import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 
@@ -64,6 +67,7 @@ import org.identityconnectors.framework.common.exceptions.PreconditionFailedExce
 import org.identityconnectors.framework.common.exceptions.PreconditionRequiredException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -657,6 +661,38 @@ public abstract class ConnectorInfoManagerTestBase {
         assertEquals(facade1.create(ObjectClass.ACCOUNT, attrs, null).getUidValue(), uid);
         assertEquals(facade1.create(ObjectClass.ACCOUNT, attrs, null).getUidValue(), uid);
         assertEquals(facade1.create(ObjectClass.ACCOUNT, attrs, null).getUidValue(), uid);
+    }
+
+    @Test
+    public void testAttributeTypeMap() throws Exception {
+        ConnectorPoolManager.dispose();
+        ConnectorInfoManager manager = getConnectorInfoManager();
+        ConnectorInfo info =
+                findConnectorInfo(manager, "1.0.0.0",
+                        "org.identityconnectors.testconnector.TstStatefulConnector");
+        assertNotNull(info);
+
+        APIConfiguration config = info.createDefaultAPIConfiguration();
+
+        config.getConnectorPoolConfiguration().setMinIdle(0);
+        config.getConnectorPoolConfiguration().setMaxIdle(0);
+
+        ConnectorFacade facade = ConnectorFacadeFactory.getInstance().newInstance(config);
+
+        Set<Attribute> createAttributes = new HashSet<Attribute>();
+        Map<String, Object> mapAttribute = new HashMap<String, Object>();
+        mapAttribute.put("email", "foo@example.com");
+        mapAttribute.put("primary", true);
+        mapAttribute.put("usage", Arrays.asList("home", "work"));
+        createAttributes.add(AttributeBuilder.build("emails", mapAttribute));
+
+        Uid uid = facade.create(ObjectClass.ACCOUNT, createAttributes, null);
+        assertEquals(uid.getUidValue(), "foo@example.com");
+
+        ConnectorObject co = facade.getObject(ObjectClass.ACCOUNT, new Uid("0"), null);
+        Object value = AttributeUtil.getSingleValue(co.getAttributeByName("emails"));
+        assertTrue(value instanceof Map);
+        assertTrue(((Map)value).get("usage") instanceof List);
     }
 
     @Test
