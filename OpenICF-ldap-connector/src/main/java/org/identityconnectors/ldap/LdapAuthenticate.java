@@ -57,19 +57,22 @@ public class LdapAuthenticate {
 
     public Uid authenticate(GuardedString password) {
         ConnectorObject authnObject = getObjectToAuthenticate();
-        AuthenticationResult authnResult = null;
-        if (authnObject != null) {
-            String entryDN = authnObject.getAttributeByName("entryDN").getValue().get(0).toString();
-            authnResult = conn.authenticate(entryDN, password);
+        if (authnObject == null) {
+            throw new InvalidCredentialException(conn.format("cannotResolveUsername", null, username));
         }
+        AuthenticationResult authnResult = null;
+        String entryDN = authnObject.getAttributeByName("entryDN").getValue().get(0).toString();
+        authnResult = conn.authenticate(entryDN, password);
 
-        if (authnResult == null || !isSuccess(authnResult)) {
+        if (authnResult == null ) {
             throw new InvalidCredentialException(conn.format("authenticationFailed", null, username));
         }
         try {
             authnResult.propagate();
         } catch (PasswordExpiredException e) {
             e.initUid(authnObject.getUid());
+            throw e;
+        } catch (InvalidCredentialException e){
             throw e;
         }
         // AuthenticationResult did not throw an exception, so this authentication was successful.

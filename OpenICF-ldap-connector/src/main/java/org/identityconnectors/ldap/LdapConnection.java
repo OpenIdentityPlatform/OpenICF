@@ -55,6 +55,8 @@ import org.identityconnectors.framework.common.exceptions.PasswordExpiredExcepti
 import org.identityconnectors.ldap.schema.LdapSchemaMapping;
 
 import com.sun.jndi.ldap.ctl.PasswordExpiredResponseControl;
+import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
+import org.identityconnectors.framework.common.exceptions.InvalidPasswordException;
 
 public class LdapConnection {
 
@@ -187,14 +189,48 @@ public class LdapConnection {
             // TODO: process Password Policy control.
         } catch (AuthenticationException e) {
             String message = e.getMessage().toLowerCase();
-            if (message.contains("password expired")) { // Sun DS.
-                authnResult = new AuthenticationResult(AuthenticationResultType.PASSWORD_EXPIRED, e);
-            } else if (message.contains("password has expired")) { // RACF.
-                authnResult = new AuthenticationResult(AuthenticationResultType.PASSWORD_EXPIRED, e);
-            } else if (message.contains("ldap: error code 49 ") && message.contains("data 773,")) { // MSAD.
-                authnResult = new AuthenticationResult(AuthenticationResultType.PASSWORD_EXPIRED, e);
-            } else {
-                authnResult = new AuthenticationResult(AuthenticationResultType.FAILED, e);
+            //SUN_DSEE, OPENDS, OPENDJ, IBM, MSAD, MSAD_LDS, MSAD_GC, NOVELL, UNBOUNDID, OPENLDAP, UNKNOWN
+            switch (getServerType()) {
+                case MSAD:
+                case MSAD_GC:
+                case MSAD_LDS:
+                    if (message.contains("ldap: error code 49 ")) {
+                        if (message.contains("data 525,")) {
+                            authnResult = new AuthenticationResult(AuthenticationResultType.FAILED, new AuthenticationException("User not found"));
+                        } else if (message.contains("data 52e,")) {
+                            authnResult = new AuthenticationResult(AuthenticationResultType.FAILED, new AuthenticationException("Invalid credentials"));
+                        } else if (message.contains("data 530,")) {
+                            authnResult = new AuthenticationResult(AuthenticationResultType.FAILED, new AuthenticationException("Not permitted to logon at this time"));
+                        } else if (message.contains("data 531,")) {
+                            authnResult = new AuthenticationResult(AuthenticationResultType.FAILED, new AuthenticationException("Not permitted to logon at this workstation"));
+                        } else if (message.contains("data 532,")) {
+                            authnResult = new AuthenticationResult(AuthenticationResultType.PASSWORD_EXPIRED, new AuthenticationException("Password expired"));
+                        } else if (message.contains("data 533,")) {
+                            authnResult = new AuthenticationResult(AuthenticationResultType.FAILED, new AuthenticationException("Account disabled"));
+                        } else if (message.contains("data 701,")) {
+                            authnResult = new AuthenticationResult(AuthenticationResultType.FAILED, new AuthenticationException("Account expired"));
+                        } else if (message.contains("data 773,")) {
+                            authnResult = new AuthenticationResult(AuthenticationResultType.FAILED, new AuthenticationException("User must reset password"));
+                        } else if (message.contains("data 775,")) {
+                            authnResult = new AuthenticationResult(AuthenticationResultType.FAILED, new AuthenticationException("User account locked"));
+                        } else {
+                        }
+                    }
+                    break;
+                case SUN_DSEE:
+                    if (message.contains("password expired")) { // Sun DS.
+                        authnResult = new AuthenticationResult(AuthenticationResultType.PASSWORD_EXPIRED, e);
+                    }
+                    break;
+                case UNKNOWN:
+                    if (message.contains("password has expired")) { // RACF.
+                        authnResult = new AuthenticationResult(AuthenticationResultType.PASSWORD_EXPIRED, e);
+                    }
+                    break;
+                case OPENDJ:
+                case OPENLDAP:
+                default:
+                    authnResult = new AuthenticationResult(AuthenticationResultType.FAILED, e);
             }
         } catch (NamingException e) {
             authnResult = new AuthenticationResult(AuthenticationResultType.FAILED, e);
@@ -318,11 +354,22 @@ public class LdapConnection {
 
     private ServerType detectServerType() {
         try {
-            Attributes attrs = getInitialContext().getAttributes("", new String[]{"vendorVersion", "vendorName", "highestCommittedUSN", "rootDomainNamingContext"});
+            Attributes attrs = getInitialContext().getAttributes("", new String[]{"vendorVersion", "vendorName", "highestCommittedUSN", "rootDomainNamingContext", "structuralObjectClass"});
             String vendorName = getStringAttrValue(attrs, "vendorName");
-            if (null != vendorName && vendorName.toLowerCase().contains("ibm")) {
-                log.info("IBM Directory server has been detected");
-                return ServerType.IBM;
+            if (null != vendorName) {
+                vendorName = vendorName.toLowerCase();
+                if (vendorName.contains("ibm")) {
+                    log.info("IBM Directory server has been detected");
+                    return ServerType.IBM;
+                }
+                if (vendorName.contains("novell")) {
+                    log.info("Novell eDirectory server has been detected");
+                    return ServerType.NOVELL;
+                }
+                if (vendorName.contains("unboundid")) {
+                    log.info("UnboundID Directory server has been detected");
+                    return ServerType.UNBOUNDID;
+                }
             }
             String vendorVersion = getStringAttrValue(attrs, "vendorVersion");
             if (vendorVersion != null) {
@@ -342,6 +389,7 @@ public class LdapConnection {
             } else {
                 String hUSN = getStringAttrValue(attrs, "highestCommittedUSN");
                 String rDC = getStringAttrValue(attrs, "rootDomainNamingContext");
+                String sOC = getStringAttrValue(attrs, "structuralObjectClass");
                 if (hUSN != null) {
                 // Windows Active Directory
                     if (rDC != null) {
@@ -358,6 +406,9 @@ public class LdapConnection {
                     // ADLDS does not have the rootDomainNamingContext...
                     log.info("MS Active Directory Lightweight Directory Services server has been detected");
                     return ServerType.MSAD_LDS;
+                }
+                else if (sOC != null && sOC.equalsIgnoreCase("OpenLDAProotDSE")){
+                    return ServerType.OPENLDAP;
                 }
             }
         } catch (NamingException e) {
@@ -391,7 +442,7 @@ public class LdapConnection {
         FAILED {
             @Override
             public void propagate(Exception cause) {
-                throw new ConnectorSecurityException(cause);
+                throw new InvalidCredentialException(cause.getMessage(),cause);
             }
         };
 
@@ -435,6 +486,6 @@ public class LdapConnection {
 
     public enum ServerType {
 
-        SUN_DSEE, OPENDS, OPENDJ, IBM, MSAD, MSAD_LDS, MSAD_GC, UNKNOWN
+        SUN_DSEE, OPENDS, OPENDJ, IBM, MSAD, MSAD_LDS, MSAD_GC, NOVELL, UNBOUNDID, OPENLDAP, UNKNOWN
     }
 }
