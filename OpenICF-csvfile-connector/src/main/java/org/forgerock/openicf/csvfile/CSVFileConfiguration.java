@@ -178,7 +178,7 @@ public class CSVFileConfiguration extends AbstractConfiguration {
      */
     @Override
     public void validate() {
-        log.info("begin");
+        log.ok("begin");
 
         if (StringUtil.isEmpty(encoding)) {
             throw new ConfigurationException("Encoding is not defined.");
@@ -231,7 +231,7 @@ public class CSVFileConfiguration extends AbstractConfiguration {
             throw new ConfigurationException("Can't write to file '" + filePath.getAbsolutePath() + "'.");
         }
 
-        log.info("end");
+        log.ok("end");
     }
 
     boolean isUniqueAndNameAttributeEqual() {
