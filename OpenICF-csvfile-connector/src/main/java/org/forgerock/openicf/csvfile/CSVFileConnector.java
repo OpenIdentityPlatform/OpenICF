@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright © 2011-2012 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2011-2014 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -24,9 +24,30 @@
  * Portions Copyrighted 2011 Viliam Repan (lazyman)
  * Portions Copyrighted 2011 Radovan Semancik
  *
- * $Id$
  */
 package org.forgerock.openicf.csvfile;
+
+import static org.forgerock.openicf.csvfile.util.Utils.*;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.channels.FileLock;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.forgerock.openicf.csvfile.sync.Change;
 import org.forgerock.openicf.csvfile.sync.InMemoryDiff;
@@ -37,23 +58,47 @@ import org.forgerock.openicf.csvfile.util.Utils;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.framework.common.exceptions.*;
-import org.identityconnectors.framework.common.objects.*;
+import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
+import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
+import org.identityconnectors.framework.common.exceptions.InvalidPasswordException;
+import org.identityconnectors.framework.common.exceptions.UnknownUidException;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeInfo;
+import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
+import org.identityconnectors.framework.common.objects.ConnectorObject;
+import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
+import org.identityconnectors.framework.common.objects.Name;
+import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
+import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.OperationalAttributeInfos;
+import org.identityconnectors.framework.common.objects.OperationalAttributes;
+import org.identityconnectors.framework.common.objects.ResultsHandler;
+import org.identityconnectors.framework.common.objects.Schema;
+import org.identityconnectors.framework.common.objects.SchemaBuilder;
+import org.identityconnectors.framework.common.objects.SyncDelta;
+import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
+import org.identityconnectors.framework.common.objects.SyncDeltaType;
+import org.identityconnectors.framework.common.objects.SyncResultsHandler;
+import org.identityconnectors.framework.common.objects.SyncToken;
+import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.AbstractFilterTranslator;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.ConnectorClass;
-import org.identityconnectors.framework.spi.operations.*;
-
-import java.io.*;
-import java.nio.channels.FileLock;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.regex.Pattern;
-
-import static org.forgerock.openicf.csvfile.util.Utils.*;
+import org.identityconnectors.framework.spi.operations.AuthenticateOp;
+import org.identityconnectors.framework.spi.operations.CreateOp;
+import org.identityconnectors.framework.spi.operations.DeleteOp;
+import org.identityconnectors.framework.spi.operations.ResolveUsernameOp;
+import org.identityconnectors.framework.spi.operations.SchemaOp;
+import org.identityconnectors.framework.spi.operations.SearchOp;
+import org.identityconnectors.framework.spi.operations.SyncOp;
+import org.identityconnectors.framework.spi.operations.TestOp;
+import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
 
 /**
  * Main implementation of the CSVFile Connector
@@ -103,7 +148,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
 
         this.configuration = (CSVFileConfiguration) initialConfiguration1;
 
-        String fieldDelimiter = Utils.escapeFieldDelimiter(configuration.getFieldDelimiter());
+        String fieldDelimiter = Pattern.quote(configuration.getFieldDelimiter());
 
         // regexp with ," chars is (?:^|,)(\"(?:[^\"]+|\"\")*\"|[^,]*)
         StringBuilder builder = new StringBuilder();
@@ -731,7 +776,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
             return values;
         }
 
-        String[] array = attributeValue.split(configuration.getMultivalueDelimiter());
+        String[] array = attributeValue.split(Pattern.quote(configuration.getMultivalueDelimiter()));
         for (String val : array) {
             if (val != null) {
                 values.add(val);
@@ -1053,7 +1098,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
     }
 
     private boolean mustUseQualifier(String value) {
-        return value.contains(Utils.escapeFieldDelimiter(configuration.getFieldDelimiter()));
+        return value.contains(Pattern.quote(configuration.getFieldDelimiter()));
     }
 
     private void testHeader(List<String> headers) {

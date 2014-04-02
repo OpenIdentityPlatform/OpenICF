@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright © 2011 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2011-2014 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -20,81 +20,101 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
- * $Id$
+ * 
  */
 package org.forgerock.openicf.csvfile;
 
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
+import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
+import org.forgerock.openicf.csvfile.util.TestUtils;
 import org.identityconnectors.common.logging.Log;
-import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.ConnectorObject;
+import org.identityconnectors.framework.common.objects.Name;
+import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationalAttributes;
+import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.test.common.TestHelpers;
-import org.identityconnectors.test.common.PropertyBag;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 /**
  * Attempts to test the {@link CSVFileConnector} with the framework.
- *
- * @author $author$
- * @version $Revision$ $Date$
+ * 
  */
 public class CSVFileConnectorTests {
 
-    /*
-    * Example test properties.
-    * See the Javadoc of the TestHelpers class for the location of the public and private configuration files.
-    */
-    private static final PropertyBag properties = TestHelpers.getProperties(CSVFileConnector.class);
-    // Host is a public property read from public configuration file
-    private static final String HOST = properties.getStringProperty("configuration.host");
-    // Login and password are private properties read from private configuration file 
-    private static final String REMOTE_USER = properties.getStringProperty("configuration.remoteUser");
-    private static final GuardedString PASSWORD = properties.getProperty("configuration.password", GuardedString.class);
-
-    //set up logging
+    // set up logging
     private static final Log log = Log.getLog(CSVFileConnectorTests.class);
 
-    @BeforeMethod
-	@BeforeClass
-    public static void setUp() {
-        Assert.assertNotNull(HOST);
-        Assert.assertNotNull(REMOTE_USER);
-        assertNotNull(PASSWORD);
+    @Test(dataProvider = "provideNumbers")
+    public void exampleTest1(CSVFileConfiguration config) throws Exception {
 
-        //
-        //other setup work to do before running tests
-        //
+        FileWriter f2 = new FileWriter(config.getFilePath(), false);
+        f2.write(new StringBuilder("uid").append(config.getFieldDelimiter()).append(
+                OperationalAttributes.PASSWORD_NAME).append(config.getFieldDelimiter()).append(
+                "fullName").append(config.getFieldDelimiter()).append("groups").toString());
+        f2.close();
+
+        final ConnectorFacade facade = getFacade(config);
+
+        Set<Attribute> createAttributes = new HashSet<Attribute>();
+        createAttributes.add(new Name("foo01"));
+        createAttributes.add(AttributeBuilder.build("fullName", "Foo Bar"));
+        createAttributes.add(AttributeBuilder.buildPassword("Password".toCharArray()));
+        createAttributes.add(AttributeBuilder.build("groups", "sample1", "sample2"));
+
+        Uid uid = facade.create(ObjectClass.ACCOUNT, createAttributes, null);
+        Assert.assertNotNull(uid);
+
+        ConnectorObject co = facade.getObject(ObjectClass.ACCOUNT, uid, null);
+
+        assertEquals(co.getUid().getUidValue(), "foo01");
+        assertEquals(co.getName().getNameValue(), "foo01");
+        assertEquals(co.getAttributeByName("groups").getValue(), Arrays.asList(new String[] {
+            "sample1", "sample2" }));
+
+        facade.delete(ObjectClass.ACCOUNT, uid, null);
+
+        Assert.assertNull(facade.getObject(ObjectClass.ACCOUNT, uid, null));
     }
 
-    @AfterMethod
-	@AfterClass
-    public static void tearDown() {
-        //
-        //clean up resources
-        //
-    }
-
-    @Test
-    public void exampleTest1() {
-        log.info("Running Test 1...");
-        //You can use TestHelpers to do some of the boilerplate work in running a search
-        //TestHelpers.search(theConnector, ObjectClass.ACCOUNT, filter, handler, null);
-    }
-
-    @Test
-    public void exampleTest2() {
-        log.info("Running Test 2...");
-        //Another example using TestHelpers
-        //List<ConnectorObject> results = TestHelpers.searchToList(theConnector, ObjectClass.GROUP, filter);
+    @DataProvider(name = "provideNumbers")
+    public Iterator<Object[]> provideData() throws Exception {
+        List<Object[]> tests = new ArrayList<Object[]>();
+        
+        CSVFileConfiguration config = new CSVFileConfiguration();
+        config.setFilePath(TestUtils.getTestFile("connector-case1.csv"));
+        config.setFieldDelimiter("*");
+        config.setUsingMultivalue(true);
+        config.setUniqueAttribute("uid");
+        config.setNameAttribute("uid");
+        config.setPasswordAttribute(OperationalAttributes.PASSWORD_NAME);        
+        tests.add(new Object[]{config});
+        
+        config = new CSVFileConfiguration();
+        config.setFilePath(TestUtils.getTestFile("connector-case2.csv"));
+        config.setMultivalueDelimiter("$");
+        config.setUsingMultivalue(true);
+        config.setUniqueAttribute("uid");
+        config.setNameAttribute("uid");
+        config.setPasswordAttribute(OperationalAttributes.PASSWORD_NAME);
+        tests.add(new Object[]{config});
+        
+        return tests.iterator();
     }
 
     protected ConnectorFacade getFacade(CSVFileConfiguration config) {

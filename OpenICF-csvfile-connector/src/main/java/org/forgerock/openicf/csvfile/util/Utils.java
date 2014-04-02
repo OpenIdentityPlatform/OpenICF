@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2010-2012 ForgeRock Inc. All Rights Reserved
+ * Copyright (c) 2010-2014 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -23,15 +23,18 @@
  * 
  * Portions Copyrighted 2011 Viliam Repan (lazyman)
  * 
- * $Id$
  */
 package org.forgerock.openicf.csvfile.util;
 
-import org.forgerock.openicf.csvfile.CSVFileConfiguration;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.objects.ObjectClass;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.util.ArrayList;
@@ -39,21 +42,15 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.forgerock.openicf.csvfile.CSVFileConfiguration;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.ObjectClass;
+
 /**
  *
  * @author Viliam Repan (lazyman)
  */
 public class Utils {
-
-    public static String escapeFieldDelimiter(String delimiter) {
-        String[] specials = new String[]{"|", ".", "\\", "^", "$", "[", "]", "(", ")"};
-        for (String special : specials) {
-            if (special.equals(delimiter)) {
-                return "\\" + delimiter;
-            }
-        }
-        return delimiter;
-    }
 
     public static void isAccount(ObjectClass oc) {
         if (oc == null) {
@@ -154,7 +151,7 @@ public class Utils {
         }
         //this if is hack for regexp - if line starts with field delimiter regexp
         //will fail, so if we find that we put "empty field" as it was expected
-        if (line.matches("^" + escapeFieldDelimiter(configuration.getFieldDelimiter()) + ".*$")) {
+        if (line.matches("^" + Pattern.quote(configuration.getFieldDelimiter()) + ".*$")) {
             StringBuilder builder = new StringBuilder();
             builder.append(configuration.getValueQualifier());
             builder.append(configuration.getValueQualifier());

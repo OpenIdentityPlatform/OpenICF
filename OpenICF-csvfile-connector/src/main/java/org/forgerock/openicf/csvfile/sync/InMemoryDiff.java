@@ -27,6 +27,19 @@
  */
 package org.forgerock.openicf.csvfile.sync;
 
+import static org.forgerock.openicf.csvfile.util.Utils.*;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Pattern;
+
 import org.forgerock.openicf.csvfile.CSVFileConfiguration;
 import org.forgerock.openicf.csvfile.util.CSVSchemaException;
 import org.forgerock.openicf.csvfile.util.CsvItem;
@@ -34,14 +47,6 @@ import org.forgerock.openicf.csvfile.util.Utils;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import java.util.regex.Pattern;
-
-import static org.forgerock.openicf.csvfile.util.Utils.*;
 
 /**
  *

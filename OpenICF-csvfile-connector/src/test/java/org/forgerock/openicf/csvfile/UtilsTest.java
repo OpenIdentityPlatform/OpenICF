@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2010 ForgeRock Inc. All Rights Reserved
+ * Copyright (c) 2010-2014 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -23,7 +23,6 @@
  *
  * Portions Copyrighted 2011 Viliam Repan (lazyman)
  *
- * $Id$
  */
 package org.forgerock.openicf.csvfile;
 
@@ -94,7 +93,7 @@ public class UtilsTest {
     @Test
     @SuppressWarnings("deprecation")
     public void parseValuesSpecialTest() throws Exception {
-        initConnector("\"", ".", "\\|");
+        initConnector("\"", ".", "|");
 
         Map<String, String> testCases = new HashMap<String, String>();
         testCases.put("", "[]");
@@ -104,6 +103,28 @@ public class UtilsTest {
         testCases.put("|\"a\"|\"b\"|\"c\"|\"asdf\"", "[, a, b, c, asdf]");
         testCases.put("\"a\"||\"b\"|\"c\"|\"asdf\"", "[a, , b, c, asdf]");
         testCases.put("\"a\"|\"b\"|\"c\"|\"asdf\"|", "[a, b, c, asdf, ]");
+
+        Set<Entry<String, String>> set = testCases.entrySet();
+        for (Entry<String, String> entry : set) {
+            assertEquals(entry.getValue(), Arrays.toString(Utils.parseValues(entry.getKey(),
+                    connector.getLinePattern(), (CSVFileConfiguration) connector.getConfiguration()).toArray()),
+                    "Testing: '" + entry.getKey() + "'");
+        }
+    }
+
+    @Test
+    @SuppressWarnings("deprecation")
+    public void parseValuesSpecialTest1() throws Exception {
+        initConnector("\"", ".", "*");
+
+        Map<String, String> testCases = new HashMap<String, String>();
+        testCases.put("", "[]");
+        testCases.put(null, "[]");
+        testCases.put(" *\"a\"*\"b\"*\"c\"*\"asdf\"", "[, a, b, c, asdf]");
+        testCases.put("\t *\"a\"*\"b\"*\"c\"*\"asdf\"", "[, a, b, c, asdf]");
+        testCases.put("*\"a\"*\"b\"*\"c\"*\"asdf\"", "[, a, b, c, asdf]");
+        testCases.put("\"a\"**\"b\"*\"c\"*\"asdf\"", "[a, , b, c, asdf]");
+        testCases.put("\"a\"*\"b\"*\"c\"*\"asdf\"*", "[a, b, c, asdf, ]");
 
         Set<Entry<String, String>> set = testCases.entrySet();
         for (Entry<String, String> entry : set) {
