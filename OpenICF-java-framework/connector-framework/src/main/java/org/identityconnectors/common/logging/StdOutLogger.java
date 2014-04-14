@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2014 ForgeRock AS.
  */
 package org.identityconnectors.common.logging;
 
@@ -75,7 +76,7 @@ class StdOutLogger implements LogSpi {
      */
     @Override
     public void log(final Class<?> clazz, final String methodName, final Level level,
-            final String message, final Throwable ex) {
+                    final String message, final Throwable ex) {
 
         final String now;
         try {
@@ -84,8 +85,8 @@ class StdOutLogger implements LogSpi {
             DATE_FORMAT_HANDLER.remove();
         }
         final Object[] args =
-                new Object[] { Thread.currentThread().getId(), now, clazz.getName(), methodName,
-                    level, message };
+                new Object[]{Thread.currentThread().getId(), now, clazz.getName(), methodName,
+                        level, message};
 
         final String msg;
         try {
@@ -104,11 +105,35 @@ class StdOutLogger implements LogSpi {
         }
     }
 
+    public void log(final Class<?> clazz, final StackTraceElement caller, final Level level, final String message, final Throwable ex) {
+        String methodName = null;
+        if (null != caller) {
+            // @formatter:off
+            methodName = caller.getMethodName() +
+                    (caller.isNativeMethod() ? "(Native Method)" :
+                            (caller.getFileName() != null && caller.getLineNumber() >= 0 ?
+                                    "(" + caller.getFileName() + ":" + caller.getLineNumber() + ")" :
+                                    (caller.getFileName() != null ? "(" + caller.getFileName() + ")" : "(Unknown Source)")));
+            // @formatter:on
+        } else {
+            methodName = "unknown";
+        }
+        log(clazz, methodName, level, message, ex);
+    }
+
     /**
      * Always returns true.
      */
     @Override
     public boolean isLoggable(final Class<?> clazz, final Level level) {
+        return true;
+    }
+
+    /**
+     * Always returns true.
+     */
+    @Override
+    public boolean needToInferCaller(Class<?> clazz, Level level) {
         return true;
     }
 }

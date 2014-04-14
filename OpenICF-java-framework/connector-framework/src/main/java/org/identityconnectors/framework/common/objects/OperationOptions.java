@@ -122,18 +122,21 @@ public final class OperationOptions {
      * An option to use with {@link SearchApiOp} that specifies an opaque cookie
      * which is used by the connector to track its position in the set of query
      * results.
+     * @since 1.4
      */
     public static final String OP_PAGED_RESULTS_COOKIE = "PAGED_RESULTS_COOKIE";
 
     /**
      * An option to use with {@link SearchApiOp} that specifies the index within
      * the result set of the first result which should be returned.
+     * @since 1.4
      */
     public static final String OP_PAGED_RESULTS_OFFSET = "PAGED_RESULTS_OFFSET";
 
     /**
      * An option to use with {@link SearchApiOp} that specifies the requested
      * page results page size.
+     * @since 1.4
      */
     public static final String OP_PAGE_SIZE = "PAGE_SIZE";
 
@@ -141,6 +144,7 @@ public final class OperationOptions {
      * An option to use with {@link SearchApiOp} that specifies the sort keys
      * which should be used for ordering the {@link ConnectorObject} returned by
      * search request.
+     * @since 1.4
      */
     public static final String OP_SORT_KEYS = "SORT_KEYS";
 

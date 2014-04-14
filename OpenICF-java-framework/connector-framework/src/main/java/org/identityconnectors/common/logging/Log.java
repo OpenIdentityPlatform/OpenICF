@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2014 ForgeRock AS.
  */
 package org.identityconnectors.common.logging;
 
@@ -26,8 +27,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.Collection;
 import java.util.Properties;
+import java.util.Set;
 
+import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.ReflectionUtil;
 import org.identityconnectors.common.StringUtil;
@@ -49,6 +53,13 @@ public final class Log {
     // Log.class.getPackage()
     // returns null.
     private static final String PACKAGE = ReflectionUtil.getPackage(Log.class);
+
+    private static final String LOGGER_NAME = Log.class.getName();
+
+    private static final Set<String> EXCLUDE_LIST = CollectionUtil.newReadOnlySet(
+            "groovy.", "org.codehaus.groovy.", "gjdk.groovy.", "java.", "javax.", "sun.",
+            "com.google.apphosting."// for GAE/J
+    );
 
     /**
      * System property to set the logger class that is most appropriate.
@@ -122,8 +133,7 @@ public final class Log {
      * private static final Log LOG = Log.getLog(MyClass.class);
      * </code>
      *
-     * @param clazz
-     *            class to log information about.
+     * @param clazz class to log information about.
      * @return logger to use for logging.
      */
     public static Log getLog(final Class<?> clazz) {
@@ -152,22 +162,18 @@ public final class Log {
     // =======================================================================
     // Helper Methods..
     // =======================================================================
+
     /**
      * Lowest level logging method.
      *
-     * @param clazz
-     *            Class that is being logged.
-     * @param method
-     *            Method name that is being logged.
-     * @param level
-     *            Logging level.
-     * @param message
-     *            Message about the log.
-     * @param ex
-     *            Exception to use process.
+     * @param clazz   Class that is being logged.
+     * @param method  Method name that is being logged.
+     * @param level   Logging level.
+     * @param message Message about the log.
+     * @param ex      Exception to use process.
      */
     public void log(final Class<?> clazz, final String method, final Log.Level level,
-            final String message, final Throwable ex) {
+                    final String message, final Throwable ex) {
 
         if (isLoggable(level)) {
             logImpl.log(clazz, method, level, message, ex);
@@ -178,17 +184,13 @@ public final class Log {
      * Logs based on the parameters given. Uses the format parameter inside
      * {@link MessageFormat}.
      *
-     * @param level
-     *            the logging level at which to write the message.
-     * @param ex
-     *            [optional] exception stack trace to log.
-     * @param format
-     *            [optional] create a message of a particular format.
-     * @param args
-     *            [optional] parameters to the format string.
+     * @param level  the logging level at which to write the message.
+     * @param ex     [optional] exception stack trace to log.
+     * @param format [optional] create a message of a particular format.
+     * @param args   [optional] parameters to the format string.
      */
     public void log(final Level level, final Throwable ex, final String format,
-            final Object... args) {
+                    final Object... args) {
         if (isLoggable(level)) {
             String message = format;
             if (format != null && args != null) {
@@ -198,9 +200,49 @@ public final class Log {
             } else if (format == null && ex != null) {
                 message = ex.getLocalizedMessage();
             }
-            final String methodName = ReflectionUtil.getMethodName(3);
-            log(clazz, methodName, level, message, ex);
+            //To get the StackTrace is expensive. Extract the method name only if it's necessary!!!
+            log(level, ex, message, logImpl.needToInferCaller(clazz, level) ? Thread.currentThread().getStackTrace() : null);
         }
+    }
+
+    protected void log(final Level level, final Throwable ex, final String message,
+                       final StackTraceElement[] locations) {
+        final StackTraceElement caller = extract(locations, EXCLUDE_LIST);
+        if (null != caller) {
+            logImpl.log(clazz, caller, level, message, ex);
+        } else {
+            logImpl.log(clazz, (String)null, level, message, ex);
+        }
+    }
+
+
+    protected StackTraceElement extract(StackTraceElement[] steArray,
+                                        Collection<String> frameworkPackageList) {
+        if (steArray == null) {
+            return null;
+        }
+
+        for (StackTraceElement current : steArray) {
+            if (!isInFrameworkPackageList(current.getClassName(), frameworkPackageList)) {
+                return current;
+            }
+        }
+        return null;
+    }
+
+    protected boolean isInFrameworkPackageList(String currentClass, Collection<String> frameworkPackageList) {
+        if (frameworkPackageList == null) {
+            return false;
+        }
+        if (LOGGER_NAME.equals(currentClass)) {
+            return true;
+        }
+        for (String s : frameworkPackageList) {
+            if (currentClass.startsWith(s)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void ok(final Throwable ex, final String format, final Object... args) {
@@ -259,7 +301,7 @@ public final class Log {
      * <li>read
      * <code>META-INF/services/<i>org.identityconnectors.common.logging.class</i></code>
      * file</li>
-     * <li>use {@link org.identityconnectors.common.logging.impl.StdOutLogger}
+     * <li>use {@link org.identityconnectors.common.logging.StdOutLogger}
      * as a fallback.</li>
      * </ol>
      */

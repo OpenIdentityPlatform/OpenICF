@@ -138,11 +138,12 @@ public final class ReflectionUtil {
         final Throwable dummyException = new Throwable();
         final StackTraceElement locations[] = dummyException.getStackTrace();
         // caller will be the depth element
-        String method = "unknown";
+        String method = METHOD_UNKNOWN;
         if (locations != null && locations.length > depth) {
             final StackTraceElement caller = locations[depth];
             method = caller.getMethodName();
         }
         return method;
     }
+    public static final String METHOD_UNKNOWN = "unknown";
 }

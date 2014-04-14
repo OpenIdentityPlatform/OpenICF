@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 ForgeRock AS. All Rights Reserved
+ * Copyright (c) 2010-2014 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -24,9 +24,7 @@
 
 package org.forgerock.openicf.common.logging.slf4j;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
+import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log.Level;
 import org.identityconnectors.common.logging.LogSpi;
 import org.slf4j.Logger;
@@ -34,62 +32,74 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.spi.LocationAwareLogger;
 
 /**
- *
- *
  * @author Laszlo Hordos
  * @since 1.1
  */
 public class SLF4JLog implements LogSpi {
 
-    private volatile ConcurrentMap<String, Logger> map = new ConcurrentHashMap<String, Logger>(1);
+    private static final String CLASS = "Class: ";
+    private static final String METHOD = "Method: ";
+    private static final String MESSAGE = "Message: ";
 
     /**
      * Uses the SLF4J logger to log the message.
      *
      * @see LogSpi#log(Class, String,
-     *      org.identityconnectors.common.logging.Log.Level, String, Throwable)
+     * org.identityconnectors.common.logging.Log.Level, String, Throwable)
      */
     public void log(final Class<?> clazz, final String methodName, final Level level,
-            final String message, final Throwable ex) {
-        String clazzName = clazz.getName();
-        Logger logger = getSLF4JLogger(clazzName);
+                    final String message, final Throwable ex) {
+        final String clazzName = clazz.getName();
+        final Logger logger = LoggerFactory.getLogger(clazzName);
 
         if (logger instanceof LocationAwareLogger) {
-            // StringBuilder sb = new StringBuilder("Method: {}\t")
-            StringBuilder sb = new StringBuilder("Method: ").append(methodName).append("\t");
-            sb.append(message);
-            ((LocationAwareLogger) logger).log(null, clazz.getName(), getLogLevel(level), sb
-                    .toString(), null /* new Object[]{methodName} */, ex);
+            if (StringUtil.isBlank(methodName)) {
+                ((LocationAwareLogger) logger).log(null, clazz.getName(), getLogLevel(level), message, null, ex);
+            } else {
+                //StringBuilder sb = new StringBuilder(METHOD).append(methodName).append("\t").append(message);
+                StringBuilder sb = new StringBuilder(message).append('\t').append(METHOD).append(methodName);
+                ((LocationAwareLogger) logger).log(null, clazz.getName(), getLogLevel(level), sb
+                        .toString(), null, ex);
+            }
         } else {
-            StringBuilder sb = new StringBuilder("Class: {}\tMethod: {}\tMessage: ");
-            sb.append(message);
+            StringBuilder sb = new StringBuilder(CLASS).append(clazz).append('\t');
+            if (StringUtil.isNotBlank(methodName)){
+                sb.append(methodName).append('\t');
+            }
+            sb.append(MESSAGE).append(message);
             // uses different call if the exception is not null..
             if (Level.OK.equals(level)) {
                 if (ex == null) {
-                    logger.debug(sb.toString(), new Object[] { clazz, methodName });
+                    logger.debug(sb.toString());
                 } else {
-                    logger.debug(sb.toString(), new Object[] { clazz, methodName }, ex);
+                    logger.debug(sb.toString(), ex);
                 }
             } else if (Level.INFO.equals(level)) {
                 if (ex == null) {
-                    logger.info(sb.toString(), new Object[] { clazz, methodName });
+                    logger.info(sb.toString());
                 } else {
-                    logger.info(sb.toString(), new Object[] { clazz, methodName }, ex);
+                    logger.info(sb.toString(), ex);
                 }
             } else if (Level.WARN.equals(level)) {
                 if (ex == null) {
-                    logger.warn(sb.toString(), new Object[] { clazz, methodName });
+                    logger.warn(sb.toString());
                 } else {
-                    logger.warn(sb.toString(), new Object[] { clazz, methodName }, ex);
+                    logger.warn(sb.toString(), ex);
                 }
             } else if (Level.ERROR.equals(level)) {
                 if (ex == null) {
-                    logger.error(sb.toString(), new Object[] { clazz, methodName });
+                    logger.error(sb.toString());
                 } else {
-                    logger.error(sb.toString(), new Object[] { clazz, methodName }, ex);
+                    logger.error(sb.toString(), ex);
                 }
             }
         }
+    }
+
+    @Override
+    public void log(final Class<?> clazz, final StackTraceElement method, final Level level,
+                    final String message, final Throwable ex) {
+        log(clazz, null != method ? method.getMethodName() : null, level, message, ex);
     }
 
     /**
@@ -97,7 +107,7 @@ public class SLF4JLog implements LogSpi {
      * logging.
      */
     public boolean isLoggable(Class<?> clazz, Level level) {
-        Logger logger = getSLF4JLogger(clazz.getName());
+        final Logger logger = LoggerFactory.getLogger(clazz);
         boolean ret = true;
         if (Level.OK.equals(level)) {
             ret = logger.isDebugEnabled();
@@ -109,6 +119,13 @@ public class SLF4JLog implements LogSpi {
             ret = logger.isErrorEnabled();
         }
         return ret;
+    }
+
+    /**
+     * The caller is extracted only if the Level is OK (Debug).
+     */
+    public boolean needToInferCaller(Class<?> clazz, Level level) {
+        return LoggerFactory.getLogger(clazz).isDebugEnabled();
     }
 
     private int getLogLevel(Level level) {
@@ -123,20 +140,5 @@ public class SLF4JLog implements LogSpi {
             ret = LocationAwareLogger.ERROR_INT;
         }
         return ret;
-    }
-
-    Logger getSLF4JLogger(String key) {
-        Logger aLogger = map.get(key);
-        if (aLogger == null) {
-            aLogger = LoggerFactory.getLogger(key);
-            Logger old = map.putIfAbsent(key, aLogger);
-            aLogger = old != null ? old : aLogger;
-        }
-        return aLogger;
-    }
-
-    // Method for tests
-    ConcurrentMap<String, Logger> getMap() {
-        return map;
     }
 }

@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2014 ForgeRock AS.
  */
 package org.identityconnectors.framework.common.objects;
 
@@ -35,7 +36,7 @@ import org.identityconnectors.framework.spi.operations.SPIOperation;
 
 /**
  * Simple builder class to help facilitate creating a {@link Schema} object.
- *
+ * 
  * @author Will Droste
  * @since 1.0
  */
@@ -53,7 +54,7 @@ public final class SchemaBuilder {
 
     /**
      * Creates a SchemaBuilder for the given connector class
-     *
+     * 
      * @param connectorClass
      *            The connector for which we are building the schema.
      */
@@ -64,10 +65,10 @@ public final class SchemaBuilder {
 
     /**
      * Adds another ObjectClassInfo to the schema.
-     *
+     * 
      * Also, adds this to the set of supported classes for every operation
      * defined by the Connector.
-     *
+     * 
      * @param info
      * @throws IllegalStateException
      *             If already defined
@@ -86,6 +87,45 @@ public final class SchemaBuilder {
                 supportedObjectClassesByOperation.put(op, oclasses);
             }
             oclasses.add(info);
+        }
+    }
+
+    /**
+     * Adds another ObjectClassInfo to the schema.
+     * 
+     * Also, adds this to the set of supported classes for every operation
+     * defined by the Connector.
+     * 
+     * @param objectClassInfo
+     * @param operations
+     *            The SPI operation which use supports this
+     *            {@code objectClassInfo}
+     * 
+     * @throws IllegalStateException
+     *             If already defined
+     */
+    public void defineObjectClass(ObjectClassInfo objectClassInfo,
+            Class<? extends SPIOperation>... operations) {
+        if (operations.length > 0) {
+            Assertions.nullCheck(objectClassInfo, "objectClassInfo");
+            if (declaredObjectClasses.contains(objectClassInfo)) {
+                throw new IllegalStateException("ObjectClass already defined: "
+                        + objectClassInfo.getType());
+            }
+            declaredObjectClasses.add(objectClassInfo);
+            for (Class<? extends SPIOperation> spi : operations) {
+                for (Class<? extends APIOperation> api : FrameworkUtil.spi2apis(spi)) {
+                    Set<ObjectClassInfo> oclasses = supportedObjectClassesByOperation.get(api);
+                    if (oclasses == null) {
+                        oclasses = new HashSet<ObjectClassInfo>();
+                        supportedObjectClassesByOperation.put(api, oclasses);
+                    }
+                    oclasses.add(objectClassInfo);
+                }
+            }
+
+        } else {
+            defineObjectClass(objectClassInfo);
         }
     }
 
@@ -111,11 +151,47 @@ public final class SchemaBuilder {
     }
 
     /**
+     * Adds another OperationOptionInfo to the schema. Also, adds this to the
+     * set of supported options for operation defined.
+     * 
+     * @param operationOptionInfo
+     * @param operations
+     * 
+     * @throws IllegalStateException
+     *             If already defined
+     */
+    public void defineOperationOption(OperationOptionInfo operationOptionInfo,
+            Class<? extends SPIOperation>... operations) {
+        if (operations.length > 0) {
+            Assertions.nullCheck(operationOptionInfo, "info");
+            if (declaredOperationOptions.contains(operationOptionInfo)) {
+                throw new IllegalStateException("OperationOption already defined: "
+                        + operationOptionInfo.getName());
+            }
+            declaredOperationOptions.add(operationOptionInfo);
+            for (Class<? extends SPIOperation> spi : operations) {
+                for (Class<? extends APIOperation> op : FrameworkUtil
+                        .getDefaultSupportedOperations(connectorClass)) {
+                    Set<OperationOptionInfo> oclasses = supportedOptionsByOperation.get(op);
+                    if (oclasses == null) {
+                        oclasses = new HashSet<OperationOptionInfo>();
+                        supportedOptionsByOperation.put(op, oclasses);
+                    }
+                    oclasses.add(operationOptionInfo);
+                }
+            }
+
+        } else {
+            defineOperationOption(operationOptionInfo);
+        }
+    }
+
+    /**
      * Adds another ObjectClassInfo to the schema.
-     *
+     * 
      * Also, adds this to the set of supported classes for every operation
      * defined by the Connector.
-     *
+     * 
      * @throws IllegalStateException
      *             If already defined
      */
@@ -129,10 +205,10 @@ public final class SchemaBuilder {
 
     /**
      * Adds another OperationOptionInfo to the schema.
-     *
+     * 
      * Also, adds this to the set of supported options for every operation
      * defined by the Connector.
-     *
+     * 
      * @throws IllegalStateException
      *             If already defined
      */
@@ -147,7 +223,7 @@ public final class SchemaBuilder {
     /**
      * Adds the given ObjectClassInfo as a supported ObjectClass for the given
      * operation.
-     *
+     * 
      * @param op
      *            The SPI operation
      * @param def
@@ -181,7 +257,7 @@ public final class SchemaBuilder {
     /**
      * Removes the given ObjectClassInfo as a supported ObjectClass for the
      * given operation.
-     *
+     * 
      * @param op
      *            The SPI operation
      * @param def
@@ -215,7 +291,7 @@ public final class SchemaBuilder {
     /**
      * Adds the given OperationOptionInfo as a supported option for the given
      * operation.
-     *
+     * 
      * @param op
      *            The SPI operation
      * @param def
@@ -250,7 +326,7 @@ public final class SchemaBuilder {
     /**
      * Removes the given OperationOptionInfo as a supported option for the given
      * operation.
-     *
+     * 
      * @param op
      *            The SPI operation
      * @param def
@@ -284,7 +360,7 @@ public final class SchemaBuilder {
 
     /**
      * Clears the operation-specific supported classes.
-     *
+     * 
      * Normally, when you add an ObjectClass, using
      * {@link #defineObjectClass(ObjectClassInfo)}, it is added to all
      * operations. You may then remove those that you need using
@@ -300,7 +376,7 @@ public final class SchemaBuilder {
 
     /**
      * Clears the operation-specific supported options.
-     *
+     * 
      * Normally, when you add an OperationOptionInfo using
      * {@link #defineOperationOption(OperationOptionInfo)}, this adds the option
      * to all operations. You may then remove the option from any operation that
@@ -319,7 +395,7 @@ public final class SchemaBuilder {
     /**
      * Builds the {@link Schema} object based on the {@link ObjectClassInfo}s
      * added so far.
-     *
+     * 
      * @return new Schema object based on the info provided.
      */
     public Schema build() {
