@@ -94,7 +94,7 @@ import org.testng.annotations.Test;
 public abstract class ConnectorInfoManagerTestBase {
 
     protected static ConnectorInfo findConnectorInfo(ConnectorInfoManager manager, String version,
-            String connectorName) {
+                                                     String connectorName) {
         for (ConnectorInfo info : manager.getConnectorInfos()) {
             ConnectorKey key = info.getConnectorKey();
             if (version.equals(key.getBundleVersion())
@@ -141,13 +141,13 @@ public abstract class ConnectorInfoManagerTestBase {
         property.setValue(1);
 
         ConnectorFacade facade1 = ConnectorFacadeFactory.getInstance().newInstance(
-                        apiConfig1);
+                apiConfig1);
 
         ConnectorFacade facade2 =
                 ConnectorFacadeFactory.getInstance().newInstance(
                         info2.createDefaultAPIConfiguration());
 
-        Set<Attribute> attrs = CollectionUtil.<Attribute> newReadOnlySet();
+        Set<Attribute> attrs = CollectionUtil.<Attribute>newReadOnlySet();
         assertEquals(facade1.create(ObjectClass.ACCOUNT, attrs, null).getUidValue(), "1.0");
         assertEquals(facade2.create(ObjectClass.ACCOUNT, attrs, null).getUidValue(), "2.0");
 
@@ -193,13 +193,17 @@ public abstract class ConnectorInfoManagerTestBase {
             // platform-independent).
             assertTrue(e.getMessage().contains(errorMessageBundle.getString("filetooshort"))
                     || e.getMessage()
-                            .contains(errorMessageBundle.getString("nosuitableimagefound")));
+                    .contains(errorMessageBundle.getString("nosuitableimagefound"))
+                    || e.getMessage()
+                    .contains(errorMessageBundle.getString("nonativein")));
         } catch (RuntimeException e) {
             // Remote framework serializes UnsatisfiedLinkError as
             // RuntimeException.
             assertTrue(e.getMessage().contains(errorMessageBundle.getString("filetooshort"))
                     || e.getMessage()
-                            .contains(errorMessageBundle.getString("nosuitableimagefound")));
+                    .contains(errorMessageBundle.getString("nosuitableimagefound"))
+                    || e.getMessage()
+                    .contains(errorMessageBundle.getString("nonativein")));
         }
     }
 
@@ -207,7 +211,7 @@ public abstract class ConnectorInfoManagerTestBase {
      * Attempt to test the information from the configuration.
      *
      * @throws Exception
-     *             if there is an issue.
+     *         if there is an issue.
      */
     @Test
     public void testAPIConfiguration() throws Exception {
@@ -260,7 +264,7 @@ public abstract class ConnectorInfoManagerTestBase {
      * Attempt to test the information from the configuration.
      *
      * @throws Exception
-     *             if there is an issue.
+     *         if there is an issue.
      */
     @Test
     public void testValidate() throws Exception {
@@ -306,10 +310,9 @@ public abstract class ConnectorInfoManagerTestBase {
     }
 
     /**
-     * Main purpose of this is to test searching with many results and that we
-     * can properly handle stopping in the middle of this. There's a bunch of
-     * code in the remote stuff that is there to handle this in particular that
-     * we want to excercise.
+     * Main purpose of this is to test searching with many results and that we can properly handle stopping in the
+     * middle of this. There's a bunch of code in the remote stuff that is there to handle this in particular that we
+     * want to excercise.
      */
     @Test
     public void testSearchWithManyResults() throws Exception {
@@ -433,14 +436,13 @@ public abstract class ConnectorInfoManagerTestBase {
         for (int j = 0; j < 50; j++) {
             attrs.add(AttributeBuilder.build("myattributename" + j, "myattributevalue" + j));
         }
-        return new Object[][] { { attrs } };
+        return new Object[][]{{attrs}};
     }
 
     /**
-     * Main purpose of this is to test sync with many results and that we can
-     * properly handle stopping in the middle of this. There's a bunch of code
-     * in the remote stuff that is there to handle this in particular that we
-     * want to excercise.
+     * Main purpose of this is to test sync with many results and that we can properly handle stopping in the middle of
+     * this. There's a bunch of code in the remote stuff that is there to handle this in particular that we want to
+     * excercise.
      */
     @Test
     public void testSyncWithManyResults() throws Exception {
@@ -503,7 +505,7 @@ public abstract class ConnectorInfoManagerTestBase {
     @Test(dataProvider = "statefulConnectors")
     public void testSyncTokenResults(ConnectorFacade facade) {
         Uid uid =
-                facade.create(ObjectClass.ACCOUNT, CollectionUtil.<Attribute> newReadOnlySet(),
+                facade.create(ObjectClass.ACCOUNT, CollectionUtil.<Attribute>newReadOnlySet(),
                         null);
 
         SyncToken latest = facade.getLatestSyncToken(ObjectClass.ACCOUNT);
@@ -610,7 +612,7 @@ public abstract class ConnectorInfoManagerTestBase {
         OperationOptionsBuilder builder = new OperationOptionsBuilder();
         builder.setOption("testPooling", "true");
         OperationOptions options = builder.build();
-        Set<Attribute> attrs = CollectionUtil.<Attribute> newReadOnlySet();
+        Set<Attribute> attrs = CollectionUtil.<Attribute>newReadOnlySet();
         assertEquals(facade1.create(ObjectClass.ACCOUNT, attrs, options).getUidValue(), "1");
         assertEquals(facade1.create(ObjectClass.ACCOUNT, attrs, options).getUidValue(), "2");
         assertEquals(facade1.create(ObjectClass.ACCOUNT, attrs, options).getUidValue(), "3");
@@ -641,7 +643,7 @@ public abstract class ConnectorInfoManagerTestBase {
 
         ConnectorFacade facade1 = ConnectorFacadeFactory.getInstance().newInstance(config);
 
-        Set<Attribute> attrs = CollectionUtil.<Attribute> newReadOnlySet();
+        Set<Attribute> attrs = CollectionUtil.<Attribute>newReadOnlySet();
         String uid = facade1.create(ObjectClass.ACCOUNT, attrs, null).getUidValue();
         assertEquals(facade1.create(ObjectClass.ACCOUNT, attrs, null).getUidValue(), uid);
         assertEquals(facade1.create(ObjectClass.ACCOUNT, attrs, null).getUidValue(), uid);
@@ -692,7 +694,7 @@ public abstract class ConnectorInfoManagerTestBase {
         ConnectorObject co = facade.getObject(ObjectClass.ACCOUNT, new Uid("0"), null);
         Object value = AttributeUtil.getSingleValue(co.getAttributeByName("emails"));
         assertTrue(value instanceof Map);
-        assertTrue(((Map)value).get("usage") instanceof List);
+        assertTrue(((Map) value).get("usage") instanceof List);
     }
 
     @Test
@@ -808,7 +810,7 @@ public abstract class ConnectorInfoManagerTestBase {
 
         ConnectorFacade facade1 = ConnectorFacadeFactory.getInstance().newInstance(config);
 
-        Set<Attribute> attrs = CollectionUtil.<Attribute> newReadOnlySet();
+        Set<Attribute> attrs = CollectionUtil.<Attribute>newReadOnlySet();
         try {
             facade1.create(ObjectClass.ACCOUNT, attrs, opBuilder.build()).getUidValue();
             fail("expected timeout");
@@ -832,7 +834,7 @@ public abstract class ConnectorInfoManagerTestBase {
     @Test(dataProvider = "statefulConnectors")
     public void testMVCCControl(AbstractConnectorFacade facade) {
         Uid uid =
-                facade.create(ObjectClass.ACCOUNT, CollectionUtil.<Attribute> newReadOnlySet(),
+                facade.create(ObjectClass.ACCOUNT, CollectionUtil.<Attribute>newReadOnlySet(),
                         null);
 
         if (facade instanceof LocalConnectorFacadeImpl) {
@@ -886,7 +888,7 @@ public abstract class ConnectorInfoManagerTestBase {
 
         APIConfiguration config = info.createDefaultAPIConfiguration();
 
-        test.add(new Object[] { ConnectorFacadeFactory.getInstance().newInstance(config) });
+        test.add(new Object[]{ConnectorFacadeFactory.getInstance().newInstance(config)});
 
         info =
                 findConnectorInfo(manager, "1.0.0.0",
@@ -898,7 +900,7 @@ public abstract class ConnectorInfoManagerTestBase {
         config.getConnectorPoolConfiguration().setMinIdle(0);
         config.getConnectorPoolConfiguration().setMaxIdle(0);
 
-        test.add(new Object[] { ConnectorFacadeFactory.getInstance().newInstance(config) });
+        test.add(new Object[]{ConnectorFacadeFactory.getInstance().newInstance(config)});
 
         return test.iterator();
     }

@@ -26,9 +26,12 @@ import java.net.URL;
 import java.util.List;
 
 import org.identityconnectors.common.Version;
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
+import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.api.ConnectorInfoManager;
 import org.identityconnectors.framework.api.ConnectorInfoManagerFactory;
+import org.identityconnectors.framework.common.FrameworkUtil;
 import org.identityconnectors.framework.common.FrameworkUtilTestHelpers;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.testng.Assert;
@@ -38,16 +41,28 @@ import org.testng.annotations.Test;
 public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase {
 
     /**
-     * Tests that the framework refuses to load a bundle that requests
-     * a framework version newer than the one present.
+     * Setup logging for the {@link LocalConnectorInfoManagerTests}.
+     */
+    private static final Log logger = Log.getLog(LocalConnectorInfoManagerTests.class);
+
+    /**
+     * Tests that the framework refuses to load a bundle that requests a framework version newer than the one present.
      */
     @Test(priority = -1)
     public void testCheckVersion() throws Exception {
         // The test bundles require framework 1.0, so pretend the framework is older.
         FrameworkUtilTestHelpers.setFrameworkVersion(Version.parse("0.5"));
         try {
-            getConnectorInfoManager();
-            Assert.fail();
+            ConnectorInfoManager manager = getConnectorInfoManager();
+            try {
+                //We should not get here. If we get here then display some diagnostic information.
+                for (ConnectorInfo info : manager.getConnectorInfos()) {
+                    logger.error("TEST FAIL: Found connector key: {0}", info.getConnectorKey());
+                }
+            } finally {
+                Assert.fail("Require framework 1.0, so pretend the framework is 0.5 but found: " + FrameworkUtil
+                        .getFrameworkVersion());
+            }
         } catch (ConfigurationException e) {
             if (!e.getMessage().contains("unrecognized framework version")) {
                 Assert.fail();
@@ -57,6 +72,7 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
 
     /**
      * To be overridden by subclasses to get different ConnectorInfoManagers
+     *
      * @return
      * @throws Exception
      */
