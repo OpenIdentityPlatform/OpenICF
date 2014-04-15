@@ -427,7 +427,7 @@ public class ScriptedConnectorTest {
         int index = 10;
         for (SyncDelta delta : result) {
             Assert.assertEquals(index++, delta.getToken().getValue());
-            if (((int) delta.getToken().getValue()) % 2 == 0) {
+            if (((Integer) delta.getToken().getValue()) % 2 == 0) {
                 Assert.assertEquals(delta.getObject().getObjectClass(), ObjectClass.ACCOUNT);
             } else {
                 Assert.assertEquals(delta.getObject().getObjectClass(), ObjectClass.GROUP);

@@ -85,7 +85,7 @@ class TestHelper {
         return uid;
     }
 
-    static Map<String, Objects> getConnectorObjectTemplate() {
+    static Map<String, Object> getConnectorObjectTemplate() {
 
         return [
                 attributeString                    : "value",

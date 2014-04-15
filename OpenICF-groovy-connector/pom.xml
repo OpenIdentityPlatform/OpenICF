@@ -40,8 +40,8 @@
     </description>
     <properties>
         <!-- maven-compiler-plugin -->
-        <maven.compiler.target>1.7</maven.compiler.target>
-        <maven.compiler.source>1.7</maven.compiler.source>
+        <maven.compiler.target>1.5</maven.compiler.target>
+        <maven.compiler.source>1.6</maven.compiler.source>
         <connectorPackage>org.forgerock.openicf.connectors</connectorPackage>
         <connectorClass>ScriptedConnector</connectorClass>
         <openicf.osgi.import.defaults>
@@ -88,8 +88,8 @@
         <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>tomcat-jdbc</artifactId>
-            <version>8.0.5</version>
-            <!--version>7.0.52</version-->
+            <!--version>8.0.5</version-->
+            <version>7.0.52</version>
         </dependency>
 
         <!-- Scripted REST -->
