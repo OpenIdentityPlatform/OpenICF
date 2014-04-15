@@ -44,9 +44,7 @@ import org.identityconnectors.framework.common.objects.filter.OrFilter;
 import org.identityconnectors.framework.common.objects.filter.StartsWithFilter;
 
 /**
- * A MapFilterVisitor converts a
- * {@link org.identityconnectors.framework.common.objects.filter.Filter} to
- * {@link Map}.
+ * A MapFilterVisitor converts a {@link org.identityconnectors.framework.common.objects.filter.Filter} to {@link Map}.
  *
  * @author Gael Allioux <gael.allioux@forgerock.com>
  */

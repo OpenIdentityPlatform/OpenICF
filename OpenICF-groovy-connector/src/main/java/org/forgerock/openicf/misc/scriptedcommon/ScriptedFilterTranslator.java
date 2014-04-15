@@ -24,10 +24,6 @@
 
 package org.forgerock.openicf.misc.scriptedcommon;
 
-import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.and;
-import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.not;
-import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.or;
-
 import org.identityconnectors.framework.common.objects.filter.AbstractFilterTranslator;
 import org.identityconnectors.framework.common.objects.filter.ContainsAllValuesFilter;
 import org.identityconnectors.framework.common.objects.filter.ContainsFilter;
@@ -40,10 +36,10 @@ import org.identityconnectors.framework.common.objects.filter.LessThanFilter;
 import org.identityconnectors.framework.common.objects.filter.LessThanOrEqualFilter;
 import org.identityconnectors.framework.common.objects.filter.StartsWithFilter;
 
+import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.*;
+
 /**
- *
  * @author Gael Allioux <gael.allioux@forgerock.com>
- *
  */
 public class ScriptedFilterTranslator extends AbstractFilterTranslator<Filter> {
 
@@ -62,7 +58,7 @@ public class ScriptedFilterTranslator extends AbstractFilterTranslator<Filter> {
      */
     @Override
     protected Filter createContainsAllValuesExpression(final ContainsAllValuesFilter filter,
-            boolean not) {
+                                                       boolean not) {
         return not ? not(filter) : filter;
     }
 
@@ -79,7 +75,7 @@ public class ScriptedFilterTranslator extends AbstractFilterTranslator<Filter> {
      */
     @Override
     protected Filter createEndsWithExpression(final EndsWithFilter filter, boolean not) {
-        return super.createEndsWithExpression(filter, not);
+        return not ? not(filter) : filter;
     }
 
     /**
@@ -103,7 +99,7 @@ public class ScriptedFilterTranslator extends AbstractFilterTranslator<Filter> {
      */
     @Override
     protected Filter createGreaterThanOrEqualExpression(final GreaterThanOrEqualFilter filter,
-            boolean not) {
+                                                        boolean not) {
         return not ? not(filter) : filter;
     }
 

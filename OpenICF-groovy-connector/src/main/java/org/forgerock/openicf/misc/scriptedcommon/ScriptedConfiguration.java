@@ -23,11 +23,8 @@
  */
 package org.forgerock.openicf.misc.scriptedcommon;
 
-import static org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase.LOGGER;
-
 import java.io.File;
 import java.net.URL;
-import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,13 +32,12 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
-import org.identityconnectors.common.ReflectionUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.objects.ConnectorMessages;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.spi.AbstractConfiguration;
+import org.identityconnectors.framework.spi.ConfigurationProperty;
 import org.identityconnectors.framework.spi.StatefulConfiguration;
 
 import groovy.lang.Binding;
@@ -51,13 +47,13 @@ import groovy.util.DelegatingScript;
 import groovy.util.GroovyScriptEngine;
 import groovy.util.ResourceException;
 import groovy.util.ScriptException;
+import static org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase.LOGGER;
 
 /**
- * Extends the {@link AbstractConfiguration} class to provide all the necessary
- * parameters to initialize the Scripted Connector.
+ * Extends the {@link AbstractConfiguration} class to provide all the necessary parameters to initialize the Scripted
+ * Connector.
  *
  * @author Gael Allioux <gael.allioux@forgerock.com>
- *
  */
 public class ScriptedConfiguration extends AbstractConfiguration implements StatefulConfiguration {
 
@@ -68,37 +64,15 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     private static final String DOT_STAR = ".*";
     private static final String EMPTY_STRING = "";
     private final CompilerConfiguration config;
+
     {
         config = new CompilerConfiguration(CompilerConfiguration.DEFAULT);
         config.setSourceEncoding("UTF-8");
     }
 
     // =======================================================================
-    // Scripts
+    // Operation Script Files
     // =======================================================================
-
-    /**
-     * Should password be passed to scripts in clear text?
-     */
-    private boolean clearTextPasswordToScript = true;
-
-    /**
-     * Return the clearTextPasswordToScript boolean
-     *
-     * @return value
-     */
-    public boolean getClearTextPasswordToScript() {
-        return clearTextPasswordToScript;
-    }
-
-    /**
-     * Set the clearTextPasswordToScript value
-     *
-     * @param value
-     */
-    public void setClearTextPasswordToScript(boolean value) {
-        this.clearTextPasswordToScript = value;
-    }
 
     /**
      * Authenticate script filename
@@ -110,6 +84,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      *
      * @return value
      */
+    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts")
     public String getAuthenticateScriptFileName() {
         return authenticateScriptFileName;
     }
@@ -133,6 +108,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      *
      * @return value
      */
+    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts")
     public String getCreateScriptFileName() {
         return createScriptFileName;
     }
@@ -156,6 +132,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      *
      * @return updateScriptFileName value
      */
+    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts")
     public String getUpdateScriptFileName() {
         return updateScriptFileName;
     }
@@ -179,6 +156,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      *
      * @return deleteScriptFileName value
      */
+    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts")
     public String getDeleteScriptFileName() {
         return deleteScriptFileName;
     }
@@ -202,6 +180,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      *
      * @return resolveUsernameScriptFileName value
      */
+    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts")
     public String getResolveUsernameScriptFileName() {
         return resolveUsernameScriptFileName;
     }
@@ -216,29 +195,6 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     }
 
     /**
-     * ScriptOnConnector script FileName
-     */
-    private String scriptOnConnectorScriptFileName = null;
-
-    /**
-     * Return the ScriptOnConnector script FileName
-     *
-     * @return scriptOnConnectorScriptFileName value
-     */
-    public String getScriptOnConnectorScriptFileName() {
-        return scriptOnConnectorScriptFileName;
-    }
-
-    /**
-     * Set the ScriptOnConnector script FileName
-     *
-     * @param value
-     */
-    public void setScriptOnConnectorScriptFileName(String value) {
-        this.scriptOnConnectorScriptFileName = value;
-    }
-
-    /**
      * ScriptOnResource script FileName
      */
     private String scriptOnResourceScriptFileName = null;
@@ -248,6 +204,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      *
      * @return scriptOnResourceScriptFileName value
      */
+    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts")
     public String getScriptOnResourceScriptFileName() {
         return scriptOnResourceScriptFileName;
     }
@@ -271,6 +228,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      *
      * @return searchScriptFileName value
      */
+    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts")
     public String getSearchScriptFileName() {
         return searchScriptFileName;
     }
@@ -294,6 +252,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      *
      * @return syncScriptFileName value
      */
+    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts")
     public String getSyncScriptFileName() {
         return syncScriptFileName;
     }
@@ -317,6 +276,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      *
      * @return schemaScriptFileName value
      */
+    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts")
     public String getSchemaScriptFileName() {
         return schemaScriptFileName;
     }
@@ -340,6 +300,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      *
      * @return testScriptFileName value
      */
+    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts")
     public String getTestScriptFileName() {
         return testScriptFileName;
     }
@@ -353,10 +314,31 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         this.testScriptFileName = value;
     }
 
+
+    // =======================================================================
+    // Groovy Engine configuration
+    // =======================================================================
+
+
     /**
-     * Gets the currently configured warning level. See WarningMessage for level
-     * details.
+     * Gets extensions used to find a groovy files
+     *
+     * @return
      */
+    @ConfigurationProperty(groupMessageKey = "groovy.engine")
+    public String[] getScriptExtensions() {
+        return config.getScriptExtensions().toArray(new String[config.getScriptExtensions().size()]);
+    }
+
+    public void setScriptExtensions(String[] scriptExtensions) {
+        config.setScriptExtensions(
+                null != scriptExtensions ? new HashSet<String>(Arrays.asList(scriptExtensions)) : null);
+    }
+
+    /**
+     * Gets the currently configured warning level. See WarningMessage for level details.
+     */
+    @ConfigurationProperty(groupMessageKey = "groovy.engine")
     public int getWarningLevel() {
         return config.getWarningLevel();
     }
@@ -371,6 +353,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     /**
      * Gets the currently configured source file encoding.
      */
+    @ConfigurationProperty(groupMessageKey = "groovy.engine")
     public String getSourceEncoding() {
         return config.getSourceEncoding();
     }
@@ -385,6 +368,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     /**
      * Gets the target directory for writing classes.
      */
+    @ConfigurationProperty(groupMessageKey = "groovy.engine")
     public File getTargetDirectory() {
         return config.getTargetDirectory();
     }
@@ -399,6 +383,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     /**
      * @return the classpath
      */
+    @ConfigurationProperty(groupMessageKey = "groovy.engine")
     public String[] getClasspath() {
         if (null != config.getClasspath()) {
             return config.getClasspath().toArray(new String[config.getClasspath().size()]);
@@ -416,6 +401,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     /**
      * Returns true if verbose operation has been requested.
      */
+    @ConfigurationProperty(groupMessageKey = "groovy.engine")
     public boolean getVerbose() {
         return config.getVerbose();
     }
@@ -430,6 +416,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     /**
      * Returns true if debugging operation has been requested.
      */
+    @ConfigurationProperty(groupMessageKey = "groovy.engine")
     public boolean getDebug() {
         return config.getDebug();
     }
@@ -444,48 +431,50 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     /**
      * Returns the requested error tolerance.
      */
+    @ConfigurationProperty(groupMessageKey = "groovy.engine")
     public int getTolerance() {
         return config.getTolerance();
     }
 
     /**
-     * Sets the error tolerance, which is the number of non-fatal errors (per
-     * unit) that should be tolerated before compilation is aborted.
+     * Sets the error tolerance, which is the number of non-fatal errors (per unit) that should be tolerated before
+     * compilation is aborted.
      */
     public void setTolerance(int tolerance) {
         config.setTolerance(tolerance);
     }
 
     /**
-     * Gets the name of the base class for scripts. It must be a subclass of
-     * Script.
+     * Gets the name of the base class for scripts. It must be a subclass of Script.
      */
+    @ConfigurationProperty(groupMessageKey = "groovy.engine")
     public String getScriptBaseClass() {
         return config.getScriptBaseClass();
     }
 
     /**
-     * Sets the name of the base class for scripts. It must be a subclass of
-     * Script.
+     * Sets the name of the base class for scripts. It must be a subclass of Script.
      */
     public void setScriptBaseClass(String scriptBaseClass) {
         config.setScriptBaseClass(scriptBaseClass);
+    }
+
+    @ConfigurationProperty(groupMessageKey = "groovy.engine")
+    public boolean getRecompileGroovySource() {
+        return config.getRecompileGroovySource();
     }
 
     public void setRecompileGroovySource(boolean recompile) {
         config.setRecompileGroovySource(recompile);
     }
 
-    public boolean getRecompileGroovySource() {
-        return config.getRecompileGroovySource();
+    @ConfigurationProperty(groupMessageKey = "groovy.engine")
+    public int getMinimumRecompilationInterval() {
+        return config.getMinimumRecompilationInterval();
     }
 
     public void setMinimumRecompilationInterval(int time) {
         config.setMinimumRecompilationInterval(time);
-    }
-
-    public int getMinimumRecompilationInterval() {
-        return config.getMinimumRecompilationInterval();
     }
 
     /**
@@ -493,6 +482,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      *
      * @return a list of global AST transformation fully qualified class names
      */
+    @ConfigurationProperty(groupMessageKey = "groovy.engine")
     public String[] getDisabledGlobalASTTransformations() {
         if (null != config.getDisabledGlobalASTTransformations()) {
             return config.getDisabledGlobalASTTransformations().toArray(new String[0]);
@@ -513,6 +503,10 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         }
     }
 
+    // =======================================================================
+    // Other Configuration Properties
+    // =======================================================================
+
     public void release() {
         groovyScriptEngine = null;
         loggerCache.clear();
@@ -528,7 +522,6 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         loadScript(getDeleteScriptFileName());
         loadScript(getResolveUsernameScriptFileName());
         loadScript(getSchemaScriptFileName());
-        loadScript(getScriptOnConnectorScriptFileName());
         loadScript(getScriptOnResourceScriptFileName());
         loadScript(getSearchScriptFileName());
         loadScript(getSyncScriptFileName());
@@ -537,13 +530,13 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         logger.info("Scripts are loaded");
     }
 
-    private static ConcurrentMap<String, Logger> loggerCache =
-            new ConcurrentHashMap<String, Logger>(11);
+    private static ConcurrentMap<String, Log> loggerCache =
+            new ConcurrentHashMap<String, Log>(11);
 
-    Object evaluate(String scriptName, Binding binding, Object delegate) {
+    Object evaluate(String scriptName, Binding binding, Object delegate) throws Exception {
         try {
             Script scr = getGroovyScriptEngine().createScript(scriptName, binding);
-            binding.setVariable(LOGGER, getLogger(scr.getClass(), 12));
+            binding.setVariable(LOGGER, getLogger(scr.getClass()));
             if (scr instanceof DelegatingScript && null != delegate) {
                 ((DelegatingScript) scr).setDelegate(delegate);
             }
@@ -553,19 +546,6 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         } catch (ScriptException e) {
             throw ConnectorException.wrap(e);
         }
-    }
-
-    Logger getLogger(final Class<?> clazz, int depth) {
-        final String key = clazz.getName();
-        Logger logger = loggerCache.get(key);
-        if (null == logger) {
-            logger = new LoggerImpl(clazz, getConnectorMessages(), depth);
-            Logger l = loggerCache.putIfAbsent(key, logger);
-            if (l != null) {
-                logger = l;
-            }
-        }
-        return logger;
     }
 
     Class loadScript(String scriptName) {
@@ -579,6 +559,19 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
             }
         }
         return null;
+    }
+
+    private Log getLogger(final Class<?> clazz) {
+        final String key = clazz.getName();
+        Log logger = loggerCache.get(key);
+        if (null == logger) {
+            logger = Log.getLog(clazz);
+            Log l = loggerCache.putIfAbsent(key, logger);
+            if (l != null) {
+                logger = l;
+            }
+        }
+        return logger;
     }
 
     private GroovyScriptEngine groovyScriptEngine = null;
@@ -625,182 +618,6 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     }
 
     protected String[] getImports() {
-        return new String[] { ConnectorObject.class.getPackage().getName() + ".*" };
-    }
-
-    protected static class LoggerImpl implements Logger {
-
-        private static final String DFLT = "__IGNORE__";
-        private final Class<?> clazz;
-        private final ConnectorMessages connectorMessages;
-        private final Log log;
-        private final Integer methodDepth;
-
-        protected LoggerImpl(final Class<?> clazz, final ConnectorMessages messages, int depth) {
-            this.clazz = clazz;
-            log = Log.getLog(this.clazz);
-            connectorMessages = messages;
-            methodDepth = depth;
-        }
-
-        protected Log getLog() {
-            return log;
-        }
-
-        /**
-         * Logs based on the parameters given. Uses the format parameter inside
-         * {@link java.text.MessageFormat}.
-         *
-         * @param level
-         *            the logging level at which to write the message.
-         * @param ex
-         *            [optional] exception stack trace to log.
-         * @param format
-         *            [optional] create a message of a particular format.
-         * @param args
-         *            [optional] parameters to the format string.
-         */
-        public void log(final Log.Level level, final Throwable ex, final String key,
-                final String format, final Object... args) {
-            if (getLog().isLoggable(level)) {
-                String message = format;
-                if (key != null) {
-                    String messageLocal = connectorMessages.format(key, DFLT, args);
-                    if (!DFLT.equals(messageLocal)) {
-                        // MessageKey was found
-                        message = messageLocal;
-                    } else {
-                        // MessageKey not was found
-                        if (format != null && args != null) {
-                            message = MessageFormat.format(format, args);
-                        } else if (format == null && ex != null) {
-                            message = ex.getLocalizedMessage();
-                        } else if (format == null) {
-                            message = key;
-                        }
-                    }
-                } else {
-                    if (format != null && args != null) {
-                        message = MessageFormat.format(format, args);
-                    } else if (format == null && ex != null) {
-                        message = ex.getLocalizedMessage();
-                    }
-                }
-                final String methodName = ReflectionUtil.getMethodName(methodDepth);
-                getLog().log(clazz, methodName, level, message, ex);
-            }
-        }
-
-        public boolean isDebug() {
-            return getLog().isOk();
-        }
-
-        public boolean isInfo() {
-            return getLog().isInfo();
-        }
-
-        public boolean isWarning() {
-            return getLog().isWarning();
-        }
-
-        public boolean isError() {
-            return getLog().isError();
-        }
-
-        public void debug(Throwable ex, String format, Object... args) {
-            log(Log.Level.OK, ex, null, format, args);
-        }
-
-        public void debugLocale(Throwable ex, String key, Object... args) {
-            log(Log.Level.OK, ex, key, null, args);
-        }
-
-        public void debugLocale(Throwable ex, String key, String defaultMessage, Object... args) {
-            log(Log.Level.OK, ex, key, defaultMessage, args);
-        }
-
-        public void info(Throwable ex, String format, Object... args) {
-            log(Log.Level.INFO, ex, null, format, args);
-        }
-
-        public void infoLocale(Throwable ex, String key, Object... args) {
-            log(Log.Level.INFO, ex, key, null, args);
-        }
-
-        public void infoLocale(Throwable ex, String key, String defaultMessage, Object... args) {
-            log(Log.Level.INFO, ex, key, defaultMessage, args);
-        }
-
-        public void warn(Throwable ex, String format, Object... args) {
-            log(Log.Level.WARN, ex, null, format, args);
-        }
-
-        public void warnLocale(Throwable ex, String key, Object... args) {
-            log(Log.Level.WARN, ex, key, null, args);
-        }
-
-        public void warnLocale(Throwable ex, String key, String defaultMessage, Object... args) {
-            log(Log.Level.WARN, ex, key, defaultMessage, args);
-        }
-
-        public void error(Throwable ex, String format, Object... args) {
-            log(Log.Level.ERROR, ex, null, format, args);
-        }
-
-        public void errorLocale(Throwable ex, String key, Object... args) {
-            log(Log.Level.ERROR, ex, key, null, args);
-        }
-
-        public void errorLocale(Throwable ex, String key, String defaultMessage, Object... args) {
-            log(Log.Level.ERROR, ex, key, defaultMessage, args);
-        }
-
-        public void debug(String format, Object... args) {
-            log(Log.Level.OK, null, null, format, args);
-        }
-
-        public void debugLocale(String key, Object... args) {
-            log(Log.Level.OK, null, key, null, args);
-        }
-
-        public void debugLocale(String key, String defaultMessage, Object... args) {
-            log(Log.Level.OK, null, key, defaultMessage, args);
-        }
-
-        public void info(String format, Object... args) {
-            log(Log.Level.INFO, null, null, format, args);
-        }
-
-        public void infoLocale(String key, Object... args) {
-            log(Log.Level.INFO, null, key, null, args);
-        }
-
-        public void infoLocale(String key, String defaultMessage, Object... args) {
-            log(Log.Level.INFO, null, key, defaultMessage, args);
-        }
-
-        public void warn(String format, Object... args) {
-            log(Log.Level.WARN, null, null, format, args);
-        }
-
-        public void warnLocale(String key, Object... args) {
-            log(Log.Level.WARN, null, key, null, args);
-        }
-
-        public void warnLocale(String key, String defaultMessage, Object... args) {
-            log(Log.Level.WARN, null, key, defaultMessage, args);
-        }
-
-        public void error(String format, Object... args) {
-            log(Log.Level.ERROR, null, null, format, args);
-        }
-
-        public void errorLocale(String key, Object... args) {
-            log(Log.Level.ERROR, null, key, null, args);
-        }
-
-        public void errorLocale(String key, String defaultMessage, Object... args) {
-            log(Log.Level.ERROR, null, key, defaultMessage, args);
-        }
+        return new String[]{ConnectorObject.class.getPackage().getName() + ".*"};
     }
 }

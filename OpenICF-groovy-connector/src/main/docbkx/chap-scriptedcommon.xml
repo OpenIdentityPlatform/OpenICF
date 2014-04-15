@@ -60,6 +60,9 @@
 
  <xinclude:include href="sec-config-scriptedconnector.xml" />
  <xinclude:include href="sec-config-scriptedpoolableconnector.xml" />
+ <xinclude:include href="sec-config-scriptedcrestconnector.xml" />
+ <xinclude:include href="sec-config-scriptedrestconnector.xml" />
+ <xinclude:include href="sec-config-scriptedsqlconnector.xml" />
  <!--xinclude:include href="sec-schema-scriptedcommon.xml" >
      <fallback>
          <para>

@@ -39,32 +39,29 @@ import org.identityconnectors.framework.common.objects.filter.StartsWithFilter;
 
 /**
  * A visitor of {@code Filter}s, in the style of the visitor design pattern.
- * <p>
- * Classes implementing this interface can query filters in a type-safe manner.
- * When a visitor is passed to a filter's accept method, the corresponding visit
- * method most applicable to that filter is invoked.
+ * <p/>
+ * Classes implementing this interface can query filters in a type-safe manner. When a visitor is passed to a filter's
+ * accept method, the corresponding visit method most applicable to that filter is invoked.
  *
  * @param <R>
- *            The return type of this visitor's methods. Use
- *            {@link java.lang.Void} for visitors that do not need to return
- *            results.
+ *         The return type of this visitor's methods. Use {@link java.lang.Void} for visitors that do not need to return
+ *         results.
  * @param <P>
- *            The type of the additional parameter to this visitor's methods.
- *            Use {@link java.lang.Void} for visitors that do not need an
- *            additional parameter.
+ *         The type of the additional parameter to this visitor's methods. Use {@link java.lang.Void} for visitors that
+ *         do not need an additional parameter.
  */
 public interface FilterVisitor<P, R> {
 
     /**
      * Visits an {@code and} filter.
-     * <p>
-     * <b>Implementation note</b>: for the purposes of matching, an empty
-     * sub-filter list should always evaluate to {@code true}.
+     * <p/>
+     * <b>Implementation note</b>: for the purposes of matching, an empty sub-filter list should always evaluate to
+     * {@code true}.
      *
      * @param parameter
-     *            A visitor specified parameter.
+     *         A visitor specified parameter.
      * @param subFilters
-     *            The unmodifiable list of sub-filters.
+     *         The unmodifiable list of sub-filters.
      * @return Returns a visitor specified result.
      */
     public R visit(P parameter, AndFilter subFilters);
@@ -73,9 +70,9 @@ public interface FilterVisitor<P, R> {
      * Visits a {@code contains all} filter.
      *
      * @param parameter
-     *            A visitor specified parameter.
+     *         A visitor specified parameter.
      * @param filter
-     *            The value assertion.
+     *         The value assertion.
      * @return Returns a visitor specified result.
      */
     public R visit(P parameter, ContainsAllValuesFilter filter);
@@ -84,9 +81,9 @@ public interface FilterVisitor<P, R> {
      * Visits a {@code contains} filter.
      *
      * @param parameter
-     *            A visitor specified parameter.
+     *         A visitor specified parameter.
      * @param filter
-     *            The value assertion.
+     *         The value assertion.
      * @return Returns a visitor specified result.
      */
     public R visit(P parameter, ContainsFilter filter);
@@ -95,9 +92,9 @@ public interface FilterVisitor<P, R> {
      * Visits a {@code ends with} filter.
      *
      * @param parameter
-     *            A visitor specified parameter.
+     *         A visitor specified parameter.
      * @param filter
-     *            The value assertion.
+     *         The value assertion.
      * @return Returns a visitor specified result.
      */
     public R visit(P parameter, EndsWithFilter filter);
@@ -106,9 +103,9 @@ public interface FilterVisitor<P, R> {
      * Visits a {@code equality} filter.
      *
      * @param parameter
-     *            A visitor specified parameter.
+     *         A visitor specified parameter.
      * @param filter
-     *            The value assertion.
+     *         The value assertion.
      * @return Returns a visitor specified result.
      */
     public R visit(P parameter, EqualsFilter filter);
@@ -117,9 +114,9 @@ public interface FilterVisitor<P, R> {
      * Visits a {@code greater than} filter.
      *
      * @param parameter
-     *            A visitor specified parameter.
+     *         A visitor specified parameter.
      * @param filter
-     *            The value assertion.
+     *         The value assertion.
      * @return Returns a visitor specified result.
      */
     public R visit(P parameter, GreaterThanFilter filter);
@@ -128,9 +125,9 @@ public interface FilterVisitor<P, R> {
      * Visits a {@code greater than or equal to} filter.
      *
      * @param parameter
-     *            A visitor specified parameter.
+     *         A visitor specified parameter.
      * @param filter
-     *            The value assertion.
+     *         The value assertion.
      * @return Returns a visitor specified result.
      */
     public R visit(P parameter, GreaterThanOrEqualFilter filter);
@@ -139,9 +136,9 @@ public interface FilterVisitor<P, R> {
      * Visits a {@code less than} filter.
      *
      * @param parameter
-     *            A visitor specified parameter.
+     *         A visitor specified parameter.
      * @param filter
-     *            The value assertion.
+     *         The value assertion.
      * @return Returns a visitor specified result.
      */
     public R visit(P parameter, LessThanFilter filter);
@@ -150,9 +147,9 @@ public interface FilterVisitor<P, R> {
      * Visits a {@code less than or equal to} filter.
      *
      * @param parameter
-     *            A visitor specified parameter.
+     *         A visitor specified parameter.
      * @param filter
-     *            The value assertion.
+     *         The value assertion.
      * @return Returns a visitor specified result.
      */
     public R visit(P parameter, LessThanOrEqualFilter filter);
@@ -161,23 +158,23 @@ public interface FilterVisitor<P, R> {
      * Visits a {@code not} filter.
      *
      * @param parameter
-     *            A visitor specified parameter.
+     *         A visitor specified parameter.
      * @param subFilter
-     *            The sub-filter.
+     *         The sub-filter.
      * @return Returns a visitor specified result.
      */
     public R visit(P parameter, NotFilter subFilter);
 
     /**
      * Visits an {@code or} filter.
-     * <p>
-     * <b>Implementation note</b>: for the purposes of matching, an empty
-     * sub-filter list should always evaluate to {@code false}.
+     * <p/>
+     * <b>Implementation note</b>: for the purposes of matching, an empty sub-filter list should always evaluate to
+     * {@code false}.
      *
      * @param parameter
-     *            A visitor specified parameter.
+     *         A visitor specified parameter.
      * @param subFilters
-     *            The unmodifiable list of sub-filters.
+     *         The unmodifiable list of sub-filters.
      * @return Returns a visitor specified result.
      */
     public R visit(P parameter, OrFilter subFilters);
@@ -186,9 +183,9 @@ public interface FilterVisitor<P, R> {
      * Visits a {@code starts with} filter.
      *
      * @param parameter
-     *            A visitor specified parameter.
+     *         A visitor specified parameter.
      * @param filter
-     *            The value assertion.
+     *         The value assertion.
      * @return Returns a visitor specified result.
      */
     public R visit(P parameter, StartsWithFilter filter);

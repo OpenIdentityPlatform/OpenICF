@@ -62,6 +62,7 @@ class ICFObjectBuilder extends AbstractICFBuilder<Void> {
     static private <B> AbstractICFBuilder<B> delegateToTag(Class<? extends AbstractICFBuilder<B>> clazz, Closure body, B builder) {
         AbstractICFBuilder<B> tag = (AbstractICFBuilder<B>) clazz.newInstance(builder)
         def clone = body.rehydrate(tag, this, this)
+        clone.resolveStrategy = Closure.DELEGATE_FIRST
         clone()
         return tag
     }

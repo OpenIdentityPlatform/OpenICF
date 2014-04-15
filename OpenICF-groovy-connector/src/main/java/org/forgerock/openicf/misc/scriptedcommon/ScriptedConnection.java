@@ -21,13 +21,13 @@
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
+
 package org.forgerock.openicf.misc.scriptedcommon;
 
 /**
- *
  * @author Gael Allioux <gael.allioux@forgerock.com>
  */
-public interface ScriptedConnection {
+public interface ScriptedConnection<T> {
 
     /**
      * Release internal resources.
@@ -40,11 +40,11 @@ public interface ScriptedConnection {
     public void test();
 
     /**
-     * The connection needs to provide a generic handler object
-     * that will be used by every scripts to connect to the remote system
+     * The connection needs to provide a generic handler object that will be used by every scripts to connect to the
+     * remote system
      *
      * @return the connection handler generic Object
      */
-    public Object getConnectionHandler();
+    public T getConnectionHandler();
 
 }

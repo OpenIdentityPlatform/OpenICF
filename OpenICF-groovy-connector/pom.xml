@@ -34,13 +34,19 @@
     <artifactId>groovy-connector</artifactId>
     <version>1.4.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
-    <name>Scripted Common</name>
+    <name>Groovy Connector</name>
     <description>This is a generic bundle that contains base classes and interfaces needed to write a scripted
         connector, such as Scripted connector.
     </description>
     <properties>
-        <connectorPackage>org.forgerock.openicf.connectors.groovy</connectorPackage>
+        <!-- maven-compiler-plugin -->
+        <maven.compiler.target>1.7</maven.compiler.target>
+        <maven.compiler.source>1.7</maven.compiler.source>
+        <connectorPackage>org.forgerock.openicf.connectors</connectorPackage>
         <connectorClass>ScriptedConnector</connectorClass>
+        <openicf.osgi.import.defaults>
+            org.codehaus.groovy*;version="[1.8,3)",groovy*;version="[1.8,3)"
+        </openicf.osgi.import.defaults>
     </properties>
     <repositories>
         <repository>
@@ -78,6 +84,45 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Scripted SQL -->
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>tomcat-jdbc</artifactId>
+            <version>8.0.5</version>
+            <!--version>7.0.52</version-->
+        </dependency>
+
+        <!-- Scripted REST -->
+        <dependency>
+            <groupId>org.codehaus.groovy.modules.http-builder</groupId>
+            <artifactId>http-builder</artifactId>
+            <version>0.7.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>4.3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.3.1</version>
+        </dependency>
+
+        <!-- Scripted SOAP -->
+
+        <!-- CREST -->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpasyncclient</artifactId>
+            <version>4.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.forgerock.commons</groupId>
+            <artifactId>json-resource</artifactId>
+            <version>2.2.4</version>
+        </dependency>
+
         <!-- Test Dependencies -->
         <dependency>
             <groupId>org.testng</groupId>
@@ -92,6 +137,50 @@
         <dependency>
             <groupId>org.forgerock.openicf.framework</groupId>
             <artifactId>connector-test-common</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!--dependency>
+            <groupId>org.forgerock.openicf.framework</groupId>
+            <artifactId>icfl-over-slf4j</artifactId>
+            <version>1.4.0.0-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.1.1</version>
+            <scope>test</scope>
+        </dependency-->
+
+        <dependency>
+            <groupId>org.forgerock.commons</groupId>
+            <artifactId>json-resource-servlet</artifactId>
+            <version>2.2.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
+            <version>8.1.14.v20131031</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+            <version>8.1.14.v20131031</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.hsqldb</groupId>
+            <artifactId>hsqldb</artifactId>
+            <version>2.3.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>1.3.175</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -167,7 +256,81 @@
                         <artifactId>groovy-all</artifactId>
                         <version>2.2.2</version>
                     </dependency>
+                    <dependency>
+                        <groupId>org.forgerock.commons</groupId>
+                        <artifactId>json-resource</artifactId>
+                        <version>2.2.4</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.httpcomponents</groupId>
+                        <artifactId>httpasyncclient</artifactId>
+                        <version>4.0.1</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.codehaus.groovy.modules.http-builder</groupId>
+                        <artifactId>http-builder</artifactId>
+                        <version>0.7.1</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.tomcat</groupId>
+                        <artifactId>tomcat-jdbc</artifactId>
+                        <version>8.0.5</version>
+                        <!--version>7.0.52</version-->
+                    </dependency>
                 </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <configuration>
+                    <excludes>**/generated-sources/groovy-stubs/**/*</excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <excludes>
+                        <exclude>**/groovy-stubs/*.java</exclude>
+                    </excludes>
+                    <excludeRoots>
+                        <excludeRoot>${project.build.directory}/generated-sources/groovy-stubs</excludeRoot>
+                    </excludeRoots>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jxr-plugin</artifactId>
+                <version>2.4</version>
+                <configuration>
+                    <linkJavadoc>true</linkJavadoc>
+                    <includes>
+                        <include>**/*.java</include>
+                        <include>**/*.groovy</include>
+                    </includes>
+                    <excludes>
+                        <exclude>target/generated/groovy-stubs</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.4</version>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/assemble/samples.xml</descriptor>
+                    </descriptors>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
