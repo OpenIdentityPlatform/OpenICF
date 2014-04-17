@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.TimerTask;
 import java.util.Vector;
 
 import org.identityconnectors.common.CollectionUtil;
@@ -47,8 +48,8 @@ import org.identityconnectors.framework.common.serializer.SerializerUtil;
 import org.identityconnectors.framework.impl.api.remote.messages.HelloRequest;
 import org.identityconnectors.framework.impl.api.remote.messages.HelloResponse;
 
-public class RemoteConnectorInfoManagerImpl implements ConnectorInfoManager,
-        ConnectorEventPublisher, Runnable {
+public class RemoteConnectorInfoManagerImpl extends TimerTask implements ConnectorInfoManager,
+        ConnectorEventPublisher {
 
     /**
      * Logger.
@@ -71,7 +72,7 @@ public class RemoteConnectorInfoManagerImpl implements ConnectorInfoManager,
     }
 
     public RemoteConnectorInfoManagerImpl(RemoteFrameworkConnectionInfo info,
-            boolean loadConnectorInfo) throws RuntimeException {
+                                          boolean loadConnectorInfo) throws RuntimeException {
         frameworkConnectionInfo = info;
         if (loadConnectorInfo) {
             init();
@@ -108,7 +109,7 @@ public class RemoteConnectorInfoManagerImpl implements ConnectorInfoManager,
         }
 
         List<ConnectorInfo> connectorInfoBefore = connectorInfoList;
-        connectorInfoList = CollectionUtil.<ConnectorInfo> newReadOnlyList(remoteInfos);
+        connectorInfoList = CollectionUtil.<ConnectorInfo>newReadOnlyList(remoteInfos);
         Object o = response.getServerInfo().get(HelloResponse.SERVER_START_TIME);
         if (o instanceof Long) {
             serverStartTime = (Long) o;
@@ -143,8 +144,8 @@ public class RemoteConnectorInfoManagerImpl implements ConnectorInfoManager,
     }
 
     /**
-     * Derives another RemoteConnectorInfoManagerImpl with a different
-     * RemoteFrameworkConnectionInfo but with the same metadata.
+     * Derives another RemoteConnectorInfoManagerImpl with a different RemoteFrameworkConnectionInfo but with the same
+     * metadata.
      *
      * @param info
      * @return
@@ -160,7 +161,7 @@ public class RemoteConnectorInfoManagerImpl implements ConnectorInfoManager,
             for (RemoteConnectorInfoImpl remoteInfo : remoteInfos) {
                 remoteInfo.setRemoteConnectionInfo(info);
             }
-            rv.connectorInfoList = CollectionUtil.<ConnectorInfo> newReadOnlyList(remoteInfos);
+            rv.connectorInfoList = CollectionUtil.<ConnectorInfo>newReadOnlyList(remoteInfos);
         }
         return rv;
     }

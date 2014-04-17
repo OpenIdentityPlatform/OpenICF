@@ -63,7 +63,6 @@ import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.ConnectorClass;
 import org.identityconnectors.framework.spi.PoolableConnector;
-import org.identityconnectors.framework.spi.StatefulConfiguration;
 
 public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
 
@@ -72,15 +71,14 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
     private List<ConnectorInfo> connectorInfos;
 
     public LocalConnectorInfoManagerImpl(final List<URL> bundleURLs,
-            final ClassLoader bundleParentClassLoader) throws ConfigurationException {
+                                         final ClassLoader bundleParentClassLoader) throws ConfigurationException {
         final List<WorkingBundleInfo> workingInfo = expandBundles(bundleURLs);
         WorkingBundleInfo.resolve(workingInfo);
         connectorInfos = createConnectorInfo(workingInfo, bundleParentClassLoader);
     }
 
     /**
-     * First pass - expand bundles as needed. populates originalURL,
-     * parsedManifest, libContents, and topLevelContents
+     * First pass - expand bundles as needed. populates originalURL, parsedManifest, libContents, and topLevelContents
      */
     private static List<WorkingBundleInfo> expandBundles(final List<URL> bundleURLs)
             throws ConfigurationException {
@@ -144,8 +142,8 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
     }
 
     /**
-     * Lists the contents of a directory and its contents. Result will be given
-     * as a list of forward-slash separated relative paths
+     * Lists the contents of a directory and its contents. Result will be given as a list of forward-slash separated
+     * relative paths
      */
     private static List<String> listBundleContents(final File dir) {
         final List<String> rv = new ArrayList<String>();
@@ -156,7 +154,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
     }
 
     private static void listBundleContents2(final String prefix, final File file,
-            final List<String> result) {
+                                            final List<String> result) {
         String path = prefix + file.getName();
         result.add(path);
         if (file.isDirectory()) {
@@ -269,17 +267,29 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
                     }
                     final LocalConnectorInfoImpl info = new LocalConnectorInfoImpl();
                     info.setConnectorClass(connectorClass.asSubclass(Connector.class));
-                    info.setConnectorConfigurationClass(options.configurationClass());
-                    info.setConnectorDisplayNameKey(options.displayNameKey());
-                    info.setConnectorCategoryKey(options.categoryKey());
-                    info.setConnectorKey(new ConnectorKey(bundleInfo.getManifest().getBundleName(),
-                            bundleInfo.getManifest().getBundleVersion(), connectorClass.getName()));
-                    final ConnectorMessagesImpl messages =
-                            loadMessageCatalog(bundleInfo.getEffectiveContents(), loader, info
-                                    .getConnectorClass());
-                    info.setMessages(messages);
-                    info.setDefaultAPIConfiguration(createDefaultAPIConfiguration(info));
-                    rv.add(info);
+                    try {
+                        info.setConnectorConfigurationClass(options.configurationClass());
+                        info.setConnectorDisplayNameKey(options.displayNameKey());
+                        info.setConnectorCategoryKey(options.categoryKey());
+                        info.setConnectorKey(new ConnectorKey(bundleInfo.getManifest().getBundleName(),
+                                bundleInfo.getManifest().getBundleVersion(), connectorClass.getName()));
+                        final ConnectorMessagesImpl messages =
+                                loadMessageCatalog(bundleInfo.getEffectiveContents(), loader, info
+                                        .getConnectorClass());
+                        info.setMessages(messages);
+                        info.setDefaultAPIConfiguration(createDefaultAPIConfiguration(info));
+                        rv.add(info);
+                    } catch (final NoClassDefFoundError e) {
+                        LOG.warn(
+                                e,
+                                "Unable to load configuration class {0} from bundle {1}. Class will be ignored and will not be listed in list of connectors.",
+                                options.configurationClass(), bundleInfo.getOriginalLocation());
+                    } catch (final TypeNotPresentException e) {
+                        LOG.warn(
+                                e,
+                                "Unable to load configuration class of connector {0} from bundle {1}. Class will be ignored and will not be listed in list of connectors.",
+                                connectorClass, bundleInfo.getOriginalLocation());
+                    }
                 }
             }
         }
@@ -287,8 +297,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
     }
 
     /**
-     * Create an instance of the {@link APIConfiguration} object to setup the
-     * framework etc..
+     * Create an instance of the {@link APIConfiguration} object to setup the framework etc..
      */
     public static APIConfigurationImpl createDefaultAPIConfiguration(
             final LocalConnectorInfoImpl localInfo) {
@@ -313,7 +322,8 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
     }
 
     public static ConnectorMessagesImpl loadMessageCatalog(final Set<String> bundleContents,
-            final ClassLoader loader, final Class<? extends Connector> connector)
+                                                           final ClassLoader loader,
+                                                           final Class<? extends Connector> connector)
             throws ConfigurationException {
         try {
             final String[] prefixes = getBundleNamePrefixes(connector);
@@ -386,7 +396,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         if (paths == null || paths.length == 0) {
             final String pkage = ReflectionUtil.getPackage(connector);
             final String messageCatalog = pkage + ".Messages";
-            paths = new String[] { messageCatalog };
+            paths = new String[]{messageCatalog};
         }
         for (int i = 0; i < paths.length; i++) {
             paths[i] = paths[i].replace('.', '/');

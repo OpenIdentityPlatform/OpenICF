@@ -101,6 +101,9 @@
                             groovy*;version="[1.8,3)",
                             *
                         </Import-Package>
+                        <Export-Package>
+                            org.identityconnectors.framework.impl.api*
+                        </Export-Package>
                         <Main-Class>org.identityconnectors.framework.server.Main</Main-Class>
                         <Fragment-Host>org.forgerock.openicf.framework.connector-framework</Fragment-Host>
                     </instructions>
