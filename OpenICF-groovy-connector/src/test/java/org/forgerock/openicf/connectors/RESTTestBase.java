@@ -99,10 +99,14 @@ public abstract class RESTTestBase {
 
     @BeforeSuite
     public void startServer() throws Exception {
-        System.out.append("Test port: ").println(System.getProperty("jetty.http.port"));
+        String httpPort = "28080";//System.getProperty("jetty.http.port", "208080");
+        System.out.append("Test port: ").println(httpPort);
         // Create a basic jetty server object that will listen on port 8080.
         // you can programmatically obtain it for use in test cases.
-        server = new Server(8080);
+        server = new Server(Integer.parseInt(httpPort));
+        for (org.eclipse.jetty.server.Connector c : server.getConnectors()) {
+            c.setHost("127.0.0.1");
+        }
 
         // Initializing the security handler
         ServletContextHandler handler =

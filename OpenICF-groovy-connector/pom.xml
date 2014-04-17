@@ -42,7 +42,7 @@
         <!-- maven-compiler-plugin -->
         <maven.compiler.target>1.5</maven.compiler.target>
         <maven.compiler.source>1.6</maven.compiler.source>
-        <connectorPackage>org.forgerock.openicf.connectors</connectorPackage>
+        <connectorPackage>org.forgerock.openicf</connectorPackage>
         <connectorClass>ScriptedConnector</connectorClass>
         <openicf.osgi.import.defaults>
             org.codehaus.groovy*;version="[1.8,3)",groovy*;version="[1.8,3)"
@@ -246,6 +246,25 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <id>reserve-network-port</id>
+                        <goals>
+                            <goal>reserve-network-port</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <portNames>
+                                <portName>jetty.http.port</portName>
+                            </portNames>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.forgerock.maven.plugins</groupId>

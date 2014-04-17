@@ -64,7 +64,7 @@ environments {
     CREST {
         configuration {
             classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/crest/").file, "UTF-8")]
-            serviceAddress = new URI("http://localhost:8080/crest/")
+            serviceAddress = new URI("http://localhost:28080/crest/")
             login = "admin"
             password = new GuardedString("Passw0rd".toCharArray())
         }
@@ -72,7 +72,7 @@ environments {
     REST {
         configuration {
             classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/rest/").file, "UTF-8")]
-            serviceAddress = new URI("http://localhost:8080/rest/")
+            serviceAddress = new URI("http://localhost:28080/rest/")
             username = "admin"
             password = new GuardedString("Passw0rd".toCharArray())
         }

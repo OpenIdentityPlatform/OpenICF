@@ -34,6 +34,8 @@ import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder
 import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.ObjectClassInfo
 import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder
+import org.identityconnectors.framework.common.objects.OperationOptionInfo
+import org.identityconnectors.framework.common.objects.OperationOptionInfoBuilder
 import org.identityconnectors.framework.common.objects.Schema
 import org.identityconnectors.framework.common.objects.SchemaBuilder
 import org.identityconnectors.framework.common.objects.SyncDelta
@@ -59,7 +61,8 @@ class ICFObjectBuilder extends AbstractICFBuilder<Void> {
         this.connectorClass = connectorClass
     }
 
-    static private <B> AbstractICFBuilder<B> delegateToTag(Class<? extends AbstractICFBuilder<B>> clazz, Closure body, B builder) {
+    static
+    private <B> AbstractICFBuilder<B> delegateToTag(Class<? extends AbstractICFBuilder<B>> clazz, Closure body, B builder) {
         AbstractICFBuilder<B> tag = (AbstractICFBuilder<B>) clazz.newInstance(builder)
         def clone = body.rehydrate(tag, this, this)
         clone.resolveStrategy = Closure.DELEGATE_FIRST
@@ -172,8 +175,52 @@ class ICFObjectBuilder extends AbstractICFBuilder<Void> {
             delegateToTag(ObjectClassDelegate, attribute)
         }
 
+        void operationOption(@DelegatesTo(OperationOptionDelegate) Closure options) {
+            delegateToTag(OperationOptionDelegate, options)
+        }
+
     }
 
+    private static class OperationOptionDelegate extends AbstractICFBuilder<SchemaBuilder> {
+
+        private OperationOptionInfoBuilder infoBuilder = new OperationOptionInfoBuilder(null, String);
+        private Set<Class<? extends SPIOperation>> unsupported = new HashSet<Class<? extends SPIOperation>>(12)
+
+        OperationOptionDelegate(SchemaBuilder builder) {
+            super(builder)
+        }
+
+        void disable(Class<? extends SPIOperation>... operation) {
+            if (null != operation) {
+                for (Class<? extends SPIOperation> clazz in operation) {
+                    unsupported.add(clazz)
+                }
+            }
+        }
+
+        void name(String name) {
+            infoBuilder.setName(name)
+        }
+
+        void type(Class<?> type) {
+            infoBuilder.setType(type)
+        }
+
+        void define(OperationOptionInfo info) {
+            infoBuilder.setName(info.name);
+            infoBuilder.setType(info.type);
+        }
+
+        @Override
+        protected void complete() {
+            final OperationOptionInfo info = infoBuilder.build();
+
+            ((SchemaBuilder) builder).defineOperationOption(info);
+            for (Class<? extends SPIOperation> clazz in unsupported) {
+                ((SchemaBuilder) builder).removeSupportedOperationOption(clazz, info)
+            }
+        }
+    }
 
     private static class ObjectClassDelegate extends AbstractICFBuilder<SchemaBuilder> {
 
