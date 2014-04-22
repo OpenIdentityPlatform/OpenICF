@@ -48,8 +48,8 @@ import org.identityconnectors.framework.common.serializer.SerializerUtil;
 import org.identityconnectors.framework.impl.api.remote.messages.HelloRequest;
 import org.identityconnectors.framework.impl.api.remote.messages.HelloResponse;
 
-public class RemoteConnectorInfoManagerImpl extends TimerTask implements ConnectorInfoManager,
-        ConnectorEventPublisher {
+public class RemoteConnectorInfoManagerImpl implements ConnectorInfoManager,
+        ConnectorEventPublisher, Runnable {
 
     /**
      * Logger.

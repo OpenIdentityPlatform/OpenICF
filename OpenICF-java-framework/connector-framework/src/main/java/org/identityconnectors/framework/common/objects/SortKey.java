@@ -42,7 +42,7 @@ public final class SortKey {
      *            The sort key field.
      * @return A new ascending-order sort key.
      * @throws IllegalArgumentException
-     *             If {@code field} is not a valid JSON pointer.
+     *             If {@code field} is not a valid attribute name.
      */
     public static SortKey ascendingOrder(final String field) {
         return new SortKey(field, true);
@@ -55,7 +55,7 @@ public final class SortKey {
      *            The sort key field.
      * @return A new descending-order sort key.
      * @throws IllegalArgumentException
-     *             If {@code field} is not a valid JSON pointer.
+     *             If {@code field} is not a valid attribute name.
      */
     public static SortKey descendingOrder(final String field) {
         return new SortKey(field, false);

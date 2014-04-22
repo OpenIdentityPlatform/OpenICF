@@ -322,7 +322,7 @@ public final class FrameworkUtil {
      */
     public static void checkAttributeValue(Object value) {
         if (value != null) {
-            checkAttributeType(value.getClass());
+            checkAttributeValue((String) null, value);
         }
     }
 

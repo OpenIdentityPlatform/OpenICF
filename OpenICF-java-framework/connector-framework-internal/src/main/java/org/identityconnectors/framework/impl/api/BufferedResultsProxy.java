@@ -272,7 +272,6 @@ public class BufferedResultsProxy implements InvocationHandler {
                 }
             }
         }
-
         return bufHandler.getResult();
     }
 }
