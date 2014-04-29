@@ -102,7 +102,7 @@ public abstract class RESTTestBase {
 
     @BeforeSuite
     public void startServer() throws Exception {
-        String httpPort = "28080";//System.getProperty("jetty.http.port", "208080");
+        String httpPort = System.getProperty("jetty.http.port", "28080");
         System.out.append("Test port: ").println(httpPort);
         // Create a basic jetty server object that will listen on port 8080.
         // you can programmatically obtain it for use in test cases.

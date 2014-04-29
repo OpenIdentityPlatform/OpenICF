@@ -26,6 +26,7 @@
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase
 import org.identityconnectors.common.security.GuardedString
 
+def httpPort = System.getProperty("jetty.http.port", "28080")
 
 configuration {
     clearTextPasswordToScript = false
@@ -64,7 +65,7 @@ environments {
     CREST {
         configuration {
             classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/crest/").file, "UTF-8")]
-            serviceAddress = new URI("http://localhost:28080/crest/")
+            serviceAddress = new URI("http://localhost:${httpPort}/crest/")
             login = "admin"
             password = new GuardedString("Passw0rd".toCharArray())
         }
@@ -72,7 +73,7 @@ environments {
     REST {
         configuration {
             classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/rest/").file, "UTF-8")]
-            serviceAddress = new URI("http://localhost:28080/rest/")
+            serviceAddress = new URI("http://localhost:${httpPort}/rest/")
             username = "admin"
             password = new GuardedString("Passw0rd".toCharArray())
         }
