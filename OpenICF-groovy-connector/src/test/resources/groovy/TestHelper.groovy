@@ -81,6 +81,8 @@ class TestHelper {
             } else {
                 throw new PreconditionRequiredException();
             }
+        } else if ("TIMEOUT".equals(uid.uidValue)) {
+            Thread.sleep(30000)
         }
         return uid;
     }

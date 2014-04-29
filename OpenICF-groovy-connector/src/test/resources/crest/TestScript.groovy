@@ -22,16 +22,14 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
 
-
-import groovy.json.JsonBuilder
 import org.forgerock.json.fluent.JsonValue
 import org.forgerock.json.resource.ActionRequest
 import org.forgerock.json.resource.Connection
 import org.forgerock.json.resource.Requests
 import org.forgerock.json.resource.RootContext
 import org.forgerock.openicf.connectors.scriptedcrest.ScriptedCRESTConfiguration
-import org.identityconnectors.common.logging.Log
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
+import org.identityconnectors.common.logging.Log
 
 def action = action as OperationType
 def configuration = configuration as ScriptedCRESTConfiguration

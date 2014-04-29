@@ -44,6 +44,9 @@ import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
+import org.identityconnectors.framework.api.operations.CreateApiOp;
+import org.identityconnectors.framework.api.operations.DeleteApiOp;
+import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.test.common.PropertyBag;
 import org.identityconnectors.test.common.TestHelpers;
@@ -175,6 +178,10 @@ public abstract class RESTTestBase {
         impl.getResultsHandlerConfiguration().setEnableCaseInsensitiveFilter(false);
         impl.getResultsHandlerConfiguration().setEnableFilteredResultsHandler(false);
         impl.getResultsHandlerConfiguration().setEnableNormalizingResultsHandler(false);
+
+        impl.setTimeout(CreateApiOp.class, 25000);
+        impl.setTimeout(UpdateApiOp.class, 25000);
+        impl.setTimeout(DeleteApiOp.class, 25000);
 
         return ConnectorFacadeFactory.getInstance().newInstance(impl);
     }

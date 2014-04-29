@@ -24,26 +24,39 @@
 
 package org.forgerock.openicf.connectors;
 
+import static org.fest.assertions.api.Assertions.assertThat;
+import static org.forgerock.openicf.connectors.RESTTestBase.createConnectorFacade;
+
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.forgerock.openicf.connectors.scriptedsql.ScriptedSQLConnector;
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase;
+import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.ConnectorFacade;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.AttributeUtil;
+import org.identityconnectors.framework.common.objects.ConnectorObject;
+import org.identityconnectors.framework.common.objects.Name;
+import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.Schema;
+import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.test.common.PropertyBag;
 import org.identityconnectors.test.common.TestHelpers;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import static org.forgerock.openicf.connectors.RESTTestBase.createConnectorFacade;
 
 /**
  * A NAME does ...
@@ -66,7 +79,8 @@ public class ScriptedSQLConnectorTest {
         Connection con = getConnection();
         Statement stmt = con.createStatement();
         try {
-            InputStream in = ScriptedSQLConnectorTest.class.getResourceAsStream("/sql/testDatabase.ddl");
+            InputStream in =
+                    ScriptedSQLConnectorTest.class.getResourceAsStream("/sql/testDatabase.ddl");
             Assert.assertNotNull(in);
             stmt.execute(IOUtils.toString(in));
         } finally {
@@ -91,6 +105,137 @@ public class ScriptedSQLConnectorTest {
     public void testTest() throws Exception {
         final ConnectorFacade facade = getFacade(TEST_NAME);
         facade.test();
+    }
+
+    @Test
+    public void testSchema() throws Exception {
+        final ConnectorFacade facade = getFacade(TEST_NAME);
+        Schema schema = facade.schema();
+        Assert.assertEquals(schema.getObjectClassInfo().size(), 3);
+    }
+
+    @Test
+    public void testCreateUpdateDeleteUser() throws Exception {
+        final ConnectorFacade facade = getFacade(TEST_NAME);
+        Set<Attribute> createAttributes = createUserAttributes(1, "John", "Doe");
+
+        Uid uid = facade.create(ObjectClass.ACCOUNT, createAttributes, null);
+        ConnectorObject co = facade.getObject(ObjectClass.ACCOUNT, uid, null);
+
+        assertThat(AttributeUtil.filterUid(co.getAttributes())).containsAll(createAttributes);
+
+        Set<Attribute> updateAttributes = new HashSet<Attribute>();
+        for (Attribute attr : createAttributes) {
+            if (attr.is("firstname")){
+                updateAttributes.add(AttributeBuilder.build("firstname", "Johny"));
+            } else {
+                updateAttributes.add(attr);
+            }
+        }
+
+        uid = facade.update(ObjectClass.ACCOUNT, co.getUid(), updateAttributes, null);
+
+        co = facade.getObject(ObjectClass.ACCOUNT, uid, null);
+
+        assertThat(AttributeUtil.filterUid(co.getAttributes())).containsAll(updateAttributes);
+
+        facade.delete(ObjectClass.ACCOUNT, uid, null);
+        Assert.assertNull(facade.getObject(ObjectClass.ACCOUNT, uid, null));
+    }
+
+    @Test
+    public void testCreateUpdateDeleteGroup() throws Exception {
+        final ConnectorFacade facade = getFacade(TEST_NAME);
+        Set<Attribute> createAttributes = createGroupAttributes(1, "GROUP#1");
+
+        Uid uid = facade.create(ObjectClass.GROUP, createAttributes, null);
+        ConnectorObject co = facade.getObject(ObjectClass.GROUP, uid, null);
+
+        assertThat(AttributeUtil.filterUid(co.getAttributes())).containsAll(createAttributes);
+
+        Set<Attribute> updateAttributes = new HashSet<Attribute>();
+        for (Attribute attr : createAttributes) {
+            if (attr.is("description")){
+                updateAttributes.add(AttributeBuilder.build("description", "Updated Description"));
+            } else {
+                updateAttributes.add(attr);
+            }
+        }
+
+        uid = facade.update(ObjectClass.GROUP, co.getUid(), updateAttributes, null);
+
+        co = facade.getObject(ObjectClass.GROUP, uid, null);
+
+        assertThat(AttributeUtil.filterUid(co.getAttributes())).containsAll(updateAttributes);
+
+        facade.delete(ObjectClass.GROUP, uid, null);
+        Assert.assertNull(facade.getObject(ObjectClass.GROUP, uid, null));
+    }
+
+    @Test
+    public void testCreateUpdateDeleteOrg() throws Exception {
+        final ConnectorFacade facade = getFacade(TEST_NAME);
+        final ObjectClass ORG = new ObjectClass("organization");
+        Set<Attribute> createAttributes = createOrgAttributes(1, "ORG#1");
+
+        Uid uid = facade.create(ORG, createAttributes, null);
+        ConnectorObject co = facade.getObject(ORG, uid, null);
+
+        assertThat(AttributeUtil.filterUid(co.getAttributes())).containsAll(createAttributes);
+
+        Set<Attribute> updateAttributes = new HashSet<Attribute>();
+        for (Attribute attr : createAttributes) {
+            if (attr.is("description")){
+                updateAttributes.add(AttributeBuilder.build("description", "Updated Description"));
+            } else {
+                updateAttributes.add(attr);
+            }
+        }
+
+        uid = facade.update(ORG, co.getUid(), updateAttributes, null);
+
+        co = facade.getObject(ORG, uid, null);
+
+        assertThat(AttributeUtil.filterUid(co.getAttributes())).containsAll(updateAttributes);
+
+        facade.delete(ORG, uid, null);
+        Assert.assertNull(facade.getObject(ORG, uid, null));
+    }
+
+    private Set<Attribute> createUserAttributes(int index, String firstName, String lastName) {
+        Set<Attribute> createAttributes = new HashSet<Attribute>();
+        createAttributes.add(new Name(lastName.toLowerCase()));
+        createAttributes.add(AttributeBuilder.build("firstname", firstName));
+        createAttributes.add(AttributeBuilder.build("lastname", lastName));
+        createAttributes.add(AttributeBuilder.build("displayName", firstName + " " + lastName));
+        createAttributes.add(AttributeBuilder.build("email", lastName.toLowerCase()
+                + "@example.com"));
+
+        createAttributes.add(AttributeBuilder.build("employeeNumber", String.format(
+                "072-5570-%04d", index)));
+        createAttributes.add(AttributeBuilder.build("employeeType", index % 3 == 0 ? "employee"
+                : "contractor"));
+        createAttributes.add(AttributeBuilder.build("description", "Sample Description"));
+        createAttributes.add(AttributeBuilder.build("mobilePhone", String.format("1-555-555-%04d",
+                index)));
+
+        return createAttributes;
+    }
+
+    private Set<Attribute> createGroupAttributes(int index, String name) {
+        Set<Attribute> createAttributes = new HashSet<Attribute>();
+        createAttributes.add(new Name(name.toLowerCase()));
+        createAttributes.add(AttributeBuilder.build("gid", String.format("GID%04d", index)));
+        createAttributes.add(AttributeBuilder.build("description", "Sample Description"));
+        return createAttributes;
+    }
+
+    private Set<Attribute> createOrgAttributes(int index, String name) {
+        Set<Attribute> createAttributes = new HashSet<Attribute>();
+        createAttributes.add(new Name(name.toLowerCase()));
+        createAttributes.add(AttributeBuilder.build("description", String.format(
+                "Sample Description of Org %04d", index)));
+        return createAttributes;
     }
 
     private Connection getConnection() throws ClassNotFoundException, SQLException {

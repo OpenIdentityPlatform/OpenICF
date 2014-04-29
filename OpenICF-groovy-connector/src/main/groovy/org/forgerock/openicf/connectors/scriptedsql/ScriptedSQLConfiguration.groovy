@@ -131,7 +131,6 @@ public class ScriptedSQLConfiguration extends ScriptedConfiguration {
         log.ok("Configuration is valid");
     }
 
-    //private ScriptedConnection<DataSource> scriptedConnection = null;
     private DataSource dataSource = null;
 
     DataSource getDataSource() {

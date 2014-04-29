@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * @author Gael Allioux <gael.allioux@forgerock.com>
  */
 
 import groovy.sql.Sql

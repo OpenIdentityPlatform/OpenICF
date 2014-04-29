@@ -109,7 +109,6 @@ public abstract class AbstractRemoteConnection implements Connection {
     static final Pattern CONTENT_TYPE_REGEX = Pattern.compile(
             "^application/json([ ]*;[ ]*charset=utf-8)?$", Pattern.CASE_INSENSITIVE);
 
-
     private final ResourceName resourceName;
 
     private final HttpHost httpHost;
@@ -120,16 +119,13 @@ public abstract class AbstractRemoteConnection implements Connection {
     }
 
     public abstract <T> Future<T> execute(final HttpUriRequest request,
-                                          final HttpAsyncResponseConsumer<T> responseConsumer,
-                                          final FutureCallback<T> callback);
-
+            final HttpAsyncResponseConsumer<T> responseConsumer, final FutureCallback<T> callback);
 
     protected abstract JsonValue parseJsonBody(final HttpEntity entity, final boolean allowEmpty)
             throws ResourceException;
 
     protected abstract QueryResult parseQueryResponse(final HttpResponse response,
-                                                      final QueryResultHandler handler) throws ResourceException;
-
+            final QueryResultHandler handler) throws ResourceException;
 
     public ResourceName getResourceName() {
         return resourceName;
@@ -139,22 +135,15 @@ public abstract class AbstractRemoteConnection implements Connection {
         return httpHost;
     }
 
-
     @Override
     public void close() {
-        //Do Nothing
+        // Do Nothing
     }
 
     @Override
     public boolean isValid() {
         return !isClosed();
     }
-
-    private final HttpAsyncResponseConsumer<JsonValue> JSON_VALUE_RESPONSE_HANDLER =
-            new JsonValueResponseHandler();
-
-    private final HttpAsyncResponseConsumer<Resource> RESOURCE_RESPONSE_HANDLER =
-            new ResourceResponseHandler();
 
     @Override
     public JsonValue action(final Context context, final ActionRequest request)
@@ -172,14 +161,13 @@ public abstract class AbstractRemoteConnection implements Connection {
 
     @Override
     public FutureResult<JsonValue> actionAsync(final Context context, final ActionRequest request,
-                                               final ResultHandler<? super JsonValue> handler) {
+            final ResultHandler<? super JsonValue> handler) {
         try {
 
             final Future<JsonValue> result =
-                    execute(convert(request),
-                            JSON_VALUE_RESPONSE_HANDLER, new InternalFutureCallback<JsonValue>(
-                                    (ResultHandler<JsonValue>) handler)
-                    );
+                    execute(convert(request), new JsonValueResponseHandler(),
+                            new InternalFutureCallback<JsonValue>(
+                                    (ResultHandler<JsonValue>) handler));
 
             return new InternalFutureResult<JsonValue>(result);
         } catch (final Throwable t) {
@@ -193,7 +181,7 @@ public abstract class AbstractRemoteConnection implements Connection {
 
     @Override
     public QueryResult query(final Context context, final QueryRequest request,
-                             final QueryResultHandler handler) throws ResourceException {
+            final QueryResultHandler handler) throws ResourceException {
         final FutureResult<QueryResult> future = queryAsync(context, request, handler);
         try {
             return future.get();
@@ -207,7 +195,7 @@ public abstract class AbstractRemoteConnection implements Connection {
 
     @Override
     public QueryResult query(final Context context, final QueryRequest request,
-                             final Collection<? super Resource> results) throws ResourceException {
+            final Collection<? super Resource> results) throws ResourceException {
         final QueryResultHandler handler = new QueryResultHandler() {
 
             @Override
@@ -231,12 +219,11 @@ public abstract class AbstractRemoteConnection implements Connection {
 
     @Override
     public FutureResult<QueryResult> queryAsync(Context context, QueryRequest request,
-                                                final QueryResultHandler handler) {
+            final QueryResultHandler handler) {
         try {
 
             final Future<QueryResult> result =
-                    execute(convert(request),
-                            new QueryResultResponseHandler(handler),
+                    execute(convert(request), new QueryResultResponseHandler(handler),
                             new InternalFutureCallback<QueryResult>(handler));
 
             return new InternalFutureResult<QueryResult>(result);
@@ -248,7 +235,6 @@ public abstract class AbstractRemoteConnection implements Connection {
             return new FailedFutureResult<QueryResult>(exception);
         }
     }
-
 
     @Override
     public Resource create(final Context context, final CreateRequest request)
@@ -264,10 +250,9 @@ public abstract class AbstractRemoteConnection implements Connection {
         }
     }
 
-
     @Override
     public FutureResult<Resource> createAsync(Context context, CreateRequest request,
-                                              ResultHandler<? super Resource> handler) {
+            ResultHandler<? super Resource> handler) {
         return handleRequestAsync(request, handler);
     }
 
@@ -287,7 +272,7 @@ public abstract class AbstractRemoteConnection implements Connection {
 
     @Override
     public FutureResult<Resource> deleteAsync(Context context, DeleteRequest request,
-                                              ResultHandler<? super Resource> handler) {
+            ResultHandler<? super Resource> handler) {
         return handleRequestAsync(request, handler);
     }
 
@@ -307,7 +292,7 @@ public abstract class AbstractRemoteConnection implements Connection {
 
     @Override
     public FutureResult<Resource> patchAsync(Context context, PatchRequest request,
-                                             ResultHandler<? super Resource> handler) {
+            ResultHandler<? super Resource> handler) {
         return handleRequestAsync(request, handler);
     }
 
@@ -326,7 +311,7 @@ public abstract class AbstractRemoteConnection implements Connection {
 
     @Override
     public FutureResult<Resource> readAsync(Context context, ReadRequest request,
-                                            ResultHandler<? super Resource> handler) {
+            ResultHandler<? super Resource> handler) {
         return handleRequestAsync(request, handler);
     }
 
@@ -346,7 +331,7 @@ public abstract class AbstractRemoteConnection implements Connection {
 
     @Override
     public FutureResult<Resource> updateAsync(Context context, UpdateRequest request,
-                                              ResultHandler<? super Resource> handler) {
+            ResultHandler<? super Resource> handler) {
         return handleRequestAsync(request, handler);
     }
 
@@ -355,125 +340,125 @@ public abstract class AbstractRemoteConnection implements Connection {
         HttpUriRequest rq = null;
         try {
             switch (request.getRequestType()) {
-                case ACTION: {
-                    ActionRequest actionRequest = (ActionRequest) request;
+            case ACTION: {
+                ActionRequest actionRequest = (ActionRequest) request;
 
-                    builder.setParameter(PARAM_ACTION, actionRequest.getAction());
-                    for (Map.Entry<String, String> entry : actionRequest
-                            .getAdditionalParameters().entrySet()) {
-                        builder.setParameter(entry.getKey(), entry.getValue());
-                    }
+                builder.setParameter(PARAM_ACTION, actionRequest.getAction());
+                for (Map.Entry<String, String> entry : actionRequest.getAdditionalParameters()
+                        .entrySet()) {
+                    builder.setParameter(entry.getKey(), entry.getValue());
+                }
 
+                HttpPost httpRequest = new HttpPost(builder.build());
+                httpRequest.setEntity(new JsonEntity(actionRequest.getContent()));
+
+                rq = httpRequest;
+                rq.addHeader(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.toString());
+                rq.addHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+                break;
+            }
+            case CREATE: {
+                CreateRequest createRequest = (CreateRequest) request;
+
+                if (null == createRequest.getNewResourceId()) {
+                    builder.setParameter(PARAM_ACTION, ActionRequest.ACTION_ID_CREATE);
                     HttpPost httpRequest = new HttpPost(builder.build());
-                    httpRequest.setEntity(new JsonEntity(actionRequest.getContent()));
-
+                    httpRequest.setEntity(new JsonEntity(createRequest.getContent()));
                     rq = httpRequest;
-                    rq.addHeader(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.toString());
-                    rq.addHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
-                    break;
-                }
-                case CREATE: {
-                    CreateRequest createRequest = (CreateRequest) request;
-
-                    if (null == createRequest.getNewResourceId()) {
-                        builder.setParameter(PARAM_ACTION, ActionRequest.ACTION_ID_CREATE);
-                        HttpPost httpRequest = new HttpPost(builder.build());
-                        httpRequest.setEntity(new JsonEntity(createRequest.getContent()));
-                        rq = httpRequest;
-                    } else {
-                        HttpPut httpRequest = new HttpPut(builder.build());
-                        httpRequest.setEntity(new JsonEntity(createRequest.getContent()));
-                        httpRequest.setHeader(HttpHeaders.IF_NONE_MATCH, ETAG_ANY);
-                        rq = httpRequest;
-                    }
-                    rq.addHeader(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.toString());
-                    rq.addHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
-                    break;
-                }
-                case UPDATE: {
-                    UpdateRequest updateRequest = (UpdateRequest) request;
-
+                } else {
                     HttpPut httpRequest = new HttpPut(builder.build());
-                    httpRequest.setEntity(new JsonEntity(updateRequest.getNewContent()));
-
-                    if (null != updateRequest.getRevision()) {
-                        httpRequest.setHeader(HttpHeaders.ETAG, updateRequest.getRevision());
-                    }
-
+                    httpRequest.setEntity(new JsonEntity(createRequest.getContent()));
+                    httpRequest.setHeader(HttpHeaders.IF_NONE_MATCH, ETAG_ANY);
                     rq = httpRequest;
-                    rq.addHeader(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.toString());
-                    rq.addHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
-                    break;
                 }
-                case PATCH: {
-                    PatchRequest patchRequest = (PatchRequest) request;
+                rq.addHeader(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.toString());
+                rq.addHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+                break;
+            }
+            case UPDATE: {
+                UpdateRequest updateRequest = (UpdateRequest) request;
 
-                    List<Map<String, Object>> patch =
-                            new ArrayList<Map<String, Object>>(patchRequest.getPatchOperations().size());
-                    for (PatchOperation operation : patchRequest.getPatchOperations()) {
-                        patch.add(operation.toJsonValue().asMap());
-                    }
+                HttpPut httpRequest = new HttpPut(builder.build());
+                httpRequest.setEntity(new JsonEntity(updateRequest.getContent()));
 
-                    HttpPatch httpRequest = new HttpPatch(builder.build());
-                    httpRequest.setEntity(new JsonEntity(patch));
-
-                    if (null != patchRequest.getRevision()) {
-                        httpRequest.setHeader(HttpHeaders.ETAG, patchRequest.getRevision());
-                    }
-
-                    rq = httpRequest;
-                    rq.addHeader(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.toString());
-                    rq.addHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
-                    break;
+                if (null != updateRequest.getRevision()) {
+                    httpRequest.setHeader(HttpHeaders.ETAG, updateRequest.getRevision());
                 }
-                case DELETE: {
-                    DeleteRequest deleteRequest = (DeleteRequest) request;
 
-                    rq = new HttpDelete(builder.build());
-                    if (null != deleteRequest.getRevision()) {
-                        rq.setHeader(HttpHeaders.ETAG, deleteRequest.getRevision());
-                    }
-                    break;
+                rq = httpRequest;
+                rq.addHeader(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.toString());
+                rq.addHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+                break;
+            }
+            case PATCH: {
+                PatchRequest patchRequest = (PatchRequest) request;
+
+                List<Map<String, Object>> patch =
+                        new ArrayList<Map<String, Object>>(patchRequest.getPatchOperations().size());
+                for (PatchOperation operation : patchRequest.getPatchOperations()) {
+                    patch.add(operation.toJsonValue().asMap());
                 }
-                case READ: {
-                    rq = new HttpGet(builder.build());
-                    break;
+
+                HttpPatch httpRequest = new HttpPatch(builder.build());
+                httpRequest.setEntity(new JsonEntity(patch));
+
+                if (null != patchRequest.getRevision()) {
+                    httpRequest.setHeader(HttpHeaders.ETAG, patchRequest.getRevision());
                 }
-                case QUERY: {
-                    QueryRequest queryRequest = (QueryRequest) request;
 
-                    for (Map.Entry<String, String> entry : queryRequest.getAdditionalQueryParameters()
-                            .entrySet()) {
-                        builder.setParameter(entry.getKey(), entry.getValue());
-                    }
+                rq = httpRequest;
+                rq.addHeader(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.toString());
+                rq.addHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+                break;
+            }
+            case DELETE: {
+                DeleteRequest deleteRequest = (DeleteRequest) request;
 
-                    if (null != queryRequest.getQueryId()) {
-                        builder.setParameter(PARAM_QUERY_ID, queryRequest.getQueryId());
-                    } else if (null != queryRequest.getQueryFilter()) {
-                        builder.setParameter(PARAM_QUERY_FILTER, queryRequest.getQueryFilter()
-                                .toString());
-                    } else if (null != queryRequest.getQueryExpression()) {
-                        builder.setParameter(PARAM_QUERY_EXPRESSION, queryRequest.getQueryExpression());
-                    }
-
-                    if (0 < queryRequest.getPageSize()) {
-                        builder.setParameter(PARAM_PAGE_SIZE, Integer.toString(queryRequest
-                                .getPageSize()));
-
-                        if (null != queryRequest.getPagedResultsCookie()) {
-                            builder.setParameter(PARAM_PAGED_RESULTS_COOKIE, queryRequest
-                                    .getPagedResultsCookie());
-                        }
-                        builder.setParameter(PARAM_PAGED_RESULTS_OFFSET, Integer.toString(queryRequest
-                                .getPagedResultsOffset()));
-                    }
-
-                    for (SortKey key : queryRequest.getSortKeys()) {
-                        builder.setParameter(PARAM_SORT_KEYS, key.toString());
-                    }
-                    rq = new HttpGet(builder.build());
-                    break;
+                rq = new HttpDelete(builder.build());
+                if (null != deleteRequest.getRevision()) {
+                    rq.setHeader(HttpHeaders.ETAG, deleteRequest.getRevision());
                 }
+                break;
+            }
+            case READ: {
+                rq = new HttpGet(builder.build());
+                break;
+            }
+            case QUERY: {
+                QueryRequest queryRequest = (QueryRequest) request;
+
+                for (Map.Entry<String, String> entry : queryRequest.getAdditionalParameters()
+                        .entrySet()) {
+                    builder.setParameter(entry.getKey(), entry.getValue());
+                }
+
+                if (null != queryRequest.getQueryId()) {
+                    builder.setParameter(PARAM_QUERY_ID, queryRequest.getQueryId());
+                } else if (null != queryRequest.getQueryFilter()) {
+                    builder.setParameter(PARAM_QUERY_FILTER, queryRequest.getQueryFilter()
+                            .toString());
+                } else if (null != queryRequest.getQueryExpression()) {
+                    builder.setParameter(PARAM_QUERY_EXPRESSION, queryRequest.getQueryExpression());
+                }
+
+                if (0 < queryRequest.getPageSize()) {
+                    builder.setParameter(PARAM_PAGE_SIZE, Integer.toString(queryRequest
+                            .getPageSize()));
+
+                    if (null != queryRequest.getPagedResultsCookie()) {
+                        builder.setParameter(PARAM_PAGED_RESULTS_COOKIE, queryRequest
+                                .getPagedResultsCookie());
+                    }
+                    builder.setParameter(PARAM_PAGED_RESULTS_OFFSET, Integer.toString(queryRequest
+                            .getPagedResultsOffset()));
+                }
+
+                for (SortKey key : queryRequest.getSortKeys()) {
+                    builder.setParameter(PARAM_SORT_KEYS, key.toString());
+                }
+                rq = new HttpGet(builder.build());
+                break;
+            }
             }
         } catch (URISyntaxException e) {
             throw new InternalServerErrorException(e);
@@ -490,25 +475,23 @@ public abstract class AbstractRemoteConnection implements Connection {
         }
 
         URIBuilder builder =
-                new URIBuilder().setScheme(getHttpHost().getSchemeName()).setHost(getHttpHost().getHostName())
-                        .setPort(getHttpHost().getPort()).setPath("/" + resourceName.toString());
+                new URIBuilder().setScheme(getHttpHost().getSchemeName()).setHost(
+                        getHttpHost().getHostName()).setPort(getHttpHost().getPort()).setPath(
+                        "/" + resourceName.toString());
 
         for (JsonPointer field : request.getFields()) {
-            builder.setParameter(PARAM_FIELDS, field.toString());
+            builder.addParameter(PARAM_FIELDS, field.toString());
         }
         return builder;
     }
 
-
     private FutureResult<Resource> handleRequestAsync(Request request,
-                                                      ResultHandler<? super Resource> handler) {
+            ResultHandler<? super Resource> handler) {
         try {
 
             final Future<Resource> result =
-                    execute(convert(request),
-                            RESOURCE_RESPONSE_HANDLER, new InternalFutureCallback<Resource>(
-                                    (ResultHandler<Resource>) handler)
-                    );
+                    execute(convert(request), new ResourceResponseHandler(),
+                            new InternalFutureCallback<Resource>((ResultHandler<Resource>) handler));
 
             return new InternalFutureResult<Resource>(result);
         } catch (final Throwable t) {
@@ -527,9 +510,9 @@ public abstract class AbstractRemoteConnection implements Connection {
 
     // Internal Class definitions
 
-
     @Immutable
-    static abstract public class AbstractJsonValueResponseHandler<T> extends AbstractAsyncResponseConsumer<T> {
+    static abstract public class AbstractJsonValueResponseHandler<T> extends
+            AbstractAsyncResponseConsumer<T> {
 
         protected volatile HttpResponse response;
         private volatile SimpleInputBuffer buf;
@@ -540,8 +523,8 @@ public abstract class AbstractRemoteConnection implements Connection {
         }
 
         @Override
-        protected void onEntityEnclosed(
-                final HttpEntity entity, final ContentType contentType) throws IOException {
+        protected void onEntityEnclosed(final HttpEntity entity, final ContentType contentType)
+                throws IOException {
             long len = entity.getContentLength();
             if (len > Integer.MAX_VALUE) {
                 throw new ContentTooLongException("Entity content is too long: " + len);
@@ -554,8 +537,8 @@ public abstract class AbstractRemoteConnection implements Connection {
         }
 
         @Override
-        protected void onContentReceived(
-                final ContentDecoder decoder, final IOControl ioctrl) throws IOException {
+        protected void onContentReceived(final ContentDecoder decoder, final IOControl ioctrl)
+                throws IOException {
             Asserts.notNull(this.buf, "Content buffer");
             this.buf.consumeContent(decoder);
         }
@@ -569,20 +552,23 @@ public abstract class AbstractRemoteConnection implements Connection {
     }
 
     /**
-     * A {@link org.apache.http.client.ResponseHandler} that returns the response body as a JsonValue for successful
-     * (2xx) responses. If the response code was >= 300, the response body is consumed and an {@link
-     * HttpResponseResourceException} is thrown.
+     * A {@link org.apache.http.client.ResponseHandler} that returns the
+     * response body as a JsonValue for successful (2xx) responses. If the
+     * response code was >= 300, the response body is consumed and an
+     * {@link HttpResponseResourceException} is thrown.
      * <p/>
-     * If this is used with {@link org.apache.http.client.HttpClient#execute(org.apache.http.client.methods.HttpUriRequest,
-     * org.apache.http.client.ResponseHandler)} , HttpClient may handle redirects (3xx responses) internally.
+     * If this is used with
+     * {@link org.apache.http.client.HttpClient#execute(org.apache.http.client.methods.HttpUriRequest, org.apache.http.client.ResponseHandler)}
+     * , HttpClient may handle redirects (3xx responses) internally.
      */
     @Immutable
     public class JsonValueResponseHandler extends AbstractJsonValueResponseHandler<JsonValue> {
 
         /**
-         * Returns the response body as a String if the response was successful (a 2xx status code). If no response body
-         * exists, this returns null. If the response was unsuccessful (>= 300 status code), throws an {@link
-         * org.apache.http.client.HttpResponseException}.
+         * Returns the response body as a String if the response was successful
+         * (a 2xx status code). If no response body exists, this returns null.
+         * If the response was unsuccessful (>= 300 status code), throws an
+         * {@link org.apache.http.client.HttpResponseException}.
          */
         @Override
         protected JsonValue buildResult(HttpContext context) throws Exception {
@@ -592,12 +578,14 @@ public abstract class AbstractRemoteConnection implements Connection {
     }
 
     /**
-     * A {@link org.apache.http.client.ResponseHandler} that returns the response body as a String for successful (2xx)
-     * responses. If the response code was >= 300, the response body is consumed and an {@link
-     * org.apache.http.client.HttpResponseException} is thrown.
+     * A {@link org.apache.http.client.ResponseHandler} that returns the
+     * response body as a String for successful (2xx) responses. If the response
+     * code was >= 300, the response body is consumed and an
+     * {@link org.apache.http.client.HttpResponseException} is thrown.
      * <p/>
-     * If this is used with {@link org.apache.http.client.HttpClient#execute(org.apache.http.client.methods.HttpUriRequest,
-     * org.apache.http.client.ResponseHandler)} , HttpClient may handle redirects (3xx responses) internally.
+     * If this is used with
+     * {@link org.apache.http.client.HttpClient#execute(org.apache.http.client.methods.HttpUriRequest, org.apache.http.client.ResponseHandler)}
+     * , HttpClient may handle redirects (3xx responses) internally.
      */
     @Immutable
     public class QueryResultResponseHandler extends AbstractJsonValueResponseHandler<QueryResult> {
@@ -609,9 +597,10 @@ public abstract class AbstractRemoteConnection implements Connection {
         }
 
         /**
-         * Returns the response body as a String if the response was successful (a 2xx status code). If no response body
-         * exists, this returns null. If the response was unsuccessful (>= 300 status code), throws an {@link
-         * org.apache.http.client.HttpResponseException}.
+         * Returns the response body as a String if the response was successful
+         * (a 2xx status code). If no response body exists, this returns null.
+         * If the response was unsuccessful (>= 300 status code), throws an
+         * {@link org.apache.http.client.HttpResponseException}.
          */
         public QueryResult buildResult(HttpContext context) throws Exception {
 
@@ -622,20 +611,23 @@ public abstract class AbstractRemoteConnection implements Connection {
     }
 
     /**
-     * A {@link org.apache.http.client.ResponseHandler} that returns the response body as a Resource for successful
-     * (2xx) responses. If the response code was >= 300, the response body is consumed and an {@link
-     * HttpResponseResourceException} is thrown.
+     * A {@link org.apache.http.client.ResponseHandler} that returns the
+     * response body as a Resource for successful (2xx) responses. If the
+     * response code was >= 300, the response body is consumed and an
+     * {@link HttpResponseResourceException} is thrown.
      * <p/>
-     * If this is used with {@link org.apache.http.client.HttpClient#execute(org.apache.http.client.methods.HttpUriRequest,
-     * org.apache.http.client.ResponseHandler)} , HttpClient may handle redirects (3xx responses) internally.
+     * If this is used with
+     * {@link org.apache.http.client.HttpClient#execute(org.apache.http.client.methods.HttpUriRequest, org.apache.http.client.ResponseHandler)}
+     * , HttpClient may handle redirects (3xx responses) internally.
      */
     @Immutable
     public class ResourceResponseHandler extends AbstractJsonValueResponseHandler<Resource> {
 
         /**
-         * Returns the response body as a String if the response was successful (a 2xx status code). If no response body
-         * exists, this returns null. If the response was unsuccessful (>= 300 status code), throws an {@link
-         * org.apache.http.client.HttpResponseException}.
+         * Returns the response body as a String if the response was successful
+         * (a 2xx status code). If no response body exists, this returns null.
+         * If the response was unsuccessful (>= 300 status code), throws an
+         * {@link org.apache.http.client.HttpResponseException}.
          */
         public Resource buildResult(HttpContext context) throws Exception {
 
@@ -643,16 +635,18 @@ public abstract class AbstractRemoteConnection implements Connection {
 
         }
 
-
     }
 
     /**
-     * The HttpResponseResourceException wraps the {@link ResourceException} into {@link
-     * org.apache.http.client.HttpResponseException}.
+     * The HttpResponseResourceException wraps the {@link ResourceException}
+     * into {@link org.apache.http.client.HttpResponseException}.
      * <p/>
-     * This exception is used inside {@link org.apache.http.client.ResponseHandler#handleResponse(org.apache.http.HttpResponse)}.
+     * This exception is used inside
+     * {@link org.apache.http.client.ResponseHandler#handleResponse(org.apache.http.HttpResponse)}.
      */
     public static class HttpResponseResourceException extends HttpResponseException {
+
+        private static final long serialVersionUID = 1L;
 
         private final ResourceException cause;
 
@@ -717,8 +711,7 @@ public abstract class AbstractRemoteConnection implements Connection {
     }
 
     /**
-     * @param <
-     *         T >
+     * @param < T >
      */
     private static class InternalFutureResult<T> implements FutureResult<T> {
 
@@ -895,7 +888,7 @@ public abstract class AbstractRemoteConnection implements Connection {
      * Adapts an {@code Exception} to a {@code ResourceException}.
      *
      * @param t
-     *         The exception which caused the request to fail.
+     *            The exception which caused the request to fail.
      * @return The equivalent resource exception.
      */
     protected static ResourceException adapt(final Throwable t) {

@@ -22,3 +22,44 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
 
+package org.forgerock.openicf.misc.scriptedcommon
+
+import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder
+
+/**
+ * A NAME does ...
+ *
+ * @author Laszlo Hordos
+ */
+class AttributeDelegate extends AbstractICFBuilder<ConnectorObjectBuilder> {
+    private String name = null
+    private Collection<Object> obj = null
+
+    AttributeDelegate(ConnectorObjectBuilder builder) {
+        super(builder)
+    }
+
+    void name(String name) {
+        this.name = name;
+    }
+
+    void value(Object value) {
+        if (obj == null) {
+            obj = new ArrayList<Object>()
+        }
+        obj.add(value)
+    }
+
+    void values(Object... args) {
+        obj = args.toList()
+    }
+
+    void values(Collection<Object> args) {
+        obj = args
+    }
+
+    @Override
+    protected void complete() {
+        ((ConnectorObjectBuilder) builder).addAttribute(name, obj)
+    }
+}

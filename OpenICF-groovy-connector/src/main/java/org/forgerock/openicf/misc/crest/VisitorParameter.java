@@ -22,3 +22,34 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
 
+package org.forgerock.openicf.misc.crest;
+
+import org.identityconnectors.framework.common.objects.Attribute;
+
+/**
+ * A VisitorParameter used to get the CREST field name and the String value.
+ *
+ * @author Laszlo Hordos
+ */
+public interface VisitorParameter {
+
+    /**
+     * Translates the attribute name from ICF to JSON.
+     *
+     * @param name
+     * @return the new name.
+     */
+    String translateName(String name);
+
+    /**
+     * Converts the attribute value from ICF to JSON.
+     *
+     * The ICF Attribute value is a {@code List < Object >} which has to be
+     * converts to JSON Type. Number, Boolean, String, Null, Map or Array of
+     * these.
+     *
+     * @param attribute
+     * @return the new value. It could be Null, String, Boolean or Number.
+     */
+    Object convertValue(Attribute attribute);
+}

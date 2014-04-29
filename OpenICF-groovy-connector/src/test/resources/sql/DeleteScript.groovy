@@ -20,19 +20,59 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * @author Gael Allioux <gael.allioux@forgerock.com>
  */
 
 
-import org.identityconnectors.common.logging.Log
+import groovy.sql.Sql
+import org.forgerock.openicf.connectors.scriptedsql.ScriptedSQLConfiguration
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
-import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration
+import org.identityconnectors.common.logging.Log
 import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationOptions
 import org.identityconnectors.framework.common.objects.Uid
 
+import java.sql.Connection
+
 def action = action as OperationType
-def configuration = configuration as ScriptedConfiguration
+def configuration = configuration as ScriptedSQLConfiguration
+def connection = connection as Connection
 def log = log as Log
 def objectClass = objectClass as ObjectClass
 def options = options as OperationOptions
 def uid = uid as Uid
+def ORG = new ObjectClass("organization")
+
+// Parameters:
+// The connector sends the following:
+// connection: handler to the SQL connection
+// configuration : handler to the connector's configuration object
+// action: a string describing the action ("DELETE" here)
+// log: a handler to the Log facility
+// objectClass: a String describing the Object class (__ACCOUNT__ / __GROUP__ / other)
+// options: a handler to the OperationOptions Map
+// uid: String for the unique id (__UID__)that specifies the object to delete
+// RETURNS: Nothing
+
+log.info("Entering " + action + " Script");
+def sql = new Sql(connection);
+
+assert uid != null
+
+switch (objectClass) {
+    case ObjectClass.ACCOUNT:
+        sql.execute("DELETE FROM Users where id= ?", [uid.uidValue])
+        break
+
+    case ObjectClass.GROUP:
+        sql.execute("DELETE FROM Groups where id= ?", [uid.uidValue])
+        break
+
+    case ORG:
+        sql.execute("DELETE FROM Organizations where id= ?", [uid.uidValue])
+        break
+
+    default:
+        throw UnsupportedOperationException(action.name() + " operation of type:" + objectClass)
+}

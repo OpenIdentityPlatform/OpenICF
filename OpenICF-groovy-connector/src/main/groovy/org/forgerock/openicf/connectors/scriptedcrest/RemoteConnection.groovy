@@ -45,7 +45,6 @@ import java.util.concurrent.Future
 
 /**
  *
- *
  * @author Laszlo Hordos
  */
 class RemoteConnection extends AbstractRemoteConnection {
@@ -128,7 +127,7 @@ class RemoteConnection extends AbstractRemoteConnection {
             boolean hasTrailingGarbage;
 
             def content = parser.parse(entity, {
-                handler.handleResource(getAsResource(it));
+                handler.handleResource(getAsResource(new JsonValue(it)));
             }, { lexer, object ->
                 try {
                     hasTrailingGarbage = lexer.nextToken() != null;

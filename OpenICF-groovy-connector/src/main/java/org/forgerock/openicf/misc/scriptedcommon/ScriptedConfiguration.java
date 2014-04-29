@@ -23,6 +23,8 @@
  */
 package org.forgerock.openicf.misc.scriptedcommon;
 
+import static org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase.LOGGER;
+
 import java.io.File;
 import java.net.URL;
 import java.util.Arrays;
@@ -47,11 +49,10 @@ import groovy.util.DelegatingScript;
 import groovy.util.GroovyScriptEngine;
 import groovy.util.ResourceException;
 import groovy.util.ScriptException;
-import static org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase.LOGGER;
 
 /**
- * Extends the {@link AbstractConfiguration} class to provide all the necessary parameters to initialize the Scripted
- * Connector.
+ * Extends the {@link AbstractConfiguration} class to provide all the necessary
+ * parameters to initialize the Scripted Connector.
  *
  * @author Gael Allioux <gael.allioux@forgerock.com>
  */
@@ -314,11 +315,9 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         this.testScriptFileName = value;
     }
 
-
     // =======================================================================
     // Groovy Engine configuration
     // =======================================================================
-
 
     /**
      * Gets extensions used to find a groovy files
@@ -327,16 +326,18 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      */
     @ConfigurationProperty(groupMessageKey = "groovy.engine")
     public String[] getScriptExtensions() {
-        return config.getScriptExtensions().toArray(new String[config.getScriptExtensions().size()]);
+        return config.getScriptExtensions()
+                .toArray(new String[config.getScriptExtensions().size()]);
     }
 
     public void setScriptExtensions(String[] scriptExtensions) {
-        config.setScriptExtensions(
-                null != scriptExtensions ? new HashSet<String>(Arrays.asList(scriptExtensions)) : null);
+        config.setScriptExtensions(null != scriptExtensions ? new HashSet<String>(Arrays
+                .asList(scriptExtensions)) : null);
     }
 
     /**
-     * Gets the currently configured warning level. See WarningMessage for level details.
+     * Gets the currently configured warning level. See WarningMessage for level
+     * details.
      */
     @ConfigurationProperty(groupMessageKey = "groovy.engine")
     public int getWarningLevel() {
@@ -437,15 +438,16 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     }
 
     /**
-     * Sets the error tolerance, which is the number of non-fatal errors (per unit) that should be tolerated before
-     * compilation is aborted.
+     * Sets the error tolerance, which is the number of non-fatal errors (per
+     * unit) that should be tolerated before compilation is aborted.
      */
     public void setTolerance(int tolerance) {
         config.setTolerance(tolerance);
     }
 
     /**
-     * Gets the name of the base class for scripts. It must be a subclass of Script.
+     * Gets the name of the base class for scripts. It must be a subclass of
+     * Script.
      */
     @ConfigurationProperty(groupMessageKey = "groovy.engine")
     public String getScriptBaseClass() {
@@ -453,7 +455,8 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     }
 
     /**
-     * Sets the name of the base class for scripts. It must be a subclass of Script.
+     * Sets the name of the base class for scripts. It must be a subclass of
+     * Script.
      */
     public void setScriptBaseClass(String scriptBaseClass) {
         config.setScriptBaseClass(scriptBaseClass);
@@ -507,6 +510,10 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     // Other Configuration Properties
     // =======================================================================
 
+    // =======================================================================
+    // Interface Implementation
+    // =======================================================================
+
     public void release() {
         groovyScriptEngine = null;
         loggerCache.clear();
@@ -530,8 +537,22 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         logger.info("Scripts are loaded");
     }
 
-    private static ConcurrentMap<String, Log> loggerCache =
-            new ConcurrentHashMap<String, Log>(11);
+    private final ConcurrentMap<String, Object> propertyBag =
+            new ConcurrentHashMap<String, Object>();
+
+    /**
+     * Returns the Map shared between the Connector instances.
+     *
+     * Shared map to store initialised resources which should be shared between
+     * the scripts.
+     *
+     * @return single instance of shared ConcurrentMap.
+     */
+    public ConcurrentMap<String, Object> getPropertyBag() {
+        return propertyBag;
+    }
+
+    private final ConcurrentMap<String, Log> loggerCache = new ConcurrentHashMap<String, Log>(11);
 
     Object evaluate(String scriptName, Binding binding, Object delegate) throws Exception {
         try {
@@ -618,6 +639,6 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     }
 
     protected String[] getImports() {
-        return new String[]{ConnectorObject.class.getPackage().getName() + ".*"};
+        return new String[] { ConnectorObject.class.getPackage().getName() + ".*" };
     }
 }

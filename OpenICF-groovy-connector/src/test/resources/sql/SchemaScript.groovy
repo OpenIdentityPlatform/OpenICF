@@ -20,13 +20,54 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * @author Gael Allioux <gael.allioux@forgerock.com>
  */
 
 
-import org.identityconnectors.common.logging.Log
+import org.forgerock.openicf.connectors.scriptedsql.ScriptedSQLConfiguration
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
-import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration
+import org.identityconnectors.common.logging.Log
+
+import java.sql.Connection
+
+import static org.identityconnectors.framework.common.objects.AttributeInfo.Flags.REQUIRED
 
 def action = action as OperationType
-def configuration = configuration as ScriptedConfiguration
+def configuration = configuration as ScriptedSQLConfiguration
+def connection = connection as Connection
 def log = log as Log
+
+builder.schema({
+    objectClass {
+        type ObjectClass.ACCOUNT_NAME
+        attributes {
+            uid String.class, REQUIRED
+            firstname String.class, REQUIRED
+            lastname String.class, REQUIRED
+            displayName String.class, REQUIRED
+            email String.class, REQUIRED
+            employeeNumber String.class, REQUIRED
+            employeeType String.class, REQUIRED
+            description String.class, REQUIRED
+            mobilePhone String.class, REQUIRED
+        }
+
+    }
+    objectClass {
+        type ObjectClass.GROUP_NAME
+        attributes {
+            name String.class, REQUIRED
+            gid String.class, REQUIRED
+            description String.class, REQUIRED
+        }
+    }
+    objectClass {
+        type 'organization'
+        attributes {
+            name String.class, REQUIRED
+            description String.class, REQUIRED
+        }
+    }
+}
+)

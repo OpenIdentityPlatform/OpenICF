@@ -22,36 +22,28 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
 
-
+import org.forgerock.json.resource.Connection
 import org.forgerock.openicf.connectors.scriptedcrest.ScriptedCRESTConfiguration
-import org.identityconnectors.common.logging.Log
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
-import org.identityconnectors.framework.common.objects.ObjectClass
-import org.identityconnectors.framework.common.objects.OperationalAttributeInfos
-import org.identityconnectors.framework.common.objects.PredefinedAttributeInfos
-
-import static org.identityconnectors.framework.common.objects.AttributeInfo.Flags.MULTIVALUED
-import static org.identityconnectors.framework.common.objects.AttributeInfo.Flags.NOT_CREATABLE
-import static org.identityconnectors.framework.common.objects.AttributeInfo.Flags.NOT_READABLE
-import static org.identityconnectors.framework.common.objects.AttributeInfo.Flags.NOT_RETURNED_BY_DEFAULT
-import static org.identityconnectors.framework.common.objects.AttributeInfo.Flags.NOT_UPDATEABLE
-import static org.identityconnectors.framework.common.objects.AttributeInfo.Flags.REQUIRED
+import org.identityconnectors.common.logging.Log
 
 def action = action as OperationType
 def configuration = configuration as ScriptedCRESTConfiguration
+def connection = connection as Connection
 def log = log as Log
 
+def url = getClass().getClassLoader().getResource("schema.json")
+def schema = SchemaSlurper.parse(url)
+
+configuration.propertyBag.putAll(schema)
+
 builder.schema({
-    objectClass {
-        type ObjectClass.ACCOUNT_NAME
-        attribute OperationalAttributeInfos.CURRENT_PASSWORD
-        attributes {
-            userName String.class, REQUIRED
-            givenName String.class, REQUIRED
-            sn String.class, REQUIRED
-            mail REQUIRED
-            telephoneNumber()
-            __NAME__()
+    schema.each { key, value ->
+        objectClass {
+            type key
+            value.attributes.values().each {
+                attribute it.attributeInfo
+            }
         }
     }
 }

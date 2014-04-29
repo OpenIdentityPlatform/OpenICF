@@ -22,3 +22,30 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
 
+import org.forgerock.json.resource.Connection
+import org.forgerock.json.resource.DeleteRequest
+import org.forgerock.json.resource.Requests
+import org.forgerock.json.resource.RootContext
+import org.forgerock.openicf.connectors.scriptedcrest.ScriptedCRESTConfiguration
+import org.forgerock.openicf.misc.scriptedcommon.OperationType
+import org.identityconnectors.common.logging.Log
+import org.identityconnectors.framework.common.objects.ObjectClass
+import org.identityconnectors.framework.common.objects.OperationOptions
+import org.identityconnectors.framework.common.objects.Uid
+
+def action = action as OperationType
+def configuration = configuration as ScriptedCRESTConfiguration
+def connection = connection as Connection
+def log = log as Log
+def objectClass = objectClass as ObjectClass
+def options = options as OperationOptions
+def uid = uid as Uid
+
+def objectClassInfo = configuration.propertyBag[objectClass.objectClassValue];
+if (objectClassInfo != null) {
+    DeleteRequest request = Requests.newDeleteRequest(objectClassInfo.resourceContainer, uid.uidValue)
+    request.setRevision(uid.revision)
+    connection.delete(new RootContext(), request)
+} else {
+    throw UnsupportedOperationException(action.name() + " operation of type:" + objectClass)
+}

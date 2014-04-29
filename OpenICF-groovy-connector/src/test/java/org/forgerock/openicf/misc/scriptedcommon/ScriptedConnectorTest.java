@@ -24,14 +24,16 @@
 
 package org.forgerock.openicf.misc.scriptedcommon;
 
+import static org.forgerock.openicf.connectors.RESTTestBase.createConnectorFacade;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.MissingResourceException;
 import java.util.Set;
 
-
 import org.forgerock.openicf.connectors.groovy.ScriptedConnector;
+import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.ConnectorFacade;
@@ -40,6 +42,7 @@ import org.identityconnectors.framework.common.exceptions.ConnectorSecurityExcep
 import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.identityconnectors.framework.common.exceptions.InvalidPasswordException;
+import org.identityconnectors.framework.common.exceptions.OperationTimeoutException;
 import org.identityconnectors.framework.common.exceptions.PermissionDeniedException;
 import org.identityconnectors.framework.common.exceptions.PreconditionFailedException;
 import org.identityconnectors.framework.common.exceptions.PreconditionRequiredException;
@@ -66,8 +69,6 @@ import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.test.common.TestHelpers;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import static org.forgerock.openicf.connectors.RESTTestBase.createConnectorFacade;
 
 public class ScriptedConnectorTest {
 
@@ -172,6 +173,13 @@ public class ScriptedConnectorTest {
         Assert.assertEquals(uid.getUidValue(), "TEST5");
     }
 
+    @Test(expectedExceptions = OperationTimeoutException.class)
+    public void testCreateTimeOut() throws Exception {
+        Set<Attribute> createAttributes = getTestConnectorObject("TIMEOUT");
+        getFacade(TEST_NAME).create(TEST, createAttributes, null);
+        Assert.fail();
+    }
+
     // =======================================================================
     // Delete Operation Test
     // =======================================================================
@@ -181,7 +189,6 @@ public class ScriptedConnectorTest {
         ConnectorFacade facade = getFacade(TEST_NAME);
         facade.delete(TEST, new Uid("TEST1"), null);
     }
-
 
     @Test(expectedExceptions = PreconditionFailedException.class)
     public void testDelete4() throws Exception {
@@ -193,6 +200,12 @@ public class ScriptedConnectorTest {
     public void testDelete5() throws Exception {
         ConnectorFacade facade = getFacade(TEST_NAME);
         facade.delete(TEST, new Uid("TEST5"), null);
+    }
+
+    @Test(expectedExceptions = OperationTimeoutException.class)
+    public void testDeleteTimeOut() throws Exception {
+        getFacade(TEST_NAME).delete(TEST, new Uid("TIMEOUT"), null);
+        Assert.fail();
     }
 
     // =======================================================================
@@ -287,7 +300,6 @@ public class ScriptedConnectorTest {
             search.create(ObjectClass.ACCOUNT, co, null);
         }
 
-
         OperationOptionsBuilder builder = new OperationOptionsBuilder();
         builder.setPageSize(10);
         builder.setSortKeys(new SortKey("sortKey", false));
@@ -296,20 +308,20 @@ public class ScriptedConnectorTest {
         final Set<ConnectorObject> resultSet = new HashSet<ConnectorObject>();
         int pageIndex = 0;
 
-        while ((result = search
-                .search(ObjectClass.ACCOUNT, FilterBuilder.startsWith(AttributeBuilder.build(Name.NAME, "TEST")),
-                        new ResultsHandler() {
-                            private int index = 101;
+        while ((result =
+                search.search(ObjectClass.ACCOUNT, FilterBuilder.startsWith(AttributeBuilder.build(
+                        Name.NAME, "TEST")), new ResultsHandler() {
+                    private int index = 101;
 
-                            public boolean handle(ConnectorObject connectorObject) {
-                                Integer idx = AttributeUtil.getIntegerValue(
-                                        connectorObject.getAttributeByName("sortKey"));
-                                Assert.assertTrue(idx < index);
-                                index = idx;
-                                return resultSet.add(connectorObject);
-                            }
-                        }, builder.build()
-                )).getPagedResultsCookie() != null) {
+                    public boolean handle(ConnectorObject connectorObject) {
+                        Integer idx =
+                                AttributeUtil.getIntegerValue(connectorObject
+                                        .getAttributeByName("sortKey"));
+                        Assert.assertTrue(idx < index);
+                        index = idx;
+                        return resultSet.add(connectorObject);
+                    }
+                }, builder.build())).getPagedResultsCookie() != null) {
 
             builder = new OperationOptionsBuilder(builder.build());
             builder.setPagedResultsCookie(result.getPagedResultsCookie());
@@ -328,11 +340,12 @@ public class ScriptedConnectorTest {
         final ConnectorFacade facade = getFacade(TEST_NAME);
         final List<SyncDelta> result = new ArrayList<SyncDelta>();
 
-        SyncToken lastToken = facade.sync(ObjectClass.ACCOUNT, new SyncToken(0), new SyncResultsHandler() {
-            public boolean handle(SyncDelta delta) {
-                return result.add(delta);
-            }
-        }, null);
+        SyncToken lastToken =
+                facade.sync(ObjectClass.ACCOUNT, new SyncToken(0), new SyncResultsHandler() {
+                    public boolean handle(SyncDelta delta) {
+                        return result.add(delta);
+                    }
+                }, null);
         Assert.assertEquals(lastToken.getValue(), 1);
         Assert.assertEquals(result.size(), 1);
         SyncDelta delta = result.remove(0);
@@ -349,7 +362,6 @@ public class ScriptedConnectorTest {
         delta = result.remove(0);
         Assert.assertEquals(delta.getDeltaType(), SyncDeltaType.UPDATE);
 
-
         lastToken = facade.sync(ObjectClass.ACCOUNT, lastToken, new SyncResultsHandler() {
             public boolean handle(SyncDelta delta) {
                 return result.add(delta);
@@ -359,7 +371,6 @@ public class ScriptedConnectorTest {
         Assert.assertEquals(result.size(), 1);
         delta = result.remove(0);
         Assert.assertEquals(delta.getDeltaType(), SyncDeltaType.CREATE_OR_UPDATE);
-
 
         lastToken = facade.sync(ObjectClass.ACCOUNT, lastToken, new SyncResultsHandler() {
             public boolean handle(SyncDelta delta) {
@@ -372,7 +383,6 @@ public class ScriptedConnectorTest {
         Assert.assertEquals(delta.getDeltaType(), SyncDeltaType.UPDATE);
         Assert.assertEquals(delta.getPreviousUid().getUidValue(), "001");
 
-
         lastToken = facade.sync(ObjectClass.ACCOUNT, lastToken, new SyncResultsHandler() {
             public boolean handle(SyncDelta delta) {
                 return result.add(delta);
@@ -383,7 +393,6 @@ public class ScriptedConnectorTest {
         delta = result.remove(0);
         Assert.assertEquals(delta.getDeltaType(), SyncDeltaType.DELETE);
 
-
         lastToken = facade.sync(ObjectClass.ACCOUNT, lastToken, new SyncResultsHandler() {
             public boolean handle(SyncDelta delta) {
                 return result.add(delta);
@@ -391,7 +400,6 @@ public class ScriptedConnectorTest {
         }, null);
         Assert.assertEquals(lastToken.getValue(), 10);
         Assert.assertTrue(result.isEmpty());
-
 
         lastToken = facade.sync(ObjectClass.ACCOUNT, lastToken, new SyncResultsHandler() {
             public boolean handle(SyncDelta delta) {
@@ -417,11 +425,12 @@ public class ScriptedConnectorTest {
         final ConnectorFacade facade = getFacade(TEST_NAME);
         final List<SyncDelta> result = new ArrayList<SyncDelta>();
 
-        SyncToken lastToken = facade.sync(ObjectClass.ALL, new SyncToken(0), new SyncResultsHandler() {
-            public boolean handle(SyncDelta delta) {
-                return result.add(delta);
-            }
-        }, null);
+        SyncToken lastToken =
+                facade.sync(ObjectClass.ALL, new SyncToken(0), new SyncResultsHandler() {
+                    public boolean handle(SyncDelta delta) {
+                        return result.add(delta);
+                    }
+                }, null);
         Assert.assertEquals(lastToken.getValue(), 17);
         Assert.assertEquals(result.size(), 7);
         int index = 10;
@@ -495,6 +504,12 @@ public class ScriptedConnectorTest {
         Assert.assertEquals(uid.getUidValue(), "2");
     }
 
+    @Test(expectedExceptions = OperationTimeoutException.class)
+    public void testUpdateTimeOut() throws Exception {
+        getFacade(TEST_NAME).update(TEST, new Uid("TIMEOUT"),
+                CollectionUtil.newSet(AttributeBuilder.build("null")), null);
+        Assert.fail();
+    }
 
     private Set<Attribute> getTestConnectorObject(String name) {
         Set<Attribute> createAttributes = new HashSet<Attribute>(1);

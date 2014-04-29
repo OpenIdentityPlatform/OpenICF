@@ -20,17 +20,22 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * @author Gael Allioux <gael.allioux@forgerock.com>
  */
 
 
-import org.identityconnectors.common.logging.Log
+import org.forgerock.openicf.connectors.scriptedsql.ScriptedSQLConfiguration
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
-import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration
+import org.identityconnectors.common.logging.Log
 import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationOptions
 
+import java.sql.Connection
+
 def action = action as OperationType
-def configuration = configuration as ScriptedConfiguration
+def configuration = configuration as ScriptedSQLConfiguration
+def connection = connection as Connection
 def username = username as String
 def log = log as Log
 def objectClass = objectClass as ObjectClass

@@ -47,14 +47,12 @@ import org.identityconnectors.common.Assertions
 import org.identityconnectors.common.security.GuardedString
 import org.identityconnectors.framework.spi.AbstractConfiguration
 import org.identityconnectors.framework.spi.ConfigurationProperty
-import org.identityconnectors.framework.spi.StatefulConfiguration
 
 /**
  * Extends the {@link AbstractConfiguration} class to provide all the necessary
  * parameters to initialize the ScriptedREST Connector.
  *
  * @author Gael Allioux <gael.allioux@gmail.com>
- * @version 1.1.0.0
  */
 public class ScriptedRESTConfiguration extends ScriptedConfiguration {
 
@@ -121,25 +119,11 @@ public class ScriptedRESTConfiguration extends ScriptedConfiguration {
         return serviceAddress
     }
 
-    void setServiceAddress(URI serviceAddress) {
-        this.serviceAddress = serviceAddress
-        host = null;
-    }
-
     // ===============================================
     // HTTP Proxy
     // ===============================================
 
     URI proxyAddress = null;
-
-    URI getProxyAddress() {
-        return proxyAddress
-    }
-
-    void setProxyAddress(URI proxyAddress) {
-        this.proxyAddress = proxyAddress
-        proxy = null;
-    }
 
     // ===============================================
     // HTTP content
@@ -178,10 +162,6 @@ public class ScriptedRESTConfiguration extends ScriptedConfiguration {
             }
         }
     }
-
-    private HttpHost host = null;
-
-    private HttpHost proxy = null;
 
     private HttpHost getHttpHost() {
         return new HttpHost(serviceAddress?.host, serviceAddress?.port, serviceAddress?.scheme);

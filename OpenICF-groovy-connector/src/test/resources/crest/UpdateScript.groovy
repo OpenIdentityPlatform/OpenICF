@@ -22,3 +22,105 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
 
+import org.forgerock.json.resource.Connection
+import org.forgerock.json.resource.NotFoundException
+import org.forgerock.json.resource.PatchRequest
+import org.forgerock.json.resource.ReadRequest
+import org.forgerock.json.resource.Requests
+import org.forgerock.json.resource.Resource
+import org.forgerock.json.resource.RootContext
+import org.forgerock.json.resource.UpdateRequest
+import org.forgerock.openicf.connectors.scriptedcrest.ScriptedCRESTConfiguration
+import org.forgerock.openicf.misc.scriptedcommon.OperationType
+import org.identityconnectors.common.logging.Log
+import org.identityconnectors.framework.common.exceptions.ConnectorException
+import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException
+import org.identityconnectors.framework.common.exceptions.UnknownUidException
+import org.identityconnectors.framework.common.objects.Attribute
+import org.identityconnectors.framework.common.objects.ObjectClass
+import org.identityconnectors.framework.common.objects.OperationOptions
+import org.identityconnectors.framework.common.objects.Schema
+import org.identityconnectors.framework.common.objects.Uid
+
+def action = action as OperationType
+def updateAttributes = attributes as Set<Attribute>
+def configuration = configuration as ScriptedCRESTConfiguration
+def connection = connection as Connection
+def id = id as Attribute
+def log = log as Log
+def objectClass = objectClass as ObjectClass
+def options = options as OperationOptions
+def uid = uid as Uid
+def schema = schema as Schema
+
+
+switch (action) {
+    case OperationType.UPDATE:
+        Map<String, Object> objectClassInfo = configuration.propertyBag[objectClass.objectClassValue];
+        if (objectClassInfo != null) {
+
+            if (true) {
+                ReadRequest request = Requests.newReadRequest(objectClassInfo.resourceContainer, uid.uidValue)
+                request.addField("/")
+                try {
+                    Resource resource = connection.read(new RootContext(), request)
+
+                    updateAttributes.each {
+                        def info = objectClassInfo.attributes[it.name]
+                        if (null != info && info.attributeInfo.isUpdateable()) {
+                            if (it.value == null) {
+                                if (resource.content.isDefined(info.jsonName)) {
+                                    resource.content.put(info.jsonName, null)
+                                }
+                            } else if (info.attributeInfo.isMultiValued()) {
+                                if (it.value.isEmpty()) {
+                                    resource.content.put(info.jsonName, it.value)
+                                } else {
+                                    resource.content.put(info.jsonName, it.value.each { a ->
+                                        CRESTHelper.fromAttributeToJSON(info.attributeInfo, a)
+                                    })
+                                }
+                            } else if (it.value.size() > 1) {
+                                final StringBuilder msg =
+                                        new StringBuilder("The ").append(it.name).append(
+                                                " attribute is not single value attribute.");
+                                throw new InvalidAttributeValueException(msg.toString());
+                            } else {
+                                if (it.value.isEmpty()) {
+                                    if (resource.content.isDefined(info.jsonName)) {
+                                        resource.content.put(info.jsonName, null)
+                                    }
+                                } else {
+                                    resource.content.put(info.jsonName, CRESTHelper.fromAttributeToJSON(info.attributeInfo, it.value.get(0)))
+                                }
+                            }
+                        }
+                    }
+
+                    UpdateRequest updateRequest = Requests.newUpdateRequest(request.resourceName, resource.content)
+                    updateRequest.setRevision(resource.revision)
+                    updateRequest.addField("_id", "_rev")
+                    def r = connection.update(new RootContext(), updateRequest)
+                    return new Uid(r.getId(), r.getRevision())
+                } catch (NotFoundException e) {
+                    throw new UnknownUidException(uid, objectClass).initCause(e)
+                }
+            } else {
+                PatchRequest request = Requests.newPatchRequest(objectClassInfo.resourceContainer, uid.uidValue)
+                request.addField("_id", "_rev")
+
+
+                Resource resource = connection.patch(new RootContext(), request)
+                return new Uid(resource.getId(), resource.getRevision())
+            }
+        } else {
+            throw UnsupportedOperationException(action.name() + " operation of type:" + objectClass)
+        }
+        break
+    case OperationType.ADD_ATTRIBUTE_VALUES:
+        throw new UnsupportedOperationException()
+    case OperationType.REMOVE_ATTRIBUTE_VALUES:
+        throw new UnsupportedOperationException()
+    default:
+        throw new ConnectorException("UpdateScript can not handle action:" + action.name())
+}

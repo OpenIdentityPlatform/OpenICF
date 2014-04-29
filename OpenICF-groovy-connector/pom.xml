@@ -130,6 +130,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.easytesting</groupId>
+            <artifactId>fest-assert-core</artifactId>
+            <version>2.0M10</version>
+        </dependency>
+        <dependency>
             <groupId>org.forgerock.openicf.framework</groupId>
             <artifactId>connector-framework-internal</artifactId>
             <scope>test</scope>
