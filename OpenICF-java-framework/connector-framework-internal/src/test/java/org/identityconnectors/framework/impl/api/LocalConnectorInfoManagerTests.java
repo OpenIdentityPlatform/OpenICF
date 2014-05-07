@@ -50,10 +50,11 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
     public void testCheckVersion() throws Exception {
         // The test bundles require framework 1.0, so pretend the framework is
         // older.
-        after();
         FrameworkUtilTestHelpers.setFrameworkVersion(Version.parse("0.5"));
         try {
-            getConnectorInfoManager();
+            List<URL> urls = getTestBundles();
+            Assert.assertFalse(urls.isEmpty());
+            ConnectorInfoManagerFactory.getInstance().getLocalManager(urls.get(0));
             Assert.fail();
         } catch (ConfigurationException e) {
             if (!e.getMessage().contains("unrecognized framework version")) {
