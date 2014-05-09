@@ -39,58 +39,65 @@
 
  <table xml:id="supported-operations">
   <title>Supported Operations</title>
-  <tgroup cols="4">
-   <colspec colnum="1" colwidth="3*"/>
-   <colspec colnum="2" colwidth="3*"/>
-   <colspec colnum="3" colwidth="1*" />
-   <colspec colnum="4" colwidth="1*" />
+  <tgroup cols="5">
+   <colspec colname="c1" colwidth="1*"/>
+   <colspec colname="c2" colwidth="1*"/>
+   <colspec colname="c3" colwidth="1*" />
+   <colspec colname="c4" colwidth="3*" />
    <thead>
     <row>
      <entry>Operation</entry>
-     <entry>Supported Options</entry>
-     <entry>Supported for Groups</entry>
-     <entry>Supported for Accounts</entry>
+     <entry namest="c2" nameend="c4" align="center">Supported Options</entry>
     </row>
    </thead>
    <tbody>
     <row valign="top">
      <entry>
-      <literal>{operation.name}</literal>
+      <literal> </literal>
      </entry>
+     <entry><emphasis role="strong">Name</emphasis></entry>
+     <entry><emphasis role="strong">Type</emphasis></entry>
+     <entry><emphasis role="strong">Description</emphasis></entry>
+    </row>
+    <row>
+     <entry>{operation.name}</entry>
      <entry>
       <simplelist>
-       <member><literal>supported.option1</literal></member>
-       <member><literal>supported.option2</literal></member>
+       <member>{option1.name}</member>
+       <member>{option2.name}</member>
+       <member>{option3.name}</member>
       </simplelist>
      </entry>
      <entry>
-       <mediaobject>
-        <imageobject>
-         <imagedata fileref="images/yes-icon.png" format="PNG" />
-        </imageobject>
-       </mediaobject>
+      <simplelist>
+       <member>{option1.type}</member>
+       <member>{option2.type}</member>
+       <member>{option3.type}</member>
+      </simplelist>
      </entry>
      <entry>
-       <mediaobject>
-        <imageobject>
-         <imagedata fileref="images/no-icon.png" format="PNG" />
-        </imageobject>
-       </mediaobject>
+      <simplelist>
+       <member>{option1.description}</member>
+       <member>{option2.description}</member>
+       <member>{option3.description}</member>
+      </simplelist>
      </entry>
     </row>
    </tbody>
   </tgroup>
  </table>
 
- <table xml:id="account-attributes">
-  <title>Attributes Supported for the Account Object Class</title>
-  <tgroup cols="6">
+ <table xml:id="supported-attributes">
+  <title>Supported Attributes</title>
+  <tgroup cols="8">
    <colspec colnum="1" colwidth="2*"/>
    <colspec colnum="2" colwidth="1*" />
    <colspec colnum="3" colwidth="1*" />
    <colspec colnum="4" colwidth="1*" />
-   <colspec colnum="3" colwidth="1*" />
-   <colspec colnum="4" colwidth="1*" />
+   <colspec colnum="5" colwidth="1*" />
+   <colspec colnum="6" colwidth="1*" />
+   <colspec colnum="7" colwidth="1*" />
+   <colspec colnum="8" colwidth="1*" />
    <thead>
     <row>
      <entry>Attribute</entry>
@@ -99,6 +106,8 @@
      <entry>Multivalued</entry>
      <entry>Creatable</entry>
      <entry>Modifiable</entry>
+     <entry>Readable</entry>
+     <entry>Returned by Default</entry>
     </row>
    </thead>
    <tbody>
@@ -137,38 +146,6 @@
         </imageobject>
        </mediaobject>
      </entry>
-    </row>
-   </tbody>
-  </tgroup>
- </table>
-
- <table xml:id="group-attributes">
-  <title>Attributes Supported for the Group Object Class</title>
-  <tgroup cols="6">
-   <colspec colnum="1" colwidth="2*"/>
-   <colspec colnum="2" colwidth="1*" />
-   <colspec colnum="3" colwidth="1*" />
-   <colspec colnum="4" colwidth="1*" />
-   <colspec colnum="3" colwidth="1*" />
-   <colspec colnum="4" colwidth="1*" />
-   <thead>
-    <row>
-     <entry>Attribute</entry>
-     <entry>Type</entry>
-     <entry>Required</entry>
-     <entry>Multivalued</entry>
-     <entry>Creatable</entry>
-     <entry>Modifiable</entry>
-    </row>
-   </thead>
-   <tbody>
-    <row valign="top">
-     <entry>
-      <literal>{property.name}</literal>
-     </entry>
-     <entry>
-      <literal>{property.type}</literal>
-     </entry>
      <entry>
        <mediaobject>
         <imageobject>
@@ -180,20 +157,6 @@
        <mediaobject>
         <imageobject>
          <imagedata fileref="images/yes-icon.png" format="PNG" />
-        </imageobject>
-       </mediaobject>
-     </entry>
-     <entry>
-       <mediaobject>
-        <imageobject>
-         <imagedata fileref="images/no-icon.png" format="PNG" />
-        </imageobject>
-       </mediaobject>
-     </entry>
-     <entry>
-       <mediaobject>
-        <imageobject>
-         <imagedata fileref="images/no-icon.png" format="PNG" />
         </imageobject>
        </mediaobject>
      </entry>

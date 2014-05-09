@@ -45,8 +45,7 @@
     <term>
      <link xlink:show="new"
       xlink:href="config-reference#interface-attributeNormalizer"
-      xlink:role="http://docbook.org/xlink/role/olink"><citetitle>AttributeNormalizer</citetitle>
-     </link>
+      xlink:role="http://docbook.org/xlink/role/olink">AttributeNormalizer</link>
     </term>
     <listitem>
      <para>
