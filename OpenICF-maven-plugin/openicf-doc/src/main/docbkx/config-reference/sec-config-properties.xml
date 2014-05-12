@@ -42,17 +42,31 @@
   <title>{groupMessageKey1} Properties</title>
 
  <informaltable>
-  <tgroup cols="5">
+  <tgroup cols="6">
    <colspec colnum="1" colwidth="2*" />
    <colspec colnum="2" colwidth="1*" />
    <colspec colnum="3" colwidth="1*" />
-   <colspec colnum="4" colwidth="3*" />
-   <colspec colnum="5" colwidth="2*" />
+   <colspec colnum="4" colwidth="1*" />
+   <colspec colnum="5" colwidth="3*" />
+   <colspec colnum="6" colwidth="2*" />
    <thead>
     <row>
      <entry>Property</entry>
      <entry>Type</entry>
      <entry>Default Value</entry>
+     <entry>
+       <mediaobject>
+        <imageobject>
+         <imagedata fileref="images/encrypted.png" format="PNG" />
+        </imageobject>
+       </mediaobject>
+      <footnote>
+       <para>
+        Indicates whether the property value is considered confidential, and
+        therefore encrypted in OpenIDM.
+       </para>
+      </footnote>
+     </entry>
      <entry>Description</entry>
      <entry>Required for these Operations</entry>
     </row>
@@ -67,6 +81,13 @@
      </entry>
      <entry>
       <literal>{property.value}</literal>
+     </entry>
+     <entry>
+       <mediaobject>
+        <imageobject>
+         <imagedata fileref="images/encrypted.png" format="PNG" />
+        </imageobject>
+       </mediaobject>
      </entry>
      <entry>
       <literal>{property.description}</literal>

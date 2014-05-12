@@ -50,6 +50,13 @@
   </para>
  </section>
 
+ <section xml:id="connector-pooling">
+  <title>Configuring Connector Pooling</title>
+  <para>
+   TO BE WRITTEN MANUALLY
+  </para>
+ </section>
+
 
  <!--This chapter is written manually for each connector -->
 

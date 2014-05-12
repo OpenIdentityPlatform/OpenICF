@@ -29,13 +29,29 @@
   xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
   xsi:schemaLocation='http://docbook.org/ns/docbook
   http://docbook.org/xml/5.0/xsd/docbook.xsd'
-  xmlns:xinclude='http://www.w3.org/2001/XInclude'>
+  xmlns:xinclude='http://www.w3.org/2001/XInclude'
+  xmlns:xlink='http://www.w3.org/1999/xlink'>
 
  <title>${connectorName} Configuration</title>
  <para>
   This chapter describes the structure and configuration of the ${connectorName},
   the operations that are supported by the connector, and the connector schema.
  </para>
+
+ <!--If "connectorPoolingSupported":true, -->
+ <para>
+  The ${connectorName} supports connector pooling for improved performance and
+  scalability. For information about configuring connector pooling, see the
+  <link xlink:show="new" xlink:href="config-reference#connector-pooling"
+  xlink:role="http://docbook.org/xlink/role/olink">Configuring Connector
+  Pooling</link>.
+ </para>
+
+ <!--If "connectorPoolingSupported":false, -->
+ <para>
+  The ${connectorName} does not support connector pooling.
+ </para>
+
 
  <xinclude:include href="sec-reference.xml" />
  <xinclude:include href="sec-implemented-interfaces.xml" />
