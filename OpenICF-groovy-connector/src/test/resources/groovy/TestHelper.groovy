@@ -27,27 +27,41 @@ import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import org.identityconnectors.common.security.GuardedByteArray
 import org.identityconnectors.common.security.GuardedString
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException
+import org.identityconnectors.framework.common.exceptions.ConfigurationException
+import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException
+import org.identityconnectors.framework.common.exceptions.ConnectionFailedException
+import org.identityconnectors.framework.common.exceptions.ConnectorException
+import org.identityconnectors.framework.common.exceptions.ConnectorIOException
+import org.identityconnectors.framework.common.exceptions.ConnectorSecurityException
 import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException
+import org.identityconnectors.framework.common.exceptions.OperationTimeoutException
 import org.identityconnectors.framework.common.exceptions.PreconditionFailedException
 import org.identityconnectors.framework.common.exceptions.PreconditionRequiredException
 import org.identityconnectors.framework.common.exceptions.RetryableException
 import org.identityconnectors.framework.common.exceptions.UnknownUidException
 import org.identityconnectors.framework.common.objects.NameUtil
 import org.identityconnectors.framework.common.objects.ObjectClass
+import org.identityconnectors.framework.common.objects.OperationOptions
 import org.identityconnectors.framework.common.objects.Uid
 
 import java.nio.charset.Charset
 
-/**
- *
- */
 class TestHelper {
 
     static final ObjectClass TEST = new ObjectClass(NameUtil.createSpecialName('TEST'))
     static final ObjectClass SAMPLE = new ObjectClass(NameUtil.createSpecialName('SAMPLE'))
 
 
-    static Uid exceptionTest(OperationType operation, ObjectClass objectClass, Uid uid) {
+    static Uid exceptionTest(OperationType operation, ObjectClass objectClass, Uid uid, OperationOptions options) {
+        if (null != options.getRunAsUser()){
+            if (null == options.getRunWithPassword()) {
+                throw new IllegalArgumentException("Missing Run As Password")
+            } else if ("valid-session".equals(options.getRunAsUser() && options.getRunWithPassword() == null)){
+                // Use valid session ID
+            } else if (!"admin".equals(options.getRunAsUser()) || !new GuardedString("Passw0rd".toCharArray()).equals(options.getRunWithPassword())){
+                throw new ConnectorSecurityException("Invalid Run As Credentials");
+            }
+        }
         if ("TEST1".equals(uid.uidValue)) {
             if (OperationType.CREATE.equals(operation)) {
                 throw new AlreadyExistsException(
@@ -83,6 +97,20 @@ class TestHelper {
             }
         } else if ("TIMEOUT".equals(uid.uidValue)) {
             Thread.sleep(30000)
+        } else if ("TESTEX_CE".equals(uid.uidValue)) {
+            throw new ConfigurationException(new MissingResourceException("Test Failed", operation.name(), "Example"));
+        } else if ("TESTEX_CB".equals(uid.uidValue)) {
+            throw new ConnectionBrokenException("Example Message");
+        } else if ("TESTEX_CF".equals(uid.uidValue)) {
+            throw new ConnectionFailedException("Example Message");
+        } else if ("TESTEX_C".equals(uid.uidValue)) {
+            throw new ConnectorException("Example Message");
+        } else if ("TESTEX_CIO".equals(uid.uidValue)) {
+            throw new ConnectorIOException("Example Message");
+        } else if ("TESTEX_OT".equals(uid.uidValue)) {
+            throw new OperationTimeoutException("Example Message");
+        } else if ("TESTEX_NPE".equals(uid.uidValue)) {
+            throw new NullPointerException("Example Message");
         }
         return uid;
     }

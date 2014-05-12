@@ -22,11 +22,12 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
 
+
 import ObjectCacheLibrary
 import org.forgerock.openicf.misc.scriptedcommon.ICFObjectBuilder as ICF
-import org.identityconnectors.common.logging.Log
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration
+import org.identityconnectors.common.logging.Log
 import org.identityconnectors.framework.common.objects.Attribute
 import org.identityconnectors.framework.common.objects.ConnectorObject
 import org.identityconnectors.framework.common.objects.ObjectClass
@@ -54,8 +55,8 @@ switch (objectClass) {
             final String pagedResultsCookie = options.getPagedResultsCookie();
             String currentPagedResultsCookie = options.getPagedResultsCookie();
             final Integer pagedResultsOffset =
-                null != options.getPagedResultsOffset() ? Math.max(0, options
-                        .getPagedResultsOffset()) : 0;
+                    null != options.getPagedResultsOffset() ? Math.max(0, options
+                            .getPagedResultsOffset()) : 0;
             final Integer pageSize = options.getPageSize();
 
             int index = 0;
@@ -102,6 +103,24 @@ switch (objectClass) {
         }
 
         break
+    case TestHelper.TEST:
+        Set<String> attributesToGet = null;
+        if (null != options.attributesToGet) {
+            attributesToGet = options.attributesToGet as Set<String>
+        }
+
+        for (i in 0..9) {
+            handler({
+                uid String.format("UID%02d", i)
+                id String.format("TEST%02d", i)
+                TestHelper.connectorObjectTemplate.each { key, value ->
+                    if (attributesToGet == null || attributesToGet.contains(key)) {
+                        attribute key, value
+                    }
+                }
+            })
+        }
+        break;
     case TestHelper.SAMPLE:
         handler(
                 ICF.co {
@@ -142,10 +161,10 @@ switch (objectClass) {
             attribute 'NULL'
             attributes(new Attribute('emails', [
                     [
-                            "address": "foo@example.com",
-                            "type": "home",
+                            "address"   : "foo@example.com",
+                            "type"      : "home",
                             "customType": "",
-                            "primary": true]
+                            "primary"   : true]
             ]))
         }
         )

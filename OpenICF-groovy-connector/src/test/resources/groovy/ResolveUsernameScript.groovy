@@ -38,7 +38,7 @@ def objectClass = objectClass as ObjectClass
 def options = options as OperationOptions
 
 if (objectClass.is(ObjectClass.ACCOUNT_NAME)) {
-    if (username.equals("TEST1")) {
+    if (username.equals("TESTOK1")) {
         return new Uid("123")
     }
     throw new UnknownUidException();

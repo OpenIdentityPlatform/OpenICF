@@ -22,9 +22,10 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
 
-import org.identityconnectors.common.logging.Log
+
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration
+import org.identityconnectors.common.logging.Log
 import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException
 import org.identityconnectors.framework.common.exceptions.InvalidPasswordException
@@ -40,12 +41,12 @@ def scriptArguments = scriptArguments as Map
 def scriptLanguage = scriptLanguage as String
 def scriptText = scriptText as String
 
-if ("shell".equalsIgnoreCase(scriptLanguage)) {
+if ("groovy".equalsIgnoreCase(scriptLanguage)) {
     log.info("Evaluate {0} Script", action)
     if (null != options.runAsUser) {
         if ("admin".equals(options.runAsUser)) {
-            if ("password".equals(decrypt(options.runWithPassword))) {
-                return [active: true]
+            if ("Passw0rd".equals(decrypt(options.runWithPassword))) {
+                log.info("Successfully authenticated")
             } else {
                 throw new InvalidPasswordException()
             }
@@ -53,7 +54,9 @@ if ("shell".equalsIgnoreCase(scriptLanguage)) {
             throw new InvalidCredentialException();
         }
     }
-    return true
+    Binding binding = new Binding();
+    binding.setVariable("arg", scriptArguments)
+    return new GroovyShell(binding).evaluate(scriptText);
 } else {
     throw new InvalidAttributeValueException("Unsupported scriptLanguage:" + scriptLanguage)
 }

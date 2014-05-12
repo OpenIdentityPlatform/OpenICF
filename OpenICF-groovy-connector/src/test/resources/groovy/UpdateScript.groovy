@@ -61,7 +61,7 @@ switch (action) {
                 break
             case TestHelper.TEST:
                 //Sample script for IDME-180:Support MVCC Revision attribute
-                TestHelper.exceptionTest(action, objectClass, uid)
+                TestHelper.exceptionTest(action, objectClass, uid, options)
                 break
             case TestHelper.SAMPLE:
                 throw UnsupportedOperationException("Update operation of type:" + objectClass)

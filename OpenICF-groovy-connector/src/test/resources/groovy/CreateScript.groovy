@@ -66,7 +66,7 @@ switch (objectClass) {
         break
     case TestHelper.TEST:
         Uid uid = new Uid(name, "0")
-        return TestHelper.exceptionTest(action, objectClass, uid)
+        return TestHelper.exceptionTest(action, objectClass, uid, options)
         break
     case TestHelper.SAMPLE:
         return ObjectCacheLibrary.instance.create(ICF.co {

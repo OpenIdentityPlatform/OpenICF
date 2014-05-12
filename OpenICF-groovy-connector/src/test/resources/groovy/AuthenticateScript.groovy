@@ -30,6 +30,7 @@ import org.identityconnectors.common.security.SecurityUtil
 import org.identityconnectors.framework.common.exceptions.ConnectorSecurityException
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException
 import org.identityconnectors.framework.common.exceptions.InvalidPasswordException
+import org.identityconnectors.framework.common.exceptions.PasswordExpiredException
 import org.identityconnectors.framework.common.exceptions.PermissionDeniedException
 import org.identityconnectors.framework.common.exceptions.UnknownUidException
 import org.identityconnectors.framework.common.objects.ObjectClass
@@ -64,11 +65,18 @@ switch (objectClass) {
         } else if (username.equals("TEST4")) {
             throw new PermissionDeniedException();
         } else if (username.equals("TEST5")) {
+            throw new PasswordExpiredException();
+        } else if (username.equals("TESTOK1")) {
             def clearPassword = SecurityUtil.decrypt(password)
             if ("Passw0rd".equals(clearPassword)) {
                 return new Uid(username);
             }
             throw new InvalidPasswordException();
+        } else if (username.equals("TESTOK2")) {
+            def clearPassword = SecurityUtil.decrypt(password)
+            if ("".equals(clearPassword)) {
+                return new Uid(username);
+            }
         }
         throw new UnknownUidException();
     case TestHelper.SAMPLE:
