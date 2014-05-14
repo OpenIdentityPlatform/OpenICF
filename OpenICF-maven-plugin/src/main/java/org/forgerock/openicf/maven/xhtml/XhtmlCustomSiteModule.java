@@ -1,7 +1,7 @@
 /*
- * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2014 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -21,17 +21,24 @@
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
-package org.forgerock.openicf.connectors.docbook;
 
-import org.identityconnectors.framework.spi.StatefulConfiguration;
+package org.forgerock.openicf.maven.xhtml;
+
+import org.apache.maven.doxia.module.site.AbstractSiteModule;
+import org.apache.maven.doxia.module.site.SiteModule;
+import org.codehaus.plexus.component.annotations.Component;
 
 /**
- * Class to represent a DocBook Configuration
+ * An XhtmlCustomSiteModule allows Script content in final HTML.
  *
+ * @author Laszlo Hordos
  */
-public class DocBookStatefulConfiguration extends DocBookConfiguration implements
-        StatefulConfiguration {
-
-    public void release() {
+@Component(role = SiteModule.class, hint = "xhtml-custom")
+public class XhtmlCustomSiteModule extends AbstractSiteModule {
+    /**
+     * Default constructor.
+     */
+    public XhtmlCustomSiteModule() {
+        super("xhtml-custom", "xhtml", "xhtml-custom");
     }
 }

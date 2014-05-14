@@ -32,7 +32,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.velocity.context.Context;
 import org.codehaus.plexus.i18n.I18N;
-import org.identityconnectors.framework.spi.Connector;
+import org.identityconnectors.framework.api.RemoteFrameworkConnectionInfo;
 
 /**
  * A ConnectorMojoBridge is a common interface for different report Mojos using
@@ -40,23 +40,29 @@ import org.identityconnectors.framework.spi.Connector;
  *
  * @author Laszlo Hordos
  */
-public interface ConnectorMojoBridge extends Mojo, ContextEnabled {
+interface ConnectorMojoBridge extends Mojo, ContextEnabled {
 
-    public File getBasedir();
+    File getBasedir();
 
-    public File getBuildOutputDirectory();
+    RemoteFrameworkConnectionInfo getRemoteFrameworkConnectionInfo();
 
-    public String getSourceEncoding();
+    File getBuildOutputDirectory();
 
-    public String getTemplateDirectory();
+    String[] getIncludes();
 
-    public I18N getI18N();
+    String[] getExcludes();
 
-    public MavenProject getMavenProject();
+    String getSourceEncoding();
 
-    public PropertyBag getConfigurationProperties();
+    String getTemplateDirectory();
 
-    public void generate(ConnectorDocBuilder builder, Context context,
-            Class<? extends Connector> connectorClass) throws MojoExecutionException;
+    I18N getI18N();
+
+    MavenProject getMavenProject();
+
+    PropertyBag getConfigurationProperties();
+
+    void generate(ConnectorDocBuilder builder, Context context, String connectorName)
+            throws MojoExecutionException;
 
 }

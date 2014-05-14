@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 ForgeRock AS. All Rights Reserved
+ * Copyright (c) 2012-2014 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -27,6 +27,8 @@ package org.forgerock.openicf.maven;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
@@ -40,12 +42,14 @@ import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.WriterFactory;
 
+import edu.emory.mathcs.backport.java.util.Arrays;
+
 /**
  * Goal generate a new POM and keeps only the minimal information.
  * <p/>
  * To debug execute this command:
  * {@code mvnDebug org.forgerock.maven.plugins:openicf-maven-plugin:reduce-pom}
- * 
+ *
  * @author Laszlo Hordos
  */
 @Mojo(name = "reduce-pom", defaultPhase = LifecyclePhase.PACKAGE)
@@ -74,6 +78,12 @@ public class ReducePomMojo extends AbstractMojo {
     private boolean skip;
 
     /**
+     * List of Element names in Pom to remove.
+     */
+    @Parameter
+    private String[] removeElement;
+
+    /**
      * {@inheritDoc}
      */
     public void execute() throws MojoExecutionException {
@@ -82,18 +92,46 @@ public class ReducePomMojo extends AbstractMojo {
             try {
                 Model model = project.getOriginalModel();
 
-                // TODO Configure the removed elements
-                model.setBuild(null);
-                model.setDependencies(null);
-                model.setDependencyManagement(null);
-                model.setDistributionManagement(null);
-                model.setParent(null);
-                model.setProfiles(null);
-                model.setProperties(null);
-                model.setPluginRepositories(null);
-                model.setReporting(null);
-                model.setReports(null);
-                model.setRepositories(null);
+                Set<String> removeSet = null;
+
+                if (null != removeElement) {
+                    removeSet = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+                    removeSet.addAll(Arrays.asList(removeElement));
+                }
+
+                if (removeSet == null || removeSet.contains("build")) {
+                    model.setBuild(null);
+                }
+                if (removeSet == null || removeSet.contains("dependencies")) {
+                    model.setDependencies(null);
+                }
+                if (removeSet == null || removeSet.contains("dependencyManagement")) {
+                    model.setDependencyManagement(null);
+                }
+                if (removeSet == null || removeSet.contains("distributionManagement")) {
+                    model.setDistributionManagement(null);
+                }
+                if (removeSet == null || removeSet.contains("parent")) {
+                    model.setParent(null);
+                }
+                if (removeSet == null || removeSet.contains("profiles")) {
+                    model.setProfiles(null);
+                }
+                if (removeSet == null || removeSet.contains("properties")) {
+                    model.setProperties(null);
+                }
+                if (removeSet == null || removeSet.contains("pluginRepositories")) {
+                    model.setPluginRepositories(null);
+                }
+                if (removeSet == null || removeSet.contains("reporting")) {
+                    model.setReporting(null);
+                }
+                if (removeSet == null || removeSet.contains("reports")) {
+                    model.setReports(null);
+                }
+                if (removeSet == null || removeSet.contains("repositories")) {
+                    model.setRepositories(null);
+                }
 
                 /*
                  * NOTE: Be sure to create the POM in the original base

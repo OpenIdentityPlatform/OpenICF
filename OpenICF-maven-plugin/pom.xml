@@ -76,11 +76,11 @@
         <url>https://bugster.forgerock.org/jira/browse/OPENICF/component/10207</url>
     </issueManagement>
     <properties>
-        <mavenVersion>3.0</mavenVersion>
+        <mavenVersion>3.0.4</mavenVersion>
         <mavenFilteringVersion>1.1</mavenFilteringVersion>
         <mavenPluginVersion>3.2</mavenPluginVersion>
         <mavenPluginPluginVersion>3.2</mavenPluginPluginVersion>
-        <doxiaVersion>1.5</doxiaVersion>
+        <doxiaVersion>1.4</doxiaVersion>
         <frameworkVersion>1.4.0.0-SNAPSHOT</frameworkVersion>
         <siteDistributionURL>scp://openicf.forgerock.org/var/www/vhosts/openicf.forgerock.org/httpdocs</siteDistributionURL>
     </properties>
@@ -218,11 +218,6 @@
             <artifactId>velocity</artifactId>
             <version>1.7</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.1</version>
-        </dependency>
 
         <dependency>
             <groupId>org.apache.maven.reporting</groupId>
@@ -246,6 +241,11 @@
             <artifactId>doxia-sink-api</artifactId>
             <version>${doxiaVersion}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.maven.doxia</groupId>
+            <artifactId>doxia-module-docbook-simple</artifactId>
+            <version>1.5</version>
+        </dependency>
         <!--dependency>
             <groupId>org.apache.maven.doxia</groupId>
             <artifactId>doxia-decoration-model</artifactId>
@@ -267,6 +267,24 @@
             <groupId>org.forgerock.openicf.framework</groupId>
             <artifactId>connector-framework-internal</artifactId>
             <version>${frameworkVersion}</version>
+        </dependency>
+
+
+        <!-- DEBUG -->
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-embedder</artifactId>
+            <version>${mavenVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-site-plugin</artifactId>
+            <version>3.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.3.3</version>
         </dependency>
 
 
@@ -327,6 +345,7 @@
                             </goals>
                             <settingsFile>src/it/settings.xml</settingsFile>
                             <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
+                            <addTestClassPath>true</addTestClassPath>
                         </configuration>
                         <executions>
                             <execution>
@@ -350,6 +369,7 @@
                 <artifactId>maven-plugin-plugin</artifactId>
                 <version>${mavenPluginPluginVersion}</version>
                 <configuration>
+                    <goalPrefix>openicf</goalPrefix>
                     <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
                     <helpPackageName>org.forgerock.openicf.maven</helpPackageName>
                 </configuration>

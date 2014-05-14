@@ -30,7 +30,10 @@
         <component>
             <role>org.codehaus.plexus.component.configurator.ComponentConfigurator</role>
             <role-hint>override</role-hint>
-            <implementation>org.codehaus.plexus.component.configurator.BasicComponentConfigurator</implementation>
+            <implementation>org.forgerock.openicf.maven.CustomComponentConfigurator</implementation>
+            <description>A custom ComponentConfigurator which adds the project&apos;s runtime classpath
+                elements to the plugin classpat.</description>
+            <isolated-realm>false</isolated-realm>
             <requirements>
                 <requirement>
                     <role>org.codehaus.plexus.component.configurator.converters.lookup.ConverterLookup</role>
@@ -47,7 +50,6 @@
             <requirements>
                 <requirement>
                     <role>org.codehaus.plexus.component.configurator.converters.ConfigurationConverter</role>
-                    <role-hint>PropertyBag</role-hint>
                     <field-name>customConverters</field-name>
                 </requirement>
             </requirements>
@@ -57,6 +59,24 @@
             <role>org.codehaus.plexus.component.configurator.converters.ConfigurationConverter</role>
             <role-hint>PropertyBag</role-hint>
             <implementation>org.forgerock.openicf.maven.ConfigurationPropertyConverter</implementation>
+        </component>
+
+        <component>
+            <role>org.codehaus.plexus.component.configurator.converters.ConfigurationConverter</role>
+            <role-hint>RemoteFrameworkConnectionInfo</role-hint>
+            <implementation>org.forgerock.openicf.maven.RemoteFrameworkConnectionInfoConverter</implementation>
+        </component>
+
+        <component>
+            <role>org.apache.maven.doxia.parser.Parser</role>
+            <role-hint>xhtml-custom</role-hint>
+            <implementation>org.forgerock.openicf.maven.xhtml.XhtmlCustomParser</implementation>
+        </component>
+
+        <component>
+            <role>org.apache.maven.doxia.module.site.SiteModule</role>
+            <role-hint>xhtml-custom</role-hint>
+            <implementation>org.forgerock.openicf.maven.xhtml.XhtmlCustomSiteModule</implementation>
         </component>
 
     </components>

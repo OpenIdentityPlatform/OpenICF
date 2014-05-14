@@ -49,7 +49,7 @@
         <menu name="DocBook Core Docs">
             <!--item name="All Formats" href="docs.html" /-->
             <!--item name="Release Notes" href="./doc/release-notes/index.html" /-->
-            <item name="Developer Guide" href="./doc/docbook-connector-1.4.0.0-SNAPSHOT/index.html" />
+            <item name="Developer Guide" href="./doc/docbook-connector-${project.version}/index.html" />
         </menu>
 
         <menu ref="reports"/>

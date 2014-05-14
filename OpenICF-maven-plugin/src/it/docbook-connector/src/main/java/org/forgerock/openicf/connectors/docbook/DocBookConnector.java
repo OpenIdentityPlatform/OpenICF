@@ -29,9 +29,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Set;
 
-import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.script.Script;
 import org.identityconnectors.common.security.GuardedByteArray;
 import org.identityconnectors.common.security.GuardedString;
@@ -41,6 +41,7 @@ import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
+import org.identityconnectors.framework.common.objects.OperationOptionInfoBuilder;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationalAttributeInfos;
 import org.identityconnectors.framework.common.objects.PredefinedAttributeInfos;
@@ -56,7 +57,6 @@ import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 import org.identityconnectors.framework.spi.AttributeNormalizer;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
-import org.identityconnectors.framework.spi.PoolableConnector;
 import org.identityconnectors.framework.spi.ConnectorClass;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
 import org.identityconnectors.framework.spi.operations.CreateOp;
@@ -76,8 +76,7 @@ import org.identityconnectors.framework.spi.operations.UpdateOp;
  *
  * @author $author$
  */
-@ConnectorClass(displayNameKey = "DocBook.connector.display",
-        categoryKey = "sample1.category",
+@ConnectorClass(displayNameKey = "DocBook.connector.display", categoryKey = "sample1.category",
         configurationClass = DocBookConfiguration.class)
 public class DocBookConnector implements Connector, AttributeNormalizer, AuthenticateOp, CreateOp,
         DeleteOp, ResolveUsernameOp, SchemaOp, ScriptOnConnectorOp, ScriptOnResourceOp,
@@ -167,6 +166,20 @@ public class DocBookConnector implements Connector, AttributeNormalizer, Authent
 
         SchemaBuilder schemaBuilder = new SchemaBuilder(DocBookConnector.class);
 
+        schemaBuilder.defineOperationOption(OperationOptionInfoBuilder.buildAttributesToGet(),
+                SearchOp.class, SyncOp.class);
+        schemaBuilder.defineOperationOption(OperationOptionInfoBuilder.buildPageSize(),
+                SearchOp.class);
+        schemaBuilder.defineOperationOption(OperationOptionInfoBuilder.buildPagedResultsCookie(),
+                SearchOp.class);
+        schemaBuilder.defineOperationOption(OperationOptionInfoBuilder.buildPagedResultsOffset(),
+                SearchOp.class);
+        schemaBuilder.defineOperationOption(OperationOptionInfoBuilder.buildSortKeys(),
+                SearchOp.class);
+
+        schemaBuilder.defineOperationOption(OperationOptionInfoBuilder.buildRunWithUser());
+        schemaBuilder.defineOperationOption(OperationOptionInfoBuilder.buildRunWithPassword());
+
         schemaBuilder.defineOperationOption("_OperationOption-boolean", boolean.class);
         schemaBuilder.defineOperationOption("_OperationOption-Boolean", Boolean.class);
         schemaBuilder.defineOperationOption("_OperationOption-char", char.class);
@@ -189,13 +202,12 @@ public class DocBookConnector implements Connector, AttributeNormalizer, Authent
         schemaBuilder.defineOperationOption("_OperationOption-Script", Script.class);
         schemaBuilder.defineOperationOption("_OperationOption-String", String.class);
         schemaBuilder.defineOperationOption("_OperationOption-StringArray", String[].class);
-        schemaBuilder.defineOperationOption("_OperationOption-Uid ", Uid.class);
+        schemaBuilder.defineOperationOption("_OperationOption-Uid", Uid.class);
         schemaBuilder.defineOperationOption("_OperationOption-URI", URI.class);
 
         ObjectClassInfoBuilder ocBuilder = new ObjectClassInfoBuilder();
 
         // Users
-        ocBuilder = new ObjectClassInfoBuilder();
         ocBuilder.setType(ObjectClass.ACCOUNT_NAME);
         // The name of the object
         ocBuilder.addAttributeInfo(AttributeInfoBuilder.build(Name.NAME, String.class, EnumSet.of(
@@ -253,13 +265,16 @@ public class DocBookConnector implements Connector, AttributeNormalizer, Authent
                 EnumSet.of(AttributeInfo.Flags.NOT_CREATABLE, AttributeInfo.Flags.NOT_UPDATEABLE)));
         ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-String", String.class,
                 EnumSet.of(AttributeInfo.Flags.MULTIVALUED, AttributeInfo.Flags.NOT_UPDATEABLE)));
+        ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("_Attribute-Map", Map.class));
         schemaBuilder.defineObjectClass(ocBuilder.build());
 
         ocBuilder = new ObjectClassInfoBuilder();
         ocBuilder.setType(ObjectClass.GROUP_NAME);
         ocBuilder.addAttributeInfo(Name.INFO);
         ocBuilder.addAttributeInfo(PredefinedAttributeInfos.DESCRIPTION);
-        schemaBuilder.defineObjectClass(ocBuilder.build());
+
+        schemaBuilder.defineObjectClass(ocBuilder.build(), CreateOp.class, UpdateOp.class,
+                SearchOp.class, SyncOp.class, DeleteOp.class);
 
         ocBuilder = new ObjectClassInfoBuilder();
         ocBuilder.setType("organization");
@@ -268,7 +283,8 @@ public class DocBookConnector implements Connector, AttributeNormalizer, Authent
         ocBuilder.addAttributeInfo(AttributeInfoBuilder.build("members", String.class, EnumSet.of(
                 AttributeInfo.Flags.MULTIVALUED, AttributeInfo.Flags.NOT_UPDATEABLE)));
         ocBuilder.addAttributeInfo(PredefinedAttributeInfos.DESCRIPTION);
-        schemaBuilder.defineObjectClass(ocBuilder.build());
+        schemaBuilder.defineObjectClass(ocBuilder.build(), CreateOp.class, UpdateOp.class,
+                SearchOp.class, DeleteOp.class);
 
         return schemaBuilder.build();
     }

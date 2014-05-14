@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ! CCPL HEADER START
+  !
+  ! This work is licensed under the Creative Commons
+  ! Attribution-NonCommercial-NoDerivs 3.0 Unported License.
+  ! To view a copy of this license, visit
+  ! http://creativecommons.org/licenses/by-nc-nd/3.0/
+  ! or send a letter to Creative Commons, 444 Castro Street,
+  ! Suite 900, Mountain View, California, 94041, USA.
+  !
+  ! You can also obtain a copy of the license at
+  ! legal/CC-BY-NC-ND.txt.
+  ! See the License for the specific language governing permissions
+  ! and limitations under the License.
+  !
+  ! If applicable, add the following below this CCPL HEADER, with the fields
+  ! enclosed by brackets "[]" replaced with your own identifying information:
+  !      Portions Copyright [yyyy] [name of copyright owner]
+  !
+  ! CCPL HEADER END
+  !
+  !      Copyright 2013-2014 ForgeRock AS
+  !
+-->
+<section xml:id='sec-implemented-interfaces-${connectorName}-${project.version}'
+         xmlns='http://docbook.org/ns/docbook'
+         version='5.0' xml:lang='en'
+         xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+         xsi:schemaLocation='http://docbook.org/ns/docbook
+ http://docbook.org/xml/5.0/xsd/docbook.xsd'
+         xmlns:xlink='http://www.w3.org/1999/xlink'>
+
+    <title>OpenICF Interfaces Implemented by the ${connectorDisplayName}</title>
+    <para>
+        The ${connectorDisplayName} implements the following OpenICF interfaces.
+    </para>
+
+    <!--THIS LIST IS BUILT FROM THE IMPLEMENTED INTERFACES, LINKS BUILT FROM THE
+    CORRESPONDING IDS IN appendix-interfaces.xml where more info is provided for
+    each interface-->
+
+    <variablelist>
+        #foreach($action in $connectorInterfaces)
+            #if ("AuthenticationApiOp" == $action)
+                <varlistentry>
+                    <term>
+                        <link xlink:show="new"
+                              xlink:href="config-reference#interface-attributeNormalizer"
+                              xlink:role="http://docbook.org/xlink/role/olink">AttributeNormalizer
+                        </link>
+                    </term>
+                    <listitem>
+                        <para>
+                            Provides simple authentication with two parameters, presumed to be a user
+                            name and password.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            #elseif ("CreateApiOp" == $action)
+                <varlistentry>
+                    <term>
+                        <link xlink:show="new"
+                              xlink:href="config-reference#interface-createOp"
+                              xlink:role="http://docbook.org/xlink/role/olink">Create
+                        </link>
+                    </term>
+                    <listitem>
+                        <para>
+                            Provides simple authentication with two parameters, presumed to be a user
+                            name and password.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            #elseif ("DeleteApiOp" == $action)
+                <varlistentry>
+                    <term>
+                        <link xlink:show="new"
+                              xlink:href="config-reference#interface-deleteOp"
+                              xlink:role="http://docbook.org/xlink/role/olink">Delete
+                        </link>
+                    </term>
+                    <listitem>
+                        <para>
+                            Provides simple authentication with two parameters, presumed to be a user
+                            name and password.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            #elseif ("ResolveUsernameApiOp" == $action)
+                <varlistentry>
+                    <term>
+                        <link xlink:show="new"
+                              xlink:href="config-reference#interface-ResolveUsernameOp"
+                              xlink:role="http://docbook.org/xlink/role/olink">Resolve Username
+                        </link>
+                    </term>
+                    <listitem>
+                        <para>
+                            Provides simple authentication with two parameters, presumed to be a user
+                            name and password.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            #elseif ("SchemaApiOp" == $action)
+                <varlistentry>
+                    <term>
+                        <link xlink:show="new"
+                              xlink:href="config-reference#interface-SchemaOp"
+                              xlink:role="http://docbook.org/xlink/role/olink">Schema
+                        </link>
+                    </term>
+                    <listitem>
+                        <para>
+                            Provides simple authentication with two parameters, presumed to be a user
+                            name and password.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            #elseif ("ScriptOnConnectorApiOp" == $action)
+                <varlistentry>
+                    <term>
+                        <link xlink:show="new"
+                              xlink:href="config-reference#interface-ScriptOnConnectorOp"
+                              xlink:role="http://docbook.org/xlink/role/olink">ScriptOnConnector
+                        </link>
+                    </term>
+                    <listitem>
+                        <para>
+                            Provides simple authentication with two parameters, presumed to be a user
+                            name and password.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            #elseif ("ScriptOnResourceApiOp" == $action)
+                <varlistentry>
+                    <term>
+                        <link xlink:show="new"
+                              xlink:href="config-reference#interface-ScriptOnResourceOp"
+                              xlink:role="http://docbook.org/xlink/role/olink">ScriptOnResource
+                        </link>
+                    </term>
+                    <listitem>
+                        <para>
+                            Provides simple authentication with two parameters, presumed to be a user
+                            name and password.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            #elseif ("SearchApiOp" == $action)
+                <varlistentry>
+                    <term>
+                        <link xlink:show="new"
+                              xlink:href="config-reference#interface-SearchOp"
+                              xlink:role="http://docbook.org/xlink/role/olink">Search
+                        </link>
+                    </term>
+                    <listitem>
+                        <para>
+                            Provides simple authentication with two parameters, presumed to be a user
+                            name and password.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            #elseif ("SyncApiOp" == $action)
+                <varlistentry>
+                    <term>
+                        <link xlink:show="new"
+                              xlink:href="config-reference#interface-SyncOp"
+                              xlink:role="http://docbook.org/xlink/role/olink">Sync
+                        </link>
+                    </term>
+                    <listitem>
+                        <para>
+                            Provides simple authentication with two parameters, presumed to be a user
+                            name and password.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            #elseif ("TestApiOp" == $action)
+                <varlistentry>
+                    <term>
+                        <link xlink:show="new"
+                              xlink:href="config-reference#interface-TestOp"
+                              xlink:role="http://docbook.org/xlink/role/olink">Test
+                        </link>
+                    </term>
+                    <listitem>
+                        <para>
+                            Provides simple authentication with two parameters, presumed to be a user
+                            name and password.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            #elseif ("UpdateApiOp" == $action)
+                <varlistentry>
+                    <term>
+                        <link xlink:show="new"
+                              xlink:href="config-reference#interface-UpdateOp"
+                              xlink:role="http://docbook.org/xlink/role/olink">Update
+                        </link>
+                    </term>
+                    <listitem>
+                        <para>
+                            Provides simple authentication with two parameters, presumed to be a user
+                            name and password.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            #else
+            #end
+        #end
+    </variablelist>
+</section>

@@ -108,7 +108,7 @@ public class DocBookPoolableConnector extends DocBookConnector implements Poolab
 
     /**
      * Disposes of the
-     * {@link org.forgerock.openicf.connectors.docbook.DocBookConnector}'s
+     * {@link DocBookPoolableConnector}'s
      * resources.
      *
      * @see org.identityconnectors.framework.spi.Connector#dispose()

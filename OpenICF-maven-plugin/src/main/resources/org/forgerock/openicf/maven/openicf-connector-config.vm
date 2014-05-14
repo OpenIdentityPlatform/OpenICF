@@ -10,7 +10,7 @@
   ! Suite 900, Mountain View, California, 94041, USA.
   !
   ! You can also obtain a copy of the license at
-  ! trunk/opendj3/legal-notices/CC-BY-NC-ND.txt.
+  ! legal-notices/CC-BY-NC-ND.txt.
   ! See the License for the specific language governing permissions
   ! and limitations under the License.
   !
@@ -76,7 +76,7 @@
     <variablelist>
         <para>The ${connectorDisplayName} implements the following OpenICF interfaces.</para>
         #foreach($action in $connectorInterfaces)
-            #if ("AuthenticateOp" == $action)
+            #if ("AuthenticationApiOp" == $action)
                 <varlistentry>
                     <term><link xlink:href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/AuthenticateOp.html"
                                 xlink:show="new">AuthenticateOp</link></term>
@@ -84,7 +84,7 @@
                         <para>Authenticate based on a unique identifier and password.</para>
                     </listitem>
                 </varlistentry>
-            #elseif ("CreateOp" == $action)
+            #elseif ("CreateApiOp" == $action)
                 <varlistentry>
                     <term><link xlink:href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/CreateOp.html"
                                 xlink:show="new">CreateOp</link></term>
@@ -92,7 +92,7 @@
                         <para>Create an object and its <literal>uid</literal>.</para>
                     </listitem>
                 </varlistentry>
-            #elseif ("DeleteOp" == $action)
+            #elseif ("DeleteApiOp" == $action)
                 <varlistentry>
                     <term><link xlink:href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/DeleteOp.html"
                                 xlink:show="new">DeleteOp</link></term>
@@ -100,7 +100,7 @@
                         <para>Delete an object by <literal>uid</literal>.</para>
                     </listitem>
                 </varlistentry>
-            #elseif ("ResolveUsernameOp" == $action)
+            #elseif ("ResolveUsernameApiOp" == $action)
                 <varlistentry>
                     <term><link xlink:href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/ResolveUsernameOp.html"
                                 xlink:show="new">ResolveUsernameOp</link></term>
@@ -108,7 +108,7 @@
                         <para>Resolve an object to its <literal>uid</literal> based on its <literal>username</literal>.</para>
                     </listitem>
                 </varlistentry>
-            #elseif ("SchemaOp" == $action)
+            #elseif ("SchemaApiOp" == $action)
                 <varlistentry>
                     <term><link xlink:href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/SchemaOp.html"
                                 xlink:show="new">SchemaOp</link></term>
@@ -116,7 +116,7 @@
                         <para>Describe supported object types, operations, and options.</para>
                     </listitem>
                 </varlistentry>
-            #elseif ("ScriptOnConnectorOp" == $action)
+            #elseif ("ScriptOnConnectorApiOp" == $action)
                 <varlistentry>
                     <term><link xlink:href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/ScriptOnConnectorOp.html"
                                 xlink:show="new">ScriptOnConnectorOp</link></term>
@@ -124,7 +124,7 @@
                         <para>Allow script execution on connector.</para>
                     </listitem>
                 </varlistentry>
-            #elseif ("ScriptOnResourceOp" == $action)
+            #elseif ("ScriptOnResourceApiOp" == $action)
                 <varlistentry>
                     <term><link xlink:href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/ScriptOnResourceOp.html"
                                 xlink:show="new">ScriptOnResourceOp</link></term>
@@ -132,7 +132,7 @@
                         <para>Allow script execution on resource.</para>
                     </listitem>
                 </varlistentry>
-            #elseif ("SearchOp" == $action)
+            #elseif ("SearchApiOp" == $action)
                 <varlistentry>
                     <term><link xlink:href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/SearchOp.html"
                                 xlink:show="new">SearchOp</link></term>
@@ -140,7 +140,7 @@
                         <para>Allow searches for resource objects.</para>
                     </listitem>
                 </varlistentry>
-            #elseif ("SyncOp" == $action)
+            #elseif ("SyncApiOp" == $action)
                 <varlistentry>
                     <term><link xlink:href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/SyncOp.html"
                                 xlink:show="new">SyncOp</link></term>
@@ -148,7 +148,7 @@
                         <para>Poll for synchronization events, which are native changes to target objects.</para>
                     </listitem>
                 </varlistentry>
-            #elseif ("TestOp" == $action)
+            #elseif ("TestApiOp" == $action)
                 <varlistentry>
                     <term><link xlink:href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/TestOp.html"
                                 xlink:show="new">TestOp</link></term>
@@ -157,7 +157,7 @@
                     </listitem>
                 </varlistentry>
             #elseif ("UpdateAttributeValuesOp" == $action)
-            #elseif ("UpdateOp" == $action)
+            #elseif ("UpdateApiOp" == $action)
                 <varlistentry>
                     <term><link xlink:href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/UpdateAttributeValuesOp.html"
                                 xlink:show="new">UpdateAttributeValuesOp</link></term>
