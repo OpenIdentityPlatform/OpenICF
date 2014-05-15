@@ -257,7 +257,7 @@ public class FilterBuilderTests {
         }
 
         public <R, P> R accept(FilterVisitor<R, P> v, P p) {
-            return v.visitExtendedFilter(p, null, this, null);
+            return v.visitExtendedFilter(p, this);
         }
     }
 
@@ -268,7 +268,7 @@ public class FilterBuilderTests {
         }
 
         public <R, P> R accept(FilterVisitor<R, P> v, P p) {
-            return v.visitExtendedFilter(p, null, this, null);
+            return v.visitExtendedFilter(p, this);
         }
     }
 }

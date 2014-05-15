@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.framework.common.serializer.ObjectSerializerFactory;
 import org.identityconnectors.framework.common.serializer.SerializerUtil;
 
@@ -54,10 +55,10 @@ public final class ScriptContext {
     public ScriptContext(String scriptLanguage, String scriptText,
             Map<String, Object> scriptArguments) {
 
-        if (scriptLanguage == null) {
+        if (StringUtil.isBlank(scriptLanguage)) {
             throw new IllegalArgumentException("Argument 'scriptLanguage' must be specified");
         }
-        if (scriptText == null) {
+        if (StringUtil.isBlank(scriptText)) {
             throw new IllegalArgumentException("Argument 'scriptText' must be specified");
         }
         // clone script arguments and options - this serves two purposes

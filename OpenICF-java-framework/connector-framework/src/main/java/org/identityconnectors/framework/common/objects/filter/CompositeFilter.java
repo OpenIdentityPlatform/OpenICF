@@ -22,6 +22,10 @@
  */
 package org.identityconnectors.framework.common.objects.filter;
 
+import java.util.Collection;
+
+import org.identityconnectors.common.CollectionUtil;
+
 /**
  * Useful for the AND, OR, XOR, etc..
  */
@@ -62,5 +66,9 @@ public abstract class CompositeFilter implements Filter {
      */
     public Filter getRight() {
         return right;
+    }
+
+    public Collection<Filter> getFilters() {
+        return CollectionUtil.newReadOnlyList(getLeft(), getRight());
     }
 }
