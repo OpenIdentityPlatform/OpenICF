@@ -17,16 +17,16 @@
   !
   ! CCPL HEADER END
   !
-  !      Copyright 2012 ForgeRock Inc
+  !      Copyright 2012-2014 ForgeRock AS
   !
 -->
 
 
 #macro ( trueorfalse $condition )
     #if($condition)
-    <img src="$relativePath/images/icon_success_sml.gif" alt="True">
+    <img src="$relativePath/shared/images/yes-icon.png" alt="True">
     #else
-    <img src="$relativePath/images/icon_error_sml.gif" alt="False">
+    <img src="$relativePath/shared/images/no-icon.png" alt="False">
     #end
 #end
 ##
@@ -45,8 +45,7 @@
 #macro ( supportedOperations $operations )
     #if($operations && $operations.size() > 0)
     <ul>
-        #foreach($operation in $operations)
-            #set($action = $operation.getSimpleName())
+        #foreach($action in $operations)
             #if ("AuthenticationApiOp" == $action)
                 <li>
                     <a class="externalLink"
@@ -131,10 +130,14 @@
     <tbody>
         #set( $calss = "a" )
     <tr class="$calss">
-        <th width="25%">Property</th>
-        <th width="10%">Java Type</th>
-        <th width="10%">Default</th>
-        <th>Description</th>
+        <th width="20%">Property</th>
+        <th width="10%">Type</th>
+        <th width="10%">Default Value</th>
+        <th width="10%">
+            <img src="shared/images/encrypted.png">
+            <sup>[<a name="confidential" href="#ftn.confidential" class="footnote">a</a>]</sup>
+        </th>
+        <th>Required for these Operations</th>
     </tr>
         #foreach($configurationProperty in $configurationProperties)
             #if ($calss == "a")
@@ -144,20 +147,25 @@
             #end
 
         <tr class="$calss">
-            <td title="$configurationProperty.getDisplayName('N/A')">
-                #if ($configurationProperty.isConfidential())
-                    <img src="$relativePath/images/icon_warning_sml.gif"
+            <td title="$$configurationProperty.property.getDisplayName('N/A')">
+                $configurationProperty.name
+            </td>
+            <td>
+                $configurationProperty.type
+            </td>
+            <td>
+                <pre>$ConnectorUtils.defaultValue($configurationProperty.property)</pre>
+            </td>
+            <td>
+                #if ($configurationProperty.confidential)
+                    <img src="$relativePath/shared/images/encrypted.png"
                          alt="Confidential Property!">
                 #end
-                $configurationProperty.getName()
             </td>
-            <td>
-                $configurationProperty.getType().getSimpleName()
-            </td>
-            <td>
-                <pre>$ConnectorUtils.defaultValue($configurationProperty)</pre>
-            </td>
-            <td>$configurationProperty.getHelpMessage('N/A')</td>
+            <td>#trueorfalse($configurationProperty.required)</td>
+        </tr>
+        <tr class="$calss">
+            <td colspan="5">$configurationProperty.description</td>
         </tr>
         #end
     </tbody>
@@ -177,139 +185,127 @@
 
 <p>The ${connectorDisplayName} implements the following OpenICF interfaces.</p>
 
-<ul>
-    #foreach($action in $connectorInterfaces)
+    #supportedOperations($connectorInterfaces)
 
-        #if ("AuthenticateOp" == $action)
+    #if($maki)
+    <ul>
+        #foreach($action in $connectorInterfaces)
+
+            #if ("AuthenticationApiOp" == $action)
+                <li>
+                    <a class="externalLink"
+                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/AuthenticateOp.html">AuthenticateOp</a>:
+                    Authenticate based on a unique identifier and password.
+                </li>
+            #elseif ("CreateApiOp" == $action)
+                <li>
+                    <a class="externalLink"
+                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/CreateOp.html">CreateOp</a>:
+                    Create an object and its <code>uid</code>.
+                </li>
+            #elseif ("DeleteApiOp" == $action)
+                <li>
+                    <a class="externalLink"
+                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/DeleteOp.html">DeleteOp</a>:
+                    Delete an object by <code>uid</code>.
+                </li>
+            #elseif ("ResolveUsernameApiOp" == $action)
+                <li>
+                    <a class="externalLink"
+                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/ResolveUsernameOp.html">ResolveUsernameOp</a>:
+                    Resolve an object to its <code>uid</code> based on its <code>username</code>.
+                </li>
+            #elseif ("SchemaApiOp" == $action)
+                <li>
+                    <a class="externalLink"
+                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/SchemaOp.html">SchemaOp</a>:
+                    Describe supported object types, operations, and options.
+                </li>
+            #elseif ("ScriptOnConnectorApiOp" == $action)
+                <li>
+                    <a class="externalLink"
+                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/ScriptOnConnectorOp.html">ScriptOnConnectorOp</a>:
+                    Run a script in the environment of the connector.
+                </li>
+            #elseif ("ScriptOnResourceApiOp" == $action)
+                <li>
+                    <a class="externalLink"
+                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/ScriptOnResourceOp.html">ScriptOnResourceOp</a>:
+                    Run a script directly on a target resource.
+                </li>
+            #elseif ("SearchApiOp" == $action)
+                <li>
+                    <a class="externalLink"
+                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/SearchOp.html">SearchOp</a>:
+                    Allow searches for resource objects.
+                </li>
+            #elseif ("SyncApiOp" == $action)
+                <li>
+                    <a class="externalLink"
+                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/SyncOp.html">SyncOp</a>:
+                    Poll for synchronization events, which are native changes to target objects.
+                </li>
+            #elseif ("TestApiOp" == $action)
+                <li>
+                    <a class="externalLink"
+                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/TestOp.html">TestOp</a>:
+                    Test the connection configuration, including connecting to the resource.
+                </li>
+            #elseif ("UpdateAttributeValuesOp" == $action)
+                <li>
+                    <a class="externalLink"
+                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/UpdateAttributeValuesOp.html">UpdateAttributeValuesOp</a>:
+                    Like <code>UpdateOp</code>, but with better performance and atomicity.
+                </li>
+            #elseif ("UpdateApiOp" == $action)
+                <li>
+                    <a class="externalLink"
+                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/UpdateOp.html">UpdateOp</a>:
+                    Allow an authorized caller to update target resource objects.
+                </li>
+            #elseif ("AttributeNormalizer" == $action)
+                <li>
+                    <a class="externalLink"
+                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/AttributeNormalizer.html">AttributeNormalizer</a>:
+                    Normalize attributes to ensure consistent filtering.
+                </li>
+            #elseif ("PoolableConnector" == $action)
+            #elseif ("Connector" == $action)
+            #else
+                <li>
+                    Custom Interface: $action
+                </li>
+            #end
+
+        #end
+
+        #if ($APIConfiguration.isConnectorPoolingSupported())
             <li>
                 <a class="externalLink"
-                   href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/AuthenticateOp.html">AuthenticateOp</a>:
-                Authenticate based on a unique identifier and password.
-            </li>
-        #elseif ("CreateOp" == $action)
-            <li>
-                <a class="externalLink"
-                   href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/CreateOp.html">CreateOp</a>:
-                Create an object and its <code>uid</code>.
-            </li>
-        #elseif ("DeleteOp" == $action)
-            <li>
-                <a class="externalLink"
-                   href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/DeleteOp.html">DeleteOp</a>:
-                Delete an object by <code>uid</code>.
-            </li>
-        #elseif ("ResolveUsernameOp" == $action)
-            <li>
-                <a class="externalLink"
-                   href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/ResolveUsernameOp.html">ResolveUsernameOp</a>:
-                Resolve an object to its <code>uid</code> based on its <code>username</code>.
-            </li>
-        #elseif ("SchemaOp" == $action)
-            <li>
-                <a class="externalLink"
-                   href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/SchemaOp.html">SchemaOp</a>:
-                Describe supported object types, operations, and options.
-            </li>
-        #elseif ("ScriptOnConnectorOp" == $action)
-            <li>
-                <a class="externalLink"
-                   href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/ScriptOnConnectorOp.html">ScriptOnConnectorOp</a>:
-                Run a script in the environment of the connector.
-            </li>
-        #elseif ("ScriptOnResourceOp" == $action)
-            <li>
-                <a class="externalLink"
-                   href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/ScriptOnResourceOp.html">ScriptOnResourceOp</a>:
-                Run a script directly on a target resource.
-            </li>
-        #elseif ("SearchOp" == $action)
-            <li>
-                <a class="externalLink"
-                   href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/SearchOp.html">SearchOp</a>:
-                Allow searches for resource objects.
-            </li>
-        #elseif ("SyncOp" == $action)
-            <li>
-                <a class="externalLink"
-                   href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/SyncOp.html">SyncOp</a>:
-                Poll for synchronization events, which are native changes to target objects.
-            </li>
-        #elseif ("TestOp" == $action)
-            <li>
-                <a class="externalLink"
-                   href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/TestOp.html">TestOp</a>:
-                Test the connection configuration, including connecting to the resource.
-            </li>
-        #elseif ("UpdateAttributeValuesOp" == $action)
-            <li>
-                <a class="externalLink"
-                   href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/UpdateAttributeValuesOp.html">UpdateAttributeValuesOp</a>:
-                Like <code>UpdateOp</code>, but with better performance and atomicity.
-            </li>
-        #elseif ("UpdateOp" == $action)
-            <li>
-                <a class="externalLink"
-                   href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/UpdateOp.html">UpdateOp</a>:
-                Allow an authorized caller to update target resource objects.
-            </li>
-        #elseif ("AttributeNormalizer" == $action)
-            <li>
-                <a class="externalLink"
-                   href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/AttributeNormalizer.html">AttributeNormalizer</a>:
-                Normalize attributes to ensure consistent filtering.
-            </li>
-        #elseif ("PoolableConnector" == $action)
-        #elseif ("Connector" == $action)
-        #else
-            <li>
-                Custom Interface: $action
+                   href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/PoolableConnector.html">PoolableConnector</a>:
+                Use pools of target resources.
             </li>
         #end
 
+    </ul>
     #end
-
-    #if ($APIConfiguration.isConnectorPoolingSupported())
-        <li>
-            <a class="externalLink"
-               href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/PoolableConnector.html">PoolableConnector</a>:
-            Use pools of target resources.
-        </li>
-    #end
-
-</ul>
 
 <h2>Configuration Properties</h2>
 
 <p>The Connector has the following configuration properties.</p>
 
-    #if ($requiredConfigurationProperties)
-    <h3>Required Properties</h3>
-
-    <p>The following properties are required.</p>
-
-        #configurationProperties( $requiredConfigurationProperties )
-
+    #foreach($configurationGroup in $configurationProperties.entrySet())
+    <h3>$configurationGroup.key Properties</h3>
+        #configurationProperties( $configurationGroup.value )
     #end
 
-    #if ($requiredOperationProperties.size() > 0)
-        #foreach($operationEntry in $requiredOperationProperties.entrySet())
-        <h3>`$operationEntry.getKey()` Required Properties</h3>
-
-        <p>The following properties are required to use <code>$operationEntry.getKey()</code>.
-        </p>
-
-            #configurationProperties( $operationEntry.getValue() )
-        #end
-    #end
-
-    #if ($optionalConfigurationProperties)
-    <h3>Optional Properties</h3>
-
-    <p>The following properties are optional.</p>
-
-        #configurationProperties( $optionalConfigurationProperties )
-
-    #end
+<div class="footnote">
+    <p>
+        <sup>[<a id="ftn.confidential" href="#ftn.confidential" class="para">a</a>]</sup>
+        Indicates whether the property value is considered confidential, and
+        therefore encrypted in OpenIDM.
+    </p>
+</div>
 
     #if ($schema)
 
@@ -317,58 +313,112 @@
 
     <p>The Connector schema may depends on the underlying target resource.</p>
 
+
+    <p>
+        The following table lists the options that can be configured for each of the
+        supported operations listed in the previous table.
+    </p>
+
+
+    <h3>Operation Options</h3>
+    <table border="0" class="bodyTable">
+        <tbody>
+        <tr class="b">
+            <th width="20%">Operation</th>
+            <th width="80%">Supported Options</th>
+        </tr>
+
+            #foreach($operationOptionInfo in $operationOptions.entrySet())
+
+            <tr class="b">
+                <td>$operationOptionInfo.key</td>
+                <td>
+                    <table border="0" class="bodyTable">
+                        <tbody>
+                        <tr class="a">
+                            <th width="20%">Name</th>
+                            <th width="20%">Type</th>
+                            <th width="60%">Description</th>
+                        </tr>
+                            #set( $calss = "a" )
+                            #foreach($option in $operationOptionInfo.value)
+                                #if ($calss == "a")
+                                    #set( $calss = "b" )
+                                #else
+                                    #set( $calss = "a" )
+                                #end
+
+                            <tr class="$calss">
+                                <td>$option.name</td>
+                                <td>$option.type</td>
+                                <td>
+                                    #if($option.name.equals("SCOPE"))
+                                        <p>$option.description</p>
+                                    #elseif($option.name.equals("CONTAINER"))
+                                        <p>$option.description</p>
+                                    #elseif($option.name.equals("RUN_AS_USER"))
+                                        <p>TODO FIXME Link to appendix with detailed description</p>
+                                    #elseif($option.name.equals("RUN_WITH_PASSWORD"))
+                                        <p>TODO FIXME Link to appendix with detailed description</p>
+                                    #elseif($option.name.equals("ATTRS_TO_GET"))
+                                        <p>$option.description</p>
+                                    #elseif($option.name.equals("PAGED_RESULTS_COOKIE"))
+                                        <p>$option.description</p>
+                                    #elseif($option.name.equals("PAGED_RESULTS_OFFSET"))
+                                        <p>$option.description</p>
+                                    #elseif($option.name.equals("PAGE_SIZE"))
+                                        <p>$option.description</p>
+                                    #elseif($option.name.equals("SORT_KEYS"))
+                                        <p>$option.description</p>
+                                    #else
+                                        <p>$option.description</p>
+                                    #end
+                                </td>
+                            </tr>
+                            #end
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            #end
+        </tbody>
+    </table>
+
+
     <p>The connector supports these objectclasses:</p>
 
     <ul>
-        #foreach($objectClassInfo in $schema.getObjectClassInfo())
+        #foreach($objectClassInfo in $objectClasses)
             <li>
-                <a href="#$objectClassInfo.getType()">
-                    #if ("__ACCOUNT__" == $objectClassInfo.getType())
-                        <b>$ConnectorUtils.getDisplayName($connectorInfo,$objectClassInfo,'Account')</b>
-                    #elseif ("__GROUP__" == $objectClassInfo.getType())
-                        <b>$ConnectorUtils.getDisplayName($connectorInfo,$objectClassInfo,'Group')</b>
-                    #else
-                        <b>$ConnectorUtils.getDisplayName($connectorInfo,$objectClassInfo,$objectClassInfo.getType())</b>
-                    #end
-                </a> ($objectClassInfo.getType())
+                <a href="#$objectClassInfo.name">
+                    <b>$objectClassInfo.displayName</b>
+                </a>($objectClassInfo.name)
             </li>
         #end
     </ul>
 
-        #foreach($objectClassInfo in $schema.getObjectClassInfo())
-            #set($ObjectClassName = $ConnectorUtils.getDisplayName($connectorInfo,$objectClassInfo,$objectClassInfo.getType()))
-            #if ("__ACCOUNT__" == $ObjectClassName)
-                #set($ObjectClassName = '<b>' + $ConnectorUtils.getDisplayName($connectorInfo,$objectClassInfo,'Account') + '</b>')
-            #elseif ("__GROUP__" == $ObjectClassName)
-                #set($ObjectClassName = '<b>'+$ConnectorUtils.getDisplayName($connectorInfo,$objectClassInfo,$objectClassInfo.getType())+'</b>')
-            #end
+        #foreach($objectClassInfo in $objectClasses)
 
-            #set($operations = $supportedOperations.get($objectClassInfo))
+        <h3><a name="$objectClassInfo.name"/>$objectClassInfo.displayName</h3>
 
-        <h3><a name="$objectClassInfo.getType()"/>$ObjectClassName</h3>
-
-        <h4>Operations Supported for the $ObjectClassName Objectclass</h4>
-            #if($operations && $operations.size() > 0)
-                #supportedOperations($operations)
+        <h4>Operations Supported for the $objectClassInfo.displayName Objectclass</h4>
+            #if($objectClassInfo.operations && $objectClassInfo.operations.size() > 0)
+                #supportedOperations($objectClassInfo.operations)
             #else
             <p>All operations are supported</p>
             #end
 
-        <h4>Attributes Supported for the $ObjectClassName Objectclass</h4>
+        <h4>Attributes Supported for the $objectClassInfo.displayName Objectclass</h4>
 
         <p>The following tables list all explicitly supported attributes in the schema, according to
             objectclass (type of object to manage).</p>
 
-            #if($objectClassInfo.isContainer())
-            <p>$ObjectClassName is container.</p>
-            #end
 
         <table border="0" class="bodyTable">
             <tbody>
-                #set( $calss = "a" )
             <tr class="$calss">
-                <th width="25%">Property</th>
-                <th width="10%">Java Type</th>
+                <th width="25%">Attribute</th>
+                <th width="10%">Type</th>
                 <th width="10%">Required</th>
                 <th width="10%">Multivalued</th>
                 <th width="10%">Creatable</th>
@@ -376,7 +426,8 @@
                 <th width="10%">Readable</th>
                 <th width="15%">Return by default</th>
             </tr>
-                #foreach($attributeInfo in $objectClassInfo.getAttributeInfo())
+                #set( $calss = "a" )
+                #foreach($attributeInfo in $objectClassInfo.attributes)
                     #if ($calss == "a")
                         #set( $calss = "b" )
                     #else

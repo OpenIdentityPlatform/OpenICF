@@ -38,7 +38,7 @@
     #foreach($configurationGroup in $configurationProperties.entrySet())
         <!--THE FOLLOWING SECTION MUST BE GENERATED ONCE FOR EACH groupMessageKey -->
 
-        <section xml:id="${configurationGroup.key}-properties-${connectorName}-${project.version}">
+        <section xml:id="$ConnectorUtils.safeNCName(${configurationGroup.key})-properties-${connectorName}-${project.version}">
             <title>$configurationGroup.key Properties</title>
 
             <informaltable>
@@ -84,13 +84,13 @@
                             <row valign="top">
                                 <?dbhtml bgcolor="#EBEDE6" ?><?dbfo bgcolor="#EBEDE6" ?>
                                 <entry>
-                                    <>${property.name}</literal>
+                                    <literal>${property.name}</literal>
                                 </entry>
                                 <entry>
                                     <literal>${property.type}</literal>
                                 </entry>
                                 <entry>
-                                    <literal>${property.value}</literal>
+                                    <literal>$ConnectorUtils.defaultValue($property.property)</literal>
                                 </entry>
                                 <entry align="center">
                                     #if (${property.confidential})

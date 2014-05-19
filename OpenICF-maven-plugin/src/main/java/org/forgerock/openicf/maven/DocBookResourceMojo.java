@@ -27,6 +27,7 @@ package org.forgerock.openicf.maven;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.Writer;
 import java.security.CodeSource;
@@ -198,7 +199,7 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
      *
      * @since 1.0.0
      */
-    @Parameter(property = "maven.remoteresource.skip", defaultValue = "false")
+    @Parameter(property = "maven.openicf.skip", defaultValue = "false")
     private boolean skip;
 
     @Parameter
@@ -277,6 +278,7 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
             File rootDirectory =
                     new File(buildDirectory, "openicf-docbkx/" + getTargetDirectoryName());
 
+
             Map<String, String> fileSetDictionary = new LinkedHashMap<String, String>();
             fileSetDictionary.put("sec-reference.xml.vm", "sec-reference-%s.xml");
             fileSetDictionary.put("sec-implemented-interfaces.xml.vm",
@@ -286,24 +288,33 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
             fileSetDictionary.put("chap-config.xml.vm", "chap-config-%s.xml");
 
             for (Map.Entry<String, String> entry : fileSetDictionary.entrySet()) {
-                if (null == context.get("schema") && "sec-schema.xml.vm".equals(entry.getKey())) {
-                    continue;
-                }
-                File configDoc =
-                        new File(rootDirectory, String.format(entry.getValue(), connectorName));
-
-                FileUtils.mkdir(configDoc.getParentFile().getAbsolutePath());
-
-                FileWriter writer = new FileWriter(configDoc);
-                builder.processTemplate(velocity.getEngine(), context, entry.getKey(), writer);
-                writer.flush();
-                writer.close();
-                context.put(entry.getKey().substring(0, entry.getKey().indexOf('.')), String.format(entry.getValue(), connectorName));
+                generateDocument(builder, context, connectorName, rootDirectory, entry.getKey());
             }
         } catch (IOException e) {
             getLog().error(e);
-            throw new MojoExecutionException("Failed to generate docbook", e);
+            throw new MojoExecutionException("Failed to generate DocBook", e);
         }
+    }
+
+    protected void generateDocument(ConnectorDocBuilder builder, Context context,
+            String connectorName, File rootDirectory, String templateFile) throws IOException,
+            MojoExecutionException {
+        if (null == context.get("schema") && templateFile.contains("-schema")) {
+            return;
+        }
+        String key =
+                templateFile
+                        .substring(templateFile.lastIndexOf("/") + 1, templateFile.indexOf('.'));
+        String fileName = key + "-"+connectorName + ".xml";
+        File configDoc = new File(rootDirectory, fileName);
+
+        FileUtils.mkdir(configDoc.getParentFile().getAbsolutePath());
+
+        FileWriter writer = new FileWriter(configDoc);
+        builder.processTemplate(velocity.getEngine(), context, templateFile, writer);
+        writer.flush();
+        writer.close();
+        context.put(key, fileName);
     }
 
     protected String getTargetDirectoryName() {
@@ -338,10 +349,6 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
                 return;
             }
 
-            String docFolder = getTargetDirectoryName();
-
-            // File rootDirectory = new File(buildDirectory, "openicf-docbkx/" +
-            // docFolder);
             File rootDirectory =
                     new File(buildDirectory, "openicf-docbkx/" + artifact.getArtifactId() + "-"
                             + artifact.getVersion());
@@ -351,7 +358,7 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
                 FileUtils.copyDirectory(docbkxDirectory, rootDirectory, "**", StringUtils.join(
                         DirectoryScanner.DEFAULTEXCLUDES, ","));
 
-                File sharedRoot = new File(buildDirectory, "openicf-docbkx/");
+                File sharedRoot = rootDirectory.getParentFile();
 
                 CodeSource src = getClass().getProtectionDomain().getCodeSource();
                 if (src != null) {
@@ -363,13 +370,11 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
 
                             File destination = new File(sharedRoot, name.substring(7));
                             if (entry.isDirectory()) {
-                                // Do nothing
                                 if (!destination.exists()) {
                                     destination.mkdirs();
                                 }
                             } else {
                                 if (!destination.exists()) {
-
                                     FileOutputStream output = null;
                                     try {
                                         output = new FileOutputStream(destination);
@@ -385,7 +390,7 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
                     zip.close();
                 }
             } catch (IOException e) {
-                throw new MojoExecutionException("Error copy remote resources manifest.", e);
+                throw new MojoExecutionException("Error copy DocBook resources.", e);
             }
 
             // Generate Config and Schema DocBook Chapter
@@ -402,7 +407,7 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
 
             if (attach) {
                 RemoteResourcesBundle remoteResourcesBundle = new RemoteResourcesBundle();
-                remoteResourcesBundle.setSourceEncoding(sourceEncoding);
+                remoteResourcesBundle.setSourceEncoding(getSourceEncoding());
 
                 DirectoryScanner scanner = new DirectoryScanner();
                 scanner.setBasedir(new File(buildDirectory, "openicf-docbkx/"));

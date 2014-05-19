@@ -25,10 +25,14 @@
 package org.forgerock.openicf.maven;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.security.CodeSource;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.apache.maven.doxia.siterenderer.Renderer;
 import org.apache.maven.doxia.tools.SiteTool;
@@ -45,6 +49,7 @@ import org.apache.velocity.context.Context;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.apache.velocity.exception.VelocityException;
 import org.codehaus.plexus.i18n.I18N;
+import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.velocity.VelocityComponent;
 import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.framework.api.RemoteFrameworkConnectionInfo;
@@ -325,6 +330,41 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
             throw new MavenReportException(ve.toString(), ve);
         } catch (MojoExecutionException e) {
             throw new MavenReportException(e.toString(), e);
+        }
+
+        try {
+            CodeSource src = getClass().getProtectionDomain().getCodeSource();
+            if (src != null) {
+                final ZipInputStream zip = new ZipInputStream(src.getLocation().openStream());
+                File outputDirectory = new File(getOutputDirectory());
+                ZipEntry entry = null;
+                while ((entry = zip.getNextEntry()) != null) {
+                    String name = entry.getName();
+                    if (entry.getName().startsWith("docbkx")) {
+
+                        File destination = new File(outputDirectory, name.substring(7));
+                        if (entry.isDirectory()) {
+                            if (!destination.exists()) {
+                                destination.mkdirs();
+                            }
+                        } else if (!name.endsWith(".xml")) {
+                            if (!destination.exists()) {
+                                FileOutputStream output = null;
+                                try {
+                                    output = new FileOutputStream(destination);
+                                    IOUtil.copy(zip, output);
+                                } finally {
+                                    IOUtil.close(output);
+                                }
+                            }
+                        }
+                    }
+                }
+                zip.closeEntry();
+                zip.close();
+            }
+        } catch (IOException e) {
+            getLog().error(e);
         }
     }
 }

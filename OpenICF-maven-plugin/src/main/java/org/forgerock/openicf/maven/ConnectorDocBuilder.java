@@ -24,7 +24,6 @@
 
 package org.forgerock.openicf.maven;
 
-import java.io.File;
 import java.io.Writer;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -79,9 +78,6 @@ import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.impl.api.local.LocalConnectorInfoImpl;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.operations.SchemaOp;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 
 /**
  * A ConnectorDocBuilder .
@@ -283,7 +279,7 @@ public class ConnectorDocBuilder {
 
                     propertyMap.put("name", propertyName);
                     propertyMap.put("type", property.getType().getSimpleName());
-                    propertyMap.put("value", property.getValue());
+                    propertyMap.put("property", property);
                     propertyMap.put("required", property.isRequired());
                     propertyMap.put("operations", convertOperations(property.getOperations()));
                     propertyMap.put("confidential", property.isConfidential());
@@ -308,23 +304,6 @@ public class ConnectorDocBuilder {
                 context.put("i18n", handler.getI18N());
 
                 context.put("project", handler.getMavenProject());
-
-                try {
-                    Map<String, Object> value = new HashMap<String, Object>();
-
-                    value.put("operationOptions", context.get("operationOptions"));
-                    value.put("objectClasses", context.get("objectClasses"));
-                    value.put("connectorInterfaces", context.get("connectorInterfaces"));
-                    value.put("configurationProperties", context.get("configurationProperties"));
-                    value.put("connectorPoolingSupported", context.get("connectorPoolingSupported"));
-
-                    ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
-                    ow.writeValue(new File(handler.getBuildOutputDirectory(), "configDrop.txt"),
-                            value);
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
 
                 handler.generate(this, context, connectorName);
 
