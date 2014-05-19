@@ -43,17 +43,18 @@
 
             <informaltable>
                 <tgroup cols="6">
-                    <colspec colnum="1" colwidth="2*"/>
-                    <colspec colnum="2" colwidth="1*"/>
-                    <colspec colnum="3" colwidth="1*"/>
-                    <colspec colnum="4" colwidth="1*"/>
-                    <colspec colnum="5" colwidth="3*"/>
-                    <colspec colnum="6" colwidth="2*"/>
+                    <?dbhtml cellspacing="0" ?>
+                    <?dbhtml cellpadding="2" ?>
+                    <colspec colname="a" colnum="1" colwidth="2*"/>
+                    <colspec colname="b" colnum="2" colwidth="1*"/>
+                    <colspec colname="c" colnum="3" colwidth="1*"/>
+                    <colspec colname="d" colnum="4" colwidth="1*"/>
+                    <colspec colname="e" colnum="5" colwidth="1*"/>
                     <thead>
                         <row>
                             <entry>Property</entry>
                             <entry>Type</entry>
-                            <entry>Default Value</entry>
+                            <entry>Default</entry>
                             <entry>
                                 <mediaobject>
                                     <imageobject>
@@ -67,15 +68,23 @@
                                     </para>
                                 </footnote>
                             </entry>
-                            <entry>Description</entry>
-                            <entry>Required for these Operations</entry>
+                            <entry>
+                             Required
+                                <footnote>
+                                    <para>
+                                     A list of operations in this column indicates that the property is
+                                     required for those operations.
+                                    </para>
+                                </footnote>
+                            </entry>
                         </row>
                     </thead>
                     <tbody>
                         #foreach($property in $configurationGroup.value)
                             <row valign="top">
+                                <?dbhtml bgcolor="#EBEDE6" ?><?dbfo bgcolor="#EBEDE6" ?>
                                 <entry>
-                                    <literal>${property.name}</literal>
+                                    <>${property.name}</literal>
                                 </entry>
                                 <entry>
                                     <literal>${property.type}</literal>
@@ -83,7 +92,7 @@
                                 <entry>
                                     <literal>${property.value}</literal>
                                 </entry>
-                                <entry>
+                                <entry align="center">
                                     #if (${property.confidential})
                                         <mediaobject>
                                             <imageobject>
@@ -92,10 +101,7 @@
                                         </mediaobject>
                                     #end
                                 </entry>
-                                <entry>
-                                    <literal>${property.description}</literal>
-                                </entry>
-                                <entry>
+                                <entry align="center">
                                     #if($property.operations.size() > 0)
                                         <imageobject>
                                             <imagedata
@@ -120,6 +126,18 @@
                                             </imageobject>
                                         </mediaobject>
                                     #end
+                                </entry>
+                            </row>
+                            <row>
+                                <?dbhtml bgcolor="#EBEDE6" ?><?dbfo bgcolor="#EBEDE6" ?>
+                                <entry namest="a" nameend="e">
+                                    <para>${property.description}</para>
+                                </entry>
+                            </row>
+                            <row>
+                                <?dbhtml row-height="10" ?>
+                                <entry namest="a" nameend="e">
+                                    <para> </para>
                                 </entry>
                             </row>
                         #end
