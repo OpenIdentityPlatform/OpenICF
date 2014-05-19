@@ -94,7 +94,7 @@ public class MapFilterVisitor extends AbstractFilterVisitor<Void, Map<String, Ob
     }
 
     public Map<String, Object> visit(Void parameter, ContainsAllValuesFilter filter) {
-        return createMap("CONTAINSALL", filter);
+        throw new UnsupportedOperationException("ContainsAllValuesFilter transformation is not supported"); //return createMap("CONTAINSALL", filter);
     }
 
     public Map<String, Object> visit(Void parameter, ContainsFilter filter) {

@@ -74,28 +74,28 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
         SchemaOp, ScriptOnConnectorOp, ScriptOnResourceOp, SearchOp<Filter>, SyncOp, TestOp,
         UpdateOp {
 
-    protected static final String USERNAME = "username"
-    protected static final String PASSWORD = "password"
+    public static final String USERNAME = "username"
+    public static final String PASSWORD = "password"
 
-    protected static final String ACTION = "action"
+    public static final String ACTION = "action"
 
-    protected static final String OBJECT_CLASS = "objectClass"
-    protected static final String UID = "uid"
-    protected static final String ID = "id"
+    public static final String OBJECT_CLASS = "objectClass"
+    public static final String UID = "uid"
+    public static final String ID = "id"
 
-    protected static final String ATTRIBUTES = "attributes"
-    protected static final String OPTIONS = "options"
+    public static final String ATTRIBUTES = "attributes"
+    public static final String OPTIONS = "options"
 
-    protected static final String CONNECTION = "connection"
-    protected static final String SCHEMA = "schema"
-    protected static final String CONFIGURATION = "configuration"
-    protected static final String LOGGER = "log"
-    protected static final String TOKEN = "token"
-    protected static final String HANDLER = "handler"
-    protected static final String QUERY = "query"
-    protected static final String BUILDER = "builder"
-    protected static final String FILTER = "filter"
-    protected static final String GROOVY = "GROOVY"
+    public static final String CONNECTION = "connection"
+    public static final String SCHEMA = "schema"
+    public static final String CONFIGURATION = "configuration"
+    public static final String LOGGER = "log"
+    public static final String TOKEN = "token"
+    public static final String HANDLER = "handler"
+    public static final String QUERY = "query"
+    public static final String BUILDER = "builder"
+    public static final String FILTER = "filter"
+    public static final String GROOVY = "GROOVY"
 
     /**
      * Place holder for the Connector schema created in the Schema() method.

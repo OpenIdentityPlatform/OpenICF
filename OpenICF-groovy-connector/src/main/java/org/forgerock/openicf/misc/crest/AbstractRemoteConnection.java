@@ -118,8 +118,22 @@ public abstract class AbstractRemoteConnection implements Connection {
         this.httpHost = httpHost;
     }
 
-    public abstract <T> Future<T> execute(final HttpUriRequest request,
-            final HttpAsyncResponseConsumer<T> responseConsumer, final FutureCallback<T> callback);
+    public abstract <T> Future<T> execute(Context context,  HttpUriRequest request,
+            final HttpAsyncResponseConsumer<T> responseConsumer, FutureCallback<T> callback);
+
+
+    /*
+    public abstract FutureResult<JsonValue> execute(Context context, HttpUriRequest request,
+            HttpAsyncResponseConsumer<JsonValue> responseConsumer,
+            FutureCallback<JsonValue> callback);
+
+    public abstract FutureResult<Resource> execute(Context context, HttpUriRequest request,
+            HttpAsyncResponseConsumer<Resource> responseConsumer, FutureCallback<Resource> callback);
+
+    public abstract FutureResult<QueryResult> execute(Context context, HttpUriRequest request,
+            QueryResultHandler handler, HttpAsyncResponseConsumer<QueryResult> responseConsumer,
+            FutureCallback<QueryResult> callback);
+     */
 
     protected abstract JsonValue parseJsonBody(final HttpEntity entity, final boolean allowEmpty)
             throws ResourceException;
@@ -165,7 +179,7 @@ public abstract class AbstractRemoteConnection implements Connection {
         try {
 
             final Future<JsonValue> result =
-                    execute(convert(request), new JsonValueResponseHandler(),
+                    execute(context, convert(request), new JsonValueResponseHandler(),
                             new InternalFutureCallback<JsonValue>(
                                     (ResultHandler<JsonValue>) handler));
 
@@ -223,7 +237,7 @@ public abstract class AbstractRemoteConnection implements Connection {
         try {
 
             final Future<QueryResult> result =
-                    execute(convert(request), new QueryResultResponseHandler(handler),
+                    execute(context, convert(request), new QueryResultResponseHandler(handler),
                             new InternalFutureCallback<QueryResult>(handler));
 
             return new InternalFutureResult<QueryResult>(result);
@@ -253,7 +267,7 @@ public abstract class AbstractRemoteConnection implements Connection {
     @Override
     public FutureResult<Resource> createAsync(Context context, CreateRequest request,
             ResultHandler<? super Resource> handler) {
-        return handleRequestAsync(request, handler);
+        return handleRequestAsync(context, request, handler);
     }
 
     @Override
@@ -273,7 +287,7 @@ public abstract class AbstractRemoteConnection implements Connection {
     @Override
     public FutureResult<Resource> deleteAsync(Context context, DeleteRequest request,
             ResultHandler<? super Resource> handler) {
-        return handleRequestAsync(request, handler);
+        return handleRequestAsync(context, request, handler);
     }
 
     @Override
@@ -293,7 +307,7 @@ public abstract class AbstractRemoteConnection implements Connection {
     @Override
     public FutureResult<Resource> patchAsync(Context context, PatchRequest request,
             ResultHandler<? super Resource> handler) {
-        return handleRequestAsync(request, handler);
+        return handleRequestAsync(context, request, handler);
     }
 
     @Override
@@ -312,7 +326,7 @@ public abstract class AbstractRemoteConnection implements Connection {
     @Override
     public FutureResult<Resource> readAsync(Context context, ReadRequest request,
             ResultHandler<? super Resource> handler) {
-        return handleRequestAsync(request, handler);
+        return handleRequestAsync(context, request, handler);
     }
 
     @Override
@@ -332,7 +346,7 @@ public abstract class AbstractRemoteConnection implements Connection {
     @Override
     public FutureResult<Resource> updateAsync(Context context, UpdateRequest request,
             ResultHandler<? super Resource> handler) {
-        return handleRequestAsync(request, handler);
+        return handleRequestAsync(context, request, handler);
     }
 
     private HttpUriRequest convert(Request request) throws ResourceException {
@@ -485,12 +499,12 @@ public abstract class AbstractRemoteConnection implements Connection {
         return builder;
     }
 
-    private FutureResult<Resource> handleRequestAsync(Request request,
-            ResultHandler<? super Resource> handler) {
+    private FutureResult<Resource> handleRequestAsync(final Context context, final Request request,
+            final ResultHandler<? super Resource> handler) {
         try {
 
             final Future<Resource> result =
-                    execute(convert(request), new ResourceResponseHandler(),
+                    execute(context, convert(request), new ResourceResponseHandler(),
                             new InternalFutureCallback<Resource>((ResultHandler<Resource>) handler));
 
             return new InternalFutureResult<Resource>(result);

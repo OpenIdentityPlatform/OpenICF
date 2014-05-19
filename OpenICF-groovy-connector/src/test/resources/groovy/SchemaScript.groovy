@@ -63,7 +63,7 @@ builder.schema({
             createDate Integer.class, NOT_CREATABLE, NOT_UPDATEABLE
             lastModified NOT_UPDATEABLE, NOT_CREATABLE, NOT_RETURNED_BY_DEFAULT
             sureName()
-            passwordHistory String.class, MULTIVALUED, NOT_READABLE, NOT_RETURNED_BY_DEFAULT
+            passwordHistory String.class, MULTIVALUED, NOT_UPDATEABLE, NOT_RETURNED_BY_DEFAULT
         }
 
     }
@@ -83,8 +83,8 @@ builder.schema({
             attributeString String.class
             attributeStringMultivalue String.class, MULTIVALUED
 
-            attributelong Long.TYPE
-            attributelongMultivalue Long.TYPE, MULTIVALUED
+            attributelongp Long.TYPE
+            attributelongpMultivalue Long.TYPE, MULTIVALUED
 
             attributeLong Long.class
             attributeLongMultivalue Long.class, MULTIVALUED
@@ -95,14 +95,14 @@ builder.schema({
             attributeCharacter Character.class
             attributeCharacterMultivalue Character.class, MULTIVALUED
 
-            attributedouble Double.TYPE
-            attributedoubleMultivalue Double.TYPE, MULTIVALUED
+            attributedoublep Double.TYPE
+            attributedoublepMultivalue Double.TYPE, MULTIVALUED
 
             attributeDouble Double.class
             attributeDoubleMultivalue Double.class, MULTIVALUED
 
-            attributefloat Float.TYPE
-            attributefloatMultivalue Float.TYPE, MULTIVALUED
+            attributefloatp Float.TYPE
+            attributefloatpMultivalue Float.TYPE, MULTIVALUED
 
             attributeFloat Float.class
             attributeFloatMultivalue Float.class, MULTIVALUED
@@ -113,14 +113,14 @@ builder.schema({
             attributeInteger Integer.class
             attributeIntegerMultivalue Integer.class, MULTIVALUED
 
-            attributeboolean Boolean.TYPE
-            attributebooleanMultivalue Boolean.TYPE, MULTIVALUED
+            attributebooleanp Boolean.TYPE
+            attributebooleanpMultivalue Boolean.TYPE, MULTIVALUED
 
             attributeBoolean Boolean.class
             attributeBooleanMultivalue Boolean.class, MULTIVALUED
 
-            attribute Byte.TYPE
-            attributeByteMultivalue Byte.TYPE, MULTIVALUED
+            attributebytep Byte.TYPE
+            attributebytepMultivalue Byte.TYPE, MULTIVALUED
 
             attributeByte Byte.class
             attributeByteMultivalued Byte.class, MULTIVALUED

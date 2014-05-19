@@ -24,10 +24,10 @@
 
 package org.forgerock.openicf.misc.scriptedcommon;
 
+import static org.fest.assertions.api.Assertions.*;
 import static org.forgerock.openicf.connectors.RESTTestBase.createConnectorFacade;
-import static org.fest.assertions.api.Assertions.assertThat; // main one
-import static org.fest.assertions.api.Assertions.atIndex; // for List assertion
-import static org.fest.assertions.api.Assertions.entry;  // for Map assertion
+import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.*;
+import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.not;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -75,11 +75,14 @@ import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
-import org.identityconnectors.framework.spi.SearchResultsHandler;
+import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.test.common.TestHelpers;
+import org.identityconnectors.test.common.ToListResultsHandler;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+
+import groovy.json.JsonSlurper;
 
 public class ScriptedConnectorTest {
 
@@ -142,8 +145,8 @@ public class ScriptedConnectorTest {
 
     @Test
     public void testAuthenticateEmpty() throws Exception {
-        getFacade(TEST_NAME).authenticate(TEST, "TESTOK2",
-                new GuardedString("".toCharArray()), null);
+        getFacade(TEST_NAME).authenticate(TEST, "TESTOK2", new GuardedString("".toCharArray()),
+                null);
     }
 
     // =======================================================================
@@ -152,12 +155,7 @@ public class ScriptedConnectorTest {
 
     @Test
     public void testCreate() throws Exception {
-        Set<Attribute> createAttributes = getTestConnectorObject("Foo");
-        ConnectorFacade facade = getFacade(TEST_NAME);
-        Uid uid = facade.create(ObjectClass.ACCOUNT, createAttributes, null);
-        Assert.assertNotNull(uid);
-        ConnectorObject co = facade.getObject(ObjectClass.ACCOUNT, uid, null);
-        Assert.assertEquals(co.getUid(), uid);
+        createTestUser("Foo");
     }
 
     @Test(expectedExceptions = AlreadyExistsException.class)
@@ -363,6 +361,51 @@ public class ScriptedConnectorTest {
     // =======================================================================
 
     @Test
+    public void testFilterTranslator() throws Exception {
+        Filter left = startsWith(AttributeBuilder.build("attributeString", "reti"));
+        left = and(left, contains(AttributeBuilder.build("attributeString", "pipi")));
+        left = and(left, endsWith(AttributeBuilder.build("attributeString", "ter")));
+
+        Filter right = lessThanOrEqualTo(AttributeBuilder.build("attributeInteger", 42));
+        right = or(right, lessThan(AttributeBuilder.build("attributeFloat", Float.MAX_VALUE)));
+        right =
+                or(right, greaterThanOrEqualTo(AttributeBuilder.build("attributeDouble",
+                        Double.MIN_VALUE)));
+        right = or(right, greaterThan(AttributeBuilder.build("attributeLong", Long.MIN_VALUE)));
+        right = and(right, not(equalTo(AttributeBuilder.build("attributeByte", new Byte("33")))));
+
+        ToListResultsHandler handler = new ToListResultsHandler();
+        SearchResult result = getFacade(TEST_NAME).search(TEST, and(left, right), handler, null);
+        Assert.assertEquals(handler.getObjects().size(), 10);
+        Assert.assertNotNull(result.getPagedResultsCookie());
+
+        Map queryMap = (Map) new JsonSlurper().parseText(result.getPagedResultsCookie());
+        assertThat(queryMap).contains(entry("operation", "AND"));
+
+        left =
+                and(left, containsAllValues(AttributeBuilder.build("attributeStringMultivalue",
+                        "value1", "value2")));
+
+        try {
+            handler = new ToListResultsHandler();
+            getFacade(TEST_NAME).search(TEST, and(left, right), handler, null);
+            fail("containsAllValues should raise exception if not implemented");
+        } catch (UnsupportedOperationException e) {
+            /* expected */
+            Assert.assertEquals(e.getMessage(), "ContainsAllValuesFilter transformation is not supported");
+        }
+
+        OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        builder.setOption("CREST", true);
+        handler = new ToListResultsHandler();
+        result = getFacade(TEST_NAME).search(TEST, and(left, right), handler, builder.build());
+        Assert.assertEquals(handler.getObjects().size(), 10);
+        Assert.assertEquals(
+                result.getPagedResultsCookie(),
+                "((((/attributeString sw \"reti\" and /attributeString co \"pipi\") and /attributeString ew \"ter\") and /attributeStringMultivalue ca \"[\"value1\",\"value2\"]\") and ((((/attributeInteger le 42 or /attributeFloat lt 3.4028235E38) or /attributeDouble ge 4.9E-324) or /attributeLong gt -9223372036854775808) and ! (/attributeByte eq 33)))");
+    }
+
+    @Test
     public void testSearch() throws Exception {
         ConnectorObject co = getFacade(TEST_NAME).getObject(SAMPLE, new Uid("1"), null);
         Assert.assertNotNull(co);
@@ -406,8 +449,8 @@ public class ScriptedConnectorTest {
         int pageIndex = 0;
 
         while ((result =
-                search.search(ObjectClass.ACCOUNT, FilterBuilder.startsWith(AttributeBuilder.build(
-                        Name.NAME, "TEST")), new ResultsHandler() {
+                search.search(ObjectClass.ACCOUNT, startsWith(AttributeBuilder.build(Name.NAME,
+                        "TEST")), new ResultsHandler() {
                     private int index = 101;
 
                     public boolean handle(ConnectorObject connectorObject) {
@@ -433,12 +476,24 @@ public class ScriptedConnectorTest {
     // =======================================================================
 
     @Test
-    public void testSync() throws Exception {
+    public void testSyncNull() throws Exception {
+
+    }
+
+    @DataProvider
+    public Object[][] SyncObjectClassProvider() {
+        return new Object[][]{
+                { ObjectClass.ACCOUNT },{ TEST }
+        };
+    }
+
+    @Test(dataProvider = "SyncObjectClassProvider")
+    public void testSync(ObjectClass objectClass) throws Exception {
         final ConnectorFacade facade = getFacade(TEST_NAME);
         final List<SyncDelta> result = new ArrayList<SyncDelta>();
 
         SyncToken lastToken =
-                facade.sync(ObjectClass.ACCOUNT, new SyncToken(0), new SyncResultsHandler() {
+                facade.sync(objectClass, new SyncToken(0), new SyncResultsHandler() {
                     public boolean handle(SyncDelta delta) {
                         return result.add(delta);
                     }
@@ -449,7 +504,7 @@ public class ScriptedConnectorTest {
         Assert.assertEquals(delta.getDeltaType(), SyncDeltaType.CREATE);
         Assert.assertEquals(delta.getObject().getAttributes().size(), 44);
 
-        lastToken = facade.sync(ObjectClass.ACCOUNT, lastToken, new SyncResultsHandler() {
+        lastToken = facade.sync(objectClass, lastToken, new SyncResultsHandler() {
             public boolean handle(SyncDelta delta) {
                 return result.add(delta);
             }
@@ -459,7 +514,7 @@ public class ScriptedConnectorTest {
         delta = result.remove(0);
         Assert.assertEquals(delta.getDeltaType(), SyncDeltaType.UPDATE);
 
-        lastToken = facade.sync(ObjectClass.ACCOUNT, lastToken, new SyncResultsHandler() {
+        lastToken = facade.sync(objectClass, lastToken, new SyncResultsHandler() {
             public boolean handle(SyncDelta delta) {
                 return result.add(delta);
             }
@@ -469,7 +524,7 @@ public class ScriptedConnectorTest {
         delta = result.remove(0);
         Assert.assertEquals(delta.getDeltaType(), SyncDeltaType.CREATE_OR_UPDATE);
 
-        lastToken = facade.sync(ObjectClass.ACCOUNT, lastToken, new SyncResultsHandler() {
+        lastToken = facade.sync(objectClass, lastToken, new SyncResultsHandler() {
             public boolean handle(SyncDelta delta) {
                 return result.add(delta);
             }
@@ -480,7 +535,7 @@ public class ScriptedConnectorTest {
         Assert.assertEquals(delta.getDeltaType(), SyncDeltaType.UPDATE);
         Assert.assertEquals(delta.getPreviousUid().getUidValue(), "001");
 
-        lastToken = facade.sync(ObjectClass.ACCOUNT, lastToken, new SyncResultsHandler() {
+        lastToken = facade.sync(objectClass, lastToken, new SyncResultsHandler() {
             public boolean handle(SyncDelta delta) {
                 return result.add(delta);
             }
@@ -490,7 +545,7 @@ public class ScriptedConnectorTest {
         delta = result.remove(0);
         Assert.assertEquals(delta.getDeltaType(), SyncDeltaType.DELETE);
 
-        lastToken = facade.sync(ObjectClass.ACCOUNT, lastToken, new SyncResultsHandler() {
+        lastToken = facade.sync(objectClass, lastToken, new SyncResultsHandler() {
             public boolean handle(SyncDelta delta) {
                 return result.add(delta);
             }
@@ -498,7 +553,7 @@ public class ScriptedConnectorTest {
         Assert.assertEquals(lastToken.getValue(), 10);
         Assert.assertTrue(result.isEmpty());
 
-        lastToken = facade.sync(ObjectClass.ACCOUNT, lastToken, new SyncResultsHandler() {
+        lastToken = facade.sync(objectClass, lastToken, new SyncResultsHandler() {
             public boolean handle(SyncDelta delta) {
                 return result.add(delta);
             }
@@ -591,14 +646,53 @@ public class ScriptedConnectorTest {
         facade.delete(ObjectClass.ACCOUNT, new Uid("NON_EXIST"), null);
     }
 
-    @Test(dependsOnMethods = "testCreate")
+    @Test
     public void testUpdate() throws Exception {
-        ConnectorFacade facade = getFacade(TEST_NAME);
+        Uid uid = createTestUser("TESTOK01");
         Set<Attribute> updateAttributes = new HashSet<Attribute>(1);
         updateAttributes.add(AttributeBuilder.build("email", "foo@example.com"));
 
-        Uid uid = facade.update(ObjectClass.ACCOUNT, new Uid("2"), updateAttributes, null);
-        Assert.assertEquals(uid.getUidValue(), "2");
+        uid = getFacade(TEST_NAME).update(ObjectClass.ACCOUNT, uid, updateAttributes, null);
+    }
+
+    @Test(expectedExceptions = InvalidAttributeValueException.class, expectedExceptionsMessageRegExp = "Expecting non null value")
+    public void testUpdateFailEmpty () throws Exception {
+        Uid uid = createTestUser("FAIL01");
+        Set<Attribute> updateAttributes = new HashSet<Attribute>(1);
+        updateAttributes.add(AttributeBuilder.build("email"));
+
+        uid = getFacade(TEST_NAME).update(ObjectClass.ACCOUNT, uid, updateAttributes, null);
+        fail("Connector operation should fail");
+    }
+
+    @Test(expectedExceptions = InvalidAttributeValueException.class, expectedExceptionsMessageRegExp = "Expecting Boolean value")
+    public void testUpdateFailType() throws Exception {
+        Uid uid = createTestUser("FAIL02");
+        Set<Attribute> updateAttributes = new HashSet<Attribute>(1);
+        updateAttributes.add(AttributeBuilder.build("active", "true"));
+
+        uid = getFacade(TEST_NAME).update(ObjectClass.ACCOUNT, uid, updateAttributes, null);
+        fail("Connector operation should fail");
+    }
+
+    @Test(expectedExceptions = InvalidAttributeValueException.class, expectedExceptionsMessageRegExp = "Expecting single value")
+    public void testUpdateFailMulti() throws Exception {
+        Uid uid = createTestUser("FAIL03");
+        Set<Attribute> updateAttributes = new HashSet<Attribute>(1);
+        updateAttributes.add(AttributeBuilder.build("userName", "name1", "name2"));
+
+        uid = getFacade(TEST_NAME).update(ObjectClass.ACCOUNT, uid, updateAttributes, null);
+        fail("Connector operation should fail");
+    }
+
+    @Test(expectedExceptions = InvalidAttributeValueException.class, expectedExceptionsMessageRegExp = "Try update non modifiable attribute")
+    public void testUpdateFailReadOnly() throws Exception {
+        Uid uid = createTestUser("FAIL04");
+        Set<Attribute> updateAttributes = new HashSet<Attribute>(1);
+        updateAttributes.add(AttributeBuilder.build("lastModified", "newValue"));
+
+        uid = getFacade(TEST_NAME).update(ObjectClass.ACCOUNT, uid, updateAttributes, null);
+        fail("Connector operation should fail");
     }
 
     @Test(expectedExceptions = OperationTimeoutException.class)
@@ -608,10 +702,23 @@ public class ScriptedConnectorTest {
         Assert.fail();
     }
 
+    protected Uid createTestUser(String username) {
+        Set<Attribute> createAttributes = getTestConnectorObject(username);
+        ConnectorFacade facade = getFacade(TEST_NAME);
+        Uid uid = facade.create(ObjectClass.ACCOUNT, createAttributes, null);
+        Assert.assertNotNull(uid);
+        ConnectorObject co = facade.getObject(ObjectClass.ACCOUNT, uid, null);
+        Assert.assertEquals(co.getUid(), uid);
+        return uid;
+    }
+
     private Set<Attribute> getTestConnectorObject(String name) {
         Set<Attribute> createAttributes = new HashSet<Attribute>(1);
         createAttributes.add(new Name(name));
+        createAttributes.add(AttributeBuilder.build("userName", name));
         createAttributes.add(AttributeBuilder.build("email", name + "@example.com"));
+        createAttributes.add(AttributeBuilder.build("active", true));
+        createAttributes.add(AttributeBuilder.build("sureName", name));
         return createAttributes;
     }
 

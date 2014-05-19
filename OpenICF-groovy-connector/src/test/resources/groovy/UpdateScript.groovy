@@ -21,19 +21,23 @@
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
-
-import org.identityconnectors.common.logging.Log
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration
+import org.identityconnectors.common.Pair
+import org.identityconnectors.common.logging.Log
 import org.identityconnectors.framework.common.exceptions.ConnectorException
 import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException
-import org.identityconnectors.framework.common.exceptions.PreconditionFailedException
-import org.identityconnectors.framework.common.exceptions.PreconditionRequiredException
 import org.identityconnectors.framework.common.exceptions.UnknownUidException
 import org.identityconnectors.framework.common.objects.Attribute
+import org.identityconnectors.framework.common.objects.AttributeUtil
+import org.identityconnectors.framework.common.objects.ConnectorObject
+import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder
+import org.identityconnectors.framework.common.objects.Name
 import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationOptions
 import org.identityconnectors.framework.common.objects.Uid
+
+import java.text.DateFormat
 
 def action = action as OperationType
 def updateAttributes = attributes as Set<Attribute>
@@ -51,7 +55,82 @@ switch (action) {
     case OperationType.UPDATE:
         switch (objectClass) {
             case ObjectClass.ACCOUNT:
-                return uid
+                def ObjectCacheLibrary library = ObjectCacheLibrary.instance
+
+                Pair<ConnectorObject, Date> current = library.getStore(objectClass).get(uid.uidValue)
+                if (null != current) {
+                    ConnectorObjectBuilder builder = new ConnectorObjectBuilder()
+                    builder.setObjectClass(objectClass)
+                    builder.addAttributes(AttributeUtil.filterUid(current.key.attributes))
+                    builder.setUid(uid)
+
+                    for (Attribute a : updateAttributes) {
+                        if (a.is(Name.NAME)) {
+                            if (a.value == null || a.value.size() == 0) {
+                                throw new InvalidAttributeValueException("Expecting non empty value");
+                            } else if (a.value.size() > 1) {
+                                throw new InvalidAttributeValueException("Expecting single value");
+                            } else if (AttributeUtil.getSingleValue(a) instanceof String) {
+                                builder.setName(AttributeUtil.getStringValue(a))
+                            } else {
+                                throw new InvalidAttributeValueException("Expecting String value");
+                            }
+                        } else if (a.is("userName")) {
+                            if (a.value == null || a.value.size() == 0) {
+                                throw new InvalidAttributeValueException("Expecting non empty value");
+                            } else if (a.value.size() > 1) {
+                                throw new InvalidAttributeValueException("Expecting single value");
+                            } else if (AttributeUtil.getSingleValue(a) instanceof String) {
+                                builder.addAttribute("userName", AttributeUtil.getStringValue(a))
+                            } else {
+                                throw new InvalidAttributeValueException("Expecting String value");
+                            }
+                        } else if (a.is("email")) {
+                            if (a.value == null || a.value.size() == 0) {
+                                throw new InvalidAttributeValueException("Expecting non null value");
+                            } else {
+                                for (Object v : a.value) {
+                                    if (!(v instanceof String)) {
+                                        throw new InvalidAttributeValueException("Expecting String value");
+                                    }
+                                }
+                                builder.addAttribute(a)
+                            }
+                        } else if (a.is("active")) {
+                            if (a.value == null || a.value.size() == 0) {
+                                throw new InvalidAttributeValueException("Expecting non empty value");
+                            } else if (a.value.size() > 1) {
+                                throw new InvalidAttributeValueException("Expecting single value");
+                            } else if (AttributeUtil.getSingleValue(a) instanceof Boolean) {
+                                builder.addAttribute("active", AttributeUtil.getBooleanValue(a))
+                            } else {
+                                throw new InvalidAttributeValueException("Expecting Boolean value");
+                            }
+                        } else if (a.is("createDate")) {
+                            throw new InvalidAttributeValueException("Try update non modifiable attribute");
+                        } else if (a.is("lastModified")) {
+                            throw new InvalidAttributeValueException("Try update non modifiable attribute");
+                        } else if (a.is("sureName")) {
+                            if (a.value.size() > 1) {
+                                throw new InvalidAttributeValueException("Expecting single value");
+                            } else if (a.value == null || a.value.size() == 0) {
+                                builder.addAttribute("sureName")
+                            } else if (AttributeUtil.getSingleValue(a) instanceof String) {
+                                builder.addAttribute("sureName", AttributeUtil.getStringValue(a))
+                            } else {
+                                throw new InvalidAttributeValueException("Expecting String value");
+                            }
+                        } else if (a.is("passwordHistory")) {
+                            throw new InvalidAttributeValueException("Try update non modifiable attribute");
+                        } else {
+                            builder.addAttribute(a)
+                        }
+                    }
+                    builder.addAttribute("lastModified", DateFormat.getDateTimeInstance().format(new Date()));
+                    return ObjectCacheLibrary.instance.update(builder.build())
+                } else {
+                    throw new UnknownUidException(uid, objectClass)
+                }
                 break
             case ObjectClass.GROUP:
                 return uid

@@ -53,16 +53,6 @@ class JsonEntity extends StringEntity {
         super(getJsonContent(content), ContentType.APPLICATION_JSON);
     }
 
-    /**
-     * Creates a JsonEntity.
-     *
-     * @throws IllegalArgumentException
-     *         if the string parameter is null
-     */
-    public JsonEntity(final String string) {
-        super(string, ContentType.APPLICATION_JSON);
-    }
-
     private static String getJsonContent(Object source) {
 
         Object value = null;

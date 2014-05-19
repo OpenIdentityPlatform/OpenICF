@@ -33,6 +33,7 @@ import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.ConnectorClass;
 import org.identityconnectors.framework.spi.PoolableConnector;
 
@@ -50,6 +51,12 @@ import groovy.lang.Binding;
                 "org/forgerock/openicf/connectors/scriptedcrest/Messages"})
 public class ScriptedCRESTConnector extends ScriptedConnectorBase<ScriptedCRESTConfiguration>
         implements PoolableConnector {
+
+    public void init(Configuration config) {
+        super.init(config);
+        //Force to call the customizer script
+        ((ScriptedCRESTConfiguration)config).getHttpAsyncClient();
+    }
 
     @Override
     public void checkAlive() {

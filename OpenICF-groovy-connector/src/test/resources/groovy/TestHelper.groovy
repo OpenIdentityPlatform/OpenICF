@@ -118,7 +118,7 @@ class TestHelper {
     static Map<String, Object> getConnectorObjectTemplate() {
 
         return [
-                attributeString                    : "value",
+                attributeString                    : "retipipiter",
                 attributeStringMultivalue          : ["value1", "value2"] as String[],
 
                 attributelongp                     : 11l,

@@ -181,7 +181,7 @@ public class ObjectCacheLibrary {
                 throw new PreconditionRequiredException()
             }
             def item = Pair.of(object, new Date())
-            if (storage.replace(object.getUid().getUidValue(), old, item)) {
+            if (storage.replace(object.getUid().getUidValue(), old.key, item)) {
                 throw new PreconditionFailedException();
             } else {
                 return new Uid(object.getUid().getUidValue(), Long.toString(item.getValue().getTime()))

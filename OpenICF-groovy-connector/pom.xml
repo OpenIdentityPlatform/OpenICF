@@ -36,11 +36,25 @@
     <packaging>bundle</packaging>
     <name>Groovy Connector</name>
     <description>This is a generic bundle that contains base classes and interfaces needed to write a scripted
-        connector, such as Scripted connector.
+        connector, such as Scripted SQL connector.
     </description>
+    <url>http://openicf.forgerock.org/connectors/groovy-connector/</url>
+    <scm>
+        <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/connectors/java/scriptedcommon</connection>
+        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/connectors/java/scriptedcommon</developerConnection>
+        <url>http://sources.forgerock.org/browse/openicf/trunk/connectors/java/scriptedcommon</url>
+    </scm>
+    <issueManagement>
+        <system>jira</system>
+        <url>https://bugster.forgerock.org/jira/browse/OPENICF/component/11352</url>
+    </issueManagement>
+    <ciManagement>
+        <system>jenkins</system>
+        <url>http://builds.forgerock.org/job/OpenICF - Ldap Connector</url>
+    </ciManagement>
     <properties>
         <!-- maven-compiler-plugin -->
-        <maven.compiler.target>1.5</maven.compiler.target>
+        <maven.compiler.target>1.6</maven.compiler.target>
         <maven.compiler.source>1.6</maven.compiler.source>
         <connectorPackage>org.forgerock.openicf</connectorPackage>
         <connectorClass>ScriptedConnector</connectorClass>
@@ -173,22 +187,6 @@
         </dependency>
     </dependencies>
     <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.forgerock.maven.plugins</groupId>
-                    <artifactId>openicf-maven-plugin</artifactId>
-                    <version>1.1.0-SNAPSHOT</version>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.codehaus.groovy</groupId>
-                            <artifactId>groovy-all</artifactId>
-                            <version>2.2.2</version>
-                        </dependency>
-                    </dependencies>
-                </plugin>
-            </plugins>
-        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -263,38 +261,6 @@
                         <jetty.http.port>${jetty.http.port}</jetty.http.port>
                     </systemPropertyVariables>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.forgerock.maven.plugins</groupId>
-                <artifactId>openicf-maven-plugin</artifactId>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.codehaus.groovy</groupId>
-                        <artifactId>groovy-all</artifactId>
-                        <version>2.2.2</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.forgerock.commons</groupId>
-                        <artifactId>json-resource</artifactId>
-                        <version>2.2.4</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.apache.httpcomponents</groupId>
-                        <artifactId>httpasyncclient</artifactId>
-                        <version>4.0.1</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.codehaus.groovy.modules.http-builder</groupId>
-                        <artifactId>http-builder</artifactId>
-                        <version>0.7.1</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.apache.tomcat</groupId>
-                        <artifactId>tomcat-jdbc</artifactId>
-                        <!--version>8.0.5</version-->
-                        <version>7.0.53</version>
-                    </dependency>
-                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

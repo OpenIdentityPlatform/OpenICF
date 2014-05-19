@@ -22,15 +22,22 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
 
+
 import ObjectCacheLibrary
 import org.forgerock.openicf.misc.scriptedcommon.ICFObjectBuilder as ICF
-import org.identityconnectors.common.logging.Log
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration
+import org.identityconnectors.common.logging.Log
+import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException
 import org.identityconnectors.framework.common.objects.Attribute
+import org.identityconnectors.framework.common.objects.AttributeUtil
+import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder
+import org.identityconnectors.framework.common.objects.Name
 import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationOptions
 import org.identityconnectors.framework.common.objects.Uid
+
+import java.text.DateFormat
 
 def action = action as OperationType
 def createAttributes = attributes as Set<Attribute>
@@ -46,12 +53,70 @@ log.info("Entering " + action + " Script");
 
 switch (objectClass) {
     case ObjectClass.ACCOUNT:
-        return ObjectCacheLibrary.instance.create(ICF.co {
-            uid UUID.randomUUID().toString()
-            id name
-            delegate.objectClass objectClass
-            attributes createAttributes
-        })
+
+        ConnectorObjectBuilder builder = new ConnectorObjectBuilder()
+        builder.setObjectClass(objectClass)
+        builder.setUid(name)
+        builder.setName(name)
+
+        for (Attribute a : createAttributes) {
+            if (a.is(Name.NAME)) {
+                continue
+            } else if (a.is("userName")) {
+                if (a.value == null || a.value.size() == 0) {
+                    throw new InvalidAttributeValueException("Expecting non empty value");
+                } else if (a.value.size() > 1) {
+                    throw new InvalidAttributeValueException("Expecting single value");
+                } else if (AttributeUtil.getSingleValue(a) instanceof String) {
+                    builder.addAttribute("userName", AttributeUtil.getStringValue(a))
+                } else {
+                    throw new InvalidAttributeValueException("Expecting String value");
+                }
+            } else if (a.is("email")) {
+                if (a.value == null || a.value.size() == 0) {
+                    throw new InvalidAttributeValueException("Expecting non null value");
+                } else {
+                    for (Object v : a.value) {
+                        if (!(v instanceof String)) {
+                            throw new InvalidAttributeValueException("Expecting String value");
+                        }
+                    }
+                    builder.addAttribute(a)
+                }
+            } else if (a.is("active")) {
+                if (a.value == null || a.value.size() == 0) {
+                    throw new InvalidAttributeValueException("Expecting non empty value");
+                } else if (a.value.size() > 1) {
+                    throw new InvalidAttributeValueException("Expecting single value");
+                } else if (AttributeUtil.getSingleValue(a) instanceof Boolean) {
+                    builder.addAttribute("active", AttributeUtil.getBooleanValue(a))
+                } else {
+                    throw new InvalidAttributeValueException("Expecting Boolean value");
+                }
+            } else if (a.is("createDate")) {
+                throw new InvalidAttributeValueException("Try update non modifiable attribute");
+            } else if (a.is("lastModified")) {
+                throw new InvalidAttributeValueException("Try update non modifiable attribute");
+            } else if (a.is("sureName")) {
+                if (a.value.size() > 1) {
+                    throw new InvalidAttributeValueException("Expecting single value");
+                } else if (a.value == null || a.value.size() == 0) {
+                    builder.addAttribute("sureName")
+                } else if (AttributeUtil.getSingleValue(a) instanceof String) {
+                    builder.addAttribute("sureName", AttributeUtil.getStringValue(a))
+                } else {
+                    throw new InvalidAttributeValueException("Expecting String value");
+                }
+            } else if (a.is("passwordHistory")) {
+                throw new InvalidAttributeValueException("Try update non modifiable attribute");
+            } else {
+                builder.addAttribute(a)
+            }
+        }
+        def now = DateFormat.getDateTimeInstance().format(new Date())
+        builder.addAttribute("createDate", now);
+        builder.addAttribute("lastModified", now);
+        return ObjectCacheLibrary.instance.create(builder.build())
         break
     case ObjectClass.GROUP:
         return ObjectCacheLibrary.instance.create(ICF.co {

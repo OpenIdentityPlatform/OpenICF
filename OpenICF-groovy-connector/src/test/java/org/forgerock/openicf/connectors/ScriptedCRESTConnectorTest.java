@@ -43,6 +43,8 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.PredefinedAttributes;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
+import org.identityconnectors.framework.common.objects.ScriptContext;
+import org.identityconnectors.framework.common.objects.ScriptContextBuilder;
 import org.identityconnectors.framework.common.objects.SearchResult;
 import org.identityconnectors.framework.common.objects.SortKey;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -162,6 +164,15 @@ public class ScriptedCRESTConnectorTest extends RESTTestBase {
         Assert.assertEquals(pageIndex, 9);
         Assert.assertEquals(resultSet.size(), 100);
 
+    }
+
+    @Test(enabled = false)
+    public void testAction() throws Exception {
+        final ConnectorFacade facade = getFacade();
+        ScriptContextBuilder builder = new ScriptContextBuilder();
+        builder.setScriptLanguage("crest");
+        builder.setScriptText("UNKNOWN");
+        Object response =  facade.runScriptOnResource(builder.build(), null);
     }
 
     private Set<Attribute> createUserAttributes(String firstName, String lastName) {

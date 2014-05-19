@@ -582,7 +582,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         return null;
     }
 
-    private Log getLogger(final Class<?> clazz) {
+    protected Log getLogger(final Class<?> clazz) {
         final String key = clazz.getName();
         Log logger = loggerCache.get(key);
         if (null == logger) {
@@ -597,7 +597,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
 
     private GroovyScriptEngine groovyScriptEngine = null;
 
-    GroovyScriptEngine getGroovyScriptEngine() {
+    protected GroovyScriptEngine getGroovyScriptEngine() {
         if (null == groovyScriptEngine) {
             synchronized (this) {
                 if (null == groovyScriptEngine) {

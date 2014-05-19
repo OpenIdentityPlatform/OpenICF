@@ -45,6 +45,7 @@ switch (action) {
         def token = token as Object
 
         switch (objectClass) {
+            case TestHelper.TEST:
             case ObjectClass.ACCOUNT:
                 switch (token) {
                     case 0:
@@ -55,6 +56,7 @@ switch (action) {
                             object {
                                 uid '001'
                                 id 'foo'
+                                delegate.objectClass(objectClass)
                                 TestHelper.connectorObjectTemplate.each { key, value ->
                                     attribute key, value
                                 }
@@ -71,6 +73,7 @@ switch (action) {
                             object {
                                 uid '001'
                                 id 'foo'
+                                delegate.objectClass(objectClass)
                                 TestHelper.connectorObjectTemplate.each { key, value ->
                                     attribute key, value
                                 }
@@ -87,6 +90,7 @@ switch (action) {
                             object {
                                 uid '001'
                                 id 'foo'
+                                delegate.objectClass(objectClass)
                                 TestHelper.connectorObjectTemplate.each { key, value ->
                                     attribute key, value
                                 }
@@ -104,6 +108,7 @@ switch (action) {
                             object {
                                 uid '002'
                                 id 'foo'
+                                delegate.objectClass(objectClass)
                                 TestHelper.connectorObjectTemplate.each { key, value ->
                                     attribute key, value
                                 }
@@ -120,6 +125,7 @@ switch (action) {
                             object {
                                 uid '002'
                                 id 'foo'
+                                delegate.objectClass(objectClass)
                                 TestHelper.connectorObjectTemplate.each { key, value ->
                                     attribute key, value
                                 }
@@ -141,10 +147,10 @@ switch (action) {
                                 object {
                                     uid '002'
                                     id 'foo'
+                                    delegate.objectClass(objectClass)
                                     TestHelper.connectorObjectTemplate.each { key, value ->
                                         attribute key, value
                                     }
-
                                 }
                             })
                         }
