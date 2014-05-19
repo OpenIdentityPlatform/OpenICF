@@ -80,174 +80,171 @@
    The following table lists the options that can be configured for each of the
    supported operations listed in the previous table.
   </para>
-  <table xml:id="operation-options-${connectorName}-${project.version}">
-   <title>Operation Options</title>
-   <tgroup cols="4">
-    <colspec colname="c1" colwidth="1*"/>
-    <colspec colname="c2" colwidth="1*"/>
-    <colspec colname="c3" colwidth="1*"/>
-    <colspec colname="c4" colwidth="3*"/>
+<table xml:id="operation-options-${connectorName}-${project.version}">
+        <title>Operation Options</title>
+        <tgroup cols="4">
+            <colspec colname="c1" colwidth="1*"/>
+            <colspec colname="c2" colwidth="1*"/>
+            <colspec colname="c3" colwidth="1*"/>
+            <colspec colname="c4" colwidth="3*"/>
+            <thead>
+                <row>
+                    <entry>Operation</entry>
+                    <entry namest="c2" nameend="c4" align="center">Supported Options</entry>
+                </row>
+                <row>
+                    <entry> <!-- Intentionally left blank --></entry>
+                    <entry align="center">Name</entry>
+                    <entry align="center">Type</entry>
+                    <entry align="center">Description</entry>
+                </row>
+            </thead>
+            <tbody>
+              #foreach($operationOptionInfo in $operationOptions.entrySet())
+               <row>
+                        <entry>
+                            <para xml:id="operation-${operationOptionInfo.key}-${connectorName}-${project.version}"
+                                  xreflabel="${operationOptionInfo.key}">${operationOptionInfo.key}</para>
+                        </entry>
+                        <entrytbl namest="c2" nameend="c4" cols="3">
+                            <colspec colname="c1" colwidth="1*"/>
+                            <colspec colname="c2" colwidth="1*"/>
+                            <colspec colname="c3" colwidth="3*"/>
+                            <tbody>
+                              #foreach($option in $operationOptionInfo.value)
+                               <row>
+                                        <entry>$option.name</entry>
+                                        <entry>$option.type</entry>
+                                 #if($option.name.equals("SCOPE"))
+                                  <entry>$option.description</entry>
+                                 #elseif($option.name.equals("CONTAINER"))
+                                  <entry>$option.description</entry>
+                                 #elseif($option.name.equals("RUN_AS_USER"))
+                                  <entry>TODO FIXME Link to appendix with detailed description</entry>
+                                 #elseif($option.name.equals("RUN_WITH_PASSWORD"))
+                                  <entry>TODO FIXME Link to appendix with detailed description</entry>
+                                 #elseif($option.name.equals("ATTRS_TO_GET"))
+                                  <entry>$option.description</entry>
+                                 #elseif($option.name.equals("PAGED_RESULTS_COOKIE"))
+                                  <entry>$option.description</entry>
+                                 #elseif($option.name.equals("PAGED_RESULTS_OFFSET"))
+                                  <entry>$option.description</entry>
+                                 #elseif($option.name.equals("PAGE_SIZE"))
+                                  <entry>$option.description</entry>
+                                 #elseif($option.name.equals("SORT_KEYS"))
+                                  <entry>$option.description</entry>
+                                 #else
+                                  <entry>$option.description</entry>
+                                 #end
+                                    </row>
+                              #end
+                            </tbody>
+                        </entrytbl>
+                    </row>
+              #end
+            </tbody>
+        </tgroup>
+    </table>
+
+  #foreach($objectClass in $objectClasses)
+  <para>
+   The ${objectClass.displayName} (${objectClass.name}) supports the following attributes.
+  </para>
+  <table xml:id="supported-attributes-${objectClass.name}-${connectorName}-${project.version}">
+   <title>Supported Attributes</title>
+   <tgroup cols="8">
+    <colspec colnum="1" colwidth="2*"/>
+    <colspec colnum="2" colwidth="1*"/>
+    <colspec colnum="3" colwidth="1*"/>
+    <colspec colnum="4" colwidth="1*"/>
+    <colspec colnum="5" colwidth="1*"/>
+    <colspec colnum="6" colwidth="1*"/>
+    <colspec colnum="7" colwidth="1*"/>
+    <colspec colnum="8" colwidth="1*"/>
     <thead>
      <row>
-      <entry>Operation</entry>
-      <entry namest="c2" nameend="c4" align="center">Supported Options</entry>
-     </row>
-     <row>
-      <entry> <!-- Intentionally left blank --></entry>
-      <entry>Name</entry>
+      <entry>Attribute</entry>
       <entry>Type</entry>
-      <entry>Description</entry>
+      <entry>Required</entry>
+      <entry>Multivalued</entry>
+      <entry>Creatable</entry>
+      <entry>Modifiable</entry>
+      <entry>Readable</entry>
+      <entry>Returned by Default</entry>
      </row>
     </thead>
     <tbody>
-      #foreach($operationOptionInfo in $operationOptions.entrySet())
-       <row>
+     #foreach($attribute in $objectClass.attributes)
+     <row valign="top">
       <entry>
-       <para xml:id="operation-${operationOptionInfo.key}-${connectorName}-${project.version}"
-             xreflabel="${operationOptionInfo.key}">${operationOptionInfo.key}</para>
+       <para>
+        <literal>$attribute.getName()</literal>
+       </para>
       </entry>
       <entry>
-        #foreach($option in $operationOptionInfo.value)
-         <para>$option.name</para>
-        #end
+       <para>
+        <literal>$attribute.getType().getSimpleName()</literal>
+       </para>
       </entry>
       <entry>
-        #foreach($option in $operationOptionInfo.value)
-         <para>$option.type</para>
-        #end
+       <mediaobject>
+        <imageobject>
+         <imagedata
+          fileref="shared/images/#if($attribute.isRequired())yes#{else}no#end-icon.png"
+          format="PNG"/>
+         </imageobject>
+        </mediaobject>
+       </entry>
+       <entry>
+        <mediaobject>
+         <imageobject>
+          <imagedata
+           fileref="shared/images/#if($attribute.isMultiValued())yes#{else}no#end-icon.png"
+           format="PNG"/>
+          </imageobject>
+         </mediaobject>
+        </entry>
+        <entry>
+         <mediaobject>
+          <imageobject>
+           <imagedata
+            fileref="shared/images/#if($attribute.isCreateable())yes#{else}no#end-icon.png"
+            format="PNG"/>
+           </imageobject>
+          </mediaobject>
+         </entry>
+         <entry>
+          <mediaobject>
+           <imageobject>
+            <imagedata
+             fileref="shared/images/#if($attribute.isUpdateable())yes#{else}no#end-icon.png"
+             format="PNG"/>
+            </imageobject>
+           </mediaobject>
+          </entry>
+          <entry>
+           <mediaobject>
+            <imageobject>
+             <imagedata
+              fileref="shared/images/#if($attribute.isReadable())yes#{else}no#end-icon.png"
+              format="PNG"/>
+             </imageobject>
+       </mediaobject>
       </entry>
       <entry>
-       <simplelist>
-         #foreach($option in $operationOptionInfo.value)
-           #if($option.name.equals("SCOPE"))
-            <member>$option.description</member>
-           #elseif($option.name.equals("CONTAINER"))
-            <member>$option.description</member>
-           #elseif($option.name.equals("RUN_AS_USER"))
-            <member>TODO FIXME Link to appendix with detailed description</member>
-           #elseif($option.name.equals("RUN_WITH_PASSWORD"))
-            <member>TODO FIXME Link to appendix with detailed description</member>
-           #elseif($option.name.equals("ATTRS_TO_GET"))
-            <member>$option.description</member>
-           #elseif($option.name.equals("PAGED_RESULTS_COOKIE"))
-            <member>$option.description</member>
-           #elseif($option.name.equals("PAGED_RESULTS_OFFSET"))
-            <member>$option.description</member>
-           #elseif($option.name.equals("PAGE_SIZE"))
-            <member>$option.description</member>
-           #elseif($option.name.equals("SORT_KEYS"))
-            <member>$option.description</member>
-           #else
-            <member>$option.description</member>
-           #end
-         #end
-       </simplelist>
+       <mediaobject>
+        <imageobject>
+         <imagedata
+          fileref="shared/images/#if($attribute.isReturnedByDefault())yes#{else}no#end-icon.png"
+          format="PNG"/>
+        </imageobject>
+       </mediaobject>
       </entry>
      </row>
-      #end
+     #end
     </tbody>
    </tgroup>
   </table>
-
-    #foreach($objectClass in $objectClasses)
-        <para>
-            The ${objectClass.displayName} (${objectClass.name}) supports the following attributes.
-        </para>
-        <table xml:id="supported-attributes-${objectClass.name}-${connectorName}-${project.version}">
-            <title>Supported Attributes</title>
-            <tgroup cols="8">
-                <colspec colnum="1" colwidth="2*"/>
-                <colspec colnum="2" colwidth="1*"/>
-                <colspec colnum="3" colwidth="1*"/>
-                <colspec colnum="4" colwidth="1*"/>
-                <colspec colnum="5" colwidth="1*"/>
-                <colspec colnum="6" colwidth="1*"/>
-                <colspec colnum="7" colwidth="1*"/>
-                <colspec colnum="8" colwidth="1*"/>
-                <thead>
-                    <row>
-                        <entry>Attribute</entry>
-                        <entry>Type</entry>
-                        <entry>Required</entry>
-                        <entry>Multivalued</entry>
-                        <entry>Creatable</entry>
-                        <entry>Modifiable</entry>
-                        <entry>Readable</entry>
-                        <entry>Returned by Default</entry>
-                    </row>
-                </thead>
-                <tbody>
-                    #foreach($attribute in $objectClass.attributes)
-                        <row valign="top">
-                            <entry>
-                                <para>
-                                    <literal>$attribute.getName()</literal>
-                                </para>
-                            </entry>
-                            <entry>
-                                <para>
-                                    <literal>$attribute.getType().getSimpleName()</literal>
-                                </para>
-                            </entry>
-                            <entry>
-                                <mediaobject>
-                                    <imageobject>
-                                        <imagedata
-                                                fileref="shared/images/#if($attribute.isRequired())yes#{else}no#end-icon.png"
-                                                format="PNG"/>
-                                    </imageobject>
-                                </mediaobject>
-                            </entry>
-                            <entry>
-                                <mediaobject>
-                                    <imageobject>
-                                        <imagedata
-                                                fileref="shared/images/#if($attribute.isMultiValued())yes#{else}no#end-icon.png"
-                                                format="PNG"/>
-                                    </imageobject>
-                                </mediaobject>
-                            </entry>
-                            <entry>
-                                <mediaobject>
-                                    <imageobject>
-                                        <imagedata
-                                                fileref="shared/images/#if($attribute.isCreateable())yes#{else}no#end-icon.png"
-                                                format="PNG"/>
-                                    </imageobject>
-                                </mediaobject>
-                            </entry>
-                            <entry>
-                                <mediaobject>
-                                    <imageobject>
-                                        <imagedata
-                                                fileref="shared/images/#if($attribute.isUpdateable())yes#{else}no#end-icon.png"
-                                                format="PNG"/>
-                                    </imageobject>
-                                </mediaobject>
-                            </entry>
-                            <entry>
-                                <mediaobject>
-                                    <imageobject>
-                                        <imagedata
-                                                fileref="shared/images/#if($attribute.isReadable())yes#{else}no#end-icon.png"
-                                                format="PNG"/>
-                                    </imageobject>
-                                </mediaobject>
-                            </entry>
-                            <entry>
-                                <mediaobject>
-                                    <imageobject>
-                                        <imagedata
-                                                fileref="shared/images/#if($attribute.isReturnedByDefault())yes#{else}no#end-icon.png"
-                                                format="PNG"/>
-                                    </imageobject>
-                                </mediaobject>
-                            </entry>
-                        </row>
-                    #end
-                </tbody>
-            </tgroup>
-        </table>
     #end
 
 </section>
