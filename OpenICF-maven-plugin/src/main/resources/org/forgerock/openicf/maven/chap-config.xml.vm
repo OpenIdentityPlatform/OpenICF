@@ -23,7 +23,7 @@
   !      Copyright 2013-2014 ForgeRock AS
   !
 -->
-<chapter xml:id='chap-config-${connectorName}-${project.version}'
+<chapter xml:id='chap-config-${uniqueConnectorName}'
          xmlns='http://docbook.org/ns/docbook'
          version='5.0' xml:lang='en'
          xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
@@ -42,7 +42,7 @@
         <para>
             The ${connectorDisplayName} supports connector pooling for improved performance and
             scalability. For information about configuring connector pooling, see the
-            <link xlink:show="new" xlink:href="config-reference#connector-pooling"
+            <link xlink:show="new" xlink:href="appendix-interfaces#interface-PoolableConnector"
                   xlink:role="http://docbook.org/xlink/role/olink">Configuring Connector
                 Pooling</link>.
         </para>

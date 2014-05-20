@@ -22,7 +22,7 @@
   ~ your own identifying information:
   ~ "Portions Copyrighted [year] [name of copyright owner]"
   -->
-<section xml:id='sec-config-properties-${connectorName}-${project.version}'
+<section xml:id='sec-config-properties-${uniqueConnectorName}'
          xmlns='http://docbook.org/ns/docbook'
          version='5.0' xml:lang='en'
          xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
@@ -38,7 +38,7 @@
     #foreach($configurationGroup in $configurationProperties.entrySet())
         <!--THE FOLLOWING SECTION MUST BE GENERATED ONCE FOR EACH groupMessageKey -->
 
-        <section xml:id="$ConnectorUtils.safeNCName(${configurationGroup.key})-properties-${connectorName}-${project.version}">
+        <section xml:id="$ConnectorUtils.safeNCName(${configurationGroup.key})-properties-${uniqueConnectorName}">
             <title>$configurationGroup.key Properties</title>
 
             <informaltable>
@@ -103,17 +103,17 @@
                                 </entry>
                                 <entry align="center">
                                     #if($property.operations.size() > 0)
-                                        <imageobject>
+                                        <!--imageobject>
                                             <imagedata
                                                     fileref="shared/images/#if($property.required)yes#{else}no#end-icon.png"
                                                     format="PNG"/>
-                                        </imageobject>
+                                        </imageobject-->
                                         <simplelist>
                                             #foreach($operation in $property.operations)
                                                 <member>
                                                     <link xlink:show="new"
-                                                          xlink:href="config-reference#interface-attributeNormalizer"
-                                                          xlink:role="http://docbook.org/xlink/role/olink">$operation</link>
+                                                          xlink:href="appendix-interfaces#interface-$operation.key}"
+                                                          xlink:role="http://docbook.org/xlink/role/olink">$operation.value</link>
                                                 </member>
                                             #end
                                         </simplelist>

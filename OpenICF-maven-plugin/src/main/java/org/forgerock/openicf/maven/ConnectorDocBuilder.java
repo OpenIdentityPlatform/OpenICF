@@ -28,6 +28,7 @@ import java.io.Writer;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,6 +54,7 @@ import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.PathTool;
 import org.codehaus.plexus.util.ReaderFactory;
 import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.common.Pair;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConfigurationProperty;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
@@ -103,22 +105,26 @@ public class ConnectorDocBuilder {
             ScriptOnResourceApiOp.class, SearchApiOp.class, SyncApiOp.class, TestApiOp.class,
             UpdateApiOp.class);
 
-    protected static final Map<Class<? extends APIOperation>, String> OP_DICTIONARY;
+    protected static final Map<Class<? extends APIOperation>, Pair<String, String>> OP_DICTIONARY;
 
     static {
-        Map<Class<? extends APIOperation>, String> dictionary =
-                new HashMap<Class<? extends APIOperation>, String>();
-        dictionary.put(AuthenticationApiOp.class, "Authenticate");
-        dictionary.put(CreateApiOp.class, "Create");
-        dictionary.put(DeleteApiOp.class, "Delete");
-        dictionary.put(ResolveUsernameApiOp.class, "Resolve username");
-        dictionary.put(SchemaApiOp.class, "Schema");
-        dictionary.put(ScriptOnConnectorApiOp.class, "Script on connector");
-        dictionary.put(ScriptOnResourceApiOp.class, "Script on resource");
-        dictionary.put(SearchApiOp.class, "Read/Search");
-        dictionary.put(SyncApiOp.class, "Sync");
-        dictionary.put(TestApiOp.class, "Test");
-        dictionary.put(UpdateApiOp.class, "Update");
+        Map<Class<? extends APIOperation>, Pair<String, String>> dictionary =
+                new HashMap<Class<? extends APIOperation>, Pair<String, String>>();
+        dictionary.put(AuthenticationApiOp.class, Pair.of(
+                AuthenticationApiOp.class.getSimpleName(), "Authenticate"));
+        dictionary.put(CreateApiOp.class, Pair.of(CreateApiOp.class.getSimpleName(), "Create"));
+        dictionary.put(DeleteApiOp.class, Pair.of(DeleteApiOp.class.getSimpleName(), "Delete"));
+        dictionary.put(ResolveUsernameApiOp.class, Pair.of(ResolveUsernameApiOp.class
+                .getSimpleName(), "Resolve Username"));
+        dictionary.put(SchemaApiOp.class, Pair.of(SchemaApiOp.class.getSimpleName(), "Schema"));
+        dictionary.put(ScriptOnConnectorApiOp.class, Pair.of(ScriptOnConnectorApiOp.class
+                .getSimpleName(), "Script on Connector"));
+        dictionary.put(ScriptOnResourceApiOp.class, Pair.of(ScriptOnResourceApiOp.class
+                .getSimpleName(), "Script on Resource"));
+        dictionary.put(SearchApiOp.class, Pair.of(SearchApiOp.class.getSimpleName(), "Search"));
+        dictionary.put(SyncApiOp.class, Pair.of(SyncApiOp.class.getSimpleName(), "Sync"));
+        dictionary.put(TestApiOp.class, Pair.of(TestApiOp.class.getSimpleName(), "Test"));
+        dictionary.put(UpdateApiOp.class, Pair.of(UpdateApiOp.class.getSimpleName(), "Update"));
         OP_DICTIONARY = CollectionUtil.newReadOnlyMap(dictionary);
     }
 
@@ -143,9 +149,8 @@ public class ConnectorDocBuilder {
                 Context context = new VelocityContext();
                 context.put("connectorInfo", info);
                 context.put("connectorDisplayName", info.getConnectorDisplayName());
+                context.put("connectorCategory", info.getConnectorCategory());
 
-                APIConfiguration config = info.createDefaultAPIConfiguration();
-                context.put("APIConfiguration", config);
                 String connectorName =
                         info.getConnectorKey().getConnectorName().substring(
                                 info.getConnectorKey().getConnectorName().lastIndexOf('.') + 1)
@@ -155,7 +160,11 @@ public class ConnectorDocBuilder {
                             connectorName.substring(0, connectorName.length() - 9) + "-connector";
                 }
                 context.put("connectorName", connectorName);
+                context.put("uniqueConnectorName", info.getConnectorKey().getConnectorName() + "-"
+                        + info.getConnectorKey().getBundleVersion());
 
+                APIConfiguration config = info.createDefaultAPIConfiguration();
+                context.put("APIConfiguration", config);
                 try {
                     if (config.getSupportedOperations().contains(SchemaApiOp.class)) {
                         Schema schema = null;
@@ -185,8 +194,9 @@ public class ConnectorDocBuilder {
 
                         if (null != schema) {
 
-                            SortedMap<String, List<Map<String, Object>>> operationOptionsMap =
-                                    new TreeMap<String, List<Map<String, Object>>>();
+                            SortedMap<Pair<String, String>, List<Map<String, Object>>> operationOptionsMap =
+                                    new TreeMap<Pair<String, String>, List<Map<String, Object>>>(
+                                            PAIR_COMPARATOR);
 
                             for (Class<? extends APIOperation> op : OPERATIONS) {
                                 if (SchemaApiOp.class.equals(op) || TestApiOp.class.equals(op)) {
@@ -214,6 +224,20 @@ public class ConnectorDocBuilder {
                             List<Map<String, Object>> objectClasses =
                                     new ArrayList<Map<String, Object>>();
 
+                            Set<Class<? extends APIOperation>> operationSet =
+                                    new TreeSet<Class<? extends APIOperation>>(
+                                            new Comparator<Class<? extends APIOperation>>() {
+                                                public int compare(
+                                                        Class<? extends APIOperation> o1,
+                                                        Class<? extends APIOperation> o2) {
+                                                    return String.CASE_INSENSITIVE_ORDER.compare(o1
+                                                            .getCanonicalName(), o2
+                                                            .getCanonicalName());
+                                                }
+                                            });
+                            operationSet.addAll(config.getSupportedOperations());
+                            operationSet.retainAll(OBJECTCLASS_OPERATIONS);
+
                             for (ObjectClassInfo objectClassInfo : schema.getObjectClassInfo()) {
                                 Map<String, Object> objectClassInfoMap =
                                         new HashMap<String, Object>();
@@ -225,9 +249,10 @@ public class ConnectorDocBuilder {
                                         .getAttributeInfo());
 
                                 boolean limited = false;
-                                List<String> operations = new ArrayList<String>();
+                                List<Pair<String, String>> operations =
+                                        new ArrayList<Pair<String, String>>();
 
-                                for (Class<? extends APIOperation> op : OBJECTCLASS_OPERATIONS) {
+                                for (Class<? extends APIOperation> op : operationSet) {
                                     if (schema.getSupportedObjectClassesByOperation(op).contains(
                                             objectClassInfo)) {
                                         operations.add(OP_DICTIONARY.get(op));
@@ -247,13 +272,18 @@ public class ConnectorDocBuilder {
                     }
 
                 } catch (Throwable e) {
-                    handler.getLog().error("Getting the default Schema.", e);
+                    if (handler.getLog().isDebugEnabled()) {
+                        handler.getLog().debug("Getting the default Schema.", e);
+                    }
                 }
 
                 try {
-                    Set<String> interfaces = new TreeSet<String>();
-                    for (Object clazz : config.getSupportedOperations()) {
-                        interfaces.add(((Class) clazz).getSimpleName());
+                    Set<Pair<String, String>> interfaces =
+                            new TreeSet<Pair<String, String>>(PAIR_COMPARATOR);
+                    for (Class<? extends APIOperation> clazz : config.getSupportedOperations()) {
+                        if (OP_DICTIONARY.containsKey(clazz)) {
+                            interfaces.add(OP_DICTIONARY.get(clazz));
+                        }
                     }
                     context.put("connectorInterfaces", interfaces);
                 } catch (Throwable e) {
@@ -319,10 +349,13 @@ public class ConnectorDocBuilder {
         return source;
     }
 
-    private Set<String> convertOperations(Set<Class<? extends APIOperation>> operations) {
+    private Set<Pair<String, String>> convertOperations(
+            Set<Class<? extends APIOperation>> operations) {
         if (null != operations) {
-            Set<String> operationNames = new TreeSet<String>();
+            Set<Pair<String, String>> operationNames =
+                    new TreeSet<Pair<String, String>>(PAIR_COMPARATOR);
             for (Class<? extends APIOperation> op : operations) {
+
                 operationNames.add(OP_DICTIONARY.get(op));
             }
             return operationNames;
@@ -430,5 +463,12 @@ public class ConnectorDocBuilder {
                     + " is not exist");
         }
     }
+
+    private static final Comparator<Pair<String, String>> PAIR_COMPARATOR =
+            new Comparator<Pair<String, String>>() {
+                public int compare(Pair<String, String> left, Pair<String, String> right) {
+                    return String.CASE_INSENSITIVE_ORDER.compare(left.first, right.first);
+                }
+            };
 
 }

@@ -23,7 +23,7 @@
   !      Copyright 2013-2014 ForgeRock AS
   !
 -->
-<section xml:id='sec-reference-${connectorName}-${project.version}'
+<section xml:id='sec-reference-${uniqueConnectorName}'
  xmlns='http://docbook.org/ns/docbook'
  version='5.0' xml:lang='en'
  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'

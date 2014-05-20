@@ -23,7 +23,7 @@
   !      Copyright 2013-2014 ForgeRock AS
   !
 -->
-<section xml:id='sec-implemented-interfaces-${connectorName}-${project.version}'
+<section xml:id='sec-implemented-interfaces-${uniqueConnectorName}'
          xmlns='http://docbook.org/ns/docbook'
          version='5.0' xml:lang='en'
          xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
@@ -41,13 +41,14 @@
     each interface-->
 
     <variablelist>
-        #foreach($action in $connectorInterfaces)
+        #foreach($interface in $connectorInterfaces)
+            #set( $action = $interface.key )
             #if ("AuthenticationApiOp" == $action)
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="config-reference#interface-attributeNormalizer"
-                              xlink:role="http://docbook.org/xlink/role/olink">AttributeNormalizer
+                              xlink:href="appendix-interfaces#interface-AuthenticationApiOp"
+                              xlink:role="http://docbook.org/xlink/role/olink">Authenticate
                         </link>
                     </term>
                     <listitem>
@@ -61,7 +62,7 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="config-reference#interface-createOp"
+                              xlink:href="appendix-interfaces#interface-CreateApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Create
                         </link>
                     </term>
@@ -76,7 +77,7 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="config-reference#interface-deleteOp"
+                              xlink:href="appendix-interfaces#interface-DeleteApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Delete
                         </link>
                     </term>
@@ -91,7 +92,7 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="config-reference#interface-ResolveUsernameOp"
+                              xlink:href="appendix-interfaces#interface-ResolveUsernameApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Resolve Username
                         </link>
                     </term>
@@ -106,7 +107,7 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="config-reference#interface-SchemaOp"
+                              xlink:href="appendix-interfaces#interface-SchemaApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Schema
                         </link>
                     </term>
@@ -121,8 +122,8 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="config-reference#interface-ScriptOnConnectorOp"
-                              xlink:role="http://docbook.org/xlink/role/olink">ScriptOnConnector
+                              xlink:href="appendix-interfaces#interface-ScriptOnConnectorApiOp"
+                              xlink:role="http://docbook.org/xlink/role/olink">Script on Connector
                         </link>
                     </term>
                     <listitem>
@@ -136,8 +137,8 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="config-reference#interface-ScriptOnResourceOp"
-                              xlink:role="http://docbook.org/xlink/role/olink">ScriptOnResource
+                              xlink:href="appendix-interfaces#interface-ScriptOnResourceApiOp"
+                              xlink:role="http://docbook.org/xlink/role/olink">Script on Resource
                         </link>
                     </term>
                     <listitem>
@@ -151,7 +152,7 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="config-reference#interface-SearchOp"
+                              xlink:href="appendix-interfaces#interface-SearchApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Search
                         </link>
                     </term>
@@ -166,7 +167,7 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="config-reference#interface-SyncOp"
+                              xlink:href="appendix-interfaces#interface-SyncApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Sync
                         </link>
                     </term>
@@ -181,7 +182,7 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="config-reference#interface-TestOp"
+                              xlink:href="users-guide#interface-TestApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Test
                         </link>
                     </term>
@@ -196,7 +197,7 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="config-reference#interface-UpdateOp"
+                              xlink:href="users-guide#interface-UpdateApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Update
                         </link>
                     </term>

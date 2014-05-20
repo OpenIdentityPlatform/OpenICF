@@ -21,7 +21,7 @@
   ! CCPL HEADER END
   !
   !      Copyright 2013-2014 ForgeRock AS
-  !    
+  !
 -->
 <appendix xml:id='appendix-interfaces'
  xmlns='http://docbook.org/ns/docbook'
@@ -45,8 +45,8 @@
   </para>
  </section>
 
- <section xml:id="interface-authenticateOp">
-  <title>AuthenticateOp</title>
+ <section xml:id="interface-AuthenticationApiOp">
+  <title>Authenticate</title>
   <para>
    Provides simple authentication with two parameters, presumed to be a user
    name and password. If the connector does not implement the AuthenticateOp
@@ -55,57 +55,57 @@
   </para>
  </section>
 
- <section xml:id="interface-createOp">
-  <title>CreateOp</title>
+ <section xml:id="interface-CreateApiOp">
+  <title>Create</title>
   <para>
    Create an object and its uid.
   </para>
  </section>
 
- <section xml:id="interface-deleteOp">
-  <title>DeleteOp</title>
+ <section xml:id="interface-DeleteApiOp">
+  <title>Delete</title>
   <para>
    Delete an object by its uid.
   </para>
  </section>
 
- <section xml:id="interface-poolableConnector">
+ <section xml:id="interface-PoolableConnector">
   <title>PoolableConnector</title>
   <para>
    Use pools of target resources.
   </para>
  </section>
 
- <section xml:id="interface-ResolveUsernameOp">
-  <title>ResolveUsernameOp</title>
+ <section xml:id="interface-ResolveUsernameApiOp">
+  <title>Resolve Username</title>
   <para>
    Resolve an object to its uid based on its username.
   </para>
  </section>
 
- <section xml:id="interface-SchemaOp">
-  <title>SchemaOp</title>
+ <section xml:id="interface-SchemaApiOp">
+  <title>Schema</title>
   <para>
    Describe supported object types, operations, and options.
   </para>
  </section>
 
- <section xml:id="interface-ScriptOnConnectorOp">
-  <title>ScriptOnConnectorOp</title>
+ <section xml:id="interface-ScriptOnConnectorApiOp">
+  <title>Script on Connector</title>
   <para>
    Allow script execution on connector.
   </para>
  </section>
 
- <section xml:id="interface-ScriptOnResourceOp">
-  <title>ScriptOnResourceOp</title>
+ <section xml:id="interface-ScriptOnResourceApiOp">
+  <title>Script On Resource</title>
   <para>
    Allow script execution on the resource.
   </para>
  </section>
 
- <section xml:id="interface-SearchOp">
-  <title>SearchOp</title>
+ <section xml:id="interface-SearchApiOp">
+  <title>Search</title>
   <para>
    Allow searches for resource objects.
   </para>
@@ -115,22 +115,22 @@
   </para>
  </section>
 
- <section xml:id="interface-SyncOp">
-  <title>SyncOp</title>
+ <section xml:id="interface-SyncApiOp">
+  <title>Sync</title>
   <para>
    Poll for synchronization events, which are native changes to target objects.
   </para>
  </section>
 
- <section xml:id="interface-TestOp">
-  <title>TestOp</title>
+ <section xml:id="interface-TestApiOp">
+  <title>Test</title>
   <para>
    Test the connection configuration, including connecting to the resource.
   </para>
  </section>
 
- <section xml:id="interface-UpdateOp">
-  <title>UpdateOp</title>
+ <section xml:id="interface-UpdateApiOp">
+  <title>Update</title>
   <para>
    Allows an authorized caller to update (modify or replace) objects on the
    target resource.
@@ -138,7 +138,7 @@
  </section>
 
  <section xml:id="interface-UpdateAttributeValuesOp">
-  <title>UpdateAttributeValuesOp</title>
+  <title>Update Attribute Values</title>
   <para>
    Allows an authorized caller to update (modify or replace) attribute values on
    the target resource. This operation is more advanced than the

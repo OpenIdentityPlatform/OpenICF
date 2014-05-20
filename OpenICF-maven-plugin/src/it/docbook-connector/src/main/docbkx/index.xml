@@ -30,11 +30,11 @@
  http://docbook.org/xml/5.0/xsd/docbook.xsd'
       xmlns:xinclude='http://www.w3.org/2001/XInclude'>
     <info>
-        <title>${connectorName} Installation and Configuration Reference</title>
+        <title>${project.name} Installation and Configuration Reference</title>
         <abstract>
             <para>
                 Provides installation instructions and configuration options for the
-                ${connectorName} version ${docTargetVersion}.</para>
+                ${project.name} version ${docTargetVersion}.</para>
         </abstract>
         <copyright>
             <year>2013-2014</year>
