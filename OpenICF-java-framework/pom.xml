@@ -162,6 +162,7 @@
         <javadocStylesheet>org/forgerock/javadoc/javadoc.css</javadocStylesheet>
 
         <!-- Core documentation properties -->
+        <frDocPluginVersion>2.1.0</frDocPluginVersion>
         <docTargetVersion>${project.version}</docTargetVersion>
         <googleAnalyticsAccountId>UA-23412190-10</googleAnalyticsAccountId>
         <!--
@@ -172,6 +173,12 @@
         -->
         <releaseDate/>
         <softwareReleaseDate>${releaseDate}</softwareReleaseDate>
+        <pubDate />
+        <publicationDate>${pubDate}</publicationDate>
+        <!--
+        <publishedDocBase>http://docs.forgerock.org/en/</publishedDocBase>
+        <forgerockSite>http://forgerock.com</forgerockSite>
+        -->
     </properties>
 
     <modules>
@@ -334,7 +341,7 @@
                 <plugin>
                     <groupId>org.forgerock.commons</groupId>
                     <artifactId>forgerock-doc-maven-plugin</artifactId>
-                    <version>2.0.0</version>
+                    <version>${frDocPluginVersion}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -403,6 +410,9 @@
                 <configuration>
                     <projectName>OpenICF</projectName>
                     <googleAnalyticsId>${googleAnalyticsAccountId}</googleAnalyticsId>
+                    <projectVersion>${docTargetVersion}</projectVersion>
+                    <latestJson>http://mcraig.org/fr/latest.php</latestJson><!-- Temporary workaround pending #QOZ-985-23233 -->
+                    <docbkxSourceDirectory>${basedir}/src/main/docbkx</docbkxSourceDirectory>
                 </configuration>
                 <executions>
                     <execution>
