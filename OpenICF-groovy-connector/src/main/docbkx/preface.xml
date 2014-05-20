@@ -10,7 +10,7 @@
   ! Suite 900, Mountain View, California, 94041, USA.
   !
   ! You can also obtain a copy of the license at
-  ! legal/CC-BY-NC-ND.txt.
+  ! legal-notices/CC-BY-NC-ND.txt.
   ! See the License for the specific language governing permissions
   ! and limitations under the License.
   !
@@ -20,21 +20,31 @@
   !
   ! CCPL HEADER END
   !
-  !      Copyright 2011-2014 ForgeRock AS
+  !      Copyright 2013-2014 ForgeRock AS
   !
 -->
- <section xml:id="install-scriptedcommon"
+<preface xml:id='preface'
  xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
- xsi:schemaLocation='http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd'
- xmlns:xlink='http://www.w3.org/1999/xlink'
+ xsi:schemaLocation='http://docbook.org/ns/docbook
+ http://docbook.org/xml/5.0/xsd/docbook.xsd'
  xmlns:xinclude='http://www.w3.org/2001/XInclude'>
- <title>Installing the Scripted Groovy Connector</title>
+ <title>Preface</title>
 
- <para>This section describes how to install the Scripted Groovy Connector.</para>
+ <para>
+  This guide describes how to install and configure the ${connectorName}.
+ </para>
 
+ <section>
+  <title>Who Should Use this Guide</title>
+  <para>
+   This guide is written for OpenICF administrators.
+  </para>
+
+ </section>
+
+ <xinclude:include href="../shared/sec-formatting-conventions.xml" />
  <!--
- The rest of this section must be written by hand, as specific
- installation instructions depend on the connector itself.
- -->
-</section>
+ <xinclude:include href="../shared/sec-accessing-doc-online.xml" />
+ <xinclude:include href="../shared/sec-joining-the-community.xml" /> -->
+</preface>

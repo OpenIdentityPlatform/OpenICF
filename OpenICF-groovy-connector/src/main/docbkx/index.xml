@@ -10,7 +10,7 @@
   ! Suite 900, Mountain View, California, 94041, USA.
   !
   ! You can also obtain a copy of the license at
-  ! legal/CC-BY-NC-ND.txt.
+  ! legal-notices/CC-BY-NC-ND.txt.
   ! See the License for the specific language governing permissions
   ! and limitations under the License.
   !
@@ -23,39 +23,53 @@
   !      Copyright 2011-2014 ForgeRock AS
   !
 -->
-<book xml:id='integrators-guide'
- xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
- xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
- xsi:schemaLocation='http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd'
- xmlns:xlink='http://www.w3.org/1999/xlink'
- xmlns:xinclude='http://www.w3.org/2001/XInclude'>
- <info>
-  <title>OpenICF Scripted Common  <?eval ${project.version}?> Reference Guide</title>
-  <abstract>
-   <para>Guide to configurating and integrating OpenIDM into identity
-   management solutions. The OpenIDM project offers flexible, open source
-   services for automating management of the identity life cycle.</para>
-  </abstract>
-  <copyright>
-   <year>2011-2014</year>
-   <holder>ForgeRock AS</holder>
-  </copyright>
-  <!--authorgroup>
-   <author>
-    <personname>
-     <firstname>John</firstname><surname>Doe</surname>
-    </personname>
-   </author>
-  </authorgroup-->
-  <xinclude:include href="legal.xml" />
-  <date><?dbtimestamp format="B d, Y"?></date>
-  <pubdate>Publication date: <?dbtimestamp format="B d, Y"?></pubdate>
- </info>
+<book xml:id='groovy-connector-guide'
+      xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
+      xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+      xsi:schemaLocation='http://docbook.org/ns/docbook
+ http://docbook.org/xml/5.0/xsd/docbook.xsd'
+      xmlns:xinclude='http://www.w3.org/2001/XInclude'>
+    <info>
+        <title>${project.name} Installation and Configuration Reference</title>
+        <abstract>
+            <para>
+                Provides installation instructions and configuration options for the
+                ${project.name} version ${docTargetVersion}.</para>
+        </abstract>
+        <copyright>
+            <year>2013-2014</year>
+            <holder>ForgeRock AS</holder>
+        </copyright>
+        <authorgroup>
+            <author>
+                <personname>
+                    <firstname>Laszlo</firstname><surname>Hordos</surname>
+                </personname>
+            </author>
+            <author>
+                <personname>
+                    <firstname>Lana</firstname><surname>Frost</surname>
+                </personname>
+            </author>
+        </authorgroup>
+        <xinclude:include href="../shared/legal.xml" />
+        <date><?dbtimestamp format="B d, Y"?></date>
+        <pubdate>Publication date: <?dbtimestamp format="B d, Y"?></pubdate>
+        <releaseinfo><?eval ${softwareReleaseDate}?></releaseinfo>
+    </info>
 
- <toc />
+    <toc />
 
- <!--xinclude:include href="preface.xml" /-->
- <xinclude:include href='chap-scriptedcommon.xml' />
+    <xinclude:include href="preface.xml" />
+    <xinclude:include href="chap-install-groovy-connector.xml" />
 
- <index />
+
+    <xinclude:include href="chap-config-scripted-connector.xml" />
+    <xinclude:include href="chap-config-scriptedpoolable-connector.xml" />
+    <xinclude:include href="chap-config-scriptedcrest-connector.xml" />
+    <xinclude:include href="chap-config-scriptedrest-connector.xml" />
+    <xinclude:include href="chap-config-scriptedsql-connector.xml" />
+    <xinclude:include href='../shared/appendix-interfaces.xml' />
+
+    <index />
 </book>
