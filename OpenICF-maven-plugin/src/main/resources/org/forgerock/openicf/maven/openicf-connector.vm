@@ -45,7 +45,8 @@
 #macro ( supportedOperations $operations )
     #if($operations && $operations.size() > 0)
     <ul>
-        #foreach($action in $operations)
+        #foreach($interface in $operations)
+            #set( $action = $interface.key )
             #if ("AuthenticationApiOp" == $action)
                 <li>
                     <a class="externalLink"
@@ -107,17 +108,11 @@
             #elseif ("UpdateApiOp" == $action)
                 <li>
                     <a class="externalLink"
-                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/api/operations/UpdateApiOp.html">Update
-                        Attribute Values</a>
-                </li>
-            #elseif ("ValidateApiOp" == $action)
-                <li>
-                    <a class="externalLink"
-                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/api/operations/ValidateApiOp.html">Update</a>
+                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/api/operations/UpdateApiOp.html">Update</a>
                 </li>
             #else
                 <li>
-                    Custom Operation: $action
+                    Custom Operation: $interface
                 </li>
             #end
         #end
@@ -137,7 +132,8 @@
             <img src="shared/images/encrypted.png">
             <sup>[<a name="confidential" href="#ftn.confidential" class="footnote">a</a>]</sup>
         </th>
-        <th>Required for these Operations</th>
+        <th>Required<sup>[<a name="required" href="#ftn.required" class="footnote">b</a>]</sup>
+        </th>
     </tr>
         #foreach($configurationProperty in $configurationProperties)
             #if ($calss == "a")
@@ -162,7 +158,17 @@
                          alt="Confidential Property!">
                 #end
             </td>
-            <td>#trueorfalse($configurationProperty.required)</td>
+            #if($configurationProperty.operations.size() > 0)
+            <td>
+                <ul>
+                    #foreach($operation in $configurationProperty.operations)
+                        <li>$operation.value </li>
+                    #end
+                </ul>
+            </td>
+            #else
+                <td>#trueorfalse($configurationProperty.required)</td>
+            #end
         </tr>
         <tr class="$calss">
             <td colspan="5">$configurationProperty.description</td>
@@ -183,112 +189,10 @@
         #connectorKey( $connectorInfo.getConnectorKey() )
     #end
 
-<p>The ${connectorDisplayName} implements the following OpenICF interfaces.</p>
+<p>The <a id="implemented-interfaces-${uniqueConnectorName}">${connectorDisplayName}</a> implements the following OpenICF interfaces.</p>
 
     #supportedOperations($connectorInterfaces)
 
-    #if($maki)
-    <ul>
-        #foreach($action in $connectorInterfaces)
-
-            #if ("AuthenticationApiOp" == $action)
-                <li>
-                    <a class="externalLink"
-                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/AuthenticateOp.html">AuthenticateOp</a>:
-                    Authenticate based on a unique identifier and password.
-                </li>
-            #elseif ("CreateApiOp" == $action)
-                <li>
-                    <a class="externalLink"
-                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/CreateOp.html">CreateOp</a>:
-                    Create an object and its <code>uid</code>.
-                </li>
-            #elseif ("DeleteApiOp" == $action)
-                <li>
-                    <a class="externalLink"
-                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/DeleteOp.html">DeleteOp</a>:
-                    Delete an object by <code>uid</code>.
-                </li>
-            #elseif ("ResolveUsernameApiOp" == $action)
-                <li>
-                    <a class="externalLink"
-                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/ResolveUsernameOp.html">ResolveUsernameOp</a>:
-                    Resolve an object to its <code>uid</code> based on its <code>username</code>.
-                </li>
-            #elseif ("SchemaApiOp" == $action)
-                <li>
-                    <a class="externalLink"
-                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/SchemaOp.html">SchemaOp</a>:
-                    Describe supported object types, operations, and options.
-                </li>
-            #elseif ("ScriptOnConnectorApiOp" == $action)
-                <li>
-                    <a class="externalLink"
-                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/ScriptOnConnectorOp.html">ScriptOnConnectorOp</a>:
-                    Run a script in the environment of the connector.
-                </li>
-            #elseif ("ScriptOnResourceApiOp" == $action)
-                <li>
-                    <a class="externalLink"
-                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/ScriptOnResourceOp.html">ScriptOnResourceOp</a>:
-                    Run a script directly on a target resource.
-                </li>
-            #elseif ("SearchApiOp" == $action)
-                <li>
-                    <a class="externalLink"
-                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/SearchOp.html">SearchOp</a>:
-                    Allow searches for resource objects.
-                </li>
-            #elseif ("SyncApiOp" == $action)
-                <li>
-                    <a class="externalLink"
-                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/SyncOp.html">SyncOp</a>:
-                    Poll for synchronization events, which are native changes to target objects.
-                </li>
-            #elseif ("TestApiOp" == $action)
-                <li>
-                    <a class="externalLink"
-                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/TestOp.html">TestOp</a>:
-                    Test the connection configuration, including connecting to the resource.
-                </li>
-            #elseif ("UpdateAttributeValuesOp" == $action)
-                <li>
-                    <a class="externalLink"
-                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/UpdateAttributeValuesOp.html">UpdateAttributeValuesOp</a>:
-                    Like <code>UpdateOp</code>, but with better performance and atomicity.
-                </li>
-            #elseif ("UpdateApiOp" == $action)
-                <li>
-                    <a class="externalLink"
-                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/operations/UpdateOp.html">UpdateOp</a>:
-                    Allow an authorized caller to update target resource objects.
-                </li>
-            #elseif ("AttributeNormalizer" == $action)
-                <li>
-                    <a class="externalLink"
-                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/AttributeNormalizer.html">AttributeNormalizer</a>:
-                    Normalize attributes to ensure consistent filtering.
-                </li>
-            #elseif ("PoolableConnector" == $action)
-            #elseif ("Connector" == $action)
-            #else
-                <li>
-                    Custom Interface: $action
-                </li>
-            #end
-
-        #end
-
-        #if ($APIConfiguration.isConnectorPoolingSupported())
-            <li>
-                <a class="externalLink"
-                   href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/spi/PoolableConnector.html">PoolableConnector</a>:
-                Use pools of target resources.
-            </li>
-        #end
-
-    </ul>
-    #end
 
 <h2>Configuration Properties</h2>
 
@@ -304,6 +208,10 @@
         <sup>[<a id="ftn.confidential" href="#ftn.confidential" class="para">a</a>]</sup>
         Indicates whether the property value is considered confidential, and
         therefore encrypted in OpenIDM.
+    </p>
+    <p>
+        <sup>[<a id="ftn.required" href="#ftn.required" class="para">b</a>]</sup>
+        A list of operations in this column indicates that the property is required for those operations.
     </p>
 </div>
 
@@ -331,7 +239,7 @@
             #foreach($operationOptionInfo in $operationOptions.entrySet())
 
             <tr class="b">
-                <td>$operationOptionInfo.key</td>
+                <td>$operationOptionInfo.key.value</td>
                 <td>
                     <table border="0" class="bodyTable">
                         <tbody>
@@ -390,7 +298,7 @@
     <ul>
         #foreach($objectClassInfo in $objectClasses)
             <li>
-                <a href="#$objectClassInfo.name">
+                <a href="#${uniqueConnectorName}-$objectClassInfo.name">
                     <b>$objectClassInfo.displayName</b>
                 </a>($objectClassInfo.name)
             </li>
@@ -399,13 +307,13 @@
 
         #foreach($objectClassInfo in $objectClasses)
 
-        <h3><a name="$objectClassInfo.name"/>$objectClassInfo.displayName</h3>
+        <h3><a id="${uniqueConnectorName}-$objectClassInfo.name"/>$objectClassInfo.displayName</h3>
 
         <h4>Operations Supported for the $objectClassInfo.displayName Objectclass</h4>
             #if($objectClassInfo.operations && $objectClassInfo.operations.size() > 0)
                 #supportedOperations($objectClassInfo.operations)
             #else
-            <p>All operations are supported</p>
+            <p>All <a href="#implemented-interfaces-${uniqueConnectorName}">connector operations</a> are supported.</p>
             #end
 
         <h4>Attributes Supported for the $objectClassInfo.displayName Objectclass</h4>

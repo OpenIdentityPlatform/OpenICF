@@ -112,7 +112,7 @@
                                             #foreach($operation in $property.operations)
                                                 <member>
                                                     <link xlink:show="new"
-                                                          xlink:href="appendix-interfaces#interface-$operation.key}"
+                                                          xlink:href="${bookName}#interface-$operation.key}"
                                                           xlink:role="http://docbook.org/xlink/role/olink">$operation.value</link>
                                                 </member>
                                             #end

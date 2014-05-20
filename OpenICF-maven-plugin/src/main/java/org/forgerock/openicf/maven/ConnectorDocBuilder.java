@@ -150,6 +150,7 @@ public class ConnectorDocBuilder {
                 context.put("connectorInfo", info);
                 context.put("connectorDisplayName", info.getConnectorDisplayName());
                 context.put("connectorCategory", info.getConnectorCategory());
+                context.put("bookName", handler.getMavenProject().getArtifactId()+"-"+handler.getMavenProject().getVersion());
 
                 String connectorName =
                         info.getConnectorKey().getConnectorName().substring(
@@ -314,7 +315,7 @@ public class ConnectorDocBuilder {
                     propertyMap.put("operations", convertOperations(property.getOperations()));
                     propertyMap.put("confidential", property.isConfidential());
                     propertyMap.put("description", convertHTMLtoDocBook(property
-                            .getHelpMessage("Description is now available")));
+                            .getHelpMessage("Description is not available")));
 
                     configurationGroup.add(propertyMap);
                 }

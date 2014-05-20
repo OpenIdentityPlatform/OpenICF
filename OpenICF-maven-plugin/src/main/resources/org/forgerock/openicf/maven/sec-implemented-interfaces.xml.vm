@@ -47,7 +47,7 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="appendix-interfaces#interface-AuthenticationApiOp"
+                              xlink:href="${bookName}#interface-AuthenticationApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Authenticate
                         </link>
                     </term>
@@ -62,7 +62,7 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="appendix-interfaces#interface-CreateApiOp"
+                              xlink:href="${bookName}#interface-CreateApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Create
                         </link>
                     </term>
@@ -77,7 +77,7 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="appendix-interfaces#interface-DeleteApiOp"
+                              xlink:href="${bookName}#interface-DeleteApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Delete
                         </link>
                     </term>
@@ -92,7 +92,7 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="appendix-interfaces#interface-ResolveUsernameApiOp"
+                              xlink:href="${bookName}#interface-ResolveUsernameApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Resolve Username
                         </link>
                     </term>
@@ -107,7 +107,7 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="appendix-interfaces#interface-SchemaApiOp"
+                              xlink:href="${bookName}#interface-SchemaApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Schema
                         </link>
                     </term>
@@ -122,7 +122,7 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="appendix-interfaces#interface-ScriptOnConnectorApiOp"
+                              xlink:href="${bookName}#interface-ScriptOnConnectorApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Script on Connector
                         </link>
                     </term>
@@ -137,7 +137,7 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="appendix-interfaces#interface-ScriptOnResourceApiOp"
+                              xlink:href="${bookName}#interface-ScriptOnResourceApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Script on Resource
                         </link>
                     </term>
@@ -152,7 +152,7 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="appendix-interfaces#interface-SearchApiOp"
+                              xlink:href="${bookName}#interface-SearchApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Search
                         </link>
                     </term>
@@ -167,7 +167,7 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="appendix-interfaces#interface-SyncApiOp"
+                              xlink:href="${bookName}#interface-SyncApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Sync
                         </link>
                     </term>
@@ -182,7 +182,7 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="users-guide#interface-TestApiOp"
+                              xlink:href="${bookName}#interface-TestApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Test
                         </link>
                     </term>
@@ -197,7 +197,7 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="users-guide#interface-UpdateApiOp"
+                              xlink:href="${bookName}#interface-UpdateApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Update
                         </link>
                     </term>

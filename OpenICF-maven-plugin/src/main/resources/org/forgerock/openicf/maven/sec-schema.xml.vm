@@ -61,8 +61,7 @@
         built from connectorInterfaces-->
         #foreach($operation in $objectclass.operations)
         <member>
-         <xref linkend="users-guide#interface-${operation.key}"
-         xreflabel="${operation.value}"/>
+            <para><link linkend="sec-implemented-interfaces-${uniqueConnectorName}">${operation.value}</link></para>
         </member>
         #end
        </simplelist>
