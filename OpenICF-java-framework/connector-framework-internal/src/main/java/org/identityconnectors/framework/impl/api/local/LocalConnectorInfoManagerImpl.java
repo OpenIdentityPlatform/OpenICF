@@ -280,13 +280,13 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
                         info.setDefaultAPIConfiguration(createDefaultAPIConfiguration(info));
                         rv.add(info);
                     } catch (final NoClassDefFoundError e) {
-                        LOG.warn(
-                                e,
+                        LOG.warn(LOG.isOk() ?
+                                e : null,
                                 "Unable to load configuration class {0} from bundle {1}. Class will be ignored and will not be listed in list of connectors.",
                                 options.configurationClass(), bundleInfo.getOriginalLocation());
                     } catch (final TypeNotPresentException e) {
-                        LOG.warn(
-                                e,
+                        LOG.warn(LOG.isOk() ?
+                                 e : null,
                                 "Unable to load configuration class of connector {0} from bundle {1}. Class will be ignored and will not be listed in list of connectors.",
                                 connectorClass, bundleInfo.getOriginalLocation());
                     }
