@@ -318,12 +318,12 @@ public class OsgiConnectorInfoManagerImpl extends ConnectorFacadeFactory impleme
                 rv.add(info);
                 } catch (final NoClassDefFoundError e) {
                     logger.warn(
-                            "Unable to load configuration class {} from bundle {}. Class will be ignored and will not be listed in list of connectors.",
-                            logger.isDebugEnabled() ? new Object[]{options.configurationClass(), parsed.getLocation(),e} : new Object[]{options.configurationClass(), parsed.getLocation()});
+                            "Unable to load configuration class of connector {} from bundle {}. Class will be ignored and will not be listed in list of connectors.",
+                            logger.isDebugEnabled() ? new Object[]{connectorClass, parsed.getLocation(),e} : new Object[]{connectorClass, parsed.getLocation()});
                 } catch (final TypeNotPresentException e) {
                     logger.warn(
                             "Unable to load configuration class of connector {} from bundle {}. Class will be ignored and will not be listed in list of connectors.",
-                            logger.isDebugEnabled() ? new Object[]{options.configurationClass(), parsed.getLocation(),e} : new Object[]{options.configurationClass(), parsed.getLocation()});
+                            logger.isDebugEnabled() ? new Object[]{connectorClass, parsed.getLocation(),e} : new Object[]{connectorClass, parsed.getLocation()});
                 }
             }
         }
