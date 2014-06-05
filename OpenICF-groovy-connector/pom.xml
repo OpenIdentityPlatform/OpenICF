@@ -59,8 +59,12 @@
         <connectorPackage>org.forgerock.openicf</connectorPackage>
         <connectorClass>ScriptedConnector</connectorClass>
         <openicf.osgi.import.defaults>
-            org.codehaus.groovy*;version="[1.8,3)",groovy*;version="[1.8,3)"
+            org.codehaus.groovy*;version="[2.2,3)",
+            groovy.*;version="[2.2,3)",
+            groovyjar*;version="[2.2,3)",
+            groovyx.net.http*;resolution:=optional,
         </openicf.osgi.import.defaults>
+        <openicf.osgi.embed/>
     </properties>
     <repositories>
         <repository>
@@ -94,7 +98,7 @@
         <dependency>
             <groupId>org.apache.ivy</groupId>
             <artifactId>ivy</artifactId>
-            <version>2.3.0</version>
+            <version>2.4.0-rc1</version>
             <scope>provided</scope>
         </dependency>
 
@@ -104,6 +108,8 @@
             <artifactId>tomcat-jdbc</artifactId>
             <!--version>8.0.5</version-->
             <version>7.0.53</version>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
 
         <!-- Scripted REST -->
@@ -111,16 +117,28 @@
             <groupId>org.codehaus.groovy.modules.http-builder</groupId>
             <artifactId>http-builder</artifactId>
             <version>0.7.1</version>
+            <scope>provided</scope>
+            <optional>true</optional>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>httpclient</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpcore</artifactId>
+            <artifactId>httpcore-osgi</artifactId>
             <version>4.3.2</version>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
+            <artifactId>httpclient-osgi</artifactId>
             <version>4.3.3</version>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
 
         <!-- Scripted SOAP -->
@@ -128,13 +146,17 @@
         <!-- CREST -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpasyncclient</artifactId>
+            <artifactId>httpasyncclient-osgi</artifactId>
             <version>4.0.1</version>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.forgerock.commons</groupId>
             <artifactId>json-resource</artifactId>
-            <version>2.2.4</version>
+            <version>2.3.0</version>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
 
         <!-- Test Dependencies -->
@@ -163,7 +185,7 @@
         <dependency>
             <groupId>org.forgerock.commons</groupId>
             <artifactId>json-resource-servlet</artifactId>
-            <version>2.2.4</version>
+            <version>2.3.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -232,6 +254,11 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Require-Bundle>groovy-all</Require-Bundle>
+                    </instructions>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

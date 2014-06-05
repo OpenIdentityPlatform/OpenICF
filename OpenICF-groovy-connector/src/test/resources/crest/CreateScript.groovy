@@ -39,7 +39,7 @@ import org.identityconnectors.framework.common.objects.OperationOptions
 import org.identityconnectors.framework.common.objects.Schema
 import org.identityconnectors.framework.common.objects.Uid
 
-def action = action as OperationType
+def operation = operation as OperationType
 def attributes = attributes as Set<Attribute>
 def attributeMap = AttributeUtil.toMap(attributes);
 def configuration = configuration as ScriptedCRESTConfiguration
@@ -63,5 +63,5 @@ if (objectClassInfo != null) {
 
 
 } else {
-    throw UnsupportedOperationException(action.name() + " operation of type:" + objectClass)
+    throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
 }

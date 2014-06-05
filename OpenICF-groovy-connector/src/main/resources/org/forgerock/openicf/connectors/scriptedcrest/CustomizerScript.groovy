@@ -22,7 +22,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
 
-package org.forgerock.openicf.connectors.groovy
+package org.forgerock.openicf.connectors.scriptedcrest
 
 import org.apache.http.HttpHost
 import org.apache.http.auth.AuthScope

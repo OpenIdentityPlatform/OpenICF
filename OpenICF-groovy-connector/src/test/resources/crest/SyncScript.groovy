@@ -31,37 +31,37 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException
 import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationOptions
 
-def action = action as OperationType
+def operation = operation as OperationType
 def configuration = configuration as ScriptedCRESTConfiguration
 def connection = connection as Connection
 def log = log as Log
 def objectClass = objectClass as ObjectClass
 
 
-switch (action) {
+switch (operation) {
     case OperationType.SYNC:
         def options = options as OperationOptions
         def token = token as Object
 
         Map<String, Object> objectClassInfo = configuration.propertyBag[objectClass.objectClassValue];
         if (objectClassInfo != null) {
-            throw UnsupportedOperationException(action.name() + " operation of type:" + objectClass)
+            throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
 
         } else {
-            throw UnsupportedOperationException(action.name() + " operation of type:" + objectClass)
+            throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
         }
 
         break;
     case OperationType.GET_LATEST_SYNC_TOKEN:
         Map<String, Object> objectClassInfo = configuration.propertyBag[objectClass.objectClassValue];
         if (objectClassInfo != null) {
-            throw UnsupportedOperationException(action.name() + " operation of type:" + objectClass)
+            throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
 
         } else {
-            throw UnsupportedOperationException(action.name() + " operation of type:" + objectClass)
+            throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
         }
 
         break;
     default:
-        throw new ConnectorException("SyncScript can not handle action:" + action.name())
+        throw new ConnectorException("SyncScript can not handle operation:" + operation.name())
 }

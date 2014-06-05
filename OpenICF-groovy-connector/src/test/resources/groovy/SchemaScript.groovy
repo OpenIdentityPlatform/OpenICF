@@ -29,6 +29,8 @@ import org.identityconnectors.common.logging.Log
 import org.identityconnectors.common.security.GuardedByteArray
 import org.identityconnectors.common.security.GuardedString
 import org.identityconnectors.framework.common.objects.ObjectClass
+import org.identityconnectors.framework.common.objects.OperationOptionInfoBuilder
+import org.identityconnectors.framework.common.objects.OperationOptionsBuilder
 import org.identityconnectors.framework.common.objects.OperationalAttributeInfos
 import org.identityconnectors.framework.common.objects.PredefinedAttributeInfos
 import org.identityconnectors.framework.spi.operations.AuthenticateOp
@@ -36,6 +38,7 @@ import org.identityconnectors.framework.spi.operations.ResolveUsernameOp
 import org.identityconnectors.framework.spi.operations.SchemaOp
 import org.identityconnectors.framework.spi.operations.ScriptOnConnectorOp
 import org.identityconnectors.framework.spi.operations.ScriptOnResourceOp
+import org.identityconnectors.framework.spi.operations.SearchOp
 import org.identityconnectors.framework.spi.operations.SyncOp
 import org.identityconnectors.framework.spi.operations.TestOp
 
@@ -46,24 +49,25 @@ import static org.identityconnectors.framework.common.objects.AttributeInfo.Flag
 import static org.identityconnectors.framework.common.objects.AttributeInfo.Flags.NOT_UPDATEABLE
 import static org.identityconnectors.framework.common.objects.AttributeInfo.Flags.REQUIRED
 
-def action = action as OperationType
+def operation = operation as OperationType
 def configuration = configuration as ScriptedConfiguration
 def log = log as Log
 
 builder.schema({
     objectClass {
         type ObjectClass.ACCOUNT_NAME
-        attribute OperationalAttributeInfos.CURRENT_PASSWORD
+        attribute OperationalAttributeInfos.PASSWORD
         attribute PredefinedAttributeInfos.DESCRIPTION
         attribute 'groups', String.class, EnumSet.of(MULTIVALUED)
         attributes {
             userName String.class, REQUIRED
             email REQUIRED, MULTIVALUED
-            active Boolean.class
-            createDate Integer.class, NOT_CREATABLE, NOT_UPDATEABLE
-            lastModified NOT_UPDATEABLE, NOT_CREATABLE, NOT_RETURNED_BY_DEFAULT
-            sureName()
-            passwordHistory String.class, MULTIVALUED, NOT_UPDATEABLE, NOT_RETURNED_BY_DEFAULT
+            __ENABLE__ Boolean.class
+            createDate  NOT_CREATABLE, NOT_UPDATEABLE
+            lastModified Long.class, NOT_CREATABLE, NOT_UPDATEABLE, NOT_RETURNED_BY_DEFAULT
+            passwordHistory String.class, MULTIVALUED, NOT_UPDATEABLE, NOT_READABLE, NOT_RETURNED_BY_DEFAULT
+            firstName()
+            sn()
         }
 
     }
@@ -71,7 +75,10 @@ builder.schema({
         type ObjectClass.GROUP_NAME
         attribute PredefinedAttributeInfos.DESCRIPTION
         attributes {
+            cn REQUIRED
+            member REQUIRED, MULTIVALUED
         }
+        // ONLY CRUD
     }
     objectClass {
         type '__TEST__'
@@ -153,5 +160,12 @@ builder.schema({
         name "force"
         type Boolean
     }
+
+    defineOperationOption OperationOptionInfoBuilder.buildPagedResultsCookie(), SearchOp
+    defineOperationOption OperationOptionInfoBuilder.buildPagedResultsOffset(), SearchOp
+    defineOperationOption OperationOptionInfoBuilder.buildPageSize(), SearchOp
+    defineOperationOption OperationOptionInfoBuilder.buildSortKeys(), SearchOp
+    defineOperationOption OperationOptionInfoBuilder.buildRunWithUser()
+    defineOperationOption OperationOptionInfoBuilder.buildRunWithPassword()
 }
 )

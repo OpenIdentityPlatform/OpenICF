@@ -37,7 +37,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationOptions
 import org.identityconnectors.framework.common.objects.Uid
 
-def action = action as OperationType
+def operation = operation as OperationType
 def configuration = configuration as ScriptedCRESTConfiguration
 def connection = connection as Connection
 def username = username as String
@@ -73,5 +73,5 @@ if (objectClassInfo != null) {
     }
 
 } else {
-    throw UnsupportedOperationException(action.name() + " operation of type:" + objectClass)
+    throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
 }

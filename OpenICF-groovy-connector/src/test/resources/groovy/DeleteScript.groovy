@@ -32,7 +32,7 @@ import org.identityconnectors.framework.common.objects.OperationOptions
 import org.identityconnectors.framework.common.objects.SyncToken
 import org.identityconnectors.framework.common.objects.Uid
 
-def action = action as OperationType
+def operation = operation as OperationType
 def configuration = configuration as ScriptedConfiguration
 def log = log as Log
 def objectClass = objectClass as ObjectClass
@@ -52,10 +52,10 @@ switch (objectClass) {
         break
     case TestHelper.TEST:
         //Sample script for IDME-180:Support MVCC Revision attribute
-        TestHelper.exceptionTest(action, objectClass, uid, options)
+        TestHelper.exceptionTest(operation, objectClass, uid, options)
         break
     case TestHelper.SAMPLE:
-        throw UnsupportedOperationException("Delete operation of type:" + objectClass)
+        throw new UnsupportedOperationException("Delete operation of type:" + objectClass)
     default:
-        throw UnsupportedOperationException("Delete operation of type:" + objectClass)
+        throw new UnsupportedOperationException("Delete operation of type:" + objectClass)
 }

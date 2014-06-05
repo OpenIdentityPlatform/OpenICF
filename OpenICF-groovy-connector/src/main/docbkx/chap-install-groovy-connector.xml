@@ -23,12 +23,12 @@
   !      Copyright 2011-2014 ForgeRock AS
   !
 -->
-<chapter xml:id='chap-install'
-         xmlns='http://docbook.org/ns/docbook'
-         version='5.0' xml:lang='en'
-         xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
-         xsi:schemaLocation='http://docbook.org/ns/docbook
- http://docbook.org/xml/5.0/xsd/docbook.xsd'>
+<chapter xml:id="install-workday-connector"
+    xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
+    xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+    xsi:schemaLocation='http://docbook.org/ns/docbook
+    http://docbook.org/xml/5.0/xsd/docbook.xsd'
+    xmlns:xlink='http://www.w3.org/1999/xlink'>
 
     <title>${project.name} Installation Instructions</title>
     <para>
@@ -47,7 +47,74 @@
         <title>Installing the ${project.name}</title>
         <para>
             TO BE WRITTEN MANUALLY
+
+            ScriptedSQL
+
         </para>
+
+        <section xml:id="scriptedsql-dependencies">
+            <title>ScriptedSQL Connector Installation</title>
+            <para>
+                Copy these requirements to bundle folder.
+            </para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        <filename>juli-7.0.39.2.jar</filename>
+                        <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.geronimo.ext.tomcat%7Cjuli%7C7.0.39.2%7Cbundle"
+                              xlink:show="new">
+                            (org.apache.geronimo.ext.tomcat:juli:7.0.39.2)
+                        </link>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <filename>tomcat-jdbc-7.0.53.jar</filename>
+                        <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.tomcat%7Ctomcat-jdbc%7C7.0.53%7Cjar"
+                              xlink:show="new">
+                            (org.apache.tomcat:tomcat-jdbc:7.0.53)
+                        </link>
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </section>
+
+        <section xml:id="scriptedcrest-dependencies">
+            <title>ScriptedCREST Connector Installation</title>
+            <para>
+                Copy these requirements to bundle folder.
+            </para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        <filename>httpasyncclient-osgi-4.0.1.jar</filename>
+                        <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.httpcomponents%7Chttpasyncclient-osgi%7C4.0.1%7Cbundle"
+                              xlink:show="new">
+                            (org.apache.httpcomponents:httpasyncclient-osgi:4.0.1)
+                        </link>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <filename>httpclient-osgi-4.3.3.jar</filename>
+                        <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.httpcomponents%7Chttpclient-osgi%7C4.3.3%7Cbundle"
+                              xlink:show="new">
+                            (org.apache.httpcomponents:httpclient-osgi:4.3.3)
+                        </link>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <filename>httpcore-osgi-4.3.2.jar</filename>
+                        <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.httpcomponents%7Chttpcore-osgi%7C4.3.2%7Cbundle"
+                              xlink:show="new">
+                            (org.apache.httpcomponents:httpcore-osgi:4.3.2)
+                        </link>
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </section>
+
     </section>
 
     <section xml:id="connector-pooling">

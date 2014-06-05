@@ -33,7 +33,7 @@ import org.identityconnectors.framework.common.objects.OperationOptions
 
 import static org.identityconnectors.common.security.SecurityUtil.decrypt
 
-def action = action as OperationType
+def operation = operation as OperationType
 def configuration = configuration as ScriptedConfiguration
 def log = log as Log
 def options = options as OperationOptions
@@ -42,7 +42,7 @@ def scriptLanguage = scriptLanguage as String
 def scriptText = scriptText as String
 
 if ("groovy".equalsIgnoreCase(scriptLanguage)) {
-    log.info("Evaluate {0} Script", action)
+    log.info("Evaluate {0} Script", operation)
     if (null != options.runAsUser) {
         if ("admin".equals(options.runAsUser)) {
             if ("Passw0rd".equals(decrypt(options.runWithPassword))) {

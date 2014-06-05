@@ -32,8 +32,13 @@ import org.identityconnectors.framework.common.objects.SchemaBuilder
  * @author Laszlo Hordos
  */
 class SchemaDelegate extends AbstractICFBuilder<SchemaBuilder> {
+
+    @Delegate
+    private final SchemaBuilder builder;
+
     SchemaDelegate(SchemaBuilder builder) {
         super(builder)
+        this.builder = builder
     }
 
     void objectClass(@DelegatesTo(ObjectClassDelegate) Closure attribute) {

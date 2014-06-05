@@ -35,7 +35,7 @@ import org.identityconnectors.framework.common.objects.OperationOptions
 
 import java.sql.Connection
 
-def action = action as OperationType
+def operation = operation as OperationType
 def configuration = configuration as ScriptedSQLConfiguration
 def connection = connection as Connection
 def log = log as Log
@@ -47,28 +47,28 @@ def ORG = new ObjectClass("organization")
 // connection: handler to the SQL connection
 // configuration : handler to the connector's configuration object
 // objectClass: an ObjectClass describing the Object class (__ACCOUNT__ / __GROUP__ / other)
-// action: an OperationType describing the action ("SYNC" or "GET_LATEST_SYNC_TOKEN" here)
+// operation: an OperationType describing the operation ("SYNC" or "GET_LATEST_SYNC_TOKEN" here)
 // log: a handler to the Log facility
-// options: a handler to the OperationOptions (null if action = "GET_LATEST_SYNC_TOKEN")
-// token: a handler to an Object representing the sync token (null if action = "GET_LATEST_SYNC_TOKEN")
+// options: a handler to the OperationOptions (null if operation = "GET_LATEST_SYNC_TOKEN")
+// token: a handler to an Object representing the sync token (null if operation = "GET_LATEST_SYNC_TOKEN")
 //
 //
 // Returns:
-// if action = "GET_LATEST_SYNC_TOKEN":
+// if operation = "GET_LATEST_SYNC_TOKEN":
 // it must return an object representing the last known
 // sync token for the corresponding ObjectClass
 //
-// if action = "SYNC":
+// if operation = "SYNC":
 // it may return an object representing the last known
 // sync token for the corresponding ObjectClass after handling all changes
 //
 
 
-log.info("Entering " + action + " Script");
+log.info("Entering " + operation + " Script");
 def sql = new Sql(connection);
 
 
-switch (action) {
+switch (operation) {
     case OperationType.SYNC:
         def options = options as OperationOptions
         def token = token as Object
@@ -136,7 +136,7 @@ switch (action) {
 
             default:
                 log.error("Sync script: objectClass " + objectClass + " is not handled by the Sync script")
-                throw UnsupportedOperationException(action.name(), " operation of type:" + objectClass.objectClassValue)
+                throw new UnsupportedOperationException(operation.name(), " operation of type:" + objectClass.objectClassValue)
         }
 
         break;
@@ -155,7 +155,7 @@ switch (action) {
                 break;
 
             default:
-                throw UnsupportedOperationException(action.name(), " operation of type:" + objectClass.objectClassValue)
+                throw new UnsupportedOperationException(operation.name(), " operation of type:" + objectClass.objectClassValue)
         }
 
         log.ok("Get Latest Sync Token script: last token is: " + row["timestamp"])
@@ -165,5 +165,5 @@ switch (action) {
 
         break;
     default:
-        throw new ConnectorException("SyncScript can not handle action:" + action.name())
+        throw new ConnectorException("SyncScript can not handle operation:" + operation.name())
 }

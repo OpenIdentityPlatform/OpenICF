@@ -35,7 +35,7 @@ import org.identityconnectors.framework.common.objects.Uid
 
 import java.sql.Connection
 
-def action = action as OperationType
+def operation = operation as OperationType
 def configuration = configuration as ScriptedSQLConfiguration
 def connection = connection as Connection
 def log = log as Log
@@ -48,14 +48,14 @@ def ORG = new ObjectClass("organization")
 // The connector sends the following:
 // connection: handler to the SQL connection
 // configuration : handler to the connector's configuration object
-// action: a string describing the action ("DELETE" here)
+// operation: an OperationType describing the operation ("DELETE" here)
 // log: a handler to the Log facility
 // objectClass: a String describing the Object class (__ACCOUNT__ / __GROUP__ / other)
 // options: a handler to the OperationOptions Map
 // uid: String for the unique id (__UID__)that specifies the object to delete
 // RETURNS: Nothing
 
-log.info("Entering " + action + " Script");
+log.info("Entering " + operation + " Script");
 def sql = new Sql(connection);
 
 assert uid != null
@@ -74,5 +74,5 @@ switch (objectClass) {
         break
 
     default:
-        throw UnsupportedOperationException(action.name() + " operation of type:" + objectClass)
+        throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
 }

@@ -37,8 +37,12 @@ import org.identityconnectors.framework.common.objects.Uid
  */
 class ConnectorObjectDelegate extends AbstractICFBuilder<ConnectorObjectBuilder> {
 
+    @Delegate
+    private final ConnectorObjectBuilder builder;
+
     ConnectorObjectDelegate(ConnectorObjectBuilder builder) {
         super(builder)
+        this.builder = builder;
     }
 
     void uid(String uid) {

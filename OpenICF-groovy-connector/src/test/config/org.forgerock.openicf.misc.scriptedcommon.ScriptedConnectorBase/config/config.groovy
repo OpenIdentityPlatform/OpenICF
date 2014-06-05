@@ -76,6 +76,7 @@ environments {
             serviceAddress = new URI("http://localhost:${httpPort}/rest/")
             username = "admin"
             password = new GuardedString("Passw0rd".toCharArray())
+            customizerScriptFileName = "CustomizerScript.groovy"
         }
     }
     SQL {

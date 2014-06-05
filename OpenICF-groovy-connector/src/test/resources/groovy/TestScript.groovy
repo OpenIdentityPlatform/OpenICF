@@ -26,11 +26,11 @@ import org.identityconnectors.common.logging.Log
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration
 
-def action = action as OperationType
+def operation = operation as OperationType
 def configuration = configuration as ScriptedConfiguration
 def log = log as Log
 
 
 log.info("This is TestScript")
 
-throw new MissingResourceException("Test Failed", action.name(), "")
+throw new MissingResourceException("Test Failed", operation.name(), "")

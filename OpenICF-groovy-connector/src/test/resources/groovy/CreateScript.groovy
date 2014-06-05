@@ -39,7 +39,7 @@ import org.identityconnectors.framework.common.objects.Uid
 
 import java.text.DateFormat
 
-def action = action as OperationType
+def operation = operation as OperationType
 def createAttributes = attributes as Set<Attribute>
 def configuration = configuration as ScriptedConfiguration
 def name = id as String
@@ -48,7 +48,7 @@ def objectClass = objectClass as ObjectClass
 def options = options as OperationOptions
 
 
-log.info("Entering " + action + " Script");
+log.info("Entering " + operation + " Script");
 
 
 switch (objectClass) {
@@ -131,7 +131,7 @@ switch (objectClass) {
         break
     case TestHelper.TEST:
         Uid uid = new Uid(name, "0")
-        return TestHelper.exceptionTest(action, objectClass, uid, options)
+        return TestHelper.exceptionTest(operation, objectClass, uid, options)
         break
     case TestHelper.SAMPLE:
         return ObjectCacheLibrary.instance.create(ICF.co {
@@ -141,5 +141,5 @@ switch (objectClass) {
         })
         break
     default:
-        throw UnsupportedOperationException("Create operation of type:" + objectClass.objectClassValue)
+        throw new UnsupportedOperationException("Create operation of type:" + objectClass.objectClassValue)
 }

@@ -151,7 +151,7 @@ public class ObjectCacheLibrary {
         ConcurrentMap<String, Pair<ConnectorObject, Date>> storage = getStore(objectClass);
 
         def s = sortKeys
-        if (null == sortKeys) {
+        if (null == sortKeys || sortKeys.size() == 0) {
             s = [new SortKey(Name.NAME, true)];
         } else {
             s = Arrays.asList(sortKeys)

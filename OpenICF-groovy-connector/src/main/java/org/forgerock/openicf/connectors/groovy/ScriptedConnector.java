@@ -36,5 +36,6 @@ import org.identityconnectors.framework.spi.ConnectorClass;
  */
 @ConnectorClass(displayNameKey = "groovy.connector.display",
         configurationClass = ScriptedConfiguration.class)
-public class ScriptedConnector extends ScriptedConnectorBase<ScriptedConfiguration> implements Connector {
+public class ScriptedConnector extends ScriptedConnectorBase<ScriptedConfiguration> implements
+        Connector {
 }

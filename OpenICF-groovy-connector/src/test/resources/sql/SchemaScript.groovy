@@ -33,7 +33,7 @@ import java.sql.Connection
 
 import static org.identityconnectors.framework.common.objects.AttributeInfo.Flags.REQUIRED
 
-def action = action as OperationType
+def operation = operation as OperationType
 def configuration = configuration as ScriptedSQLConfiguration
 def connection = connection as Connection
 def log = log as Log

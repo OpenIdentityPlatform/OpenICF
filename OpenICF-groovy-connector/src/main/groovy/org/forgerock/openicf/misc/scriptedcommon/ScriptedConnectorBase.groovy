@@ -77,7 +77,7 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
     public static final String USERNAME = "username"
     public static final String PASSWORD = "password"
 
-    public static final String ACTION = "action"
+    public static final String OPERATION = "operation"
 
     public static final String OBJECT_CLASS = "objectClass"
     public static final String UID = "uid"
@@ -628,7 +628,7 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
             final Binding arguments, OperationType action,
             final ObjectClass objectClass, final Uid uid, final Set<Attribute> attributes,
             final OperationOptions options) {
-        arguments.setVariable(ACTION, action);
+        arguments.setVariable(OPERATION, action);
         if (null != objectClass) {
             arguments.setVariable(OBJECT_CLASS, objectClass);
         }

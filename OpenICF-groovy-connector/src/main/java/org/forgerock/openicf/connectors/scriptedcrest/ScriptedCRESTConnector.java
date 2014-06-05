@@ -52,12 +52,6 @@ import groovy.lang.Binding;
 public class ScriptedCRESTConnector extends ScriptedConnectorBase<ScriptedCRESTConfiguration>
         implements PoolableConnector {
 
-    public void init(Configuration config) {
-        super.init(config);
-        //Force to call the customizer script
-        ((ScriptedCRESTConfiguration)config).getHttpAsyncClient();
-    }
-
     @Override
     public void checkAlive() {
     }

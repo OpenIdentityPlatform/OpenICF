@@ -25,6 +25,7 @@ package org.forgerock.openicf.connectors.scriptedrest;
 
 import java.util.Set;
 
+import org.apache.http.client.HttpClient;
 import org.forgerock.openicf.misc.scriptedcommon.OperationType;
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase;
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -42,17 +43,23 @@ import groovy.lang.Binding;
  * @author Gael Allioux <gael.allioux@forgerock.com>
  */
 @ConnectorClass(displayNameKey = "groovy.rest.connector.display",
-        configurationClass = ScriptedRESTConfiguration.class,
-        messageCatalogPaths = {"org/forgerock/openicf/connectors/groovy/Messages",
-                "org/forgerock/openicf/connectors/scriptedrest/Messages"})
+        configurationClass = ScriptedRESTConfiguration.class, messageCatalogPaths = {
+            "org/forgerock/openicf/connectors/groovy/Messages",
+            "org/forgerock/openicf/connectors/scriptedrest/Messages" })
 public class ScriptedRESTConnector extends ScriptedConnectorBase<ScriptedRESTConfiguration>
         implements Connector {
 
-    protected Binding createBinding(Binding arguments, OperationType action, ObjectClass objectClass,
-                                    Uid uid, Set<Attribute> attributes, OperationOptions options) {
+    public static final String CUSTOMIZED_CONNECTION = "customizedConnection";
+
+    protected Binding createBinding(Binding arguments, OperationType action,
+            ObjectClass objectClass, Uid uid, Set<Attribute> attributes, OperationOptions options) {
         Binding b = super.createBinding(arguments, action, objectClass, uid, attributes, options);
-        b.setVariable(CONNECTION, ((ScriptedRESTConfiguration) getScriptedConfiguration())
-                .getRESTClient());
+
+        HttpClient client =
+                ((ScriptedRESTConfiguration) getScriptedConfiguration()).getHttpClient();
+        b.setVariable(CONNECTION, client);
+        b.setVariable(CUSTOMIZED_CONNECTION, ((ScriptedRESTConfiguration) getScriptedConfiguration())
+                .getDecoratedObject(client));
         return b;
     }
 }

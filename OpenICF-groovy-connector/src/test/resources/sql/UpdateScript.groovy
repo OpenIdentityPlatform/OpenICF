@@ -38,7 +38,7 @@ import org.identityconnectors.framework.common.objects.Uid
 
 import java.sql.Connection
 
-def action = action as OperationType
+def operation = operation as OperationType
 def updateAttributes = attributes as Set<Attribute>
 def configuration = configuration as ScriptedSQLConfiguration
 def connection = connection as Connection
@@ -54,7 +54,7 @@ def ORG = new ObjectClass("organization")
 // connection : SQL connection
 // configuration : handler to the connector's configuration object
 //
-// action: String correponding to the action (UPDATE/ADD_ATTRIBUTE_VALUES/REMOVE_ATTRIBUTE_VALUES)
+// operation: an OperationType describing the operation (UPDATE/ADD_ATTRIBUTE_VALUES/REMOVE_ATTRIBUTE_VALUES)
 //   - UPDATE : For each input attribute, replace all of the current values of that attribute
 //     in the target object with the values of that attribute.
 //   - ADD_ATTRIBUTE_VALUES: For each attribute that the input set contains, add to the current values
@@ -77,10 +77,10 @@ def ORG = new ObjectClass("organization")
 //
 // RETURNS: the uid (__UID__)
 
-log.info("Entering " + action + " Script");
+log.info("Entering " + operation + " Script");
 def sql = new Sql(connection);
 
-switch (action) {
+switch (operation) {
     case OperationType.UPDATE:
 
         // Prepare the Update statement
@@ -114,7 +114,7 @@ switch (action) {
     case OperationType.REMOVE_ATTRIBUTE_VALUES:
         throw new UnsupportedOperationException()
     default:
-        throw new ConnectorException("UpdateScript can not handle action:" + action.name())
+        throw new ConnectorException("UpdateScript can not handle operation:" + operation.name())
 }
 
 

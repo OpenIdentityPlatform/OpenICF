@@ -30,7 +30,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationOptions
 import org.identityconnectors.framework.common.objects.Uid
 
-def action = action as OperationType
+def operation = operation as OperationType
 def configuration = configuration as ScriptedConfiguration
 def username = username as String
 def log = log as Log
@@ -43,6 +43,6 @@ if (objectClass.is(ObjectClass.ACCOUNT_NAME)) {
     }
     throw new UnknownUidException();
 } else {
-    throw UnsupportedOperationException("Authentication is not supported on " + objectClass);
+    throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass);
 }
 

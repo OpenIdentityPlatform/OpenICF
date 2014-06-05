@@ -22,18 +22,23 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
 
-
+@Grapes([
+        @Grab(group = 'org.codehaus.groovy.modules.http-builder', module = 'http-builder', version = '0.7.1'),
+        @Grab(group = 'commons-io', module = 'commons-io', version = '2.4')]
+)
 import groovyx.net.http.RESTClient
+import org.apache.http.client.HttpClient
 import org.forgerock.openicf.connectors.scriptedrest.ScriptedRESTConfiguration
-import org.identityconnectors.common.logging.Log
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
+import org.identityconnectors.common.logging.Log
 
 import static groovyx.net.http.ContentType.JSON
 import static groovyx.net.http.Method.POST
 
-def action = action as OperationType
+def operation = operation as OperationType
 def configuration = configuration as ScriptedRESTConfiguration
-def connection = connection as RESTClient
+def httpClient = connection as HttpClient
+def connection = customizedConnection as RESTClient
 def log = log as Log
 
 connection.handler.failure = { resp ->
@@ -51,9 +56,9 @@ def cleared = connection.post(
 )
 
 
-cleared = connection.request(POST, JSON) {  req ->
+cleared = connection.request(POST, JSON) { req ->
     uri.path = '/rest/users'
-    uri.query = [_action : 'clear']
+    uri.query = [_action: 'clear']
     send JSON, 'null'
 
     //requestContentType = JSON
@@ -61,7 +66,7 @@ cleared = connection.request(POST, JSON) {  req ->
 
     response.success = { resp, json ->
         assert json.size() == 1
-        println "Query response: "
+        println "Action response: "
         json.responseData.each() { key, value ->
             log.debug "  ${key} : ${value}"
         }

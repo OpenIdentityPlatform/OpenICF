@@ -23,17 +23,23 @@
  */
 package org.forgerock.openicf.misc.scriptedcommon;
 
+import static org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase.CONFIGURATION;
 import static org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase.LOGGER;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
+import org.codehaus.groovy.runtime.InvokerHelper;
+import org.codehaus.groovy.runtime.ResourceGroovyMethods;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -44,6 +50,7 @@ import org.identityconnectors.framework.spi.StatefulConfiguration;
 
 import groovy.lang.Binding;
 import groovy.lang.GroovyClassLoader;
+import groovy.lang.GroovyCodeSource;
 import groovy.lang.Script;
 import groovy.util.DelegatingScript;
 import groovy.util.GroovyScriptEngine;
@@ -510,32 +517,20 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     // Other Configuration Properties
     // =======================================================================
 
-    // =======================================================================
-    // Interface Implementation
-    // =======================================================================
-
-    public void release() {
-        groovyScriptEngine = null;
-        loggerCache.clear();
+    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts")
+    public String getCustomizerScriptFileName() {
+        return customizerScriptFileName;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void validate() {
-        logger.info("Load and compile every scripts");
-        loadScript(getAuthenticateScriptFileName());
-        loadScript(getCreateScriptFileName());
-        loadScript(getDeleteScriptFileName());
-        loadScript(getResolveUsernameScriptFileName());
-        loadScript(getSchemaScriptFileName());
-        loadScript(getScriptOnResourceScriptFileName());
-        loadScript(getSearchScriptFileName());
-        loadScript(getSyncScriptFileName());
-        loadScript(getTestScriptFileName());
-        loadScript(getUpdateScriptFileName());
-        logger.info("Scripts are loaded");
+    public void setCustomizerScriptFileName(String customizerScriptFileName) {
+        this.customizerScriptFileName = customizerScriptFileName;
     }
+
+    private String customizerScriptFileName = null;
+
+    // =======================================================================
+    // Methods for Script writers
+    // =======================================================================
 
     private final ConcurrentMap<String, Object> propertyBag =
             new ConcurrentHashMap<String, Object>();
@@ -550,6 +545,72 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      */
     public ConcurrentMap<String, Object> getPropertyBag() {
         return propertyBag;
+    }
+
+    // =======================================================================
+    // Interface Implementation
+    // =======================================================================
+
+    public void release() {
+        synchronized (this) {
+            groovyScriptEngine = null;
+            loggerCache.clear();
+            logger.ok("Shared state ScriptedConfiguration is successfully released");
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void validate() {
+        logger.info("Load and compile configured scripts");
+        loadScript(getAuthenticateScriptFileName());
+        loadScript(getCreateScriptFileName());
+        loadScript(getDeleteScriptFileName());
+        loadScript(getResolveUsernameScriptFileName());
+        loadScript(getSchemaScriptFileName());
+        loadScript(getScriptOnResourceScriptFileName());
+        loadScript(getSearchScriptFileName());
+        loadScript(getSyncScriptFileName());
+        loadScript(getTestScriptFileName());
+        loadScript(getUpdateScriptFileName());
+        logger.info("Load and compile of scripts are successful");
+    }
+
+    // =======================================================================
+    //
+    // =======================================================================
+
+    protected String getDefaultCustomizerScriptName() {
+        return new StringBuilder("/").append(getClass().getPackage().getName().replace('.', '/'))
+                .append("/CustomizerScript.groovy").toString();
+    }
+
+    protected Class getCustomizerClass() {
+        Class customizerClass = null;
+        if (StringUtil.isBlank(customizerScriptFileName)) {
+            URL url = getClass().getResource(getDefaultCustomizerScriptName());
+            if (null != url) {
+                GroovyCodeSource source = null;
+                try {
+                    source =
+                            new GroovyCodeSource(ResourceGroovyMethods.getText(url,
+                                    getSourceEncoding()), url.toExternalForm(), "/groovy/script");
+                } catch (IOException e) {
+                    throw ConnectorException.wrap(e);
+                }
+                source.setCachable(false);
+                customizerClass = getGroovyScriptEngine().getGroovyClassLoader().parseClass(source);
+            }
+        } else {
+            customizerClass = loadScript(customizerScriptFileName);
+        }
+        return customizerClass;
+    }
+
+    protected Script createCustomizerScript(Class customizerClass, Binding binding) {
+        binding.setVariable(CONFIGURATION, this);
+        return InvokerHelper.createScript(customizerClass, binding);
     }
 
     private final ConcurrentMap<String, Log> loggerCache = new ConcurrentHashMap<String, Log>(11);
@@ -607,26 +668,64 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
                     compilerConfiguration.addCompilationCustomizers(getImportCustomizer(null));
 
                     final GroovyClassLoader loader =
-                            new GroovyClassLoader(getClass().getClassLoader(),
-                                    compilerConfiguration, true);
+                            new GroovyClassLoader(getParentLoader(), compilerConfiguration, true);
 
                     groovyScriptEngine =
                             new GroovyScriptEngine(getRoots(compilerConfiguration, loader), loader);
+
+                    initializeCustomizer();
                 }
             }
         }
         return groovyScriptEngine;
     }
 
-    protected URL[] getRoots(CompilerConfiguration compilerConfiguration, GroovyClassLoader loader) {
-        if (false) {
-            // TODO allow to add the Connector ROOT
-            URL[] urls = Arrays.copyOf(loader.getURLs(), loader.getURLs().length + 1);
-            urls[urls.length - 1] = getClass().getProtectionDomain().getCodeSource().getLocation();
-            return urls;
-        } else {
-            return loader.getURLs();
+    /*
+     * This must be called once from thread-safe location and inside the
+     * synchronized to avoid deadlock.
+     */
+    private void initializeCustomizer() {
+        try {
+            Class customizerClass = getCustomizerClass();
+
+            if (null != customizerClass) {
+                Binding binding = new Binding();
+                binding.setVariable(LOGGER, getLogger(customizerClass));
+                createCustomizerScript(customizerClass, binding).run();
+            }
+        } catch (Throwable t) {
+            logger.error(t, "Failed to customize the connector");
+            throw ConnectorException.wrap(t);
         }
+    }
+
+    protected ClassLoader getParentLoader() {
+        ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
+        try {
+            Class c = contextLoader.loadClass(Script.class.getName());
+            if (c == Script.class) {
+                return contextLoader;
+            }
+        } catch (ClassNotFoundException e) {
+            /* ignore */
+        }
+        return Script.class.getClassLoader();
+    }
+
+    protected URL[] getRoots(CompilerConfiguration compilerConfiguration, GroovyClassLoader loader) {
+        // Do not allow this because it collides with the classes from
+        // parent. For safety remove this from roots
+        URL forbiddenLocation = getClass().getProtectionDomain().getCodeSource().getLocation();
+        List<URL> safeRoots = new ArrayList<URL>();
+        for (URL root : loader.getURLs()) {
+            if (forbiddenLocation.equals(root)) {
+                logger.info(
+                        "The connector source location is removed from the roots. This url is not allowed: {0}",
+                        forbiddenLocation);
+            }
+            safeRoots.add(root);
+        }
+        return safeRoots.toArray(new URL[safeRoots.size()]);
     }
 
     protected ImportCustomizer getImportCustomizer(ImportCustomizer parent) {

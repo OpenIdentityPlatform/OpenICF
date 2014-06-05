@@ -182,7 +182,7 @@ class TestHelper {
 
                 attributeGuardedString             : new GuardedString("secret".toCharArray()),
                 attributeGuardedStringMultivalue   : [new GuardedString("secret1".toCharArray()),
-                                                      new GuardedString("secret1".toCharArray())] as GuardedString[],
+                                                      new GuardedString("secret2".toCharArray())] as GuardedString[],
 
                 // Sample script for IDME-113
                 attributeMap                       : [

@@ -35,17 +35,13 @@ import org.apache.http.nio.client.HttpAsyncClient
 import org.apache.http.nio.client.methods.HttpAsyncMethods
 import org.apache.http.nio.protocol.HttpAsyncResponseConsumer
 import org.codehaus.groovy.runtime.InvokerHelper
-import org.codehaus.groovy.runtime.ResourceGroovyMethods
 import org.forgerock.json.resource.Context
 import org.forgerock.json.resource.ResourceName
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration
 import org.identityconnectors.common.Assertions
-import org.identityconnectors.common.StringUtil
 import org.identityconnectors.framework.spi.ConfigurationProperty
 
 import java.util.concurrent.Future
-
-import static org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase.LOGGER
 
 /**
  * A ScriptedCRESTConfiguration.
@@ -143,44 +139,16 @@ class ScriptedCRESTConfiguration extends ScriptedConfiguration {
                 localContext, callback);
     }
 
-    String customizerScriptFileName = null;
-
-    private interface OnExecuteDelegate<T> {
-
-        public Future<T> execute(
-                Context context,
-                HttpUriRequest request, FutureCallback<T> callback)
-
-    }
-
-    private interface ScriptsDelegate {
-        //Connector lifecycle
-        void init(Closure paramClosure);
-
-        void release(Closure paramClosure);
-        //Before call
-        void beforeRequest(Closure paramClosure);
-
-        //FutureCallback
-        void onComplete(Closure paramClosure);
-
-        void onFail(Closure paramClosure);
-    }
-
-
     private Closure init = null;
     private Closure release = null;
     private Closure beforeRequest = null;
     private Closure onComplete = null;
     private Closure onFail = null;
 
-    private static final String CUSTOMIZER_SCRIPT = "/org/forgerock/openicf/connectors/groovy/CustomizerScript.groovy";
-
     HttpAsyncClient getHttpAsyncClient() {
         if (null == httpClient) {
             synchronized (this) {
                 if (null == httpClient) {
-                    initialize()
                     Closure clone = init.rehydrate(this, this, this);
                     clone.setResolveStrategy(Closure.DELEGATE_FIRST);
                     HttpAsyncClientBuilder builder = HttpAsyncClients.custom()
@@ -193,16 +161,7 @@ class ScriptedCRESTConfiguration extends ScriptedConfiguration {
         return httpClient;
     }
 
-    private void initialize() throws Exception {
-        Class customizerClass = null;
-        if (StringUtil.isBlank(customizerScriptFileName)) {
-            URL url = getClass().getResource(CUSTOMIZER_SCRIPT);
-            def source = new GroovyCodeSource(ResourceGroovyMethods.getText(url, getSourceEncoding()), url.toExternalForm(), "/groovy/script")
-            source.cachable = false;
-            customizerClass = getGroovyScriptEngine().getGroovyClassLoader().parseClass(source);
-        } else {
-            customizerClass = getGroovyScriptEngine().loadScriptByName(customizerScriptFileName)
-        }
+    protected Script createCustomizerScript(Class customizerClass, Binding binding) {
 
         customizerClass.metaClass.customize << { Closure cl ->
             init = null
@@ -211,36 +170,29 @@ class ScriptedCRESTConfiguration extends ScriptedConfiguration {
             onComplete = null
             onFail = null
 
-            ScriptsDelegate delegate = new ScriptsDelegate() {
-
-                void init(Closure paramClosure) {
-                    init = paramClosure
-                }
-
-                void release(Closure paramClosure) {
-                    release = paramClosure
-                }
-
-                void beforeRequest(Closure paramClosure) {
-                    beforeRequest = paramClosure
-                }
-
-                void onComplete(Closure paramClosure) {
-                    onComplete = paramClosure
-                }
-
-                void onFail(Closure paramClosure) {
-                    onFail = paramClosure
-                }
-            }
-
+            def delegate = [
+                    init         : { Closure paramClosure ->
+                        init = paramClosure
+                    },
+                    release      : { Closure paramClosure ->
+                        release = paramClosure
+                    },
+                    beforeRequest: { Closure paramClosure ->
+                        beforeRequest = paramClosure
+                    },
+                    onComplete   : { Closure paramClosure ->
+                        onComplete = paramClosure
+                    },
+                    onFail       : { Closure paramClosure ->
+                        onFail = paramClosure
+                    }
+            ]
             cl.setDelegate(new Reference(delegate));
             cl.setResolveStrategy(Closure.DELEGATE_FIRST);
             cl.call();
         }
-        Binding binding = new Binding()
-        Script scr = InvokerHelper.createScript(customizerClass, binding);
-        binding.setVariable(LOGGER, getLogger(scr.getClass()));
-        scr.run();
+
+        return InvokerHelper.createScript(customizerClass, binding);
     }
+
 }

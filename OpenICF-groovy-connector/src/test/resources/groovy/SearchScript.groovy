@@ -41,7 +41,7 @@ import org.identityconnectors.framework.common.objects.OperationOptions
 import org.identityconnectors.framework.common.objects.SearchResult
 import org.identityconnectors.framework.common.objects.filter.Filter
 
-def action = action as OperationType
+def operation = operation as OperationType
 def configuration = configuration as ScriptedConfiguration
 def filter = filter as Filter
 def log = log as Log
@@ -209,7 +209,7 @@ switch (objectClass) {
         return new SearchResult()
         break
     default:
-        throw UnsupportedOperationException("Search operation of type:" + objectClass)
+        throw new UnsupportedOperationException("Search operation of type:" + objectClass)
 }
 
 

@@ -45,7 +45,7 @@ import org.identityconnectors.framework.common.objects.SearchResult
 import org.identityconnectors.framework.common.objects.Uid
 import org.identityconnectors.framework.common.objects.filter.Filter
 
-def action = action as OperationType
+def operation = operation as OperationType
 def configuration = configuration as ScriptedCRESTConfiguration
 def connection = connection as Connection
 def filter = filter as Filter
@@ -170,5 +170,5 @@ if (objectClassInfo != null) {
     return new SearchResult(result.pagedResultsCookie, result.remainingPagedResults);
 
 } else {
-    throw UnsupportedOperationException(action.name() + " operation of type:" + objectClass)
+    throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
 }

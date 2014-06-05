@@ -100,6 +100,11 @@ public class ScriptedSQLConnectorTest {
             con.close();
         }
     }
+    @Test
+    public void validate() throws Exception {
+        final ConnectorFacade facade = getFacade(TEST_NAME);
+        facade.validate();
+    }
 
     @Test
     public void testTest() throws Exception {

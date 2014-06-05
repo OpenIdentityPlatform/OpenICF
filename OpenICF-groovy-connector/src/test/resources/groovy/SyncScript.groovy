@@ -32,13 +32,13 @@ import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationOptions
 import org.identityconnectors.framework.common.objects.SyncToken
 
-def action = action as OperationType
+def operation = operation as OperationType
 def configuration = configuration as ScriptedConfiguration
 def log = log as Log
 def objectClass = objectClass as ObjectClass
 
 
-switch (action) {
+switch (operation) {
     case OperationType.SYNC:
 
         def options = options as OperationOptions
@@ -257,7 +257,7 @@ switch (action) {
                 return new SyncToken('SAMPLE')
                 break
             default:
-                throw UnsupportedOperationException("Sync operation of type:" + objectClass)
+                throw new UnsupportedOperationException("Sync operation of type:" + objectClass)
         }
 
     case OperationType.GET_LATEST_SYNC_TOKEN:
@@ -273,8 +273,8 @@ switch (action) {
             case TestHelper.SAMPLE:
                 return new SyncToken("ANY OBJECT");
             default:
-                throw UnsupportedOperationException("Sync operation of type:" + objectClass.objectClassValue)
+                throw new UnsupportedOperationException("Sync operation of type:" + objectClass.objectClassValue)
         }
     default:
-        throw new ConnectorException("SyncScript can not handle action:" + action.name())
+        throw new ConnectorException("SyncScript can not handle operation:" + operation.name())
 }

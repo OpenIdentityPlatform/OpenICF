@@ -42,7 +42,7 @@ import org.identityconnectors.framework.common.objects.OperationOptions
 import org.identityconnectors.framework.common.objects.Schema
 import org.identityconnectors.framework.common.objects.Uid
 
-def action = action as OperationType
+def operation = operation as OperationType
 def updateAttributes = attributes as Set<Attribute>
 def configuration = configuration as ScriptedCRESTConfiguration
 def connection = connection as Connection
@@ -54,7 +54,7 @@ def uid = uid as Uid
 def schema = schema as Schema
 
 
-switch (action) {
+switch (operation) {
     case OperationType.UPDATE:
         Map<String, Object> objectClassInfo = configuration.propertyBag[objectClass.objectClassValue];
         if (objectClassInfo != null) {
@@ -114,7 +114,7 @@ switch (action) {
                 return new Uid(resource.getId(), resource.getRevision())
             }
         } else {
-            throw UnsupportedOperationException(action.name() + " operation of type:" + objectClass)
+            throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
         }
         break
     case OperationType.ADD_ATTRIBUTE_VALUES:
@@ -122,5 +122,5 @@ switch (action) {
     case OperationType.REMOVE_ATTRIBUTE_VALUES:
         throw new UnsupportedOperationException()
     default:
-        throw new ConnectorException("UpdateScript can not handle action:" + action.name())
+        throw new ConnectorException("UpdateScript can not handle operation:" + operation.name())
 }

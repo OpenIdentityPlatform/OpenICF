@@ -32,7 +32,7 @@ import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import java.sql.Connection
 
 
-def action = action as OperationType
+def operation = operation as OperationType
 def configuration = configuration as ScriptedSQLConfiguration
 def connection = new Sql(connection as Connection)
 def log = log as Log

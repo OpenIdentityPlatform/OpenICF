@@ -39,7 +39,7 @@ import org.identityconnectors.framework.common.objects.Uid
 
 import java.text.DateFormat
 
-def action = action as OperationType
+def operation = operation as OperationType
 def updateAttributes = attributes as Set<Attribute>
 def configuration = configuration as ScriptedConfiguration
 def id = id as Attribute
@@ -51,7 +51,7 @@ def uid = uid as Uid
 
 log.ok("Default Message")
 
-switch (action) {
+switch (operation) {
     case OperationType.UPDATE:
         switch (objectClass) {
             case ObjectClass.ACCOUNT:
@@ -140,12 +140,12 @@ switch (action) {
                 break
             case TestHelper.TEST:
                 //Sample script for IDME-180:Support MVCC Revision attribute
-                TestHelper.exceptionTest(action, objectClass, uid, options)
+                TestHelper.exceptionTest(operation, objectClass, uid, options)
                 break
             case TestHelper.SAMPLE:
-                throw UnsupportedOperationException("Update operation of type:" + objectClass)
+                throw new UnsupportedOperationException("Update operation of type:" + objectClass)
             default:
-                throw UnsupportedOperationException("Update operation of type:" + objectClass)
+                throw new UnsupportedOperationException("Update operation of type:" + objectClass)
         }
         break
     case OperationType.ADD_ATTRIBUTE_VALUES:
@@ -153,7 +153,7 @@ switch (action) {
     case OperationType.REMOVE_ATTRIBUTE_VALUES:
         throw new UnsupportedOperationException()
     default:
-        throw new ConnectorException("UpdateScript can not handle action:" + action.name())
+        throw new ConnectorException("UpdateScript can not handle operation:" + operation.name())
 }
 
 

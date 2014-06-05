@@ -24,28 +24,17 @@
 
 package org.forgerock.openicf.connectors.scriptedrest
 
-import groovyx.net.http.ContentType
-import groovyx.net.http.RESTClient
-import groovyx.net.http.StringHashMap
-import org.apache.http.HttpHost
-import org.apache.http.auth.AuthScope
-import org.apache.http.auth.UsernamePasswordCredentials
-import org.apache.http.client.AuthCache
-import org.apache.http.client.ClientProtocolException
-import org.apache.http.client.CredentialsProvider
-import org.apache.http.client.config.RequestConfig
-import org.apache.http.client.protocol.HttpClientContext
-import org.apache.http.conn.routing.HttpRoute
-import org.apache.http.impl.auth.BasicScheme
-import org.apache.http.impl.client.BasicAuthCache
-import org.apache.http.impl.client.BasicCredentialsProvider
+import org.apache.http.client.HttpClient
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClientBuilder
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
+import org.codehaus.groovy.runtime.InvokerHelper
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration
 import org.identityconnectors.common.Assertions
+import org.identityconnectors.common.StringUtil
 import org.identityconnectors.common.security.GuardedString
+import org.identityconnectors.framework.common.exceptions.ConfigurationException
 import org.identityconnectors.framework.spi.AbstractConfiguration
+import org.identityconnectors.framework.spi.ConfigurationClass
 import org.identityconnectors.framework.spi.ConfigurationProperty
 
 /**
@@ -54,6 +43,7 @@ import org.identityconnectors.framework.spi.ConfigurationProperty
  *
  * @author Gael Allioux <gael.allioux@gmail.com>
  */
+@ConfigurationClass(skipUnsupported = true)
 public class ScriptedRESTConfiguration extends ScriptedConfiguration {
 
     // Exposed configuration properties.
@@ -63,7 +53,7 @@ public class ScriptedRESTConfiguration extends ScriptedConfiguration {
     // ===============================================
 
     public enum AuthMethod {
-        NONE, BASIC, BASIC_PREEMPTIVE, DIGEST, NTLM, SPNEGO, CERT, OAUTH
+        NONE, BASIC, BASIC_PREEMPTIVE, DIGEST, NTLM, SPNEGO, CERT, OAUTH, CUSTOM
     }
 
     /*
@@ -87,8 +77,7 @@ public class ScriptedRESTConfiguration extends ScriptedConfiguration {
     private GuardedString password = null;
 
     @ConfigurationProperty(order = 1, displayMessageKey = "username.display",
-            groupMessageKey = "basic.group", helpMessageKey = "username.help",
-            required = true)
+            groupMessageKey = "basic.group", helpMessageKey = "username.help")
     public String getUsername() {
         return username;
     }
@@ -140,39 +129,9 @@ public class ScriptedRESTConfiguration extends ScriptedConfiguration {
      *  URLENC("application/x-www-form-urlencoded")
      *  BINARY("application/octet-stream")
      */
-    String defaultContentType = ContentType.JSON.name();
+    String defaultContentType = "application/json";
 
-    protected final Map<Object, Object> defaultRequestHeaders = new StringHashMap<Object>();
-
-    String[] getDefaultRequestHeaders() {
-        def headers = []
-        return defaultRequestHeaders.each { key, value ->
-            headers.add("${key}=${value}")
-        }
-        return headers as String[]
-    }
-
-    void setDefaultRequestHeaders(String[] headers) {
-        defaultRequestHeaders.clear()
-        if (null != headers) {
-            headers.each {
-                def kv = it.split('=')
-                assert kv.size() == 2
-                defaultRequestHeaders.put(kv[0], kv[1])
-            }
-        }
-    }
-
-    private HttpHost getHttpHost() {
-        return new HttpHost(serviceAddress?.host, serviceAddress?.port, serviceAddress?.scheme);
-    }
-
-    private HttpHost getProxyHost() {
-        if (proxyAddress != null) {
-            return new HttpHost(proxyAddress?.host, proxyAddress?.port, proxyAddress?.scheme);
-        }
-        return null;
-    }
+    String[] defaultRequestHeaders = null;
 
     /**
      * {@inheritDoc}
@@ -181,114 +140,96 @@ public class ScriptedRESTConfiguration extends ScriptedConfiguration {
     public void validate() {
         Assertions.nullCheck(getServiceAddress(), "serviceAddress")
         super.validate()
+        if (StringUtil.isNotBlank(defaultAuthMethod)) {
+            switch (defaultAuthMethod) {
+                case AuthMethod.NONE.name():
+                    break;
+                case AuthMethod.NTLM.name():
+                    Assertions.blankCheck("workstation", "workstation")
+                    Assertions.blankCheck("domain", "domain")
+                    Assertions.blankCheck(getUsername(), "username")
+                    Assertions.nullCheck(getPassword(), "password")
+                case AuthMethod.DIGEST.name():
+                    Assertions.blankCheck("realm", "realm")
+                    Assertions.blankCheck("nonce", "nonce")
+                case AuthMethod.BASIC_PREEMPTIVE.name():
+                case AuthMethod.BASIC.name():
+                    Assertions.blankCheck(getUsername(), "username")
+                    Assertions.nullCheck(getPassword(), "password")
+                    break;
+                default:
+                    break;
+            }
+        }
+        if (null == initClosure) {
+            throw new ConfigurationException("The Customizer Script must define the 'init' Closure")
+        }
     }
 
     private CloseableHttpClient httpClient = null;
-    //Need for Preemptive Auth
-    private AuthCache authCache = null;
 
-    @SuppressWarnings("fallthrough")
-    RESTClient getRESTClient() {
+    Closure initClosure = null;
+    Closure releaseClosure = null;
+    Closure decorateClosure = null;
+
+    protected Script createCustomizerScript(Class customizerClass, Binding binding) {
+
+        customizerClass.metaClass.customize << { Closure cl ->
+            initClosure = null
+            releaseClosure = null
+            decorateClosure = null
+
+            def delegate = [
+                    init    : { Closure c ->
+                        initClosure = c
+                    },
+                    release : { Closure c ->
+                        releaseClosure = c
+                    },
+                    decorate: { Closure c ->
+                        decorateClosure = c
+                    }
+            ]
+            cl.setDelegate(new Reference(delegate));
+            cl.setResolveStrategy(Closure.DELEGATE_FIRST);
+            cl.call();
+        }
+
+        return InvokerHelper.createScript(customizerClass, binding);
+    }
+
+    HttpClient getHttpClient() {
         if (null == httpClient) {
             synchronized (this) {
                 if (null == httpClient) {
-
-                    //SETUP: org.apache.http
-
-                    PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
-                    // Increase max total connection to 200
-                    cm.setMaxTotal(200);
-                    // Increase default max connection per route to 20
-                    cm.setDefaultMaxPerRoute(20);
-                    // Increase max connections for localhost:8080 to 50
-
-                    cm.setMaxPerRoute(new HttpRoute(getHttpHost()), 50);
-
-                    // configure timeout on the entire client
-                    RequestConfig requestConfig = RequestConfig.custom()/*
-                                                             * .
-                                                             * setConnectionRequestTimeout
-                                                             * ( 50).
-                                                             * setConnectTimeout
-                                                             * (50)
-                                                             * .setSocketTimeout
-                                                             * (50)
-                                                             */.build();
-
-                    HttpClientBuilder builder =
-                            HttpClientBuilder.create().
-                                    setConnectionManager(cm).
-                                    setDefaultRequestConfig(requestConfig).
-                                    setProxy(getProxyHost());
-
-
-                    switch (AuthMethod.valueOf(getDefaultAuthMethod())) {
-                        case AuthMethod.BASIC_PREEMPTIVE:
-
-                            // Create AuthCache instance
-                            authCache = new BasicAuthCache();
-                            // Generate BASIC scheme object and add it to the local auth cache
-                            authCache.put(getHttpHost(), new BasicScheme());
-
-                        case AuthMethod.BASIC:
-                            // It's part of the http client spec to request the resource anonymously
-                            // first and respond to the 401 with the Authorization header.
-                            final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-
-                            getPassword().access(new GuardedString.Accessor() {
-                                @Override
-                                public void access(char[] clearChars) {
-                                    credentialsProvider.setCredentials(new AuthScope(getHttpHost().getHostName(), getHttpHost().getPort()),
-                                            new UsernamePasswordCredentials(getUsername(), new String(clearChars)));
-                                }
-                            });
-
-                            builder.setDefaultCredentialsProvider(credentialsProvider);
-                            break;
-                        case AuthMethod.NONE:
-                            break;
-                        default:
-                            throw new IllegalArgumentException();
-                    }
-
+                    Closure clone = initClosure.rehydrate(this, this, this);
+                    clone.setResolveStrategy(Closure.DELEGATE_FIRST);
+                    HttpClientBuilder builder = HttpClientBuilder.create()
+                    clone(builder)
                     httpClient = builder.build();
-
                 }
             }
         }
+        return httpClient;
+    }
 
-        //SETUP: groovyx.net.http
-
-        RESTClient restClient = new RESTClient() {
-            @Override
-            protected Object doRequest(
-                    final groovyx.net.http.HTTPBuilder.RequestConfigDelegate delegate) throws ClientProtocolException, IOException {
-                // Add AuthCache to the execution context
-                if (null != authCache) {
-                    //do Preemptive Auth
-                    delegate.getContext().setAttribute(HttpClientContext.AUTH_CACHE, authCache);
-                }
-                return super.doRequest(delegate)
-            }
-
-            @Override
-            void shutdown() {
-                //Do not allow to shutdown the HttpClient
-            }
-        };
-        restClient.setClient(httpClient);
-        restClient.setUri(getHttpHost().toURI());
-        restClient.setContentType(defaultContentType);
-        restClient.setHeaders(defaultRequestHeaders)
-        return restClient;
+    Object getDecoratedObject(HttpClient client) {
+        if (null != decorateClosure) {
+            Closure clone = decorateClosure.rehydrate(this, this, this);
+            clone.setResolveStrategy(Closure.DELEGATE_FIRST);
+            return clone(client)
+        }
+        return client
     }
 
     @Override
     void release() {
-        super.release()
-        if (null != httpClient) {
-            httpClient.close();
-            httpClient = null;
+        synchronized (this) {
+            super.release()
+            if (null != httpClient) {
+                httpClient.close();
+                httpClient = null;
+            }
         }
     }
 }

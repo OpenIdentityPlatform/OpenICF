@@ -58,6 +58,12 @@ public class ScriptedRESTConnectorTest extends RESTTestBase {
     }
 
     @Test
+    public void validate() throws Exception {
+        final ConnectorFacade facade = getFacade();
+        facade.validate();
+    }
+
+    @Test
     public void test() throws Exception {
         final ConnectorFacade facade = getFacade();
         facade.test();

@@ -37,7 +37,7 @@ import org.identityconnectors.framework.common.objects.Uid
 
 import java.sql.Connection
 
-def action = action as OperationType
+def operation = operation as OperationType
 def createAttributes = new AttributesAccessor(attributes as Set<Attribute>)
 def configuration = configuration as ScriptedSQLConfiguration
 def connection = connection as Connection
@@ -51,7 +51,7 @@ def ORG = new ObjectClass("organization")
 // The connector sends us the following:
 // connection : SQL connection
 // configuration : handler to the connector's configuration object
-// action: String correponding to the action ("CREATE" here)
+// operation: an OperationType describing the operation ("CREATE" here)
 // log: a handler to the connector's Logger facility
 // objectClass: a String describing the Object class (__ACCOUNT__ / __GROUP__ / other)
 // id: Corresponds to the OpenICF __NAME__ atribute if it is provided as part of the attribute set,
@@ -62,7 +62,7 @@ def ORG = new ObjectClass("organization")
 // options: a handler to the OperationOptions Map
 // RETURNS: Create must return the immutable identifier (OpenICF __UID__).
 
-log.info("Entering " + action + " Script");
+log.info("Entering " + operation + " Script");
 
 def sql = new Sql(connection);
 
@@ -106,5 +106,5 @@ switch (objectClass) {
         break
 
     default:
-        throw UnsupportedOperationException(action.name() + " operation of type:" + objectClass)
+        throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
 }

@@ -22,11 +22,13 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
 
+
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration
 import org.identityconnectors.common.logging.Log
 import org.identityconnectors.common.security.GuardedString
 import org.identityconnectors.common.security.SecurityUtil
+import org.identityconnectors.framework.common.exceptions.ConnectorException
 import org.identityconnectors.framework.common.exceptions.ConnectorSecurityException
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException
 import org.identityconnectors.framework.common.exceptions.InvalidPasswordException
@@ -37,7 +39,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationOptions
 import org.identityconnectors.framework.common.objects.Uid
 
-def action = action as OperationType
+def operation = operation as OperationType
 def configuration = configuration as ScriptedConfiguration
 def username = username as String
 def log = log as Log
@@ -47,10 +49,10 @@ def password = password as GuardedString;
 
 switch (objectClass) {
     case ObjectClass.ACCOUNT:
-        throw UnsupportedOperationException(action.name() + " operation of type:" + objectClass)
+        throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
         break
     case ObjectClass.GROUP:
-        throw UnsupportedOperationException(action.name() + " operation of type:" + objectClass)
+        throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
         break
     case ObjectClass.ALL:
         log.error("ICF Framework MUST reject this")
@@ -76,13 +78,15 @@ switch (objectClass) {
             def clearPassword = SecurityUtil.decrypt(password)
             if ("".equals(clearPassword)) {
                 return new Uid(username);
+            } else {
+                throw new ConnectorException("The password must be empty in this test")
             }
         }
         throw new UnknownUidException();
     case TestHelper.SAMPLE:
-        throw UnsupportedOperationException(action.name() + " operation of type:" + objectClass)
+        throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
         break
     default:
-        throw UnsupportedOperationException(action.name() + " operation of type:" + objectClass)
+        throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
 }
 
