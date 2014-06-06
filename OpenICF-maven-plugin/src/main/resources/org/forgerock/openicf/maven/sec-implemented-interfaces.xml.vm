@@ -47,7 +47,7 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="${bookName}#interface-AuthenticationApiOp"
+                              xlink:href="CURRENT.DOCID#interface-AuthenticationApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Authenticate
                         </link>
                     </term>
@@ -62,14 +62,13 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="${bookName}#interface-CreateApiOp"
+                              xlink:href="CURRENT.DOCID#interface-CreateApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Create
                         </link>
                     </term>
                     <listitem>
                         <para>
-                            Provides simple authentication with two parameters, presumed to be a user
-                            name and password.
+                            TODO: Describe operation.
                         </para>
                     </listitem>
                 </varlistentry>
@@ -77,14 +76,13 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="${bookName}#interface-DeleteApiOp"
+                              xlink:href="CURRENT.DOCID#interface-DeleteApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Delete
                         </link>
                     </term>
                     <listitem>
                         <para>
-                            Provides simple authentication with two parameters, presumed to be a user
-                            name and password.
+                            TODO: Describe operation.
                         </para>
                     </listitem>
                 </varlistentry>
@@ -92,14 +90,13 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="${bookName}#interface-ResolveUsernameApiOp"
+                              xlink:href="CURRENT.DOCID#interface-ResolveUsernameApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Resolve Username
                         </link>
                     </term>
                     <listitem>
                         <para>
-                            Provides simple authentication with two parameters, presumed to be a user
-                            name and password.
+                            TODO: Describe operation.
                         </para>
                     </listitem>
                 </varlistentry>
@@ -107,14 +104,13 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="${bookName}#interface-SchemaApiOp"
+                              xlink:href="CURRENT.DOCID#interface-SchemaApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Schema
                         </link>
                     </term>
                     <listitem>
                         <para>
-                            Provides simple authentication with two parameters, presumed to be a user
-                            name and password.
+                            TODO: Describe operation.
                         </para>
                     </listitem>
                 </varlistentry>
@@ -122,14 +118,13 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="${bookName}#interface-ScriptOnConnectorApiOp"
+                              xlink:href="CURRENT.DOCID#interface-ScriptOnConnectorApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Script on Connector
                         </link>
                     </term>
                     <listitem>
                         <para>
-                            Provides simple authentication with two parameters, presumed to be a user
-                            name and password.
+                            TODO: Describe operation.
                         </para>
                     </listitem>
                 </varlistentry>
@@ -137,14 +132,13 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="${bookName}#interface-ScriptOnResourceApiOp"
+                              xlink:href="CURRENT.DOCID#interface-ScriptOnResourceApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Script on Resource
                         </link>
                     </term>
                     <listitem>
                         <para>
-                            Provides simple authentication with two parameters, presumed to be a user
-                            name and password.
+                            TODO: Describe operation.
                         </para>
                     </listitem>
                 </varlistentry>
@@ -152,14 +146,13 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="${bookName}#interface-SearchApiOp"
+                              xlink:href="CURRENT.DOCID#interface-SearchApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Search
                         </link>
                     </term>
                     <listitem>
                         <para>
-                            Provides simple authentication with two parameters, presumed to be a user
-                            name and password.
+                            TODO: Describe operation.
                         </para>
                     </listitem>
                 </varlistentry>
@@ -167,14 +160,13 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="${bookName}#interface-SyncApiOp"
+                              xlink:href="CURRENT.DOCID#interface-SyncApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Sync
                         </link>
                     </term>
                     <listitem>
                         <para>
-                            Provides simple authentication with two parameters, presumed to be a user
-                            name and password.
+                            TODO: Describe operation.
                         </para>
                     </listitem>
                 </varlistentry>
@@ -182,14 +174,13 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="${bookName}#interface-TestApiOp"
+                              xlink:href="CURRENT.DOCID#interface-TestApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Test
                         </link>
                     </term>
                     <listitem>
                         <para>
-                            Provides simple authentication with two parameters, presumed to be a user
-                            name and password.
+                            TODO: Describe operation.
                         </para>
                     </listitem>
                 </varlistentry>
@@ -197,14 +188,13 @@
                 <varlistentry>
                     <term>
                         <link xlink:show="new"
-                              xlink:href="${bookName}#interface-UpdateApiOp"
+                              xlink:href="CURRENT.DOCID#interface-UpdateApiOp"
                               xlink:role="http://docbook.org/xlink/role/olink">Update
                         </link>
                     </term>
                     <listitem>
                         <para>
-                            Provides simple authentication with two parameters, presumed to be a user
-                            name and password.
+                            TODO: Describe operation.
                         </para>
                     </listitem>
                 </varlistentry>

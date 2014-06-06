@@ -28,7 +28,8 @@
          version='5.0' xml:lang='en'
          xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
          xsi:schemaLocation='http://docbook.org/ns/docbook
-  http://docbook.org/xml/5.0/xsd/docbook.xsd'>
+ http://docbook.org/xml/5.0/xsd/docbook.xsd'
+         xmlns:xlink='http://www.w3.org/1999/xlink'>
 
   <title>${connectorDisplayName} Schema</title>
   <para>
@@ -75,11 +76,16 @@
    </tgroup>
   </table>
 
+    #if($operationOptions.isEmpty())
+        <para>
+            The connector may not support any operation option.
+        </para>
+    #else
   <para>
    The following table lists the options that can be configured for each of the
    supported operations listed in the previous table.
   </para>
-<table xml:id="operation-options-${uniqueConnectorName}">
+    <table xml:id="operation-options-${uniqueConnectorName}">
         <title>Operation Options</title>
         <tgroup cols="4">
             <colspec colname="c1" colwidth="1*"/>
@@ -99,8 +105,8 @@
                 </row>
             </thead>
             <tbody>
-              #foreach($operationOptionInfo in $operationOptions.entrySet())
-               <row>
+                #foreach($operationOptionInfo in $operationOptions.entrySet())
+                    <row>
                         <entry>
                             <para xml:id="operation-${operationOptionInfo.key.key}-${uniqueConnectorName}"
                                   xreflabel="${operationOptionInfo.key.value}">${operationOptionInfo.key.value}</para>
@@ -110,41 +116,80 @@
                             <colspec colname="c2" colwidth="1*"/>
                             <colspec colname="c3" colwidth="3*"/>
                             <tbody>
-                              #foreach($option in $operationOptionInfo.value)
-                               <row>
+                                #foreach($option in $operationOptionInfo.value)
+                                    <row>
                                         <entry>$option.name</entry>
                                         <entry>$option.type</entry>
-                                 #if($option.name.equals("SCOPE"))
-                                  <entry>$option.description</entry>
-                                 #elseif($option.name.equals("CONTAINER"))
-                                  <entry>$option.description</entry>
-                                 #elseif($option.name.equals("RUN_AS_USER"))
-                                  <entry>TODO FIXME Link to appendix with detailed description</entry>
-                                 #elseif($option.name.equals("RUN_WITH_PASSWORD"))
-                                  <entry>TODO FIXME Link to appendix with detailed description</entry>
-                                 #elseif($option.name.equals("ATTRS_TO_GET"))
-                                  <entry>$option.description</entry>
-                                 #elseif($option.name.equals("PAGED_RESULTS_COOKIE"))
-                                  <entry>$option.description</entry>
-                                 #elseif($option.name.equals("PAGED_RESULTS_OFFSET"))
-                                  <entry>$option.description</entry>
-                                 #elseif($option.name.equals("PAGE_SIZE"))
-                                  <entry>$option.description</entry>
-                                 #elseif($option.name.equals("SORT_KEYS"))
-                                  <entry>$option.description</entry>
-                                 #else
-                                  <entry>$option.description</entry>
-                                 #end
+                                        <entry>
+                                            #if($option.description)
+                                                $option.description
+                                            #end
+                                            #if($option.name.equals("SCOPE"))
+                                                <link xlink:show="new"
+                                                      xlink:href="CURRENT.DOCID#operation-option-scope"
+                                                      xlink:role="http://docbook.org/xlink/role/olink">More information
+                                                    see here.
+                                                </link>
+                                            #elseif($option.name.equals("CONTAINER"))
+                                                <link xlink:show="new"
+                                                      xlink:href="CURRENT.DOCID#operation-option-container"
+                                                      xlink:role="http://docbook.org/xlink/role/olink">More information
+                                                    see here.
+                                                </link>
+                                            #elseif($option.name.equals("RUN_AS_USER"))
+                                                <link xlink:show="new"
+                                                      xlink:href="CURRENT.DOCID#operation-option-run-as-user"
+                                                      xlink:role="http://docbook.org/xlink/role/olink">More information
+                                                    see here.
+                                                </link>
+                                            #elseif($option.name.equals("RUN_WITH_PASSWORD"))
+                                                <link xlink:show="new"
+                                                      xlink:href="CURRENT.DOCID#operation-option-run-with-password"
+                                                      xlink:role="http://docbook.org/xlink/role/olink">More information
+                                                    see here.
+                                                </link>
+                                            #elseif($option.name.equals("ATTRS_TO_GET"))
+                                                <link xlink:show="new"
+                                                      xlink:href="CURRENT.DOCID#operation-option-attributes-to-get"
+                                                      xlink:role="http://docbook.org/xlink/role/olink">More information
+                                                    see here.
+                                                </link>
+                                            #elseif($option.name.equals("PAGED_RESULTS_COOKIE"))
+                                                <link xlink:show="new"
+                                                      xlink:href="CURRENT.DOCID#operation-option-paged-results-cookie"
+                                                      xlink:role="http://docbook.org/xlink/role/olink">More information
+                                                    see here.
+                                                </link>
+                                            #elseif($option.name.equals("PAGED_RESULTS_OFFSET"))
+                                                <link xlink:show="new"
+                                                      xlink:href="CURRENT.DOCID#operation-option-results-offset"
+                                                      xlink:role="http://docbook.org/xlink/role/olink">More information
+                                                    see here.
+                                                </link>
+                                            #elseif($option.name.equals("PAGE_SIZE"))
+                                                <link xlink:show="new"
+                                                      xlink:href="CURRENT.DOCID#operation-option-page-size"
+                                                      xlink:role="http://docbook.org/xlink/role/olink">More information
+                                                    see here.
+                                                </link>
+                                            #elseif($option.name.equals("SORT_KEYS"))
+                                                <link xlink:show="new"
+                                                      xlink:href="CURRENT.DOCID#operation-option-sort-keys"
+                                                      xlink:role="http://docbook.org/xlink/role/olink">More information
+                                                    see here.
+                                                </link>
+                                            #end
+                                        </entry>
                                     </row>
-                              #end
+                                #end
                             </tbody>
                         </entrytbl>
                     </row>
-              #end
+                #end
             </tbody>
         </tgroup>
     </table>
-
+    #end
   #foreach($objectClass in $objectClasses)
   <para>
    The ${objectClass.displayName} (${objectClass.name}) supports the following attributes.
@@ -173,74 +218,74 @@
      </row>
     </thead>
     <tbody>
-     #foreach($attribute in $objectClass.attributes)
-     <row valign="top">
-      <entry>
-       <para>
-        <literal>$attribute.getName()</literal>
-       </para>
-      </entry>
-      <entry>
-       <para>
-        <literal>$attribute.getType().getSimpleName()</literal>
-       </para>
-      </entry>
-      <entry>
-       <mediaobject>
-        <imageobject>
-         <imagedata
-          fileref="shared/images/#if($attribute.isRequired())yes#{else}no#end-icon.png"
-          format="PNG"/>
-         </imageobject>
-        </mediaobject>
-       </entry>
-       <entry>
-        <mediaobject>
-         <imageobject>
-          <imagedata
-           fileref="shared/images/#if($attribute.isMultiValued())yes#{else}no#end-icon.png"
-           format="PNG"/>
-          </imageobject>
-         </mediaobject>
-        </entry>
-        <entry>
-         <mediaobject>
-          <imageobject>
-           <imagedata
-            fileref="shared/images/#if($attribute.isCreateable())yes#{else}no#end-icon.png"
-            format="PNG"/>
-           </imageobject>
-          </mediaobject>
-         </entry>
-         <entry>
-          <mediaobject>
-           <imageobject>
-            <imagedata
-             fileref="shared/images/#if($attribute.isUpdateable())yes#{else}no#end-icon.png"
-             format="PNG"/>
-            </imageobject>
-           </mediaobject>
-          </entry>
-          <entry>
-           <mediaobject>
-            <imageobject>
-             <imagedata
-              fileref="shared/images/#if($attribute.isReadable())yes#{else}no#end-icon.png"
-              format="PNG"/>
-             </imageobject>
-       </mediaobject>
-      </entry>
-      <entry>
-       <mediaobject>
-        <imageobject>
-         <imagedata
-          fileref="shared/images/#if($attribute.isReturnedByDefault())yes#{else}no#end-icon.png"
-          format="PNG"/>
-        </imageobject>
-       </mediaobject>
-      </entry>
-     </row>
-     #end
+        #foreach($attribute in $objectClass.attributes)
+            <row valign="top">
+                <entry>
+                    <para>
+                        <literal>$attribute.getName()</literal>
+                    </para>
+                </entry>
+                <entry>
+                    <para>
+                        <literal>$attribute.getType().getSimpleName()</literal>
+                    </para>
+                </entry>
+                <entry>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata
+                                    fileref="shared/images/#if($attribute.isRequired())yes#{else}no#end-icon.png"
+                                    format="PNG"/>
+                        </imageobject>
+                    </mediaobject>
+                </entry>
+                <entry>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata
+                                    fileref="shared/images/#if($attribute.isMultiValued())yes#{else}no#end-icon.png"
+                                    format="PNG"/>
+                        </imageobject>
+                    </mediaobject>
+                </entry>
+                <entry>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata
+                                    fileref="shared/images/#if($attribute.isCreateable())yes#{else}no#end-icon.png"
+                                    format="PNG"/>
+                        </imageobject>
+                    </mediaobject>
+                </entry>
+                <entry>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata
+                                    fileref="shared/images/#if($attribute.isUpdateable())yes#{else}no#end-icon.png"
+                                    format="PNG"/>
+                        </imageobject>
+                    </mediaobject>
+                </entry>
+                <entry>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata
+                                    fileref="shared/images/#if($attribute.isReadable())yes#{else}no#end-icon.png"
+                                    format="PNG"/>
+                        </imageobject>
+                    </mediaobject>
+                </entry>
+                <entry>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata
+                                    fileref="shared/images/#if($attribute.isReturnedByDefault())yes#{else}no#end-icon.png"
+                                    format="PNG"/>
+                        </imageobject>
+                    </mediaobject>
+                </entry>
+            </row>
+        #end
     </tbody>
    </tgroup>
   </table>

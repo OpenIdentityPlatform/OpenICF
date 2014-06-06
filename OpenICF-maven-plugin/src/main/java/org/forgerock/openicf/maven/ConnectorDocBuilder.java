@@ -65,6 +65,7 @@ import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
+import org.identityconnectors.framework.api.operations.GetApiOp;
 import org.identityconnectors.framework.api.operations.ResolveUsernameApiOp;
 import org.identityconnectors.framework.api.operations.SchemaApiOp;
 import org.identityconnectors.framework.api.operations.ScriptOnConnectorApiOp;
@@ -122,6 +123,7 @@ public class ConnectorDocBuilder {
         dictionary.put(ScriptOnResourceApiOp.class, Pair.of(ScriptOnResourceApiOp.class
                 .getSimpleName(), "Script on Resource"));
         dictionary.put(SearchApiOp.class, Pair.of(SearchApiOp.class.getSimpleName(), "Search"));
+        dictionary.put(GetApiOp.class, Pair.of(GetApiOp.class.getSimpleName(), "Read"));
         dictionary.put(SyncApiOp.class, Pair.of(SyncApiOp.class.getSimpleName(), "Sync"));
         dictionary.put(TestApiOp.class, Pair.of(TestApiOp.class.getSimpleName(), "Test"));
         dictionary.put(UpdateApiOp.class, Pair.of(UpdateApiOp.class.getSimpleName(), "Update"));
@@ -161,7 +163,7 @@ public class ConnectorDocBuilder {
                             connectorName.substring(0, connectorName.length() - 9) + "-connector";
                 }
                 context.put("connectorName", connectorName);
-                context.put("uniqueConnectorName", info.getConnectorKey().getConnectorName() + "-"
+                context.put("uniqueConnectorName", info.getConnectorKey().getConnectorName().replaceAll("\\.","-") + "-"
                         + info.getConnectorKey().getBundleVersion());
 
                 APIConfiguration config = info.createDefaultAPIConfiguration();
@@ -468,6 +470,13 @@ public class ConnectorDocBuilder {
     private static final Comparator<Pair<String, String>> PAIR_COMPARATOR =
             new Comparator<Pair<String, String>>() {
                 public int compare(Pair<String, String> left, Pair<String, String> right) {
+                    if (left == null && right == null){
+                        return 0;
+                    } else if (left == null ){
+                        return -1;
+                    } else if (right == null){
+                        return  1;
+                    }
                     return String.CASE_INSENSITIVE_ORDER.compare(left.first, right.first);
                 }
             };
