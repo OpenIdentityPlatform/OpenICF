@@ -186,7 +186,7 @@
         <module>connector-test-common</module>
         <module>connector-framework-internal</module>
         <module>connector-framework-osgi</module>
-        <module>connector-framework-contract</module>
+        <!--<module>connector-framework-contract</module>-->
         <module>testcommonv1</module>
         <module>testcommonv2</module>
         <module>testbundlev1</module>

@@ -141,11 +141,11 @@
             <artifactId>connector-test-common</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
+        <!--dependency>
             <groupId>org.forgerock.openicf.framework</groupId>
             <artifactId>connector-framework-contract</artifactId>
             <scope>test</scope>
-        </dependency>
+        </dependency-->
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-all</artifactId>
@@ -366,12 +366,12 @@
             <id>contract-test</id>
             <build>
                 <plugins>
-                    <plugin>
+                    <!--plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-dependency-plugin</artifactId>
                         <executions>
 
-                            <!-- Copy classes from contract tests -->
+                            <!- - Copy classes from contract tests - ->
                             <execution>
                                 <id>copy-contractclasses</id>
                                 <phase>pre-integration-test</phase>
@@ -399,7 +399,7 @@
                                 </configuration>
                             </execution>
                         </executions>
-                    </plugin>
+                    </plugin-->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-failsafe-plugin</artifactId>
