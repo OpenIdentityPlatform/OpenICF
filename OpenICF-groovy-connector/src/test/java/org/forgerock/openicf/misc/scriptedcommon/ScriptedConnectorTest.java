@@ -388,6 +388,18 @@ public class ScriptedConnectorTest {
     }
 
     // =======================================================================
+    // Get Operation Test
+    // =======================================================================
+
+    @Test
+    public void testGet() throws Exception{
+        ConnectorObject co = getFacade(TEST_NAME).getObject(TEST, new Uid("ANY"), null);
+        Assert.assertEquals(co.getUid().getUidValue(), "ANY");
+        Assert.assertEquals(co.getName().getNameValue(), "ANY");
+        Assert.assertEquals(co.getObjectClass(), TEST);
+    }
+
+    // =======================================================================
     // Search Operation Test
     // =======================================================================
 

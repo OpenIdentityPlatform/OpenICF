@@ -39,6 +39,8 @@ import org.identityconnectors.framework.common.objects.ConnectorObject
 import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationOptions
 import org.identityconnectors.framework.common.objects.SearchResult
+import org.identityconnectors.framework.common.objects.Uid
+import org.identityconnectors.framework.common.objects.filter.EqualsFilter
 import org.identityconnectors.framework.common.objects.filter.Filter
 
 def operation = operation as OperationType
@@ -115,20 +117,35 @@ switch (objectClass) {
             attributesToGet = options.attributesToGet as Set<String>
         }
 
-        for (i in 0..9) {
-            def co = ICFObjectBuilder.co {
-                uid String.format("UID%02d", i)
-                id String.format("TEST%02d", i)
+        if (filter instanceof EqualsFilter && (filter as EqualsFilter).name == Uid.NAME){
+            //This is a Read
+            handler {
+                uid AttributeUtil.getStringValue((filter as EqualsFilter).attribute)
+                id AttributeUtil.getStringValue((filter as EqualsFilter).attribute)
+                delegate.objectClass(objectClass)
                 TestHelper.connectorObjectTemplate.each { key, value ->
                     if (attributesToGet == null || attributesToGet.contains(key)) {
                         attribute key, value
                     }
                 }
             }
-            if (null != filter && filter.accept(co)) {
-                handler(co)
-            } else {
-                handler(co)
+        } else {
+            for (i in 0..9) {
+                def co = ICFObjectBuilder.co {
+                    uid String.format("UID%02d", i)
+                    id String.format("TEST%02d", i)
+                    delegate.objectClass(objectClass)
+                    TestHelper.connectorObjectTemplate.each { key, value ->
+                        if (attributesToGet == null || attributesToGet.contains(key)) {
+                            attribute key, value
+                        }
+                    }
+                }
+                if (null != filter && filter.accept(co)) {
+                    handler(co)
+                } else {
+                    handler(co)
+                }
             }
         }
         if (null != filter && null != options.options.CREST) {
@@ -161,6 +178,7 @@ switch (objectClass) {
                 ICF.co {
                     uid '12'
                     id '12'
+                    delegate.objectClass(objectClass)
                     attribute {
                         name 'sureName'
                         value 'Foo'
@@ -180,6 +198,7 @@ switch (objectClass) {
         handler({
             uid '13'
             id '13'
+            delegate.objectClass(objectClass)
             attribute {
                 name 'sureName'
                 value 'Foo'
