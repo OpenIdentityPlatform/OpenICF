@@ -137,6 +137,7 @@ if (objectClassInfo != null) {
             handleResource: { Resource resource ->
                 handler {
                     uid resource.id, resource.revision
+                    setObjectClass objectClass
 
                     objectClassInfo.attributes.each { key, value ->
                         if (AttributeUtil.namesEqual(key, Name.NAME)) {

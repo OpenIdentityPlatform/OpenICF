@@ -135,6 +135,7 @@ switch (objectClass) {
             handler {
                 uid row.id as String
                 id row.name
+                delegate.objectClass(objectClass)
                 attribute 'gid', row.gid
                 attribute 'description', row.description
             }
@@ -146,6 +147,7 @@ switch (objectClass) {
             handler {
                 uid row.id as String
                 id row.name
+                setObjectClass objectClass
                 attribute 'description', row.description
             }
         });
