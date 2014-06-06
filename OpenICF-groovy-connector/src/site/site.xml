@@ -35,12 +35,6 @@
     <version position="right"/>
     <googleAnalyticsAccountId>UA-23412190-10</googleAnalyticsAccountId>
     <body>
-        <breadcrumbs>
-            <item name="Developer Community" href="http://www.forgerock.org" />
-            <item name="OpenICF" href="../../index.html"/>
-            <item name="Connectors" href="../index.html" />
-            <item name="Scripted Groovy Connector" href="./index.html" />
-        </breadcrumbs>
         <menu name="Overview" img="images/arrow_right.png">
             <item name="Introduction" href="openicf-report.html"/>
         </menu>
@@ -48,7 +42,7 @@
         <menu name="ScriptedREST Core Docs">
             <!--<item name="All Formats" href="docs.html" />-->
             <!--item name="Release Notes" href="./doc/release-notes/index.html" /-->
-            <item name="Developer Guide" href="./doc/groovy-connector-1.4.0.0-SNAPSHOT/index.html" />
+            <item name="Developer Guide" href="./doc/groovy-connector-${project.version}/index.html" />
         </menu>
 
         <menu ref="reports"/>

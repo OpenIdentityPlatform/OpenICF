@@ -52,7 +52,7 @@
                 </personname>
             </author>
         </authorgroup>
-        <xinclude:include href="../shared/legal.xml" />
+        <xinclude:include href="../legal.xml" />
         <date><?dbtimestamp format="B d, Y"?></date>
         <pubdate>Publication date: <?dbtimestamp format="B d, Y"?></pubdate>
         <releaseinfo><?eval ${softwareReleaseDate}?></releaseinfo>
@@ -70,6 +70,7 @@
     <xinclude:include href="chap-config-scriptedrest-connector.xml" />
     <xinclude:include href="chap-config-scriptedsql-connector.xml" />
     <xinclude:include href='../shared/appendix-interfaces.xml' />
+    <xinclude:include href='../shared/appendix-options.xml' />
 
     <index />
 </book>

@@ -117,8 +117,15 @@
 
     </section>
 
-    <section xml:id="connector-pooling">
+    <section xml:id="connector-pooling-org-forgerock-openicf-connectors-groovy-ScriptedPoolableConnector-${project.version}">
         <title>Configuring Connector Pooling</title>
+        <para>
+            TO BE WRITTEN MANUALLY
+        </para>
+    </section>
+
+    <section xml:id="connector-pooling-forgerock-openicf-connectors-scriptedcrest-ScriptedCRESTConnector-${project.version}">
+        <title>Configuring Scripted CREST Connector Pooling</title>
         <para>
             TO BE WRITTEN MANUALLY
         </para>
