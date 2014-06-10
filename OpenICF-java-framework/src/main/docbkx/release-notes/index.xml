@@ -30,21 +30,25 @@
  xmlns:xlink='http://www.w3.org/1999/xlink'
  xmlns:xinclude='http://www.w3.org/2001/XInclude'>
  <info>
-  <title>OpenICF <?eval ${docTargetVersion}?> Release Notes</title>
+  <xinclude:include href="../shared/mediaobject-fr-logo.xml" />
+  <title>OpenICF Release Notes</title>
+  <subtitle>Version ${docTargetVersion}</subtitle>
   <abstract>
    <para>Notes covering OpenICF prerequisites, fixes, known issues. Open
    Identity Connector Framework provides connectors for a consistent generic
    layer between applications and target resources.</para>
   </abstract>
   <copyright>
-   <year>2012</year>
+   <year>2014</year>
    <holder>ForgeRock AS</holder>
   </copyright>
   <authorgroup>
    <author>
     <personname>
-     <firstname>Mark</firstname><surname>Craig</surname>
+     <!-- Need to introduce a space after the first name for now. This will be fixed. -->
+     <firstname>Mark </firstname><surname>Craig</surname>
     </personname>
+    <xinclude:include href="../shared/affiliation-fr.xml"/>
    </author>
   </authorgroup>
   <xinclude:include href="../legal.xml" />
