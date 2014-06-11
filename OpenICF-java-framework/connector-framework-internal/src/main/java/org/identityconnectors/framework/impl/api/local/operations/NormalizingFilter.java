@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2013-2014 Evolveum
+ * Portions Copyrighted 2014 ForgeRock AS. 
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 

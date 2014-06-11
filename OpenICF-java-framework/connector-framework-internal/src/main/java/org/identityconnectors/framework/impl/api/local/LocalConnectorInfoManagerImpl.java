@@ -279,6 +279,8 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
                         info.setMessages(messages);
                         info.setDefaultAPIConfiguration(createDefaultAPIConfiguration(info));
                         rv.add(info);
+                        LOG.info("Add ConnectorInfo {0} to Local Connector Info Manager from {1}",
+                                info.getConnectorKey(), bundleInfo.getOriginalLocation());
                     } catch (final NoClassDefFoundError e) {
                         LOG.warn(LOG.isOk() ?
                                 e : null,
