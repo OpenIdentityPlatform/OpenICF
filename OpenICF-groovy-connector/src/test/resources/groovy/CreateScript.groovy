@@ -141,5 +141,6 @@ switch (objectClass) {
         })
         break
     default:
-        throw new UnsupportedOperationException("Create operation of type:" + objectClass.objectClassValue)
+        throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                objectClass.objectClassValue + " is not supported.")
 }

@@ -50,7 +50,7 @@
     </issueManagement>
     <ciManagement>
         <system>jenkins</system>
-        <url>http://builds.forgerock.org/job/OpenICF - Ldap Connector</url>
+        <url>http://builds.forgerock.org/job/OpenICF - Groovy Connector</url>
     </ciManagement>
     <properties>
         <!-- maven-compiler-plugin -->

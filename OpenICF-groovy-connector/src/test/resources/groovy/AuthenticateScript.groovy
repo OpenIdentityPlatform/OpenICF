@@ -49,10 +49,12 @@ def password = password as GuardedString;
 
 switch (objectClass) {
     case ObjectClass.ACCOUNT:
-        throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
+        throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                objectClass.objectClassValue + " is not supported.")
         break
     case ObjectClass.GROUP:
-        throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
+        throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                objectClass.objectClassValue + " is not supported.")
         break
     case ObjectClass.ALL:
         log.error("ICF Framework MUST reject this")
@@ -84,9 +86,11 @@ switch (objectClass) {
         }
         throw new UnknownUidException();
     case TestHelper.SAMPLE:
-        throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
+        throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                objectClass.objectClassValue + " is not supported.")
         break
     default:
-        throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
+        throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                objectClass.objectClassValue + " is not supported.")
 }
 

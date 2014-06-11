@@ -73,5 +73,6 @@ if (objectClassInfo != null) {
     }
 
 } else {
-    throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
+    throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+            objectClass.objectClassValue + " is not supported.")
 }

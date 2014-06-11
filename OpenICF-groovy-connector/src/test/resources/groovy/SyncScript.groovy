@@ -257,7 +257,8 @@ switch (operation) {
                 return new SyncToken('SAMPLE')
                 break
             default:
-                throw new UnsupportedOperationException("Sync operation of type:" + objectClass)
+                throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                        objectClass.objectClassValue + " is not supported.")
         }
 
     case OperationType.GET_LATEST_SYNC_TOKEN:
@@ -273,7 +274,8 @@ switch (operation) {
             case TestHelper.SAMPLE:
                 return new SyncToken("ANY OBJECT");
             default:
-                throw new UnsupportedOperationException("Sync operation of type:" + objectClass.objectClassValue)
+                throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                        objectClass.objectClassValue + " is not supported.")
         }
     default:
         throw new ConnectorException("SyncScript can not handle operation:" + operation.name())

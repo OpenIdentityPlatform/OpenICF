@@ -136,7 +136,8 @@ switch (operation) {
 
             default:
                 log.error("Sync script: objectClass " + objectClass + " is not handled by the Sync script")
-                throw new UnsupportedOperationException(operation.name(), " operation of type:" + objectClass.objectClassValue)
+                throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                        objectClass.objectClassValue + " is not supported.")
         }
 
         break;
@@ -155,7 +156,8 @@ switch (operation) {
                 break;
 
             default:
-                throw new UnsupportedOperationException(operation.name(), " operation of type:" + objectClass.objectClassValue)
+                throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                        objectClass.objectClassValue + " is not supported.")
         }
 
         log.ok("Get Latest Sync Token script: last token is: " + row["timestamp"])

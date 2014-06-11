@@ -228,7 +228,8 @@ switch (objectClass) {
         return new SearchResult()
         break
     default:
-        throw new UnsupportedOperationException("Search operation of type:" + objectClass)
+        throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                objectClass.objectClassValue + " is not supported.")
 }
 
 

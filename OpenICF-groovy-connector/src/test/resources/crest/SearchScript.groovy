@@ -171,5 +171,6 @@ if (objectClassInfo != null) {
     return new SearchResult(result.pagedResultsCookie, result.remainingPagedResults);
 
 } else {
-    throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
+    throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+            objectClass.objectClassValue + " is not supported.")
 }

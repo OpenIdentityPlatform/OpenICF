@@ -45,20 +45,23 @@ switch (operation) {
 
         Map<String, Object> objectClassInfo = configuration.propertyBag[objectClass.objectClassValue];
         if (objectClassInfo != null) {
-            throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
-
+            throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                    objectClass.objectClassValue + " is not supported.")
         } else {
-            throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
+            throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                    objectClass.objectClassValue + " is not supported.")
         }
 
         break;
     case OperationType.GET_LATEST_SYNC_TOKEN:
         Map<String, Object> objectClassInfo = configuration.propertyBag[objectClass.objectClassValue];
         if (objectClassInfo != null) {
-            throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
+            throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                    objectClass.objectClassValue + " is not supported.")
 
         } else {
-            throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
+            throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                    objectClass.objectClassValue + " is not supported.")
         }
 
         break;

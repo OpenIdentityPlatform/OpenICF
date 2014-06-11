@@ -55,7 +55,9 @@ switch (objectClass) {
         TestHelper.exceptionTest(operation, objectClass, uid, options)
         break
     case TestHelper.SAMPLE:
-        throw new UnsupportedOperationException("Delete operation of type:" + objectClass)
+        throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                objectClass.objectClassValue + " is not supported.")
     default:
-        throw new UnsupportedOperationException("Delete operation of type:" + objectClass)
+        throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                objectClass.objectClassValue + " is not supported.")
 }

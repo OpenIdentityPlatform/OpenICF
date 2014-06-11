@@ -114,13 +114,16 @@ switch (operation) {
                 return new Uid(resource.getId(), resource.getRevision())
             }
         } else {
-            throw new UnsupportedOperationException(operation.name() + " operation of type:" + objectClass)
+            throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                    objectClass.objectClassValue + " is not supported.")
         }
         break
     case OperationType.ADD_ATTRIBUTE_VALUES:
-        throw new UnsupportedOperationException()
+        throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                objectClass.objectClassValue + " is not supported.")
     case OperationType.REMOVE_ATTRIBUTE_VALUES:
-        throw new UnsupportedOperationException()
+        throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                objectClass.objectClassValue + " is not supported.")
     default:
         throw new ConnectorException("UpdateScript can not handle operation:" + operation.name())
 }
