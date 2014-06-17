@@ -118,11 +118,11 @@
                             <tbody>
                                 #foreach($option in $operationOptionInfo.value)
                                     <row>
-                                        <entry>$option.name</entry>
-                                        <entry>$option.type</entry>
+                                        <entry><para>$option.name</para></entry>
+                                        <entry><para>$option.type</para></entry>
                                         <entry>
                                             #if($option.description)
-                                                $option.description
+                                                <para>$option.description</para>
                                             #end
                                             #if($option.name.equals("SCOPE"))
                                                 <link xlink:show="new"

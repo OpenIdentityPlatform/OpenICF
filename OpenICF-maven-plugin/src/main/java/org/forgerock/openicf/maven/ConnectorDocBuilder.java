@@ -213,7 +213,7 @@ public class ConnectorDocBuilder {
                                     optionInfoMap.put("name", optionInfo.getName());
                                     optionInfoMap.put("type", optionInfo.getType().getSimpleName());
                                     optionInfoMap.put("description", info.getMessages().format(
-                                            optionInfo.getName() + ".help", null));
+                                            optionInfo.getName() + ".help", "Additional description is not available"));
                                     if (null == optionList) {
                                         optionList = new ArrayList<Map<String, Object>>();
                                     }

@@ -180,7 +180,7 @@
 ##
 
 <div id="section">
-<h1>${connectorDisplayName}</h1>
+<h1>${connectorDisplayName} Connector</h1>
 
     #if ($connectorInfo)
     <h2>Installation</h2>
@@ -260,26 +260,25 @@
                                 <td>$option.name</td>
                                 <td>$option.type</td>
                                 <td>
+                                    <p>$option.description</p>
                                     #if($option.name.equals("SCOPE"))
-                                        <p>$option.description</p>
+                                        <p>An option to use with Search (in conjunction with Container) that specifies how far beneath the specified container to search</p>
                                     #elseif($option.name.equals("CONTAINER"))
-                                        <p>$option.description</p>
+                                        <p>An option to use with Search that specifies the container under which to perform the search. Must be of type QualifiedUid. Should be implemented for those object classes whose ObjectClassInfo.isContainer() returns true.</p>
                                     #elseif($option.name.equals("RUN_AS_USER"))
-                                        <p>TODO FIXME Link to appendix with detailed description</p>
+                                        <p>An option to use with Script on Resource and possibly others that specifies an account under which to execute the script/operation. The specified account will appear to have performed any action that the script/operation performs.</p>
                                     #elseif($option.name.equals("RUN_WITH_PASSWORD"))
-                                        <p>TODO FIXME Link to appendix with detailed description</p>
+                                        <p>An option to use with Script on Resource and possibly others that specifies a password under which to execute the script/operation.</p>
                                     #elseif($option.name.equals("ATTRS_TO_GET"))
-                                        <p>$option.description</p>
+                                        <p>Determines which attributes to retrieve during Search and Sync. This option overrides the default behavior, which is for the connector to return exactly the set of attributes that are identified as returned by default in the schema for that connector. This option allows a client application to request additional attributes that would not otherwise not be returned (generally because such attributes are more expensive for a connector to fetch and to format) and/or to request only a subset of the attributes that would normally be returned.</p>
                                     #elseif($option.name.equals("PAGED_RESULTS_COOKIE"))
-                                        <p>$option.description</p>
+                                        <p>An option to use with Search that specifies an opaque cookie which is used by the connector to track its position in the set of query results.</p>
                                     #elseif($option.name.equals("PAGED_RESULTS_OFFSET"))
-                                        <p>$option.description</p>
+                                        <p>An option to use with Search that specifies the index within the result set of the first result which should be returned.</p>
                                     #elseif($option.name.equals("PAGE_SIZE"))
-                                        <p>$option.description</p>
+                                        <p>An option to use with Search that specifies the requested page results page size.</p>
                                     #elseif($option.name.equals("SORT_KEYS"))
-                                        <p>$option.description</p>
-                                    #else
-                                        <p>$option.description</p>
+                                        <p>An option to use with Search that specifies the sort keys which should be used for ordering the ConnectorObject returned by search request.</p>
                                     #end
                                 </td>
                             </tr>
