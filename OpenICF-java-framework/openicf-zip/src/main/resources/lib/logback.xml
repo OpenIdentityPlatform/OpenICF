@@ -35,6 +35,16 @@
             <pattern>%-4relative [%thread] %-5level %logger{35} - %msg %n</pattern>
         </encoder>
     </appender>
+    <appender name="TRACE-FILE" class="ch.qos.logback.core.FileAppender">
+        <file>logs/ConnectorServerTrace.log</file>
+        <append>true</append>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/ConnectorServer-%d{yyyyMMdd}.log</fileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg %n</pattern>
+        </encoder>
+    </appender>
     <appender name="CONNECTOR-FILE" class="ch.qos.logback.core.FileAppender">
         <file>logs/Connector.log</file>
         <append>true</append>
@@ -69,6 +79,10 @@
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="SERVER-FILE"/>
     </logger>
+    <!-- To enable TraceProxy uncomment this - ->
+    <logger name="org.identityconnectors.framework.impl.api.LoggingProxy" level="DEBUG" additivity="false">
+        <appender-ref ref="TRACE-FILE"/>
+    </logger-->
     <logger name="org.forgerock.openicf.common" level="INFO" additivity="false">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="SERVER-FILE"/>
@@ -101,6 +115,7 @@
     <!-- Legacy connectors -->
     <logger name="org.identityconnectors" level="INFO" additivity="false">
         <appender-ref ref="STDOUT"/>
+        <appender-ref ref="CONNECTOR-FILE"/>
     </logger>
 
     <root level="debug">

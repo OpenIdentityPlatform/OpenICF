@@ -34,6 +34,7 @@
         <menu name="ForgeRock Supported">
             <item name="CSV File Connector" href="csvfile-connector/openicf-report.html" />
             <item name="Database Table Connector" href="databasetable-connector/openicf-report.html" />
+            <item name="Groovy Connector" href="groovy-connector/openicf-report.html" />
             <item name="LDAP Connector" href="ldap-connector/openicf-report.html" />
             <item name="Scripted SQL Connector" href="scriptedsql-connector/openicf-report.html" />
             <item name="XML Connector" href="xml-connector/openicf-report.html" />
