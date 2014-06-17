@@ -574,17 +574,26 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      */
     public void validate() {
         logger.info("Load and compile configured scripts");
-        loadScript(getAuthenticateScriptFileName());
-        loadScript(getCreateScriptFileName());
-        loadScript(getDeleteScriptFileName());
-        loadScript(getResolveUsernameScriptFileName());
-        loadScript(getSchemaScriptFileName());
-        loadScript(getScriptOnResourceScriptFileName());
-        loadScript(getSearchScriptFileName());
-        loadScript(getSyncScriptFileName());
-        loadScript(getTestScriptFileName());
-        loadScript(getUpdateScriptFileName());
+        validateScript(getAuthenticateScriptFileName());
+        validateScript(getCreateScriptFileName());
+        validateScript(getDeleteScriptFileName());
+        validateScript(getResolveUsernameScriptFileName());
+        validateScript(getSchemaScriptFileName());
+        validateScript(getScriptOnResourceScriptFileName());
+        validateScript(getSearchScriptFileName());
+        validateScript(getSyncScriptFileName());
+        validateScript(getTestScriptFileName());
+        validateScript(getUpdateScriptFileName());
         logger.info("Load and compile of scripts are successful");
+    }
+
+    protected void validateScript(String scriptName) {
+        try {
+            loadScript(scriptName);
+        } catch (Throwable t){
+            logger.error(t, "Failed to validate and load script: {0} failed");
+            throw ConnectorException.wrap(t);
+        }
     }
 
     // =======================================================================

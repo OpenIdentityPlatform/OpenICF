@@ -159,8 +159,8 @@ public class ScriptedConnectorTest {
 
     @Test(expectedExceptions = ConnectorException.class)
     public void testAuthenticateNotEmpty() throws Exception {
-        getFacade(TEST_NAME).authenticate(TEST, "TESTOK2", new GuardedString("NOT_EMPTY".toCharArray()),
-                null);
+        getFacade(TEST_NAME).authenticate(TEST, "TESTOK2",
+                new GuardedString("NOT_EMPTY".toCharArray()), null);
     }
 
     // =======================================================================
@@ -392,7 +392,7 @@ public class ScriptedConnectorTest {
     // =======================================================================
 
     @Test
-    public void testGet() throws Exception{
+    public void testGet() throws Exception {
         ConnectorObject co = getFacade(TEST_NAME).getObject(TEST, new Uid("ANY"), null);
         Assert.assertEquals(co.getUid().getUidValue(), "ANY");
         Assert.assertEquals(co.getName().getNameValue(), "ANY");
@@ -438,15 +438,6 @@ public class ScriptedConnectorTest {
             Assert.assertEquals(e.getMessage(),
                     "ContainsAllValuesFilter transformation is not supported");
         }
-
-        OperationOptionsBuilder builder = new OperationOptionsBuilder();
-        builder.setOption("CREST", true);
-        handler = new ToListResultsHandler();
-        result = getFacade(TEST_NAME).search(TEST, and(left, right), handler, builder.build());
-        Assert.assertEquals(handler.getObjects().size(), 10);
-        Assert.assertEquals(
-                result.getPagedResultsCookie(),
-                "((((/attributeString sw \"reti\" and /attributeString co \"pipi\") and /attributeString ew \"ter\") and /attributeStringMultivalue ca \"[\"value1\",\"value2\"]\") and ((((/attributeInteger le 42 or /attributeFloat lt 3.4028235E38) or /attributeDouble ge 4.9E-324) or /attributeLong gt -9223372036854775808) and ! (/attributeByte eq 33)))");
     }
 
     @Test
@@ -532,11 +523,12 @@ public class ScriptedConnectorTest {
     @Test(dataProvider = "SyncObjectClassProvider")
     public void testSyncNull(ObjectClass objectClass) throws Exception {
         final List<SyncDelta> result = new ArrayList<SyncDelta>();
-        SyncToken lastToken = getFacade(TEST_NAME).sync(objectClass, new SyncToken(5), new SyncResultsHandler() {
-            public boolean handle(SyncDelta delta) {
-                return result.add(delta);
-            }
-        }, null);
+        SyncToken lastToken =
+                getFacade(TEST_NAME).sync(objectClass, new SyncToken(5), new SyncResultsHandler() {
+                    public boolean handle(SyncDelta delta) {
+                        return result.add(delta);
+                    }
+                }, null);
         Assert.assertEquals(lastToken.getValue(), 10);
         Assert.assertTrue(result.isEmpty());
     }
@@ -713,7 +705,6 @@ public class ScriptedConnectorTest {
     // Update Operation Test
     // =======================================================================
 
-
     @Test
     public void testUpdate() throws Exception {
         Uid uid = createTestUser("TESTOK01");
@@ -781,8 +772,6 @@ public class ScriptedConnectorTest {
         getFacade(TEST_NAME).update(UNKNOWN, new Uid("TESTOK1"), updateAttributes, null);
     }
 
-
-
     protected Uid createTestUser(String username) {
         Set<Attribute> createAttributes = getTestConnectorObject(username);
         ConnectorFacade facade = getFacade(TEST_NAME);
@@ -802,7 +791,8 @@ public class ScriptedConnectorTest {
         createAttributes.add(AttributeBuilder.build("firstName", "John"));
         createAttributes.add(AttributeBuilder.build("sn", name.toUpperCase()));
         createAttributes.add(AttributeBuilder.buildPassword("Passw0rd".toCharArray()));
-        createAttributes.add(AttributeBuilder.build(PredefinedAttributes.DESCRIPTION, "Description"));
+        createAttributes.add(AttributeBuilder
+                .build(PredefinedAttributes.DESCRIPTION, "Description"));
         createAttributes.add(AttributeBuilder.build("groups", "group1", "group2"));
 
         return createAttributes;

@@ -22,6 +22,8 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
 
+
+import groovy.json.JsonOutput
 import org.forgerock.json.resource.Connection
 import org.forgerock.json.resource.QueryRequest
 import org.forgerock.json.resource.QueryResult
@@ -53,6 +55,27 @@ def log = log as Log
 def objectClass = objectClass as ObjectClass
 def options = options as OperationOptions
 def schema = schema as Schema
+
+if (objectClass.objectClassValue == "TEST"){
+    def queryFilter = CRESTFilterVisitor.VISITOR.accept(new VisitorParameter() {
+        String translateName(String name) {
+            return name;
+        }
+        Object convertValue(Attribute attribute) {
+            if (attribute.value.size() > 1) {
+                return JsonOutput.toJson(attribute.value)
+            } else {
+                Object value = attribute.value[0];
+                if (value == null || value instanceof String || value instanceof Number || value instanceof Boolean) {
+                    return value
+                } else {
+                    return AttributeUtil.getAsStringValue(attribute)
+                }
+            }
+        }
+    }, filter)
+    return new SearchResult(queryFilter.toString(), -1);
+}
 
 def objectClassInfo = configuration.propertyBag[objectClass.objectClassValue];
 if (objectClassInfo != null) {

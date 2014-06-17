@@ -154,7 +154,7 @@
         <dependency>
             <groupId>org.forgerock.commons</groupId>
             <artifactId>json-resource</artifactId>
-            <version>2.3.0</version>
+            <version>2.3.1</version>
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
@@ -185,7 +185,7 @@
         <dependency>
             <groupId>org.forgerock.commons</groupId>
             <artifactId>json-resource-servlet</artifactId>
-            <version>2.3.0</version>
+            <version>2.3.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>

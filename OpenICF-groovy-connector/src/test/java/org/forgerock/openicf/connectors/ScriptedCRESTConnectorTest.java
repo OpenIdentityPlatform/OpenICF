@@ -25,6 +25,7 @@
 package org.forgerock.openicf.connectors;
 
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -43,12 +44,13 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.PredefinedAttributes;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
-import org.identityconnectors.framework.common.objects.ScriptContext;
 import org.identityconnectors.framework.common.objects.ScriptContextBuilder;
 import org.identityconnectors.framework.common.objects.SearchResult;
 import org.identityconnectors.framework.common.objects.SortKey;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
+import org.identityconnectors.test.common.ToListResultsHandler;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -170,6 +172,31 @@ public class ScriptedCRESTConnectorTest extends RESTTestBase {
         Assert.assertEquals(pageIndex, 9);
         Assert.assertEquals(resultSet.size(), 100);
 
+    }
+
+    @Test
+    public void testFilterTranslator() throws Exception {
+        Filter left = startsWith(AttributeBuilder.build("attributeString", "reti"));
+        left = and(left, contains(AttributeBuilder.build("attributeString", "pipi")));
+        left = and(left, endsWith(AttributeBuilder.build("attributeString", "ter")));
+
+        Filter right = lessThanOrEqualTo(AttributeBuilder.build("attributeInteger", 42));
+        right = or(right, lessThan(AttributeBuilder.build("attributeFloat", Float.MAX_VALUE)));
+        right =
+                or(right, greaterThanOrEqualTo(AttributeBuilder.build("attributeDouble",
+                        Double.MIN_VALUE)));
+        right = or(right, greaterThan(AttributeBuilder.build("attributeLong", Long.MIN_VALUE)));
+        right = and(right, not(equalTo(AttributeBuilder.build("attributeByte", new Byte("33")))));
+        left =
+                and(left, containsAllValues(AttributeBuilder.build("attributeStringMultivalue",
+                        "value1", "value2")));
+
+        ToListResultsHandler handler = new ToListResultsHandler();
+        SearchResult result = getFacade().search(new ObjectClass("TEST"), and(left, right), handler, null);
+        Assert.assertTrue(handler.getObjects().isEmpty());
+        Assert.assertEquals(
+                result.getPagedResultsCookie(),
+                "((((/attributeString sw \"reti\" and /attributeString co \"pipi\") and /attributeString ew \"ter\") and /attributeStringMultivalue ca \"[\"value1\",\"value2\"]\") and ((((/attributeInteger le 42 or /attributeFloat lt 3.4028235E38) or /attributeDouble ge 4.9E-324) or /attributeLong gt -9223372036854775808) and ! (/attributeByte eq 33)))");
     }
 
     @Test(enabled = false)
