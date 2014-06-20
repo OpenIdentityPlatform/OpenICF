@@ -152,7 +152,7 @@ class SchemaSlurper {
                               }
                               propertyDefinition?.flags.each {
                                   if ("NOT_CREATABLE".equalsIgnoreCase(it)) {
-                                      builder.setCreateable(false)
+                                      builder.setCreatable(false)
                                   } else if ("NOT_UPDATEABLE".equalsIgnoreCase(it)) {
                                       builder.setUpdateable(false)
                                   } else if ("NOT_READABLE".equalsIgnoreCase(it)) {
