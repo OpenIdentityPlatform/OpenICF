@@ -121,11 +121,13 @@
             </listitem>
             <listitem>
                 <para>displayMessageKey</para>
-                <para> Change the default display message key.</para>
+                <para> Change the default display message key. (Java propertyName.display, c#
+                        display_propertyName)</para>
             </listitem>
             <listitem>
                 <para>groupMessageKey</para>
-                <para>Change the default group message key.</para>
+                <para>Change the default group message key. (Java propertyName.group, c#
+                        group_propertyName)</para>
             </listitem>
             <listitem>
                 <para>confidential</para>
@@ -597,7 +599,7 @@ public void schemaTest() {
         groupInfoBuilder.setType(ObjectClass.GROUP_NAME);
         groupInfoBuilder.addAttributeInfo(Name.INFO);
         groupInfoBuilder.addAttributeInfo(PredefinedAttributeInfos.DESCRIPTION);
-        groupInfoBuilder.addAttributeInfo(AttributeInfoBuilder.define("members").setCreateable(
+        groupInfoBuilder.addAttributeInfo(AttributeInfoBuilder.define("members").setCreatable(
                 false).setUpdateable(false).setMultiValued(true).build());
 
         // Only the CRUD operations
@@ -1012,8 +1014,8 @@ public void ValidateTest() {
         <section xml:id='AbstractConfiguration-spi-level-rules'>
             <title>Configuration</title>
             <programlisting language="java">public void validate() {
-    if (StringUtil.isBlank(remoteUser)) {
-        throw new IllegalArgumentException("Remote User cannot be null or empty.");
+    if (StringUtil.isBlank(host)) {
+        throw new IllegalArgumentException("Host User cannot be null or empty.");
     }
 
     Assertions.blankCheck(remoteUser, "remoteUser");

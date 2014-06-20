@@ -202,7 +202,7 @@ public final class AttributeInfoBuilder {
      *            NOTE: EnumSet.noneOf(AttributeInfo.Flags.class) results in an
      *            attribute with the default behavior:
      *            <ul>
-     *            <li>updateable</li>
+     *            <li>update-able</li>
      *            <li>creatable</li>
      *            <li>returned by default</li>
      *            <li>readable</li>

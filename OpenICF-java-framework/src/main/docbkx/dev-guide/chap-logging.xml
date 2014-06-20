@@ -236,6 +236,33 @@
             </tgroup>
         </informaltable>
     </section>
+        <section>
+            <title>Useage of Logging Levels</title>
+            <para>Use level:<emphasis role="bold">OK</emphasis></para>
+            <para>Information useful for debugging; such as information about the processing of each
+                message. If we used multiple debug log levels then we could define which to use
+                depending on the frequency of a given entry for example.</para>
+            <para>Use level: <emphasis role="bold">INFO</emphasis></para>
+            <para>Useful information about the state of the system, such as successful start of a
+                component with given settings, or recovery from an error condition. Startup (and
+                shutdown) may result in quite a bit of info logging. During steady state processing
+                there should be very little info logging; that is, as long as there system is
+                started up and there are no issues in processing one would not expect a log entry
+                per message processed. "Big" tasks, such as a daily scheduled reconciliation my
+                leave an info entry. It should be possible to leave a system running at info level
+                in production (without undue logging noise/filling up the logs/performance
+                overhead), although many will choose to switch to warn. Info logging statements (and
+                lower) should be guarded if they trigger significant overhead/calculation; that is,
+                when disabled they should not incur significant overhead.</para>
+            <para>Use level: <emphasis role="bold">WARN</emphasis></para>
+            <para>The system encountered a problem, it may be able to recover (such as reconnect)
+                eventually. Expect an admin to get notified, and they will try to get to the bottom
+                of the issue.</para>
+            <para>Use level: <emphasis role="bold">ERROR</emphasis></para>
+            <para>The system can not recover without operator intervention. Expect someone to get
+                called into the office in the middle of the night. As such, be very careful about
+                its use.</para>
+        </section>
     <section xml:id="logging-logback">
         <title>Logging with Logback</title>
         <para>The OpenICF Java Connector Server ZIP is package with Logback by default. If you use

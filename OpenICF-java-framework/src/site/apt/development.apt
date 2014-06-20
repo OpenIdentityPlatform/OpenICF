@@ -26,7 +26,7 @@
 ~~
 ~~ CCPL HEADER END
 ~~
-~~      Copyright 2010-2013 ForgeRock AS.
+~~      Copyright 2010-2014 ForgeRock AS.
 ~~
 ~~
 
@@ -75,7 +75,7 @@ C:\framework> mvn install
 C:\build> svn checkout https://svn.forgerock.org/openicf/trunk/framework/dotnet/ framework
 C:\build> set WIX_HOME=C:\Program Files (x86)\WiX Toolset v3.7
 C:\build> set Path=%Path%;%WIX_HOME%\bin
-C:\build> set NUNIT_HOME=C:\Program Files (x86)\NUnit 2.6.2
+C:\build> set NUNIT_HOME=C:\Program Files (x86)\NUnit 2.6.3
 
 C:\framework> C:\Windows\Microsoft.NET\Framework64\v4.0.30319\msbuild.exe ConnectorFramework.sln /p:Configuration=Release  /p:ProductName=OpenICF
 +---
@@ -99,7 +99,7 @@ ZipRelease | true
 
     or
 
-    {{{http://www.microsoft.com/visualstudio/eng/products/visual-studio-2010-express}Visual Studio 2010}}
+    {{{http://www.visualstudio.com}Microsoft Visual Studio}}
 
     {{{http://testdriven.net/overview.aspx}TestDriven.Net}}
     {{{http://www.jetbrains.com/resharper/}ReSharper}}
@@ -120,7 +120,7 @@ ZipRelease | true
 
         <<Example>>: sample-connector
 
-    *<version>: This value will be prefixed with the compatibility version (1.1). The final version 1.1.1.0-SNAPSHOT
+    *<version>: This value will be prefixed with the compatibility version (1.4). The final version 1.4.1.0-SNAPSHOT
 
         <<Example>>: 1.0-SNAPSHOT
 
@@ -140,7 +140,7 @@ ZipRelease | true
 mvn archetype:generate \
     -DarchetypeGroupId=org.forgerock.openicf \
     -DarchetypeArtifactId=connector-archetype \
-    -DarchetypeVersion=1.0.0-SNAPSHOT \
+    -DarchetypeVersion=1.4.0 \
     -DremoteRepositories=http://maven.forgerock.org/repo/snapshots \
     -DarchetypeRepository=http://maven.forgerock.org/repo/snapshots \
     -DgroupId=org.forgerock.openicf.connectors \
@@ -166,6 +166,7 @@ mvn archetype:generate \
     [INFO]
     [INFO] --- maven-archetype-plugin:2.2:generate (default-cli) @ standalone-pom ---
     [INFO] Generating project in Interactive mode
+    [INFO] No archetype defined. Using maven-archetype-quickstart (org.apache.maven.archetypes:maven-archetype-quickstart:1.0)
     Choose archetype:
     1: local -> org.forgerock.openicf:connector-archetype (OpenICF Connector Development Archetype)
     Choose a number or apply filter (format: [groupId:]artifactId, case sensitive contains): : 1
@@ -187,12 +188,11 @@ mvn archetype:generate \
     [INFO] Using property: OP_UPDATE = y
     [INFO] Using property: OP_UPDATEATTRIBUTEVALUES = n
     [INFO] Using property: attributeNormalizer = n
-    [INFO] Using property: compatibility_version = 1.1
+    [INFO] Using property: compatibility_version = 1.4
     Define value for property 'connectorName': : Sample
-    [INFO] Using property: framework_version = 1.0
-    [INFO] Using property: jira_componentId = 10191
-    [INFO] Using property: jira_fixVersionIds = 0
+    [INFO] Using property: framework_version = 0.0
     [INFO] Using property: poolableConnector = n
+    [INFO] Using property: statefulConnector = n
     Confirm properties configuration:
     groupId: org.forgerock.openicf.connectors
     artifactId: sample-connector
@@ -212,15 +212,14 @@ mvn archetype:generate \
     OP_UPDATE: y
     OP_UPDATEATTRIBUTEVALUES: n
     attributeNormalizer: n
-    compatibility_version: 1.1
+    compatibility_version: 1.4
     connectorName: Sample
-    framework_version: 1.0
-    jira_componentId: 10191
-    jira_fixVersionIds: 0
+    framework_version: 0.0
     poolableConnector: n
+    statefulConnector: n
      Y: : y
     [INFO] ----------------------------------------------------------------------------
-    [INFO] Using following parameters for creating project from Archetype: connector-archetype:1.0.0-SNAPSHOT
+    [INFO] Using following parameters for creating project from Archetype: connector-archetype:1.4.0-SNAPSHOT
     [INFO] ----------------------------------------------------------------------------
     [INFO] Parameter: groupId, Value: org.forgerock.openicf.connectors
     [INFO] Parameter: artifactId, Value: sample-connector
@@ -239,14 +238,13 @@ mvn archetype:generate \
     [INFO] Parameter: attributeNormalizer, Value: n
     [INFO] Parameter: OP_UPDATEATTRIBUTEVALUES, Value: n
     [INFO] Parameter: groupId, Value: org.forgerock.openicf.connectors
-    [INFO] Parameter: framework_version, Value: 1.0
+    [INFO] Parameter: framework_version, Value: 0.0
     [INFO] Parameter: poolableConnector, Value: n
-    [INFO] Parameter: jira_componentId, Value: 10191
+    [INFO] Parameter: statefulConnector, Value: n
     [INFO] Parameter: OP_UPDATE, Value: y
-    [INFO] Parameter: jira_fixVersionIds, Value: 0
     [INFO] Parameter: OP_SEARCH, Value: y
     [INFO] Parameter: OP_CREATE, Value: y
-    [INFO] Parameter: compatibility_version, Value: 1.1
+    [INFO] Parameter: compatibility_version, Value: 1.4
     [INFO] Parameter: OP_SYNC, Value: n
     [INFO] Parameter: connectorName, Value: Sample
     [INFO] Parameter: OP_SCHEMA, Value: n
@@ -255,6 +253,8 @@ mvn archetype:generate \
     [INFO] ------------------------------------------------------------------------
     [INFO] BUILD SUCCESS
     [INFO] ------------------------------------------------------------------------
+    $ cd sample
+    $ mvn install
 +---
 
 Developing .NET Connector Bundles
