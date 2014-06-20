@@ -180,7 +180,7 @@
 ##
 
 <div id="section">
-<h1>${connectorDisplayName} Connector</h1>
+<h1>${connectorDisplayName}</h1>
 
     #if ($connectorInfo)
     <h2>Installation</h2>
