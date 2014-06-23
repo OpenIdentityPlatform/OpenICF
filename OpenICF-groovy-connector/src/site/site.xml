@@ -39,8 +39,8 @@
             <item name="Introduction" href="openicf-report.html"/>
         </menu>
 
-        <menu name="ScriptedREST Core Docs">
-            <!--<item name="All Formats" href="docs.html" />-->
+        <menu name="Connectors Core Docs">
+            <item name="All Formats" href="docs.html" />
             <!--item name="Release Notes" href="./doc/release-notes/index.html" /-->
             <item name="Developer Guide" href="./doc/groovy-connector-${project.version}/index.html" />
         </menu>

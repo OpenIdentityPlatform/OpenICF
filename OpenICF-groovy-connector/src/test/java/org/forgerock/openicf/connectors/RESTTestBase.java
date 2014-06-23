@@ -47,9 +47,11 @@ import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
+import org.identityconnectors.framework.impl.api.local.LocalConnectorFacadeImpl;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.test.common.PropertyBag;
 import org.identityconnectors.test.common.TestHelpers;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
 
@@ -164,6 +166,12 @@ public abstract class RESTTestBase {
             facade = createConnectorFacade(clazz, environment);
         }
         return facade;
+    }
+
+    @AfterClass
+    public synchronized void afterClass() {
+        ((LocalConnectorFacadeImpl) facade).dispose();
+        facade = null;
     }
 
     public static ConnectorFacade createConnectorFacade(Class<? extends Connector> clazz,

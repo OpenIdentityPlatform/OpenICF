@@ -56,11 +56,12 @@ def objectClass = objectClass as ObjectClass
 def options = options as OperationOptions
 def schema = schema as Schema
 
-if (objectClass.objectClassValue == "TEST"){
-    def queryFilter = CRESTFilterVisitor.VISITOR.accept(new VisitorParameter() {
+if (objectClass.objectClassValue == "TEST") {
+    def queryFilter = filter.accept(CRESTFilterVisitor.VISITOR, new VisitorParameter() {
         String translateName(String name) {
             return name;
         }
+
         Object convertValue(Attribute attribute) {
             if (attribute.value.size() > 1) {
                 return JsonOutput.toJson(attribute.value)
@@ -73,7 +74,7 @@ if (objectClass.objectClassValue == "TEST"){
                 }
             }
         }
-    }, filter)
+    })
     return new SearchResult(queryFilter.toString(), -1);
 }
 
@@ -82,7 +83,7 @@ if (objectClassInfo != null) {
 
     QueryRequest request = Requests.newQueryRequest(objectClassInfo.resourceContainer)
     if (null != filter) {
-        request.queryFilter = CRESTFilterVisitor.VISITOR.accept([
+        request.queryFilter = filter.accept(CRESTFilterVisitor.VISITOR, [
                 translateName: { String name ->
                     if (AttributeUtil.namesEqual(name, Uid.NAME)) {
                         return "_id"
@@ -110,7 +111,7 @@ if (objectClassInfo != null) {
                     } else {
                         return AttributeUtil.getAsStringValue(value)
                     }
-                }] as VisitorParameter, filter);
+                }] as VisitorParameter);
     }
 
     if (null != options.attributesToGet) {

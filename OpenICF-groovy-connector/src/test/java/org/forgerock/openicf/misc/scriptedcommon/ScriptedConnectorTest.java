@@ -77,9 +77,11 @@ import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.Filter;
+import org.identityconnectors.framework.impl.api.local.LocalConnectorFacadeImpl;
 import org.identityconnectors.test.common.TestHelpers;
 import org.identityconnectors.test.common.ToListResultsHandler;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -803,5 +805,11 @@ public class ScriptedConnectorTest {
             facade = createConnectorFacade(ScriptedConnector.class, environment);
         }
         return facade;
+    }
+
+    @AfterClass
+    public synchronized void afterClass() {
+        ((LocalConnectorFacadeImpl) facade).dispose();
+        facade = null;
     }
 }

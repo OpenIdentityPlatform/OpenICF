@@ -51,6 +51,7 @@ import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.impl.api.local.LocalConnectorFacadeImpl;
 import org.identityconnectors.test.common.PropertyBag;
 import org.identityconnectors.test.common.TestHelpers;
 import org.testng.Assert;
@@ -258,6 +259,12 @@ public class ScriptedSQLConnectorTest {
             facadeInstance = createConnectorFacade(ScriptedSQLConnector.class, environment);
         }
         return facadeInstance;
+    }
+
+    @AfterClass
+    public synchronized void afterClass() {
+        ((LocalConnectorFacadeImpl) facadeInstance).dispose();
+        facadeInstance = null;
     }
 
     @Test

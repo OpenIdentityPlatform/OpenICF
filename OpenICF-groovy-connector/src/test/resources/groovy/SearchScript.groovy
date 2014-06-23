@@ -115,7 +115,7 @@ switch (objectClass) {
             attributesToGet = options.attributesToGet as Set<String>
         }
 
-        if (filter instanceof EqualsFilter && (filter as EqualsFilter).name == Uid.NAME){
+        if (filter instanceof EqualsFilter && (filter as EqualsFilter).name == Uid.NAME) {
             //This is a Read
             handler {
                 uid AttributeUtil.getStringValue((filter as EqualsFilter).attribute)
@@ -147,7 +147,7 @@ switch (objectClass) {
             }
         }
         if (null != filter) {
-            def map = MapFilterVisitor.INSTANCE.accept(null, filter)
+            def map = filter.accept(MapFilterVisitor.INSTANCE, null)
             return new SearchResult(JsonOutput.toJson(map), -1);
         }
         break;

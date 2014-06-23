@@ -24,13 +24,17 @@
 
 package org.forgerock.openicf.misc.crest;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import org.forgerock.json.resource.QueryFilter;
-import org.forgerock.openicf.misc.scriptedcommon.AbstractFilterVisitor;
 import org.identityconnectors.framework.common.objects.filter.AndFilter;
 import org.identityconnectors.framework.common.objects.filter.ContainsAllValuesFilter;
 import org.identityconnectors.framework.common.objects.filter.ContainsFilter;
 import org.identityconnectors.framework.common.objects.filter.EndsWithFilter;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
+import org.identityconnectors.framework.common.objects.filter.Filter;
+import org.identityconnectors.framework.common.objects.filter.FilterVisitor;
 import org.identityconnectors.framework.common.objects.filter.GreaterThanFilter;
 import org.identityconnectors.framework.common.objects.filter.GreaterThanOrEqualFilter;
 import org.identityconnectors.framework.common.objects.filter.LessThanFilter;
@@ -46,24 +50,30 @@ import org.identityconnectors.framework.common.objects.filter.StartsWithFilter;
  *
  * @author Laszlo Hordos
  */
-class CRESTFilterVisitor extends AbstractFilterVisitor<VisitorParameter, QueryFilter> {
+class CRESTFilterVisitor implements FilterVisitor<QueryFilter, VisitorParameter> {
 
-    static final CRESTFilterVisitor VISITOR = new CRESTFilterVisitor();
+    public static final CRESTFilterVisitor VISITOR = new CRESTFilterVisitor();
 
-    public QueryFilter visit(VisitorParameter parameter, AndFilter subFilters) {
-        QueryFilter left = this.accept(parameter, subFilters.getLeft());
-        QueryFilter right = this.accept(parameter, subFilters.getRight());
-        return QueryFilter.and(left, right);
+    public QueryFilter visitAndFilter(VisitorParameter parameter, AndFilter subFilters) {
+        final Collection<QueryFilter> filters =
+                new ArrayList<QueryFilter>(subFilters.getFilters().size());
+        for (Filter filter : subFilters.getFilters()) {
+            filters.add(filter.accept(this, parameter));
+        }
+        return QueryFilter.and(filters);
     }
 
-    public QueryFilter visit(VisitorParameter parameter, OrFilter subFilters) {
-        QueryFilter left = this.accept(parameter, subFilters.getLeft());
-        QueryFilter right = this.accept(parameter, subFilters.getRight());
-        return QueryFilter.or(left, right);
+    public QueryFilter visitOrFilter(VisitorParameter parameter, OrFilter subFilters) {
+        final Collection<QueryFilter> filters =
+                new ArrayList<QueryFilter>(subFilters.getFilters().size());
+        for (Filter filter : subFilters.getFilters()) {
+            filters.add(filter.accept(this, parameter));
+        }
+        return QueryFilter.or(filters);
     }
 
-    public QueryFilter visit(VisitorParameter parameter, NotFilter subFilter) {
-        return QueryFilter.not(this.accept(parameter, subFilter.getFilter()));
+    public QueryFilter visitNotFilter(VisitorParameter parameter, NotFilter subFilter) {
+        return QueryFilter.not(subFilter.getFilter().accept(this, parameter));
     }
 
     /**
@@ -78,13 +88,14 @@ class CRESTFilterVisitor extends AbstractFilterVisitor<VisitorParameter, QueryFi
 
     // AttributeFilter
 
-    public QueryFilter visit(VisitorParameter parameter, EqualsFilter filter) {
+    public QueryFilter visitEqualsFilter(VisitorParameter parameter, EqualsFilter filter) {
         // TODO: Support other then Single values
         return QueryFilter.equalTo(parameter.translateName(filter.getName()), parameter
                 .convertValue(filter.getAttribute()));
     }
 
-    public QueryFilter visit(VisitorParameter parameter, ContainsAllValuesFilter filter) {
+    public QueryFilter visitContainsAllValuesFilter(VisitorParameter parameter,
+            ContainsAllValuesFilter filter) {
         // TODO: Support other then Single values
         return QueryFilter.comparisonFilter(parameter.translateName(filter.getName()), CA,
                 parameter.convertValue(filter.getAttribute()));
@@ -92,41 +103,47 @@ class CRESTFilterVisitor extends AbstractFilterVisitor<VisitorParameter, QueryFi
 
     // StringFilter
 
-    public QueryFilter visit(VisitorParameter parameter, ContainsFilter filter) {
+    public QueryFilter visitContainsFilter(VisitorParameter parameter, ContainsFilter filter) {
         return QueryFilter.contains(parameter.translateName(filter.getName()), parameter
                 .convertValue(filter.getAttribute()));
     }
 
-    public QueryFilter visit(VisitorParameter parameter, StartsWithFilter filter) {
+    public QueryFilter visitStartsWithFilter(VisitorParameter parameter, StartsWithFilter filter) {
         return QueryFilter.startsWith(parameter.translateName(filter.getName()), parameter
                 .convertValue(filter.getAttribute()));
     }
 
-    public QueryFilter visit(VisitorParameter parameter, EndsWithFilter filter) {
+    public QueryFilter visitEndsWithFilter(VisitorParameter parameter, EndsWithFilter filter) {
         return QueryFilter.comparisonFilter(parameter.translateName(filter.getName()), EW,
                 parameter.convertValue(filter.getAttribute()));
     }
 
     // ComparableAttributeFilter
 
-    public QueryFilter visit(VisitorParameter parameter, GreaterThanFilter filter) {
+    public QueryFilter visitGreaterThanFilter(VisitorParameter parameter, GreaterThanFilter filter) {
         return QueryFilter.greaterThan(parameter.translateName(filter.getName()), parameter
                 .convertValue(filter.getAttribute()));
     }
 
-    public QueryFilter visit(VisitorParameter parameter, GreaterThanOrEqualFilter filter) {
+    public QueryFilter visitGreaterThanOrEqualFilter(VisitorParameter parameter,
+            GreaterThanOrEqualFilter filter) {
         return QueryFilter.greaterThanOrEqualTo(parameter.translateName(filter.getName()),
                 parameter.convertValue(filter.getAttribute()));
     }
 
-    public QueryFilter visit(VisitorParameter parameter, LessThanFilter filter) {
+    public QueryFilter visitLessThanFilter(VisitorParameter parameter, LessThanFilter filter) {
         return QueryFilter.lessThan(parameter.translateName(filter.getName()), parameter
                 .convertValue(filter.getAttribute()));
     }
 
-    public QueryFilter visit(VisitorParameter parameter, LessThanOrEqualFilter filter) {
+    public QueryFilter visitLessThanOrEqualFilter(VisitorParameter parameter,
+            LessThanOrEqualFilter filter) {
         return QueryFilter.lessThanOrEqualTo(parameter.translateName(filter.getName()), parameter
                 .convertValue(filter.getAttribute()));
     }
 
+    public QueryFilter visitExtendedFilter(VisitorParameter visitorParameter, Filter filter) {
+        throw new UnsupportedOperationException("Filter type is not supported: "
+                + filter.getClass());
+    }
 }

@@ -83,7 +83,7 @@ def where = "";
 
 if (filter != null) {
 
-    def query = MapFilterVisitor.INSTANCE.accept(null, filter)
+    def query = filter.accept(MapFilterVisitor.INSTANCE, null)
     //Need to handle the __UID__ in queries
     if (query.get("left").equalsIgnoreCase("__UID__") && objectClass.is("__ACCOUNT__")) query.put("left", "id");
     if (query.get("left").equalsIgnoreCase("__UID__") && objectClass.is("__GROUP__")) query.put("left", "id");

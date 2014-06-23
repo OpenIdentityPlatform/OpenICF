@@ -79,6 +79,33 @@
             </itemizedlist>
         </section>
 
+        <section xml:id="scriptedrest-dependencies">
+            <title>Scripted REST Connector Installation</title>
+            <para>
+                Copy these requirements to bundle folder.
+            </para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        <filename>httpclient-osgi-4.3.3.jar</filename>
+                        <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.httpcomponents%7Chttpclient-osgi%7C4.3.3%7Cbundle"
+                              xlink:show="new">
+                            (org.apache.httpcomponents:httpclient-osgi:4.3.3)
+                        </link>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <filename>httpcore-osgi-4.3.2.jar</filename>
+                        <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.httpcomponents%7Chttpcore-osgi%7C4.3.2%7Cbundle"
+                              xlink:show="new">
+                            (org.apache.httpcomponents:httpcore-osgi:4.3.2)
+                        </link>
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </section>
+
         <section xml:id="scriptedcrest-dependencies">
             <title>ScriptedCREST Connector Installation</title>
             <para>

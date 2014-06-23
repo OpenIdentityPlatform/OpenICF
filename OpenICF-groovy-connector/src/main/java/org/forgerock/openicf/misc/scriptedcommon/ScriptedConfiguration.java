@@ -339,7 +339,6 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     /**
      * Gets extensions used to find a groovy files
      *
-     * @return
      */
     @ConfigurationProperty(groupMessageKey = "groovy.engine")
     public String[] getScriptExtensions() {

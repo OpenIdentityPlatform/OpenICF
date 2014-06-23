@@ -35,6 +35,8 @@ import org.identityconnectors.framework.common.objects.filter.ContainsAllValuesF
 import org.identityconnectors.framework.common.objects.filter.ContainsFilter;
 import org.identityconnectors.framework.common.objects.filter.EndsWithFilter;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
+import org.identityconnectors.framework.common.objects.filter.Filter;
+import org.identityconnectors.framework.common.objects.filter.FilterVisitor;
 import org.identityconnectors.framework.common.objects.filter.GreaterThanFilter;
 import org.identityconnectors.framework.common.objects.filter.GreaterThanOrEqualFilter;
 import org.identityconnectors.framework.common.objects.filter.LessThanFilter;
@@ -44,11 +46,13 @@ import org.identityconnectors.framework.common.objects.filter.OrFilter;
 import org.identityconnectors.framework.common.objects.filter.StartsWithFilter;
 
 /**
- * A MapFilterVisitor converts a {@link org.identityconnectors.framework.common.objects.filter.Filter} to {@link Map}.
+ * A MapFilterVisitor converts a
+ * {@link org.identityconnectors.framework.common.objects.filter.Filter} to
+ * {@link Map}.
  *
  * @author Gael Allioux <gael.allioux@forgerock.com>
  */
-public class MapFilterVisitor extends AbstractFilterVisitor<Void, Map<String, Object>> {
+public class MapFilterVisitor implements FilterVisitor<Map<String, Object>, Void> {
 
     public static final MapFilterVisitor INSTANCE = new MapFilterVisitor();
 
@@ -85,61 +89,70 @@ public class MapFilterVisitor extends AbstractFilterVisitor<Void, Map<String, Ob
         }
     }
 
-    public Map<String, Object> visit(Void parameter, AndFilter subFilters) {
+    public Map<String, Object> visitAndFilter(Void parameter, AndFilter subFilters) {
         Map<String, Object> map = new LinkedHashMap<String, Object>(3);
         map.put("operation", "AND");
-        map.put("left", accept(null, subFilters.getLeft()));
-        map.put("right", accept(null, subFilters.getRight()));
+        map.put("left", subFilters.getLeft().accept(this, null));
+        map.put("right", subFilters.getRight().accept(this, null));
         return map;
     }
 
-    public Map<String, Object> visit(Void parameter, ContainsAllValuesFilter filter) {
-        throw new UnsupportedOperationException("ContainsAllValuesFilter transformation is not supported"); //return createMap("CONTAINSALL", filter);
+    public Map<String, Object> visitContainsAllValuesFilter(Void parameter,
+            ContainsAllValuesFilter filter) {
+        throw new UnsupportedOperationException(
+                "ContainsAllValuesFilter transformation is not supported");
     }
 
-    public Map<String, Object> visit(Void parameter, ContainsFilter filter) {
+    public Map<String, Object> visitContainsFilter(Void parameter, ContainsFilter filter) {
         return createMap("CONTAINS", filter);
     }
 
-    public Map<String, Object> visit(Void parameter, EndsWithFilter filter) {
+    public Map<String, Object> visitEndsWithFilter(Void parameter, EndsWithFilter filter) {
         return createMap("ENDSWITH", filter);
     }
 
-    public Map<String, Object> visit(Void parameter, EqualsFilter filter) {
+    public Map<String, Object> visitEqualsFilter(Void parameter, EqualsFilter filter) {
         return createMap("EQUALS", filter);
     }
 
-    public Map<String, Object> visit(Void parameter, GreaterThanFilter filter) {
+    public Map<String, Object> visitGreaterThanFilter(Void parameter, GreaterThanFilter filter) {
         return createMap("GREATERTHAN", filter);
     }
 
-    public Map<String, Object> visit(Void parameter, GreaterThanOrEqualFilter filter) {
+    public Map<String, Object> visitGreaterThanOrEqualFilter(Void parameter,
+            GreaterThanOrEqualFilter filter) {
         return createMap("GREATERTHANOREQUAL", filter);
     }
 
-    public Map<String, Object> visit(Void parameter, LessThanFilter filter) {
+    public Map<String, Object> visitLessThanFilter(Void parameter, LessThanFilter filter) {
         return createMap("LESSTHAN", filter);
     }
 
-    public Map<String, Object> visit(Void parameter, LessThanOrEqualFilter filter) {
+    public Map<String, Object> visitLessThanOrEqualFilter(Void parameter,
+            LessThanOrEqualFilter filter) {
         return createMap("LESSTHANOREQUAL", filter);
     }
 
-    public Map<String, Object> visit(Void parameter, NotFilter subFilter) {
-        Map<String, Object> map = accept(null, subFilter.getFilter());
+    public Map<String, Object> visitNotFilter(Void parameter, NotFilter subFilter) {
+        Map<String, Object> map = subFilter.getFilter().accept(this, null);
         map.put("not", true);
         return map;
     }
 
-    public Map<String, Object> visit(Void parameter, OrFilter subFilters) {
+    public Map<String, Object> visitOrFilter(Void parameter, OrFilter subFilters) {
         Map<String, Object> map = new LinkedHashMap<String, Object>(3);
         map.put("operation", "OR");
-        map.put("left", accept(null, subFilters.getLeft()));
-        map.put("right", accept(null, subFilters.getRight()));
+        map.put("left", subFilters.getLeft().accept(this, null));
+        map.put("right", subFilters.getRight().accept(this, null));
         return map;
     }
 
-    public Map<String, Object> visit(Void parameter, StartsWithFilter filter) {
+    public Map<String, Object> visitStartsWithFilter(Void parameter, StartsWithFilter filter) {
         return createMap("STARTSWITH", filter);
+    }
+
+    public Map<String, Object> visitExtendedFilter(Void aVoid, Filter filter) {
+        throw new UnsupportedOperationException("Filter type is not supported: "
+                + filter.getClass());
     }
 }
