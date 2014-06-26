@@ -211,7 +211,7 @@
                         <dependency>
                             <groupId>org.forgerock.maven.plugins</groupId>
                             <artifactId>openicf-maven-plugin</artifactId>
-                            <version>1.1.0-SNAPSHOT</version>
+                            <version>1.1.0</version>
                         </dependency>
                     </dependencies>
                 </plugin>
@@ -344,7 +344,7 @@
                 <plugin>
                     <groupId>org.forgerock.maven.plugins</groupId>
                     <artifactId>openicf-maven-plugin</artifactId>
-                    <version>1.1.0-SNAPSHOT</version>
+                    <version>1.1.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -354,7 +354,18 @@
             <plugin>
                 <groupId>org.forgerock.maven.plugins</groupId>
                 <artifactId>openicf-maven-plugin</artifactId>
-                <version>1.1.0-SNAPSHOT</version>
+                <version>1.1.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <links>
+                        <link>http://download.oracle.com/javase/6/docs/api/</link>
+                        <link>http://groovy.codehaus.org/api/</link>
+                        <link>http://openicf.forgerock.org/apidocs/</link>
+                    </links>
+                </configuration>
             </plugin>
         </plugins>
     </reporting>
