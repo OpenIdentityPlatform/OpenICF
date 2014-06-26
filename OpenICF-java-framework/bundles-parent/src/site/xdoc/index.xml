@@ -475,6 +475,34 @@
                         <td width="10%">Supported</td>
                         <td width="10%">Build Date</td>
                     </tr>
+                    <tr class="b">
+                        <td>
+                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=releases%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fgroovy-connector%2F1.4.0.0"
+                               target="_blank">
+                                1.4.0.0
+                            </a>
+                        </td>
+                        <td>
+                            <a href="./groovy-connector-1.4.0.0/openicf-report.html">
+                                Maven</a>,
+                            <a href="./groovy-connector-1.4.0.0/doc/OpenICF-Groovy-Connector-1.4.0.0.epub">
+                                EPUB</a>,
+                            <a href="./groovy-connector-1.4.0.0/doc/groovy-connector-1.4.0.0/index.html">HTML
+                                (single page)</a>,
+                            <a href="./groovy-connector-1.4.0.0/doc/groovy-connector-1.4.0.0/index/index.html">
+                                HTML (1 page/chapter)</a>,
+                            <a href="./groovy-connector-1.4.0.0/doc/OpenICF-Groovy-Connector-1.4.0.0.pdf">
+                                PDF</a>,
+                            <a href="./groovy-connector-1.4.0.0/doc/OpenICF-Groovy-Connector-1.4.0.0.rtf">
+                                RTF
+                            </a>
+                        </td>
+                        <td>openicf-groovy-connector-1.4.0.x</td>
+                        <td>
+                            <img src="./images/forgerock_supported.png" alt="ForgeRock Supported" align="middle"/>
+                        </td>
+                        <td>20140626</td>
+                    </tr>
                 </tbody>
             </table>
             <br/>
@@ -492,23 +520,23 @@
                     </tr>
                     <tr class="b">
                         <td>
-                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=snapshots%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fgroovy-connector%2F1.4.0.0-SNAPSHOT"
+                            <a href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=snapshots%3Aorg%2Fforgerock%2Fopenicf%2Fconnectors%2Fgroovy-connector%2F1.4.1.0-SNAPSHOT"
                                target="_blank">
-                                1.4.0.0-SNAPSHOT
+                                1.4.1.0-SNAPSHOT
                             </a>
                         </td>
                         <td>
                             <a href="./groovy-connector/openicf-report.html">
                                 Maven</a>,
-                            <a href="./groovy-connector/doc/OpenICF-Groovy-Connector-1.4.0.0-Snapshot.epub">
+                            <a href="./groovy-connector/doc/OpenICF-Groovy-Connector-1.4.1.0-Snapshot.epub">
                                 EPUB</a>,
-                            <a href="./groovy-connector/doc/groovy-connector-1.4.0.0-SNAPSHOT/index.html">HTML
+                            <a href="./groovy-connector/doc/groovy-connector-1.4.1.0-SNAPSHOT/index.html">HTML
                                 (single page)</a>,
-                            <a href="./groovy-connector/doc/groovy-connector-1.4.0.0-SNAPSHOT/index/index.html">
+                            <a href="./groovy-connector/doc/groovy-connector-1.4.1.0-SNAPSHOT/index/index.html">
                                 HTML (1 page/chapter)</a>,
-                            <a href="./groovy-connector/doc/OpenICF-Groovy-Connector-1.4.0.0-Snapshot.pdf">
+                            <a href="./groovy-connector/doc/OpenICF-Groovy-Connector-1.4.1.0-Snapshot.pdf">
                                 PDF</a>,
-                            <a href="./groovy-connector/doc/OpenICF-Groovy-Connector-1.4.0.0-Snapshot.rtf">
+                            <a href="./groovy-connector/doc/OpenICF-Groovy-Connector-1.4.1.0-Snapshot.rtf">
                                 RTF
                             </a>
                         </td>

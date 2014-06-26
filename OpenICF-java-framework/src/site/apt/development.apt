@@ -49,7 +49,7 @@ C:\build> cd framework
 C:\framework> mvn install
 +---
 
-    This command will install the 1.4.0.0-SNAPSHOT version of the OpenICF Framework. The same binaries are published to frequently to the {{{http://maven.forgerock.org/repo/snapshots/org/forgerock/openicf/}ForgeRock Snapshot Repository}}.
+    This command will install the 1.4.1.0-SNAPSHOT version of the OpenICF Framework. The same binaries are published to frequently to the {{{http://maven.forgerock.org/repo/snapshots/org/forgerock/openicf/}ForgeRock Snapshot Repository}}.
 
 *Developing .NET Connector Framework
 
