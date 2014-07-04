@@ -26,7 +26,6 @@ package org.forgerock.openicf.maven;
 
 import java.lang.reflect.Array;
 import java.util.Locale;
-import java.util.Stack;
 
 import org.identityconnectors.common.security.GuardedByteArray;
 import org.identityconnectors.common.security.GuardedString;
@@ -67,15 +66,17 @@ public class ConnectorUtils {
                 sb.append("'").append(String.valueOf(item)).append("'");
             }
             value = sb.append("]").toString();
+        } else if ((property.getValue() instanceof GuardedString)
+                || (property.getValue() instanceof GuardedByteArray)) {
+            value = "*****";
         } else {
-            value = property.getValue().toString();
+            value = String.valueOf(property.getValue());
         }
         return value;
     }
 
-
-    public static String safeNCName(String value){
-        return value.toLowerCase(Locale.US).replaceAll("\\s+","-");
+    public static String safeNCName(String value) {
+        return value.toLowerCase(Locale.US).replaceAll("\\s+", "-");
     }
 
     /**
