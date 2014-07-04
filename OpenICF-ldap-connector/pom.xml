@@ -2,7 +2,7 @@
 <!--
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
- Copyright (c) 2011-2012 ForgeRock AS. All rights reserved.
+ Copyright (c) 2011-2014 ForgeRock AS. All rights reserved.
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -22,16 +22,17 @@
  your own identifying information:
  "Portions Copyrighted [year] [name of copyright owner]"
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.forgerock.openicf.connectors</groupId>
         <artifactId>connectors-parent</artifactId>
-        <version>1.1.1.0</version>
+        <version>1.4.0.0</version>
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>ldap-connector</artifactId>
-    <version>1.1.1.0-SNAPSHOT</version>
+    <version>1.4.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>Generic JNDI based LDAP Connector</name>
     <description>Connector for Sun DSEE and OpenDJ and Generic LDAP</description>
@@ -53,8 +54,6 @@
         <openicf.osgi.embed>ldapbp</openicf.osgi.embed>
         <connectorPackage>org.identityconnectors.ldap</connectorPackage>
         <connectorClass>LdapConnector</connectorClass>
-        <jira.componentIds>10182</jira.componentIds>
-        <jira.versionPrefix>${project.artifactId}</jira.versionPrefix>
     </properties>
     <repositories>
         <repository>
@@ -97,6 +96,23 @@
             <artifactId>ldap</artifactId>
             <version>1.2.4</version>
         </dependency-->
+
+        <!-- Test Dependencies -->
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.forgerock.openicf.framework</groupId>
+            <artifactId>connector-framework-internal</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.forgerock.openicf.framework</groupId>
+            <artifactId>connector-test-common</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.forgerock.opendj</groupId>
             <artifactId>opendj-ldap-sdk</artifactId>

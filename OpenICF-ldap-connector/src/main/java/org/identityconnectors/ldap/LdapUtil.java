@@ -19,8 +19,8 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- * 
- * Portions Copyrighted 2013 Forgerock
+ *
+ * Portions Copyrighted 2013-2014 ForgeRock AS
  */
 package org.identityconnectors.ldap;
 
@@ -49,6 +49,7 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.ObjectClassUtil;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import static org.identityconnectors.ldap.LdapEntry.isDNAttribute;
 import org.identityconnectors.ldap.search.LdapInternalSearch;
@@ -56,8 +57,12 @@ import org.identityconnectors.ldap.search.LdapInternalSearch;
 public class LdapUtil {
 
     private static final Log log = Log.getLog(LdapUtil.class);
-    
+
     private static final String LDAP_BINARY_OPTION = ";binary";
+
+    public static final String SERVER_INFO_NAME = ObjectClassUtil.createSpecialName("SERVER_INFO");
+
+    public static final ObjectClass SERVER_INFO = new ObjectClass(SERVER_INFO_NAME);
 
     private LdapUtil() {
     }
@@ -157,7 +162,7 @@ public class LdapUtil {
 		toBuilder.append(ch);
 	    }
 	}
-        return toBuilder.toString();        
+        return toBuilder.toString();
     }
 
     /**
@@ -174,13 +179,12 @@ public class LdapUtil {
             return escapeStringAttrValue(value.toString(), toBuilder);
         }
     }
-    
+
     /**
      * Normalize the DN string
-     * @param The DN string to normalize
+     * @param ldapString DN string to normalize
      * @return The normalized DN string
      */
-    
     public static String  normalizeLdapString(String ldapString)
         {
             StringBuilder normalPath = new StringBuilder();
@@ -492,7 +496,7 @@ public class LdapUtil {
             }
         }
     }
-    
+
     private static String getIDfromDN(LdapConnection conn, String dn) throws NamingException{
                     if (isDNAttribute(conn.getConfiguration().getUidAttribute())) {
                         return dn;
@@ -511,7 +515,7 @@ public class LdapUtil {
                         }
                     }
     }
-    
+
     // This function builds a _memberId attribute which is a helper
     // that contains the group members' GUID
     public static org.identityconnectors.framework.common.objects.Attribute buildMemberIdAttribute(LdapConnection conn, javax.naming.directory.Attribute attr) {
@@ -542,13 +546,13 @@ public class LdapUtil {
         }
         return AttributeBuilder.build("_memberId", membersIds);
     }
-        
+
    public static void getServerInfo(LdapConnection conn, ResultsHandler handler){
        ConnectorObjectBuilder builder = new ConnectorObjectBuilder();
-        builder.setObjectClass(new ObjectClass(conn.getConfiguration().getServerInformationObjectClass()));
+        builder.setObjectClass(SERVER_INFO);
         builder.setUid(conn.getServerType().name());
         builder.setName(conn.getServerType().name());
         handler.handle(builder.build());
-   }     
-        
+   }
+
 }

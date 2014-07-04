@@ -19,8 +19,8 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- * 
- * Portions Copyrighted 2013 Forgerock
+ *
+ * Portions Copyrighted 2013-2014 ForgeRock AS
  */
 package org.identityconnectors.ldap;
 
@@ -50,13 +50,11 @@ import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.common.security.GuardedString.Accessor;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.exceptions.ConnectorSecurityException;
 import org.identityconnectors.framework.common.exceptions.PasswordExpiredException;
 import org.identityconnectors.ldap.schema.LdapSchemaMapping;
 
 import com.sun.jndi.ldap.ctl.PasswordExpiredResponseControl;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
-import org.identityconnectors.framework.common.exceptions.InvalidPasswordException;
 
 public class LdapConnection {
 

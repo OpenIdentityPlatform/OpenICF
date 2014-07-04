@@ -10,7 +10,7 @@
   ! Suite 900, Mountain View, California, 94041, USA.
   !
   ! You can also obtain a copy of the license at
-  ! legal/CC-BY-NC-ND.txt.
+  ! legal-notices/CC-BY-NC-ND.txt.
   ! See the License for the specific language governing permissions
   ! and limitations under the License.
   !
@@ -20,21 +20,24 @@
   !
   ! CCPL HEADER END
   !
-  !      Copyright 2011-2012 ForgeRock AS
+  !      Copyright 2011-2014 ForgeRock AS
   !
 -->
- <section xml:id="install-ldap-connector"
- xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
- xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
- xsi:schemaLocation='http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd'
- xmlns:xlink='http://www.w3.org/1999/xlink'
- xmlns:xinclude='http://www.w3.org/2001/XInclude'>
- <title>Installing the Ldap Connector</title>
 
- <para>This section describes how to install the Ldap Connector.</para>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 
- <!--
- The rest of this section must be written by hand, as specific
- installation instructions depend on the connector itself.
- -->
-</section>
+<head>
+    <title>${project.name}</title>
+</head>
+
+<body>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $(location).attr('href', 'openicf-report.html');
+    });
+</script>
+</body>
+
+</html>

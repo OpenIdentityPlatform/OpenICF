@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2013-2014 ForgeRock AS
  */
 package org.identityconnectors.ldap.schema;
 
@@ -38,12 +39,15 @@ import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
 import org.identityconnectors.framework.spi.operations.CreateOp;
 import org.identityconnectors.framework.spi.operations.DeleteOp;
+import org.identityconnectors.framework.spi.operations.ResolveUsernameOp;
 import org.identityconnectors.framework.spi.operations.SyncOp;
+import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
 import org.identityconnectors.framework.spi.operations.UpdateOp;
 import org.identityconnectors.ldap.LdapAttributeType;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapConnector;
 import org.identityconnectors.ldap.LdapNativeSchema;
+import org.identityconnectors.ldap.LdapUtil;
 import org.identityconnectors.ldap.ObjectClassMappingConfig;
 import org.identityconnectors.ldap.LdapConnection.ServerType;
 
@@ -107,19 +111,17 @@ class LdapSchemaBuilder {
                 schemaBld.removeSupportedObjectClass(SyncOp.class, oci);
             }
         }
-        
-        // Specific SERVER INFORMATION "fake" object class
-        if (conn.getConfiguration().getServerInformationObjectClass() != null){
-            ObjectClassInfoBuilder objClassBld = new ObjectClassInfoBuilder();
-            objClassBld.setType(conn.getConfiguration().getServerInformationObjectClass());
-            ObjectClassInfo oci = objClassBld.build();
-            schemaBld.defineObjectClass(oci);
-            schemaBld.removeSupportedObjectClass(AuthenticateOp.class, oci);
-            schemaBld.removeSupportedObjectClass(CreateOp.class, oci);
-            schemaBld.removeSupportedObjectClass(UpdateOp.class, oci);
-            schemaBld.removeSupportedObjectClass(DeleteOp.class, oci);
-            schemaBld.removeSupportedObjectClass(SyncOp.class, oci);
-        }
+
+        ObjectClassInfoBuilder objClassBld = new ObjectClassInfoBuilder();
+        objClassBld.setType(LdapUtil.SERVER_INFO_NAME);
+        ObjectClassInfo oci = objClassBld.build();
+        schemaBld.defineObjectClass(oci);
+        schemaBld.removeSupportedObjectClass(AuthenticateOp.class, oci);
+        schemaBld.removeSupportedObjectClass(ResolveUsernameOp.class, oci);
+        schemaBld.removeSupportedObjectClass(CreateOp.class, oci);
+        schemaBld.removeSupportedObjectClass(UpdateAttributeValuesOp.class, oci);
+        schemaBld.removeSupportedObjectClass(DeleteOp.class, oci);
+        schemaBld.removeSupportedObjectClass(SyncOp.class, oci);
 
         schema = schemaBld.build();
     }

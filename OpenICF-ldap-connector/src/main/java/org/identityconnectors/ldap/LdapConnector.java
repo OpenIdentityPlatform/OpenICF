@@ -19,8 +19,8 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- * 
- * Portions Copyrighted 2013 Forgerock
+ *
+ * Portions Copyrighted 2013-2014 ForgeRock AS
  */
 package org.identityconnectors.ldap;
 
@@ -120,8 +120,8 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
         if (!badBCS.isEmpty()){
             throw new ConfigurationException("Bad Base Context(s) to Synchronize: " + badBCS.toString());
         }
-        
-        
+
+
     }
 
     public void checkAlive() {
@@ -145,7 +145,7 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
     }
 
     public void executeQuery(ObjectClass oclass, LdapFilter query, ResultsHandler handler, OperationOptions options) {
-        if ((conn.getConfiguration().getServerInformationObjectClass() != null) && oclass.is(conn.getConfiguration().getServerInformationObjectClass())) {
+        if (oclass.is(LdapUtil.SERVER_INFO_NAME)) {
             LdapUtil.getServerInfo(conn, handler);
         } else {
             new LdapSearch(conn, oclass, query, options).execute(handler);

@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2013-2014 ForgeRock AS
  */
 package org.identityconnectors.ldap;
 
@@ -48,9 +49,9 @@ public class LdapAuthenticate {
     private final String username;
     private final OperationOptions options;
 
-    public LdapAuthenticate(LdapConnection conn, ObjectClass oclass, String username, OperationOptions options) {
+    public LdapAuthenticate(LdapConnection conn, ObjectClass objectClass, String username, OperationOptions options) {
         this.conn = conn;
-        this.oclass = oclass;
+        this.oclass = objectClass;
         this.username = username;
         this.options = options;
     }
@@ -71,8 +72,6 @@ public class LdapAuthenticate {
             authnResult.propagate();
         } catch (PasswordExpiredException e) {
             e.initUid(authnObject.getUid());
-            throw e;
-        } catch (InvalidCredentialException e){
             throw e;
         }
         // AuthenticationResult did not throw an exception, so this authentication was successful.
