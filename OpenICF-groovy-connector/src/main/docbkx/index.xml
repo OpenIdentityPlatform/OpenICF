@@ -23,7 +23,7 @@
   !      Copyright 2011-2014 ForgeRock AS
   !
 -->
-<book xml:id='groovy-connector-guide'
+<book xml:id='connector-guide-org.forgerock.openicf.connectors-groovy-connector-${project.version}'
       xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
       xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
       xsi:schemaLocation='http://docbook.org/ns/docbook

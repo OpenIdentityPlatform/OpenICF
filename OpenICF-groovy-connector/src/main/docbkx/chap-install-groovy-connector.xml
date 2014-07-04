@@ -23,7 +23,7 @@
   !      Copyright 2011-2014 ForgeRock AS
   !
 -->
-<chapter xml:id="install-workday-connector"
+<chapter xml:id="install-org.forgerock.openicf.connectors-groovy-connector-${project.version}"
     xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
     xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
     xsi:schemaLocation='http://docbook.org/ns/docbook
@@ -36,14 +36,14 @@
         prerequisites specific to its use.
     </para>
 
-    <section xml:id="before-you-install">
+    <section xml:id="before-you-install-org.forgerock.openicf.connectors-groovy-connector-${project.version}">
         <title>Before You Install the ${project.name}</title>
         <para>
             TO BE WRITTEN MANUALLY
         </para>
     </section>
 
-    <section xml:id="connector-install">
+    <section xml:id="connector-install-org.forgerock.openicf.connectors-groovy-connector-${project.version}">
         <title>Installing the ${project.name}</title>
         <para>
             TO BE WRITTEN MANUALLY
@@ -52,7 +52,7 @@
 
         </para>
 
-        <section xml:id="scriptedsql-dependencies">
+        <section xml:id="scriptedsql-dependencies-org.forgerock.openicf.connectors-groovy-connector-${project.version}">
             <title>ScriptedSQL Connector Installation</title>
             <para>
                 Copy these requirements to bundle folder.
@@ -79,7 +79,7 @@
             </itemizedlist>
         </section>
 
-        <section xml:id="scriptedrest-dependencies">
+        <section xml:id="scriptedrest-dependencies-org.forgerock.openicf.connectors-groovy-connector-${project.version}">
             <title>Scripted REST Connector Installation</title>
             <para>
                 Copy these requirements to bundle folder.
@@ -106,7 +106,7 @@
             </itemizedlist>
         </section>
 
-        <section xml:id="scriptedcrest-dependencies">
+        <section xml:id="scriptedcrest-dependencies-org.forgerock.openicf.connectors-groovy-connector-${project.version}">
             <title>ScriptedCREST Connector Installation</title>
             <para>
                 Copy these requirements to bundle folder.

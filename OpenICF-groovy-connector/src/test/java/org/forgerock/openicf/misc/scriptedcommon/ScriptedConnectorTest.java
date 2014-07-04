@@ -29,7 +29,12 @@ import static org.forgerock.openicf.connectors.RESTTestBase.createConnectorFacad
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.*;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.not;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +44,7 @@ import java.util.Set;
 import org.forgerock.openicf.connectors.groovy.ScriptedConnector;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.common.security.GuardedByteArray;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
@@ -399,6 +405,134 @@ public class ScriptedConnectorTest {
         Assert.assertEquals(co.getUid().getUidValue(), "ANY");
         Assert.assertEquals(co.getName().getNameValue(), "ANY");
         Assert.assertEquals(co.getObjectClass(), TEST);
+
+        assertThat(co.getAttributeByName("attributeString").getValue()).describedAs(
+                "attributeString").containsOnly("retipipiter");
+        assertThat(co.getAttributeByName("attributeStringMultivalue").getValue()).describedAs(
+                "attributeStringMultivalue").containsOnly("value1", "value2");
+
+        assertThat(co.getAttributeByName("attributelongp").getValue())
+                .describedAs("attributelongp").containsOnly(11l);
+        assertThat(co.getAttributeByName("attributelongpMultivalue").getValue()).describedAs(
+                "attributelongpMultivalue").containsOnly(12l, 13l);
+
+        assertThat(co.getAttributeByName("attributeLong").getValue()).describedAs("attributeLong")
+                .containsOnly(14l);
+        assertThat(co.getAttributeByName("attributeLongMultivalue").getValue()).describedAs(
+                "attributeLongMultivalue").containsOnly(15l, 16l);
+
+        assertThat(co.getAttributeByName("attributechar").getValue()).describedAs("attributechar")
+                .containsOnly('a');
+        assertThat(co.getAttributeByName("attributecharMultivalue").getValue()).describedAs(
+                "attributecharMultivalue").containsOnly('b', 'c');
+
+        assertThat(co.getAttributeByName("attributeCharacter").getValue()).describedAs(
+                "attributeCharacter").containsOnly('d');
+        assertThat(co.getAttributeByName("attributeCharacterMultivalue").getValue()).describedAs(
+                "attributeCharacterMultivalue").containsOnly('e', 'f');
+
+        assertThat(co.getAttributeByName("attributedoublep").getValue()).describedAs(
+                "attributedoublep").containsOnly(Double.MIN_NORMAL);
+        assertThat(co.getAttributeByName("attributedoublepMultivalue").getValue()).describedAs(
+                "attributedoublepMultivalue").containsOnly(Double.MIN_VALUE, Double.MAX_VALUE);
+
+        assertThat(co.getAttributeByName("attributeDouble").getValue()).describedAs(
+                "attributeDouble").containsOnly(17D);
+        assertThat(co.getAttributeByName("attributeDoubleMultivalue").getValue()).describedAs(
+                "attributeDoubleMultivalue").containsOnly(18D, 19D);
+
+        assertThat(co.getAttributeByName("attributefloatp").getValue()).describedAs(
+                "attributefloatp").containsOnly(20F);
+        assertThat(co.getAttributeByName("attributefloatpMultivalue").getValue()).describedAs(
+                "attributefloatpMultivalue").containsOnly(21F, 22F);
+
+        assertThat(co.getAttributeByName("attributeFloat").getValue())
+                .describedAs("attributeFloat").containsOnly(23F);
+        assertThat(co.getAttributeByName("attributeFloatMultivalue").getValue()).describedAs(
+                "attributeFloatMultivalue").containsOnly(24F, 25F);
+
+        assertThat(co.getAttributeByName("attributeint").getValue()).describedAs("attributeint")
+                .containsOnly(26);
+        assertThat(co.getAttributeByName("attributeintMultivalue").getValue()).describedAs(
+                "attributeintMultivalue").containsOnly(27, 28);
+
+        assertThat(co.getAttributeByName("attributeInteger").getValue()).describedAs(
+                "attributeInteger").containsOnly(29);
+        assertThat(co.getAttributeByName("attributeIntegerMultivalue").getValue()).describedAs(
+                "attributeIntegerMultivalue").containsOnly(30, 31);
+
+        assertThat(co.getAttributeByName("attributebooleanp").getValue()).describedAs(
+                "attributebooleanp").containsOnly(true);
+        assertThat(co.getAttributeByName("attributebooleanpMultivalue").getValue()).describedAs(
+                "attributebooleanpMultivalue").containsOnly(true, false);
+
+        assertThat(co.getAttributeByName("attributeBoolean").getValue()).describedAs(
+                "attributeBoolean").containsOnly(false);
+        assertThat(co.getAttributeByName("attributeBooleanMultivalue").getValue()).describedAs(
+                "attributeBooleanMultivalue").containsOnly(true, false);
+
+        assertThat(co.getAttributeByName("attributebytep").getValue())
+                .describedAs("attributebytep").containsOnly((byte) 48);
+        assertThat(co.getAttributeByName("attributebytepMultivalue").getValue()).describedAs(
+                "attributebytepMultivalue").containsOnly((byte) 49, (byte) 50);
+
+        assertThat(co.getAttributeByName("attributeByte").getValue()).describedAs("attributeByte")
+                .containsOnly((byte) 51);
+        assertThat(co.getAttributeByName("attributeByteMultivalue").getValue()).describedAs(
+                "attributeByteMultivalue").containsOnly((byte) 52, (byte) 53);
+
+        assertThat(co.getAttributeByName("attributeByteArray").getValue()).describedAs(
+                "attributeByteArray").containsOnly(
+                new Object[] { "array".getBytes(Charset.forName("UTF-8")) });
+        assertThat(co.getAttributeByName("attributeByteArrayMultivalue").getValue()).describedAs(
+                "attributeByteArrayMultivalue").containsOnly(
+                "item1".getBytes(Charset.forName("UTF-8")),
+                "item2".getBytes(Charset.forName("UTF-8")));
+
+        assertThat(co.getAttributeByName("attributeBigDecimal").getValue()).describedAs(
+                "attributeBigDecimal").containsOnly(BigDecimal.ONE);
+        assertThat(co.getAttributeByName("attributeBigDecimalMultivalue").getValue()).describedAs(
+                "attributeBigDecimalMultivalue").containsOnly(BigDecimal.ZERO, BigDecimal.TEN);
+
+        assertThat(co.getAttributeByName("attributeBigInteger").getValue()).describedAs(
+                "attributeBigInteger").containsOnly(BigInteger.ONE);
+        assertThat(co.getAttributeByName("attributeBigIntegerMultivalue").getValue()).describedAs(
+                "attributeBigIntegerMultivalue").containsOnly(BigInteger.ZERO, BigInteger.TEN);
+
+        assertThat(co.getAttributeByName("attributeGuardedByteArray").getValue()).describedAs(
+                "attributeGuardedByteArray").containsOnly(
+                new GuardedByteArray("array".getBytes(Charset.forName("UTF-8"))));
+        assertThat(co.getAttributeByName("attributeGuardedByteArrayMultivalue").getValue())
+                .describedAs("attributeGuardedByteArrayMultivalue").containsOnly(
+                        new GuardedByteArray("item1".getBytes(Charset.forName("UTF-8"))),
+                        new GuardedByteArray("item2".getBytes(Charset.forName("UTF-8"))));
+
+        assertThat(co.getAttributeByName("attributeGuardedString").getValue()).describedAs(
+                "attributeGuardedString").containsOnly(new GuardedString("secret".toCharArray()));
+        assertThat(co.getAttributeByName("attributeGuardedStringMultivalue").getValue())
+                .describedAs("attributeGuardedStringMultivalue").containsOnly(
+                        new GuardedString("secret1".toCharArray()),
+                        new GuardedString("secret2".toCharArray()));
+
+        assertThat(co.getAttributeByName("attributeMap").getValue()).describedAs("attributeMap")
+                .containsOnly(createAssertMap(42));
+        assertThat(co.getAttributeByName("attributeMapMultivalue").getValue()).describedAs(
+                "attributeMapMultivalue").containsOnly(createAssertMap(42), createAssertMap(43));
+
+    }
+
+    private Map<String, Object> createAssertMap(int n) {
+        Map<String, Object> result = new HashMap<String, Object>(6);
+        result.put("string", "String");
+        result.put("number", n);
+        result.put("trueOrFalse", true);
+        result.put("nullValue", null);
+        result.put("collection", Arrays.asList("item1", "item2"));
+        Map<String, Object> o = new HashMap<String, Object>(2);
+        o.put("key1", "value1");
+        o.put("key2", "value2");
+        result.put("object", o);
+        return result;
     }
 
     // =======================================================================

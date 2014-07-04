@@ -165,7 +165,8 @@ class TestHelper {
                 attributeByte                      : 51 as Byte,
                 attributeByteMultivalue            : [52 as Byte, 53 as Byte] as Byte[],
 
-                attributeByteArray                 : "array".getBytes(Charset.forName("UTF-8")),
+                //This must be wrapped into array because 'attributeByteMultivalue' and 'attributeByteArray' collide
+                attributeByteArray                 : ["array".getBytes(Charset.forName("UTF-8"))] as byte[][] ,
                 attributeByteArrayMultivalue       : ["item1".getBytes(Charset.forName("UTF-8")),
                                                       "item2".getBytes(Charset.forName("UTF-8"))] as byte[][],
 
