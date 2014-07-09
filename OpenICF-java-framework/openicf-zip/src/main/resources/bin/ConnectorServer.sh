@@ -114,7 +114,7 @@ cd "$CONNECTOR_SERVER_HOME"
 #Run java options, separated by space
 #set JAVA_OPTS=-Xmx500m "-Djava.util.logging.config.file=conf/logging.properties" "-Dlogback.configurationFile=lib/logback.xml"
 
-echo "Using CONNECTOR_SERVER_HOME:  $OCONNECTOR_SERVER_HOME"
+echo "Using CONNECTOR_SERVER_HOME:  $CONNECTOR_SERVER_HOME"
 echo "Using          OPENICF_OPTS:  $OPENICF_OPTS"
 echo "Using             CLASSPATH:  $CLASSPATH"
 

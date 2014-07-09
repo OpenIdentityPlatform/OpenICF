@@ -45,28 +45,33 @@ public class SLF4JLog implements LogSpi {
      * Uses the SLF4J logger to log the message.
      *
      * @see LogSpi#log(Class, String,
-     * org.identityconnectors.common.logging.Log.Level, String, Throwable)
+     *      org.identityconnectors.common.logging.Log.Level, String, Throwable)
      */
     public void log(final Class<?> clazz, final String methodName, final Level level,
-                    final String message, final Throwable ex) {
+            final String message, final Throwable ex) {
         final String clazzName = clazz.getName();
         final Logger logger = LoggerFactory.getLogger(clazzName);
 
         if (logger instanceof LocationAwareLogger) {
             if (StringUtil.isBlank(methodName)) {
-                ((LocationAwareLogger) logger).log(null, clazz.getName(), getLogLevel(level), message, null, ex);
+                ((LocationAwareLogger) logger).log(null, clazz.getName(), getLogLevel(level),
+                        message, null, ex);
             } else {
-                //StringBuilder sb = new StringBuilder(METHOD).append(methodName).append("\t").append(message);
-                StringBuilder sb = new StringBuilder(message).append('\t').append(METHOD).append(methodName);
+                // StringBuilder sb = new StringBuilder(METHOD).append(methodName).append("\t").append(message);
+                StringBuilder sb =
+                        new StringBuilder(null == message ? "" : message).append('\t').append(METHOD).append(methodName);
                 ((LocationAwareLogger) logger).log(null, clazz.getName(), getLogLevel(level), sb
                         .toString(), null, ex);
             }
         } else {
             StringBuilder sb = new StringBuilder(CLASS).append(clazz).append('\t');
-            if (StringUtil.isNotBlank(methodName)){
+            if (StringUtil.isNotBlank(methodName)) {
                 sb.append(methodName).append('\t');
             }
-            sb.append(MESSAGE).append(message);
+            sb.append(MESSAGE);
+            if (null != message) {
+                sb.append(message);
+            }
             // uses different call if the exception is not null..
             if (Level.OK.equals(level)) {
                 if (ex == null) {
@@ -98,7 +103,7 @@ public class SLF4JLog implements LogSpi {
 
     @Override
     public void log(final Class<?> clazz, final StackTraceElement method, final Level level,
-                    final String message, final Throwable ex) {
+            final String message, final Throwable ex) {
         log(clazz, null != method ? method.getMethodName() : null, level, message, ex);
     }
 
