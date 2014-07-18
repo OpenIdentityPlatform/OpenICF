@@ -369,6 +369,16 @@ public class ScriptedConnectorTest {
         Assert.assertEquals(facade.runScriptOnConnector(builder.build(), null), uid);
     }
 
+    @Test(expectedExceptions = ConnectorException.class,
+            expectedExceptionsMessageRegExp = "No argument has arrived.")
+    public void testScriptOnConnectorArgFail() throws Exception {
+        ConnectorFacade facade = getFacade(TEST_NAME);
+        ScriptContextBuilder builder = new ScriptContextBuilder();
+        builder.setScriptLanguage("Groovy");
+        builder.setScriptText("try{return loginName}catch(MissingPropertyException e){throw new Exception(\"No argument has arrived.\")}");
+        facade.runScriptOnConnector(builder.build(), null);
+    }
+
     // =======================================================================
     // ScriptOnResource Operation Test
     // =======================================================================
@@ -384,6 +394,16 @@ public class ScriptedConnectorTest {
         assertThat((Map) facade.runScriptOnResource(builder.build(), null)).contains(
                 entry("arg01", true), entry("arg02", "String"));
 
+    }
+
+    @Test(expectedExceptions = ConnectorException.class,
+            expectedExceptionsMessageRegExp = "No argument has arrived.")
+    public void testScriptOnResourceArgFail() throws Exception {
+        ConnectorFacade facade = getFacade(TEST_NAME);
+        ScriptContextBuilder builder = new ScriptContextBuilder();
+        builder.setScriptLanguage("Groovy");
+        builder.setScriptText("try{return loginName}catch(MissingPropertyException e){throw new Exception(\"No argument has arrived.\")}");
+        facade.runScriptOnResource(builder.build(), null);
     }
 
     @Test(expectedExceptions = InvalidAttributeValueException.class)

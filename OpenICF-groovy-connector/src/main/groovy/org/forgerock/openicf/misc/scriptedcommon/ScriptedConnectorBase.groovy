@@ -344,7 +344,7 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
             } catch (final RuntimeException e) {
                 throw e;
             } catch (final Exception e) {
-                throw new ConnectorException("RunScriptOnConnector error", e);
+                throw new ConnectorException(e.getMessage(), e);
             }
         } else {
             throw new InvalidAttributeValueException("Only Groovy is supported");
@@ -364,7 +364,7 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
             } catch (final RuntimeException e) {
                 throw e;
             } catch (final Exception e) {
-                throw new ConnectorException("ScriptOnResourceScript error", e);
+                throw new ConnectorException(e.getMessage(), e);
             }
         } else {
             throw new UnsupportedOperationException();
