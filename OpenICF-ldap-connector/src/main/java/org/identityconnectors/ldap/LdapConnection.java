@@ -120,6 +120,20 @@ public class LdapConnection {
         return config;
     }
 
+    private LdapContext getAnonymousContext() throws NamingException {
+        InitialLdapContext ctx = null;
+        final Hashtable<Object, Object> env = new Hashtable<Object, Object>();
+        env.put(Context.INITIAL_CONTEXT_FACTORY, LDAP_CTX_FACTORY);
+        env.put(Context.PROVIDER_URL, getLdapUrls());
+        env.put(Context.REFERRAL, "follow");
+        env.put(Context.SECURITY_AUTHENTICATION, "simple");
+
+        if (config.isSsl()) {
+            env.put(Context.SECURITY_PROTOCOL, "ssl");
+        }
+        return new InitialLdapContext(env, null);
+    }
+    
     public LdapContext getInitialContext() {
         if (initCtx != null) {
             return initCtx;
@@ -351,8 +365,10 @@ public class LdapConnection {
     }
 
     private ServerType detectServerType() {
+        LdapContext anonymousContext = null;
         try {
-            Attributes attrs = getInitialContext().getAttributes("", new String[]{"vendorVersion", "vendorName", "highestCommittedUSN", "rootDomainNamingContext", "structuralObjectClass"});
+            anonymousContext = getAnonymousContext();
+            Attributes attrs = anonymousContext.getAttributes("", new String[]{"vendorVersion", "vendorName", "highestCommittedUSN", "rootDomainNamingContext", "structuralObjectClass"});
             String vendorName = getStringAttrValue(attrs, "vendorName");
             if (null != vendorName) {
                 vendorName = vendorName.toLowerCase();
@@ -389,7 +405,7 @@ public class LdapConnection {
                 String rDC = getStringAttrValue(attrs, "rootDomainNamingContext");
                 String sOC = getStringAttrValue(attrs, "structuralObjectClass");
                 if (hUSN != null) {
-                // Windows Active Directory
+                    // Windows Active Directory
                     if (rDC != null) {
                         // Only DCs and GCs have the rootDomainNamingContext
                         // We check the port number as well. DC is using the standard 389|636 pair.
@@ -404,13 +420,20 @@ public class LdapConnection {
                     // ADLDS does not have the rootDomainNamingContext...
                     log.info("MS Active Directory Lightweight Directory Services server has been detected");
                     return ServerType.MSAD_LDS;
-                }
-                else if (sOC != null && sOC.equalsIgnoreCase("OpenLDAProotDSE")){
+                } else if (sOC != null && sOC.equalsIgnoreCase("OpenLDAProotDSE")) {
                     return ServerType.OPENLDAP;
                 }
             }
         } catch (NamingException e) {
-            log.warn(e, "Exception while detecting the server type");
+            log.warn("Exception while detecting the server type: {0}", e.getExplanation());
+        } finally {
+            if (null != anonymousContext) {
+                try {
+                    anonymousContext.close();
+                } catch (NamingException ex) {
+                    log.ok(ex, "Exception while detecting the server type");
+                }
+            }
         }
         log.info("Directory server type is unknown");
         return ServerType.UNKNOWN;
@@ -440,7 +463,7 @@ public class LdapConnection {
         FAILED {
             @Override
             public void propagate(Exception cause) {
-                throw new InvalidCredentialException(cause.getMessage(),cause);
+                throw new InvalidCredentialException(cause.getMessage(), cause);
             }
         };
 
