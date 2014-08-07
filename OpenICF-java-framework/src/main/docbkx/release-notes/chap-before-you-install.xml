@@ -27,94 +27,120 @@
  xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
  xsi:schemaLocation='http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd'
- xmlns:xlink='http://www.w3.org/1999/xlink'
- xmlns:xinclude='http://www.w3.org/2001/XInclude'>
+ xmlns:xlink='http://www.w3.org/1999/xlink'>
  <title>Before You Install OpenICF Software</title>
 
- <para>This chapter covers prerequisites for installing and running OpenICF
- software. If you have a special request to support a component or
- combination not listed here, contact ForgeRock at <link
- xlink:href="mailto:info@forgerock.com">info@forgerock.com</link>.</para>
+ <para>
+  This chapter covers prerequisites for installing and running OpenICF software.
+  If you have a special request to support a component or combination not listed
+  here, contact ForgeRock at <link
+  xlink:href="mailto:info@forgerock.com">info@forgerock.com</link>.
+ </para>
 
  <section xml:id="java-requirements">
   <title>Java Requirements</title>
-
-  <para>OpenICF requires Java Development Kit 1.6. ForgeRock has tested this
-  release primarily with Oracle Java SE JDK.</para>
+  <para>
+   OpenICF ${docTargetVersion} has been tested primarily with Java SE JRE 1.6
+   and 1.7, on Linux and Windows platforms.
+  </para>
  </section>
 
  <section xml:id="connector-server-requirements">
   <title>Connector Server Requirements</title>
 
-  <para>If you choose to run an OpenICF connector server, then read this
-  section.</para>
+  <para>
+   If your deployment requires an OpenICF connector server, then read this
+   section.
+  </para>
 
   <section xml:id="dotnet-connector-server-requirements">
    <title>.NET Connector Servers</title>
-
    <itemizedlist>
-    <para>.NET Connector Servers require the following:</para>
+    <para>
+     .NET Connector Servers require the following:
+    </para>
     <listitem>
-     <para>Windows Server 2003 or 2008</para>
+     <para>
+      Windows Server 2008 R2, or Windows Server 2012 R2
+     </para>
     </listitem>
     <listitem>
-     <para>.NET Framework 3.5 or later (but not 4.0 or later)</para>
+     <para>
+      .NET framework (version 4.0 or later)
+     </para>
     </listitem>
    </itemizedlist>
-
-   <para>Specific .NET connector bundles might come with additional
-   requirements.</para>
+   <para>
+    Specific .NET connectors might have additional requirements, for example,
+    the PowerShell connector requires the PowerShell V2 environment.
+   </para>
   </section>
 
   <section xml:id="java-connector-server-requirements">
    <title>Java Connector Servers</title>
-
-   <para>Java Connector Servers require Java 1.5 or later.</para>
-
-   <para>Specific Java connector bundles might come with additional
-   requirements.</para>
+   <para>
+    Java Connector Servers require Java SE JRE version 1.6, or 1.7.
+   </para>
+   <para>
+    Specific Java connectors might have additional requirements.
+   </para>
   </section>
  </section>
 
  <section xml:id="connector-requirements">
   <title>Supported Connectors to Data Resources</title>
-
-  <para>This section covers the basic data resources that OpenICF connectors
-  support.</para>
-
-  <para>Many advanced connectors not listed in this section are also available,
-  including connectors for IBM Resource Access Control Facility (RACF), IBM
-  Tivoli Access Manager (TAM), SAP, a wide range of databases, as well as
-  enterprise and cloud applications. If you require support for a data resource
-  connector not mentioned here, contact ForgeRock at <link
-  xlink:href="mailto:info@forgerock.com">info@forgerock.com</link>.</para>
+  <para>
+   This section covers the data resources that have been tested with OpenICF
+   connectors.
+  </para>
+  <para>
+   Many advanced connectors not listed in this section are also available,
+   including connectors for IBM Resource Access Control Facility (RACF), IBM
+   Tivoli Access Manager (TAM), SAP, a wide range of databases, as well as
+   enterprise and cloud applications. If you require support for a data resource
+   connector not mentioned here, contact ForgeRock at <link
+   xlink:href="mailto:info@forgerock.com">info@forgerock.com</link>.
+  </para>
 
   <itemizedlist>
-   <para>ForgeRock has tested connectors with the following data
-   resources.</para>
-
+   <para>
+    ForgeRock has tested, and supports, the following connectors:
+   </para>
    <listitem>
-    <para>Database Table</para>
+    <para>
+     Database Table
+    </para>
    </listitem>
-
    <listitem>
-    <para>File CSV</para>
+    <para>
+     File CSV
+    </para>
    </listitem>
-
    <listitem>
-    <para>File XML</para>
+    <para>
+     File XML
+    </para>
    </listitem>
-
    <listitem>
-    <para>LDAP</para>
+    <para>
+     LDAP (tested with OpenDJ, MS Active Directory, and MS ADLS)
+    </para>
    </listitem>
-
    <listitem>
-    <para>Microsoft Active Directory (tested with the .NET connector server on Windows 2008)</para>
+    <para>
+     Microsoft Active Directory (tested with the .NET connector server on
+     Windows Server 2008 R2 and Windows Server 2012 R2)
+    </para>
    </listitem>
-
    <listitem>
-    <para>Scripted SQL</para>
+    <para>
+     Scripted SQL
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     Scripted Groovy
+    </para>
    </listitem>
   </itemizedlist>
  </section>

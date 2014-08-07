@@ -26,9 +26,7 @@
 <chapter xml:id='chap-compatibility'
  xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
- xsi:schemaLocation='http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd'
- xmlns:xlink='http://www.w3.org/1999/xlink'
- xmlns:xinclude='http://www.w3.org/2001/XInclude'>
+ xsi:schemaLocation='http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd'>
  <title>OpenICF Compatibility</title>
 
  <para>This chapter covers both major changes to existing functionality, and
@@ -43,12 +41,12 @@
  <section xml:id="deprecation">
   <title>Deprecated Functionality</title>
 
-  <para>No functionality is deprecated in OpenICF <?eval ${docTargetVersion}?>.</para>
+  <para>No functionality is deprecated in OpenICF ${docTargetVersion}.</para>
  </section>
 
  <section xml:id="removed-functionality">
   <title>Removed Functionality</title>
 
-  <para>No functionality has been removed in OpenICF <?eval ${docTargetVersion}?>.</para>
+  <para>No functionality has been removed in OpenICF ${docTargetVersion}.</para>
  </section>
 </chapter>
