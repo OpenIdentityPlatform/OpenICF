@@ -123,13 +123,14 @@
    </listitem>
    <listitem>
     <para>
-     LDAP (tested with OpenDJ, MS Active Directory, and MS ADLS)
+     LDAP - tested with OpenDJ, MS Active Directory, and MS Active Directory
+     Lightweight Directory Services (AD LDS)
     </para>
    </listitem>
    <listitem>
     <para>
-     Microsoft Active Directory (tested with the .NET connector server on
-     Windows Server 2008 R2 and Windows Server 2012 R2)
+     Microsoft Active Directory - tested with the .NET connector server on
+     Windows Server 2008 R2 and Windows Server 2012 R2
     </para>
    </listitem>
    <listitem>
