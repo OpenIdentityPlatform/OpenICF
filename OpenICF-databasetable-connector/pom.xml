@@ -27,7 +27,7 @@
     <parent>
         <groupId>org.forgerock.openicf.connectors</groupId>
         <artifactId>connectors-parent</artifactId>
-        <version>1.1.1.0</version>
+        <version>1.1.2.0</version>
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>databasetable-connector</artifactId>
@@ -89,6 +89,64 @@
         </dependency>
     </dependencies>
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.forgerock.commons</groupId>
+                    <artifactId>forgerock-doc-maven-plugin</artifactId>
+                    <version>2.1.3</version>
+                    <configuration>
+                        <projectName>OpenICF</projectName>
+                        <googleAnalyticsId>${googleAnalyticsAccountId}</googleAnalyticsId>
+                        <useGeneratedSources>true</useGeneratedSources>
+                        <docbkxSourceDirectory>${project.build.directory}/openicf-docbkx</docbkxSourceDirectory>
+                        <projectVersion>${docTargetVersion}</projectVersion>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>copy-common</id>
+                            <phase>pre-site</phase>
+                            <goals>
+                                <goal>boilerplate</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>filter-sources</id>
+                            <phase>pre-site</phase>
+                            <goals>
+                                <goal>filter</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>prepare-sources</id>
+                            <phase>pre-site</phase>
+                            <goals>
+                                <goal>prepare</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>build-doc</id>
+                            <phase>pre-site</phase>
+                            <goals>
+                                <goal>build</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>layout-doc</id>
+                            <phase>site</phase>
+                            <goals>
+                                <goal>layout</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.forgerock.maven.plugins</groupId>
+                    <artifactId>openicf-maven-plugin</artifactId>
+                    <version>1.2.0-SNAPSHOT</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -105,6 +163,13 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.forgerock.commons</groupId>
+                <artifactId>forgerock-doc-maven-plugin</artifactId>
+                <configuration>
+                    <useGeneratedSources>true</useGeneratedSources>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.forgerock.maven.plugins</groupId>
                 <artifactId>openicf-maven-plugin</artifactId>
                 <executions>
@@ -114,13 +179,6 @@
                         </goals>
                     </execution>
                 </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.forgerock.openicf.connectors.misc</groupId>
-                        <artifactId>dbcommon</artifactId>
-                        <version>1.1.0.0</version>
-                    </dependency>
-                </dependencies>
             </plugin>
         </plugins>
     </build>
