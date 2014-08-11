@@ -27,11 +27,11 @@ package org.forgerock.openicf.maven;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.Writer;
 import java.security.CodeSource;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -60,6 +60,9 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
+import org.apache.maven.shared.filtering.MavenFileFilter;
+import org.apache.maven.shared.filtering.MavenFilteringException;
+import org.apache.maven.shared.filtering.MavenResourcesExecution;
 import org.apache.velocity.context.Context;
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.ArchiverException;
@@ -247,6 +250,9 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
     @Component()
     private VelocityComponent velocity;
 
+    @Component()
+    private MavenFileFilter fileFilter;
+
     /**
      * @plexus.requirement
      */
@@ -278,7 +284,6 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
             File rootDirectory =
                     new File(buildDirectory, "openicf-docbkx/" + getTargetDirectoryName());
 
-
             Map<String, String> fileSetDictionary = new LinkedHashMap<String, String>();
             fileSetDictionary.put("sec-reference.xml.vm", "sec-reference-%s.xml");
             fileSetDictionary.put("sec-implemented-interfaces.xml.vm",
@@ -305,7 +310,7 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
         String key =
                 templateFile
                         .substring(templateFile.lastIndexOf("/") + 1, templateFile.indexOf('.'));
-        String fileName = key + "-"+connectorName + ".xml";
+        String fileName = key + "-" + connectorName + ".xml";
         File configDoc = new File(rootDirectory, fileName);
 
         FileUtils.mkdir(configDoc.getParentFile().getAbsolutePath());
@@ -355,8 +360,35 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
             try {
                 FileUtils.mkdir(rootDirectory.getAbsolutePath());
 
-                FileUtils.copyDirectory(docbkxDirectory, rootDirectory, "**", StringUtils.join(
-                        DirectoryScanner.DEFAULTEXCLUDES, ","));
+                MavenResourcesExecution mre = new MavenResourcesExecution();
+                mre.setMavenProject(getMavenProject());
+                mre.setEscapeWindowsPaths(true);
+                mre.setMavenSession(session);
+                mre.setInjectProjectBuildFilters(true);
+
+                List<FileUtils.FilterWrapper> filterWrappers = null;
+                try {
+                    filterWrappers = fileFilter.getDefaultFilterWrappers(mre);
+                } catch (MavenFilteringException e) {
+                    filterWrappers = Collections.emptyList();
+                }
+
+                if (docbkxDirectory.exists()) {
+                    List<File> files = FileUtils.getFiles(docbkxDirectory, "**/*.xml", null);
+
+                    for (File file : files) {
+                        try {
+                            fileFilter.copyFile(file, new File(rootDirectory, file.getName()),
+                                    true, filterWrappers, getSourceEncoding());
+                        } catch (MavenFilteringException e) {
+                            throw new MojoExecutionException(e.getMessage(), e);
+                        }
+                    }
+
+                    FileUtils.copyDirectory(docbkxDirectory, rootDirectory, "**", StringUtils.join(
+                            DirectoryScanner.DEFAULTEXCLUDES, ",")
+                            + ",**/*.xml");
+                }
 
                 File sharedRoot = rootDirectory.getParentFile();
 
@@ -366,9 +398,9 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
                     ZipEntry entry = null;
                     while ((entry = zip.getNextEntry()) != null) {
                         String name = entry.getName();
-                        if (entry.getName().startsWith("docbkx")) {
+                        if (entry.getName().startsWith("shared")) {
 
-                            File destination = new File(sharedRoot, name.substring(7));
+                            File destination = new File(sharedRoot, name);
                             if (entry.isDirectory()) {
                                 if (!destination.exists()) {
                                     destination.mkdirs();

@@ -383,12 +383,8 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <excludes>
-                        <exclude>assembles/**</exclude>
-                    </excludes>
                     <includes>
-                        <include>**/*.txt</include>
-                        <include>docbkx/**</include>
+                        <include>shared/**</include>
                     </includes>
                 </configuration>
             </plugin>
