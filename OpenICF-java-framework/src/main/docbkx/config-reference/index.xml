@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ! CCPL HEADER START
+  !
+  ! This work is licensed under the Creative Commons
+  ! Attribution-NonCommercial-NoDerivs 3.0 Unported License.
+  ! To view a copy of this license, visit
+  ! http://creativecommons.org/licenses/by-nc-nd/3.0/
+  ! or send a letter to Creative Commons, 444 Castro Street,
+  ! Suite 900, Mountain View, California, 94041, USA.
+  !
+  ! You can also obtain a copy of the license at
+  ! legal-notices/CC-BY-NC-ND.txt.
+  ! See the License for the specific language governing permissions
+  ! and limitations under the License.
+  !
+  ! If applicable, add the following below this CCPL HEADER, with the fields
+  ! enclosed by brackets "[]" replaced with your own identifying information:
+  !      Portions Copyright [yyyy] [name of copyright owner]
+  !
+  ! CCPL HEADER END
+  !
+  !      Copyright 2012-2014 ForgeRock AS
+  !
+-->
+<book xml:id='config-reference'
+      xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
+      xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+      xsi:schemaLocation='http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd'
+      xmlns:xlink='http://www.w3.org/1999/xlink'
+      xmlns:xinclude='http://www.w3.org/2001/XInclude'>
+ <info>
+  <xinclude:include href="../shared/mediaobject-fr-logo.xml" />
+  <title>OpenICF Connector Configuration Reference</title>
+  <subtitle>Version ${docTargetVersion}</subtitle>
+  <abstract>
+   <para>
+    Compiled reference documentation that describes all the configurable
+    properties for the connectors that are <emphasis>supported and tested with
+    OpenIDM 3.0.0</emphasis>. Note that additional connectors, and the
+    corresponding configuration reference material, are available on the <link
+    xlink:show="new"
+    xlink:href="http://openicf.forgerock.org/connectors/index.html">OpenICF
+    Connectors</link> site.
+   </para>
+  </abstract>
+  <copyright>
+   <year>2012-2014</year>
+   <holder>ForgeRock AS</holder>
+  </copyright>
+
+  <!-- Add a space after the first name so that it appears on the PDF cover -->
+  <authorgroup>
+   <author>
+    <personname>
+     <firstname>Lana </firstname><surname>Frost</surname>
+    </personname>
+   </author>
+   <author>
+    <personname>
+     <firstname>László </firstname><surname>Hordós</surname>
+    </personname>
+   </author>
+   <author>
+    <personname>
+     <firstname>Mark </firstname><surname>Craig</surname>
+    </personname>
+    <xinclude:include href="../shared/affiliation-fr.xml"/>
+   </author>
+  </authorgroup>
+  <xinclude:include href="../legal.xml" />
+  <date><?dbtimestamp format="B d, Y"?></date>
+  <pubdate>Publication date: <?dbtimestamp format="B d, Y"?></pubdate>
+ </info>
+
+ <toc />
+
+ <xinclude:include href="preface.xml" />
+
+
+ <!-- Foreach connector mentioned as a resourceBundle for the
+      maven-remote-resources-plugin in pom.xml, add
+ <xinclude:include href="path/to/chap-connector-name.xml" />
+ -->
+
+ <!-- TODO: Get connector reference documentation for at least
+             Active Directory
+             Database Table
+             File CSV
+             File XML
+             LDAP
+             RACF
+             SAP HR
+             Scripted SQL
+             TAM
+    -->
+ <part xml:id="csv-connector-ref">
+  <title>File CSV Connector Reference</title>
+  <xinclude:include href="${project.build.directory}/remotedocbkx/csvfile-connector-1.1.1.0-SNAPSHOT/chap-install-csvfile-connector.xml" />
+  <xinclude:include href="${project.build.directory}/remotedocbkx/csvfile-connector-1.1.1.0-SNAPSHOT/chap-config-csvfile-connector.xml" />
+ </part>
+
+ <part xml:id="db-table-connector-ref">
+  <title>Database Table Connector Reference</title>
+  <xinclude:include href="${project.build.directory}/remotedocbkx/databasetable-connector-1.1.1.0-SNAPSHOT/chap-install-databasetable-connector.xml" />
+  <xinclude:include href="${project.build.directory}/remotedocbkx/databasetable-connector-1.1.1.0-SNAPSHOT/chap-config-databasetable-connector.xml" />
+ </part>
+
+ <part xml:id="groovy-connector-ref">
+  <title>Groovy Connector Reference</title>
+  <xinclude:include href="${project.build.directory}/remotedocbkx/groovy-connector-1.4.1.0-SNAPSHOT/chap-install-groovy-connector.xml" />
+  <xinclude:include href="${project.build.directory}/remotedocbkx/groovy-connector-1.4.1.0-SNAPSHOT/chap-config-scripted-connector.xml" />
+  <xinclude:include href="${project.build.directory}/remotedocbkx/groovy-connector-1.4.1.0-SNAPSHOT/chap-config-scriptedpoolable-connector.xml" />
+  <xinclude:include href="${project.build.directory}/remotedocbkx/groovy-connector-1.4.1.0-SNAPSHOT/chap-config-scriptedrest-connector.xml" />
+  <xinclude:include href="${project.build.directory}/remotedocbkx/groovy-connector-1.4.1.0-SNAPSHOT/chap-config-scriptedsql-connector.xml" />
+ </part>
+
+ <part xml:id="ldap-connector-ref">
+  <title>LDAP Connector Reference</title>
+  <xinclude:include href="${project.build.directory}/remotedocbkx/ldap-connector-1.4.0.0-SNAPSHOT/chap-install-ldap-connector.xml" />
+  <xinclude:include href="${project.build.directory}/remotedocbkx/ldap-connector-1.4.0.0-SNAPSHOT/chap-config-ldap-connector.xml" />
+ </part>
+
+ <part xml:id="scriptedsql-connector-ref">
+  <title>Scripted SQL Connector Reference</title>
+  <xinclude:include href="${project.build.directory}/remotedocbkx/scriptedsql-connector-1.1.2.0-SNAPSHOT/chap-install-scriptedsql-connector.xml" />
+  <xinclude:include href="${project.build.directory}/remotedocbkx/scriptedsql-connector-1.1.2.0-SNAPSHOT/chap-config-scriptedsql-connector.xml" />
+ </part>
+
+ <part xml:id="xml-connector-ref">
+  <title>XML Connector Reference</title>
+  <xinclude:include href="${project.build.directory}/remotedocbkx/xml-connector-1.1.1.0-SNAPSHOT/chap-install-xml-connector.xml" />
+  <xinclude:include href="${project.build.directory}/remotedocbkx/xml-connector-1.1.1.0-SNAPSHOT/chap-config-xml-connector.xml" />
+ </part>
+
+ <xinclude:include href='../shared/appendix-interfaces.xml' />
+ <xinclude:include href='../shared/appendix-options.xml' />
+    
+ <appendix xml:id="appendix-interface-stability">
+  <title>Release Levels &amp; Interface Stability</title>
+
+  <para>This appendix includes ForgeRock definitions for product release levels
+  and interface stability.</para>
+
+  <xinclude:include href="../shared/sec-release-levels.xml" />
+  <xinclude:include href="../shared/sec-interface-stability.xml" />
+ </appendix>
+
+ <index />
+</book>
