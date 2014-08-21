@@ -162,7 +162,7 @@
         <javadocStylesheet>org/forgerock/javadoc/javadoc.css</javadocStylesheet>
 
         <!-- Core documentation properties -->
-        <frDocPluginVersion>2.1.3</frDocPluginVersion>
+        <frDocPluginVersion>2.1.4-SNAPSHOT</frDocPluginVersion>
         <docTargetVersion>${project.version}</docTargetVersion>
         <googleAnalyticsAccountId>UA-23412190-10</googleAnalyticsAccountId>
         <!--
@@ -406,6 +406,7 @@
                     <!--Build connector config reference-->
                     <execution>
                         <id>shared-files</id>
+                        <phase>pre-site</phase>
                         <goals>
                             <goal>process</goal>
                         </goals>
@@ -414,11 +415,12 @@
                             <resourceBundles>
                                 <resourceBundle>org.forgerock.maven.plugins:openicf-maven-plugin:1.2.0-SNAPSHOT</resourceBundle>
                             </resourceBundles>
-                            <outputDirectory>${project.build.directory}/docbkx-filtered</outputDirectory>
+                            <outputDirectory>${project.build.directory}/docbkx-generated</outputDirectory>
                         </configuration>
                     </execution>
                     <execution>
                         <id>config-reference</id>
+                        <phase>pre-site</phase>
                         <goals>
                             <goal>process</goal>
                         </goals>
@@ -444,7 +446,7 @@
                                     org.forgerock.openicf.connectors:csvfile-connector:1.1.1.0-SNAPSHOT:jar:docbkx
                                 </resourceBundle>
                             </resourceBundles>
-                            <outputDirectory>${project.build.directory}/remotedocbkx</outputDirectory>
+                            <outputDirectory>${project.build.directory}/docbkx-generated/config-reference</outputDirectory>
                         </configuration>
                     </execution>
 
@@ -468,6 +470,9 @@
                         <goals>
                             <goal>boilerplate</goal>
                         </goals>
+                        <configuration>
+                            <overwriteGeneratedSource>true</overwriteGeneratedSource>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>filter-sources</id>
