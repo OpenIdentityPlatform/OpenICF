@@ -24,38 +24,111 @@
   !
 -->
 <chapter xml:id="install-org.forgerock.openicf.connectors-databasetable-connector-${project.version}"
-         xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
-         xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
-         xsi:schemaLocation='http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd'
-         xmlns:xlink='http://www.w3.org/1999/xlink'
-         xmlns:xinclude='http://www.w3.org/2001/XInclude'>
+ xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
+ xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+ xsi:schemaLocation='http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd'
+ xmlns:xlink='http://www.w3.org/1999/xlink'
+ xmlns:xinclude='http://www.w3.org/2001/XInclude'>
 
-    <title>${project.name} Installation Instructions</title>
+ <title>${project.name} Installation Instructions</title>
+ <para>
+  This chapter describes how to install the ${project.name} and any
+  prerequisites specific to its use.
+ </para>
+
+ <!--This chapter is written manually for each connector -->
+ <section xml:id="before-you-install-org.forgerock.openicf.connectors-databasetable-connector-${project.version}">
+  <title>Before You Install the ${project.name}</title>
+  <para>
+   The ${project.name} enables provisioning to a single table in a JDBC
+   database. Before you set up the ${project.name}, your JDBC database must be
+   up and running, and the required JDBC driver must be available in the
+   <filename>openidm/bundle</filename> directory.
+  </para>
+  <itemizedlist>
+   <para>
+    Download the driver that corresponds to your database:
+   </para>
+   <listitem>
     <para>
-        This chapter describes how to install the ${project.name} and any
-        prerequisites specific to its use.
+     For a MySQL database, download MySQL Connector/J, version 5.1 or later from
+     the MySQL website.
     </para>
+   </listitem>
+   <listitem>
+    <para>
+     For an MS SQL database, download the JDBC Driver 4.0 for SQL Server
+     (<filename>sqljdbc_4.0.2206.100_enu.tar.gz</filename>) from Microsoft's
+     download site.
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     For an Oracle DB database, create an Oracle DB driver from two separate
+     jar files, as described in <link xlink:show="new"
+     xlink:href="http://docs.forgerock.org/en/openidm/3.0.0/install-guide/#repository-oracledb">To
+     Set Up OpenIDM With Oracle Database</link> in the <citetitle>OpenIDM
+     Installation Guide</citetitle>.
+    </para>
+   </listitem>
+  </itemizedlist>
+ </section>
 
-    <!--This chapter is written manually for each connector -->
-    <section xml:id="before-you-install-org.forgerock.openicf.connectors-databasetable-connector-${project.version}">
-        <title>Before You Install the ${project.name}</title>
-        <para>
-            TO BE WRITTEN MANUALLY
-        </para>
-    </section>
+ <section xml:id="connector-install-org.forgerock.openicf.connectors-databasetable-connector-${project.version}">
+  <title>Installing the ${project.name}</title>
+  <para>
+   The ${project.name} is provided in the
+   <filename>openidm/connectors/${project.artifactId}-${project.version}.jar</filename>
+   file, for local use. If you are running the connector remotely, copy the
+   connector jar file to the <literal>bundles</literal> directory on the Java
+   connector server.
+  </para>
+  <para>
+   OpenIDM provides a sample ${project.name} configuration at
+   <filename>openidm/samples/provisioners/provisioner.openicf-contractordb.json</filename>.
+   The corresponding data definition language file is provided in
+   <filename>openidm/samples/provisioners/provisioner.openicf-contractordb.sql</filename>.
+   Edit this sample configuration, to specify at least the following properties.
+  </para>
+  <itemizedlist>
+   <listitem>
+    <para>
+     The JDBC <literal>database</literal> that contains the table to which you
+     are provisioning
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     The <literal>table</literal> in the database that contains the user
+     accounts
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     The <literal>keyColumn</literal> value that is used as the unique
+     identifier for rows in the table
+    </para>
+   </listitem>
+  </itemizedlist>
+   <para>
+    Additional configuration properties are as described in the
+    <link xlink:show="new"
+    xlink:href="CURRENT.DOCID#chap-config-org-identityconnectors-databasetable-DatabaseTableConnector-${project.version}"
+    xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Configuration
+    chapter</citetitle></link>.
+   </para>
+ </section>
 
-    <section xml:id="connector-install-org.forgerock.openicf.connectors-databasetable-connector-${project.version}">
-        <title>Installing the ${project.name}</title>
-        <para>
-            TO BE WRITTEN MANUALLY
-        </para>
-    </section>
-
-    <section xml:id="connector-pooling-org-identityconnectors-databasetable-DatabaseTableConnector-${project.version}">
-        <title>Configuring Connector Pooling</title>
-        <para>
-            TO BE WRITTEN MANUALLY
-        </para>
-    </section>
+ <section xml:id="connector-pooling-org-identityconnectors-databasetable-DatabaseTableConnector-${project.version}">
+  <title>Configuring Connection Pooling</title>
+  <para>
+   The ${project.name} supports connection pooling, which can substantially
+   improve the performance of the connector. The basic connection pooling
+   configuration is described in the <link xlink:show="new"
+   xlink:href="CURRENT.DOCID#appendix-pooling"
+   xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Connection
+   Pooling Configuration Appendix</citetitle></link>.
+  </para>
+ </section>
 
 </chapter>
