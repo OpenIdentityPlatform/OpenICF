@@ -33,8 +33,8 @@
     <artifactId>csvfile-connector</artifactId>
     <version>1.1.1.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
-    <name>CSVFile Connector</name>
-    <description>Connector for CSVFile</description>
+    <name>CSV File Connector</name>
+    <description>Connector for CSV File</description>
     <url>https://openicf.forgerock.org/connectors/csvfile-connector</url>
     <scm>
         <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/connectors/java/csvfile</connection>

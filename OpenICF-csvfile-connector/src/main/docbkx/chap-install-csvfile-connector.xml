@@ -24,31 +24,51 @@
   !
 -->
 <chapter xml:id="install-org.forgerock.openicf.connectors-csvfile-connector-${project.version}"
-         xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
-         xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
-         xsi:schemaLocation='http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd'
-         xmlns:xlink='http://www.w3.org/1999/xlink'
-         xmlns:xinclude='http://www.w3.org/2001/XInclude'>
+ xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
+ xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+ xsi:schemaLocation='http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd'
+ xmlns:xlink='http://www.w3.org/1999/xlink'
+ xmlns:xinclude='http://www.w3.org/2001/XInclude'>
 
-    <title>${project.name} Installation Instructions</title>
-    <para>
-        This chapter describes how to install the ${project.name} and any
-        prerequisites specific to its use.
-    </para>
+ <title>${project.name} Installation Instructions</title>
+ <para>
+  This chapter describes how to install the ${project.name} and any
+  prerequisites specific to its use.
+ </para>
 
-    <!--This chapter is written manually for each connector -->
-    <section xml:id="before-you-install-org.forgerock.openicf.connectors-csvfile-connector-${project.version}">
-        <title>Before You Install the ${project.name}</title>
-        <para>
-            TO BE WRITTEN MANUALLY
-        </para>
-    </section>
+ <!--This chapter is written manually for each connector -->
+ <section xml:id="before-you-install-org.forgerock.openicf.connectors-csvfile-connector-${project.version}">
+ <title>Before You Install the ${project.name}</title>
+  <para>
+   The ${project.name} is useful when importing users, either for initial
+   provisioning or for ongoing updates. When used continuously in production, a
+   CSV file can serve as a change log, often containing only those user records
+   that have changed.
+  </para>
+ </section>
 
-    <section xml:id="connector-install-org.forgerock.openicf.connectors-csvfile-connector-${project.version}">
-        <title>Installing the ${project.name}</title>
-        <para>
-            TO BE WRITTEN MANUALLY
-        </para>
-    </section>
+ <section xml:id="connector-install-org.forgerock.openicf.connectors-csvfile-connector-${project.version}">
+  <title>Installing the ${project.name}</title>
+  <para>
+   The ${project.name} is provided in the
+   <filename>openidm/connectors/${project.artifactId}-${project.version}.jar</filename>
+   file, for local use. If you are running the connector remotely, copy the
+   connector jar file to the <literal>bundles</literal> directory on the Java
+   connector server. No additional installation steps are required for the
+   ${project.name}.
+  </para>
+  <para>
+   OpenIDM provides a sample ${project.name} configuration at
+   <filename>openidm/samples/sample4/conf/provisioner.openicf-csv.json</filename>.
+   Edit that sample to specify <emphasis>at least</emphasis> the path to the
+   CSV file (<literal>"filePath"</literal>) and the attribute that will serve
+   as the primary key (<literal>"uniqueAttribute"</literal>) for the user
+   accounts. Additional configuration properties are as described in the
+   <link xlink:show="new"
+   xlink:href="CURRENT.DOCID#chap-config-org-forgerock-openicf-csvfile-CSVFileConnector-${project.version}"
+   xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Configuration
+   chapter</citetitle></link>.
+  </para>
+ </section>
 
 </chapter>
