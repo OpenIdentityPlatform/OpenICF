@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ! CCPL HEADER START
+  !
+  ! This work is licensed under the Creative Commons
+  ! Attribution-NonCommercial-NoDerivs 3.0 Unported License.
+  ! To view a copy of this license, visit
+  ! http://creativecommons.org/licenses/by-nc-nd/3.0/
+  ! or send a letter to Creative Commons, 444 Castro Street,
+  ! Suite 900, Mountain View, California, 94041, USA.
+  !
+  ! You can also obtain a copy of the license at
+  ! legal-notices/CC-BY-NC-ND.txt.
+  ! See the License for the specific language governing permissions
+  ! and limitations under the License.
+  !
+  ! If applicable, add the following below this CCPL HEADER, with the fields
+  ! enclosed by brackets "[]" replaced with your own identifying information:
+  !      Portions Copyright [yyyy] [name of copyright owner]
+  !
+  ! CCPL HEADER END
+  !
+  !      Copyright 2013-2014 ForgeRock AS
+  !
+-->
+<appendix xml:id='appendix-pooling'
+          xmlns='http://docbook.org/ns/docbook'
+          version='5.0' xml:lang='en'
+          xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+          xsi:schemaLocation='http://docbook.org/ns/docbook
+ http://docbook.org/xml/5.0/xsd/docbook.xsd'>
+
+ <title>Connection Pooling Configuration</title>
+
+ <para>
+  Certain connectors support the ability to be pooled. For a pooled connector,
+  OpenICF maintains a pool of connector instances and reuses these instances for
+  multiple provisioning and reconciliation operations. When an operation must be
+  executed, an existing connector instance is taken from the connector pool. If
+  no connector instance exists, a new instance is initialized. When the
+  operation has been executed, the connector instance is released back into the
+  connector pool, ready to be used for a subsequent operation.
+ </para>
+ <para>
+  For an unpooled connector, a new connector instance is initialized for every
+  operation. When the operation has been executed, OpenICF disposes of the
+  connector instance.
+ </para>
+ <para>
+  Because the initialization of a connector is an expensive operation, reducing
+  the number of connector initializations can substantially improve performance.
+ </para>
+ <para>
+  To configure connection pooling, set the following values in the connector
+  configuration file <literal>poolConfigOptions</literal> property:
+ </para>
+ <itemizedlist>
+  <listitem>
+   <para>
+    <literal>"maxObjects"</literal> - the maximum number of connector instances
+    in the pool (both idle and active). The default value is
+    <literal>10</literal> instances.
+   </para>
+  </listitem>
+  <listitem>
+   <para>
+    <literal>"maxIdle"</literal> - the maximum number of idle connector
+    instances in the pool. The default value is <literal>10</literal> idle
+    instances.
+   </para>
+  </listitem>
+  <listitem>
+   <para>
+    <literal>"maxWait"</literal> - the maximum period to wait for a free
+    connector instance to become available before failing. The default period is
+    <literal>150000</literal> milliseconds, or 15 seconds.
+   </para>
+  </listitem>
+  <listitem>
+   <para>
+    <literal>"minEvictableIdleTimeMillis"</literal> - the minimum period to wait
+    before evicting an idle connector instance from the pool. The default period
+    is <literal>120000</literal> milliseconds, or 12 seconds.
+   </para>
+  </listitem>
+  <listitem>
+   <para>
+    <literal>"minIdle"</literal> - the minimum number of idle connector
+    instances in the pool. The default value is <literal>1</literal> instance.
+   </para>
+  </listitem>
+ </itemizedlist>
+</appendix>
