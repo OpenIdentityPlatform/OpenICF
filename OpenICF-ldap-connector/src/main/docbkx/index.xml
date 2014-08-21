@@ -24,42 +24,44 @@
   !
 -->
 <book xml:id='connector-guide-org.forgerock.openicf.connectors-ldap-connector-${project.version}'
-      xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
-      xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
-      xsi:schemaLocation='http://docbook.org/ns/docbook
+ xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
+ xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+ xsi:schemaLocation='http://docbook.org/ns/docbook
  http://docbook.org/xml/5.0/xsd/docbook.xsd'
-      xmlns:xinclude='http://www.w3.org/2001/XInclude'>
-    <info>
-        <title>${project.name} Installation and Configuration Reference</title>
-        <abstract>
-            <para>
-                Provides installation instructions and configuration options for the
-                ${project.name} version ${docTargetVersion}.</para>
-        </abstract>
-        <copyright>
-            <year>2011-2014</year>
-            <holder>ForgeRock AS</holder>
-        </copyright>
-        <authorgroup>
-         <author>
-          <personname>
-           <firstname>Gael </firstname><surname>Allioux</surname>
-          </personname>
-         </author>
-        </authorgroup>
-        <xinclude:include href="../legal.xml" />
-        <date><?dbtimestamp format="B d, Y"?></date>
-        <pubdate>Publication date: <?dbtimestamp format="B d, Y"?></pubdate>
-        <releaseinfo><?eval ${softwareReleaseDate}?></releaseinfo>
-    </info>
+ xmlns:xinclude='http://www.w3.org/2001/XInclude'>
+ <info>
+ <title>${project.name} Installation and Configuration Reference</title>
+ <abstract>
+  <para>
+   Provides installation instructions and configuration options for the
+   ${project.name} version ${docTargetVersion}.
+  </para>
+ </abstract>
+ <copyright>
+  <year>2011-2014</year>
+  <holder>ForgeRock AS</holder>
+ </copyright>
+ <authorgroup>
+  <author>
+   <personname>
+    <firstname>Gael </firstname><surname>Allioux</surname>
+   </personname>
+  </author>
+ </authorgroup>
+ <xinclude:include href="../legal.xml" />
+ <date><?dbtimestamp format="B d, Y"?></date>
+ <pubdate>Publication date: <?dbtimestamp format="B d, Y"?></pubdate>
+ <releaseinfo><?eval ${softwareReleaseDate}?></releaseinfo>
+ </info>
 
-    <toc />
+ <toc />
 
-    <xinclude:include href="preface.xml" />
-    <xinclude:include href="chap-install-ldap-connector.xml" />
-    <xinclude:include href="chap-config-ldap-connector.xml" />
-    <xinclude:include href='../shared/appendix-interfaces.xml' />
-    <xinclude:include href='../shared/appendix-options.xml' />
+ <xinclude:include href="preface.xml" />
+ <xinclude:include href="chap-install-ldap-connector.xml" />
+ <xinclude:include href="chap-config-ldap-connector.xml" />
+ <xinclude:include href='../shared/appendix-interfaces.xml' />
+ <xinclude:include href='../shared/appendix-options.xml' />
+ <xinclude:include href='../shared/appendix-pooling.xml' />
 
-    <index />
+ <index />
 </book>

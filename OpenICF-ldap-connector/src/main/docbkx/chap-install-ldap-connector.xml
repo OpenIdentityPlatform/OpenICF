@@ -30,32 +30,69 @@
          xmlns:xlink='http://www.w3.org/1999/xlink'
          xmlns:xinclude='http://www.w3.org/2001/XInclude'>
 
-    <title>${project.name} Installation Instructions</title>
-    <para>
-        This chapter describes how to install the ${project.name} and any
-        prerequisites specific to its use.
-    </para>
+ <title>${project.name} Installation Instructions</title>
+ <para>
+  This chapter describes how to install the ${project.name} and any
+  prerequisites specific to its use.
+ </para>
 
-    <!--This chapter is written manually for each connector -->
-    <section xml:id="before-you-install-org.forgerock.openicf.connectors-ldap-connector-${project.version}">
-        <title>Before You Install the ${project.name}</title>
-        <para>
-            TO BE WRITTEN MANUALLY
-        </para>
-    </section>
+ <!--This chapter is written manually for each connector -->
+ <section xml:id="before-you-install-org.forgerock.openicf.connectors-ldap-connector-${project.version}">
+  <title>Before You Install the ${project.name}</title>
+  <para>
+   The ${project.name} enables you to provision to any LDAP v3 compliant
+   directory server. Before you use the connector, ensure that your directory
+   server is up and running and that the connection details in the
+   <filename>conf/provisioner.openicf-ldap.json</filename> file match those of
+   your directory server deployment.
+  </para>
+  <para>
+   The ${project.name} is supported with any LDAP V3 directory server, and for
+   use with OpenIDM 2.1 and 3.x. The connector works with the OpenICF framework
+   versions 1.1 and 1.4.
+  </para>
+ </section>
 
-    <section xml:id="connector-install-org.forgerock.openicf.connectors-ldap-connector-${project.version}">
-        <title>Installing the ${project.name}</title>
-        <para>
-            TO BE WRITTEN MANUALLY
-        </para>
-    </section>
+ <section xml:id="connector-install-org.forgerock.openicf.connectors-ldap-connector-${project.version}">
+  <title>Installing the ${project.name}</title>
+  <para>
+   The ${project.name} is provided in the
+   <filename>openidm/connectors/${project.artifactId}-${project.version}.jar</filename> file, for
+   local use. If you are running the connector remotely, copy the connector jar
+   file to the <literal>bundles</literal> directory on the Java connector
+   server.
+  </para>
+  <para>
+   A sample ${project.name} configuration is provided in
+   <filename>openidm/samples/provisioners/provisioner.openicf-ldap.json</filename>.
+   Edit this file to match your LDAP directory deployment, and copy the file to
+   the <filename>openidm/conf</filename> directory. Edit the configuration file,
+   specifying at least the connection details to your LDAP server. Additional
+   configuration properties are as described in the
+   <link xlink:show="new"
+   xlink:href="CURRENT.DOCID#chap-config-org-identityconnectors-ldap-LdapConnector-${project.version}"
+   xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Configuration
+   chapter</citetitle></link>.
+  </para>
+ </section>
 
-    <section xml:id="connector-pooling-org-identityconnectors-ldap-LdapConnector-${project.version}">
-        <title>Configuring Connector Pooling</title>
-        <para>
-            TO BE WRITTEN MANUALLY
-        </para>
-    </section>
+ <section xml:id="connector-pooling-org-identityconnectors-ldap-LdapConnector-${project.version}">
+  <title>Configuring Connector Pooling</title>
+  <para>
+   The ${project.name} supports connection pooling, which can substantially
+   improve the performance of the connector. The basic connection pooling
+   configuration is described in the <link xlink:show="new"
+   xlink:href="CURRENT.DOCID#appendix-pooling"
+   xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Connection
+   Pooling Configuration Appendix</citetitle></link>.
+  </para>
+  <para>
+   Specifically, for the ${project.name}, the value of the
+   <literal>"maxObjects"</literal> and <literal>"maxIdle"</literal> properties
+   <emphasis>must</emphasis> be the same. The best performance results with this
+   connector have been observed when these properties have been increased to
+   <literal>40</literal> respectively.
+  </para>
+ </section>
 
 </chapter>
