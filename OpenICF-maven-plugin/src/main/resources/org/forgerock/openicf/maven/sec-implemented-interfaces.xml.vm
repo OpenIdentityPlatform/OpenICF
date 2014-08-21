@@ -33,7 +33,7 @@
 
     <title>OpenICF Interfaces Implemented by the ${connectorDisplayName}</title>
     <para>
-        The ${connectorDisplayName} implements the following OpenICF interfaces.
+     The ${connectorDisplayName} implements the following OpenICF interfaces.
     </para>
 
     <!--THIS LIST IS BUILT FROM THE IMPLEMENTED INTERFACES, LINKS BUILT FROM THE
@@ -45,158 +45,206 @@
             #set( $action = $interface.key )
             #if ("AuthenticationApiOp" == $action)
                 <varlistentry>
-                    <term>
-                        <link xlink:show="new"
-                              xlink:href="CURRENT.DOCID#interface-AuthenticationApiOp"
-                              xlink:role="http://docbook.org/xlink/role/olink">Authenticate
-                        </link>
-                    </term>
-                    <listitem>
-                        <para>
-                            Provides simple authentication with two parameters, presumed to be a user
-                            name and password.
-                        </para>
-                    </listitem>
+                 <term>
+                  <link xlink:show="new"
+                   xlink:href="CURRENT.DOCID#interface-AuthenticationApiOp"
+                   xlink:role="http://docbook.org/xlink/role/olink">Authenticate
+                  </link>
+                 </term>
+                 <listitem>
+                  <para>
+                   Provides simple authentication with two parameters, presumed
+                   to be a user name and password.
+                  </para>
+                 </listitem>
                 </varlistentry>
             #elseif ("CreateApiOp" == $action)
                 <varlistentry>
-                    <term>
-                        <link xlink:show="new"
-                              xlink:href="CURRENT.DOCID#interface-CreateApiOp"
-                              xlink:role="http://docbook.org/xlink/role/olink">Create
-                        </link>
-                    </term>
-                    <listitem>
-                        <para>
-                            TODO: Describe operation.
-                        </para>
-                    </listitem>
+                 <term>
+                  <link xlink:show="new"
+                   xlink:href="CURRENT.DOCID#interface-CreateApiOp"
+                   xlink:role="http://docbook.org/xlink/role/olink">Create
+                  </link>
+                 </term>
+                 <listitem>
+                  <para>
+                   Creates an object and its <literal>uid</literal>.
+                  </para>
+                 </listitem>
                 </varlistentry>
             #elseif ("DeleteApiOp" == $action)
                 <varlistentry>
-                    <term>
-                        <link xlink:show="new"
-                              xlink:href="CURRENT.DOCID#interface-DeleteApiOp"
-                              xlink:role="http://docbook.org/xlink/role/olink">Delete
-                        </link>
-                    </term>
-                    <listitem>
-                        <para>
-                            TODO: Describe operation.
-                        </para>
-                    </listitem>
+                 <term>
+                  <link xlink:show="new"
+                   xlink:href="CURRENT.DOCID#interface-DeleteApiOp"
+                   xlink:role="http://docbook.org/xlink/role/olink">Delete
+                  </link>
+                 </term>
+                 <listitem>
+                  <para>
+                   Deletes an object, referenced by its <literal>uid</literal>.
+                  </para>
+                 </listitem>
                 </varlistentry>
             #elseif ("ResolveUsernameApiOp" == $action)
                 <varlistentry>
-                    <term>
-                        <link xlink:show="new"
-                              xlink:href="CURRENT.DOCID#interface-ResolveUsernameApiOp"
-                              xlink:role="http://docbook.org/xlink/role/olink">Resolve Username
-                        </link>
-                    </term>
-                    <listitem>
-                        <para>
-                            TODO: Describe operation.
-                        </para>
-                    </listitem>
+                 <term>
+                  <link xlink:show="new"
+                   xlink:href="CURRENT.DOCID#interface-ResolveUsernameApiOp"
+                   xlink:role="http://docbook.org/xlink/role/olink">Resolve Username
+                  </link>
+                 </term>
+                 <listitem>
+                  <para>
+                   Resolves an object by its username and returns the
+                   <literal>uid</literal> of the object.
+                  </para>
+                 </listitem>
                 </varlistentry>
             #elseif ("SchemaApiOp" == $action)
                 <varlistentry>
-                    <term>
-                        <link xlink:show="new"
-                              xlink:href="CURRENT.DOCID#interface-SchemaApiOp"
-                              xlink:role="http://docbook.org/xlink/role/olink">Schema
-                        </link>
-                    </term>
-                    <listitem>
-                        <para>
-                            TODO: Describe operation.
-                        </para>
-                    </listitem>
+                 <term>
+                  <link xlink:show="new"
+                   xlink:href="CURRENT.DOCID#interface-SchemaApiOp"
+                   xlink:role="http://docbook.org/xlink/role/olink">Schema
+                  </link>
+                 </term>
+                 <listitem>
+                  <para>
+                   Describes the object types, operations, and options that the
+                   connector supports.
+                  </para>
+                 </listitem>
                 </varlistentry>
             #elseif ("ScriptOnConnectorApiOp" == $action)
                 <varlistentry>
-                    <term>
-                        <link xlink:show="new"
-                              xlink:href="CURRENT.DOCID#interface-ScriptOnConnectorApiOp"
-                              xlink:role="http://docbook.org/xlink/role/olink">Script on Connector
-                        </link>
-                    </term>
-                    <listitem>
-                        <para>
-                            TODO: Describe operation.
-                        </para>
-                    </listitem>
+                 <term>
+                  <link xlink:show="new"
+                   xlink:href="CURRENT.DOCID#interface-ScriptOnConnectorApiOp"
+                   xlink:role="http://docbook.org/xlink/role/olink">Script on Connector
+                  </link>
+                 </term>
+                 <listitem>
+                  <para>
+                   Enables an application to run a script in the context of the
+                   connector. Any script that runs on the connector has the
+                   following characteristics:
+                  </para>
+                  <itemizedlist>
+                   <listitem>
+                    <para>
+                     The script runs in the same execution environment as the
+                     connector and has access to all the classes to which the
+                     connector has access.
+                    </para>
+                   </listitem>
+                   <listitem>
+                    <para>
+                     The script has access to a <literal>connector</literal>
+                     variable that is equivalent to an initialized instance of
+                     the connector. At a minimum, the script can access the
+                     connector configuration.
+                    </para>
+                   </listitem>
+                   <listitem>
+                    <para>
+                     The script has access to any script-arguments passed in by
+                     the application.
+                    </para>
+                   </listitem>
+                  </itemizedlist>
+                 </listitem>
                 </varlistentry>
             #elseif ("ScriptOnResourceApiOp" == $action)
                 <varlistentry>
-                    <term>
-                        <link xlink:show="new"
-                              xlink:href="CURRENT.DOCID#interface-ScriptOnResourceApiOp"
-                              xlink:role="http://docbook.org/xlink/role/olink">Script on Resource
-                        </link>
-                    </term>
-                    <listitem>
-                        <para>
-                            TODO: Describe operation.
-                        </para>
-                    </listitem>
+                 <term>
+                  <link xlink:show="new"
+                   xlink:href="CURRENT.DOCID#interface-ScriptOnResourceApiOp"
+                   xlink:role="http://docbook.org/xlink/role/olink">Script on Resource
+                  </link>
+                 </term>
+                 <listitem>
+                  <para>
+                   Runs a script on the target resource that is managed by this
+                   connector.
+                  </para>
+                 </listitem>
                 </varlistentry>
             #elseif ("SearchApiOp" == $action)
                 <varlistentry>
-                    <term>
-                        <link xlink:show="new"
-                              xlink:href="CURRENT.DOCID#interface-SearchApiOp"
-                              xlink:role="http://docbook.org/xlink/role/olink">Search
-                        </link>
-                    </term>
-                    <listitem>
-                        <para>
-                            TODO: Describe operation.
-                        </para>
-                    </listitem>
+                 <term>
+                  <link xlink:show="new"
+                   xlink:href="CURRENT.DOCID#interface-SearchApiOp"
+                   xlink:role="http://docbook.org/xlink/role/olink">Search
+                  </link>
+                 </term>
+                 <listitem>
+                  <para>
+                   Searches the target resource for all objects that match the
+                   specified object class and filter.
+                  </para>
+                 </listitem>
                 </varlistentry>
             #elseif ("SyncApiOp" == $action)
                 <varlistentry>
-                    <term>
-                        <link xlink:show="new"
-                              xlink:href="CURRENT.DOCID#interface-SyncApiOp"
-                              xlink:role="http://docbook.org/xlink/role/olink">Sync
-                        </link>
-                    </term>
-                    <listitem>
-                        <para>
-                            TODO: Describe operation.
-                        </para>
-                    </listitem>
+                 <term>
+                  <link xlink:show="new"
+                   xlink:href="CURRENT.DOCID#interface-SyncApiOp"
+                   xlink:role="http://docbook.org/xlink/role/olink">Sync
+                  </link>
+                 </term>
+                 <listitem>
+                  <para>
+                   Polls the target resource for synchronization events, that
+                   is, native changes to objects on the target resource.
+                  </para>
+                 </listitem>
                 </varlistentry>
             #elseif ("TestApiOp" == $action)
                 <varlistentry>
-                    <term>
-                        <link xlink:show="new"
-                              xlink:href="CURRENT.DOCID#interface-TestApiOp"
-                              xlink:role="http://docbook.org/xlink/role/olink">Test
-                        </link>
-                    </term>
-                    <listitem>
-                        <para>
-                            TODO: Describe operation.
-                        </para>
-                    </listitem>
+                 <term>
+                  <link xlink:show="new"
+                   xlink:href="CURRENT.DOCID#interface-TestApiOp"
+                   xlink:role="http://docbook.org/xlink/role/olink">Test
+                  </link>
+                 </term>
+                 <listitem>
+                  <para>
+                   Tests the connector configuration. Testing a configuration
+                   checks all elements of the environment that are referred to
+                   by the configuration are available. For example, the
+                   connector might make a physical connection to a host that is
+                   specified in the configuration to verify that it exists and
+                   that the credentials that are specified in the configuration
+                   are valid.
+                  </para>
+                  <para>
+                   This operation might need to connect to a resource, and, as
+                   such, might take some time. Do not invoke this operation too
+                   often, such as before every provisioning operation. The test
+                   operation is not intended to check that the connector is
+                   alive (that is, that its physical connection to the resource
+                   has not timed out).
+                  </para>
+                  <para>
+                   You can invoke the test operation before a connector
+                   configuration has been validated.
+                  </para>
+                 </listitem>
                 </varlistentry>
             #elseif ("UpdateApiOp" == $action)
                 <varlistentry>
-                    <term>
-                        <link xlink:show="new"
-                              xlink:href="CURRENT.DOCID#interface-UpdateApiOp"
-                              xlink:role="http://docbook.org/xlink/role/olink">Update
-                        </link>
-                    </term>
-                    <listitem>
-                        <para>
-                            TODO: Describe operation.
-                        </para>
-                    </listitem>
+                 <term>
+                  <link xlink:show="new"
+                   xlink:href="CURRENT.DOCID#interface-UpdateApiOp"
+                   xlink:role="http://docbook.org/xlink/role/olink">Update
+                  </link>
+                 </term>
+                 <listitem>
+                  <para>
+                   Updates (modifies or replaces) objects on a target resource.
+                  </para>
+                 </listitem>
                 </varlistentry>
             #else
             #end
