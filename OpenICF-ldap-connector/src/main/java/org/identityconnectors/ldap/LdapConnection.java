@@ -54,6 +54,7 @@ import org.identityconnectors.framework.common.exceptions.PasswordExpiredExcepti
 import org.identityconnectors.ldap.schema.LdapSchemaMapping;
 
 import com.sun.jndi.ldap.ctl.PasswordExpiredResponseControl;
+import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 
 public class LdapConnection {
@@ -100,6 +101,7 @@ public class LdapConnection {
         LDAP_BINARY_SYNTAX_ATTRS.add(LdapConstants.MS_GUID_ATTR);
     }
     private static final String LDAP_CTX_FACTORY = "com.sun.jndi.ldap.LdapCtxFactory";
+    public static final String SASL_GSSAPI = "SASL-GSSAPI";
     private static final Log log = Log.getLog(LdapConnection.class);
     private final LdapConfiguration config;
     private final LdapSchemaMapping schemaMapping;
@@ -119,26 +121,48 @@ public class LdapConnection {
     public LdapConfiguration getConfiguration() {
         return config;
     }
-
-    private LdapContext getAnonymousContext() throws NamingException {
-        InitialLdapContext ctx = null;
-        final Hashtable<Object, Object> env = new Hashtable<Object, Object>();
+    
+    private Hashtable getDefaultContextEnv(){
+        final Hashtable env = new Hashtable(11);
+        env.put("java.naming.ldap.attributes.binary", LdapConstants.MS_GUID_ATTR);
         env.put(Context.INITIAL_CONTEXT_FACTORY, LDAP_CTX_FACTORY);
         env.put(Context.PROVIDER_URL, getLdapUrls());
         env.put(Context.REFERRAL, "follow");
         env.put(Context.SECURITY_AUTHENTICATION, "simple");
-
         if (config.isSsl()) {
             env.put(Context.SECURITY_PROTOCOL, "ssl");
         }
-        return new InitialLdapContext(env, null);
+        return env;
+    }
+    
+    private LdapContext getAnonymousContext() throws NamingException {
+        InitialLdapContext ctx = null;
+        return new InitialLdapContext(getDefaultContextEnv(), null);
+    }
+    
+    private LdapContext getSaslContext() throws NamingException {
+        // Set up environment for creating initial context
+        final Hashtable env = getDefaultContextEnv();
+        env.put(Context.REFERRAL, config.getReferralsHandling());
+        // Request the use of the "GSSAPI" SASL mechanism
+        // Authenticate by using already established Kerberos credentials
+        env.put(Context.SECURITY_AUTHENTICATION, "GSSAPI");
+        return new InitialLdapContext(env,null);
     }
     
     public LdapContext getInitialContext() {
         if (initCtx != null) {
             return initCtx;
         }
-        initCtx = connect(config.getPrincipal(), config.getCredentials());
+        if (SASL_GSSAPI.equalsIgnoreCase(config.getAuthType())) {
+            try {
+                initCtx = getSaslContext();
+            } catch (NamingException ex) {
+                throw new ConnectionFailedException(ex);
+            }
+        } else {
+            initCtx = connect(config.getPrincipal(), config.getCredentials());
+        }
         return initCtx;
     }
 
@@ -154,16 +178,8 @@ public class LdapConnection {
     private Pair<AuthenticationResult, LdapContext> createContext(String principal, GuardedString credentials) {
         final List<Pair<AuthenticationResult, LdapContext>> result = new ArrayList<Pair<AuthenticationResult, LdapContext>>(1);
 
-        final Hashtable<Object, Object> env = new Hashtable<Object, Object>();
-        env.put("java.naming.ldap.attributes.binary", LdapConstants.MS_GUID_ATTR);
-        env.put(Context.INITIAL_CONTEXT_FACTORY, LDAP_CTX_FACTORY);
-        env.put(Context.PROVIDER_URL, getLdapUrls());
+        final Hashtable<Object, Object> env = getDefaultContextEnv();
         env.put(Context.REFERRAL, config.getReferralsHandling());
-
-        if (config.isSsl()) {
-            env.put(Context.SECURITY_PROTOCOL, "ssl");
-        }
-
         String authentication = isNotBlank(principal) ? "simple" : "none";
         env.put(Context.SECURITY_AUTHENTICATION, authentication);
 

@@ -113,6 +113,13 @@ public class LdapConfiguration extends AbstractConfiguration {
      * will be written to.
      */
     private String passwordAttribute = "userPassword";
+    
+    /**
+     * The authentication mechanism to use. Either "simple" or "SASL-GSSAPI".
+     * Defaults to "simple"
+     */
+    
+    private String authType = "simple";
 
     /**
      * A search filter that any account needs to match in order to be returned.
@@ -186,7 +193,7 @@ public class LdapConfiguration extends AbstractConfiguration {
      * Whether to read the schema from the server.
      */
     private boolean readSchema = true;
-
+    
     // Sync configuration properties.
 
     private String[] baseContextsToSynchronize = { };
@@ -426,7 +433,15 @@ public class LdapConfiguration extends AbstractConfiguration {
     public void setCredentials(GuardedString credentials) {
         this.credentials = credentials != null ? credentials.copy() : null;
     }
-
+    
+    public String getAuthType(){
+        return authType;
+    }
+    
+    public void setAuthType(String authType){
+        this.authType = authType;
+    }
+    
     public String[] getBaseContexts() {
         return baseContexts.clone();
     }
