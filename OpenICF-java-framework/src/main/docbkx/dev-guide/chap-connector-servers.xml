@@ -315,9 +315,9 @@ connectorserver.key=lmA6bMfENJGlIDbfrVtklXFK32s\=
 
   <para>Use the <option>-run</option> option.</para>
 
-  <screen>java
- -cp "connector-framework.jar:connector-framework-internal.jar:groovy-all.jar"
- org.identityconnectors.framework.server.Main
+  <screen>$ java \
+ -cp "connector-framework.jar:connector-framework-internal.jar:groovy-all.jar" \
+ org.identityconnectors.framework.server.Main \
  -run -properties connectorserver.properties</screen>
 
   <section xml:id="install-connectors-java">
