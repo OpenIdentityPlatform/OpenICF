@@ -162,7 +162,7 @@
         <javadocStylesheet>org/forgerock/javadoc/javadoc.css</javadocStylesheet>
 
         <!-- Core documentation properties -->
-        <frDocPluginVersion>2.1.4-SNAPSHOT</frDocPluginVersion>
+        <frDocPluginVersion>2.1.4</frDocPluginVersion>
         <docTargetVersion>${project.version}</docTargetVersion>
         <googleAnalyticsAccountId>UA-23412190-10</googleAnalyticsAccountId>
         <!--
