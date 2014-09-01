@@ -75,7 +75,6 @@ public abstract class TstAbstractConnector implements CreateOp, SearchOp<Filter>
             this.sortKeys = Arrays.asList(sortKeys);
         }
 
-        @Override
         public int compare(final ConnectorObject r1, final ConnectorObject r2) {
             for (final SortKey sortKey : sortKeys) {
                 final int result = compare(r1, r2, sortKey);
@@ -120,7 +119,7 @@ public abstract class TstAbstractConnector implements CreateOp, SearchOp<Filter>
     }
 
     private static final Comparator<Object> VALUE_COMPARATOR = new Comparator<Object>() {
-        @Override
+
         public int compare(final Object o1, final Object o2) {
             return compareValues(o1, o2);
         }
@@ -151,7 +150,6 @@ public abstract class TstAbstractConnector implements CreateOp, SearchOp<Filter>
         config.getGuid();
     }
 
-    @Override
     public Uid create(ObjectClass objectClass, Set<Attribute> createAttributes,
             OperationOptions options) {
         AttributesAccessor accessor = new AttributesAccessor(createAttributes);
@@ -170,7 +168,6 @@ public abstract class TstAbstractConnector implements CreateOp, SearchOp<Filter>
         return new Uid(config.getGuid().toString());
     }
 
-    @Override
     public void delete(ObjectClass objectClass, Uid uid, OperationOptions options) {
         if (null == uid.getRevision()) {
             throw new PreconditionRequiredException("Version is required for MVCC");
@@ -182,18 +179,16 @@ public abstract class TstAbstractConnector implements CreateOp, SearchOp<Filter>
         }
     }
 
-    @Override
     public FilterTranslator<Filter> createFilterTranslator(ObjectClass objectClass,
             OperationOptions options) {
         return new FilterTranslator<Filter>() {
-            @Override
+
             public List<Filter> translate(Filter filter) {
                 return Collections.singletonList(filter);
             }
         };
     }
 
-    @Override
     public void executeQuery(ObjectClass objectClass, Filter query, ResultsHandler handler,
             OperationOptions options) {
 
@@ -277,7 +272,6 @@ public abstract class TstAbstractConnector implements CreateOp, SearchOp<Filter>
 
     }
 
-    @Override
     public void sync(ObjectClass objectClass, SyncToken token, SyncResultsHandler handler,
             OperationOptions options) {
         if (handler instanceof SyncTokenResultsHandler) {
@@ -285,7 +279,6 @@ public abstract class TstAbstractConnector implements CreateOp, SearchOp<Filter>
         }
     }
 
-    @Override
     public SyncToken getLatestSyncToken(ObjectClass objectClass) {
         return new SyncToken(config.getGuid().toString());
     }

@@ -51,7 +51,6 @@ public class GetImpl implements GetApiOp {
         this.op = search;
     }
 
-    @Override
     public ConnectorObject getObject(ObjectClass objectClass, Uid uid, OperationOptions options) {
         Assertions.nullCheck(objectClass, "objectClass");
         if (ObjectClass.ALL.equals(objectClass)) {
@@ -66,7 +65,7 @@ public class GetImpl implements GetApiOp {
         final List<ConnectorObject> list = new ArrayList<ConnectorObject>();
         Filter filter = FilterBuilder.equalTo(uid);
         op.search(objectClass, filter, new ResultsHandler() {
-            @Override
+
             public boolean handle(ConnectorObject obj) {
                 list.add(obj);
                 return false;

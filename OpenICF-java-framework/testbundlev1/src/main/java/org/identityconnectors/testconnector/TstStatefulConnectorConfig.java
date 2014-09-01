@@ -39,7 +39,6 @@ public class TstStatefulConnectorConfig extends TstConnectorConfig implements St
         return guid;
     }
 
-    @Override
     public void release() {
         guid = null;
     }

@@ -53,7 +53,6 @@ public final class AndFilter extends CompositeFilter {
      *
      * @see Filter#accept(ConnectorObject)
      */
-    @Override
     public boolean accept(final ConnectorObject obj) {
         boolean result = true;
         for (final Filter subFilter : subFilters) {

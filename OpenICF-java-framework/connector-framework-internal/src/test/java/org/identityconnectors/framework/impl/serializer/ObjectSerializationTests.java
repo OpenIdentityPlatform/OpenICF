@@ -1121,7 +1121,7 @@ public class ObjectSerializationTests {
         final StringBuilder buf = new StringBuilder();
         string.access(
                 new GuardedString.Accessor() {
-                    @Override
+
                     public void access(char [] chars) {
                         buf.append(chars);
                     }
@@ -1137,7 +1137,7 @@ public class ObjectSerializationTests {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         bytes.access(
                 new GuardedByteArray.Accessor() {
-                    @Override
+
                     public void access(byte[] bytes) {
                         out.write(bytes, 0, bytes.length);
                     }

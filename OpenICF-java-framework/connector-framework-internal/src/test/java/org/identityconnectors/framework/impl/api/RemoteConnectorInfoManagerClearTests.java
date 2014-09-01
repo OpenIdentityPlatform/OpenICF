@@ -142,7 +142,7 @@ public class RemoteConnectorInfoManagerClearTests extends ConnectorInfoManagerTe
             // Assert it has one item
             Assert.assertNotNull(managedFactory.find(remoteFacade.getConnectorFacadeKey()));
             for (int i = 0; i <= 3; i++) {
-                Thread.sleep(TimeUnit.MINUTES.toMillis(1));
+                Thread.sleep(TimeUnit.SECONDS.toMillis(60));
                 if (null == managedFactory.find(remoteFacade.getConnectorFacadeKey())) {
                     break;
                 }

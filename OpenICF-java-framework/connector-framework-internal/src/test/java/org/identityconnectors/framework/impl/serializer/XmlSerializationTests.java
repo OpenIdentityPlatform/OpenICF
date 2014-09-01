@@ -22,8 +22,8 @@
  */
 package org.identityconnectors.framework.impl.serializer;
 
-import static org.fest.assertions.api.Assertions.assertThat;
-import static org.fest.assertions.api.Assertions.atIndex;
+import static org.fest.assertions.Assertions.assertThat;
+import static org.fest.assertions.Index.atIndex;
 
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -69,7 +69,6 @@ public class XmlSerializationTests extends ObjectSerializationTests {
         factory.deserializeXmlStream(new InputSource(new StringReader(xml)),
                 new XmlObjectResultsHandler() {
 
-                    @Override
                     public boolean handle(Object o) {
                         results.add(o);
                         return true;

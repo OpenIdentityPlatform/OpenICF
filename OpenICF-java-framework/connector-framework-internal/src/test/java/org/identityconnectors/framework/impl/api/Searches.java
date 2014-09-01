@@ -36,7 +36,6 @@ public class Searches {
 
     static class EmptySearch implements SearchApiOp {
 
-        @Override
         public SearchResult search(final ObjectClass objectClass, final Filter filter,
                 final ResultsHandler handler, final OperationOptions options) {
             return new SearchResult();
@@ -55,7 +54,6 @@ public class Searches {
             this.limit = limit;
         }
 
-        @Override
         public SearchResult search(final ObjectClass objectClass, final Filter filter,
                 final ResultsHandler handler, OperationOptions options) {
             for (int i = 0; i < limit; i++) {

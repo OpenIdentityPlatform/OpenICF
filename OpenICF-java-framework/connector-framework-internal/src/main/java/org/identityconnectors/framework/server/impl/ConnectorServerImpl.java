@@ -78,6 +78,7 @@ public class ConnectorServerImpl extends ConnectorServer {
 
         final ServerSocket socket = createServerSocket();
         final ConnectionListener listener = new ConnectionListener(this, socket);
+        listener.setDaemon(true);
         listener.start();
         stopLatch = new CountDownLatch(1);
         startDate = System.currentTimeMillis();
@@ -86,10 +87,10 @@ public class ConnectorServerImpl extends ConnectorServer {
         // Create an inferred delegate that invokes methods for the timer.
         if (getMaxFacadeLifeTime() > 0) {
             FacadeDisposer statusChecker =
-                    new FacadeDisposer(getMaxFacadeLifeTime(), TimeUnit.MINUTES);
+                    new FacadeDisposer(getMaxFacadeLifeTime() * 60, TimeUnit.SECONDS);
             timer = new Timer();
-            timer.scheduleAtFixedRate(statusChecker, new Date(), TimeUnit.MINUTES.toMillis(Math
-                    .min(getMaxFacadeLifeTime(), 10)));
+            timer.scheduleAtFixedRate(statusChecker, new Date(), TimeUnit.SECONDS.toMillis(Math
+                    .min(getMaxFacadeLifeTime() * 60, 600)));
         }
     }
 

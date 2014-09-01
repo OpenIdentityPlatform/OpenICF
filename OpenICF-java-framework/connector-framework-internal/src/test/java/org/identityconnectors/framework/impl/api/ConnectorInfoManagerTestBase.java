@@ -23,7 +23,7 @@
  */
 package org.identityconnectors.framework.impl.api;
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import static org.fest.assertions.Assertions.assertThat;
 import static org.identityconnectors.common.IOUtil.makeURL;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -153,7 +153,7 @@ public abstract class ConnectorInfoManagerTestBase {
 
         final int[] count = new int[1];
         facade1.search(ObjectClass.ACCOUNT, null, new ResultsHandler() {
-            @Override
+
             public boolean handle(ConnectorObject obj) {
                 count[0]++;
                 // make sure thread local classloader is restored
@@ -195,6 +195,8 @@ public abstract class ConnectorInfoManagerTestBase {
                     || e.getMessage()
                     .contains(errorMessageBundle.getString("nosuitableimagefound"))
                     || e.getMessage()
+                    .contains(errorMessageBundle.getString("notvalidwin32application"))
+                    || e.getMessage()
                     .contains(errorMessageBundle.getString("nonativein")));
         } catch (RuntimeException e) {
             // Remote framework serializes UnsatisfiedLinkError as
@@ -202,6 +204,8 @@ public abstract class ConnectorInfoManagerTestBase {
             assertTrue(e.getMessage().contains(errorMessageBundle.getString("filetooshort"))
                     || e.getMessage()
                     .contains(errorMessageBundle.getString("nosuitableimagefound"))
+                    || e.getMessage()
+                    .contains(errorMessageBundle.getString("notvalidwin32application"))
                     || e.getMessage()
                     .contains(errorMessageBundle.getString("nonativein")));
         }
@@ -336,7 +340,7 @@ public abstract class ConnectorInfoManagerTestBase {
         final List<ConnectorObject> results = new ArrayList<ConnectorObject>();
 
         SearchResult searchResult = facade.search(ObjectClass.ACCOUNT, null, new ResultsHandler() {
-            @Override
+
             public boolean handle(ConnectorObject obj) {
                 results.add(obj);
                 return true;
@@ -353,7 +357,7 @@ public abstract class ConnectorInfoManagerTestBase {
         results.clear();
 
         searchResult = facade.search(ObjectClass.ACCOUNT, null, new ResultsHandler() {
-            @Override
+
             public boolean handle(ConnectorObject obj) {
                 if (results.size() < 500) {
                     results.add(obj);
@@ -390,7 +394,7 @@ public abstract class ConnectorInfoManagerTestBase {
         ConnectorFacade facade = facf.newInstance(api);
         long start = System.currentTimeMillis();
         facade.search(ObjectClass.ACCOUNT, null, new ResultsHandler() {
-            @Override
+
             public boolean handle(ConnectorObject obj) {
                 return true;
             }
@@ -468,7 +472,7 @@ public abstract class ConnectorInfoManagerTestBase {
         final List<SyncDelta> results = new ArrayList<SyncDelta>();
 
         facade.sync(ObjectClass.ACCOUNT, null, new SyncResultsHandler() {
-            @Override
+
             public boolean handle(SyncDelta obj) {
                 results.add(obj);
                 return true;
@@ -484,7 +488,7 @@ public abstract class ConnectorInfoManagerTestBase {
         results.clear();
 
         facade.sync(ObjectClass.ACCOUNT, null, new SyncResultsHandler() {
-            @Override
+
             public boolean handle(SyncDelta obj) {
                 if (results.size() < 500) {
                     results.add(obj);
@@ -513,7 +517,7 @@ public abstract class ConnectorInfoManagerTestBase {
 
         for (int i = 0; i < 10; i++) {
             SyncToken lastToken = facade.sync(ObjectClass.ACCOUNT, null, new SyncResultsHandler() {
-                @Override
+
                 public boolean handle(SyncDelta obj) {
                     return true;
                 }
@@ -570,7 +574,7 @@ public abstract class ConnectorInfoManagerTestBase {
             } catch (Exception e) {
                 String expectedMessage =
                         "unable to resolve class org.identityconnectors.framework.impl.api.ConfigurationPropertyImpl";
-                assertThat(e).hasMessageContaining(expectedMessage);
+                assertThat(e.getMessage()).contains(expectedMessage);
             }
         }
 
@@ -731,7 +735,6 @@ public abstract class ConnectorInfoManagerTestBase {
             searchResult = facade1.search(ObjectClass.ACCOUNT, null, new ResultsHandler() {
                 int size = 0;
 
-                @Override
                 public boolean handle(ConnectorObject connectorObject) {
                     if (size >= 10) {
                         fail("More then 10 objects was handled!");
@@ -771,7 +774,6 @@ public abstract class ConnectorInfoManagerTestBase {
             searchResult = facade1.search(ObjectClass.ACCOUNT, filter, new ResultsHandler() {
                 int size = 0;
 
-                @Override
                 public boolean handle(ConnectorObject connectorObject) {
                     if (size >= 10) {
                         fail("More then 10 objects was handled!");
@@ -820,7 +822,7 @@ public abstract class ConnectorInfoManagerTestBase {
 
         try {
             facade1.search(ObjectClass.ACCOUNT, null, new ResultsHandler() {
-                @Override
+
                 public boolean handle(ConnectorObject obj) {
                     return true;
                 }

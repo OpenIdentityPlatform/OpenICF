@@ -22,7 +22,7 @@
  */
 package org.identityconnectors.framework.common.objects;
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import static org.fest.assertions.Assertions.assertThat;
 import static org.identityconnectors.framework.common.objects.LocaleTestUtil.resetLocaleCache;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;

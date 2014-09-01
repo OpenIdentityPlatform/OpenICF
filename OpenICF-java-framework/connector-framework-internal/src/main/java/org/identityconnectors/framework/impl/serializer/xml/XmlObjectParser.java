@@ -101,7 +101,6 @@ public class XmlObjectParser {
             }
         }
 
-        @Override
         public void characters(char[] ch, int start, int length) {
             Element currentElement = getCurrentElement();
             if (currentElement != null) {
@@ -110,11 +109,9 @@ public class XmlObjectParser {
             }
         }
 
-        @Override
         public void endDocument() {
         }
 
-        @Override
         public void endElement(String namespaceURI, String localName, String qName) {
             // we don't push the top-level MULTI_OBJECT_ELEMENT on the stack
             if (elementStack.size() > 0) {
@@ -130,11 +127,9 @@ public class XmlObjectParser {
             }
         }
 
-        @Override
         public void endPrefixMapping(String prefix) {
         }
 
-        @Override
         public void ignorableWhitespace(char[] ch, int start, int length) {
             Element currentElement = getCurrentElement();
             if (currentElement != null) {
@@ -143,23 +138,18 @@ public class XmlObjectParser {
             }
         }
 
-        @Override
         public void processingInstruction(String target, String data) {
         }
 
-        @Override
         public void setDocumentLocator(Locator locator) {
         }
 
-        @Override
         public void skippedEntity(String name) {
         }
 
-        @Override
         public void startDocument() {
         }
 
-        @Override
         public void startElement(String namespaceURI, String localName, String qName,
                 Attributes atts) {
             Element element = null;
@@ -189,11 +179,9 @@ public class XmlObjectParser {
             }
         }
 
-        @Override
         public void startPrefixMapping(String prefix, String uri) {
         }
 
-        @Override
         public InputSource resolveEntity(String pubid, String sysid) throws SAXException {
             if (XmlObjectSerializerImpl.CONNECTORS_DTD.equals(pubid)) {
                 // stupid freakin sax parser. even if validation
@@ -215,17 +203,14 @@ public class XmlObjectParser {
             }
         }
 
-        @Override
         public void error(SAXParseException exception) throws SAXException {
             throw exception;
         }
 
-        @Override
         public void fatalError(SAXParseException exception) throws SAXException {
             throw exception;
         }
 
-        @Override
         public void warning(SAXParseException exception) {
         }
     }

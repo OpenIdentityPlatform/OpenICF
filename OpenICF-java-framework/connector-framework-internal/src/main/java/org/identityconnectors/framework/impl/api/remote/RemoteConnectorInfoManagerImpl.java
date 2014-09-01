@@ -166,7 +166,6 @@ public class RemoteConnectorInfoManagerImpl implements ConnectorInfoManager,
         return rv;
     }
 
-    @Override
     public ConnectorInfo findConnectorInfo(ConnectorKey key) {
         for (ConnectorInfo info : getConnectorInfos()) {
             if (info.getConnectorKey().equals(key)) {
@@ -176,7 +175,6 @@ public class RemoteConnectorInfoManagerImpl implements ConnectorInfoManager,
         return null;
     }
 
-    @Override
     public List<ConnectorInfo> getConnectorInfos() {
         List<ConnectorInfo> result = connectorInfoList;
         if (null == result) {
@@ -188,7 +186,6 @@ public class RemoteConnectorInfoManagerImpl implements ConnectorInfoManager,
     /**
      * {@inheritDoc}
      */
-    @Override
     public void run() {
         try {
             Map<String, Object> serverInfo = getServerInfo();
@@ -225,7 +222,6 @@ public class RemoteConnectorInfoManagerImpl implements ConnectorInfoManager,
     /**
      * {@inheritDoc}
      */
-    @Override
     public void addConnectorEventHandler(ConnectorEventHandler hook) {
         if (hook == null) {
             throw new NullPointerException();
@@ -244,7 +240,6 @@ public class RemoteConnectorInfoManagerImpl implements ConnectorInfoManager,
     /**
      * {@inheritDoc}
      */
-    @Override
     public void deleteConnectorEventHandler(ConnectorEventHandler hook) {
         eventHandlers.removeElement(hook);
     }

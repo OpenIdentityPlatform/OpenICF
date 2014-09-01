@@ -41,7 +41,6 @@ public class SchemaImpl extends ConnectorAPIOperationRunner implements
      *
      * @see org.identityconnectors.framework.api.operations.SchemaApiOp#schema()
      */
-    @Override
     public Schema schema() {
         return ((SchemaOp)getConnector()).schema();
     }

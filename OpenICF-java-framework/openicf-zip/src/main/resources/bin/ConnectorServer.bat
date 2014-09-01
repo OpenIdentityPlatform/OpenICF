@@ -21,7 +21,7 @@ rem enclosed by brackets [] replaced by your own identifying information:
 rem "Portions Copyrighted [year] [name of copyright owner]"
 rem ====================
 rem
-rem Portions Copyrighted 2012-2013 ForgeRock AS
+rem Portions Copyrighted 2012-2014 ForgeRock AS
 rem
 rem -- END LICENSE
 
@@ -61,21 +61,6 @@ set JAVA="%JAVA_HOME%\bin\java.exe"
 set JAVA_DLL="%JAVA_HOME%\jre\bin\server\jvm.dll"
 :homeOk
 
-rem Set CLASSPATH for starting connector server
-rem Only Java 6 supports wildcard (*)
-rem set CP="lib/*;lib/framework/*"
-
-rem setup the classpath
-set CP=lib\framework\connector-framework.jar
-set CP=%CP%;lib\framework\connector-framework-internal.jar
-set CP=%CP%;lib\framework\groovy-all.jar
-set CP=%CP%;lib\framework\icfl-over-slf4j.jar
-set CP=%CP%;lib\framework\slf4j-api.jar
-set CP=%CP%;lib\framework\logback-core.jar
-set CP=%CP%;lib\framework\logback-classic.jar
-
-echo %CP%
-
 rem SET MISC PROPERTIES
 rem Architecture, can be i386 or amd64 or ia64 (it is basically the directory name
 rem   where the binaries are stored, if not set this script will try to
@@ -88,34 +73,63 @@ if ""%ARCH%"" == """" (
   if ""%PROCESSOR_ARCHITECTURE%"" == ""IA64""  set ARCH=ia64
 )
 
+for /f tokens^=2-5^ delims^=.-_^" %%j in ('%JAVA% -fullversion 2^>^&1') do set "java_version=%%j%%k"
+rem Set CLASSPATH for starting connector server
+rem Only Java 6 and above supports wildcard (*)
+set CP="lib\framework\*;lib\framework"
+
+if %java_version% LSS 16 (
+    rem setup the classpath
+    set CP=lib\framework\connector-framework.jar
+    set CP=!CP!;lib\framework\connector-framework-internal.jar
+    set CP=!CP!;lib\framework\groovy-all.jar
+    set CP=!CP!;lib\framework\icfl-over-slf4j.jar
+    set CP=!CP!;lib\framework\slf4j-api.jar
+    set CP=!CP!;lib\framework\logback-core.jar
+    set CP=!CP!;lib\framework\logback-classic.jar
+    set CP=!CP!;lib\framework
+    rem Start the 32bit binary with Java 5
+    set ARCH=i386
+)
+
 rem Run java options, separated by space
-set JAVA_OPTS=-Xmx500m "-Djava.util.logging.config.file=conf\logging.properties" "-Dlogback.configurationFile=lib\logback.xml"
+set JAVA_OPTS=-Xmx500m "-Djava.util.logging.config.file=conf\logging.properties"
 
 rem Service java options, needs to be separated by ;
-set JAVA_OPTS_SERVICE=-Xmx500m;"-Dlogback.configurationFile=lib\logback.xml";
+set JAVA_OPTS_SERVICE=-Xmx512m;
+rem Enable SSL 
+rem set JAVA_OPTS_SERVICE=-Xmx500m;-Djavax.net.ssl.keyStore=conf\keystore.jks;-Djavax.net.ssl.keyStorePassword=changeit;
 set MAIN_CLASS=org.identityconnectors.framework.server.Main
-set SERVER_PROPERTIES_KEY=-properties
 set SERVER_PROPERTIES="conf\ConnectorServer.properties"
 set JVM_OPTION_IDENTIFIER=-J
 
+if ""%1"" == ""jpda"" (
+  if ""%JPDA_TRANSPORT%"" == """" set JPDA_TRANSPORT="dt_socket"
+  if ""%JPDA_ADDRESS%"" == """" set JPDA_ADDRESS="5005"
+  if ""%JPDA_SUSPEND%"" == """" set JPDA_SUSPEND="y"
+  if ""%JPDA_OPTS%"" == """" set JPDA_OPTS="-agentlib:jdwp=transport=!JPDA_TRANSPORT!,address=!JPDA_ADDRESS!,server=y,suspend=!JPDA_SUSPEND!"
+  set JAVA_OPTS=!JAVA_OPTS! !JPDA_OPTS!
+  shift
+)
 
-if ""%1"" == ""/run"" goto srvRun
-if ""%1"" == ""/setkey"" goto srvSetKey
-if ""%1"" == ""/install"" goto srvInstall
-if ""%1"" == ""/uninstall"" goto srvUninstall
+if /i ""%1"" == ""/run"" goto srvRun
+if /i ""%1"" == ""/setKey"" goto srvSetKey
+if /i ""%1"" == ""/setDefaults"" goto srvSetDefaults
+if /i ""%1"" == ""/install"" goto srvInstall
+if /i ""%1"" == ""/uninstall"" goto srvUninstall
 
-echo Usage: ConnectorServer ^<command^> ^[option^]
-echo command:
+echo Usage: ConnectorServer ^<command^> ^[option^], where command is one of the following:
 echo    /install ^[^<serviceName^>^] ^["-J<java option>"^] - Installs the service.
 echo    /uninstall ^[^<serviceName^>^] - Uninstalls the service.
 echo    /run ^["-J<java option>"^] - Runs the server from the console.
-echo    /setkey ^[^<key^>^] - Sets the connector server key.
+echo    /setKey ^[^<key^>^] - Sets the connector server key.
+echo    /setDefaults - Sets the default ConnectorServer.properties.
 echo.
 echo example:
 echo     ConnectorServer.bat /run "-J-Djavax.net.ssl.keyStore=mykeystore.jks" "-J-Djavax.net.ssl.keyStorePassword=changeit"
 echo        - this will run connector server with SSL
 echo.
-echo     ConnectorServer.bat /run "-J-Xdebug" "-J-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
+echo     ConnectorServer.bat jpda /run
 echo        - this will run connector server in debug mode
 goto :EOF
 
@@ -133,27 +147,27 @@ for %%P in (%*) do (
 )
 cd "%CONNECTOR_SERVER_HOME%"
 
-%JAVA% %JAVA_OPTS% %JAVA_OPTS_PARAM% -server -classpath %CP% %MAIN_CLASS% -run %SERVER_PROPERTIES_KEY% %SERVER_PROPERTIES%
+%JAVA% %JAVA_OPTS% %JAVA_OPTS_PARAM% -server -classpath %CP% %MAIN_CLASS% -run -properties %SERVER_PROPERTIES%
 cd "%CURRENT_DIR%"
 goto :EOF
 
 :srvSetKey
-rem Set Connector Server key in its properties file
-shift
-if not ""%1"" == """" goto keyOk
-echo Please provide key you want to set.
-goto exit
-:keyOk
-set key=%1
 rem Sets key in the Identity Connectors Server properties file
-%JAVA% %JAVA_OPTS% -classpath %CP% %MAIN_CLASS% -setkey -key %key% %SERVER_PROPERTIES_KEY% %SERVER_PROPERTIES%
-set key=
+if not ""%2"" == """" (
+    %JAVA% %JAVA_OPTS% -classpath %CP% %MAIN_CLASS% -setKey -key %2 -properties %SERVER_PROPERTIES%
+    goto :EOF
+)
+%JAVA% %JAVA_OPTS% -classpath %CP% %MAIN_CLASS% -setKey -properties %SERVER_PROPERTIES%
+goto :EOF
+
+:srvSetDefaults
+%JAVA% %JAVA_OPTS% -classpath %CP% %MAIN_CLASS% -setDefaults -properties %SERVER_PROPERTIES%
 goto :EOF
 
 :srvInstall
 rem Install the Connector Server as Windows service
 shift
-set SERVICE_NAME=OpenICFConnectorServerJava
+set SERVICE_NAME=ConnectorServerServiceJava
 if not ""%1"" == """" (
     set T=%1
     if "!T:~1,2!" == "%JVM_OPTION_IDENTIFIER%" goto :noServiceName
@@ -170,7 +184,7 @@ for %%P in (%*) do (
       set JAVA_OPTS_DELIM=;
     )
 )
-"%CONNECTOR_SERVER_HOME%\bin\%ARCH%\ConnectorServerJava.exe" //IS//%SERVICE_NAME% --Install="%CONNECTOR_SERVER_HOME%\bin\%ARCH%\ConnectorServerJava.exe" --Description="OpenICF Connectors Java Server" --Jvm=%JAVA_DLL% --Classpath=%CP% --JvmOptions=%JAVA_OPTS_SERVICE%%JAVA_OPTS_PARAM% --StartPath="%CONNECTOR_SERVER_HOME%" --StartMode=jvm --StartClass=%MAIN_CLASS% --StartParams="-run;%SERVER_PROPERTIES_KEY%;%SERVER_PROPERTIES%" --StopMode=jvm --StopClass=%MAIN_CLASS% --StopMethod=stop --StopParams=dummy --LogPath="%CONNECTOR_SERVER_HOME%\logs" --LogPrefix=service --StdOutput=auto --StdError=auto --LogLevel=INFO
+"%CONNECTOR_SERVER_HOME%\bin\%ARCH%\ConnectorServerJava.exe" //IS//%SERVICE_NAME% --Install="%CONNECTOR_SERVER_HOME%\bin\%ARCH%\ConnectorServerJava.exe" --DisplayName="OpenICF Connector Server Java" --Description="OpenICF Connector Server Java" --Startup=auto --Jvm=%JAVA_DLL% --Classpath=%CP% --JvmOptions=%JAVA_OPTS_SERVICE%%JAVA_OPTS_PARAM% --StartPath="%CONNECTOR_SERVER_HOME%" --StartMode=jvm --StartClass=%MAIN_CLASS% --StartParams="-service;-properties;%SERVER_PROPERTIES%" --StopMode=jvm --StopClass=%MAIN_CLASS% --StopMethod=stop --StopParams=dummy --LogPath="%CONNECTOR_SERVER_HOME%\logs" --LogPrefix=service --StdOutput=auto --StdError=auto --LogLevel=INFO
 echo Connector server successfully installed as "%SERVICE_NAME%" service
 goto :EOF
 
@@ -179,7 +193,7 @@ shift
 if not ""%1"" == """" (
     set SERVICE_NAME=%1
 ) else (
-    set SERVICE_NAME=OpenICFConnectorServerJava
+    set SERVICE_NAME=ConnectorServerServiceJava
 )
 "%CONNECTOR_SERVER_HOME%\bin\%ARCH%\ConnectorServerJava.exe" //DS//%SERVICE_NAME%
 echo Service "%SERVICE_NAME%" removed successfully

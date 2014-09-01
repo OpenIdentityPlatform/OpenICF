@@ -59,7 +59,6 @@ public final class DuplicateFilteringResultsHandler implements SearchResultsHand
         this.handler = handler;
     }
 
-    @Override
     public boolean handle(ConnectorObject object) {
         String uid = object.getUid().getUidValue();
         if (!visitedUIDs.add(uid)) {
@@ -71,7 +70,6 @@ public final class DuplicateFilteringResultsHandler implements SearchResultsHand
         return stillHandling;
     }
 
-    @Override
     public void handleResult(final SearchResult result) {
         handler.handleResult(result);
     }

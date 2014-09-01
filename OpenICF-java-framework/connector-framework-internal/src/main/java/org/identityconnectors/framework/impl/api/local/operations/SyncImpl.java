@@ -45,7 +45,6 @@ public class SyncImpl extends ConnectorAPIOperationRunner implements SyncApiOp {
         super(context, connector);
     }
 
-    @Override
     public SyncToken sync(final ObjectClass objectClass, final SyncToken token,
             SyncResultsHandler handler, OperationOptions options) {
         Assertions.nullCheck(objectClass, "objectClass");
@@ -69,12 +68,11 @@ public class SyncImpl extends ConnectorAPIOperationRunner implements SyncApiOp {
         final AtomicReference<SyncToken> result = new AtomicReference<SyncToken>(null);
         // SyncTokenResultsHandler handlerChain =
         ((SyncOp) getConnector()).sync(objectClass, token, new SyncTokenResultsHandler() {
-            @Override
+
             public void handleResult(SyncToken token) {
                 result.compareAndSet(null, token);
             }
 
-            @Override
             public boolean handle(final SyncDelta delta) {
                 return handlerChain.handle(delta);
             }
@@ -82,7 +80,6 @@ public class SyncImpl extends ConnectorAPIOperationRunner implements SyncApiOp {
         return result.get();
     }
 
-    @Override
     public SyncToken getLatestSyncToken(ObjectClass objectClass) {
         return ((SyncOp) getConnector()).getLatestSyncToken(objectClass);
     }
@@ -102,7 +99,6 @@ public class SyncImpl extends ConnectorAPIOperationRunner implements SyncApiOp {
             this.handler = handler;
         }
 
-        @Override
         public boolean handle(final SyncDelta delta) {
             SyncDeltaBuilder bld = new SyncDeltaBuilder(delta);
             if (delta.getObject() != null) {

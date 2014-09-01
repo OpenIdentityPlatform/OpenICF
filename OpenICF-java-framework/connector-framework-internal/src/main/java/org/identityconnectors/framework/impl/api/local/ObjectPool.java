@@ -99,12 +99,10 @@ public class ObjectPool<T> {
             touch();
         }
 
-        @Override
         public T getPooledObject() {
             return object;
         }
 
-        @Override
         public void close() throws IOException {
             try {
                 returnObject(this);

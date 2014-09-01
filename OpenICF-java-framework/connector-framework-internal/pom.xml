@@ -65,7 +65,7 @@
         </dependency>
         <dependency>
             <groupId>org.easytesting</groupId>
-            <artifactId>fest-assert-core</artifactId>
+            <artifactId>fest-assert</artifactId>
         </dependency>
         <dependency>
             <groupId>org.forgerock.openicf.framework</groupId>

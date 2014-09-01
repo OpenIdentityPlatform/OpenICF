@@ -57,7 +57,6 @@ public class RemoteOperationInvocationHandler implements InvocationHandler {
         this.operation = operation;
     }
 
-    @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         // don't proxy toString, hashCode, or equals
         if (method.getDeclaringClass() == Object.class) {

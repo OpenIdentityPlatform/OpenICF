@@ -37,17 +37,14 @@ public class TstStatefulPoolableConnector extends TstAbstractConnector implement
         super.init(cfg);
     }
 
-    @Override
     public Configuration getConfiguration() {
         return config;
     }
 
-    @Override
     public void dispose() {
         config = null;
     }
 
-    @Override
     public void checkAlive() {
     }
 

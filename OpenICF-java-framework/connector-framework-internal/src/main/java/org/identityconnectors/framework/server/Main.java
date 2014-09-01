@@ -19,39 +19,45 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2010-2014 ForgeRock AS.
  */
 package org.identityconnectors.framework.server;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.Scanner;
 import java.util.logging.LogManager;
 
 import org.identityconnectors.common.IOUtil;
+import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.SecurityUtil;
 import org.identityconnectors.framework.api.ConnectorInfoManagerFactory;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
-
 
 public final class Main {
 
     private static final String PROP_PORT = "connectorserver.port";
     private static final String PROP_BUNDLE_DIR = "connectorserver.bundleDir";
     private static final String PROP_LIB_DIR = "connectorserver.libDir";
-    private static final String PROP_SSL  = "connectorserver.usessl";
+    private static final String PROP_SSL = "connectorserver.usessl";
     private static final String PROP_IFADDRESS = "connectorserver.ifaddress";
     private static final String PROP_KEY = "connectorserver.key";
     private static final String PROP_FACADE_LIFETIME = "connectorserver.maxFacadeLifeTime";
     private static final String PROP_LOGGER_CLASS = "connectorserver.loggerClass";
 
-    private static final String DEFAULT_LOG_SPI = "org.identityconnectors.common.logging.StdOutLogger";
+    private static final String DEFAULT_LOG_SPI =
+            "org.identityconnectors.common.logging.StdOutLogger";
 
     private static ConnectorServer connectorServer;
 
@@ -59,6 +65,7 @@ public final class Main {
 
     private static void usage() {
         System.out.println("Usage: Main -run -properties <connectorserver.properties>");
+        System.out.println("       Main -service -properties <connectorserver.properties>");
         System.out.println("       Main -setKey -key <key> -properties <connectorserver.properties>");
         System.out.println("       Main -setDefaults -properties <connectorserver.properties>");
         System.out.println("NOTE: If using SSL, you must specify the system config");
@@ -68,55 +75,122 @@ public final class Main {
         System.out.println("        -Djavax.net.ssl.keyStorePassword");
     }
 
-    public static void main(String[] args) throws Exception {
-        if (args.length == 0 || args.length % 2 != 1) {
+    public static void main(String[] arguments) throws Exception {        
+        if (arguments.length == 0 || arguments.length % 2 != 1) {
             usage();
             return;
         }
-        String propertiesFileName = null;
-        String key = null;
-        for (int i = 1; i < args.length; i += 2) {
-            String name = args[i];
-            String value = args[i + 1];
-            if (name.equalsIgnoreCase("-properties")) {
-                propertiesFileName = value;
-            } else if (name.equalsIgnoreCase("-key")) {
-                key = value;
+        
+        String cmd = arguments[0];
+        if (cmd.equalsIgnoreCase("-run")) {
+            String propertiesFileName = getArgumentValue(arguments, "-properties");
+            if (StringUtil.isNotBlank(propertiesFileName)) {
+                Properties properties = IOUtil.loadPropertiesFile(propertiesFileName);
+                run(properties);
+                final BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+                System.out.println("Press q to shutdown.");
+                char c;
+                // read characters
+                do {
+                    c = (char) br.read();
+                } while (c != 'q');
+                connectorServer.stop();
             } else {
                 usage();
-                return;
             }
-        }
-        String cmd = args[0];
-        if (cmd.equalsIgnoreCase("-run")) {
-            if (propertiesFileName == null || key != null) {
+        } else if (cmd.equalsIgnoreCase("-service")) {
+            /*
+             * Using Procrun in jvm mode: Note that the method handling service
+             * start should create and start a separate thread to carry out the
+             * processing, and then return. The start and stop methods are
+             * called from different threads.
+             */
+            String propertiesFileName = getArgumentValue(arguments, "-properties");
+            if (StringUtil.isNotBlank(propertiesFileName)) {
+                Properties properties = IOUtil.loadPropertiesFile(propertiesFileName);
+                run(properties);
+            } else {
                 usage();
-                return;
             }
-            Properties properties = IOUtil.loadPropertiesFile(propertiesFileName);
-            run(properties);
         } else if (cmd.equalsIgnoreCase("-setkey")) {
-            if (propertiesFileName == null || key == null) {
+            String propertiesFileName = getArgumentValue(arguments, "-properties");
+            if (StringUtil.isBlank(propertiesFileName)) {
                 usage();
                 return;
             }
             Properties properties = IOUtil.loadPropertiesFile(propertiesFileName);
-            properties.put(PROP_KEY, SecurityUtil.computeBase64SHA1Hash(key.toCharArray()));
-            IOUtil.storePropertiesFile(new File(propertiesFileName), properties);
-        } else if (cmd.equalsIgnoreCase("-setDefaults")) {
-            if (propertiesFileName == null || key != null) {
-                usage();
-                return;
+            String key = getArgumentValue(arguments, "-key");
+            if (StringUtil.isBlank(key)) {
+
+                Scanner scanner = new Scanner(System.in);
+                System.out.print("Please enter the new key: ");
+                Thread maskThread = beforeReadPassword();
+                char v1[] = scanner.nextLine().toCharArray();
+                afterReadPassword(maskThread);                
+                
+                System.out.print("Please confirm the new key: ");
+                maskThread = beforeReadPassword();
+                char v2[] = scanner.nextLine().toCharArray();
+                afterReadPassword(maskThread);
+                
+                if (!Arrays.equals(v1, v2)) {
+                    System.out.println("Error: Key mismatch.");
+                    return;
+                }
+                properties.put(PROP_KEY, SecurityUtil.computeBase64SHA1Hash(v2));
+            } else {
+                properties.put(PROP_KEY, SecurityUtil.computeBase64SHA1Hash(key.toCharArray()));
             }
-            IOUtil.extractResourceToFile(Main.class, "connectorserver.properties", new File(
-                    propertiesFileName));
+
+            IOUtil.storePropertiesFile(new File(propertiesFileName), properties);
+            System.out.println("Key has been successfully updated.");
+        } else if (cmd.equalsIgnoreCase("-setDefaults")) {
+            String propertiesFileName = getArgumentValue(arguments, "-properties");
+            if (StringUtil.isNotBlank(propertiesFileName)) {
+                IOUtil.extractResourceToFile(Main.class, "connectorserver.properties", new File(
+                        propertiesFileName));
+            } else {
+                usage();
+            }           
         } else {
             usage();
-            return;
         }
     }
 
+    private static Thread beforeReadPassword() {
+        Thread maskThread = new Thread() {
+            public void run() {
+                while (!interrupted()) {
+                    try {
+                        System.out.print("\010*");
+                        sleep(5);
+                    } catch (InterruptedException e) {
+                        return;
+                    }
+                }
+            }
+        };
+
+        maskThread.setPriority(Thread.MAX_PRIORITY);
+        maskThread.setDaemon(true);
+        maskThread.start();
+        return maskThread;
+    }
+
+    private static void afterReadPassword(Thread maskThread) throws InterruptedException {
+        if (maskThread != null && maskThread.isAlive()) {
+            maskThread.interrupt();
+            Thread.sleep(5);
+        }
+    }
+    
     private static void run(Properties properties) throws Exception {
+        loadProperties(properties);
+        connectorServer.start();
+        getLog().info("Connector server listening on port " + connectorServer.getPort());
+    }
+
+    private static void loadProperties(Properties properties) throws Exception {
         if (connectorServer != null) {
             // Procrun called main() without calling stop().
             // Do not use a logging statement here to avoid initializing logging
@@ -174,9 +248,6 @@ public final class Main {
         if (facadeLifeTime != null) {
             connectorServer.setMaxFacadeLifeTime(Long.parseLong(facadeLifeTime));
         }
-        connectorServer.start();
-        getLog().info("Connector server listening on port " + port);
-        connectorServer.awaitStop();
     }
 
     public static void stop(String[] args) {
@@ -244,10 +315,57 @@ public final class Main {
         return rv;
     }
 
+    private static String getArgumentValue(String[] arguments, String keyName) {
+        if (arguments.length >= 2) {
+            for (int i = 0; i < arguments.length - 1; i++) {
+                String name = arguments[i];
+                String value = arguments[i + 1];
+                if (name.equalsIgnoreCase(keyName)) {
+                    return value;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static void handleThrowable(Throwable t)
+    {
+        if (t instanceof ThreadDeath)
+            throw ((ThreadDeath)t);
+
+        if (t instanceof VirtualMachineError)
+            throw ((VirtualMachineError)t);
+    }
+
     private synchronized static Log getLog() {
         if (log == null) {
             log = Log.getLog(Main.class);
         }
         return log;
+    }
+
+    public void init(String[] arguments) throws Exception {
+        String propertiesFileName = getArgumentValue(arguments, "-properties");
+        if (StringUtil.isNotBlank(propertiesFileName)) {
+            Properties properties = IOUtil.loadPropertiesFile(propertiesFileName);
+            loadProperties(properties);
+        } else {
+            System.exit(1);
+        }
+    }
+
+    public void start() throws Exception {
+        if (null == connectorServer) {
+            loadProperties(IOUtil.loadPropertiesFile("conf/ConnectorServer.properties"));
+        }
+        connectorServer.start();
+    }
+
+    public void stop() throws Exception {
+        connectorServer.stop();
+    }
+
+    public void destroy() {
+
     }
 }

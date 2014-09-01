@@ -36,7 +36,6 @@ public class BundleLibSorter implements Comparator<File>, Serializable {
 
     private static final long serialVersionUID = 1885450684185821535L;
 
-    @Override
     public int compare(final File arg0, final File arg1) {
         final String name1 = arg0.getName();
         final String name2 = arg1.getName();

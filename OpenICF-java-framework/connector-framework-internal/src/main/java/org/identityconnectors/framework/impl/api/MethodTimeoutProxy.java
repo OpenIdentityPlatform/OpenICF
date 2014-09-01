@@ -75,7 +75,6 @@ public class MethodTimeoutProxy implements InvocationHandler {
         this.timeoutMillis = timeoutMillis;
     }
 
-    @Override
     public Object invoke(final Object proxy, final Method method, final Object[] args)
             throws Throwable {
 
@@ -87,7 +86,7 @@ public class MethodTimeoutProxy implements InvocationHandler {
         final Locale locale = CurrentLocale.get();
 
         Callable<Object> callable = new Callable<Object>() {
-            @Override
+
             public Object call() throws Exception {
                 try {
                     try {

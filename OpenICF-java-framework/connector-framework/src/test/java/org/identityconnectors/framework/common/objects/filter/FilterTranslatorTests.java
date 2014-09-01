@@ -22,8 +22,8 @@
  */
 package org.identityconnectors.framework.common.objects.filter;
 
-import static org.fest.assertions.api.Assertions.assertThat;
-import static org.fest.assertions.api.Assertions.atIndex;
+import static org.fest.assertions.Assertions.assertThat;
+import static org.fest.assertions.Index.atIndex;
 import static org.testng.Assert.assertEquals;
 
 import java.util.List;

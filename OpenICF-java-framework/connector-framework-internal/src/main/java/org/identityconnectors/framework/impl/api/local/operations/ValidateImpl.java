@@ -35,7 +35,6 @@ public class ValidateImpl extends APIOperationRunner implements ValidateApiOp {
     /**
      * {@inheritDoc}
      */
-    @Override
     public void validate() {
         getOperationalContext().getConfiguration().validate();
     }

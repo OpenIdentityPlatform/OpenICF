@@ -37,12 +37,10 @@ public class TstStatefulConnector extends TstAbstractConnector implements Connec
         super.init(cfg);
     }
 
-    @Override
     public Configuration getConfiguration() {
         return config;
     }
 
-    @Override
     public void dispose() {
         config = null;
     }

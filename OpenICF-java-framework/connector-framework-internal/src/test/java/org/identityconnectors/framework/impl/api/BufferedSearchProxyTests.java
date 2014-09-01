@@ -57,7 +57,6 @@ public class BufferedSearchProxyTests {
             }
         }
 
-        @Override
         public boolean handle(ConnectorObject object) {
             if (_count >= _resultsHandlers.size()) {
                 fail("Unpextected number of results: " + _count);
@@ -76,7 +75,7 @@ public class BufferedSearchProxyTests {
         public StopResultsHandler(ResultsHandler target) {
             _target = target;
         }
-        @Override
+
         public boolean handle(ConnectorObject object) {
             if (_target != null)
                 _target.handle(object);
@@ -89,7 +88,7 @@ public class BufferedSearchProxyTests {
         public CheckCountHandler(int expectedCount) {
             _expectedCount = expectedCount;
         }
-        @Override
+
         public boolean handle(ConnectorObject object) {
             assertEquals(object.getAttributeByName("count").getValue().get(0), _expectedCount);
             return true;

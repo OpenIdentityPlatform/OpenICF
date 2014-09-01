@@ -279,7 +279,6 @@ public class BinaryObjectDecoder implements ObjectDecoder, BinaryObjectDeseriali
                 new InternalDecoder(new DataInputStream(new BufferedInputStream(in, 4096)));
     }
 
-    @Override
     public void close() {
         try {
             internalDecoder.rootInput.close();
@@ -288,18 +287,15 @@ public class BinaryObjectDecoder implements ObjectDecoder, BinaryObjectDeseriali
         }
     }
 
-    @Override
     public Object readObject() {
         return internalDecoder.readObject(this);
     }
 
-    @Override
     public boolean readBooleanContents() {
         internalDecoder.startAnonymousField(0);
         return internalDecoder.readBoolean();
     }
 
-    @Override
     public boolean readBooleanField(String fieldName, boolean dflt) {
         if (internalDecoder.startField(fieldName)) {
             return internalDecoder.readBoolean();
@@ -308,25 +304,21 @@ public class BinaryObjectDecoder implements ObjectDecoder, BinaryObjectDeseriali
         }
     }
 
-    @Override
     public byte readByteContents() {
         internalDecoder.startAnonymousField(0);
         return internalDecoder.readByte();
     }
 
-    @Override
     public byte[] readByteArrayContents() {
         internalDecoder.startAnonymousField(0);
         return internalDecoder.readByteArray();
     }
 
-    @Override
     public Class<?> readClassContents() {
         internalDecoder.startAnonymousField(0);
         return internalDecoder.readClass();
     }
 
-    @Override
     public Class<?> readClassField(String fieldName, Class<?> dflt) {
         if (internalDecoder.startField(fieldName)) {
             return internalDecoder.readClass();
@@ -335,13 +327,11 @@ public class BinaryObjectDecoder implements ObjectDecoder, BinaryObjectDeseriali
         }
     }
 
-    @Override
     public double readDoubleContents() {
         internalDecoder.startAnonymousField(0);
         return internalDecoder.readDouble();
     }
 
-    @Override
     public double readDoubleField(String fieldName, double dflt) {
         if (internalDecoder.startField(fieldName)) {
             return internalDecoder.readDouble();
@@ -350,14 +340,12 @@ public class BinaryObjectDecoder implements ObjectDecoder, BinaryObjectDeseriali
         }
     }
 
-    @Override
     public float readFloatContents() {
         internalDecoder.startAnonymousField(0);
         // read as double since C# only knows how to deal with that
         return (float) internalDecoder.readDouble();
     }
 
-    @Override
     public float readFloatField(String fieldName, float dflt) {
         if (internalDecoder.startField(fieldName)) {
             return (float) internalDecoder.readDouble();
@@ -366,13 +354,11 @@ public class BinaryObjectDecoder implements ObjectDecoder, BinaryObjectDeseriali
         }
     }
 
-    @Override
     public int readIntContents() {
         internalDecoder.startAnonymousField(0);
         return internalDecoder.readInt();
     }
 
-    @Override
     public int readIntField(String fieldName, int dflt) {
         if (internalDecoder.startField(fieldName)) {
             return internalDecoder.readInt();
@@ -381,13 +367,11 @@ public class BinaryObjectDecoder implements ObjectDecoder, BinaryObjectDeseriali
         }
     }
 
-    @Override
     public long readLongContents() {
         internalDecoder.startAnonymousField(0);
         return internalDecoder.readLong();
     }
 
-    @Override
     public long readLongField(String fieldName, long dflt) {
         if (internalDecoder.startField(fieldName)) {
             return internalDecoder.readLong();
@@ -396,18 +380,15 @@ public class BinaryObjectDecoder implements ObjectDecoder, BinaryObjectDeseriali
         }
     }
 
-    @Override
     public int getNumSubObjects() {
         return internalDecoder.getNumAnonymousFields();
     }
 
-    @Override
     public Object readObjectContents(int index) {
         internalDecoder.startAnonymousField(index);
         return internalDecoder.readObject(this);
     }
 
-    @Override
     public Object readObjectField(String fieldName, Class<?> expected, Object dflt) {
         if (internalDecoder.startField(fieldName)) {
             return readObject();
@@ -416,13 +397,11 @@ public class BinaryObjectDecoder implements ObjectDecoder, BinaryObjectDeseriali
         }
     }
 
-    @Override
     public String readStringContents() {
         internalDecoder.startAnonymousField(0);
         return internalDecoder.readString(false);
     }
 
-    @Override
     public String readStringField(String fieldName, String dflt) {
         if (internalDecoder.startField(fieldName)) {
             return internalDecoder.readString(false);

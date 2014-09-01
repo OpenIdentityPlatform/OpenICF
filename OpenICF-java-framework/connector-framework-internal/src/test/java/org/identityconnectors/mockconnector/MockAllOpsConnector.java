@@ -52,7 +52,6 @@ public class MockAllOpsConnector extends MockConnector implements CreateOp, Dele
         SearchOp<String>, UpdateAttributeValuesOp, AuthenticateOp, ResolveUsernameOp, TestOp,
         ScriptOnConnectorOp, ScriptOnResourceOp , SyncOp {
 
-    @Override
     public Object runScriptOnConnector(ScriptContext request, OperationOptions options) {
         assert request != null;
         assert options != null;
@@ -60,7 +59,6 @@ public class MockAllOpsConnector extends MockConnector implements CreateOp, Dele
         return null;
     }
 
-    @Override
     public Object runScriptOnResource(ScriptContext request, OperationOptions options) {
         assert request != null;
         assert options != null;
@@ -68,7 +66,6 @@ public class MockAllOpsConnector extends MockConnector implements CreateOp, Dele
         return null;
     }
 
-    @Override
     public Uid create(final ObjectClass objectClass, final Set<Attribute> createAttributes,
             OperationOptions options) {
         assert createAttributes != null;
@@ -76,13 +73,11 @@ public class MockAllOpsConnector extends MockConnector implements CreateOp, Dele
         return null;
     }
 
-    @Override
     public void delete(final ObjectClass objectClass, final Uid uid, OperationOptions options) {
         assert uid != null && objectClass != null;
         addCall(objectClass, uid);
     }
 
-    @Override
     public Uid update(ObjectClass objectClass, Uid uid, Set<Attribute> attrs,
             OperationOptions options) {
         assert objectClass != null && attrs != null;
@@ -90,21 +85,18 @@ public class MockAllOpsConnector extends MockConnector implements CreateOp, Dele
         return null;
     }
 
-    @Override
     public Uid addAttributeValues(ObjectClass objclass, Uid uid, Set<Attribute> valuesToAdd,
             OperationOptions options) {
         addCall(objclass, valuesToAdd);
         return null;
     }
 
-    @Override
     public Uid removeAttributeValues(ObjectClass objclass, Uid uid, Set<Attribute> valuesToRemove,
             OperationOptions options) {
         addCall(objclass, valuesToRemove);
         return null;
     }
 
-    @Override
     public FilterTranslator<String> createFilterTranslator(ObjectClass objectClass,
             OperationOptions options) {
         assert objectClass != null && options != null;
@@ -114,14 +106,12 @@ public class MockAllOpsConnector extends MockConnector implements CreateOp, Dele
         };
     }
 
-    @Override
     public void executeQuery(ObjectClass objectClass, String query, ResultsHandler handler,
             OperationOptions options) {
         assert objectClass != null && handler != null && options != null;
         addCall(objectClass, query, handler, options);
     }
 
-    @Override
     public Uid authenticate(ObjectClass objectClass, String username, GuardedString password,
             OperationOptions options) {
         assert username != null && password != null;
@@ -129,25 +119,21 @@ public class MockAllOpsConnector extends MockConnector implements CreateOp, Dele
         return null;
     }
 
-    @Override
     public Uid resolveUsername(ObjectClass objectClass, String username, OperationOptions options) {
         assert username != null;
         addCall(username);
         return null;
     }
 
-    @Override
     public void test() {
         addCall();
     }
 
-    @Override
     public void sync(ObjectClass objectClass, SyncToken token, SyncResultsHandler handler, OperationOptions options) {
         assert objectClass != null && token != null && handler != null && options != null;
         addCall(objectClass, token, handler, options);
     }
 
-    @Override
     public SyncToken getLatestSyncToken(ObjectClass objectClass) {
         assert objectClass != null;
         addCall(objectClass);

@@ -129,7 +129,7 @@ public class GuardedStringTests {
             char c = (char) i;
             GuardedString gs = new GuardedString(new char[] { c });
             gs.access(new GuardedString.Accessor() {
-                @Override
+
                 public void access(char[] clearChars) {
                     int v = (int) clearChars[0];
                     assertEquals(v, expected);
@@ -146,7 +146,7 @@ public class GuardedStringTests {
     private String decryptToString(GuardedString string) {
         final StringBuilder buf = new StringBuilder();
         string.access(new GuardedString.Accessor() {
-            @Override
+
             public void access(char[] chars) {
                 buf.append(chars);
             }

@@ -32,7 +32,6 @@ public final class LessThanFilter extends ComparableAttributeFilter {
         super(attr);
     }
 
-    @Override
     public boolean accept(ConnectorObject obj) {
         return isPresent(obj) && compare(obj) < 0;
     }

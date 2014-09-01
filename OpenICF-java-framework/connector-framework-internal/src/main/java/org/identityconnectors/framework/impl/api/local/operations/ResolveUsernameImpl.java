@@ -44,7 +44,6 @@ public class ResolveUsernameImpl extends ConnectorAPIOperationRunner implements
     /**
      * Resolve the username to an <code>Uid</code>.
      */
-    @Override
     public Uid resolveUsername(final ObjectClass objectClass, final String username,
             OperationOptions options) {
         Assertions.nullCheck(objectClass, "objectClass");

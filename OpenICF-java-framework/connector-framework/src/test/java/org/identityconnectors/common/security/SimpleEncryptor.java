@@ -27,12 +27,10 @@ package org.identityconnectors.common.security;
  */
 public class SimpleEncryptor implements Encryptor {
 
-    @Override
     public byte[] encrypt(byte[] bytes) {
         return xor(bytes);
     }
 
-    @Override
     public byte[] decrypt(byte[] bytes) {
         return xor(bytes);
     }

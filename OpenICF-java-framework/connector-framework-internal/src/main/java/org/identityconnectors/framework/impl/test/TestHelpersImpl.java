@@ -66,7 +66,6 @@ public class TestHelpersImpl implements TestHelpersSpi {
     /**
      * Method for convenient testing of local connectors.
      */
-    @Override
     public APIConfiguration createTestConfiguration(Class<? extends Connector> clazz,
             Configuration config) {
         LocalConnectorInfoImpl info = new LocalConnectorInfoImpl();
@@ -87,7 +86,6 @@ public class TestHelpersImpl implements TestHelpersSpi {
     /**
      * Method for convenient testing of local connectors.
      */
-    @Override
     public APIConfiguration createTestConfiguration(Class<? extends Connector> clazz,
             final Set<String> bundleContents, PropertyBag configData, String prefix) {
         assert null != clazz;
@@ -128,7 +126,6 @@ public class TestHelpersImpl implements TestHelpersSpi {
         return impl;
     }
 
-    @Override
     public void fillConfiguration(Configuration config, Map<String, ? extends Object> configData) {
         Map<String, Object> configDataCopy = new HashMap<String, Object>(configData);
         ConfigurationPropertiesImpl configProps =
@@ -169,7 +166,6 @@ public class TestHelpersImpl implements TestHelpersSpi {
      *            The options - may be null - will be cast to an empty
      *            OperationOptions
      */
-    @Override
     public SearchResult search(SearchOp<?> search, final ObjectClass objectClass,
             final Filter filter, final ResultsHandler handler, OperationOptions options) {
         if (options == null) {
@@ -178,12 +174,11 @@ public class TestHelpersImpl implements TestHelpersSpi {
         final AtomicReference<SearchResult> result = new AtomicReference<SearchResult>(null);
 
         SearchImpl.rawSearch(search, objectClass, filter, new SearchResultsHandler() {
-            @Override
+
             public void handleResult(SearchResult searchResult) {
                 result.set(searchResult);
             }
 
-            @Override
             public boolean handle(final ConnectorObject connectorObject) {
                 return handler.handle(connectorObject);
             }
@@ -191,13 +186,12 @@ public class TestHelpersImpl implements TestHelpersSpi {
         return result.get();
     }
 
-    @Override
     public ConnectorMessages createDummyMessages() {
         return new DummyConnectorMessages();
     }
 
     private static class DummyConnectorMessages implements ConnectorMessages {
-        @Override
+
         public String format(String key, String dflt, Object... args) {
             StringBuilder builder = new StringBuilder();
             builder.append(key);

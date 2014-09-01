@@ -102,7 +102,6 @@ abstract public class AbstractFilterTranslator<T> implements FilterTranslator<T>
      *         possible you implement {@link #createOrExpression}</li>
      *         </ol>
      */
-    @Override
     public final List<T> translate(Filter filter) {
         if (filter == null) {
             return new ArrayList<T>();

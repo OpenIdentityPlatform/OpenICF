@@ -58,7 +58,6 @@ public abstract class StringFilter extends SingleValueAttributeFilter {
      *             the same name as provided is not a string.
      * @see org.identityconnectors.framework.common.objects.filter.Filter#accept(ConnectorObject)
      */
-    @Override
     public boolean accept(ConnectorObject obj) {
         boolean ret = false;
         Attribute attr = obj.getAttributeByName(getName());

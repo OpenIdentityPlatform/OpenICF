@@ -38,7 +38,6 @@ public class NormalizingResultsHandler implements ResultsHandler {
         this.normalizer = normalizer;
     }
 
-    @Override
     public boolean handle(ConnectorObject obj) {
         ConnectorObject normalized = normalizer.normalizeObject(obj);
         return target.handle(normalized);

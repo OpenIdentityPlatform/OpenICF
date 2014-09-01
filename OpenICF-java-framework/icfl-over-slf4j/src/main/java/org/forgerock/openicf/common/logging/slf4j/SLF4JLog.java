@@ -101,7 +101,6 @@ public class SLF4JLog implements LogSpi {
         }
     }
 
-    @Override
     public void log(final Class<?> clazz, final StackTraceElement method, final Level level,
             final String message, final Throwable ex) {
         log(clazz, null != method ? method.getMethodName() : null, level, message, ex);

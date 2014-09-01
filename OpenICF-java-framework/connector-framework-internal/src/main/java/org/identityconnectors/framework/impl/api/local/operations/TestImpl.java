@@ -43,7 +43,6 @@ public class TestImpl extends ConnectorAPIOperationRunner implements TestApiOp {
     /**
      * {@inheritDoc}
      */
-    @Override
     public void test() {
         ((TestOp) getConnector()).test();
     }

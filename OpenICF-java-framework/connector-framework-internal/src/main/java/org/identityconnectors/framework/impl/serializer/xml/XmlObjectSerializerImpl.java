@@ -59,7 +59,6 @@ public class XmlObjectSerializerImpl implements XmlObjectSerializer {
      *             if there is more than one object and this is not configured
      *             for multi-object document.
      */
-    @Override
     public void writeObject(Object object) {
         if (documentEnded) {
             throw new IllegalStateException(
@@ -80,7 +79,6 @@ public class XmlObjectSerializerImpl implements XmlObjectSerializer {
         firstObjectWritten = true;
     }
 
-    @Override
     public void flush() {
         try {
             output.flush();
@@ -89,7 +87,6 @@ public class XmlObjectSerializerImpl implements XmlObjectSerializer {
         }
     }
 
-    @Override
     public void close(boolean closeStream) {
         if (!documentEnded) {
             if (!firstObjectWritten) {

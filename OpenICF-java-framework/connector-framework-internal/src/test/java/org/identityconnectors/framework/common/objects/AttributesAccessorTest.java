@@ -24,9 +24,9 @@
 
 package org.identityconnectors.framework.common.objects;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -113,7 +113,7 @@ public class AttributesAccessorTest {
 
     @Test
     public void testFindDouble() throws Exception {
-        Assert.assertEquals(getTestable().findDouble("attributedoublep"), Double.MIN_NORMAL);
+        Assert.assertEquals(getTestable().findDouble("attributedoublep"), Double.MIN_VALUE);
         Assert.assertEquals(getTestable().findDouble("attributedouble"), 17D);
     }
 
@@ -137,7 +137,7 @@ public class AttributesAccessorTest {
 
     @Test
     public void testFindByteArray() throws Exception {
-        Assert.assertEquals( getTestable().findByteArray("attributeByteArray"), "array".getBytes(Charset.forName("UTF-8")));
+        Assert.assertEquals( getTestable().findByteArray("attributeByteArray"), "array".getBytes("UTF-8"));
     }
 
     @Test
@@ -152,7 +152,7 @@ public class AttributesAccessorTest {
 
     @Test
     public void testFindGuardedByteArray() throws Exception {
-        Assert.assertEquals( getTestable().findGuardedByteArray("attributeGuardedByteArray"), new GuardedByteArray("array".getBytes(Charset.forName("UTF-8"))));
+        Assert.assertEquals( getTestable().findGuardedByteArray("attributeGuardedByteArray"), new GuardedByteArray("array".getBytes("UTF-8")));
     }
 
     @Test
@@ -165,7 +165,7 @@ public class AttributesAccessorTest {
         Assert.assertEquals( getTestable().findMap("attributeMap"), getSampleMap());
     }
 
-    private AttributesAccessor getTestable() {
+    private AttributesAccessor getTestable() throws UnsupportedEncodingException {
         Set<Attribute> attributes = new HashSet<Attribute>();
         attributes.add(new Uid("UID001"));
         attributes.add(new Name("NAME001"));
@@ -189,7 +189,7 @@ public class AttributesAccessorTest {
         attributes.add(AttributeBuilder.build("attributeCharacterMultivalue", new Character('e'),
                 new Character('f'), null));
 
-        attributes.add(AttributeBuilder.build("attributedoublep", Double.MIN_NORMAL));
+        attributes.add(AttributeBuilder.build("attributedoublep", Double.MIN_VALUE));
         attributes.add(AttributeBuilder.build("attributedoublepMultivalue", Double.MIN_VALUE,
                 Double.MAX_VALUE));
 
@@ -225,10 +225,9 @@ public class AttributesAccessorTest {
         attributes.add(AttributeBuilder.build("attributeByteMultivalue", new Byte((byte) 52),
                 new Byte((byte) 53), null));
 
-        attributes.add(AttributeBuilder.build("attributeByteArray", "array".getBytes(Charset
-                .forName("UTF-8"))));
+        attributes.add(AttributeBuilder.build("attributeByteArray", "array".getBytes("UTF-8")));
         attributes.add(AttributeBuilder.build("attributeByteArrayMultivalue", "item1"
-                .getBytes(Charset.forName("UTF-8")), "item2".getBytes(Charset.forName("UTF-8"))));
+                .getBytes("UTF-8"), "item2".getBytes("UTF-8")));
 
         attributes.add(AttributeBuilder.build("attributeBigDecimal", BigDecimal.ONE));
         attributes.add(AttributeBuilder.build("attributeBigDecimalMultivalue", BigDecimal.ZERO,
@@ -239,10 +238,10 @@ public class AttributesAccessorTest {
                 BigInteger.TEN));
 
         attributes.add(AttributeBuilder.build("attributeGuardedByteArray", new GuardedByteArray(
-                "array".getBytes(Charset.forName("UTF-8")))));
+                "array".getBytes("UTF-8"))));
         attributes.add(AttributeBuilder.build("attributeGuardedByteArrayMultivalue",
-                new GuardedByteArray("item1".getBytes(Charset.forName("UTF-8"))),
-                new GuardedByteArray("item2".getBytes(Charset.forName("UTF-8")))));
+                new GuardedByteArray("item1".getBytes("UTF-8")),
+                new GuardedByteArray("item2".getBytes("UTF-8"))));
 
         attributes.add(AttributeBuilder.build("attributeGuardedString", new GuardedString("secret"
                 .toCharArray())));

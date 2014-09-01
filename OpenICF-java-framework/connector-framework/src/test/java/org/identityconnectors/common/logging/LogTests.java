@@ -41,19 +41,16 @@ public class LogTests {
         public Throwable _exception = null;
         public boolean _isloggable = false;
 
-        @Override
         public boolean isLoggable(Class<?> clazz, Level level) {
             _class = clazz;
             _level = level;
             return _isloggable;
         }
 
-        @Override
         public boolean needToInferCaller(Class<?> clazz, Level level) {
             return true;
         }
 
-        @Override
         public void log(Class<?> clazz, String methodName, Level level, String message, Throwable ex) {
             _class = clazz;
             _level = level;
@@ -62,7 +59,6 @@ public class LogTests {
             _methodName = methodName;
         }
 
-        @Override
         public void log(Class<?> clazz, StackTraceElement caller, Level level, String message, Throwable ex) {
             _class = clazz;
             _level = level;

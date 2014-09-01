@@ -89,19 +89,16 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
             return false;
         }
 
-        @Override
         public void checkClientTrusted(X509Certificate[] chain, String authType)
             throws CertificateException {
             checkTrusted(chain);
         }
 
-        @Override
         public void checkServerTrusted(X509Certificate[] chain, String authType)
             throws CertificateException {
             checkTrusted(chain);
         }
 
-        @Override
         public X509Certificate[] getAcceptedIssuers() {
             return new X509Certificate[0];
         }
@@ -145,17 +142,14 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
             return false;
         }
 
-        @Override
         public String chooseClientAlias(String[] keyType, Principal[] issuers, Socket socket) {
             return "mykey";
         }
 
-        @Override
         public String chooseServerAlias(String keyType, Principal[] issuers, Socket socket) {
             return "mykey";
         }
 
-        @Override
         public X509Certificate[] getCertificateChain(String a) {
             try {
                 KeyStore store = loadKeyStoreResource(_keyStoreName);
@@ -168,12 +162,10 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
             }
         }
 
-        @Override
         public String[] getClientAliases(String keyType, Principal[] issuers) {
             return new String[]{"myalias"};
         }
 
-        @Override
         public PrivateKey getPrivateKey(String a) {
             try {
                 KeyStore store = loadKeyStoreResource(_keyStoreName);
@@ -186,7 +178,6 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
             }
         }
 
-        @Override
         public String[] getServerAliases(String keyType, Principal[] issuers) {
             return new String[]{"mykey"};
         }

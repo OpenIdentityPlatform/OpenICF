@@ -56,7 +56,6 @@ public class ThreadClassLoaderManagerProxy implements InvocationHandler {
             this.target = target;
         }
 
-        @Override
         public boolean handle(final Object object) {
             ThreadClassLoaderManager.getInstance().pushClassLoader(applicationClassLoader);
             try {
@@ -74,7 +73,6 @@ public class ThreadClassLoaderManagerProxy implements InvocationHandler {
         this.target = target;
     }
 
-    @Override
     public Object invoke(final Object proxy, final Method method, final Object[] arguments)
             throws Throwable {
         final ClassLoader applicationClassLoader =
