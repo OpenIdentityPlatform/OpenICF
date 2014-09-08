@@ -20,26 +20,41 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * @author Gael Allioux <gael.allioux@forgerock.com>
  */
 
-@Grapes([
-        @Grab(group = 'org.codehaus.groovy.modules.http-builder', module = 'http-builder', version = '0.7.1'),
-        @Grab(group = 'commons-io', module = 'commons-io', version = '2.4')]
-)
-import groovyx.net.http.RESTClient
-import org.apache.http.client.HttpClient
-import org.forgerock.openicf.connectors.scriptedrest.ScriptedRESTConfiguration
+import groovy.sql.Sql
+import org.forgerock.openicf.connectors.scriptedsql.ScriptedSQLConfiguration
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import org.identityconnectors.common.logging.Log
+import org.identityconnectors.common.security.GuardedString
+import org.identityconnectors.common.security.SecurityUtil
+import org.identityconnectors.framework.common.exceptions.InvalidPasswordException
 import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationOptions
-import org.identityconnectors.framework.common.objects.Uid
+
+import java.sql.Connection
 
 def operation = operation as OperationType
-def configuration = configuration as ScriptedRESTConfiguration
-def httpClient = connection as HttpClient
-def connection = customizedConnection as RESTClient
+def configuration = configuration as ScriptedSQLConfiguration
+def connection = connection as Connection
+def username = username as String
 def log = log as Log
 def objectClass = objectClass as ObjectClass
 def options = options as OperationOptions
-def uid = uid as Uid
+def password = password as GuardedString;
+
+log.info("Entering " + operation + " Script");
+def sql = new Sql(connection);
+def authId = null;
+
+sql.eachRow("SELECT id FROM Users WHERE uid = ? AND password = sha1(?)", [username, SecurityUtil.decrypt(password)]) {
+    authId = String.valueOf(it.id)
+}
+
+if (authId == null) {
+    throw new InvalidPasswordException("Authentication Failed")
+}
+
+return authId

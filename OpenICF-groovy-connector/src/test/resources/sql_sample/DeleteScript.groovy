@@ -20,26 +20,49 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * @author Gael Allioux <gael.allioux@forgerock.com>
  */
 
-@Grapes([
-        @Grab(group = 'org.codehaus.groovy.modules.http-builder', module = 'http-builder', version = '0.7.1'),
-        @Grab(group = 'commons-io', module = 'commons-io', version = '2.4')]
-)
-import groovyx.net.http.RESTClient
-import org.apache.http.client.HttpClient
-import org.forgerock.openicf.connectors.scriptedrest.ScriptedRESTConfiguration
+
+import groovy.sql.Sql
+import org.forgerock.openicf.connectors.scriptedsql.ScriptedSQLConfiguration
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import org.identityconnectors.common.logging.Log
 import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationOptions
 import org.identityconnectors.framework.common.objects.Uid
 
+import java.sql.Connection
+
 def operation = operation as OperationType
-def configuration = configuration as ScriptedRESTConfiguration
-def httpClient = connection as HttpClient
-def connection = customizedConnection as RESTClient
+def configuration = configuration as ScriptedSQLConfiguration
+def connection = connection as Connection
 def log = log as Log
 def objectClass = objectClass as ObjectClass
 def options = options as OperationOptions
 def uid = uid as Uid
+def ORG = new ObjectClass("organization")
+
+log.info("Entering " + operation + " Script");
+def sql = new Sql(connection);
+
+assert uid != null
+
+switch (objectClass) {
+    case ObjectClass.ACCOUNT:
+        sql.execute("DELETE FROM Users where id= ?", [uid.uidValue])
+        break
+
+    case ObjectClass.GROUP:
+        sql.execute("DELETE FROM Groups where id= ?", [uid.uidValue])
+        break
+
+    case ORG:
+        sql.execute("DELETE FROM Organizations where id= ?", [uid.uidValue])
+        break
+
+    default:
+        throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                objectClass.objectClassValue + " is not supported.")
+}

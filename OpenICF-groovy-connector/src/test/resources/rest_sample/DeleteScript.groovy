@@ -43,3 +43,13 @@ def log = log as Log
 def objectClass = objectClass as ObjectClass
 def options = options as OperationOptions
 def uid = uid as Uid
+
+log.info("Entering " + operation + " Script");
+
+switch (objectClass) {
+    case ObjectClass.ACCOUNT:
+        connection.delete(path: '/users/' + uid.uidValue);
+        break
+    case ObjectClass.GROUP:
+        connection.delete(path: '/groups/' + uid.uidValue);
+}
