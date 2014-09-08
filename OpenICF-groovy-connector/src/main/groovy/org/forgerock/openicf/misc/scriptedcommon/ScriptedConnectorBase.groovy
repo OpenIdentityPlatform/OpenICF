@@ -433,7 +433,7 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
         arguments.setVariable(QUERY, {
             Object result = null;
             if (null != query) {
-                result = MapFilterVisitor.INSTANCE.accept(null, query);
+                result = query.accept(MapFilterVisitor.INSTANCE, null);
             }
             return result;
         });

@@ -626,7 +626,7 @@ public class ScriptedConnectorTest {
     public void testSearch2() throws Exception {
         ConnectorFacade search = getFacade(TEST_NAME);
         for (int i = 0; i < 100; i++) {
-            Set<Attribute> co = getTestConnectorObject(String.format("TEST%05d", i));
+            Set<Attribute> co = getTestConnectorObject(String.format("TESTS%05d", i));
             co.add(AttributeBuilder.build("sortKey", i));
             search.create(ObjectClass.ACCOUNT, co, null);
         }
@@ -641,7 +641,7 @@ public class ScriptedConnectorTest {
 
         while ((result =
                 search.search(ObjectClass.ACCOUNT, startsWith(AttributeBuilder.build(Name.NAME,
-                        "TEST")), new ResultsHandler() {
+                        "TESTS")), new ResultsHandler() {
                     private int index = 101;
 
                     public boolean handle(ConnectorObject connectorObject) {
@@ -868,6 +868,27 @@ public class ScriptedConnectorTest {
         updateAttributes.add(AttributeBuilder.build("email", "foo@example.com"));
 
         uid = getFacade(TEST_NAME).update(ObjectClass.ACCOUNT, uid, updateAttributes, null);
+    }
+
+    @Test(expectedExceptions = PreconditionFailedException.class)
+    public void testUpdateMVCCNOK1() throws Exception {
+        Uid uid = createTestUser("TESTMVCCNOK01");
+        Set<Attribute> updateAttributes = new HashSet<Attribute>(1);
+        updateAttributes.add(AttributeBuilder.build("email", "foo@example.com"));
+        Assert.assertNotNull(uid.getRevision());
+        getFacade(TEST_NAME).update(ObjectClass.ACCOUNT, new Uid(uid.getUidValue(), "NOK"),
+                updateAttributes, null);
+    }
+
+    @Test(expectedExceptions = PreconditionRequiredException.class)
+    public void testUpdateMVCCNOK2() throws Exception {
+        Uid uid = createTestUser("TESTMVCCNOK02");
+        Set<Attribute> updateAttributes = new HashSet<Attribute>(1);
+        updateAttributes.add(new Name("TEST"));
+        updateAttributes.add(AttributeBuilder.build("email", "foo@example.com"));
+        Assert.assertNotNull(uid.getRevision());
+        getFacade(TEST_NAME).update(ObjectClass.ACCOUNT, new Uid(uid.getUidValue()),
+                updateAttributes, null);
     }
 
     @Test(expectedExceptions = InvalidAttributeValueException.class,

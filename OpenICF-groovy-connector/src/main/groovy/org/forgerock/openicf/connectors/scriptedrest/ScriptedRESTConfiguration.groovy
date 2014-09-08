@@ -202,6 +202,7 @@ public class ScriptedRESTConfiguration extends ScriptedConfiguration {
         if (null == httpClient) {
             synchronized (this) {
                 if (null == httpClient) {
+                    getGroovyScriptEngine()
                     Closure clone = initClosure.rehydrate(this, this, this);
                     clone.setResolveStrategy(Closure.DELEGATE_FIRST);
                     HttpClientBuilder builder = HttpClientBuilder.create()

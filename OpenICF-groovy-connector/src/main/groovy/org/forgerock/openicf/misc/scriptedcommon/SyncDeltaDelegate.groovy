@@ -24,6 +24,7 @@
 
 package org.forgerock.openicf.misc.scriptedcommon
 
+import org.identityconnectors.framework.common.objects.ConnectorObject
 import org.identityconnectors.framework.common.objects.SyncDeltaBuilder
 import org.identityconnectors.framework.common.objects.SyncDeltaType
 import org.identityconnectors.framework.common.objects.SyncToken
@@ -47,6 +48,10 @@ class SyncDeltaDelegate extends AbstractICFBuilder<SyncDeltaBuilder> {
     void syncToken(Object token) {
         ((SyncDeltaBuilder) builder).setToken(new SyncToken(token));
     }
+    
+    void setDeltaType(SyncDeltaType deltaType){
+        ((SyncDeltaBuilder) builder).setDeltaType(deltaType)
+    }
 
     void CREATE_OR_UPDATE() {
         ((SyncDeltaBuilder) builder).setDeltaType(SyncDeltaType.CREATE_OR_UPDATE)
@@ -54,6 +59,16 @@ class SyncDeltaDelegate extends AbstractICFBuilder<SyncDeltaBuilder> {
 
     void DELETE() {
         ((SyncDeltaBuilder) builder).setDeltaType(SyncDeltaType.DELETE)
+    }
+
+    void DELETE(String uid) {
+        ((SyncDeltaBuilder) builder).setDeltaType(SyncDeltaType.DELETE)
+        ((SyncDeltaBuilder) builder).setUid(new Uid(uid))
+    }
+
+    void DELETE(Uid uid) {
+        ((SyncDeltaBuilder) builder).setDeltaType(SyncDeltaType.DELETE)
+        ((SyncDeltaBuilder) builder).setUid(uid)
     }
 
     void CREATE() {
@@ -74,5 +89,9 @@ class SyncDeltaDelegate extends AbstractICFBuilder<SyncDeltaBuilder> {
 
     void object(@DelegatesTo(ConnectorObjectDelegate) Closure closure) {
         ((SyncDeltaBuilder) builder).setObject(ICFObjectBuilder.co(closure));
+    }
+
+    void object(ConnectorObject connectorObject) {
+        ((SyncDeltaBuilder) builder).setObject(connectorObject);
     }
 }

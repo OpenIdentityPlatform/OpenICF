@@ -55,7 +55,13 @@
         <section xml:id="scriptedsql-dependencies-org.forgerock.openicf.connectors-groovy-connector-${project.version}">
             <title>ScriptedSQL Connector Installation</title>
             <para>
-                Copy these requirements to bundle folder.
+                Install connector on Java 7 OSGi: copy these requirements to /bundle folder. Non OSGi installation you can
+                use non OSGi juli version
+                <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.tomcat%7Ctomcat-juli%7C8.0.11%7Cjar"
+                      xlink:show="new">
+                    <filename>tomcat-juli-8.0.11.jar</filename>
+                </link>
+                and copy these requirements to /lib folder.
             </para>
             <itemizedlist>
                 <listitem>
@@ -69,10 +75,37 @@
                 </listitem>
                 <listitem>
                     <para>
-                        <filename>tomcat-jdbc-7.0.53.jar</filename>
-                        <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.tomcat%7Ctomcat-jdbc%7C7.0.53%7Cjar"
+                        <filename>tomcat-jdbc-8.0.11.jar</filename>
+                        <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.tomcat%7Ctomcat-jdbc%7C8.0.11%7Cjar"
                               xlink:show="new">
-                            (org.apache.tomcat:tomcat-jdbc:7.0.53)
+                            (org.apache.tomcat:tomcat-jdbc:8.0.11)
+                        </link>
+                        <note>
+                            <para>The 8.0.11 is the first working OSGi ready version.</para>
+                        </note>
+                    </para>
+                </listitem>
+            </itemizedlist>
+
+            <para>
+                Install connector on Java 6: copy these requirements to /lib folder.
+            </para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        <filename>tomcat-juli-7.0.55.jar</filename>
+                        <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.tomcat%7Ctomcat-juli%7C7.0.55%7Cjar"
+                              xlink:show="new">
+                            (org.apache.tomcat:tomcat-juli:7.0.55)
+                        </link>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <filename>tomcat-jdbc-7.0.55.jar</filename>
+                        <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.tomcat%7Ctomcat-jdbc%7C7.0.55%7Cjar"
+                              xlink:show="new">
+                            (org.apache.tomcat:tomcat-jdbc:7.0.55)
                         </link>
                     </para>
                 </listitem>

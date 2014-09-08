@@ -30,7 +30,9 @@ import org.apache.tomcat.jdbc.pool.PoolProperties
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration
 import org.identityconnectors.common.StringUtil
 import org.identityconnectors.common.logging.Log
+import org.identityconnectors.common.security.GuardedString
 import org.identityconnectors.framework.spi.ConfigurationClass
+import org.identityconnectors.framework.spi.ConfigurationProperty
 
 /**
  * Extends the {@link org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration} class to provide all the necessary
@@ -88,16 +90,26 @@ public class ScriptedSQLConfiguration extends ScriptedConfiguration {
      */
     static final Log log = Log.getLog(ScriptedSQLConfiguration.class);
 
-    @Delegate
+    @Delegate(excludes = "password")
     private final PoolProperties poolProperties = new PoolProperties();
 
     // =======================================================================
     // Configuration Interface
     // =======================================================================
 
-    /**
-     * Attempt to validate the arguments added to the Configuration.
-     */
+    GuardedString password = null;
+
+    @ConfigurationProperty(confidential = true)
+    public String getPassword() {
+        return poolProperties.getPassword()
+    }
+
+    public void setPassword(String password) {
+        poolProperties.setPassword(password)
+    }
+/**
+ * Attempt to validate the arguments added to the Configuration.
+ */
     @Override
     public void validate() {
         super.validate();

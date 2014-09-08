@@ -79,6 +79,16 @@ environments {
             customizerScriptFileName = "CustomizerScript.groovy"
         }
     }
+    REST_SAMPLE {
+        configuration {
+            classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/rest_sample/").file, "UTF-8")]
+            serviceAddress = new URI("http://localhost:8090")
+            defaultAuthMethod = "BASIC_PREEMPTIVE"
+            username = "__configureme__"
+            password = new GuardedString("__configureme__".toCharArray())
+            customizerScriptFileName = "CustomizerScript.groovy"
+        }
+    }
     SQL {
         configuration {
             classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/sql/").file, "UTF-8")]
@@ -87,6 +97,16 @@ environments {
             url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"
             username = "sa"
             password = "sa"
+        }
+    }
+    SQL_SAMPLE {
+        configuration {
+            classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/sql_sample/").file, "UTF-8")]
+            driverClassName = "com.mysql.jdbc.Driver"
+            validationQuery = "select 1"
+            url = "jdbc:mysql://localhost:3306/HRDB"
+            username = "__configureme__"
+            password = "__configureme__"
         }
     }
 }
