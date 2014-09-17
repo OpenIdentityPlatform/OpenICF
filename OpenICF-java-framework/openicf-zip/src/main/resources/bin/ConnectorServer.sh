@@ -48,6 +48,8 @@ main_exec(){
 service_exec(){
     # Keep track of this pid
     echo $$ > "$OPENICF_PID_FILE"
+    echo "OPENICF_OPTS:   "$OPENICF_OPTS
+    echo "CLASSPATH:      "$CLASSPATH
     exec java $OPENICF_OPTS -server -classpath "$CLASSPATH" \
         org.identityconnectors.framework.server.Main $1 -properties "$CONNECTOR_SERVER_HOME/conf/ConnectorServer.properties"
 }
