@@ -23,6 +23,7 @@
  */
 
 
+import org.forgerock.json.fluent.JsonValue
 import org.identityconnectors.common.Base64
 import org.identityconnectors.common.security.GuardedByteArray
 import org.identityconnectors.common.security.GuardedString
@@ -53,15 +54,15 @@ class CRESTHelper {
      * @throws NullPointerException
      *         if the parameter <strong>attributes</strong> is <strong>null</strong>.
      */
-    public static Map<String, Object> toMap(
+    public static JsonValue toJsonValue(
             final String id, final Map<String, Attribute> attributes, Map<String, Object> objectClassInfo) {
-        def ret = [:]
+        def ret = new JsonValue(new LinkedHashMap<String, Object>())
         objectClassInfo.attributes.each { key, value ->
             if (AttributeUtil.namesEqual(key, Name.NAME)) {
                 if (null == id && value.attributeInfo.required) {
                     throw new InvalidAttributeValueException("Missing requires attribute:" + key);
                 } else {
-                    ret[value.jsonName] = id
+                    ret.addPermissive(value.jsonName, id)
                 }
             } else if (value.attributeInfo.isCreateable()) {
                 Attribute attribute = attributes[key];
@@ -71,15 +72,15 @@ class CRESTHelper {
                 } else if (null != attribute) {
                     List<Object> attributeValue = attribute.getValue();
                     if (attributeValue == null) {
-                        ret[value.jsonName] = null
+                        ret.addPermissive(value.jsonName, null)
                     } else {
                         if (value.attributeInfo.isMultiValued()) {
                             if (attributeValue.isEmpty()) {
-                                ret[value.jsonName] = attributeValue
+                                ret.addPermissive(value.jsonName, attributeValue)
                             } else {
-                                ret[value.jsonName] = attributeValue.each {
+                                ret.addPermissive(value.jsonName, attributeValue.each {
                                     fromAttributeToJSON(value.attributeInfo, it)
-                                }
+                                })
                             }
                         } else if (attributeValue.size() > 1) {
                             final StringBuilder msg =
@@ -88,9 +89,9 @@ class CRESTHelper {
                             throw new InvalidAttributeValueException(msg.toString());
                         } else {
                             if (attributeValue.isEmpty()) {
-                                ret[value.jsonName] = null
+                                ret.addPermissive(value.jsonName, null)
                             } else {
-                                ret[value.jsonName] = fromAttributeToJSON(value.attributeInfo, attributeValue.get(0))
+                                ret.addPermissive(value.jsonName, fromAttributeToJSON(value.attributeInfo, attributeValue.get(0)))
                             }
                         }
                     }

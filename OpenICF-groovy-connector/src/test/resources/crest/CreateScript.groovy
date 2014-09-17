@@ -54,7 +54,7 @@ def schema = schema as Schema
 Map<String, Object> objectClassInfo = configuration.propertyBag[objectClass.objectClassValue];
 if (objectClassInfo != null) {
 
-    def user = CRESTHelper.toMap(id, attributeMap, objectClassInfo);
+    def user = CRESTHelper.toJsonValue(id, attributeMap, objectClassInfo);
 
     CreateRequest request = Requests.newCreateRequest(objectClassInfo.resourceContainer, new JsonValue(user))
     request.addField("_id", "_rev")

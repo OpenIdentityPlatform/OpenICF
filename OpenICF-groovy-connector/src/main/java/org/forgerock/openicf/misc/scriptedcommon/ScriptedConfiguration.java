@@ -62,6 +62,8 @@ import groovy.lang.Binding;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyCodeSource;
 import groovy.lang.Script;
+import groovy.util.ConfigObject;
+import groovy.util.ConfigSlurper;
 import groovy.util.DelegatingScript;
 import groovy.util.GroovyScriptEngine;
 import groovy.util.ResourceException;
@@ -102,7 +104,8 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      *
      * @return value
      */
-    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts", operations = AuthenticateOp.class)
+    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts",
+            operations = AuthenticateOp.class)
     public String getAuthenticateScriptFileName() {
         return authenticateScriptFileName;
     }
@@ -126,7 +129,8 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      *
      * @return value
      */
-    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts" , operations = CreateOp.class)
+    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts",
+            operations = CreateOp.class)
     public String getCreateScriptFileName() {
         return createScriptFileName;
     }
@@ -150,7 +154,8 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      *
      * @return updateScriptFileName value
      */
-    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts", operations = UpdateOp.class)
+    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts",
+            operations = UpdateOp.class)
     public String getUpdateScriptFileName() {
         return updateScriptFileName;
     }
@@ -174,7 +179,8 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      *
      * @return deleteScriptFileName value
      */
-    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts", operations = DeleteOp.class)
+    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts",
+            operations = DeleteOp.class)
     public String getDeleteScriptFileName() {
         return deleteScriptFileName;
     }
@@ -198,7 +204,8 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      *
      * @return resolveUsernameScriptFileName value
      */
-    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts", operations = ResolveUsernameOp.class)
+    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts",
+            operations = ResolveUsernameOp.class)
     public String getResolveUsernameScriptFileName() {
         return resolveUsernameScriptFileName;
     }
@@ -222,7 +229,8 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      *
      * @return scriptOnResourceScriptFileName value
      */
-    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts", operations = ScriptOnResourceOp.class)
+    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts",
+            operations = ScriptOnResourceOp.class)
     public String getScriptOnResourceScriptFileName() {
         return scriptOnResourceScriptFileName;
     }
@@ -246,7 +254,8 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      *
      * @return searchScriptFileName value
      */
-    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts", operations = SearchOp.class)
+    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts",
+            operations = SearchOp.class)
     public String getSearchScriptFileName() {
         return searchScriptFileName;
     }
@@ -294,7 +303,8 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      *
      * @return schemaScriptFileName value
      */
-    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts", operations = SchemaOp.class)
+    @ConfigurationProperty(groupMessageKey = "groovy.operation.scripts",
+            operations = SchemaOp.class)
     public String getSchemaScriptFileName() {
         return schemaScriptFileName;
     }
@@ -537,6 +547,21 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
 
     private String customizerScriptFileName = null;
 
+    @ConfigurationProperty
+    public String getCustomConfiguration() {
+        return customConfiguration;
+    }
+
+    public void setCustomConfiguration(String customConfiguration) {
+        this.customConfiguration = customConfiguration;
+        if (StringUtil.isNotBlank(this.customConfiguration)) {
+            ConfigObject config = new ConfigSlurper().parse(this.customConfiguration);
+            propertyBag.putAll(config);
+        }
+    }
+
+    private String customConfiguration = null;
+
     // =======================================================================
     // Methods for Script writers
     // =======================================================================
@@ -589,7 +614,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     protected void validateScript(String scriptName) {
         try {
             loadScript(scriptName);
-        } catch (Throwable t){
+        } catch (Throwable t) {
             logger.error(t, "Failed to validate and load script: {0} failed");
             throw ConnectorException.wrap(t);
         }
@@ -600,8 +625,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     // =======================================================================
 
     protected String getDefaultCustomizerScriptName() {
-        return new StringBuilder("/").append(getClass().getPackage().getName().replace('.', '/'))
-                .append("/CustomizerScript.groovy").toString();
+        return "/" + getClass().getPackage().getName().replace('.', '/') + "/CustomizerScript.groovy";
     }
 
     protected Class getCustomizerClass() {

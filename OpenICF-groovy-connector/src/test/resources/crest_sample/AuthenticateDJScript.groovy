@@ -1,3 +1,4 @@
+package crest_sample
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
@@ -21,34 +22,28 @@
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
-
 import org.forgerock.json.resource.Connection
 import org.forgerock.openicf.connectors.scriptedcrest.ScriptedCRESTConfiguration
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import org.identityconnectors.common.logging.Log
+import org.identityconnectors.common.security.GuardedString
+import org.identityconnectors.framework.common.objects.ObjectClass
+import org.identityconnectors.framework.common.objects.OperationOptions
+import org.identityconnectors.framework.common.objects.Uid
 
 def operation = operation as OperationType
 def configuration = configuration as ScriptedCRESTConfiguration
 def connection = connection as Connection
+def username = username as String
 def log = log as Log
+def objectClass = objectClass as ObjectClass
+def options = options as OperationOptions
+def password = password as GuardedString;
 
-def url = getClass().getClassLoader().getResource("schema.json")
-if (configuration.propertyBag.containsKey("schema")) {
-    url = getClass().getClassLoader().getResource(configuration.propertyBag.get("schema") as String)
+switch (objectClass) {
+    case ObjectClass.ACCOUNT:
+        return new Uid(username)
+    default:
+        throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                objectClass.objectClassValue + " is not supported.")
 }
-
-def schema = SchemaSlurper.parse(url)
-
-configuration.propertyBag.putAll(schema)
-
-builder.schema({
-    schema.each { key, value ->
-        objectClass {
-            type key
-            value.attributes.values().each {
-                attribute it.attributeInfo
-            }
-        }
-    }
-}
-)

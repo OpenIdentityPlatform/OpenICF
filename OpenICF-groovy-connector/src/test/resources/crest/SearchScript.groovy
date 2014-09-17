@@ -90,7 +90,7 @@ if (objectClassInfo != null) {
                     }
                     def attributeDefinition = objectClassInfo.attributes[name]
                     if (null != attributeDefinition) {
-                        return attributeDefinition.jsonName
+                        return String.valueOf(attributeDefinition.jsonName)
                     } else {
                         return name
                     }
@@ -120,14 +120,14 @@ if (objectClassInfo != null) {
         //__NAME__
         def nameAttribute = objectClassInfo.attributes[Name.NAME]
         if (null != nameAttribute) {
-            request.addField(nameAttribute.jsonName)
+            request.addField(String.valueOf(nameAttribute.jsonName))
         } else {
             request.addField(Name.NAME)
         }
         options.attributesToGet.each {
             def crestAttribute = objectClassInfo.attributes[it]
             if (null != crestAttribute) {
-                request.addField(crestAttribute.jsonName)
+                request.addField(String.valueOf(crestAttribute.jsonName))
             }
         }
     }
@@ -148,7 +148,7 @@ if (objectClassInfo != null) {
             } else {
                 def crestAttribute = objectClassInfo.attributes[it.field]
                 if (null != crestAttribute) {
-                    request.addSortKey(it.ascendingOrder ? SortKey.ascendingOrder(crestAttribute.jsonName) : SortKey.descendingOrder(crestAttribute.jsonName))
+                    request.addSortKey(it.ascendingOrder ? SortKey.ascendingOrder(String.valueOf(crestAttribute.jsonName)) : SortKey.descendingOrder(String.valueOf(crestAttribute.jsonName)))
                 }
             }
         }
@@ -166,7 +166,7 @@ if (objectClassInfo != null) {
                     objectClassInfo.attributes.each { key, value ->
                         if (AttributeUtil.namesEqual(key, Name.NAME)) {
                             id resource.content.get(value.jsonName).required().asString()
-                        } else if (resource.content.isDefined(value.jsonName)) {
+                        } else if (null != resource.content.get(value.jsonName)) {
                             //attribute key, converter(value.attributeInfo, value)
 
                             def attributeValue = resource.content.get(value.jsonName).getObject();

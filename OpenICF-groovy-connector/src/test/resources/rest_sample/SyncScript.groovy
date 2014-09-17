@@ -30,6 +30,7 @@ import org.apache.http.client.HttpClient
 import org.forgerock.openicf.connectors.scriptedrest.ScriptedRESTConfiguration
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import org.identityconnectors.common.logging.Log
+import org.identityconnectors.framework.common.exceptions.ConnectorException
 import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.SyncToken
 
@@ -66,7 +67,7 @@ if (OperationType.GET_LATEST_SYNC_TOKEN.equals(operation)) {
 
 
         response.failure = { resp, json ->
-            return new ConnectException(json.message)
+            return new ConnectorException(json.message)
         }
     }
 
@@ -139,7 +140,7 @@ if (OperationType.GET_LATEST_SYNC_TOKEN.equals(operation)) {
                                 }
 
                                 response.failure = { getResp, error ->
-                                    return new ConnectException(error.message)
+                                    return new ConnectorException(error.message)
                                 }
                             }
 
@@ -149,7 +150,7 @@ if (OperationType.GET_LATEST_SYNC_TOKEN.equals(operation)) {
                 }
 
                 response.failure = { resp, json ->
-                    return new ConnectException(json.message)
+                    return new ConnectorException(json.message)
                 }
             }
             break;
@@ -214,7 +215,7 @@ if (OperationType.GET_LATEST_SYNC_TOKEN.equals(operation)) {
                                 }
 
                                 response.failure = { getResp, error ->
-                                    return new ConnectException(error.message)
+                                    return new ConnectorException(error.message)
                                 }
                             }
 
@@ -225,7 +226,7 @@ if (OperationType.GET_LATEST_SYNC_TOKEN.equals(operation)) {
 
 
                 response.failure = { resp, json ->
-                    return new ConnectException(json.message)
+                    return new ConnectorException(json.message)
                 }
             }
             break;

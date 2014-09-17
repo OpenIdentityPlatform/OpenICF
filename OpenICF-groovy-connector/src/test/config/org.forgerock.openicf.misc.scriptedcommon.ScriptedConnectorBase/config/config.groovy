@@ -66,8 +66,20 @@ environments {
         configuration {
             classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/crest/").file, "UTF-8")]
             serviceAddress = new URI("http://localhost:${httpPort}/crest/")
-            login = "admin"
+            username = "admin"
             password = new GuardedString("Passw0rd".toCharArray())
+        }
+    }
+    CREST_SAMPLE {
+        configuration {
+            classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/crest_sample/").file, "UTF-8"),
+                         URLDecoder.decode(ScriptedConnectorBase.class.getResource("/crest/").file, "UTF-8")]
+            serviceAddress = new URI("http://localhost:8090/")
+            defaultAuthMethod = "BASIC_PREEMPTIVE"
+            username = "__configureme__"
+            password = new GuardedString("__configureme__".toCharArray())
+            customConfiguration = "schema = 'dj_schema.json'"
+            syncScriptFileName = "SyncDJScript.groovy"
         }
     }
     REST {

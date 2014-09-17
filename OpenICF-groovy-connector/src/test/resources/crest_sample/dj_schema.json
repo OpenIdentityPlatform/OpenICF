@@ -1,0 +1,167 @@
+{
+    "__ACCOUNT__": {
+        "resourceContainer": "users",
+        "attributes": {
+            "__NAME__": {
+                "attributeInfo": null,
+                "jsonName": "userName",
+                "jsonType": "boolean"
+            }
+        }
+    },
+    "objectTypes": {
+        "groups": {
+            "$schema": "http://json-schema.org/draft-03/schema",
+            "id": "__GROUP__",
+            "type": "object",
+            "nativeType": "__GROUP__",
+            "properties": {
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "nativeType": "object"
+                    },
+                    "nativeName": "members",
+                    "nativeType": "object"
+                },
+                "lastModified": {
+                    "type": "string",
+                    "nativeName": "lastModified",
+                    "nativeType": "string",
+                    "flags": [
+                        "NOT_CREATABLE",
+                        "NOT_UPDATEABLE"
+                    ]
+                },
+                "displayName": {
+                    "type": "string",
+                    "nativeName": "displayName",
+                    "nativeType": "string",
+                    "flags": [
+                        "NOT_CREATABLE",
+                        "NOT_UPDATEABLE"
+                    ]
+                },
+                "_id": {
+                    "type": "string",
+                    "required": true,
+                    "nativeName": "__NAME__",
+                    "nativeType": "string",
+                    "flags": ["NOT_UPDATEABLE"]
+                },
+                "created": {
+                    "type": "string",
+                    "nativeName": "created",
+                    "nativeType": "string",
+                    "flags": [
+                        "NOT_CREATABLE",
+                        "NOT_UPDATEABLE"
+                    ]
+                }
+            }
+        },
+        "users": {
+            "$schema": "http://json-schema.org/draft-03/schema",
+            "id": "__ACCOUNT__",
+            "type": "object",
+            "nativeType": "__ACCOUNT__",
+            "properties": {
+                "created": {
+                    "type": "string",
+                    "nativeName": "created",
+                    "nativeType": "string",
+                    "flags": [
+                        "NOT_CREATABLE",
+                        "NOT_UPDATEABLE"
+                    ]
+                },
+                "manager/_id": {
+                    "type": "string",
+                    "nativeName": "managerId",
+                    "nativeType": "string"
+                },
+                "lastModified": {
+                    "type": "string",
+                    "nativeName": "lastModified",
+                    "nativeType": "string",
+                    "flags": [
+                        "NOT_CREATABLE",
+                        "NOT_UPDATEABLE"
+                    ]
+                },
+                "displayName": {
+                    "type": "string",
+                    "required": true,
+                    "nativeName": "displayName",
+                    "nativeType": "string"
+                },
+                "manager/displayName": {
+                    "type": "string",
+                    "nativeName": "managerDisplayName",
+                    "nativeType": "string",
+                    "flags": [
+                        "NOT_CREATABLE",
+                        "NOT_UPDATEABLE"
+                    ]
+                },
+                "name/givenName": {
+                    "type": "string",
+                    "nativeName": "givenName",
+                    "nativeType": "string"
+                },
+                "name/familyName": {
+                    "type": "string",
+                    "required": true,
+                    "nativeName": "familyName",
+                    "nativeType": "string"
+                },
+                "_id": {
+                    "type": "string",
+                    "required": true,
+                    "nativeName": "__NAME__",
+                    "nativeType": "string",
+                    "flags": ["NOT_UPDATEABLE"]
+                },
+                "userName": {
+                    "type": "string",
+                    "nativeName": "userName",
+                    "nativeType": "string",
+                    "flags": [
+                        "NOT_CREATABLE",
+                        "NOT_UPDATEABLE"
+                    ]
+                },
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "nativeType": "string"
+                    },
+                    "nativeName": "groups",
+                    "nativeType": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "nativeName": "password",
+                    "nativeType": "string",
+                    "flags": [
+                        "NOT_UPDATEABLE",
+                        "NOT_READABLE",
+                        "NOT_RETURNED_BY_DEFAULT"
+                    ]
+                },
+                "contactInformation/emailAddress": {
+                    "type": "string",
+                    "nativeName": "emailAddress",
+                    "nativeType": "string"
+                },
+                "contactInformation/telephoneNumber": {
+                    "type": "string",
+                    "nativeName": "telephoneNumber",
+                    "nativeType": "string"
+                }
+            }
+        }
+    }
+}

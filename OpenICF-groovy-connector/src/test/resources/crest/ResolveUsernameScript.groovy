@@ -53,7 +53,7 @@ if (objectClassInfo != null) {
 
     def attributeDefinition = objectClassInfo.attributes[name]
     if (null != attributeDefinition) {
-        request.queryFilter = QueryFilter.equalTo((String) attributeDefinition.jsonName, username)
+        request.queryFilter = QueryFilter.equalTo(String.valueOf(attributeDefinition.jsonName), username)
     } else {
         request.queryFilter = QueryFilter.equalTo(Name.NAME, username)
     }

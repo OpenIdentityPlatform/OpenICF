@@ -24,6 +24,7 @@
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import org.forgerock.json.fluent.JsonPointer
 import org.forgerock.openicf.misc.crest.VisitorParameter
 import org.identityconnectors.common.CollectionUtil
 import org.identityconnectors.common.Pair
@@ -139,7 +140,7 @@ class SchemaSlurper {
             [objectDefinition.nativeType,
              [resourceContainer: objectName,
               attributes       :
-                      objectDefinition.properties.collectEntries { propertyName, propertyDefinition ->
+                      objectDefinition.properties.collectEntries {String propertyName, Map propertyDefinition ->
                           if (AttributeUtil.namesEqual(Uid.NAME, propertyDefinition.nativeName)) {
                               //Ignore it
                               return null
@@ -150,9 +151,9 @@ class SchemaSlurper {
                               if (propertyDefinition?.required) {
                                   builder.setRequired(true)
                               }
-                              propertyDefinition?.flags.each {
+                              propertyDefinition?.flags?.each {
                                   if ("NOT_CREATABLE".equalsIgnoreCase(it)) {
-                                      builder.setCreatable(false)
+                                      builder.setCreateable(false)
                                   } else if ("NOT_UPDATEABLE".equalsIgnoreCase(it)) {
                                       builder.setUpdateable(false)
                                   } else if ("NOT_READABLE".equalsIgnoreCase(it)) {
@@ -171,7 +172,7 @@ class SchemaSlurper {
                               return [propertyDefinition.nativeName,
                                       [attributeInfo: builder.build(),
                                        jsonType     : jsonType,
-                                       jsonName     : propertyName,
+                                       jsonName     : new JsonPointer(propertyName),
                                       ]]
                           }
                       }]]

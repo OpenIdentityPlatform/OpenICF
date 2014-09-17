@@ -24,14 +24,20 @@
  * @author Gael Allioux <gael.allioux@forgerock.com>
  */
 
+
 import groovy.sql.Sql
+import groovy.text.SimpleTemplateEngine
 import org.forgerock.openicf.connectors.scriptedsql.ScriptedSQLConfiguration
-import org.forgerock.openicf.misc.scriptedcommon.MapFilterVisitor
+import org.forgerock.openicf.misc.scriptedcommon.ICFObjectBuilder
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
+import org.identityconnectors.common.StringUtil
 import org.identityconnectors.common.logging.Log
+import org.identityconnectors.framework.common.objects.AttributeUtil
 import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationOptions
 import org.identityconnectors.framework.common.objects.SearchResult
+import org.identityconnectors.framework.common.objects.Uid
+import org.identityconnectors.framework.common.objects.filter.EqualsFilter
 import org.identityconnectors.framework.common.objects.filter.Filter
 
 import java.sql.Connection
@@ -49,80 +55,102 @@ def ORG = new ObjectClass("organization")
 log.info("Entering " + operation + " Script");
 
 def sql = new Sql(connection);
-def where = "";
-def whereParams = []
+
+//Need to handle the __UID__ and __NAME__ in queries - this map has entries for each objectType, 
+//and is used to translate fields that might exist in the query object from the ICF identifier
+//back to the real property name.
+def fieldMap = [
+        "organization": [
+                "__UID__"    : "id",
+                "__NAME__"   : "name",
+                "description": "description",
+                "timestamp"  : "timestamp",
+                "tableName"  : "Organizations"
+        ],
+        "__ACCOUNT__" : [
+                "__UID__"     : "id",
+                "__NAME__"    : "uid",
+                "password"    : "password",
+                "firstname"   : "firstname",
+                "lastname"    : "lastname",
+                "fullname"    : "fullname",
+                "email"       : "email",
+                "organization": "organization",
+                "timestamp"   : "timestamp",
+                "tableName"   : "Users"
+
+        ],
+        "__GROUP__"   : [
+                "__UID__"    : "id",
+                "__NAME__"   : "name",
+                "gid"        : "gid",
+                "description": "description",
+                "timestamp"  : "timestamp",
+                "tableName"  : "Groups"
+        ]
+]
+
+def query = "SELECT * FROM ${tableName}"
+def whereParams = fieldMap[objectClass.objectClassValue]
+def where = ""
 
 
-if (filter != null) {
+if (filter instanceof EqualsFilter && ((EqualsFilter) filter).getAttribute().is(Uid.NAME)) {
+    //This is a Read
 
-    def query = filter.accept(MapFilterVisitor.INSTANCE, null)
-    //Need to handle the __UID__ and __NAME__ in queries - this map has entries for each objectType, 
-    //and is used to translate fields that might exist in the query object from the ICF identifier
-    //back to the real property name.
-    def fieldMap = [
-            "organization": [
-                    "__UID__" : "id",
-                    "__NAME__": "name"
-            ],
-            "__ACCOUNT__" : [
-                    "__UID__" : "id",
-                    "__NAME__": "uid"
-            ],
-            "__GROUP__"   : [
-                    "__UID__" : "id",
-                    "__NAME__": "name"
-            ]
-    ]
+    def id = AttributeUtil.getStringValue(((EqualsFilter) filter).getAttribute());
+    where = " WHERE ${__UID__} = :UID"
+    whereParams["UID"] = id
+} else if (filter != null) {
+    //This is a Search
 
-    def whereTemplates = [
-            CONTAINS          : '$left ${not ? "NOT " : ""}LIKE ?',
-            ENDSWITH          : '$left ${not ? "NOT " : ""}LIKE ?',
-            STARTSWITH        : '$left ${not ? "NOT " : ""}LIKE ?',
-            EQUALS            : '$left ${not ? "<>" : "="} ?',
-            GREATERTHAN       : '$left ${not ? "<=" : ">"} ?',
-            GREATERTHANOREQUAL: '$left ${not ? "<" : ">="} ?',
-            LESSTHAN          : '$left ${not ? ">=" : "<"} ?',
-            LESSTHANOREQUAL   : '$left ${not ? ">" : "<="} ?'
-    ];
+    def queryTemplate = filter.accept(new SQLFilterVisitor(), whereParams)
+    where = " WHERE " + queryTemplate
 
-    // this closure function recurses through the (potentially complex) query object in order to build an equivalent SQL 'where' expression
-    def queryParser
-    queryParser = { queryObj ->
-
-        if (queryObj.operation == "OR" || queryObj.operation == "AND") {
-            return "(" + queryParser(queryObj.right) + " " + queryObj.operation + " " + queryParser(queryObj.left) + ")";
-        } else {
-
-            if (fieldMap[objectClass.objectClassValue] && fieldMap[objectClass.objectClassValue][queryObj.get("left")]) {
-                queryObj.put("left", fieldMap[objectClass.objectClassValue][queryObj.get("left")]);
-            }
-
-            def engine = new groovy.text.SimpleTemplateEngine()
-            def wt = whereTemplates.get(queryObj.get("operation"))
-            def binding = [left: queryObj.get("left"), not: queryObj.get("not")]
-            def template = engine.createTemplate(wt).make(binding)
-
-            if (queryObj.get("operation") == "CONTAINS") {
-                whereParams.push("%" + queryObj.get("right") + "%")
-            } else if (queryObj.get("operation") == "ENDSWITH") {
-                whereParams.push("%" + queryObj.get("right"))
-            } else if (queryObj.get("operation") == "STARTSWITH") {
-                whereParams.push(queryObj.get("right") + "%")
-            } else {
-                whereParams.push(queryObj.get("right"))
-            }
-            return template.toString()
-        }
-    }
-
-    where = " WHERE " + queryParser(query)
     log.ok("Search WHERE clause is: " + where)
 }
 
-switch (objectClass) {
-    case ObjectClass.ACCOUNT:
-        sql.eachRow("SELECT * FROM Users" + where, whereParams, { row ->
-            handler {
+def pagedResultsCookie = null
+def pageSize = 0
+
+if (null != options.getPageSize() && options.getPageSize() > 0) {
+    pageSize = options.getPageSize()
+    /*
+    Select * from Users order by firstname DESC, id DESC LIMIT 3
+    Select * from Users where firstname <= 'John' AND (id < 5 OR firstname < 'John') order by firstname DESC, id DESC
+
+    Select m2.* from Users m1, Users m2 where m1.id = m2.id AND m1.firstname <= 'John' AND (m1.id < 5 OR m1.firstname < 'John') ORDER BY m1.firstname DESC, m1.id DESC LIMIT 3
+    */
+    if (StringUtil.isBlank(options.getPagedResultsCookie())) {
+        //First Page
+        query = query + " LIMIT " + options.getPageSize()
+        //return new SearchResult("NEXT");
+    } else {
+        //Next Page
+        where = "(" + where + ") AND ${__UID__} > :pagedResultsCookie LIMIT " + options.getPageSize()
+        whereParams[pagedResultsCookie] = options.getPagedResultsCookie()
+    }
+    where = where + "ORDER BY id ASC"    
+} else {
+    //If paged search requested ignore the sorting
+    options?.sortKeys?.each {
+        if (!AttributeUtil.namesEqual(it.field, Uid.NAME)) {
+            if (it.isAscendingOrder()) {
+                where = where + " ORDER BY ${it.field} ASC ,"
+            } else {
+                where = where + " ORDER BY ${it.field} DESC ,"
+            }
+        }
+    }
+}
+
+query = new SimpleTemplateEngine().createTemplate(query + where).make(whereParams)
+
+sql.eachRow((Map) whereParams, (String) query, { row ->
+
+    def connectorObject = ICFObjectBuilder.co {
+        switch (objectClass) {
+            case ObjectClass.ACCOUNT:
                 uid row.id as String
                 id row.uid
                 attribute 'uid', row.uid
@@ -131,36 +159,40 @@ switch (objectClass) {
                 attribute 'lastname', row.lastname
                 attribute 'email', row.email
                 attribute 'organization', row.organization
-            }
-        });
-        break
 
-    case ObjectClass.GROUP:
-        sql.eachRow("SELECT * FROM Groups" + where, whereParams, { row ->
-            handler {
+                break;
+            case ObjectClass.GROUP:
                 uid row.id as String
                 id row.name
                 delegate.objectClass(objectClass)
                 attribute 'gid', row.gid
                 attribute 'description', row.description
-            }
-        });
-        break
 
-    case ORG:
-        sql.eachRow("SELECT * FROM Organizations" + where, whereParams, { row ->
-            handler {
+                break;
+            case ORG:
                 uid row.id as String
                 id row.name
                 setObjectClass objectClass
                 attribute 'description', row.description
-            }
-        });
-        break
 
-    default:
-        throw new UnsupportedOperationException(operation.name() + " operation of type:" +
-                objectClass.objectClassValue + " is not supported.")
+                break;
+            default:
+                throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                        objectClass.objectClassValue + " is not supported.")
+        }
+    }
+
+    if (pageSize > 0) {
+        pageSize--
+        //Just for simple paging by ID
+        pagedResultsCookie = connectorObject.uid.uidValue
+    }
+
+    handler connectorObject
+})
+if (pageSize <= 0) {
+    // There are no more page left
+    pagedResultsCookie = null
 }
 
-return new SearchResult();
+return new SearchResult(pagedResultsCookie, -1);

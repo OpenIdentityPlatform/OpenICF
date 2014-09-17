@@ -14,7 +14,7 @@ CREATE TABLE Users(
 	fullname varchar(32),
 	email varchar(32),
 	organization varchar(32),
-	timestamp TIMESTAMP default now()
+	timestamp TIMESTAMP default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE Groups(
@@ -22,14 +22,14 @@ CREATE TABLE Groups(
 	gid char(32) NOT NULL,
 	name varchar(32) NOT NULL default '',
 	description varchar(32),
-	timestamp TIMESTAMP default now()
+  timestamp TIMESTAMP default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE Organizations(
 	id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 	name varchar(32) NOT NULL default '',
 	description varchar(32),
-	timestamp TIMESTAMP default now()
+  timestamp TIMESTAMP default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 INSERT INTO Users 

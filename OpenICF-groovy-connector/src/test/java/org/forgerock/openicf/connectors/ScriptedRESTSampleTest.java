@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.forgerock.openicf.connectors.scriptedcrest.ScriptedCRESTConnector;
 import org.forgerock.openicf.connectors.scriptedrest.ScriptedRESTConnector;
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase;
 import org.identityconnectors.common.logging.Log;
@@ -57,6 +58,7 @@ import org.testng.Assert;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 /**
@@ -70,14 +72,16 @@ public class ScriptedRESTSampleTest {
      */
     private static final Log logger = Log.getLog(ScriptedRESTSampleTest.class);
 
-    protected static final String TEST_NAME = "REST_SAMPLE";
+    protected static final String REST_TEST_NAME = "REST_SAMPLE";
+    protected static final String CREST_TEST_NAME = "CREST_SAMPLE";
 
     private ConnectorFacade facadeInstance;
+
 
     @BeforeClass
     public void setUp() throws Exception {
         String username =
-                TestHelpers.getProperties(ScriptedConnectorBase.class, TEST_NAME)
+                TestHelpers.getProperties(ScriptedConnectorBase.class, getTestName())
                         .getStringProperty("configuration.username");
         if ("__configureme__".equals(username)) {
             throw new SkipException("REST Sample tests are skipped. Create private configuration!");
@@ -86,26 +90,29 @@ public class ScriptedRESTSampleTest {
 
     @Test
     public void validate() throws Exception {
-        final ConnectorFacade facade = getFacade(TEST_NAME);
+        final ConnectorFacade facade = getFacade();
         facade.validate();
     }
 
     @Test
     public void testTest() throws Exception {
-        final ConnectorFacade facade = getFacade(TEST_NAME);
+        final ConnectorFacade facade = getFacade();
         facade.test();
     }
 
     @Test
     public void testSchema() throws Exception {
-        final ConnectorFacade facade = getFacade(TEST_NAME);
+        final ConnectorFacade facade = getFacade();
         Schema schema = facade.schema();
         Assert.assertEquals(schema.getObjectClassInfo().size(), 2);
     }
 
     @Test
     public void testAuthenticate() throws Exception {
-        final ConnectorFacade facade = getFacade(TEST_NAME);
+        if (CREST_TEST_NAME.equals(getTestName())){
+            throw new SkipException("CREST Sample does not implement this operation");
+        }
+        final ConnectorFacade facade = getFacade();
         Set<Attribute> createAttributes = createUserAttributes(1, "Bob", "Fleming");
         createAttributes.add(AttributeBuilder.build("password", "Passw0rd"));
 
@@ -122,7 +129,7 @@ public class ScriptedRESTSampleTest {
 
     @Test
     public void testCreateUpdateDeleteUser() throws Exception {
-        final ConnectorFacade facade = getFacade(TEST_NAME);
+        final ConnectorFacade facade = getFacade();
         Set<Attribute> expectedAttributes = createUserAttributes(1, "John", "Doe");
 
         Set<Attribute> createAttributes = new HashSet<Attribute>(expectedAttributes);
@@ -160,7 +167,7 @@ public class ScriptedRESTSampleTest {
 
     @Test(dependsOnMethods = { "testCreateUpdateDeleteUser" })
     public void testCreateUpdateDeleteGroup() throws Exception {
-        final ConnectorFacade facade = getFacade(TEST_NAME);
+        final ConnectorFacade facade = getFacade();
         Set<Attribute> createAttributes = createGroupAttributes("Sample_Test_Group");
 
         Uid uid = facade.create(ObjectClass.GROUP, createAttributes, null);
@@ -202,13 +209,13 @@ public class ScriptedRESTSampleTest {
     }
 
     @Test(dependsOnMethods = { "testCreateUpdateDeleteGroup" })
-    public void testSyncUser() throws Exception {
-        final ConnectorFacade facade = getFacade(TEST_NAME);
+    public void testSync() throws Exception {
+        final ConnectorFacade facade = getFacade();
         SyncToken userToken = facade.getLatestSyncToken(ObjectClass.ACCOUNT);
-        assertThat(Integer.parseInt((String)userToken.getValue())).isGreaterThan(3);
+        assertThat(Integer.parseInt((String) userToken.getValue())).isGreaterThan(3);
         SyncToken groupToken = facade.getLatestSyncToken(ObjectClass.ACCOUNT);
-        assertThat(Integer.parseInt((String)userToken.getValue())).isGreaterThan(3);
-        
+        assertThat(Integer.parseInt((String) userToken.getValue())).isGreaterThan(3);
+
         SyncResultsHandler handler = mock(SyncResultsHandler.class);
         when(handler.handle(any(SyncDelta.class))).thenReturn(true);
 
@@ -243,9 +250,21 @@ public class ScriptedRESTSampleTest {
         return createAttributes;
     }
 
+    protected String getTestName(){
+        return REST_TEST_NAME;
+    }
+    
+    protected ConnectorFacade getFacade() {
+        return getFacade(getTestName());
+    } 
+    
     protected ConnectorFacade getFacade(String environment) {
         if (null == facadeInstance) {
-            facadeInstance = createConnectorFacade(ScriptedRESTConnector.class, environment);
+            if (CREST_TEST_NAME.equals(environment)) {
+                facadeInstance = createConnectorFacade(ScriptedCRESTConnector.class, environment);
+            } else {
+                facadeInstance = createConnectorFacade(ScriptedRESTConnector.class, environment);
+            }
         }
         return facadeInstance;
     }

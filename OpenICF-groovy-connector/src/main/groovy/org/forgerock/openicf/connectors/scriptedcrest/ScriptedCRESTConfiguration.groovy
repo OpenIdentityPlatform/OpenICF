@@ -39,6 +39,7 @@ import org.forgerock.json.resource.Context
 import org.forgerock.json.resource.ResourceName
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration
 import org.identityconnectors.common.Assertions
+import org.identityconnectors.common.security.GuardedString
 import org.identityconnectors.framework.spi.ConfigurationProperty
 
 import java.util.concurrent.Future
@@ -50,6 +51,61 @@ import java.util.concurrent.Future
  */
 class ScriptedCRESTConfiguration extends ScriptedConfiguration {
 
+    // Exposed configuration properties.
+
+    // ===============================================
+    // HTTP authentication
+    // ===============================================
+
+    public enum AuthMethod {
+        NONE, BASIC, BASIC_PREEMPTIVE, DIGEST, NTLM, SPNEGO, CERT, OAUTH, CUSTOM
+    }
+
+    /*
+     * authMethod
+     * Can be:
+     *  BASIC
+     *  BASIC_PREEMPTIVE
+     *  CERT
+     *  OAUTH
+     */
+    String defaultAuthMethod = AuthMethod.BASIC.name();
+
+    /**
+     * The Remote user to authenticate with.
+     */
+    private String username = null;
+
+    /**
+     * The Password to authenticate with.
+     */
+    private GuardedString password = null;
+
+    @ConfigurationProperty(order = 1, displayMessageKey = "username.display",
+            groupMessageKey = "basic.group", helpMessageKey = "username.help")
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    @ConfigurationProperty(order = 2, displayMessageKey = "password.display",
+            groupMessageKey = "basic.group", helpMessageKey = "password.help",
+            confidential = true)
+    public GuardedString getPassword() {
+        return password;
+    }
+
+    public void setPassword(GuardedString password) {
+        this.password = password;
+    }
+
+    // ===============================================
+    // HTTP connection
+    // ===============================================
+    
     URI serviceAddress = null;
 
     URI proxyAddress = null;

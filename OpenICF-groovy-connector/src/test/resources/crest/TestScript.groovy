@@ -38,6 +38,3 @@ def log = log as Log
 
 log.info("This is TestScript")
 
-ActionRequest request = Requests.newActionRequest("users", "clear");
-JsonValue result = connection.action(new RootContext(), request);
-

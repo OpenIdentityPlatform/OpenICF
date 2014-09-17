@@ -46,7 +46,7 @@ def operation = operation as OperationType
 def updateAttributes = attributes as Set<Attribute>
 def configuration = configuration as ScriptedCRESTConfiguration
 def connection = connection as Connection
-def id = id as Attribute
+def id = id as String
 def log = log as Log
 def objectClass = objectClass as ObjectClass
 def options = options as OperationOptions
@@ -69,14 +69,15 @@ switch (operation) {
                         def info = objectClassInfo.attributes[it.name]
                         if (null != info && info.attributeInfo.isUpdateable()) {
                             if (it.value == null) {
-                                if (resource.content.isDefined(info.jsonName)) {
-                                    resource.content.put(info.jsonName, null)
+                                if (null != resource.content.get(info.jsonName)) {
+                                    resource.content.addPermissive(info.jsonName, null)
                                 }
                             } else if (info.attributeInfo.isMultiValued()) {
+                                resource.content.remove(info.jsonName)
                                 if (it.value.isEmpty()) {
-                                    resource.content.put(info.jsonName, it.value)
+                                    resource.content.addPermissive(info.jsonName, it.value)
                                 } else {
-                                    resource.content.put(info.jsonName, it.value.each { a ->
+                                    resource.content.addPermissive(info.jsonName, it.value.each { a ->
                                         CRESTHelper.fromAttributeToJSON(info.attributeInfo, a)
                                     })
                                 }
@@ -87,11 +88,12 @@ switch (operation) {
                                 throw new InvalidAttributeValueException(msg.toString());
                             } else {
                                 if (it.value.isEmpty()) {
-                                    if (resource.content.isDefined(info.jsonName)) {
-                                        resource.content.put(info.jsonName, null)
+                                    if (null != resource.content.get(info.jsonName)) {
+                                        resource.content.addPermissive(info.jsonName, null)
                                     }
                                 } else {
-                                    resource.content.put(info.jsonName, CRESTHelper.fromAttributeToJSON(info.attributeInfo, it.value.get(0)))
+                                    resource.content.remove(info.jsonName)
+                                    resource.content.addPermissive(info.jsonName, CRESTHelper.fromAttributeToJSON(info.attributeInfo, it.value.get(0)))
                                 }
                             }
                         }
