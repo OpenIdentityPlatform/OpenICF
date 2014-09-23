@@ -58,7 +58,7 @@
  <section xml:id="interface-CreateApiOp">
   <title>Create</title>
   <para>
-   Create an object and its uid.
+   Create an object and return its uid.
   </para>
  </section>
 

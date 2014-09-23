@@ -25,6 +25,7 @@
 package org.forgerock.openicf.maven;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -374,6 +375,18 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
                 }
 
                 if (docbkxDirectory.exists()) {
+                    final List<String> includes =
+                            FileUtils.getFileAndDirectoryNames(docbkxDirectory, "**", StringUtils
+                                    .join(DirectoryScanner.DEFAULTEXCLUDES, ",")
+                                    + ",**/*.xml", true, false, true, true);
+
+                    org.apache.commons.io.FileUtils.copyDirectory(docbkxDirectory, rootDirectory,
+                            new FileFilter() {
+                                public boolean accept(File pathname) {
+                                    return includes.contains(pathname.getPath());
+                                }
+                            });
+
                     List<File> files = FileUtils.getFiles(docbkxDirectory, "**/*.xml", null);
 
                     for (File file : files) {
@@ -384,10 +397,6 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
                             throw new MojoExecutionException(e.getMessage(), e);
                         }
                     }
-
-                    FileUtils.copyDirectory(docbkxDirectory, rootDirectory, "**", StringUtils.join(
-                            DirectoryScanner.DEFAULTEXCLUDES, ",")
-                            + ",**/*.xml");
                 }
 
                 File sharedRoot = rootDirectory.getParentFile();
