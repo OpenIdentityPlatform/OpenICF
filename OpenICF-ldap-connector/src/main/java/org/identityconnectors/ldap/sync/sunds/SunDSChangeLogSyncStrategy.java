@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * "Portions Copyrighted 2014 ForgeRock AS"
  */
 package org.identityconnectors.ldap.sync.sunds;
 
@@ -68,6 +69,7 @@ import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.spi.SyncTokenResultsHandler;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapEntry;
 import org.identityconnectors.ldap.search.DefaultSearchStrategy;
@@ -75,7 +77,7 @@ import org.identityconnectors.ldap.search.LdapFilter;
 import org.identityconnectors.ldap.search.LdapInternalSearch;
 import org.identityconnectors.ldap.search.LdapSearch;
 import org.identityconnectors.ldap.search.LdapSearches;
-import org.identityconnectors.ldap.search.SearchResultsHandler;
+import org.identityconnectors.ldap.search.LdapSearchResultsHandler;
 import org.identityconnectors.ldap.sync.LdapSyncStrategy;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.ChangeSeparator;
 import org.identityconnectors.ldap.sync.sunds.LdifParser.Line;
@@ -129,6 +131,7 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
         controls.setReturningAttributes(new String[] { changeNumberAttr, "targetDN", "changeType", "changes", "newRdn", "deleteOldRdn", "newSuperior", "targetEntryUUID", "targetUniqueID", "changeInitiatorsName" });
 
         final int[] currentChangeNumber = { getStartChangeNumber(token) };
+        final int[] processedChangeNumber = { -1 };
 
         final boolean[] results = new boolean[1];
         do {
@@ -137,9 +140,10 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
             String filter = getChangeLogSearchFilter(changeNumberAttr, currentChangeNumber[0]);
             LdapInternalSearch search = new LdapInternalSearch(conn, filter, singletonList(context), new DefaultSearchStrategy(false), controls);
 
-            search.execute(new SearchResultsHandler() {
+            search.execute(new LdapSearchResultsHandler() {
                 public boolean handle(String baseDN, SearchResult result) throws NamingException {
                     results[0] = true;
+                    boolean handled = true;
                     LdapEntry entry = LdapEntry.create(baseDN, result);
 
                     int changeNumber = convertToInt(getStringAttrValue(entry.getAttributes(), changeNumberAttr), -1);
@@ -149,8 +153,15 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
 
                     SyncDelta delta = createSyncDelta(entry, changeNumber, options.getAttributesToGet());
                     if (delta != null) {
-                        return handler.handle(delta);
+                        handled = handler.handle(delta);
+                        if (!handled){
+                            results[0] = false;
+                        } else{
+                            processedChangeNumber[0] = changeNumber;
+                        }
+                        return handled;
                     }
+                    processedChangeNumber[0] = changeNumber;
                     return true;
                 }
             });
@@ -161,6 +172,10 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
                 currentChangeNumber[0]++;
             }
         } while (results[0]);
+        // ICF 1.4 now allows us to send the Token even if no entries were actually processed
+        if (processedChangeNumber[0] != -1){
+            ((SyncTokenResultsHandler)handler).handleResult(new SyncToken(processedChangeNumber[0]));
+        }
     }
 
     private SyncDelta createSyncDelta(LdapEntry changeLogEntry, int changeNumber, String[] attrsToGetOption) {
@@ -400,8 +415,12 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
     private SyncDeltaType getSyncDeltaType(String changeType) {
         if ("delete".equalsIgnoreCase(changeType)) {
             return SyncDeltaType.DELETE;
+        } else if ("modify".equalsIgnoreCase(changeType)){
+            return SyncDeltaType.UPDATE;
+        } else if ("add".equalsIgnoreCase(changeType)){
+            return SyncDeltaType.CREATE;
         }
-        return SyncDeltaType.CREATE_OR_UPDATE;
+        throw new IllegalArgumentException("Unknown change type: " + changeType);
     }
 
     private String getModifiedEntrySearchFilter() {

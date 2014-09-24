@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * "Portions Copyrighted 2014 ForgeRock AS"
  */
 package org.identityconnectors.ldap.search;
 
@@ -114,7 +115,7 @@ public class LdapSearches {
         OperationOptionsBuilder builder = new OperationOptionsBuilder();
         builder.setAttributesToGet("entryDN");
 
-        LdapSearch search = new LdapSearch(conn, oclass, ldapFilter, builder.build());
+        LdapSearch search = new LdapSearch(conn, oclass, ldapFilter, null, builder.build());
         ConnectorObject object = search.getSingleResult();
         if (object != null) {
             return AttributeUtil.getStringValue(object.getAttributeByName("entryDN"));
@@ -133,7 +134,7 @@ public class LdapSearches {
         OperationOptionsBuilder builder = new OperationOptionsBuilder();
         builder.setAttributesToGet(attrsToGet);
 
-        LdapSearch search = new LdapSearch(conn, oclass, ldapFilter, builder.build(), baseDN);
+        LdapSearch search = new LdapSearch(conn, oclass, ldapFilter, null, builder.build(), baseDN);
         search.execute(new ResultsHandler() {
             public boolean handle(ConnectorObject object) {
                 result.add(object);
@@ -149,7 +150,7 @@ public class LdapSearches {
         OperationOptionsBuilder builder = new OperationOptionsBuilder();
         builder.setAttributesToGet(attrsToGet);
 
-        LdapSearch search = new LdapSearch(conn, oclass, filter, builder.build());
+        LdapSearch search = new LdapSearch(conn, oclass, filter, null, builder.build());
         return search.getSingleResult();
     }
 
@@ -165,7 +166,7 @@ public class LdapSearches {
         controls.setSearchScope(SearchControls.OBJECT_SCOPE);
         controls.setReturningAttributes(ldapAttrsToGet);
         LdapInternalSearch search = new LdapInternalSearch(conn, null, singletonList(entryDN.toString()), new DefaultSearchStrategy(true), controls);
-        search.execute(new SearchResultsHandler() {
+        search.execute(new LdapSearchResultsHandler() {
             public boolean handle(String baseDN, SearchResult searchResult) {
                 result.add(LdapEntry.create(baseDN, searchResult));
                 return false;
@@ -177,7 +178,7 @@ public class LdapSearches {
         throw new ConnectorException(conn.format("entryNotFound", null, entryDN));
     }
 
-    public static void findEntries(SearchResultsHandler handler, LdapConnection conn, String filter, String... ldapAttrsToGet) {
+    public static void findEntries(LdapSearchResultsHandler handler, LdapConnection conn, String filter, String... ldapAttrsToGet) {
         log.ok("Searching for entries matching {0}", filter);
 
         List<String> baseDNs = Arrays.asList(conn.getConfiguration().getBaseContexts());

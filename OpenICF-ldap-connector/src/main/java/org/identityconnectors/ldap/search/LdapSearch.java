@@ -20,10 +20,11 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * 
- * Portions Copyrighted 2013 Forgerock
+ * Portions Copyrighted [2013-2014] Forgerock
  */
 package org.identityconnectors.ldap.search;
 
+import com.sun.jndi.ldap.ctl.SortControl;
 import com.sun.jndi.ldap.ctl.VirtualListViewControl;
 
 import java.util.Arrays;
@@ -61,6 +62,8 @@ import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet
 import static org.identityconnectors.common.CollectionUtil.newSet;
 import static org.identityconnectors.common.StringUtil.isBlank;
 import org.identityconnectors.framework.common.objects.OperationalAttributeInfos;
+import org.identityconnectors.framework.common.objects.SortKey;
+import org.identityconnectors.framework.spi.SearchResultsHandler;
 import static org.identityconnectors.ldap.LdapUtil.buildMemberIdAttribute;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValues;
 import static org.identityconnectors.ldap.ADLdapUtil.objectGUIDtoString;
@@ -82,6 +85,7 @@ public class LdapSearch {
     private final OperationOptions options;
     private final GroupHelper groupHelper;
     private final String[] baseDNs;
+    private final ResultsHandler handler;
 
     public static Set<String> getAttributesReturnedByDefault(LdapConnection conn, ObjectClass oclass) {
         if (oclass.equals(LdapSchemaMapping.ANY_OBJECT_CLASS)) {
@@ -99,18 +103,23 @@ public class LdapSearch {
         return result;
     }
 
-    public LdapSearch(LdapConnection conn, ObjectClass oclass, LdapFilter filter, OperationOptions options) {
-        this(conn, oclass, filter, options, conn.getConfiguration().getBaseContexts());
+    public LdapSearch(LdapConnection conn, ObjectClass oclass, LdapFilter filter, ResultsHandler handler, OperationOptions options) {
+        this(conn, oclass, filter, handler, options, conn.getConfiguration().getBaseContexts());
     }
 
-    public LdapSearch(LdapConnection conn, ObjectClass oclass, LdapFilter filter, OperationOptions options, String... baseDNs) {
+    public LdapSearch(LdapConnection conn, ObjectClass oclass, LdapFilter filter, ResultsHandler handler, OperationOptions options, String... baseDNs) {
         this.conn = conn;
         this.oclass = oclass;
         this.filter = filter;
         this.options = options;
         this.baseDNs = baseDNs;
+        this.handler = handler;
 
         groupHelper = new GroupHelper(conn);
+    }
+    
+    public final void execute(){
+        execute(handler);
     }
 
     /**
@@ -126,7 +135,7 @@ public class LdapSearch {
         final String[] attrsToGetOption = options.getAttributesToGet();
         final Set<String> attrsToGet = getAttributesToGet(attrsToGetOption);
         LdapInternalSearch search = getInternalSearch(attrsToGet);
-        search.execute(new SearchResultsHandler() {
+        search.execute(new LdapSearchResultsHandler() {
             public boolean handle(String baseDN, SearchResult result) throws NamingException {
                 return handler.handle(createConnectorObject(baseDN, result, attrsToGet, attrsToGetOption != null));
             }
@@ -142,7 +151,7 @@ public class LdapSearch {
         final Set<String> attrsToGet = getAttributesToGet(attrsToGetOption);
         final ConnectorObject[] results = new ConnectorObject[] { null };
         LdapInternalSearch search = getInternalSearch(attrsToGet);
-        search.execute(new SearchResultsHandler() {
+        search.execute(new LdapSearchResultsHandler() {
             public boolean handle(String baseDN, SearchResult result) throws NamingException {
                 results[0] = createConnectorObject(baseDN, result, attrsToGet, attrsToGetOption != null);
                 return false;
@@ -375,14 +384,23 @@ public class LdapSearch {
         boolean useBlocks = conn.getConfiguration().isUseBlocks();
         boolean usePagedResultsControl = conn.getConfiguration().isUsePagedResultControl();
         int pageSize = conn.getConfiguration().getBlockSize();
+        SortKey[] sortKeys = null;
+        
+        if (options.getSortKeys() != null && options.getSortKeys().length > 0){
+            if (conn.supportsControl(SortControl.OID)){
+                sortKeys = options.getSortKeys();
+            }
+        }
 
-        if (useBlocks && !usePagedResultsControl && conn.supportsControl(VirtualListViewControl.OID)) {
+        if((null != options.getPageSize() && options.getPageSize() > 0) && conn.supportsControl(PagedResultsControl.OID)) {
+            strategy = new PagedSearchStrategy(options.getPageSize(), options.getPagedResultsCookie(), options.getPagedResultsOffset(), (SearchResultsHandler)handler, sortKeys);
+        } else if (useBlocks && !usePagedResultsControl && conn.supportsControl(VirtualListViewControl.OID)) {
             String vlvSortAttr = conn.getConfiguration().getVlvSortAttribute();
             strategy = new VlvIndexSearchStrategy(vlvSortAttr, pageSize);
         } else if (useBlocks && conn.supportsControl(PagedResultsControl.OID)) {
-            strategy = new SimplePagedSearchStrategy(pageSize);
+            strategy = new SimplePagedSearchStrategy(pageSize, sortKeys);
         } else {
-            strategy = new DefaultSearchStrategy(false);
+            strategy = new DefaultSearchStrategy(false, sortKeys);
         }
         return strategy;
     }

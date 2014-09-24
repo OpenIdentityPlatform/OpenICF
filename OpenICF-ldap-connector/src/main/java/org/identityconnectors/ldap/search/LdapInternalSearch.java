@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * "Portions Copyrighted 2014 ForgeRock AS"
  */
 package org.identityconnectors.ldap.search;
 
@@ -56,7 +57,7 @@ public class LdapInternalSearch {
         this.controls = controls;
     }
 
-    public void execute(SearchResultsHandler handler) {
+    public void execute(LdapSearchResultsHandler handler) {
         String filter = blankAsAllObjects(this.filter);
         try {
             strategy.doSearch(conn.getInitialContext(), baseDNs, filter, controls, handler);

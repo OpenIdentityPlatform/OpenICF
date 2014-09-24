@@ -19,13 +19,14 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * "Portions Copyrighted [2014] [ForgeRock AS]"
  */
 package org.identityconnectors.ldap.search;
 
 import javax.naming.NamingException;
 import javax.naming.directory.SearchResult;
 
-public interface SearchResultsHandler {
+public interface LdapSearchResultsHandler {
 
     public boolean handle(String baseDN, SearchResult result) throws NamingException;
 }

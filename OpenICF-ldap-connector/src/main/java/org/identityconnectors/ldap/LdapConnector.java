@@ -188,12 +188,12 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
             if (loginContext != null) {
                 Subject.doAs(loginContext.getSubject(), new PrivilegedAction() {
                     public Object run() {
-                        new LdapSearch(conn, objectClass, query, options).execute(handler);
+                        new LdapSearch(conn, objectClass, query, handler, options).execute();
                         return null;
                     }
                 });
             } else {
-                new LdapSearch(conn, objectClass, query, options).execute(handler);
+                new LdapSearch(conn, objectClass, query, handler, options).execute();
             }
         }
     }
@@ -231,7 +231,7 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
                 }
             });
         } else {
-            return new LdapUpdate(conn, objectClass, uid).update(replaceAttributes);
+            return new LdapUpdate(conn, objectClass, uid, options).update(replaceAttributes);
         }
     }
 

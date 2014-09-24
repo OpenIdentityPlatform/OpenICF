@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 ForgeRock AS. All Rights Reserved
+ * Copyright (c) 2013-2014 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -49,13 +49,14 @@ import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.spi.SyncTokenResultsHandler;
 import org.identityconnectors.ldap.ADUserAccountControl;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapConstants;
 import static org.identityconnectors.ldap.LdapUtil.buildMemberIdAttribute;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValue;
 import org.identityconnectors.ldap.search.LdapInternalSearch;
-import org.identityconnectors.ldap.search.SearchResultsHandler;
+import org.identityconnectors.ldap.search.LdapSearchResultsHandler;
 import org.identityconnectors.ldap.search.SimplePagedSearchStrategy;
 import org.identityconnectors.ldap.sync.LdapSyncStrategy;
 import static org.identityconnectors.ldap.ADLdapUtil.objectGUIDtoString;
@@ -77,6 +78,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
     private static final String NAMING_CTX_ATTR = "defaultNamingContext";
     private static final String OBJSID_ATTR = "objectSID";
     private static final String USN_CHANGED_ATTR = "uSNChanged";
+    private static final String USN_CREATED_ATTR = "uSNCreated";
     private static final String HCU_CHANGED_ATTR = "highestCommittedUSN";
     private static final Log logger = Log.getLog(ActiveDirectoryChangeLogSyncStrategy.class);
     private final LdapConnection conn;
@@ -99,6 +101,9 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
         // the tombstones in the cn=delete objects,<defaultNamingContext> container.
 
         final TreeMap<Integer, SyncDelta> changes = new TreeMap<Integer, SyncDelta>();
+        final String[] usnChanged = {""};
+        final String lastUSN = gethighestCommittedUSN();
+        int lastProcessed = -1;
 
         SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
         controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
@@ -110,7 +115,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                 new SimplePagedSearchStrategy(conn.getConfiguration().getBlockSize()),
                 controls);
         try {
-            search.execute(new SearchResultsHandler() {
+            search.execute(new LdapSearchResultsHandler() {
                 public boolean handle(String baseDN, SearchResult result) throws NamingException {
                     Attributes attrs = result.getAttributes();
                     Uid uid = conn.getSchemaMapping().createUid(conn.getConfiguration().getUidAttribute(), attrs);
@@ -180,14 +185,18 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                             cob.addAttribute(buildMemberIdAttribute(conn, attr));
                         }
                     }
-                    String usnChanged = attrs.get(USN_CHANGED_ATTR).get().toString();
                     SyncDeltaBuilder syncDeltaBuilder = new SyncDeltaBuilder();
-                    syncDeltaBuilder.setToken(new SyncToken(usnChanged));
-                    syncDeltaBuilder.setDeltaType(SyncDeltaType.CREATE_OR_UPDATE);
+                    usnChanged[0] = attrs.get(USN_CHANGED_ATTR).get().toString();
+                    if (usnChanged[0].equalsIgnoreCase(attrs.get(USN_CREATED_ATTR).get().toString())) {
+                        syncDeltaBuilder.setDeltaType(SyncDeltaType.CREATE);
+                    } else {
+                        syncDeltaBuilder.setDeltaType(SyncDeltaType.UPDATE);
+                    }
+                    syncDeltaBuilder.setToken(new SyncToken(usnChanged[0]));
                     syncDeltaBuilder.setUid(uid);
                     syncDeltaBuilder.setObject(cob.build());
 
-                    changes.put(Integer.parseInt(usnChanged), syncDeltaBuilder.build());
+                    changes.put(Integer.parseInt(usnChanged[0]), syncDeltaBuilder.build());
                     return true;
                 }
             });
@@ -215,13 +224,13 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                         SearchResult entry = deleted.next();
                         Attributes attrs = entry.getAttributes();
                         Uid uid = conn.getSchemaMapping().createUid(conn.getConfiguration().getUidAttribute(), attrs);
-                        String usnChanged = attrs.get(USN_CHANGED_ATTR).get().toString();
+                        usnChanged[0] = attrs.get(USN_CHANGED_ATTR).get().toString();
 
                         SyncDeltaBuilder syncDeltaBuilder = new SyncDeltaBuilder();
-                        syncDeltaBuilder.setToken(new SyncToken(usnChanged));
+                        syncDeltaBuilder.setToken(new SyncToken(usnChanged[0]));
                         syncDeltaBuilder.setDeltaType(SyncDeltaType.DELETE);
                         syncDeltaBuilder.setUid(uid);
-                        changes.put(Integer.parseInt(usnChanged), syncDeltaBuilder.build());
+                        changes.put(Integer.parseInt(usnChanged[0]), syncDeltaBuilder.build());
                     }
                 } else if (LdapConnection.ServerType.MSAD_LDS.equals(conn.getServerType())) {
                     logger.error("Active Directory Lightweight Directory Services is used but defaultNamingContext has not been set - impossible to detect deleted objects");
@@ -236,7 +245,13 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
         for (Map.Entry<Integer, SyncDelta> entry : changes.entrySet()) {
             if (!handler.handle(entry.getValue())) {
                 break;
+            } else {
+                lastProcessed = entry.getKey();
             }
+        }
+        // ICF 1.4 now allows us to send the Token even if no entries were actually processed
+        if (lastProcessed == -1) {
+            ((SyncTokenResultsHandler) handler).handleResult(new SyncToken(lastUSN));
         }
     }
 

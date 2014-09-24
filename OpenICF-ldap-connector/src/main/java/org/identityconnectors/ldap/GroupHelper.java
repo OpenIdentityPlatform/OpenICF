@@ -45,7 +45,7 @@ import javax.naming.ldap.LdapName;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.ldap.search.LdapSearches;
-import org.identityconnectors.ldap.search.SearchResultsHandler;
+import org.identityconnectors.ldap.search.LdapSearchResultsHandler;
 
 public class GroupHelper {
 
@@ -306,7 +306,7 @@ public class GroupHelper {
         }
     }
 
-    private static final class ToDNHandler implements SearchResultsHandler {
+    private static final class ToDNHandler implements LdapSearchResultsHandler {
 
         private final List<String> results = new ArrayList<String>();
 
@@ -320,7 +320,7 @@ public class GroupHelper {
         }
     }
 
-    private static final class ToGroupMembershipHandler implements SearchResultsHandler {
+    private static final class ToGroupMembershipHandler implements LdapSearchResultsHandler {
 
         private final Set<GroupMembership> results = new HashSet<GroupMembership>();
         private String memberRef;

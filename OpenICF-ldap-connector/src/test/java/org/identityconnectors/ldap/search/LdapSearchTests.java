@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * "Portions Copyrighted 2014 ForgeRock AS"
  */
 package org.identityconnectors.ldap.search;
 
@@ -76,12 +77,12 @@ public class LdapSearchTests extends LdapConnectorTestBase {
 
         LdapFilter filter = LdapFilter.forEntryDN(BUGS_BUNNY_DN);
         ToListResultsHandler handler = new ToListResultsHandler();
-        new LdapSearch(conn, ObjectClass.ACCOUNT, filter, new OperationOptionsBuilder().build()).execute(handler);
+        new LdapSearch(conn, ObjectClass.ACCOUNT, filter, handler, new OperationOptionsBuilder().build()).execute();
         assertEquals(1, handler.getObjects().size());
 
         filter = filter.withNativeFilter("(foo=bar)");
         handler = new ToListResultsHandler();
-        new LdapSearch(conn, ObjectClass.ACCOUNT, filter, new OperationOptionsBuilder().build()).execute(handler);
+        new LdapSearch(conn, ObjectClass.ACCOUNT, filter, handler, new OperationOptionsBuilder().build()).execute();
         assertTrue(handler.getObjects().isEmpty());
     }
 
@@ -134,7 +135,7 @@ public class LdapSearchTests extends LdapConnectorTestBase {
         LdapConnection conn = new LdapConnection(config);
         ToListResultsHandler handler = new ToListResultsHandler();
         // Should not fail with NameNotFoundException or InvalidNameException.
-        new LdapSearch(conn, ObjectClass.ACCOUNT, filter, new OperationOptionsBuilder().build()).execute(handler);
+        new LdapSearch(conn, ObjectClass.ACCOUNT, filter, handler, new OperationOptionsBuilder().build()).execute();
         assertTrue(handler.getObjects().isEmpty());
     }
 
@@ -164,7 +165,7 @@ public class LdapSearchTests extends LdapConnectorTestBase {
     private void searchExpectingSingleResult(LdapConfiguration config) {
         LdapConnection conn = new LdapConnection(config);
         FirstOnlyResultsHandler handler = new FirstOnlyResultsHandler();
-        new LdapSearch(conn, ObjectClass.ACCOUNT, null, new OperationOptionsBuilder().build()).execute(handler);
+        new LdapSearch(conn, ObjectClass.ACCOUNT, null, handler, new OperationOptionsBuilder().build()).execute();
         handler.assertSingleResult();
     }
 

@@ -19,9 +19,11 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * "Portions Copyrighted 2014 ForgeRock AS"
  */
 package org.identityconnectors.ldap.search;
 
+import java.io.IOException;
 import static org.identityconnectors.ldap.LdapUtil.escapeDNValueOfJNDIReservedChars;
 
 import java.util.Iterator;
@@ -33,33 +35,55 @@ import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
+import javax.naming.ldap.Control;
 import javax.naming.ldap.LdapContext;
+import javax.naming.ldap.SortControl;
 
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.framework.common.objects.SortKey;
 
 public class DefaultSearchStrategy extends LdapSearchStrategy {
 
     private static final Log log = Log.getLog(DefaultSearchStrategy.class);
 
     private final boolean ignoreNonExistingBaseDNs;
+    private final SortKey[] sortKeys;
 
     public DefaultSearchStrategy(boolean ignoreNonExistingBaseDNs) {
         this.ignoreNonExistingBaseDNs = ignoreNonExistingBaseDNs;
+        this.sortKeys = null;
+    }
+
+    public DefaultSearchStrategy(boolean ignoreNonExistingBaseDNs, SortKey[] sortKeys) {
+        this.ignoreNonExistingBaseDNs = ignoreNonExistingBaseDNs;
+        this.sortKeys = sortKeys;
     }
 
     @Override
-    public void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler) throws NamingException {
+    public void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, LdapSearchResultsHandler handler) throws IOException,NamingException {
         log.ok("Searching in {0} with filter {1} and {2}", baseDNs, query, searchControlsToString(searchControls));
 
         Iterator<String> baseDNIter = baseDNs.iterator();
         boolean proceed = true;
+        boolean isSorted = false;
+        LdapContext ctx = initCtx;
+        
+        if (sortKeys != null && sortKeys.length > 0){
+            javax.naming.ldap.SortKey[] skis = new javax.naming.ldap.SortKey[sortKeys.length];
+            for(int i = 0; i < sortKeys.length; i++){
+                skis[i] = new javax.naming.ldap.SortKey(sortKeys[i].getField(),sortKeys[i].isAscendingOrder(),null);
+            }
+            // We don't want to make this critical... better return unsorted results than nothing.
+            ctx = initCtx.newInstance(new Control[]{new SortControl(skis, Control.NONCRITICAL)});
+            isSorted = true;
+        }
 
         while (baseDNIter.hasNext() && proceed) {
             String baseDN = baseDNIter.next();
 
             NamingEnumeration<SearchResult> results;
             try {
-                results = initCtx.search((escapeDNValueOfJNDIReservedChars(baseDN)), query, searchControls);
+                results = ctx.search((escapeDNValueOfJNDIReservedChars(baseDN)), query, searchControls);
             } catch (NameNotFoundException e) {
                 if (!ignoreNonExistingBaseDNs) {
                     throw e;
@@ -79,6 +103,9 @@ public class DefaultSearchStrategy extends LdapSearchStrategy {
                 }
             } finally {
                 results.close();
+                if (isSorted){
+                    ctx.close();
+                }
             }
         }
     }

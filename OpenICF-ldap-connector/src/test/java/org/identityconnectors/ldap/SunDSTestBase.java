@@ -40,7 +40,7 @@ import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.ldap.search.DefaultSearchStrategy;
 import org.identityconnectors.ldap.search.LdapInternalSearch;
-import org.identityconnectors.ldap.search.SearchResultsHandler;
+import org.identityconnectors.ldap.search.LdapSearchResultsHandler;
 import org.identityconnectors.test.common.PropertyBag;
 import org.identityconnectors.test.common.TestHelpers;
 
@@ -67,7 +67,7 @@ public class SunDSTestBase {
         LdapInternalSearch search = new LdapInternalSearch(conn, null, Arrays.asList(conn.getConfiguration().getBaseContexts()),
                 new DefaultSearchStrategy(false), controls);
         final List<LdapName> entryDNs = new ArrayList<LdapName>();
-        search.execute(new SearchResultsHandler() {
+        search.execute(new LdapSearchResultsHandler() {
             public boolean handle(String baseDN, SearchResult result) throws NamingException {
                 entryDNs.add(LdapEntry.create(baseDN, result).getDN());
                 return true;

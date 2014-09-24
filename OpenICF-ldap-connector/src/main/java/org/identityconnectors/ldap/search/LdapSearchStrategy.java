@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * "Portions Copyrighted 2014 ForgeRock AS"
  */
 package org.identityconnectors.ldap.search;
 
@@ -32,7 +33,7 @@ import javax.naming.ldap.LdapContext;
 
 public abstract class LdapSearchStrategy {
 
-    public abstract void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler)
+    public abstract void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, LdapSearchResultsHandler handler)
             throws IOException, NamingException;
 
     static String searchControlsToString(SearchControls controls) {

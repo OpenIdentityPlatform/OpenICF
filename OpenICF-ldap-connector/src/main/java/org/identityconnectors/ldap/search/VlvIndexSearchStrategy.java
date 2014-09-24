@@ -71,7 +71,7 @@ public class VlvIndexSearchStrategy extends LdapSearchStrategy {
     }
 
     @Override
-    public void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler) throws IOException, NamingException {
+    public void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, LdapSearchResultsHandler handler) throws IOException, NamingException {
         getLog().ok("Searching in {0} with filter {1} and {2}", baseDNs, query, searchControlsToString(searchControls));
 
         Iterator<String> baseDNIter = baseDNs.iterator();
@@ -87,7 +87,7 @@ public class VlvIndexSearchStrategy extends LdapSearchStrategy {
         }
     }
 
-    private boolean searchBaseDN(LdapContext ctx, String baseDN, String query, SearchControls searchControls, SearchResultsHandler handler) throws IOException, NamingException {
+    private boolean searchBaseDN(LdapContext ctx, String baseDN, String query, SearchControls searchControls, LdapSearchResultsHandler handler) throws IOException, NamingException {
         getLog().ok("Searching in {0}", baseDN);
         
         index = 1;

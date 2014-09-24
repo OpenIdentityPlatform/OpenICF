@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 ForgeRock AS. All Rights Reserved
+ * Copyright (c) 2013-2014 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -47,6 +47,7 @@ import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.spi.SyncTokenResultsHandler;
 import static org.identityconnectors.ldap.ADLdapUtil.fetchGroupMembersByRange;
 import static org.identityconnectors.ldap.ADLdapUtil.objectGUIDtoString;
 import org.identityconnectors.ldap.LdapConnection;
@@ -57,7 +58,7 @@ import org.identityconnectors.ldap.LdapConstants;
 import org.identityconnectors.ldap.search.DefaultSearchStrategy;
 import org.identityconnectors.ldap.search.LdapInternalSearch;
 import org.identityconnectors.ldap.search.LdapSearchStrategy;
-import org.identityconnectors.ldap.search.SearchResultsHandler;
+import org.identityconnectors.ldap.search.LdapSearchResultsHandler;
 import org.identityconnectors.ldap.search.SimplePagedSearchStrategy;
 import org.identityconnectors.ldap.sync.LdapSyncStrategy;
 
@@ -113,7 +114,7 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
                 strategy, controls);
 
         try {
-            search.execute(new SearchResultsHandler() {
+            search.execute(new LdapSearchResultsHandler() {
                 public boolean handle(String baseDN, SearchResult result) throws NamingException {
                     Attributes attrs = result.getAttributes();
                     Uid uid = conn.getSchemaMapping().createUid(conn.getConfiguration().getUidAttribute(), attrs);
@@ -190,6 +191,8 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
                     return handler.handle(syncDeltaBuilder.build());
                 }
             });
+            // ICF 1.4 now allows us to send the Token even if no entries were actually processed
+            ((SyncTokenResultsHandler)handler).handleResult(new SyncToken(now));
         } catch (ConnectorException e) {
             if (e.getCause() instanceof PartialResultException) {
                 logger.warn("PartialResultException has been caught");

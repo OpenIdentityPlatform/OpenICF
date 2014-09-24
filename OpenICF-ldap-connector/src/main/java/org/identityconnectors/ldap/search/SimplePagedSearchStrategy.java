@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * "Portions Copyrighted 2014 ForgeRock AS"
  */
 package org.identityconnectors.ldap.search;
 
@@ -35,24 +36,44 @@ import javax.naming.ldap.Control;
 import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.PagedResultsControl;
 import javax.naming.ldap.PagedResultsResponseControl;
+import javax.naming.ldap.SortControl;
 
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.framework.common.objects.SortKey;
 
 public class SimplePagedSearchStrategy extends LdapSearchStrategy {
 
     private static final Log log = Log.getLog(SimplePagedSearchStrategy.class);
 
     private final int pageSize;
+    private final SortKey[] sortKeys;
 
     public SimplePagedSearchStrategy(int pageSize) {
         this.pageSize = pageSize;
+        this.sortKeys = null;
+    }
+    
+    public SimplePagedSearchStrategy(int pageSize, SortKey[] sortKeys) {
+        this.pageSize = pageSize;
+        this.sortKeys = sortKeys;
     }
 
     @Override
-    public void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, SearchResultsHandler handler) throws IOException, NamingException {
+    public void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, LdapSearchResultsHandler handler) throws IOException, NamingException {
         log.ok("Searching in {0} with filter {1} and {2}", baseDNs, query, searchControlsToString(searchControls));
 
         LdapContext ctx = initCtx.newInstance(null);
+        SortControl sortControl = null;
+        
+        if (sortKeys != null && sortKeys.length > 0){
+            javax.naming.ldap.SortKey[] skis = new javax.naming.ldap.SortKey[sortKeys.length];
+            for(int i = 0; i < sortKeys.length; i++){
+                skis[i] = new javax.naming.ldap.SortKey(sortKeys[i].getField(),sortKeys[i].isAscendingOrder(),null);
+            }
+            // We don't want to make this critical... better return unsorted results than nothing.
+            sortControl = new SortControl(skis, Control.NONCRITICAL);
+        }
+        
         try {
             Iterator<String> baseDNIter = baseDNs.iterator();
             boolean proceed = true;
@@ -61,7 +82,11 @@ public class SimplePagedSearchStrategy extends LdapSearchStrategy {
                 String baseDN = baseDNIter.next();
                 byte[] cookie = null;
                 do {
-                    ctx.setRequestControls(new Control[]{new PagedResultsControl(pageSize, cookie, Control.CRITICAL)});
+                    if (sortControl != null) {
+                        ctx.setRequestControls(new Control[]{new PagedResultsControl(pageSize, cookie, Control.CRITICAL), sortControl});
+                    } else {
+                        ctx.setRequestControls(new Control[]{new PagedResultsControl(pageSize, cookie, Control.CRITICAL)});
+                    }
                     NamingEnumeration<SearchResult> results = ctx.search(baseDN, query, searchControls);
                     try {
                         while (proceed && results.hasMore()) {
