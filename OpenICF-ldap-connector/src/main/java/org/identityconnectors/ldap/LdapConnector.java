@@ -231,7 +231,7 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
                 }
             });
         } else {
-            return new LdapUpdate(conn, objectClass, uid, options).update(replaceAttributes);
+            return new LdapUpdate(conn, objectClass, uid).update(replaceAttributes);
         }
     }
 
