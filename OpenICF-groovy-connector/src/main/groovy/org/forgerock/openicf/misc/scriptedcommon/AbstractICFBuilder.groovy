@@ -43,6 +43,10 @@ abstract class AbstractICFBuilder<B> {
         this.builder = builder
     }
 
+    B getBuilder(){
+        return builder;
+    }
+    
     protected void complete() {}
 
     protected void delegateToTag(Class<? extends AbstractICFBuilder> clazz, Closure body) {

@@ -24,6 +24,8 @@
 
 package org.forgerock.openicf.misc.scriptedcommon
 
+import org.identityconnectors.common.security.GuardedByteArray
+import org.identityconnectors.common.security.GuardedString
 import org.identityconnectors.framework.common.objects.Attribute
 import org.identityconnectors.framework.common.objects.AttributeBuilder
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder
@@ -31,7 +33,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.Uid
 
 /**
- * A NAME does ...
+ * A ConnectorObjectDelegate ...
  *
  * @author Laszlo Hordos
  */
@@ -73,7 +75,99 @@ class ConnectorObjectDelegate extends AbstractICFBuilder<ConnectorObjectBuilder>
         delegateToTag(AttributeDelegate, attribute)
     }
 
-    void attribute(String name, Object... args) {
+    void attribute(String name, Collection<Object> args) {
+        if (null != args) {
+            ((ConnectorObjectBuilder) builder).addAttribute(name, args)
+        } else {
+            ((ConnectorObjectBuilder) builder).addAttribute(AttributeBuilder.build(name))
+        }
+    }
+    
+    void attribute(String name, String... args) {
+        addConnectorAttribute(name, args)
+    }
+
+    void attribute(String name, long... args) {
+        addConnectorAttribute(name, args)
+    }
+
+    void attribute(String name, Long... args) {
+        addConnectorAttribute(name, args)
+    }
+
+    void attribute(String name, char... args) {
+        addConnectorAttribute(name, args)
+    }
+
+    void attribute(String name, Character... args) {
+        addConnectorAttribute(name, args)
+    }
+
+    void attribute(String name, double... args) {
+        addConnectorAttribute(name, args)
+    }
+
+    void attribute(String name, Double... args) {
+        addConnectorAttribute(name, args)
+    }
+
+    void attribute(String name, float... args) {
+        addConnectorAttribute(name, args)
+    }
+
+    void attribute(String name, Float... args) {
+        addConnectorAttribute(name, args)
+    }
+
+    void attribute(String name, int... args) {
+        addConnectorAttribute(name, args)
+    }
+
+    void attribute(String name, Integer... args) {
+        addConnectorAttribute(name, args)
+    }
+
+    void attribute(String name, boolean... args) {
+        addConnectorAttribute(name, args)
+    }
+
+    void attribute(String name, Boolean... args) {
+        addConnectorAttribute(name, args)
+    }
+
+    void attribute(String name, byte... args) {
+        addConnectorAttribute(name, args)
+    }
+
+    void attribute(String name, Byte... args) {
+        addConnectorAttribute(name, args)
+    }
+
+    void attribute(String name, byte[]... args) {
+        addConnectorAttribute(name, args)
+    }
+
+    void attribute(String name, BigDecimal... args) {
+        addConnectorAttribute(name, args)
+    }
+
+    void attribute(String name, BigInteger... args) {
+        addConnectorAttribute(name, args)
+    }
+
+    void attribute(String name, GuardedByteArray... args) {
+        addConnectorAttribute(name, args)
+    }
+
+    void attribute(String name, GuardedString... args) {
+        addConnectorAttribute(name, args)
+    }
+
+    void attribute(String name, Map... args) {
+        addConnectorAttribute(name, args)
+    }
+    
+    private void addConnectorAttribute(String name, Object... args) {
         if (null != args) {
             ((ConnectorObjectBuilder) builder).addAttribute(name, args.toList())
         } else {
@@ -85,6 +179,10 @@ class ConnectorObjectDelegate extends AbstractICFBuilder<ConnectorObjectBuilder>
         ((ConnectorObjectBuilder) builder).addAttribute(name)
     }
 
+    void attribute(Attribute... attrs) {
+        ((ConnectorObjectBuilder) builder).addAttribute(attrs)
+    }
+    
     void attributes(Attribute... attrs) {
         ((ConnectorObjectBuilder) builder).addAttribute(attrs)
     }
