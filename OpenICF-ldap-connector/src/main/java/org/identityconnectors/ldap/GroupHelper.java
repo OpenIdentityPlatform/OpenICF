@@ -20,7 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  *
- * Portions Copyrighted 2013 Forgerock
+ * Portions Copyrighted 2013-2014 Forgerock
  */
 package org.identityconnectors.ldap;
 
@@ -40,6 +40,7 @@ import javax.naming.directory.BasicAttribute;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.ModificationItem;
 import javax.naming.directory.SearchResult;
+import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.LdapName;
 
 import org.identityconnectors.common.logging.Log;
@@ -92,30 +93,30 @@ public class GroupHelper {
         return handler.getResults();
     }
 
-    public void addLdapGroupMemberships(String entryDN, Collection<String> groupDNs) {
+    public void addLdapGroupMemberships(String entryDN, Collection<String> groupDNs, LdapContext context) {
         log.ok("Adding {0} to LDAP groups {1}", entryDN, groupDNs);
         String ldapGroupMemberAttribute = getLdapGroupMemberAttribute();
         for (String groupDN : groupDNs) {
-            addMemberToGroup(ldapGroupMemberAttribute, entryDN, groupDN);
+            addMemberToGroup(ldapGroupMemberAttribute, entryDN, groupDN, context);
         }
     }
 
-    public void removeLdapGroupMemberships(String entryDN, Collection<String> groupDNs) {
+    public void removeLdapGroupMemberships(String entryDN, Collection<String> groupDNs, LdapContext context) {
         log.ok("Removing {0} from LDAP groups {1}", entryDN, groupDNs);
         String ldapGroupMemberAttribute = getLdapGroupMemberAttribute();
         for (String groupDN : groupDNs) {
-            removeMemberFromGroup(ldapGroupMemberAttribute, entryDN, groupDN);
+            removeMemberFromGroup(ldapGroupMemberAttribute, entryDN, groupDN, context);
         }
     }
 
-    public void modifyLdapGroupMemberships(Modification<GroupMembership> mod) {
+    public void modifyLdapGroupMemberships(Modification<GroupMembership> mod, LdapContext context) {
         log.ok("Modifying LDAP group memberships: removing {0}, adding {1}", mod.getRemoved(), mod.getAdded());
         String ldapGroupMemberAttribute = getLdapGroupMemberAttribute();
         for (GroupMembership membership : mod.getRemoved()) {
-            removeMemberFromGroup(ldapGroupMemberAttribute, membership.getMemberRef(), membership.getGroupDN());
+            removeMemberFromGroup(ldapGroupMemberAttribute, membership.getMemberRef(), membership.getGroupDN(), context);
         }
         for (GroupMembership membership : mod.getAdded()) {
-            addMemberToGroup(ldapGroupMemberAttribute, membership.getMemberRef(), membership.getGroupDN());
+            addMemberToGroup(ldapGroupMemberAttribute, membership.getMemberRef(), membership.getGroupDN(), context);
         }
     }
 
@@ -140,27 +141,27 @@ public class GroupHelper {
         return handler.getResults();
     }
 
-    public void addPosixGroupMemberships(String posixRefAttr, Collection<String> groupDNs) {
+    public void addPosixGroupMemberships(String posixRefAttr, Collection<String> groupDNs, LdapContext context) {
         log.ok("Adding {0} to POSIX groups {1}", posixRefAttr, groupDNs);
         for (String groupDN : groupDNs) {
-            addMemberToGroup("memberUid", posixRefAttr, groupDN);
+            addMemberToGroup("memberUid", posixRefAttr, groupDN, context);
         }
     }
 
-    public void removePosixGroupMemberships(Set<GroupMembership> memberships) {
+    public void removePosixGroupMemberships(Set<GroupMembership> memberships, LdapContext context) {
         log.ok("Removing POSIX group memberships {0}", memberships);
         for (GroupMembership membership : memberships) {
-            removeMemberFromGroup("memberUid", membership.getMemberRef(), membership.getGroupDN());
+            removeMemberFromGroup("memberUid", membership.getMemberRef(), membership.getGroupDN(), context);
         }
     }
 
-    public void modifyPosixGroupMemberships(Modification<GroupMembership> mod) {
+    public void modifyPosixGroupMemberships(Modification<GroupMembership> mod, LdapContext context) {
         log.ok("Modifying POSIX group memberships: removing {0}, adding {1}", mod.getRemoved(), mod.getAdded());
         for (GroupMembership membership : mod.getRemoved()) {
-            removeMemberFromGroup("memberUid", membership.getMemberRef(), membership.getGroupDN());
+            removeMemberFromGroup("memberUid", membership.getMemberRef(), membership.getGroupDN(), context);
         }
         for (GroupMembership membership : mod.getAdded()) {
-            addMemberToGroup("memberUid", membership.getMemberRef(), membership.getGroupDN());
+            addMemberToGroup("memberUid", membership.getMemberRef(), membership.getGroupDN(), context);
         }
     }
 
@@ -183,11 +184,15 @@ public class GroupHelper {
         return builder.toString();
     }
 
-    private void addMemberToGroup(String memberAttr, String memberValue, String groupDN) {
+    private void addMemberToGroup(String memberAttr, String memberValue, String groupDN, LdapContext context) {
         BasicAttribute attr = new BasicAttribute(memberAttr, memberValue);
         ModificationItem item = new ModificationItem(DirContext.ADD_ATTRIBUTE, attr);
         try {
-            conn.getInitialContext().modifyAttributes(groupDN, new ModificationItem[] { item });
+            if (context != null){
+            context.modifyAttributes(groupDN, new ModificationItem[] { item });
+            } else {
+                conn.getInitialContext().modifyAttributes(groupDN, new ModificationItem[] { item });
+            }
         } catch (AttributeInUseException e) {
             //throw new ConnectorException(conn.format("memberAlreadyInGroup", null, memberValue, groupDN), e);
             log.ok("Duplicate value when adding {0} to {1}",memberValue,groupDN);
@@ -196,11 +201,15 @@ public class GroupHelper {
         }
     }
 
-    private void removeMemberFromGroup(String memberAttr, String memberValue, String groupDN) {
+    private void removeMemberFromGroup(String memberAttr, String memberValue, String groupDN, LdapContext context) {
         BasicAttribute attr = new BasicAttribute(memberAttr, memberValue);
         ModificationItem item = new ModificationItem(DirContext.REMOVE_ATTRIBUTE, attr);
         try {
-            conn.getInitialContext().modifyAttributes(groupDN, new ModificationItem[] { item });
+            if (context != null){
+                context.modifyAttributes(groupDN, new ModificationItem[]{item});
+            } else {
+                conn.getInitialContext().modifyAttributes(groupDN, new ModificationItem[]{item});
+            }
         } catch (NamingException e) {
             throw new ConnectorException(e);
         }

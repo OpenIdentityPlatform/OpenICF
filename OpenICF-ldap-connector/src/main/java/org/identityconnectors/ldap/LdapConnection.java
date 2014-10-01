@@ -165,6 +165,10 @@ public class LdapConnection {
         }
         return initCtx;
     }
+    
+    public LdapContext getRunAsContext(String principal, GuardedString credentials) {
+        return connect(principal, credentials);
+    }
 
     private LdapContext connect(String principal, GuardedString credentials) {
         Pair<AuthenticationResult, LdapContext> pair = createContext(principal, credentials);

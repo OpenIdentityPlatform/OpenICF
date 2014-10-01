@@ -210,52 +210,52 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
         }
     }
 
-    public void delete(final ObjectClass objectClass, final Uid uid, OperationOptions options) {
+    public void delete(final ObjectClass objectClass, final Uid uid, final OperationOptions options) {
         if (loginContext != null) {
             Subject.doAs(loginContext.getSubject(), new PrivilegedAction() {
                 public Object run() {
-                    new LdapDelete(conn, objectClass, uid).execute();
+                    new LdapDelete(conn, objectClass, uid, options).execute();
                     return null;
                 }
             });
         } else {
-            new LdapDelete(conn, objectClass, uid).execute();
+            new LdapDelete(conn, objectClass, uid, options).execute();
         }
     }
 
-    public Uid update(final ObjectClass objectClass, final Uid uid, final Set<Attribute> replaceAttributes, OperationOptions options) {
+    public Uid update(final ObjectClass objectClass, final Uid uid, final Set<Attribute> replaceAttributes, final OperationOptions options) {
         if (loginContext != null) {
             return Subject.doAs(loginContext.getSubject(), new PrivilegedAction<Uid>() {
                 public Uid run() {
-                    return new LdapUpdate(conn, objectClass, uid).update(replaceAttributes);
+                    return new LdapUpdate(conn, objectClass, uid, options).update(replaceAttributes);
                 }
             });
         } else {
-            return new LdapUpdate(conn, objectClass, uid).update(replaceAttributes);
+            return new LdapUpdate(conn, objectClass, uid, options).update(replaceAttributes);
         }
     }
 
-    public Uid addAttributeValues(final ObjectClass objectClass, final Uid uid, final Set<Attribute> valuesToAdd, OperationOptions options) {
+    public Uid addAttributeValues(final ObjectClass objectClass, final Uid uid, final Set<Attribute> valuesToAdd, final OperationOptions options) {
         if (loginContext != null) {
             return Subject.doAs(loginContext.getSubject(), new PrivilegedAction<Uid>() {
                 public Uid run() {
-                    return new LdapUpdate(conn, objectClass, uid).addAttributeValues(valuesToAdd);
+                    return new LdapUpdate(conn, objectClass, uid, options).addAttributeValues(valuesToAdd);
                 }
             });
         } else {
-            return new LdapUpdate(conn, objectClass, uid).addAttributeValues(valuesToAdd);
+            return new LdapUpdate(conn, objectClass, uid, options).addAttributeValues(valuesToAdd);
         }
     }
 
-    public Uid removeAttributeValues(final ObjectClass objectClass, final Uid uid, final Set<Attribute> valuesToRemove, OperationOptions options) {
+    public Uid removeAttributeValues(final ObjectClass objectClass, final Uid uid, final Set<Attribute> valuesToRemove, final OperationOptions options) {
         if (loginContext != null) {
             return Subject.doAs(loginContext.getSubject(), new PrivilegedAction<Uid>() {
                 public Uid run() {
-                    return new LdapUpdate(conn, objectClass, uid).removeAttributeValues(valuesToRemove);
+                    return new LdapUpdate(conn, objectClass, uid, options).removeAttributeValues(valuesToRemove);
                 }
             });
         } else {
-            return new LdapUpdate(conn, objectClass, uid).removeAttributeValues(valuesToRemove);
+            return new LdapUpdate(conn, objectClass, uid, options).removeAttributeValues(valuesToRemove);
         }
     }
 

@@ -20,10 +20,11 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * 
- * Portions Copyrighted 2013 Forgerock
+ * Portions Copyrighted 2013-2014 Forgerock
  */
 package org.identityconnectors.ldap;
 
+import java.io.UnsupportedEncodingException;
 import static java.util.Collections.min;
 import static org.identityconnectors.common.CollectionUtil.isEmpty;
 import static org.identityconnectors.common.StringUtil.isBlank;
@@ -71,7 +72,9 @@ public abstract class LdapModifyOperation {
                 sb.append("\"");
                 passwordAttr.clear();
                 passwordAttr.add(sb.toString().getBytes("UTF-16LE"));
-            } catch (Exception e) {
+            } catch (NamingException e) {
+                throw new ConnectorException(e);
+            } catch (UnsupportedEncodingException e) {
                 throw new ConnectorException(e);
             }
                     

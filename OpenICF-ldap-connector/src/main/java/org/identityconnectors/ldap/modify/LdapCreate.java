@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * "Portions Copyrighted 2014 ForgeRock AS"
  */
 package org.identityconnectors.ldap.modify;
 
@@ -29,9 +30,17 @@ import static org.identityconnectors.ldap.LdapUtil.escapeDNValueOfJNDIReservedCh
 
 import java.util.List;
 import java.util.Set;
+import javax.naming.NameAlreadyBoundException;
+import javax.naming.NamingEnumeration;
 
 import javax.naming.NamingException;
+import javax.naming.directory.BasicAttribute;
 import javax.naming.directory.BasicAttributes;
+import javax.naming.ldap.LdapContext;
+import javax.naming.ldap.LdapName;
+import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -42,22 +51,27 @@ import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.GroupHelper;
+import org.identityconnectors.ldap.LdapAuthenticate;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapModifyOperation;
 import org.identityconnectors.ldap.LdapConstants;
+import static org.identityconnectors.ldap.LdapUtil.quietCreateLdapName;
 import org.identityconnectors.ldap.schema.GuardedPasswordAttribute;
 import org.identityconnectors.ldap.schema.GuardedPasswordAttribute.Accessor;
 
 public class LdapCreate extends LdapModifyOperation {
 
     // TODO old LDAP connector has a note about a RFC 4527 Post-Read control.
-
     private final ObjectClass oclass;
     private final Set<Attribute> attrs;
+    private final OperationOptions options;
+
+    private static final Log log = Log.getLog(LdapCreate.class);
 
     public LdapCreate(LdapConnection conn, ObjectClass oclass, Set<Attribute> attrs, OperationOptions options) {
         super(conn);
         this.oclass = oclass;
+        this.options = options;
         this.attrs = attrs;
     }
 
@@ -70,7 +84,9 @@ public class LdapCreate extends LdapModifyOperation {
     }
 
     private Uid executeImpl() throws NamingException {
+        final LdapContext runAsContext;
         final Name nameAttr = AttributeUtil.getNameFromAttributes(attrs);
+
         if (nameAttr == null) {
             throw new IllegalArgumentException("No Name attribute provided in the attributes");
         }
@@ -99,31 +115,76 @@ public class LdapCreate extends LdapModifyOperation {
             }
         }
 
-        final String[] entryDN = { null };
-        if (pwdAttr != null) {
-            pwdAttr.access(new Accessor() {
-                public void access(javax.naming.directory.Attribute passwordAttr) {
-                    hashPassword(passwordAttr, null);
-                    ldapAttrs.put(passwordAttr);
-                    entryDN[0] = conn.getSchemaMapping().create(oclass, nameAttr, ldapAttrs);
-                }
-            });
+        if (StringUtil.isNotBlank(options.getRunAsUser())) {
+            String dn = new LdapAuthenticate(conn, oclass, options.getRunAsUser(), options).getDn();
+            runAsContext = conn.getRunAsContext(dn, options.getRunWithPassword());
         } else {
-            entryDN[0] = conn.getSchemaMapping().create(oclass, nameAttr, ldapAttrs);
+            runAsContext = null;
         }
 
-	entryDN[0] = escapeDNValueOfJNDIReservedChars(entryDN[0]);
+        final String[] entryDN = {null};
+        try {
+            if (pwdAttr != null) {
+                pwdAttr.access(new Accessor() {
+                    public void access(javax.naming.directory.Attribute passwordAttr) {
+                        hashPassword(passwordAttr, null);
+                        ldapAttrs.put(passwordAttr);
+                        entryDN[0] = doCreate(nameAttr, ldapAttrs, runAsContext);
+                    }
+                });
+            } else {
+                entryDN[0] = doCreate(nameAttr, ldapAttrs, runAsContext);
+            }
 
-        if (!isEmpty(ldapGroups)) {
-            groupHelper.addLdapGroupMemberships(entryDN[0], ldapGroups);
-        }
+            entryDN[0] = escapeDNValueOfJNDIReservedChars(entryDN[0]);
 
-        if (!isEmpty(posixGroups)) {
-            Set<String> posixRefAttrs = getAttributeValues(GroupHelper.getPosixRefAttribute(), null, ldapAttrs);
-            String posixRefAttr = getFirstPosixRefAttr(entryDN[0], posixRefAttrs);
-            groupHelper.addPosixGroupMemberships(posixRefAttr, posixGroups);
+            if (!isEmpty(ldapGroups)) {
+                groupHelper.addLdapGroupMemberships(entryDN[0], ldapGroups, runAsContext);
+            }
+
+            if (!isEmpty(posixGroups)) {
+                Set<String> posixRefAttrs = getAttributeValues(GroupHelper.getPosixRefAttribute(), null, ldapAttrs);
+                String posixRefAttr = getFirstPosixRefAttr(entryDN[0], posixRefAttrs);
+                groupHelper.addPosixGroupMemberships(posixRefAttr, posixGroups, runAsContext);
+            }
+        } finally {
+            if (runAsContext != null) {
+                try {
+                    runAsContext.close();
+                } catch (NamingException e) {
+                }
+            }
         }
 
         return conn.getSchemaMapping().createUid(oclass, entryDN[0]);
+    }
+
+    public String doCreate(Name name, javax.naming.directory.Attributes initialAttrs, LdapContext runAsContext) {
+        LdapName entryName = quietCreateLdapName(name.getNameValue());
+
+        BasicAttributes ldapAttrs = new BasicAttributes();
+        NamingEnumeration<? extends javax.naming.directory.Attribute> initialAttrEnum = initialAttrs.getAll();
+        while (initialAttrEnum.hasMoreElements()) {
+            ldapAttrs.put(initialAttrEnum.nextElement());
+        }
+        BasicAttribute objectClass = new BasicAttribute("objectClass");
+        for (String ldapClass : conn.getSchemaMapping().getEffectiveLdapClasses(oclass)) {
+            objectClass.add(ldapClass);
+        }
+        ldapAttrs.put(objectClass);
+
+        log.ok("Creating LDAP entry {0} with attributes {1}", entryName, ldapAttrs);
+        try {
+            if (runAsContext == null) {
+                conn.getInitialContext().createSubcontext(entryName, ldapAttrs).close();
+            } else {
+                runAsContext.createSubcontext(entryName, ldapAttrs).close();
+            }
+            return entryName.toString();
+        } catch (NameAlreadyBoundException e) {
+            throw new AlreadyExistsException(e);
+        } catch (NamingException e) {
+            throw new ConnectorException(e);
+        }
     }
 }

@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.naming.NameAlreadyBoundException;
 
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingEnumeration;
@@ -44,14 +45,18 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.BasicAttributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.ModificationItem;
+import javax.naming.ldap.LdapContext;
 
 import org.identityconnectors.common.Pair;
+import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.GroupHelper;
@@ -60,6 +65,7 @@ import org.identityconnectors.ldap.LdapModifyOperation;
 import org.identityconnectors.ldap.LdapConstants;
 import org.identityconnectors.ldap.GroupHelper.GroupMembership;
 import org.identityconnectors.ldap.GroupHelper.Modification;
+import org.identityconnectors.ldap.LdapAuthenticate;
 import org.identityconnectors.ldap.schema.GuardedPasswordAttribute;
 import org.identityconnectors.ldap.schema.GuardedPasswordAttribute.Accessor;
 import org.identityconnectors.ldap.search.LdapSearches;
@@ -67,18 +73,20 @@ import org.identityconnectors.ldap.search.LdapSearches;
 public class LdapUpdate extends LdapModifyOperation {
 
     private final ObjectClass oclass;
+    private final OperationOptions options;
+    private final Uid uid;
 
-    private Uid uid;
-
-    public LdapUpdate(LdapConnection conn, ObjectClass oclass, Uid uid) {
+    public LdapUpdate(LdapConnection conn, ObjectClass oclass, Uid uid, OperationOptions options) {
         super(conn);
         this.oclass = oclass;
         this.uid = uid;
+        this.options = options;
     }
 
     public Uid update(Set<Attribute> attrs) {
         String entryDN = escapeDNValueOfJNDIReservedChars(LdapSearches.getEntryDN(conn, oclass, uid));
         PosixGroupMember posixMember = new PosixGroupMember(entryDN);
+        LdapContext runAsContext = null;
 
         // Extract the Name attribute if any, to be used to rename the entry later.
         Set<Attribute> updateAttrs = attrs;
@@ -103,6 +111,11 @@ public class LdapUpdate extends LdapModifyOperation {
         if (newPosixRefAttrs != null && newPosixRefAttrs.isEmpty()) {
             checkRemovedPosixRefAttrs(posixMember.getPosixRefAttributes(), posixMember.getPosixGroupMemberships());
         }
+        
+        if (StringUtil.isNotBlank(options.getRunAsUser())) {
+            String dn = new LdapAuthenticate(conn, oclass, options.getRunAsUser(), options).getDn();
+            runAsContext = conn.getRunAsContext(dn, options.getRunWithPassword());
+        }
 
         // Rename the entry if needed.
         String oldEntryDN = null;
@@ -111,10 +124,21 @@ public class LdapUpdate extends LdapModifyOperation {
                 posixMember.getPosixRefAttributes();
             }
             oldEntryDN = entryDN;
+            try {
+                if (runAsContext == null) {
+                    conn.getInitialContext().rename(oldEntryDN, newEntryDN);
+                } else {
+                    runAsContext.rename(oldEntryDN, newEntryDN);
+                }
+            } catch (NameAlreadyBoundException e) {
+                throw new AlreadyExistsException(e);
+            } catch (NamingException e) {
+                throw new ConnectorException(e);
+            }
             entryDN = conn.getSchemaMapping().rename(oclass, oldEntryDN, newName);
         }
         // Update the attributes.
-        modifyAttributes(entryDN, attrToModify, DirContext.REPLACE_ATTRIBUTE);
+        modifyAttributes(entryDN, attrToModify, DirContext.REPLACE_ATTRIBUTE, runAsContext);
 
         // Update the LDAP groups.
         Modification<GroupMembership> ldapGroupMod = new Modification<GroupMembership>();
@@ -133,7 +157,7 @@ public class LdapUpdate extends LdapModifyOperation {
                 ldapGroupMod.add(new GroupMembership(entryDN, ldapGroup));
             }
         }
-        groupHelper.modifyLdapGroupMemberships(ldapGroupMod);
+        groupHelper.modifyLdapGroupMemberships(ldapGroupMod, runAsContext);
 
         // Update the POSIX groups.
         Modification<GroupMembership> posixGroupMod = new Modification<GroupMembership>();
@@ -160,7 +184,7 @@ public class LdapUpdate extends LdapModifyOperation {
                 }
             }
         }
-        groupHelper.modifyPosixGroupMemberships(posixGroupMod);
+        groupHelper.modifyPosixGroupMemberships(posixGroupMod, runAsContext);
 
         return conn.getSchemaMapping().createUid(oclass, entryDN);
     }
@@ -168,20 +192,26 @@ public class LdapUpdate extends LdapModifyOperation {
     public Uid addAttributeValues(Set<Attribute> attrs) {
         String entryDN = LdapSearches.findEntryDN(conn, oclass, uid);
         PosixGroupMember posixMember = new PosixGroupMember(entryDN);
+        LdapContext runAsContext = null;
+        
+        if (StringUtil.isNotBlank(options.getRunAsUser())) {
+            String dn = new LdapAuthenticate(conn, oclass, options.getRunAsUser(), options).getDn();
+            runAsContext = conn.getRunAsContext(dn, options.getRunWithPassword());
+        }
 
         Pair<Attributes, GuardedPasswordAttribute> attrsToModify = getAttributesToModify(attrs);
-        modifyAttributes(entryDN, attrsToModify, DirContext.ADD_ATTRIBUTE);
+        modifyAttributes(entryDN, attrsToModify, DirContext.ADD_ATTRIBUTE, runAsContext);
 
         List<String> ldapGroups = getStringListValue(attrs, LdapConstants.LDAP_GROUPS_NAME);
         if (!isEmpty(ldapGroups)) {
-            groupHelper.addLdapGroupMemberships(entryDN, ldapGroups);
+            groupHelper.addLdapGroupMemberships(entryDN, ldapGroups, runAsContext);
         }
 
         List<String> posixGroups = getStringListValue(attrs, LdapConstants.POSIX_GROUPS_NAME);
         if (!isEmpty(posixGroups)) {
             Set<String> posixRefAttrs = posixMember.getPosixRefAttributes();
             String posixRefAttr = getFirstPosixRefAttr(entryDN, posixRefAttrs);
-            groupHelper.addPosixGroupMemberships(posixRefAttr, posixGroups);
+            groupHelper.addPosixGroupMemberships(posixRefAttr, posixGroups, runAsContext);
         }
 
         return uid;
@@ -190,6 +220,12 @@ public class LdapUpdate extends LdapModifyOperation {
     public Uid removeAttributeValues(Set<Attribute> attrs) {
         String entryDN = LdapSearches.findEntryDN(conn, oclass, uid);
         PosixGroupMember posixMember = new PosixGroupMember(entryDN);
+        LdapContext runAsContext = null;
+        
+        if (StringUtil.isNotBlank(options.getRunAsUser())) {
+            String dn = new LdapAuthenticate(conn, oclass, options.getRunAsUser(), options).getDn();
+            runAsContext = conn.getRunAsContext(dn, options.getRunWithPassword());
+        }
 
         Pair<Attributes, GuardedPasswordAttribute> attrsToModify = getAttributesToModify(attrs);
         Attributes ldapAttrs = attrsToModify.first;
@@ -199,17 +235,17 @@ public class LdapUpdate extends LdapModifyOperation {
             checkRemovedPosixRefAttrs(removedPosixRefAttrs, posixMember.getPosixGroupMemberships());
         }
 
-        modifyAttributes(entryDN, attrsToModify, DirContext.REMOVE_ATTRIBUTE);
+        modifyAttributes(entryDN, attrsToModify, DirContext.REMOVE_ATTRIBUTE, runAsContext);
 
         List<String> ldapGroups = getStringListValue(attrs, LdapConstants.LDAP_GROUPS_NAME);
         if (!isEmpty(ldapGroups)) {
-            groupHelper.removeLdapGroupMemberships(entryDN, ldapGroups);
+            groupHelper.removeLdapGroupMemberships(entryDN, ldapGroups, runAsContext);
         }
 
         List<String> posixGroups = getStringListValue(attrs, LdapConstants.POSIX_GROUPS_NAME);
         if (!isEmpty(posixGroups)) {
             Set<GroupMembership> members = posixMember.getPosixGroupMembershipsByGroups(posixGroups);
-            groupHelper.removePosixGroupMemberships(members);
+            groupHelper.removePosixGroupMemberships(members, runAsContext);
         }
 
         return uid;
@@ -261,7 +297,7 @@ public class LdapUpdate extends LdapModifyOperation {
         return new Pair<Attributes, GuardedPasswordAttribute>(ldapAttrs, pwdAttr);
     }
 
-    private void modifyAttributes(final String entryDN, Pair<Attributes, GuardedPasswordAttribute> attrs, final int ldapModifyOp) {
+    private void modifyAttributes(final String entryDN, Pair<Attributes, GuardedPasswordAttribute> attrs, final int ldapModifyOp, final LdapContext context) {
         final List<ModificationItem> modItems = new ArrayList<ModificationItem>(attrs.first.size());
         NamingEnumeration<? extends javax.naming.directory.Attribute> attrEnum = attrs.first.getAll();
         while (attrEnum.hasMoreElements()) {
@@ -275,17 +311,27 @@ public class LdapUpdate extends LdapModifyOperation {
                     // it is a guarded value.
                     hashPassword(passwordAttr, entryDN);
                     modItems.add(new ModificationItem(ldapModifyOp, passwordAttr));
-                    modifyAttributes(entryDN, modItems);
+                    modifyAttributes(entryDN, modItems, context);
                 }
             });
         } else {
-            modifyAttributes(entryDN, modItems);
+            modifyAttributes(entryDN, modItems, context);
         }
     }
 
-    private void modifyAttributes(String entryDN, List<ModificationItem> modItems) {
+    private void modifyAttributes(String entryDN, List<ModificationItem> modItems, LdapContext context) {
+        LdapContext runAsContext = null;
         try {
-            conn.getInitialContext().modifyAttributes(entryDN, modItems.toArray(new ModificationItem[modItems.size()]));
+            if (StringUtil.isNotBlank(options.getRunAsUser())) {
+                String dn = new LdapAuthenticate(conn, oclass, options.getRunAsUser(), options).getDn();
+                runAsContext = conn.getRunAsContext(dn, options.getRunWithPassword());
+            }
+            if (context == null) {
+                conn.getInitialContext().modifyAttributes(entryDN, modItems.toArray(new ModificationItem[modItems.size()]));
+            }
+            else {
+                context.modifyAttributes(entryDN, modItems.toArray(new ModificationItem[modItems.size()]));
+            }
         } catch (NameNotFoundException e) {
             throw (UnknownUidException) new UnknownUidException(uid, oclass).initCause(e);
         } catch (NamingException e) {

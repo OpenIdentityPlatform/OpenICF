@@ -85,6 +85,15 @@ public class LdapAuthenticate {
         }
         return authnObject.getUid();
     }
+    
+    public String getDn() {
+        ConnectorObject authnObject = getObjectToAuthenticate();
+        if (authnObject == null) {
+            throw new InvalidCredentialException(conn.format("cannotResolveUsername", null, username));
+        }
+        return authnObject.getName().getNameValue();
+        
+    }
 
     private ConnectorObject getObjectToAuthenticate() {
         List<String> userNameAttrs = getUserNameAttributes();

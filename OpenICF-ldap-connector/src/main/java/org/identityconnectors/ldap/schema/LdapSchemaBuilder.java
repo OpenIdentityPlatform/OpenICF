@@ -36,10 +36,12 @@ import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.SchemaBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
+import org.identityconnectors.framework.common.objects.OperationOptionInfoBuilder;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
 import org.identityconnectors.framework.spi.operations.CreateOp;
 import org.identityconnectors.framework.spi.operations.DeleteOp;
 import org.identityconnectors.framework.spi.operations.ResolveUsernameOp;
+import org.identityconnectors.framework.spi.operations.SearchOp;
 import org.identityconnectors.framework.spi.operations.SyncOp;
 import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
 import org.identityconnectors.framework.spi.operations.UpdateOp;
@@ -111,7 +113,15 @@ class LdapSchemaBuilder {
                 schemaBld.removeSupportedObjectClass(SyncOp.class, oci);
             }
         }
-
+        
+        schemaBld.defineOperationOption(OperationOptionInfoBuilder.buildRunWithUser(), CreateOp.class, UpdateOp.class, DeleteOp.class);
+        schemaBld.defineOperationOption(OperationOptionInfoBuilder.buildRunWithPassword(), CreateOp.class, UpdateOp.class, DeleteOp.class);
+        
+        schemaBld.defineOperationOption(OperationOptionInfoBuilder.buildPageSize(), SearchOp.class);
+        schemaBld.defineOperationOption(OperationOptionInfoBuilder.buildPagedResultsCookie(), SearchOp.class);
+        schemaBld.defineOperationOption(OperationOptionInfoBuilder.buildPagedResultsOffset(), SearchOp.class);
+        schemaBld.defineOperationOption(OperationOptionInfoBuilder.buildSortKeys(), SearchOp.class);
+        
         ObjectClassInfoBuilder objClassBld = new ObjectClassInfoBuilder();
         objClassBld.setType(LdapUtil.SERVER_INFO_NAME);
         ObjectClassInfo oci = objClassBld.build();

@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * "Portions Copyrighted 2014 ForgeRock AS"
  */
 package org.identityconnectors.ldap.modify;
 
@@ -28,44 +29,74 @@ import java.util.List;
 import java.util.Set;
 
 import javax.naming.NamingException;
+import javax.naming.ldap.LdapContext;
+import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.common.logging.Log;
 
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapModifyOperation;
 import org.identityconnectors.ldap.GroupHelper.GroupMembership;
+import org.identityconnectors.ldap.LdapAuthenticate;
 import org.identityconnectors.ldap.search.LdapSearches;
 
 public class LdapDelete extends LdapModifyOperation {
 
     private final ObjectClass oclass;
+    private final OperationOptions options;
     private final Uid uid;
+    
+    private static final Log log = Log.getLog(LdapDelete.class);
 
-    public LdapDelete(LdapConnection conn, ObjectClass oclass, Uid uid) {
+    public LdapDelete(LdapConnection conn, ObjectClass oclass, Uid uid, OperationOptions options) {
         super(conn);
         this.oclass = oclass;
+        this.options = options;
         this.uid = uid;
     }
 
     public void execute() {
         String entryDN = escapeDNValueOfJNDIReservedChars(LdapSearches.getEntryDN(conn, oclass, uid));
-
+        LdapContext runAsContext = null;
+        
+        if (StringUtil.isNotBlank(options.getRunAsUser())) {
+            String dn = new LdapAuthenticate(conn, oclass, options.getRunAsUser(), options).getDn();
+            runAsContext = conn.getRunAsContext(dn, options.getRunWithPassword());
+        }
+        
         if (conn.getConfiguration().isMaintainLdapGroupMembership()) {
             List<String> ldapGroups = groupHelper.getLdapGroups(entryDN);
-            groupHelper.removeLdapGroupMemberships(entryDN, ldapGroups);
+            groupHelper.removeLdapGroupMemberships(entryDN, ldapGroups, runAsContext);
         }
 
         if (conn.getConfiguration().isMaintainPosixGroupMembership()) {
             PosixGroupMember posixMember = new PosixGroupMember(entryDN);
             Set<GroupMembership> memberships = posixMember.getPosixGroupMemberships();
-            groupHelper.removePosixGroupMemberships(memberships);
+            groupHelper.removePosixGroupMemberships(memberships, runAsContext);
         }
+        
 
+        log.ok("Deleting LDAP entry {0}", entryDN);
         try {
-            conn.getInitialContext().destroySubcontext(entryDN);
+            if (runAsContext == null) {
+                conn.getInitialContext().destroySubcontext(entryDN);
+            }
+            else {
+                runAsContext.destroySubcontext(entryDN);
+            }
         } catch (NamingException e) {
             throw new ConnectorException(e);
+        }
+        finally {
+            if (runAsContext != null) {
+                try {
+                    runAsContext.close();
+                } catch (NamingException ex) {
+                }
+            }
         }
     }
 }

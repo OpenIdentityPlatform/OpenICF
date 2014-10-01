@@ -497,25 +497,25 @@ public class LdapUtil {
         }
     }
 
-    private static String getIDfromDN(LdapConnection conn, String dn) throws NamingException{
-                    if (isDNAttribute(conn.getConfiguration().getUidAttribute())) {
-                        return dn;
-                    } else {
-                        SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
-                        controls.setSearchScope(SearchControls.OBJECT_SCOPE);
-                        controls.setReturningAttributes(new String[]{conn.getConfiguration().getUidAttribute()});
-                        LdapContext context = conn.getInitialContext().newInstance(null);
-                        NamingEnumeration<SearchResult> entries = context.search(escapeDNValueOfJNDIReservedChars(dn), "objectclass=*", controls);
-                        SearchResult res = entries.next();
-                        String uidAttr = conn.getConfiguration().getUidAttribute();
-                        if (LdapConstants.MS_GUID_ATTR.equalsIgnoreCase(uidAttr)) {
-                            return(ADLdapUtil.objectGUIDtoString(res.getAttributes().get(conn.getConfiguration().getUidAttribute())));
-                        } else {
-                            return(res.getAttributes().get(conn.getConfiguration().getUidAttribute()).get(0).toString());
-                        }
-                    }
+    private static String getIDfromDN(LdapConnection conn, String dn) throws NamingException {
+        if (isDNAttribute(conn.getConfiguration().getUidAttribute())) {
+            return dn;
+        } else {
+            SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
+            controls.setSearchScope(SearchControls.OBJECT_SCOPE);
+            controls.setReturningAttributes(new String[]{conn.getConfiguration().getUidAttribute()});
+            LdapContext context = conn.getInitialContext().newInstance(null);
+            NamingEnumeration<SearchResult> entries = context.search(escapeDNValueOfJNDIReservedChars(dn), "objectclass=*", controls);
+            SearchResult res = entries.next();
+            String uidAttr = conn.getConfiguration().getUidAttribute();
+            if (LdapConstants.MS_GUID_ATTR.equalsIgnoreCase(uidAttr)) {
+                return (ADLdapUtil.objectGUIDtoString(res.getAttributes().get(conn.getConfiguration().getUidAttribute())));
+            } else {
+                return (res.getAttributes().get(conn.getConfiguration().getUidAttribute()).get(0).toString());
+            }
+        }
     }
-
+    
     // This function builds a _memberId attribute which is a helper
     // that contains the group members' GUID
     public static org.identityconnectors.framework.common.objects.Attribute buildMemberIdAttribute(LdapConnection conn, javax.naming.directory.Attribute attr) {
