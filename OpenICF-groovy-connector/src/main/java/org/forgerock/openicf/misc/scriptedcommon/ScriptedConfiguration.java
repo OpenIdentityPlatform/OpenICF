@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -42,6 +43,9 @@ import org.codehaus.groovy.runtime.InvokerHelper;
 import org.codehaus.groovy.runtime.ResourceGroovyMethods;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.common.security.SecurityUtil;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.spi.AbstractConfiguration;
@@ -410,7 +414,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     /**
      * @return the classpath
      */
-    @ConfigurationProperty(groupMessageKey = "groovy.engine")
+    @ConfigurationProperty(groupMessageKey = "groovy.engine", required = true)
     public String[] getClasspath() {
         if (null != config.getClasspath()) {
             return config.getClasspath().toArray(new String[config.getClasspath().size()]);
@@ -556,12 +560,43 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         this.customConfiguration = customConfiguration;
         if (StringUtil.isNotBlank(this.customConfiguration)) {
             ConfigObject config = new ConfigSlurper().parse(this.customConfiguration);
-            propertyBag.putAll(config);
+            mergeConfig(propertyBag, config, false);
         }
     }
 
     private String customConfiguration = null;
 
+    @ConfigurationProperty(confidential = true)
+    public GuardedString getCustomSensitiveConfiguration() {
+        return customSensitiveConfiguration;
+    }
+
+    public void setCustomSensitiveConfiguration(GuardedString customConfiguration) {
+        this.customSensitiveConfiguration = customConfiguration;
+        if (null != this.customSensitiveConfiguration) {
+            ConfigObject config =
+                    new ConfigSlurper().parse(SecurityUtil
+                            .decrypt(this.customSensitiveConfiguration));
+            mergeConfig(propertyBag, config, true);
+        }
+    }
+
+    private GuardedString customSensitiveConfiguration = null;
+
+    private void mergeConfig(final Map config, final Map other, boolean overwrite) {
+        for (Object o : other.entrySet()) {
+            final Object key = ((Map.Entry) o).getKey();
+            final Object value = ((Map.Entry) o).getValue();
+            final Object entry = config.get(key);
+
+            if (entry instanceof Map && ((Map) entry).size() > 0 && value instanceof Map) {
+                mergeConfig((Map) entry, (Map) value, overwrite);
+            } else if (entry == null || overwrite) {
+                config.put(key, value);
+            }
+        }
+    }
+    
     // =======================================================================
     // Methods for Script writers
     // =======================================================================
@@ -598,6 +633,9 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      */
     public void validate() {
         logger.info("Load and compile configured scripts");
+        if (getClasspath() == null || getClasspath().length < 1) {
+            throw new ConfigurationException("Missing required 'classpath' configuration property");
+        }        
         validateScript(getAuthenticateScriptFileName());
         validateScript(getCreateScriptFileName());
         validateScript(getDeleteScriptFileName());
@@ -615,7 +653,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         try {
             loadScript(scriptName);
         } catch (Throwable t) {
-            logger.error(t, "Failed to validate and load script: {0} failed");
+            logger.error(t, "Failed to validate and load script: {0}", scriptName);
             throw ConnectorException.wrap(t);
         }
     }

@@ -29,13 +29,11 @@ import org.identityconnectors.common.security.GuardedString
 def httpPort = System.getProperty("jetty.http.port", "28080")
 
 configuration {
-    clearTextPasswordToScript = false
     authenticateScriptFileName = "AuthenticateScript.groovy"
     createScriptFileName = "CreateScript.groovy"
     deleteScriptFileName = "DeleteScript.groovy"
     resolveUsernameScriptFileName = "ResolveUsernameScript.groovy"
     schemaScriptFileName = "SchemaScript.groovy"
-    //scriptOnConnectorScriptFileName = "ScriptOnConnectorScript.groovy"
     scriptOnResourceScriptFileName = "ScriptOnResourceScript.groovy"
     searchScriptFileName = "SearchScript.groovy"
     syncScriptFileName = "SyncScript.groovy"
@@ -60,6 +58,28 @@ environments {
         configuration {
             classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/groovy/").file, "UTF-8")]
             scriptExtensions = ['groovy', 'java'] as String[]
+        }
+    }
+    TEST {
+        configuration {
+            classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/test/").file, "UTF-8")]
+            authenticateScriptFileName = null
+            createScriptFileName = null
+            deleteScriptFileName = null
+            resolveUsernameScriptFileName = null
+            schemaScriptFileName = null
+            scriptOnResourceScriptFileName = null
+            searchScriptFileName = null
+            syncScriptFileName = null
+            testScriptFileName = "TestScript.groovy"
+            updateScriptFileName = null
+            
+            customConfiguration = "test = [public : true, sensitive : false]\n" +
+                    "client_secret = '__configureme__'\n" +
+                    "refresh_token = '__configureme__'"
+            customSensitiveConfiguration = new GuardedString(("test = [public : true, sensitive : true, added : true]\n" +
+                    "client_secret = '0chK9ArV8BdQqz9xDEjs'\n" +
+                    "refresh_token = 'ycuZNrU8FjjCVHVUkgXn3IlHHMfYtzu56c4I'").toCharArray())
         }
     }
     CREST {
