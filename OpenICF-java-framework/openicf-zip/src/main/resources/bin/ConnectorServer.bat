@@ -93,7 +93,7 @@ if %java_version% LSS 16 (
 )
 
 rem Run java options, separated by space
-set JAVA_OPTS=-Xmx500m "-Djava.util.logging.config.file=conf\logging.properties"
+set JAVA_OPTS=-Xmx500m
 
 rem Service java options, needs to be separated by ;
 set JAVA_OPTS_SERVICE=-Xmx512m;

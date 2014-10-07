@@ -149,6 +149,7 @@ public final class Main {
             if (StringUtil.isNotBlank(propertiesFileName)) {
                 IOUtil.extractResourceToFile(Main.class, "connectorserver.properties", new File(
                         propertiesFileName));
+                System.out.println("Default configuration successfully restored.");
             } else {
                 usage();
             }           
