@@ -63,6 +63,7 @@
             groovy.*;version="[2.2,3)",
             groovyjar*;version="[2.2,3)",
             groovyx.net.http*;resolution:=optional,
+            org.apache.http*;version="[4.3.0, 4.4.0)";resolution:=optional
         </openicf.osgi.import.defaults>
         <openicf.osgi.embed/>
         <forgerock.rest.version>2.3.1</forgerock.rest.version>

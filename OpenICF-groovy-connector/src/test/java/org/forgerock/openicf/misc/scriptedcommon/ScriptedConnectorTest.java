@@ -853,7 +853,7 @@ public class ScriptedConnectorTest {
 
     @Test
     public void testCustomConfiguration() throws Exception {
-        getFacade("TEST").test();
+        createConnectorFacade(ScriptedConnector.class, "TEST").test();
     }
     
     @Test(expectedExceptions = MissingResourceException.class)

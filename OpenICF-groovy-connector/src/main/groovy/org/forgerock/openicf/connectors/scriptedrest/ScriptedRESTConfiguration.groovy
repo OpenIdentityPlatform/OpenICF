@@ -108,11 +108,23 @@ public class ScriptedRESTConfiguration extends ScriptedConfiguration {
         return serviceAddress
     }
 
+    void setServiceAddress(URI serviceAddress) {
+        this.serviceAddress = serviceAddress
+    }
+
     // ===============================================
     // HTTP Proxy
     // ===============================================
 
     URI proxyAddress = null;
+
+    URI getProxyAddress() {
+        return proxyAddress
+    }
+
+    void setProxyAddress(URI proxyAddress) {
+        this.proxyAddress = proxyAddress
+    }
 
     // ===============================================
     // HTTP content
