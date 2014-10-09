@@ -823,7 +823,7 @@ public abstract class AbstractRemoteConnection implements Connection {
 
     protected static Resource getAsResource(final JsonValue value) throws ResourceException {
         try {
-            return new Resource(value.get(Resource.FIELD_CONTENT_ID).required().asString(), value
+            return new Resource(value.get(Resource.FIELD_CONTENT_ID).asString(), value
                     .get(Resource.FIELD_CONTENT_REVISION).asString(), value);
         } catch (JsonValueException e) {
             // What shell we do if the response does not contains the _id
