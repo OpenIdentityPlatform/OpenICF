@@ -28,7 +28,7 @@
     <parent>
         <groupId>org.forgerock.openicf.framework</groupId>
         <artifactId>framework</artifactId>
-        <version>1.4.1.0-SNAPSHOT</version>
+        <version>1.4.2.0-SNAPSHOT</version>
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>connectors-parent</artifactId>
@@ -70,13 +70,12 @@
         <!-- These two properties must be set in the connector project -->
         <connectorName>${connectorPackage}.${connectorClass}</connectorName>
 
-        <contract.suiteName>org.identityconnectors.contract.test.ContractITCase</contract.suiteName>
         <testConfigurations>default</testConfigurations>
         <privateConfigPath>${user.home}/.connectors/${project.artifactId}-${project.version}/config</privateConfigPath>
 
         <!-- OSGi Properties -->
         <openicf.osgi.exclude.dependencies>false</openicf.osgi.exclude.dependencies>
-        <framework.version>1.4.1.0-SNAPSHOT</framework.version>
+        <framework.version>1.4.2.0-SNAPSHOT</framework.version>
 
         <openicf.osgi.import.framework.version>
             version="[$(version;==;${framework.version}),$(version;+;${framework.version}))"
@@ -141,11 +140,6 @@
             <artifactId>connector-test-common</artifactId>
             <scope>test</scope>
         </dependency>
-        <!--dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
-            <artifactId>connector-framework-contract</artifactId>
-            <scope>test</scope>
-        </dependency-->
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-all</artifactId>
@@ -373,123 +367,6 @@
     <!-- Profiles-->
 
     <profiles>
-        <profile>
-            <id>contract-test</id>
-            <build>
-                <plugins>
-                    <!--plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-dependency-plugin</artifactId>
-                        <executions>
-
-                            <!- - Copy classes from contract tests - ->
-                            <execution>
-                                <id>copy-contractclasses</id>
-                                <phase>pre-integration-test</phase>
-                                <goals>
-                                    <goal>unpack</goal>
-                                </goals>
-                                <configuration>
-                                    <artifactItems>
-                                        <artifactItem>
-                                            <groupId>org.forgerock.openicf.framework</groupId>
-                                            <artifactId>connector-framework-contract</artifactId>
-                                            <outputDirectory>
-                                                ${project.build.directory}/contractClasses
-                                            </outputDirectory>
-                                        </artifactItem>
-                                        <artifactItem>
-                                            <groupId>org.forgerock.openicf.framework</groupId>
-                                            <artifactId>connector-framework-contract</artifactId>
-                                            <classifier>sources</classifier>
-                                            <outputDirectory>
-                                                ${project.build.directory}/contractSources
-                                            </outputDirectory>
-                                        </artifactItem>
-                                    </artifactItems>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin-->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-failsafe-plugin</artifactId>
-                        <version>2.16</version>
-                        <executions>
-                            <execution>
-                                <id>integration-test</id>
-                                <goals>
-                                    <goal>integration-test</goal>
-                                </goals>
-                                <configuration>
-                                    <testNGArtifactName>org.testng:testng</testNGArtifactName>
-                                    <suiteXmlFiles>
-                                        <suiteXmlFile>${basedir}/src/test/resources/it-testng.xml</suiteXmlFile>
-                                    </suiteXmlFiles>
-                                    <!--test>${contract.suiteName}</test-->
-                                    <testSourceDirectory>${project.build.directory}/contractSources
-                                    </testSourceDirectory>
-                                    <testClassesDirectory>${project.build.directory}/contractClasses
-                                    </testClassesDirectory>
-                                    <additionalClasspathElements>
-                                        <additionalClasspathElement>
-                                            ${project.build.testOutputDirectory}
-                                        </additionalClasspathElement>
-                                    </additionalClasspathElements>
-                                    <systemPropertyVariables>
-                                        <bundleJar>${project.build.directory}/${project.build.finalName}.jar</bundleJar>
-                                        <bundleName>${ConnectorBundle-Name}</bundleName>
-                                        <bundleVersion>${ConnectorBundle-Version}</bundleVersion>
-                                        <connectorName>${connectorName}</connectorName>
-
-                                        <!-- Name of configuration folder in config folder ("default" use the config folder) -->
-                                        <testConfig>${testConfigurations}</testConfig>
-                                        <test.parameters.outFile>
-                                            ${project.build.testOutputDirectory}/defaultTestOutput.groovy
-                                        </test.parameters.outFile>
-                                        <test.parameters.outQueriedFile>
-                                            ${project.build.testOutputDirectory}/defaultTestOutputQueried.groovy
-                                        </test.parameters.outQueriedFile>
-                                    </systemPropertyVariables>
-                                    <!--summaryFile>target/failsafe-reports/failsafe-summary-default.xml</summaryFile-->
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>verify</id>
-                                <goals>
-                                    <goal>verify</goal>
-                                </goals>
-                                <configuration>
-                                    <testFailureIgnore>true</testFailureIgnore>
-                                    <reportsDirectory>${project.build.directory}/site/failsafe-reports
-                                    </reportsDirectory>
-                                    <!--summaryFiles>
-                                        <summaryFile>target/failsafe-reports/failsafe-summary-default.xml</summaryFile>
-                                        <summaryFile>target/failsafe-reports/failsafe-summary-other.xml</summaryFile>
-                                    </summaryFiles-->
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-            <reporting>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-report-plugin</artifactId>
-                        <reportSets>
-                            <reportSet>
-                                <id>integration-tests</id>
-                                <reports>
-                                    <report>failsafe-report-only</report>
-                                </reports>
-                            </reportSet>
-                        </reportSets>
-                    </plugin>
-                </plugins>
-            </reporting>
-        </profile>
         <profile>
             <id>generate-docbook</id>
             <build>
