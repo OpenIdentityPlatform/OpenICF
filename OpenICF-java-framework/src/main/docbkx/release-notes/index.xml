@@ -46,6 +46,10 @@
     <personname>
      <!-- Need to introduce a space after the first name for now. This will be fixed. -->
      <firstname>Mark </firstname><surname>Craig</surname>
+    </personname>
+   </author>
+   <author>
+    <personname>
      <firstname>Lana </firstname><surname>Frost</surname>
     </personname>
     <xinclude:include href="../shared/affiliation-fr.xml"/>
