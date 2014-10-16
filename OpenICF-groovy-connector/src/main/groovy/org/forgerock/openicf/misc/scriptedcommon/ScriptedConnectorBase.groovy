@@ -336,9 +336,14 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
             try {
                 final GroovyCodeSource codeSource = new GroovyCodeSource(request.scriptText,
                         "Script" + System.currentTimeMillis() + ".groovy", "fix");
+                Binding binding = new Binding(request.scriptArguments);
+                binding.setVariable(LOGGER, logger);
+                binding.setVariable(CONFIGURATION, getConfiguration());
+                binding.setVariable(OPTIONS, options)
+                
                 Object result = InvokerHelper.createScript(getScriptedConfiguration().getGroovyScriptEngine().
-                        getGroovyClassLoader().parseClass(codeSource, false),
-                        new Binding(request.scriptArguments)).run();
+                        getGroovyClassLoader().parseClass(codeSource, false),                                                
+                        binding).run();
                 logger.ok("runScriptOnConnector ok");
                 return result;
             } catch (final RuntimeException e) {
