@@ -192,7 +192,7 @@ public class LdapConnection {
             if (credentials != null) {
                 credentials.access(new Accessor() {
                     public void access(char[] clearChars) {
-                        env.put(Context.SECURITY_CREDENTIALS, clearChars);
+                        env.put(Context.SECURITY_CREDENTIALS, new String(clearChars));
                         // Connect while in the accessor, otherwise clearChars will be cleared.
                         result.add(createContext(env));
                     }

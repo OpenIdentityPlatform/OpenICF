@@ -538,7 +538,7 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
             result.append(startChangeNumber);
             result.append(')');
 
-            int endChangeNumber = startChangeNumber + blockSize;
+            int endChangeNumber = startChangeNumber + blockSize -1;
             for (int i = startChangeNumber + 1; i <= endChangeNumber; i++) {
                 result.append("(");
                 result.append(changeNumberAttr);
@@ -562,7 +562,7 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
             result.append(startChangeNumber);
             result.append(')');
 
-            int endChangeNumber = startChangeNumber + blockSize;
+            int endChangeNumber = startChangeNumber + blockSize -1;
             result.append("(");
             result.append(changeNumberAttr);
             result.append("<=");
