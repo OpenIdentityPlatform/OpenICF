@@ -135,7 +135,7 @@ public class LdapUpdate extends LdapModifyOperation {
             } catch (NamingException e) {
                 throw new ConnectorException(e);
             }
-            entryDN = conn.getSchemaMapping().rename(oclass, oldEntryDN, newName);
+            entryDN = newEntryDN;
         }
         // Update the attributes.
         modifyAttributes(entryDN, attrToModify, DirContext.REPLACE_ATTRIBUTE, runAsContext);
