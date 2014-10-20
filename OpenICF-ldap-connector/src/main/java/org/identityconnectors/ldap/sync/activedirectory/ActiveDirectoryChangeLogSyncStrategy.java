@@ -23,10 +23,13 @@
  */
 package org.identityconnectors.ldap.sync.activedirectory;
 
+import com.sun.jndi.ldap.ctl.DirSyncResponseControl;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
+import javax.naming.InvalidNameException;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.PartialResultException;
@@ -36,6 +39,7 @@ import javax.naming.directory.SearchResult;
 import javax.naming.ldap.BasicControl;
 import javax.naming.ldap.Control;
 import javax.naming.ldap.LdapContext;
+import javax.naming.ldap.LdapName;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -62,7 +66,6 @@ import org.identityconnectors.ldap.sync.LdapSyncStrategy;
 import static org.identityconnectors.ldap.ADLdapUtil.objectGUIDtoString;
 import static org.identityconnectors.ldap.ADLdapUtil.fetchGroupMembersByRange;
 
-
 /**
  *
  * @author Gael Allioux <gael.allioux@forgerock.com>
@@ -80,6 +83,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
     private static final String USN_CHANGED_ATTR = "uSNChanged";
     private static final String USN_CREATED_ATTR = "uSNCreated";
     private static final String HCU_CHANGED_ATTR = "highestCommittedUSN";
+    private static final String DIRSYNC_EVENTS_OBJCLASS = "__DIRSYNC_EVENTS__";
     private static final Log logger = Log.getLog(ActiveDirectoryChangeLogSyncStrategy.class);
     private final LdapConnection conn;
     private final ObjectClass oclass;
@@ -90,168 +94,172 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
     }
 
     public SyncToken getLatestSyncToken() {
+        if (oclass.is(DIRSYNC_EVENTS_OBJCLASS)) {
+            return new SyncToken(getDirSyncCookie());
+        }
         return new SyncToken(gethighestCommittedUSN());
     }
 
     public void sync(SyncToken token, final SyncResultsHandler handler, final OperationOptions options) {
-        // ldapsearch -h host -p 389 -b "ou=test,dc=example,dc=com" -D "cn=administrator,cn=users,dc=example,dc=com" -w xxx "(uSNChanged>=52410)" 
-        // We use the uSNchanged attribute to detect changes on entries and newly created entries.
-        // Since ICF does not make any difference between CREATE/UPDATE we don't have to deal with uSNCreated.
-        // We have to detect deleted entries as well. To do so, we use the filter (isDeleted==TRUE) to detect
-        // the tombstones in the cn=delete objects,<defaultNamingContext> container.
-
-        final TreeMap<Integer, SyncDelta> changes = new TreeMap<Integer, SyncDelta>();
-        final String[] usnChanged = {""};
-        final String lastUSN = gethighestCommittedUSN();
-        int lastProcessed = -1;
-
-        SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
-        controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
-        controls.setDerefLinkFlag(false);
-
-        LdapInternalSearch search = new LdapInternalSearch(conn,
-                generateUSNChangedFilter(oclass, token, false),
-                Arrays.asList(conn.getConfiguration().getBaseContextsToSynchronize()),
-                new SimplePagedSearchStrategy(conn.getConfiguration().getBlockSize()),
-                controls);
-        try {
-            search.execute(new LdapSearchResultsHandler() {
-                public boolean handle(String baseDN, SearchResult result) throws NamingException {
-                    Attributes attrs = result.getAttributes();
-                    Uid uid = conn.getSchemaMapping().createUid(conn.getConfiguration().getUidAttribute(), attrs);
-                    // build the object first
-                    ConnectorObjectBuilder cob = new ConnectorObjectBuilder();
-                    cob.setUid(uid);
-                    cob.setObjectClass(oclass);
-                    cob.setName(result.getNameInNamespace());
-                    if (attrs.get(LdapConstants.MS_GUID_ATTR) != null) {
-                        cob.addAttribute(AttributeBuilder.build(LdapConstants.MS_GUID_ATTR, objectGUIDtoString(attrs.get(LdapConstants.MS_GUID_ATTR))));
-                        attrs.remove(LdapConstants.MS_GUID_ATTR);
-                    }
-                    // Make sure we remove the SID
-                    attrs.remove(OBJSID_ATTR);
-
-                    // Make sure we're not hitting AD large group issue
-                    if (ObjectClass.GROUP.equals(oclass)) {
-                        // see: http://msdn.microsoft.com/en-us/library/ms817827.aspx
-                        if (attrs.get("member;range=0-1499") != null) {
-                            // we're in the limitation
-                            Attribute range = AttributeBuilder.build("member", fetchGroupMembersByRange(conn, result));
-                            cob.addAttribute(range);
-                            if (conn.getConfiguration().isGetGroupMemberId()) {
-                                cob.addAttribute(buildMemberIdAttribute(conn, range));
-                            }
-                            attrs.remove("member;range=0-1499");
-                            attrs.remove("member");
-                        }
-                    }
-                    // Process Account specifics (ENABLE/PASSWORD_EXPIRED/LOCKOUT)
-                    if (oclass.equals(ObjectClass.ACCOUNT)) {
-                        switch (conn.getServerType()) {
-                            case MSAD_GC:
-                            case MSAD:
-                                if (attrs.get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR) != null) {
-                                    String controls = attrs.get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR).get(0).toString();
-                                    cob.addAttribute(AttributeBuilder.buildEnabled(!ADUserAccountControl.isAccountDisabled(controls)));
-                                    cob.addAttribute(AttributeBuilder.buildLockOut(ADUserAccountControl.isAccountLockOut(controls)));
-                                    cob.addAttribute(AttributeBuilder.buildPasswordExpired(ADUserAccountControl.isPasswordExpired(controls)));
-                                }
-                                break;
-                            case MSAD_LDS:
-                                if (attrs.get(LdapConstants.MS_DS_USER_ACCOUNT_DISABLED) != null) {
-                                    cob.addAttribute(AttributeBuilder.buildEnabled(!Boolean.parseBoolean(attrs.get(LdapConstants.MS_DS_USER_ACCOUNT_DISABLED).get().toString())));
-                                } else if (attrs.get(LdapConstants.MS_DS_USER_PASSWORD_EXPIRED) != null) {
-                                    cob.addAttribute(AttributeBuilder.buildPasswordExpired(Boolean.parseBoolean(attrs.get(LdapConstants.MS_DS_USER_PASSWORD_EXPIRED).get().toString())));
-                                } else if (attrs.get(LdapConstants.MS_DS_USER_ACCOUNT_AUTOLOCKED) != null) {
-                                    cob.addAttribute(AttributeBuilder.buildLockOut(Boolean.parseBoolean(attrs.get(LdapConstants.MS_DS_USER_ACCOUNT_AUTOLOCKED).get().toString())));
-                                }
-                                break;
-                            default:
-                        }
-                    }
-
-                    // Set all Attributes
-                    NamingEnumeration<? extends javax.naming.directory.Attribute> attrsEnum = attrs.getAll();
-                    while (attrsEnum.hasMore()) {
-                        javax.naming.directory.Attribute attr = attrsEnum.next();
-                        String id = attr.getID();
-                        NamingEnumeration vals = attr.getAll();
-                        ArrayList values = new ArrayList();
-                        while (vals.hasMore()) {
-                            values.add(vals.next());
-                        }
-                        cob.addAttribute(AttributeBuilder.build(id, values));
-                        if (conn.getConfiguration().isGetGroupMemberId() && oclass.equals(ObjectClass.GROUP) && attr.getID().equalsIgnoreCase("member")) {
-                            cob.addAttribute(buildMemberIdAttribute(conn, attr));
-                        }
-                    }
-                    SyncDeltaBuilder syncDeltaBuilder = new SyncDeltaBuilder();
-                    usnChanged[0] = attrs.get(USN_CHANGED_ATTR).get().toString();
-                    if (usnChanged[0].equalsIgnoreCase(attrs.get(USN_CREATED_ATTR).get().toString())) {
-                        syncDeltaBuilder.setDeltaType(SyncDeltaType.CREATE);
-                    } else {
-                        syncDeltaBuilder.setDeltaType(SyncDeltaType.UPDATE);
-                    }
-                    syncDeltaBuilder.setToken(new SyncToken(usnChanged[0]));
-                    syncDeltaBuilder.setUid(uid);
-                    syncDeltaBuilder.setObject(cob.build());
-
-                    changes.put(Integer.parseInt(usnChanged[0]), syncDeltaBuilder.build());
-                    return true;
-                }
-            });
-        } catch (ConnectorException e) {
-            if (e.getCause() instanceof PartialResultException) {
-                // The default naming context is used on the DC as the baseContextsToSynchronize, hence this PartialResultException.
-                // Let's just silently catch it not to break the sync cycle. It is thrown at the end of the search anyway...
-                logger.warn("Default naming context of the DC is used as baseContextsToSynchronize.\nPartialResultException has been caught");
-            } else {
-                throw e;
-            }
-        }
-
-        // Deletes
-        // ldapsearch -J 1.2.840.113556.1.4.417 -h xx -p 389 -b "dc=example,dc=com" -D "cn=administrator,cn=users,dc=example,dc=com" -w xx "&(isDeleted=TRUE)(uSNChanged>=528433)"
-        if (conn.supportsControl(DELETE_CTRL)) {
-            try {
-                Attributes rootAttrs = conn.getInitialContext().getAttributes("", new String[]{NAMING_CTX_ATTR});
-                String defaultContext = getStringAttrValue(rootAttrs, NAMING_CTX_ATTR);
-                if (defaultContext != null) {
-                    LdapContext context = conn.getInitialContext().newInstance(new Control[]{new BasicControl(DELETE_CTRL)});
-                    NamingEnumeration<SearchResult> deleted = context.search(DELETED_PREFIX + defaultContext, generateUSNChangedFilter(oclass, token, true), controls);
-
-                    while (deleted.hasMore()) {
-                        SearchResult entry = deleted.next();
-                        Attributes attrs = entry.getAttributes();
-                        Uid uid = conn.getSchemaMapping().createUid(conn.getConfiguration().getUidAttribute(), attrs);
-                        usnChanged[0] = attrs.get(USN_CHANGED_ATTR).get().toString();
-
-                        SyncDeltaBuilder syncDeltaBuilder = new SyncDeltaBuilder();
-                        syncDeltaBuilder.setToken(new SyncToken(usnChanged[0]));
-                        syncDeltaBuilder.setDeltaType(SyncDeltaType.DELETE);
-                        syncDeltaBuilder.setUid(uid);
-                        changes.put(Integer.parseInt(usnChanged[0]), syncDeltaBuilder.build());
-                    }
-                } else if (LdapConnection.ServerType.MSAD_LDS.equals(conn.getServerType())) {
-                    logger.error("Active Directory Lightweight Directory Services is used but defaultNamingContext has not been set - impossible to detect deleted objects");
-                }
-            } catch (NamingException e) {
-                logger.info(e.getExplanation());
-            }
+        if (oclass.is(DIRSYNC_EVENTS_OBJCLASS)) {
+            handleEvents(token, handler, options);
         } else {
-            logger.info("The server does not support the control to search for deleted entries");
-        }
-        // Changes are now ordered in the TreeMap according to usnChanged.
-        for (Map.Entry<Integer, SyncDelta> entry : changes.entrySet()) {
-            if (!handler.handle(entry.getValue())) {
-                break;
-            } else {
-                lastProcessed = entry.getKey();
+            // ldapsearch -h host -p 389 -b "ou=test,dc=example,dc=com" -D "cn=administrator,cn=users,dc=example,dc=com" -w xxx "(uSNChanged>=52410)" 
+            // We use the uSNchanged attribute to detect changes on entries and newly created entries.
+            // Since ICF does not make any difference between CREATE/UPDATE we don't have to deal with uSNCreated.
+            // We have to detect deleted entries as well. To do so, we use the filter (isDeleted==TRUE) to detect
+            // the tombstones in the cn=delete objects,<defaultNamingContext> container.
+
+            final TreeMap<Integer, SyncDelta> changes = new TreeMap<Integer, SyncDelta>();
+            final String[] usnChanged = {""};
+
+            SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
+            controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+            controls.setDerefLinkFlag(false);
+
+            LdapInternalSearch search = new LdapInternalSearch(conn,
+                    generateUSNChangedFilter(oclass, token, false),
+                    Arrays.asList(conn.getConfiguration().getBaseContextsToSynchronize()),
+                    new SimplePagedSearchStrategy(conn.getConfiguration().getBlockSize()),
+                    controls);
+            try {
+                search.execute(new LdapSearchResultsHandler() {
+                    public boolean handle(String baseDN, SearchResult result) throws NamingException {
+                        Attributes attrs = result.getAttributes();
+                        Uid uid = conn.getSchemaMapping().createUid(conn.getConfiguration().getUidAttribute(), attrs);
+                        // build the object first
+                        ConnectorObjectBuilder cob = new ConnectorObjectBuilder();
+                        cob.setUid(uid);
+                        cob.setObjectClass(oclass);
+                        cob.setName(result.getNameInNamespace());
+                        if (attrs.get(LdapConstants.MS_GUID_ATTR) != null) {
+                            cob.addAttribute(AttributeBuilder.build(LdapConstants.MS_GUID_ATTR, objectGUIDtoString(attrs.get(LdapConstants.MS_GUID_ATTR))));
+                            attrs.remove(LdapConstants.MS_GUID_ATTR);
+                        }
+                        // Make sure we remove the SID
+                        attrs.remove(OBJSID_ATTR);
+
+                        // Make sure we're not hitting AD large group issue
+                        if (ObjectClass.GROUP.equals(oclass)) {
+                            // see: http://msdn.microsoft.com/en-us/library/ms817827.aspx
+                            if (attrs.get("member;range=0-1499") != null) {
+                                // we're in the limitation
+                                Attribute range = AttributeBuilder.build("member", fetchGroupMembersByRange(conn, result));
+                                cob.addAttribute(range);
+                                if (conn.getConfiguration().isGetGroupMemberId()) {
+                                    cob.addAttribute(buildMemberIdAttribute(conn, range));
+                                }
+                                attrs.remove("member;range=0-1499");
+                                attrs.remove("member");
+                            }
+                        }
+                        // Process Account specifics (ENABLE/PASSWORD_EXPIRED/LOCKOUT)
+                        if (oclass.equals(ObjectClass.ACCOUNT)) {
+                            switch (conn.getServerType()) {
+                                case MSAD_GC:
+                                case MSAD:
+                                    if (attrs.get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR) != null) {
+                                        String controls = attrs.get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR).get(0).toString();
+                                        cob.addAttribute(AttributeBuilder.buildEnabled(!ADUserAccountControl.isAccountDisabled(controls)));
+                                        cob.addAttribute(AttributeBuilder.buildLockOut(ADUserAccountControl.isAccountLockOut(controls)));
+                                        cob.addAttribute(AttributeBuilder.buildPasswordExpired(ADUserAccountControl.isPasswordExpired(controls)));
+                                    }
+                                    break;
+                                case MSAD_LDS:
+                                    if (attrs.get(LdapConstants.MS_DS_USER_ACCOUNT_DISABLED) != null) {
+                                        cob.addAttribute(AttributeBuilder.buildEnabled(!Boolean.parseBoolean(attrs.get(LdapConstants.MS_DS_USER_ACCOUNT_DISABLED).get().toString())));
+                                    } else if (attrs.get(LdapConstants.MS_DS_USER_PASSWORD_EXPIRED) != null) {
+                                        cob.addAttribute(AttributeBuilder.buildPasswordExpired(Boolean.parseBoolean(attrs.get(LdapConstants.MS_DS_USER_PASSWORD_EXPIRED).get().toString())));
+                                    } else if (attrs.get(LdapConstants.MS_DS_USER_ACCOUNT_AUTOLOCKED) != null) {
+                                        cob.addAttribute(AttributeBuilder.buildLockOut(Boolean.parseBoolean(attrs.get(LdapConstants.MS_DS_USER_ACCOUNT_AUTOLOCKED).get().toString())));
+                                    }
+                                    break;
+                                default:
+                            }
+                        }
+
+                        // Set all Attributes
+                        NamingEnumeration<? extends javax.naming.directory.Attribute> attrsEnum = attrs.getAll();
+                        while (attrsEnum.hasMore()) {
+                            javax.naming.directory.Attribute attr = attrsEnum.next();
+                            String id = attr.getID();
+                            NamingEnumeration vals = attr.getAll();
+                            ArrayList values = new ArrayList();
+                            while (vals.hasMore()) {
+                                values.add(vals.next());
+                            }
+                            cob.addAttribute(AttributeBuilder.build(id, values));
+                            if (conn.getConfiguration().isGetGroupMemberId() && oclass.equals(ObjectClass.GROUP) && attr.getID().equalsIgnoreCase("member")) {
+                                cob.addAttribute(buildMemberIdAttribute(conn, attr));
+                            }
+                        }
+                        SyncDeltaBuilder syncDeltaBuilder = new SyncDeltaBuilder();
+                        usnChanged[0] = attrs.get(USN_CHANGED_ATTR).get().toString();
+                        if (usnChanged[0].equalsIgnoreCase(attrs.get(USN_CREATED_ATTR).get().toString())){
+                            syncDeltaBuilder.setDeltaType(SyncDeltaType.CREATE);
+                        } else {
+                            syncDeltaBuilder.setDeltaType(SyncDeltaType.UPDATE);
+                        }
+                        syncDeltaBuilder.setToken(new SyncToken(usnChanged[0]));
+                        syncDeltaBuilder.setUid(uid);
+                        syncDeltaBuilder.setObject(cob.build());
+
+                        changes.put(Integer.parseInt(usnChanged[0]), syncDeltaBuilder.build());
+                        return true;
+                    }
+                });
+            } catch (ConnectorException e) {
+                if (e.getCause() instanceof PartialResultException) {
+                    // The default naming context is used on the DC as the baseContextsToSynchronize, hence this PartialResultException.
+                    // Let's just silently catch it not to break the sync cycle. It is thrown at the end of the search anyway...
+                    logger.warn("Default naming context of the DC is used as baseContextsToSynchronize.\nPartialResultException has been caught");
+                } else {
+                    throw e;
+                }
             }
-        }
-        // ICF 1.4 now allows us to send the Token even if no entries were actually processed
-        if (lastProcessed == -1) {
-            ((SyncTokenResultsHandler) handler).handleResult(new SyncToken(lastUSN));
+
+            // Deletes
+            // ldapsearch -J 1.2.840.113556.1.4.417 -h xx -p 389 -b "dc=example,dc=com" -D "cn=administrator,cn=users,dc=example,dc=com" -w xx "&(isDeleted=TRUE)(uSNChanged>=528433)"
+            if (conn.supportsControl(DELETE_CTRL)) {
+                try {
+                    Attributes rootAttrs = conn.getInitialContext().getAttributes("", new String[]{NAMING_CTX_ATTR});
+                    String defaultContext = getStringAttrValue(rootAttrs, NAMING_CTX_ATTR);
+                    if (defaultContext != null) {
+                        LdapContext context = conn.getInitialContext().newInstance(new Control[]{new BasicControl(DELETE_CTRL)});
+                        NamingEnumeration<SearchResult> deleted = context.search(DELETED_PREFIX + defaultContext, generateUSNChangedFilter(oclass, token, true), controls);
+
+                        while (deleted.hasMore()) {
+                            SearchResult entry = deleted.next();
+                            Attributes attrs = entry.getAttributes();
+                            Uid uid = conn.getSchemaMapping().createUid(conn.getConfiguration().getUidAttribute(), attrs);
+                            usnChanged[0] = attrs.get(USN_CHANGED_ATTR).get().toString();
+
+                            SyncDeltaBuilder syncDeltaBuilder = new SyncDeltaBuilder();
+                            syncDeltaBuilder.setToken(new SyncToken(usnChanged[0]));
+                            syncDeltaBuilder.setDeltaType(SyncDeltaType.DELETE);
+                            syncDeltaBuilder.setUid(uid);
+                            changes.put(Integer.parseInt(usnChanged[0]), syncDeltaBuilder.build());
+                        }
+                    } else if (LdapConnection.ServerType.MSAD_LDS.equals(conn.getServerType())) {
+                        logger.error("Active Directory Lightweight Directory Services is used but defaultNamingContext has not been set - impossible to detect deleted objects");
+                    }
+                } catch (NamingException e) {
+                    logger.info(e.getExplanation());
+                }
+            } else {
+                logger.info("The server does not support the control to search for deleted entries");
+            }
+            // Changes are now ordered in the TreeMap according to usnChanged.
+            Integer lastProcessed = -1;
+            for (Map.Entry<Integer, SyncDelta> entry : changes.entrySet()) {
+                if (!handler.handle(entry.getValue())) {
+                    break;
+                } else {
+                    lastProcessed = entry.getKey();
+                }
+            }
+            // ICF 1.4 now allows us to send the Token even if no entries were actually processed
+            ((SyncTokenResultsHandler)handler).handleResult(new SyncToken(lastProcessed.toString()));
         }
     }
 
@@ -316,4 +324,242 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
         filter.append(")");
         return filter.toString();
     }
+
+    private byte[] getDirSyncCookie() {
+        try {
+            Attributes rootAttrs = conn.getInitialContext().getAttributes("", new String[]{NAMING_CTX_ATTR});
+            String defaultContext = getStringAttrValue(rootAttrs, NAMING_CTX_ATTR);
+
+            LdapContext ctx = conn.getInitialContext().newInstance(null);
+            String searchFilter = "(|(objectClass=group)(objectclass=user))";
+
+            //Specify the DirSync and DirSyncResponse controls
+            byte[] dirSyncCookie = null;
+            boolean hasMore = false;
+            Control[] rspCtls;
+            //Search for objects using the filter
+            do {
+                ctx.setRequestControls(new Control[]{new DirSyncControl(dirSyncCookie)});
+                NamingEnumeration answer = ctx.search(defaultContext, searchFilter, getSearchCtls());
+                while (answer.hasMoreElements()) {
+                    answer.next();
+                }
+                answer.close();
+                //save the response controls
+                if ((rspCtls = ctx.getResponseControls()) != null) {
+                    for (Control control : rspCtls) {
+                        if (control instanceof DirSyncResponseControl) {
+                            DirSyncResponseControl dirSyncControl = (DirSyncResponseControl) control;
+                            dirSyncCookie = dirSyncControl.getCookie();
+                            hasMore = dirSyncControl.hasMoreData();
+                        }
+                    }
+                }
+
+            } while (hasMore);
+            ctx.close();
+
+            return dirSyncCookie;
+
+        } catch (NamingException ex) {
+            logger.error("Problem reading naming context");
+        } catch (IOException ex) {
+            logger.error("Problem reading cookie");
+        }
+        return null;
+    }
+
+    private void handleEvents(SyncToken token, SyncResultsHandler handler, OperationOptions options) {
+        ArrayList<SearchResult> changes = new ArrayList<SearchResult>();
+        String searchFilter = "(|(objectClass=group)(objectclass=user))";
+        Control[] rspCtls;
+        //Specify the DirSync and DirSyncResponse controls
+        byte[] dirSyncCookie = (byte[]) token.getValue();
+        boolean hasMore = false;
+
+        try {
+            Attributes rootAttrs = conn.getInitialContext().getAttributes("", new String[]{NAMING_CTX_ATTR});
+            String defaultContext = getStringAttrValue(rootAttrs, NAMING_CTX_ATTR);
+            LdapContext ctx = conn.getInitialContext().newInstance(null);
+
+            do {
+                ctx.setRequestControls(new Control[]{new DirSyncControl(dirSyncCookie)});
+                NamingEnumeration answer = ctx.search(defaultContext, searchFilter, getSearchCtls());
+                while (answer.hasMoreElements()) {
+                    SearchResult sr = (SearchResult) answer.next();
+                    Attributes attrs = sr.getAttributes();
+                    String dn = sr.getNameInNamespace();
+
+                    // Group change 
+                    if ((attrs.get("member;range=0-0") != null) || (attrs.get("member;range=1-1") != null)) {
+                        changes.add(sr);
+                    } // User Change
+                    else {
+                        boolean change = false;
+                        // Create, rename or move
+                        if (attrs.get("parentGUID") != null) {
+                            // Ignore create...
+                            if (attrs.get("WhenCreated") == null) {
+                                // Process move/rename
+                                // What interest us is mainly user getting out of sync scope...
+                                // The entry has been either moved or renamed and if now it is not 
+                                // in the sync scope anymore, we take it
+                                change = isOutOfScope(dn);
+                            }
+                        }
+                        // Account control is part of the change.
+                        if (attrs.get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR) != null) {
+                            change = true;
+                        }
+                        // The modified entry is of interest
+                        if (change) {
+                            changes.add(sr);
+                        }
+                    }
+                }
+
+                //Save the response control for next round
+                if ((rspCtls = ctx.getResponseControls()) != null) {
+                    for (Control control : rspCtls) {
+                        if (control instanceof DirSyncResponseControl) {
+                            DirSyncResponseControl dirSyncControl = (DirSyncResponseControl) control;
+                            dirSyncCookie = dirSyncControl.getCookie();
+                            hasMore = dirSyncControl.hasMoreData();
+                        }
+                    }
+                }
+                processChanges(handler, changes, new SyncToken(dirSyncCookie));
+                ((SyncTokenResultsHandler) handler).handleResult(new SyncToken(dirSyncCookie));
+                changes.clear();
+            } while (hasMore);
+
+            ctx.close();
+
+        } catch (IOException ex) {
+            logger.error("Problem reading cookie");
+        } catch (NamingException ex) {
+            logger.error("Problem reading naming context");
+        }
+    }
+
+    private boolean isOutOfScope(String dn) throws InvalidNameException {
+        boolean outOfScope = true;
+        LdapName ldn = new LdapName(dn);
+        for (String context : conn.getConfiguration().getBaseContextsToSynchronize()) {
+            LdapName suffix = new LdapName(context);
+            if (ldn.startsWith(suffix)) {
+                outOfScope = false;
+            }
+        }
+        return outOfScope;
+    }
+    
+    private void processChanges(SyncResultsHandler handler, ArrayList<SearchResult> changes, SyncToken syncToken) throws NamingException {
+        for (SearchResult change : changes) {
+            Attributes attrs = change.getAttributes();
+            if ((attrs.get("member;range=0-0") != null) || (attrs.get("member;range=1-1") != null)) {
+                processGroupChange(handler, change, syncToken);
+            } else {
+                processUserChange(handler, change, syncToken);
+            }
+        }
+    }
+
+    private void processGroupChange(SyncResultsHandler handler, SearchResult groupChange, SyncToken syncToken) throws NamingException {
+        // Now process the changes
+        Attributes attrs = groupChange.getAttributes();
+        String dn = groupChange.getNameInNamespace();
+        String groupGUID = objectGUIDtoString(attrs.get(LdapConstants.MS_GUID_ATTR));
+        javax.naming.directory.Attribute memberIn = attrs.get("member;range=1-1");
+        javax.naming.directory.Attribute memberOut = attrs.get("member;range=0-0");
+
+        if (memberIn != null) {
+            NamingEnumeration enu = memberIn.getAll();
+            while (enu.hasMore()) {
+                // acount DN
+                String memberDn = (String) enu.next();
+                Attributes guid = conn.getInitialContext().getAttributes(memberDn, new String[]{LdapConstants.MS_GUID_ATTR});
+                String memberGuid = objectGUIDtoString(guid.get(LdapConstants.MS_GUID_ATTR));
+
+                ConnectorObjectBuilder cob = new ConnectorObjectBuilder();
+                cob.setUid(memberGuid);
+                cob.setName(memberDn);
+                cob.setObjectClass(oclass);
+                cob.addAttribute(AttributeBuilder.build("addedToGroup", dn));
+                cob.addAttribute(AttributeBuilder.build("groupGUID", groupGUID));
+                SyncDeltaBuilder syncDeltaBuilder = new SyncDeltaBuilder();
+                syncDeltaBuilder.setToken(syncToken);
+                syncDeltaBuilder.setDeltaType(SyncDeltaType.UPDATE);
+                syncDeltaBuilder.setUid(new Uid(memberGuid));
+                syncDeltaBuilder.setObject(cob.build());
+                if (!handler.handle(syncDeltaBuilder.build())) {
+                   break;
+                }
+            }
+        }
+        if (memberOut != null) {
+            NamingEnumeration enu = memberOut.getAll();
+            while (enu.hasMore()) {
+                // acount DN
+                String memberDn = (String) enu.next();
+                Attributes guid = conn.getInitialContext().getAttributes(memberDn, new String[]{LdapConstants.MS_GUID_ATTR});
+                String memberGuid = objectGUIDtoString(guid.get(LdapConstants.MS_GUID_ATTR));
+
+                ConnectorObjectBuilder cob = new ConnectorObjectBuilder();
+                cob.setUid(memberGuid);
+                cob.setName(memberDn);
+                cob.setObjectClass(oclass);
+                cob.addAttribute(AttributeBuilder.build("removedFromGroup", dn));
+                cob.addAttribute(AttributeBuilder.build("groupGUID", groupGUID));
+                SyncDeltaBuilder syncDeltaBuilder = new SyncDeltaBuilder();
+                syncDeltaBuilder.setToken(syncToken);
+                syncDeltaBuilder.setDeltaType(SyncDeltaType.UPDATE);
+                syncDeltaBuilder.setUid(new Uid(memberGuid));
+                syncDeltaBuilder.setObject(cob.build());
+                if (!handler.handle(syncDeltaBuilder.build())) {
+                    break;
+                }
+            }
+        }
+    }
+
+    private void processUserChange(SyncResultsHandler handler, SearchResult userChange, SyncToken syncToken) throws NamingException {
+        Attributes attrs = userChange.getAttributes();
+        String dn = userChange.getNameInNamespace();
+        String objectGUID = objectGUIDtoString(attrs.get(LdapConstants.MS_GUID_ATTR));
+
+        ConnectorObjectBuilder cob = new ConnectorObjectBuilder();
+
+        if (attrs.get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR) != null) {
+            String controls = attrs.get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR).get(0).toString();
+            cob.addAttribute(AttributeBuilder.buildEnabled(!ADUserAccountControl.isAccountDisabled(controls)));
+            cob.addAttribute(AttributeBuilder.buildLockOut(ADUserAccountControl.isAccountLockOut(controls)));
+            cob.addAttribute(AttributeBuilder.buildPasswordExpired(ADUserAccountControl.isPasswordExpired(controls)));
+        }
+        if (attrs.get("parentGUID") != null) {
+            // move/rename that was out of scope
+            cob.addAttribute(AttributeBuilder.build("outOfScope", true));
+        }
+        cob.setUid(objectGUID);
+        cob.setName(dn);
+        cob.setObjectClass(oclass);
+        cob.addAttribute(AttributeBuilder.build(LdapConstants.MS_GUID_ATTR, objectGUID));
+
+        SyncDeltaBuilder syncDeltaBuilder = new SyncDeltaBuilder();
+        syncDeltaBuilder.setToken(syncToken);
+        syncDeltaBuilder.setDeltaType(SyncDeltaType.UPDATE);
+        syncDeltaBuilder.setUid(new Uid(objectGUID));
+        syncDeltaBuilder.setObject(cob.build());
+        handler.handle(syncDeltaBuilder.build());
+    }
+
+    private SearchControls getSearchCtls() {
+        SearchControls searchCtls = new SearchControls();
+        String returnedAtts[] = {};
+        searchCtls.setReturningAttributes(returnedAtts);
+        searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+
+        return searchCtls;
+    }
+
 }
