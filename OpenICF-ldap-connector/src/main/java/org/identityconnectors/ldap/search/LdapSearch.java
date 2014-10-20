@@ -31,6 +31,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import static java.util.Collections.singletonList;
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.naming.NamingException;
 import javax.naming.directory.SearchControls;
@@ -64,10 +67,13 @@ import static org.identityconnectors.common.StringUtil.isBlank;
 import org.identityconnectors.framework.common.objects.OperationalAttributeInfos;
 import org.identityconnectors.framework.common.objects.SortKey;
 import org.identityconnectors.framework.spi.SearchResultsHandler;
+import org.identityconnectors.ldap.ADLdapUtil;
 import static org.identityconnectors.ldap.LdapUtil.buildMemberIdAttribute;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValues;
 import static org.identityconnectors.ldap.ADLdapUtil.objectGUIDtoString;
 import static org.identityconnectors.ldap.ADLdapUtil.fetchGroupMembersByRange;
+import static org.identityconnectors.ldap.ADLdapUtil.getADLdapDatefromJavaDate;
+import static org.identityconnectors.ldap.ADLdapUtil.getJavaDateFromADTime;
 import org.identityconnectors.ldap.LdapConnection.ServerType;
 
 
@@ -284,15 +290,44 @@ public class LdapSearch {
             } else {
                 attribute = conn.getSchemaMapping().createAttribute(oclass, attrName, entry, emptyAttrWhenNotFound);
             }
+
+            // Some AD specifics
+            if (conn.getServerType().equals(ServerType.MSAD)) {
+                if (oclass.equals(ObjectClass.ACCOUNT)) {
+                    try {
+                        if (ADLdapUtil.ACCOUNT_EXPIRES.equalsIgnoreCase(attrName)) {
+                            String value = (String) entry.getAttributes().get(ADLdapUtil.ACCOUNT_EXPIRES).get(0);
+                            if ("0".equalsIgnoreCase(value) || ADLdapUtil.ACCOUNT_NEVER_EXPIRES.equalsIgnoreCase(value)) {
+                                // Let's set it to zero - this is equivalent: it means Never
+                                attribute = AttributeBuilder.build(ADLdapUtil.ACCOUNT_EXPIRES, "0");
+                            } else {
+                                Date date = getJavaDateFromADTime(value);
+                                attribute = AttributeBuilder.build(ADLdapUtil.ACCOUNT_EXPIRES, getADLdapDatefromJavaDate(date));
+                            }
+                        } else if (ADLdapUtil.PWD_LAST_SET.equalsIgnoreCase(attrName)) {
+                            String value = (String) entry.getAttributes().get(ADLdapUtil.PWD_LAST_SET).get(0);
+                            if ("0".equalsIgnoreCase(value)) {
+                                attribute = AttributeBuilder.build(ADLdapUtil.PWD_LAST_SET, "0");
+                            } else {
+                                Date date = getJavaDateFromADTime(value);
+                                attribute = AttributeBuilder.build(ADLdapUtil.PWD_LAST_SET, getADLdapDatefromJavaDate(date));
+                            }
+                        }
+                    } catch (NamingException ex) {
+                        log.warn("Special Attribute {0} of object class {1} can not be read from entry", attrName, oclass.getObjectClassValue());
+                    }
+                }
+            }
+
             if (ObjectClass.GROUP.equals(oclass) && conn.getConfiguration().getGroupMemberAttribute().equalsIgnoreCase(attrName)) {
-                if (ServerType.MSAD.equals(conn.getServerType()) || 
-                        ServerType.MSAD_GC.equals(conn.getServerType()) || 
-                        ServerType.MSAD_LDS.equals(conn.getServerType())) {
+                if (ServerType.MSAD.equals(conn.getServerType())
+                        || ServerType.MSAD_GC.equals(conn.getServerType())
+                        || ServerType.MSAD_LDS.equals(conn.getServerType())) {
                     // Make sure we're not hitting AD large group issue
                     // see: http://msdn.microsoft.com/en-us/library/ms817827.aspx
                     if (entry.getAttributes().get("member;range=0-1499") != null) {
                         // we're in the limitation
-                        attribute = AttributeBuilder.build(attrName, fetchGroupMembersByRange(conn,entry));
+                        attribute = AttributeBuilder.build(attrName, fetchGroupMembersByRange(conn, entry));
                     }
                 }
                 if (conn.getConfiguration().isGetGroupMemberId()) {

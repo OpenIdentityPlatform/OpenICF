@@ -23,8 +23,11 @@
  */
 package org.identityconnectors.ldap;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
@@ -53,6 +56,27 @@ public class ADLdapUtil {
      * Maximum number of members retrieved from a group in one search 
      */
     public static final int GROUP_MEMBERS_MAXRANGE = 1500;
+    
+    /*
+    * The time difference between Java and .Net for Dates
+    */
+    public static final long DIFF_NET_JAVA_FOR_DATE_AND_TIMES = 11644473600000L;
+    
+    /*
+     * The Pwd-Last-Set attribute represents the date and time that the password for this account was last changed.
+     * for read purpose, only values that can be set:
+     * 0 - To force a user to change his password at next logon
+     * -1 - To set it to current date
+    */
+    public static final String PWD_LAST_SET = "pwdLastSet";
+    
+    /*
+     * The date when a Microsoft Active Directory account expires.
+     * For read purpose
+     * A value of 0 or 9,223,372,036,854,775,807 indicates that the account never expires.
+    */
+    public static final String ACCOUNT_EXPIRES = "accountExpires";
+    public static final String ACCOUNT_NEVER_EXPIRES = "9223372036854775807";
     
     static String AddLeadingZero(int k) {
             return (k<=0xF)?"0" + Integer.toHexString(k):Integer.toHexString(k);
@@ -215,5 +239,16 @@ public class ADLdapUtil {
             }
         }
         return members;
+    }
+    
+    public static Date getJavaDateFromADTime(String adTime) {
+        long milliseconds = (Long.parseLong(adTime) / 10000) - DIFF_NET_JAVA_FOR_DATE_AND_TIMES;
+        return new Date(milliseconds);
+    }
+    
+    public static String getADLdapDatefromJavaDate(Date date) {
+        SimpleDateFormat df = new SimpleDateFormat("YYYYMMddHHmmss");
+        df.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return df.format(date)+".0Z";
     }
 }
