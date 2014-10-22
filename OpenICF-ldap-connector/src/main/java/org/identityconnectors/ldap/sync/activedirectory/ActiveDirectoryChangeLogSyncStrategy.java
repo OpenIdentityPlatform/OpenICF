@@ -27,6 +27,7 @@ import com.sun.jndi.ldap.ctl.DirSyncResponseControl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Map;
 import java.util.TreeMap;
 import javax.naming.InvalidNameException;
@@ -46,6 +47,7 @@ import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import static org.identityconnectors.framework.common.objects.ObjectClassUtil.createSpecialName;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
@@ -54,6 +56,7 @@ import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.SyncTokenResultsHandler;
+import org.identityconnectors.ldap.ADLdapUtil;
 import org.identityconnectors.ldap.ADUserAccountControl;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapConstants;
@@ -65,6 +68,11 @@ import org.identityconnectors.ldap.search.SimplePagedSearchStrategy;
 import org.identityconnectors.ldap.sync.LdapSyncStrategy;
 import static org.identityconnectors.ldap.ADLdapUtil.objectGUIDtoString;
 import static org.identityconnectors.ldap.ADLdapUtil.fetchGroupMembersByRange;
+import static org.identityconnectors.ldap.ADLdapUtil.getADLdapDatefromJavaDate;
+import static org.identityconnectors.ldap.ADLdapUtil.getJavaDateFromADTime;
+import static org.identityconnectors.ldap.LdapConstants.OBJECTCLASS_ATTR;
+import static org.identityconnectors.ldap.LdapUtil.getObjectClassFilter;
+import static org.identityconnectors.ldap.LdapUtil.guessObjectClass;
 
 /**
  *
@@ -83,7 +91,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
     private static final String USN_CHANGED_ATTR = "uSNChanged";
     private static final String USN_CREATED_ATTR = "uSNCreated";
     private static final String HCU_CHANGED_ATTR = "highestCommittedUSN";
-    private static final String DIRSYNC_EVENTS_OBJCLASS = "__DIRSYNC_EVENTS__";
+    private static final String DIRSYNC_EVENTS_OBJCLASS = createSpecialName("DIRSYNC_EVENTS");
     private static final Log logger = Log.getLog(ActiveDirectoryChangeLogSyncStrategy.class);
     private final LdapConnection conn;
     private final ObjectClass oclass;
@@ -106,12 +114,12 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
         } else {
             // ldapsearch -h host -p 389 -b "ou=test,dc=example,dc=com" -D "cn=administrator,cn=users,dc=example,dc=com" -w xxx "(uSNChanged>=52410)" 
             // We use the uSNchanged attribute to detect changes on entries and newly created entries.
-            // Since ICF does not make any difference between CREATE/UPDATE we don't have to deal with uSNCreated.
             // We have to detect deleted entries as well. To do so, we use the filter (isDeleted==TRUE) to detect
             // the tombstones in the cn=delete objects,<defaultNamingContext> container.
 
             final TreeMap<Integer, SyncDelta> changes = new TreeMap<Integer, SyncDelta>();
             final String[] usnChanged = {""};
+            String waterMark = gethighestCommittedUSN();
 
             SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
             controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
@@ -130,7 +138,11 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                         // build the object first
                         ConnectorObjectBuilder cob = new ConnectorObjectBuilder();
                         cob.setUid(uid);
-                        cob.setObjectClass(oclass);
+                        if (ObjectClass.ALL.equals(oclass)){
+                            cob.setObjectClass(guessObjectClass(conn, attrs.get(OBJECTCLASS_ATTR)));
+                        } else {
+                            cob.setObjectClass(oclass);
+                        }
                         cob.setName(result.getNameInNamespace());
                         if (attrs.get(LdapConstants.MS_GUID_ATTR) != null) {
                             cob.addAttribute(AttributeBuilder.build(LdapConstants.MS_GUID_ATTR, objectGUIDtoString(attrs.get(LdapConstants.MS_GUID_ATTR))));
@@ -153,7 +165,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                                 attrs.remove("member");
                             }
                         }
-                        // Process Account specifics (ENABLE/PASSWORD_EXPIRED/LOCKOUT)
+                        // Process Account specifics (ENABLE/PASSWORD_EXPIRED/LOCKOUT/accountExpires/pwdLastSet)
                         if (oclass.equals(ObjectClass.ACCOUNT)) {
                             switch (conn.getServerType()) {
                                 case MSAD_GC:
@@ -175,6 +187,27 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                                     }
                                     break;
                                 default:
+                            }
+                            if (attrs.get(ADLdapUtil.ACCOUNT_EXPIRES) != null) {
+                                String value = (String) attrs.get(ADLdapUtil.ACCOUNT_EXPIRES).get();
+                                if ("0".equalsIgnoreCase(value) || ADLdapUtil.ACCOUNT_NEVER_EXPIRES.equalsIgnoreCase(value)) {
+                                    // Let's set it to zero - this is equivalent: it means Never
+                                    cob.addAttribute(AttributeBuilder.build(ADLdapUtil.ACCOUNT_EXPIRES, "0"));
+                                } else {
+                                    Date date = getJavaDateFromADTime(value);
+                                    cob.addAttribute(AttributeBuilder.build(ADLdapUtil.ACCOUNT_EXPIRES, getADLdapDatefromJavaDate(date)));
+                                }
+                                attrs.remove(ADLdapUtil.ACCOUNT_EXPIRES);
+                            }
+                            if (attrs.get(ADLdapUtil.PWD_LAST_SET) != null) {
+                                String value = (String) attrs.get(ADLdapUtil.PWD_LAST_SET).get();
+                                if ("0".equalsIgnoreCase(value)) {
+                                    cob.addAttribute(AttributeBuilder.build(ADLdapUtil.PWD_LAST_SET, "0"));
+                                } else {
+                                    Date date = getJavaDateFromADTime(value);
+                                    cob.addAttribute(AttributeBuilder.build(ADLdapUtil.PWD_LAST_SET, getADLdapDatefromJavaDate(date)));
+                                }
+                                attrs.remove(ADLdapUtil.PWD_LAST_SET);
                             }
                         }
 
@@ -238,6 +271,11 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                             syncDeltaBuilder.setToken(new SyncToken(usnChanged[0]));
                             syncDeltaBuilder.setDeltaType(SyncDeltaType.DELETE);
                             syncDeltaBuilder.setUid(uid);
+                            if (ObjectClass.ALL.equals(oclass)) {
+                                syncDeltaBuilder.setObjectClass(guessObjectClass(conn, attrs.get(OBJECTCLASS_ATTR)));
+                            } else {
+                                syncDeltaBuilder.setObjectClass(oclass);
+                            }
                             changes.put(Integer.parseInt(usnChanged[0]), syncDeltaBuilder.build());
                         }
                     } else if (LdapConnection.ServerType.MSAD_LDS.equals(conn.getServerType())) {
@@ -250,16 +288,15 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                 logger.info("The server does not support the control to search for deleted entries");
             }
             // Changes are now ordered in the TreeMap according to usnChanged.
-            Integer lastProcessed = -1;
             for (Map.Entry<Integer, SyncDelta> entry : changes.entrySet()) {
                 if (!handler.handle(entry.getValue())) {
                     break;
                 } else {
-                    lastProcessed = entry.getKey();
+                    waterMark = entry.getKey().toString();
                 }
             }
             // ICF 1.4 now allows us to send the Token even if no entries were actually processed
-            ((SyncTokenResultsHandler)handler).handleResult(new SyncToken(lastProcessed.toString()));
+            ((SyncTokenResultsHandler)handler).handleResult(new SyncToken(waterMark));
         }
     }
 
@@ -278,10 +315,9 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
         }
         return hcUSN;
     }
-
+    
     private String generateUSNChangedFilter(ObjectClass oc, SyncToken token, boolean isDeleted) {
-        StringBuilder filter;
-        filter = new StringBuilder();
+        StringBuilder filter = new StringBuilder();
 
         if (token == null) {
             token = this.getLatestSyncToken();
@@ -295,25 +331,17 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
             filter.append("(isDeleted=TRUE)");
         }
         if (ObjectClass.ACCOUNT.equals(oc)) {
-            String[] oclasses = conn.getConfiguration().getAccountObjectClasses();
-            for (int i = 0; i < oclasses.length; i++) {
-                filter.append("(objectClass=");
-                filter.append(oclasses[i]);
-                filter.append(")");
-            }
+            filter.append(getObjectClassFilter(conn.getConfiguration().getAccountObjectClasses()));
             if (conn.getConfiguration().getAccountSynchronizationFilter() != null) {
                 filter.append(conn.getConfiguration().getAccountSynchronizationFilter());
             }
         } else if (ObjectClass.GROUP.equals(oc)) {
-            String[] oclasses = conn.getConfiguration().getGroupObjectClasses();
-            for (int i = 0; i < oclasses.length; i++) {
-                filter.append("(objectClass=");
-                filter.append(oclasses[i]);
-                filter.append(")");
-            }
+            filter.append(getObjectClassFilter(conn.getConfiguration().getGroupObjectClasses()));
             if (conn.getConfiguration().getGroupSynchronizationFilter() != null) {
                 filter.append(conn.getConfiguration().getGroupSynchronizationFilter());
             }
+        } else if (ObjectClass.ALL.equals(oc)) {
+            filter.append(getObjectClassFilter(conn.getConfiguration().getObjectClassesToSynchronize()));
         } else { // we use the ObjectClass value as the filter...
             filter.append("(objectClass=");
             filter.append(oc.getObjectClassValue());
@@ -324,7 +352,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
         filter.append(")");
         return filter.toString();
     }
-
+    
     private byte[] getDirSyncCookie() {
         try {
             Attributes rootAttrs = conn.getInitialContext().getAttributes("", new String[]{NAMING_CTX_ATTR});

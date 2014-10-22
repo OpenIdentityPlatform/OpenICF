@@ -52,6 +52,8 @@ public class LdapConstants {
     public static final String MS_DS_USER_PASSWORD_EXPIRED = "msDS-UserPasswordExpired";
     
     public static final String MS_DS_USER_ACCOUNT_AUTOLOCKED = "ms-DS-UserAccountAutoLocked";
+    
+    public static final String OBJECTCLASS_ATTR = "objectClass";
 
     /**
      * Overrides the framework-defined password because ours is readable:

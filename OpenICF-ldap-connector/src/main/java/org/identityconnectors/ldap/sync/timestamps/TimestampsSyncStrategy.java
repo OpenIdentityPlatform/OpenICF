@@ -48,13 +48,19 @@ import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.SyncTokenResultsHandler;
+import org.identityconnectors.ldap.ADLdapUtil;
 import static org.identityconnectors.ldap.ADLdapUtil.fetchGroupMembersByRange;
+import static org.identityconnectors.ldap.ADLdapUtil.getADLdapDatefromJavaDate;
+import static org.identityconnectors.ldap.ADLdapUtil.getJavaDateFromADTime;
 import static org.identityconnectors.ldap.ADLdapUtil.objectGUIDtoString;
 import org.identityconnectors.ldap.LdapConnection;
 import static org.identityconnectors.ldap.LdapUtil.buildMemberIdAttribute;
 import org.identityconnectors.ldap.ADUserAccountControl;
 import org.identityconnectors.ldap.LdapConnection.ServerType;
 import org.identityconnectors.ldap.LdapConstants;
+import static org.identityconnectors.ldap.LdapConstants.OBJECTCLASS_ATTR;
+import static org.identityconnectors.ldap.LdapUtil.getObjectClassFilter;
+import static org.identityconnectors.ldap.LdapUtil.guessObjectClass;
 import org.identityconnectors.ldap.search.DefaultSearchStrategy;
 import org.identityconnectors.ldap.search.LdapInternalSearch;
 import org.identityconnectors.ldap.search.LdapSearchStrategy;
@@ -96,7 +102,7 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
         // on other directories
 
         final String now = getNowTime();
-        LdapSearchStrategy strategy = null;
+        LdapSearchStrategy strategy;
         SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
         controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
         controls.setDerefLinkFlag(false);
@@ -121,7 +127,11 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
                     // build the object first
                     ConnectorObjectBuilder cob = new ConnectorObjectBuilder();
                     cob.setUid(uid);
-                    cob.setObjectClass(oclass);
+                    if (ObjectClass.ALL.equals(oclass)) {
+                        cob.setObjectClass(guessObjectClass(conn, attrs.get(OBJECTCLASS_ATTR)));
+                    } else {
+                        cob.setObjectClass(oclass);
+                    }
                     cob.setName(result.getNameInNamespace());
 
                     // Let's process AD specifics...
@@ -143,6 +153,27 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
                                     cob.addAttribute(AttributeBuilder.buildLockOut(ADUserAccountControl.isAccountLockOut(controls)));
                                     cob.addAttribute(AttributeBuilder.buildPasswordExpired(ADUserAccountControl.isPasswordExpired(controls)));
                                 }
+                            }
+                            if (attrs.get(ADLdapUtil.ACCOUNT_EXPIRES) != null) {
+                                String value = (String) attrs.get(ADLdapUtil.ACCOUNT_EXPIRES).get();
+                                if ("0".equalsIgnoreCase(value) || ADLdapUtil.ACCOUNT_NEVER_EXPIRES.equalsIgnoreCase(value)) {
+                                    // Let's set it to zero - this is equivalent: it means Never
+                                    cob.addAttribute(AttributeBuilder.build(ADLdapUtil.ACCOUNT_EXPIRES, "0"));
+                                } else {
+                                    Date date = getJavaDateFromADTime(value);
+                                    cob.addAttribute(AttributeBuilder.build(ADLdapUtil.ACCOUNT_EXPIRES, getADLdapDatefromJavaDate(date)));
+                                }
+                                attrs.remove(ADLdapUtil.ACCOUNT_EXPIRES);
+                            }
+                            if (attrs.get(ADLdapUtil.PWD_LAST_SET) != null) {
+                                String value = (String) attrs.get(ADLdapUtil.PWD_LAST_SET).get();
+                                if ("0".equalsIgnoreCase(value)) {
+                                    cob.addAttribute(AttributeBuilder.build(ADLdapUtil.PWD_LAST_SET, "0"));
+                                } else {
+                                    Date date = getJavaDateFromADTime(value);
+                                    cob.addAttribute(AttributeBuilder.build(ADLdapUtil.PWD_LAST_SET, getADLdapDatefromJavaDate(date)));
+                                }
+                                attrs.remove(ADLdapUtil.PWD_LAST_SET);
                             }
                         }
                         if (ObjectClass.GROUP.equals(oclass)) {
@@ -225,25 +256,17 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
             token = this.getLatestSyncToken();
         }
         if (ObjectClass.ACCOUNT.equals(oc)) {
-            String[] oclasses = conn.getConfiguration().getAccountObjectClasses();
-            for (int i = 0; i < oclasses.length; i++) {
-                filter.append("(objectClass=");
-                filter.append(oclasses[i]);
-                filter.append(")");
-            }
+            filter.append(getObjectClassFilter(conn.getConfiguration().getAccountObjectClasses()));
             if (conn.getConfiguration().getAccountSynchronizationFilter() != null){
                 filter.append(conn.getConfiguration().getAccountSynchronizationFilter());
             }
         } else if (ObjectClass.GROUP.equals(oc)) {
-            String[] oclasses = conn.getConfiguration().getGroupObjectClasses();
-            for (int i = 0; i < oclasses.length; i++) {
-                filter.append("(objectClass=");
-                filter.append(oclasses[i]);
-                filter.append(")");
-            }
+            filter.append(getObjectClassFilter(conn.getConfiguration().getGroupObjectClasses()));
             if (conn.getConfiguration().getGroupSynchronizationFilter() != null){
                 filter.append(conn.getConfiguration().getGroupSynchronizationFilter());
             }
+        } else if (ObjectClass.ALL.equals(oc)) {
+            filter.append(getObjectClassFilter(conn.getConfiguration().getObjectClassesToSynchronize()));
         } else { // we use the ObjectClass value as the filter...
             filter.append("(objectClass=");
             filter.append(oc.getObjectClassValue());

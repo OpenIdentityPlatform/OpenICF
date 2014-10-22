@@ -42,6 +42,7 @@ import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.LdapName;
+import org.identityconnectors.common.CollectionUtil;
 
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
@@ -50,6 +51,7 @@ import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassUtil;
+import static org.identityconnectors.framework.common.objects.ObjectClassUtil.createSpecialName;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import static org.identityconnectors.ldap.LdapEntry.isDNAttribute;
 import org.identityconnectors.ldap.search.LdapInternalSearch;
@@ -60,10 +62,14 @@ public class LdapUtil {
 
     private static final String LDAP_BINARY_OPTION = ";binary";
 
-    public static final String SERVER_INFO_NAME = ObjectClassUtil.createSpecialName("SERVER_INFO");
+    public static final String SERVER_INFO_NAME = createSpecialName("SERVER_INFO");
 
-    public static final ObjectClass SERVER_INFO = new ObjectClass(SERVER_INFO_NAME);
+    public static final ObjectClass SERVER_INFO_OBJCLASS = new ObjectClass(SERVER_INFO_NAME);
+    
+    private static final String UNKNOWN_OBJCLASS_NAME = createSpecialName("UNKNOWN");
 
+    public static final ObjectClass UNKNOWN_OBJCLASS = new ObjectClass(UNKNOWN_OBJCLASS_NAME);
+    
     private LdapUtil() {
     }
 
@@ -549,10 +555,60 @@ public class LdapUtil {
 
    public static void getServerInfo(LdapConnection conn, ResultsHandler handler){
        ConnectorObjectBuilder builder = new ConnectorObjectBuilder();
-        builder.setObjectClass(SERVER_INFO);
+        builder.setObjectClass(SERVER_INFO_OBJCLASS);
         builder.setUid(conn.getServerType().name());
         builder.setName(conn.getServerType().name());
         handler.handle(builder.build());
    }
+   
+   public static String getObjectClassFilter(String[] oclasses) {
+        StringBuilder filter = new StringBuilder();
+        if (oclasses.length > 1) {
+                filter.append("(|");
+                for (String oclasse : oclasses) {
+                    filter.append("(objectClass=");
+                    filter.append(oclasse);
+                    filter.append(")");
+                }
+                filter.append(")");
+            } else {
+                filter.append("(objectClass=");
+                filter.append(oclasses[0]);
+                filter.append(")");
+            }
+        return filter.toString();
+    }
+   
+   public static ObjectClass guessObjectClass(LdapConnection lconn, javax.naming.directory.Attribute attr) throws NamingException{
+        NamingEnumeration<?> valuesEnum = attr.getAll();
+        Set values = CollectionUtil.newCaseInsensitiveSet();
+
+        while (valuesEnum.hasMore()) {
+            values.add((String)valuesEnum.next());
+        }
+        // Account
+        for (String oc: lconn.getConfiguration().getAccountObjectClasses()) {
+            if (values.contains(oc)) {
+                log.info("Account ObjectClass found based on objectClass attribute value: {}", oc);
+                return ObjectClass.ACCOUNT;
+            }
+        }
+        // Group
+        for (String oc: lconn.getConfiguration().getGroupObjectClasses()) {
+            if (values.contains(oc)) {
+                log.info("Group ObjectClass found based on objectClass attribute value: {}", oc);
+                return ObjectClass.GROUP;
+            }
+        }
+        // now... let's guess for the best...
+        for (String oc: lconn.getConfiguration().getObjectClassesToSynchronize()) {
+            if (values.contains(oc)) {
+                log.info("{} ObjectClass found based on objectClass attribute value: {}", oc,oc);
+                return new ObjectClass(oc);
+            }
+        }
+       log.info("No suitable ObjectClass found based on objectClass attribute value. Returning UNKNOWN ObjectClass");
+       return UNKNOWN_OBJCLASS;
+    }
 
 }
