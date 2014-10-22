@@ -184,7 +184,8 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
         final Binding arguments = new Binding();
         arguments.setVariable(USERNAME, username);
         arguments.setVariable(PASSWORD, password);
-        return evaluateScript(scriptName, createBinding(arguments, OperationType.AUTHENTICATE, objectClass, null, null, options));
+        return evaluateScript(scriptName, createBinding(arguments, OperationType.AUTHENTICATE, objectClass, null, null, options),
+                getScriptEvaluator());
     }
 
     /**
@@ -230,7 +231,8 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
             }
         }
         arguments.setVariable(ATTRIBUTES, attributes);
-        return returnUid(OperationType.CREATE, objectClass, evaluateScript(scriptName, createBinding(arguments, OperationType.CREATE, objectClass, null, createAttributes, options)));
+        return returnUid(OperationType.CREATE, objectClass,evaluateScript(scriptName, createBinding(arguments,
+                OperationType.CREATE, objectClass, null, createAttributes, options), getScriptEvaluator()));
     }
 
     /**
@@ -256,7 +258,8 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
     }
 
     protected void executeDelete(String scriptName, ObjectClass objectClass, Uid uid, OperationOptions options) throws Exception {
-        evaluateScript(scriptName, createBinding(new Binding(), OperationType.DELETE, objectClass, uid, null, options));
+        evaluateScript(scriptName, createBinding(new Binding(), OperationType.DELETE, objectClass, uid, null, options),
+                getScriptEvaluator());
     }
 
     /**
@@ -288,7 +291,8 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
         final Binding arguments = new Binding();
         arguments.setVariable(USERNAME, username);
         return evaluateScript(scriptName,
-                createBinding(arguments, OperationType.RESOLVE_USERNAME, objectClass, null, null, options));
+                createBinding(arguments, OperationType.RESOLVE_USERNAME, objectClass, null, null, options),
+                getScriptEvaluator());
     }
 
     /**
@@ -323,7 +327,8 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
     protected Object executeSchema(String scriptName, Class<? extends Connector> connectorClass) {
         final Binding arguments = new Binding();
         arguments.setVariable(BUILDER, new ICFObjectBuilder(connectorClass));
-        return evaluateScript(scriptName, createBinding(arguments, OperationType.SCHEMA, null, null, null, null));
+        return evaluateScript(scriptName, createBinding(arguments, OperationType.SCHEMA, null, null, null, null),
+                getScriptEvaluator());
     }
 
     /**
@@ -336,16 +341,18 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
             try {
                 final GroovyCodeSource codeSource = new GroovyCodeSource(request.scriptText,
                         "Script" + System.currentTimeMillis() + ".groovy", "fix");
-                Binding binding = new Binding(request.scriptArguments);
-                binding.setVariable(LOGGER, logger);
-                binding.setVariable(CONFIGURATION, getConfiguration());
-                binding.setVariable(OPTIONS, options)
-                
-                Object result = InvokerHelper.createScript(getScriptedConfiguration().getGroovyScriptEngine().
-                        getGroovyClassLoader().parseClass(codeSource, false),                                                
-                        binding).run();
-                logger.ok("runScriptOnConnector ok");
-                return result;
+                Binding binding = new Binding();
+                for (Map.Entry<String, Object> entry : request.scriptArguments) {
+                    binding.setVariable(entry.key, entry.value)
+                }
+                return evaluateScript(null,
+                        createBinding(binding, OperationType.RUNSCRIPTONCONNECTOR, null, null, null, options),
+                        { String scriptName, Binding arguments ->
+                            arguments.setVariable(LOGGER, logger)
+                            return InvokerHelper.createScript(getScriptedConfiguration().getGroovyScriptEngine().
+                                    getGroovyClassLoader().parseClass(codeSource, false),
+                                    arguments).run();
+                        });                       
             } catch (final RuntimeException e) {
                 throw e;
             } catch (final Exception e) {
@@ -383,7 +390,8 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
         arguments.setVariable("scriptLanguage", request.scriptLanguage)
 
         return evaluateScript(scriptName,
-                createBinding(arguments, OperationType.RUNSCRIPTONRESOURCE, null, null, null, options));
+                createBinding(arguments, OperationType.RUNSCRIPTONRESOURCE, null, null, null, options),
+                getScriptEvaluator());
     }
 
     /**
@@ -445,7 +453,8 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
         arguments.setVariable(HANDLER, handler)
 
         return evaluateScript(scriptName,
-                createBinding(arguments, OperationType.SEARCH, objectClass, null, null, options));
+                createBinding(arguments, OperationType.SEARCH, objectClass, null, null, options),
+                getScriptEvaluator());
     }
 
     /**
@@ -488,7 +497,8 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
         final Binding arguments = new Binding();
         arguments.setVariable(TOKEN, token != null ? token.getValue() : null);
         arguments.setVariable(HANDLER, handler)
-        return evaluateScript(scriptName, createBinding(arguments, OperationType.SYNC, objectClass, null, null, options));
+        return evaluateScript(scriptName, createBinding(arguments, OperationType.SYNC, objectClass, null, null, options),
+                getScriptEvaluator());
     }
 
     /**
@@ -522,7 +532,8 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
 
     protected Object executeGetLatestSyncToken(String scriptName, ObjectClass objectClass) {
         return evaluateScript(scriptName,
-                createBinding(new Binding(), OperationType.GET_LATEST_SYNC_TOKEN, objectClass, null, null, null));
+                createBinding(new Binding(), OperationType.GET_LATEST_SYNC_TOKEN, objectClass, null, null, null),
+                getScriptEvaluator());
     }
 
     /**
@@ -546,7 +557,7 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
 
     protected void executeTest(String scriptName) {
         evaluateScript(scriptName,
-                createBinding(new Binding(), OperationType.TEST, null, null, null, null));
+                createBinding(new Binding(), OperationType.TEST, null, null, null, null), getScriptEvaluator());
     }
 
     /**
@@ -625,8 +636,14 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
         return genericUpdate(scriptName, OperationType.REMOVE_ATTRIBUTE_VALUES, objectClass, uid, valuesToRemove, options);
     }
 
-    protected Object evaluateScript(String scriptName, Binding arguments) throws Exception {
-        return getScriptedConfiguration().evaluate(scriptName, arguments, null)
+    protected Closure<Object> getScriptEvaluator() {
+        return { String scriptName, Binding arguments ->
+            return getScriptedConfiguration().evaluate(scriptName, arguments, null)
+        }
+    }
+
+    protected Object evaluateScript(String scriptName, Binding arguments, Closure<Object> scriptEvaluator) throws Exception {
+        return scriptEvaluator.call(scriptName, arguments)
     }
 
     protected Binding createBinding(
@@ -698,6 +715,7 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
             }
         }
         arguments.setVariable(ATTRIBUTES, attributesMap);
-        return evaluateScript(scriptName, createBinding(arguments, method, objectClass, uid, attributes, options));
+        return evaluateScript(scriptName, createBinding(arguments, method, objectClass, uid, attributes, options),
+                getScriptEvaluator());
     }
 }

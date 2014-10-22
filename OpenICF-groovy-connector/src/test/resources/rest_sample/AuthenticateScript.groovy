@@ -80,10 +80,10 @@ return authClient.request(GET) { req ->
     }
 
     response."401" = { resp, json ->
-        return new InvalidCredentialException();
+        throw new InvalidCredentialException();
     }
 
     response.failure = { resp, json ->
-        return new ConnectorSecurityException()
+        throw new ConnectorSecurityException()
     }
 }

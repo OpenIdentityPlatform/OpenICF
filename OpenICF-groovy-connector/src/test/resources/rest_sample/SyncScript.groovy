@@ -52,8 +52,6 @@ if (OperationType.GET_LATEST_SYNC_TOKEN.equals(operation)) {
         uri.path = '/changelog'
         uri.query = [
                 _queryFilter: 'true',
-                _fields     : '_id',
-                _sortKeys   : '-_id',
                 _pageSize   : '1'
         ]
 
@@ -67,7 +65,7 @@ if (OperationType.GET_LATEST_SYNC_TOKEN.equals(operation)) {
 
 
         response.failure = { resp, json ->
-            return new ConnectorException(json.message)
+            throw new ConnectorException(json.message)
         }
     }
 
@@ -140,7 +138,7 @@ if (OperationType.GET_LATEST_SYNC_TOKEN.equals(operation)) {
                                 }
 
                                 response.failure = { getResp, error ->
-                                    return new ConnectorException(error.message)
+                                    throw new ConnectorException(error.message)
                                 }
                             }
 
@@ -150,7 +148,7 @@ if (OperationType.GET_LATEST_SYNC_TOKEN.equals(operation)) {
                 }
 
                 response.failure = { resp, json ->
-                    return new ConnectorException(json.message)
+                    throw new ConnectorException(json.message)
                 }
             }
             break;
@@ -215,7 +213,7 @@ if (OperationType.GET_LATEST_SYNC_TOKEN.equals(operation)) {
                                 }
 
                                 response.failure = { getResp, error ->
-                                    return new ConnectorException(error.message)
+                                    throw new ConnectorException(error.message)
                                 }
                             }
 
@@ -226,7 +224,7 @@ if (OperationType.GET_LATEST_SYNC_TOKEN.equals(operation)) {
 
 
                 response.failure = { resp, json ->
-                    return new ConnectorException(json.message)
+                    throw new ConnectorException(json.message)
                 }
             }
             break;

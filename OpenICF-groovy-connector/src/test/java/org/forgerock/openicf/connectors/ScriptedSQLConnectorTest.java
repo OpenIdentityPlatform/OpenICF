@@ -34,13 +34,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.forgerock.openicf.connectors.scriptedsql.ScriptedSQLConnector;
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase;
-import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -49,7 +47,9 @@ import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Schema;
+import org.identityconnectors.framework.common.objects.ScriptContextBuilder;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.impl.api.local.LocalConnectorFacadeImpl;
 import org.identityconnectors.test.common.PropertyBag;
@@ -208,6 +208,16 @@ public class ScriptedSQLConnectorTest {
         Assert.assertNull(facade.getObject(ORG, uid, null));
     }
 
+    @Test
+    public void testScriptOnConnector() throws Exception {
+        final ConnectorFacade facade = getFacade(TEST_NAME);
+        ScriptContextBuilder builder = new ScriptContextBuilder();
+        builder.setScriptLanguage(ScriptedConnectorBase.GROOVY);
+        builder.setScriptText("assert null != connection\n assert null != options\n assert null != log\n assert isOK");
+        builder.addScriptArgument("isOK", true);
+        facade.runScriptOnConnector(builder.build(), new OperationOptionsBuilder().build());
+    }
+    
     private Set<Attribute> createUserAttributes(int index, String firstName, String lastName) {
         Set<Attribute> createAttributes = new HashSet<Attribute>();
         createAttributes.add(new Name(lastName.toLowerCase()));

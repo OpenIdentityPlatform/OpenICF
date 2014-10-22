@@ -77,7 +77,7 @@ if (filter != null) {
                 } else if (AttributeUtil.namesEqual(name, "members")) {
                     return "members"
                 } else {
-                    throw IllegalArgumentException("Unknown field name: ${name}");
+                    throw new IllegalArgumentException("Unknown field name: ${name}");
                 }
             },
             convertValue : { Attribute value ->

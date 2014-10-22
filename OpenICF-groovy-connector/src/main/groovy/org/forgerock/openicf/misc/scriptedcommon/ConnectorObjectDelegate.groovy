@@ -24,6 +24,7 @@
 
 package org.forgerock.openicf.misc.scriptedcommon
 
+import org.identityconnectors.common.StringUtil
 import org.identityconnectors.common.security.GuardedByteArray
 import org.identityconnectors.common.security.GuardedString
 import org.identityconnectors.framework.common.objects.Attribute
@@ -56,7 +57,7 @@ class ConnectorObjectDelegate extends AbstractICFBuilder<ConnectorObjectBuilder>
     }
 
     void uid(String uid, String revision) {
-        ((ConnectorObjectBuilder) builder).setUid(new Uid(uid, revision));
+        ((ConnectorObjectBuilder) builder).setUid(StringUtil.isBlank(revision) ? new Uid(uid) : new Uid(uid, revision));
     }
 
     void id(String id) {

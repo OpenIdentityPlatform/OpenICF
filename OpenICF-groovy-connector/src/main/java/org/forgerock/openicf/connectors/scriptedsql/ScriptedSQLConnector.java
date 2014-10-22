@@ -31,6 +31,7 @@ import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.ConnectorClass;
 
 import groovy.lang.Binding;
+import groovy.lang.Closure;
 
 /**
  * Main implementation of the ScriptedSQL Connector.
@@ -38,19 +39,20 @@ import groovy.lang.Binding;
  * @author Gael Allioux <gael.allioux@forgerock.com>
  */
 @ConnectorClass(displayNameKey = "groovy.sql.connector.display",
-        configurationClass = ScriptedSQLConfiguration.class,
-        messageCatalogPaths = {"org/forgerock/openicf/connectors/groovy/Messages",
-                "org/forgerock/openicf/connectors/scriptedsql/Messages"})
+        configurationClass = ScriptedSQLConfiguration.class, messageCatalogPaths = {
+            "org/forgerock/openicf/connectors/groovy/Messages",
+            "org/forgerock/openicf/connectors/scriptedsql/Messages" })
 public class ScriptedSQLConnector extends ScriptedConnectorBase<ScriptedSQLConfiguration> implements
         Connector {
 
-    protected Object evaluateScript(String scriptName, Binding arguments) throws Exception {
+    protected Object evaluateScript(String scriptName, Binding arguments,
+            Closure<Object> scriptEvaluator) throws Exception {
         final Connection c =
                 ((ScriptedSQLConfiguration) getScriptedConfiguration()).getDataSource()
                         .getConnection();
         try {
             arguments.setVariable(CONNECTION, c);
-            return super.evaluateScript(scriptName, arguments);
+            return scriptEvaluator.call(scriptName, arguments);
         } finally {
             // Put back the connection to pool
             c.close();

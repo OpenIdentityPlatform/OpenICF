@@ -30,9 +30,12 @@ import static org.mockito.Mockito.*;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.fest.assertions.core.Condition;
 import org.forgerock.openicf.connectors.scriptedcrest.ScriptedCRESTConnector;
 import org.forgerock.openicf.connectors.scriptedrest.ScriptedRESTConnector;
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase;
@@ -45,8 +48,10 @@ import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.SyncDelta;
+import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -58,7 +63,6 @@ import org.testng.Assert;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 /**
@@ -161,6 +165,14 @@ public class ScriptedRESTSampleTest {
 
         assertThat(AttributeUtil.filterUid(co.getAttributes())).containsAll(updateAttributes);
 
+        //Test query-all
+        OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        builder.setAttributesToGet(Uid.NAME);
+        assertThat(TestHelpers.searchToList(facade, ObjectClass.ACCOUNT, null, builder.build()))
+                .isNotEmpty();
+        assertThat(TestHelpers.searchToList(facade, ObjectClass.ACCOUNT, null, null)).isNotEmpty();
+
+
         facade.delete(ObjectClass.ACCOUNT, uid, null);
         Assert.assertNull(facade.getObject(ObjectClass.ACCOUNT, uid, null));
     }
@@ -213,20 +225,39 @@ public class ScriptedRESTSampleTest {
         final ConnectorFacade facade = getFacade();
         SyncToken userToken = facade.getLatestSyncToken(ObjectClass.ACCOUNT);
         assertThat(Integer.parseInt((String) userToken.getValue())).isGreaterThan(3);
-        SyncToken groupToken = facade.getLatestSyncToken(ObjectClass.ACCOUNT);
-        assertThat(Integer.parseInt((String) userToken.getValue())).isGreaterThan(3);
+        SyncToken groupToken = facade.getLatestSyncToken(ObjectClass.GROUP);
+        assertThat(Integer.parseInt((String) groupToken.getValue())).isGreaterThan(3);
 
-        SyncResultsHandler handler = mock(SyncResultsHandler.class);
-        when(handler.handle(any(SyncDelta.class))).thenReturn(true);
+        Set<Attribute> createAttributes = createUserAttributes(1, "John", "Doe");
+        Uid uid = facade.create(ObjectClass.ACCOUNT, createAttributes, null);
+        
+         final List<SyncDelta> deltas = new LinkedList<SyncDelta>();
+        facade.sync(ObjectClass.ACCOUNT, new SyncToken(0), new SyncResultsHandler() {
+            public boolean handle(SyncDelta delta) {
+                deltas.add(delta);
+                return true;
+            }
+        }, null);
 
-        facade.sync(ObjectClass.ACCOUNT, new SyncToken(0), handler, null);
-        verify(handler, atLeast(3)).handle(any(SyncDelta.class));
-
-        handler = mock(SyncResultsHandler.class);
+        assertThat(deltas).areAtLeast(1, new Condition<SyncDelta>() {
+            public boolean matches(SyncDelta value) {
+                return value.getDeltaType().equals(SyncDeltaType.CREATE);
+            }
+        }).areAtLeast(1, new Condition<SyncDelta>() {
+            public boolean matches(SyncDelta value) {
+                return value.getDeltaType().equals(SyncDeltaType.UPDATE);
+            }
+        }).areAtLeast(1, new Condition<SyncDelta>() {
+            public boolean matches(SyncDelta value) {
+                return value.getDeltaType().equals(SyncDeltaType.DELETE);
+            }
+        });
+        final SyncResultsHandler handler = mock(SyncResultsHandler.class);
         when(handler.handle(any(SyncDelta.class))).thenReturn(true);
 
         facade.sync(ObjectClass.GROUP, new SyncToken(0), handler, null);
         verify(handler, atLeast(3)).handle(any(SyncDelta.class));
+        facade.delete(ObjectClass.ACCOUNT, uid, null);
     }
 
     private Set<Attribute> createUserAttributes(int index, String firstName, String lastName) {
