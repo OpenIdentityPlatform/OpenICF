@@ -143,7 +143,6 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
             search.execute(new LdapSearchResultsHandler() {
                 public boolean handle(String baseDN, SearchResult result) throws NamingException {
                     results[0] = true;
-                    boolean handled = true;
                     LdapEntry entry = LdapEntry.create(baseDN, result);
 
                     int changeNumber = convertToInt(getStringAttrValue(entry.getAttributes(), changeNumberAttr), -1);
@@ -153,11 +152,11 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
 
                     SyncDelta delta = createSyncDelta(entry, changeNumber, options.getAttributesToGet());
                     if (delta != null) {
-                        handled = handler.handle(delta);
-                        if (!handled){
-                            results[0] = false;
-                        } else{
+                        boolean handled = handler.handle(delta);
+                        if (handled){
                             processedChangeNumber[0] = changeNumber;
+                        } else{
+                            results[0] = false;
                         }
                         return handled;
                     }
@@ -212,6 +211,10 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
                 String guid = null;
                 if ("entryUUID".equalsIgnoreCase(uidAttr)) {
                     guid = getStringAttrValue(changeLogEntry.getAttributes(), "targetEntryUUID");
+                    // dirty hack for now... See OPENICF-316
+                    if (guid == null) {
+                        guid = getStringAttrValue(changeLogEntry.getAttributes(), "targetUniqueID");
+                    }
                 } else if ("nsUniqueId".equalsIgnoreCase(uidAttr)) {
                     // SunDS/ODSEE
                     guid = getStringAttrValue(changeLogEntry.getAttributes(), "targetUniqueID");
