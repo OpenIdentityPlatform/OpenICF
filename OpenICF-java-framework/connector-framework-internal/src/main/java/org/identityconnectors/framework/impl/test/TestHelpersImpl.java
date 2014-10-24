@@ -76,6 +76,8 @@ public class TestHelpersImpl implements TestHelpersSpi {
         info.setMessages(createDummyMessages());
         try {
             APIConfigurationImpl rv = createDefaultAPIConfiguration(info);
+            rv.setConfigurationProperties(JavaClassProperties.createConfigurationProperties(config));
+
             info.setDefaultAPIConfiguration(rv);
             return rv;
         } catch (Exception e) {
