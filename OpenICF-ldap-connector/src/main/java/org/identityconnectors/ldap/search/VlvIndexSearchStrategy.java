@@ -19,10 +19,13 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2013-2014 ForgeRock AS
  */
 package org.identityconnectors.ldap.search;
 
-import static org.identityconnectors.common.StringUtil.isNotBlank;
+import com.sun.jndi.ldap.Ber;
+import com.sun.jndi.ldap.BerDecoder;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,11 +40,15 @@ import javax.naming.ldap.Control;
 import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.SortControl;
 import javax.naming.ldap.SortResponseControl;
+import javax.naming.ldap.BasicControl;
 
 import org.identityconnectors.common.logging.Log;
+import static org.identityconnectors.common.StringUtil.isNotBlank;
 
-import com.sun.jndi.ldap.ctl.VirtualListViewControl;
-import com.sun.jndi.ldap.ctl.VirtualListViewResponseControl;
+import org.forgerock.opendj.ldap.ByteString;
+
+import org.forgerock.opendj.ldap.controls.VirtualListViewRequestControl;
+import org.forgerock.opendj.ldap.controls.VirtualListViewResponseControl;
 
 public class VlvIndexSearchStrategy extends LdapSearchStrategy {
 
@@ -100,12 +107,12 @@ public class VlvIndexSearchStrategy extends LdapSearchStrategy {
             SortControl sortControl = new SortControl(vlvIndexAttr, Control.CRITICAL);
             
             int afterCount = blockSize - 1;
-            VirtualListViewControl vlvControl = new VirtualListViewControl(index, lastListSize, 0, afterCount, Control.CRITICAL);
-            vlvControl.setContextID(cookie);
+            VirtualListViewRequestControl vlvreq = VirtualListViewRequestControl.newOffsetControl(Control.CRITICAL, index, lastListSize, 0, afterCount, ByteString.valueOf(cookie));
+            BasicControl vlvControl = new BasicControl(VirtualListViewRequestControl.OID, Control.CRITICAL, vlvreq.getValue().toByteArray());
             
             getLog().ok("New search: target = {0}, afterCount = {1}", index, afterCount);
             ctx.setRequestControls(new Control[] { sortControl, vlvControl });
-
+            
             // Need to process the response controls, which are available after
             // all results have been processed, before sending anything to the caller
             // (because processing the response controls might throw exceptions that
@@ -176,14 +183,26 @@ public class VlvIndexSearchStrategy extends LdapSearchStrategy {
                         throw sortControl.getException();
                     }
                 }
-                if (control instanceof VirtualListViewResponseControl) {
-                    VirtualListViewResponseControl vlvControl = (VirtualListViewResponseControl) control;
-                    if (vlvControl.getResultCode() == 0) {
-                        lastListSize = vlvControl.getListSize();
-                        cookie = vlvControl.getContextID();
-                        getLog().ok("Response control: lastListSize = {0}", lastListSize);
-                    } else {
-                        throw vlvControl.getException();
+                if (control.getID().equalsIgnoreCase(VirtualListViewResponseControl.OID)) {
+                    byte[] value = control.getEncodedValue();
+                    if ((value != null) && (value.length > 0)) {
+                        BerDecoder decoder = new BerDecoder(value, 0, value.length);
+
+                        try {
+                            decoder.parseSeq(null);
+                            int offset = decoder.parseInt();
+                            lastListSize = decoder.parseInt();
+                            getLog().ok("Response control: lastListSize = {0}", lastListSize);
+                            int code = decoder.parseEnumeration();
+                            if ((decoder.bytesLeft() > 0) && (decoder.peekByte() == Ber.ASN_OCTET_STR)) {
+                                cookie = decoder.parseOctetString(Ber.ASN_OCTET_STR, null);
+                            }
+                            if (code != 0) {
+                                throw new NamingException("The view operation has failed on LDAP server");
+                            }
+                        } catch (IOException ex) {
+                            getLog().error("Can't decode response control");
+                        }
                     }
                 }
             }

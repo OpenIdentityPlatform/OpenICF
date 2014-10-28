@@ -51,7 +51,6 @@
         <url>http://builds.forgerock.org/job/OpenICF - Ldap Connector</url>
     </ciManagement>
     <properties>
-        <openicf.osgi.embed>ldapbp</openicf.osgi.embed>
         <connectorPackage>org.identityconnectors.ldap</connectorPackage>
         <connectorClass>LdapConnector</connectorClass>
     </properties>
@@ -79,24 +78,6 @@
         </repository>
     </repositories>
     <dependencies>
-        <dependency>
-            <groupId>com.sun</groupId>
-            <artifactId>ldapbp</artifactId>
-            <version>1.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <!-- Java 6 has the JNDI
-        <dependency>
-            <groupId>com.sun.jndi</groupId>
-            <artifactId>providerutil</artifactId>
-            <version>1.2</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jndi</groupId>
-            <artifactId>ldap</artifactId>
-            <version>1.2.4</version>
-        </dependency-->
-
         <!-- Test Dependencies -->
         <dependency>
             <groupId>org.testng</groupId>
@@ -116,8 +97,7 @@
         <dependency>
             <groupId>org.forgerock.opendj</groupId>
             <artifactId>opendj-ldap-sdk</artifactId>
-            <version>3.0.0-M2</version>
-            <scope>test</scope>
+            <version>2.6.9</version>
         </dependency>
         <dependency>
             <groupId>org.forgerock.opendj</groupId>

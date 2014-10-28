@@ -34,8 +34,8 @@ import javax.naming.directory.Attributes;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.ldap.LdapConnection.ServerType;
-import com.sun.jndi.ldap.ctl.PagedResultsControl;
-import com.sun.jndi.ldap.ctl.VirtualListViewControl;
+import javax.naming.ldap.PagedResultsControl;
+import org.forgerock.opendj.ldap.controls.VirtualListViewRequestControl;
 
 public class LdapConnectionTests extends LdapConnectorTestBase {
 
@@ -166,7 +166,7 @@ public class LdapConnectionTests extends LdapConnectorTestBase {
     public void testSupportedControls() {
         LdapConnection conn = new LdapConnection(newConfiguration());
         assertTrue(conn.supportsControl(PagedResultsControl.OID));
-        assertTrue(conn.supportsControl(VirtualListViewControl.OID));
+        assertTrue(conn.supportsControl(VirtualListViewRequestControl.OID));
     }
 
     @Test

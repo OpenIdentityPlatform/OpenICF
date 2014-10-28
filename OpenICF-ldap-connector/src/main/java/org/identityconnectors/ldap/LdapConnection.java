@@ -41,9 +41,9 @@ import javax.naming.AuthenticationException;
 import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
-import javax.naming.ldap.Control;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
+import javax.naming.ldap.Control;
 
 import org.identityconnectors.common.Pair;
 import org.identityconnectors.common.logging.Log;
@@ -51,11 +51,11 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.common.security.GuardedString.Accessor;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.PasswordExpiredException;
-import org.identityconnectors.ldap.schema.LdapSchemaMapping;
-
-import com.sun.jndi.ldap.ctl.PasswordExpiredResponseControl;
 import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
+import org.identityconnectors.ldap.schema.LdapSchemaMapping;
+
+import org.forgerock.opendj.ldap.controls.PasswordExpiredResponseControl;
 
 public class LdapConnection {
 
@@ -277,11 +277,10 @@ public class LdapConnection {
     private static boolean hasPasswordExpiredControl(Control[] controls) {
         if (controls != null) {
             for (Control control : controls) {
-                if (control instanceof PasswordExpiredResponseControl) {
+                if (control.getID().equalsIgnoreCase(PasswordExpiredResponseControl.OID))
                     return true;
                 }
             }
-        }
         return false;
     }
 

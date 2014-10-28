@@ -23,7 +23,6 @@
  */
 package org.identityconnectors.ldap.sync.activedirectory;
 
-import com.sun.jndi.ldap.ctl.DirSyncResponseControl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -378,8 +377,8 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                     for (Control control : rspCtls) {
                         if (control instanceof DirSyncResponseControl) {
                             DirSyncResponseControl dirSyncControl = (DirSyncResponseControl) control;
-                            dirSyncCookie = dirSyncControl.getCookie();
-                            hasMore = dirSyncControl.hasMoreData();
+                            dirSyncCookie = dirSyncControl.getResponseCookie();
+                            hasMore = dirSyncControl.hasMore();
                         }
                     }
                 }
@@ -451,8 +450,8 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                     for (Control control : rspCtls) {
                         if (control instanceof DirSyncResponseControl) {
                             DirSyncResponseControl dirSyncControl = (DirSyncResponseControl) control;
-                            dirSyncCookie = dirSyncControl.getCookie();
-                            hasMore = dirSyncControl.hasMoreData();
+                            dirSyncCookie = dirSyncControl.getResponseCookie();
+                            hasMore = dirSyncControl.hasMore();
                         }
                     }
                 }
