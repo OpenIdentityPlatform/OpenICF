@@ -589,21 +589,21 @@ public class LdapUtil {
         // Account
         for (String oc: lconn.getConfiguration().getAccountObjectClasses()) {
             if (values.contains(oc)) {
-                log.info("Account ObjectClass found based on objectClass attribute value: {}", oc);
+                log.info("Account ObjectClass found based on objectClass attribute value: {0}", oc);
                 return ObjectClass.ACCOUNT;
             }
         }
         // Group
         for (String oc: lconn.getConfiguration().getGroupObjectClasses()) {
             if (values.contains(oc)) {
-                log.info("Group ObjectClass found based on objectClass attribute value: {}", oc);
+                log.info("Group ObjectClass found based on objectClass attribute value: {0}", oc);
                 return ObjectClass.GROUP;
             }
         }
         // now... let's guess for the best...
         for (String oc: lconn.getConfiguration().getObjectClassesToSynchronize()) {
             if (values.contains(oc)) {
-                log.info("{} ObjectClass found based on objectClass attribute value: {}", oc,oc);
+                log.info("{0} ObjectClass found based on objectClass attribute value", oc);
                 return new ObjectClass(oc);
             }
         }
