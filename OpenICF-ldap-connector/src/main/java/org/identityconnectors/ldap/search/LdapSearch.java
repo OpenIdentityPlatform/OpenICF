@@ -24,8 +24,6 @@
  */
 package org.identityconnectors.ldap.search;
 
-import org.forgerock.opendj.ldap.controls.VirtualListViewRequestControl;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -425,10 +423,7 @@ public class LdapSearch {
 
         if ((null != options.getPageSize() && options.getPageSize() > 0) && conn.supportsControl(PagedResultsControl.OID)) {
             strategy = new PagedSearchStrategy(options.getPageSize(), options.getPagedResultsCookie(), options.getPagedResultsOffset(), (SearchResultsHandler) handler, sortKeys);
-        } else if (useBlocks && !usePagedResultsControl && conn.supportsControl(VirtualListViewRequestControl.OID)) {
-            String vlvSortAttr = conn.getConfiguration().getVlvSortAttribute();
-            strategy = new VlvIndexSearchStrategy(vlvSortAttr, pageSize);
-        } else if (useBlocks && conn.supportsControl(PagedResultsControl.OID)) {
+        } else if ((useBlocks || usePagedResultsControl) && conn.supportsControl(PagedResultsControl.OID)) {
             strategy = new SimplePagedSearchStrategy(pageSize, sortKeys);
         } else {
             strategy = new DefaultSearchStrategy(false, sortKeys);

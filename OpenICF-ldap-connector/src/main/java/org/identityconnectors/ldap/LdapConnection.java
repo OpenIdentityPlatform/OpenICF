@@ -55,8 +55,6 @@ import org.identityconnectors.framework.common.exceptions.ConnectionFailedExcept
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.identityconnectors.ldap.schema.LdapSchemaMapping;
 
-import org.forgerock.opendj.ldap.controls.PasswordExpiredResponseControl;
-
 public class LdapConnection {
 
     // TODO: SASL authentication, "dn:entryDN" user name.
@@ -102,6 +100,7 @@ public class LdapConnection {
     }
     private static final String LDAP_CTX_FACTORY = "com.sun.jndi.ldap.LdapCtxFactory";
     public static final String SASL_GSSAPI = "SASL-GSSAPI";
+    public static final String PASSWORD_EXPIRED_OID = "2.16.840.1.113730.3.4.4";
     private static final Log log = Log.getLog(LdapConnection.class);
     private final LdapConfiguration config;
     private final LdapSchemaMapping schemaMapping;
@@ -277,7 +276,7 @@ public class LdapConnection {
     private static boolean hasPasswordExpiredControl(Control[] controls) {
         if (controls != null) {
             for (Control control : controls) {
-                if (control.getID().equalsIgnoreCase(PasswordExpiredResponseControl.OID))
+                if (PASSWORD_EXPIRED_OID.equalsIgnoreCase(control.getID()))
                     return true;
                 }
             }

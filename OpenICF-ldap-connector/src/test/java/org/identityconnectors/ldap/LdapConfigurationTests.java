@@ -309,7 +309,6 @@ public class LdapConfigurationTests {
         assertTrue(config.isUseBlocks());
         assertEquals(100, config.getBlockSize());
         assertFalse(config.isUsePagedResultControl());
-        assertEquals("uid", config.getVlvSortAttribute());
         assertEquals("entryUUID", config.getUidAttribute());
         assertTrue(config.isReadSchema());
         assertEquals(0, config.getBaseContextsToSynchronize().length);

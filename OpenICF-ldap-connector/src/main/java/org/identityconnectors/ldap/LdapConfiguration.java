@@ -180,11 +180,6 @@ public class LdapConfiguration extends AbstractConfiguration {
     private boolean usePagedResultControl = false;
 
     /**
-     * The attribute used as the sort key for the VLV index.
-     */
-    private String vlvSortAttribute = "uid";
-
-    /**
      * The LDAP attribute to map Uid to.
      */
     private String uidAttribute = "entryUUID";
@@ -275,8 +270,6 @@ public class LdapConfiguration extends AbstractConfiguration {
         if (blockSize <= 0) {
             failValidation("blockSize.legalValue");
         }
-
-        checkNotBlank(vlvSortAttribute, "vlvSortAttribute.notBlank");
 
         checkNotBlank(uidAttribute, "uidAttribute.notBlank");
 
@@ -581,14 +574,6 @@ public class LdapConfiguration extends AbstractConfiguration {
         this.usePagedResultControl = usePagedResultControl;
     }
 
-    public String getVlvSortAttribute() {
-        return vlvSortAttribute;
-    }
-
-    public void setVlvSortAttribute(String vlvSortAttribute) {
-        this.vlvSortAttribute = vlvSortAttribute;
-    }
-
     public String getUidAttribute() {
         return uidAttribute;
     }
@@ -820,7 +805,6 @@ public class LdapConfiguration extends AbstractConfiguration {
         builder.append(useBlocks);
         builder.append(blockSize);
         builder.append(usePagedResultControl);
-        builder.append(vlvSortAttribute);
         builder.append(uidAttribute);
         builder.append(readSchema);
         // Sync configuration properties.
