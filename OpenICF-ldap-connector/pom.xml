@@ -106,6 +106,12 @@
             <version>1.9.0</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.forgerock.opendj</groupId>
+            <artifactId>opendj-ldap-sdk</artifactId>
+            <version>2.6.9</version>
+            <type>jar</type>
+        </dependency>
     </dependencies>
 
     <build>
