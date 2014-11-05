@@ -40,6 +40,7 @@ import org.forgerock.json.resource.ResourceName
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration
 import org.identityconnectors.common.Assertions
 import org.identityconnectors.common.security.GuardedString
+import org.identityconnectors.framework.spi.ConfigurationClass
 import org.identityconnectors.framework.spi.ConfigurationProperty
 
 import java.util.concurrent.Future
@@ -49,6 +50,7 @@ import java.util.concurrent.Future
  *
  * @author Laszlo Hordos
  */
+@ConfigurationClass(skipUnsupported = true)
 class ScriptedCRESTConfiguration extends ScriptedConfiguration {
 
     // Exposed configuration properties.
@@ -231,7 +233,7 @@ class ScriptedCRESTConfiguration extends ScriptedConfiguration {
                         init = paramClosure
                     },
                     release      : { Closure paramClosure ->
-                        release = paramClosure
+                        setReleaseClosure(paramClosure)
                     },
                     beforeRequest: { Closure paramClosure ->
                         beforeRequest = paramClosure

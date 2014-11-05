@@ -196,7 +196,7 @@ public class ScriptedRESTConfiguration extends ScriptedConfiguration {
                         initClosure = c
                     },
                     release : { Closure c ->
-                        releaseClosure = c
+                        setReleaseClosure(c)
                     },
                     decorate: { Closure c ->
                         decorateClosure = c

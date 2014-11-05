@@ -170,7 +170,9 @@ public abstract class RESTTestBase {
 
     @AfterClass
     public synchronized void afterClass() {
-        ((LocalConnectorFacadeImpl) facade).dispose();
+        if (facade instanceof LocalConnectorFacadeImpl) {
+            ((LocalConnectorFacadeImpl) facade).dispose();
+        }
         facade = null;
     }
 

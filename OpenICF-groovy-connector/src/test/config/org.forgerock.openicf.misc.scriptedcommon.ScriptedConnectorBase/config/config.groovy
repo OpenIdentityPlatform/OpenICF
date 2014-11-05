@@ -54,6 +54,27 @@ configuration {
 }
 
 environments {
+    AZURE_AD {
+        domain = null
+        configuration {
+            classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/azure_ad/shared").file, "UTF-8")]
+            scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/azure_ad/scripts").file, "UTF-8")]
+            authenticateScriptFileName = null
+            resolveUsernameScriptFileName = null
+            scriptOnResourceScriptFileName = null
+            customizerScriptFileName = "CustomizerScript.groovy"
+
+            customConfiguration = "graphServiceUrl = 'https://graph.windows.net/__configureme__'\n" +
+                    "oauth2.authority = 'https://login.windows.net/__configureme__'\n" +
+                    "oauth2.redirectURI = '__configureme__'\n" +
+                    "oauth2.resourceURI = 'https://graph.windows.net'\n"
+            
+            customSensitiveConfiguration = new GuardedString(("oauth2.clientId = '__configureme__'\n" +
+                    "oauth2.clientSecret = '__configureme__'\n" +
+                    "oauth2.username = '__configureme__'\n" +
+                    "oauth2.password = '__configureme__'").toCharArray())
+        }
+    }
     GROOVY {
         configuration {
             classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/groovy/").file, "UTF-8")]
@@ -73,7 +94,7 @@ environments {
             syncScriptFileName = null
             testScriptFileName = "TestScript.groovy"
             updateScriptFileName = null
-            
+
             customConfiguration = "test = [public : true, sensitive : false]\n" +
                     "client_secret = '__configureme__'\n" +
                     "refresh_token = '__configureme__'"

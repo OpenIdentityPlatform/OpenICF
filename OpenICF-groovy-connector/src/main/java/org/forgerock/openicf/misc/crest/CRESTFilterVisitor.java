@@ -50,7 +50,7 @@ import org.identityconnectors.framework.common.objects.filter.StartsWithFilter;
  *
  * @author Laszlo Hordos
  */
-class CRESTFilterVisitor implements FilterVisitor<QueryFilter, VisitorParameter> {
+public class CRESTFilterVisitor implements FilterVisitor<QueryFilter, VisitorParameter> {
 
     public static final CRESTFilterVisitor VISITOR = new CRESTFilterVisitor();
 

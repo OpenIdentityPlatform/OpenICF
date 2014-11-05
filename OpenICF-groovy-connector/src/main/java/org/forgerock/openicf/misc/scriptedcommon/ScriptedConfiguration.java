@@ -28,6 +28,8 @@ import static org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase.LO
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,6 +51,7 @@ import org.identityconnectors.framework.common.exceptions.ConfigurationException
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.spi.AbstractConfiguration;
+import org.identityconnectors.framework.spi.ConfigurationClass;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
 import org.identityconnectors.framework.spi.StatefulConfiguration;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
@@ -63,6 +66,7 @@ import org.identityconnectors.framework.spi.operations.TestOp;
 import org.identityconnectors.framework.spi.operations.UpdateOp;
 
 import groovy.lang.Binding;
+import groovy.lang.Closure;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyCodeSource;
 import groovy.lang.Script;
@@ -79,6 +83,7 @@ import groovy.util.ScriptException;
  *
  * @author Gael Allioux <gael.allioux@forgerock.com>
  */
+@ConfigurationClass(skipUnsupported = true)
 public class ScriptedConfiguration extends AbstractConfiguration implements StatefulConfiguration {
 
     /**
@@ -429,6 +434,25 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         config.setClasspathList(Arrays.asList(classpath));
     }
 
+    
+    private String[] scriptRoots = null;
+    
+    /**
+     * @return the script roots
+     */
+    @ConfigurationProperty(groupMessageKey = "groovy.engine", required = true)
+    public String[] getScriptRoots() {        
+        return scriptRoots;
+    }
+
+    /**
+     * Sets the script root folders.
+     */
+    public void setScriptRoots(String[] scriptRoots) {
+        this.scriptRoots = scriptRoots;
+    }
+
+
     /**
      * Returns true if verbose operation has been requested.
      */
@@ -604,6 +628,16 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     private final ConcurrentMap<String, Object> propertyBag =
             new ConcurrentHashMap<String, Object>();
 
+    private Closure releaseClosure = null;
+
+    public void setReleaseClosure(Closure releaseClosure) {
+        this.releaseClosure = releaseClosure;
+    }
+
+    public Closure getReleaseClosure() {
+        return releaseClosure;
+    }
+
     /**
      * Returns the Map shared between the Connector instances.
      *
@@ -622,7 +656,15 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
 
     public void release() {
         synchronized (this) {
+            Closure c = getReleaseClosure();
+            if (null != c) {
+                Closure clone = c.rehydrate(this, this, this);
+                clone.setResolveStrategy(Closure.DELEGATE_FIRST);
+                clone.call();
+                releaseClosure = null;
+            }
             groovyScriptEngine = null;
+            propertyBag.clear();
             loggerCache.clear();
             logger.ok("Shared state ScriptedConfiguration is successfully released");
         }
@@ -797,13 +839,36 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         // parent. For safety remove this from roots
         URL forbiddenLocation = getClass().getProtectionDomain().getCodeSource().getLocation();
         List<URL> safeRoots = new ArrayList<URL>();
-        for (URL root : loader.getURLs()) {
-            if (forbiddenLocation.equals(root)) {
-                logger.info(
-                        "The connector source location is removed from the roots. This url is not allowed: {0}",
-                        forbiddenLocation);
+        String[] customRoots = getScriptRoots();
+        if (null != customRoots && customRoots.length > 0) {
+            for (String sr : customRoots) {
+                if (null != sr) {
+                    try {
+                        URL root =  new File(sr).toURI().toURL();
+                        if (forbiddenLocation.equals(root)) {
+                            logger.info(
+                                    "The connector source location is removed from the roots. This url is not allowed: {0}",
+                                    forbiddenLocation);
+                        }
+                        safeRoots.add(root);
+                    } catch (MalformedURLException e) {
+                        throw new ConfigurationException(e.getMessage(), e);
+                    }
+                }
             }
-            safeRoots.add(root);
+        } else {
+            logger.ok("Fallback to use the classpath for scripts.");
+        }
+        
+        if (safeRoots.isEmpty()) {
+            for (URL root : loader.getURLs()) {
+                if (forbiddenLocation.equals(root)) {
+                    logger.info(
+                            "The connector source location is removed from the roots. This url is not allowed: {0}",
+                            forbiddenLocation);
+                }
+                safeRoots.add(root);
+            }
         }
         return safeRoots.toArray(new URL[safeRoots.size()]);
     }
