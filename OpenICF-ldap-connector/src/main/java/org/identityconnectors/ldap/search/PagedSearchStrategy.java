@@ -88,13 +88,19 @@ public class PagedSearchStrategy extends LdapSearchStrategy {
         }
 
         if (StringUtil.isNotBlank(pagedResultsCookie)) {
-                // we need to determine which base context we're dealing with...
+            // we need to determine which base context we're dealing with...
             // The cookie value is <base64 encoded LDAP cookie>:<index in baseDNs>
             String[] split = pagedResultsCookie.split(":", 2);
             // bit of sanity check...
             if (split.length == 2) {
-                cookie = Base64.decode(split[0]);
+                try{
+                    cookie = Base64.decode(split[0]);
+                } catch (RuntimeException e) {
+                    throw new ConnectorException("PagedResultsCookie is not properly encoded",e);
+                }
                 context = Integer.valueOf(split[1]);
+            } else {
+                throw new ConnectorException("PagedResultsCookie is not properly formatted");
             }
         }
 
