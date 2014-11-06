@@ -50,7 +50,6 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
-import org.identityconnectors.framework.common.objects.ObjectClassUtil;
 import static org.identityconnectors.framework.common.objects.ObjectClassUtil.createSpecialName;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import static org.identityconnectors.ldap.LdapEntry.isDNAttribute;
@@ -534,7 +533,7 @@ public class LdapUtil {
                 }
             }
         } catch (NamingException e) {
-            log.error(e,"Error reading group member attribute");
+            log.warn(e,"Error reading group member attribute");
         }
         return AttributeBuilder.build("_memberId", membersIds);
     }
@@ -548,7 +547,7 @@ public class LdapUtil {
                 }
             }
         } catch (NamingException e) {
-            log.error(e,"Error reading group member attribute");
+            log.warn(e,"Error reading group member attribute");
         }
         return AttributeBuilder.build("_memberId", membersIds);
     }
@@ -610,5 +609,16 @@ public class LdapUtil {
        log.info("No suitable ObjectClass found based on objectClass attribute value. Returning UNKNOWN ObjectClass");
        return UNKNOWN_OBJCLASS;
     }
+   
+   public static boolean isSameDistinguishedName(String first, LdapContext context) {
+        try {
+            LdapName lfirst = new LdapName(first);
+            LdapName lsecond = new LdapName(context.getEnvironment().get("java.naming.security.principal").toString());
+            return lfirst.equals(lsecond);
+        } catch (NamingException ex) {
+            log.info("Can't compare DN {0} with the operation's context DN", first);
+        }
+        return false;
+   }
 
 }

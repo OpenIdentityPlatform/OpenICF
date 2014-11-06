@@ -41,14 +41,18 @@ import javax.naming.NameAlreadyBoundException;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
+import javax.naming.NoPermissionException;
 import javax.naming.directory.Attributes;
+import javax.naming.directory.BasicAttribute;
 import javax.naming.directory.BasicAttributes;
 import javax.naming.directory.DirContext;
+import javax.naming.directory.InvalidAttributeValueException;
 import javax.naming.directory.ModificationItem;
 import javax.naming.ldap.LdapContext;
 
 import org.identityconnectors.common.Pair;
 import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.common.security.SecurityUtil;
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
@@ -66,6 +70,7 @@ import org.identityconnectors.ldap.LdapConstants;
 import org.identityconnectors.ldap.GroupHelper.GroupMembership;
 import org.identityconnectors.ldap.GroupHelper.Modification;
 import org.identityconnectors.ldap.LdapAuthenticate;
+import org.identityconnectors.ldap.LdapUtil;
 import org.identityconnectors.ldap.schema.GuardedPasswordAttribute;
 import org.identityconnectors.ldap.schema.GuardedPasswordAttribute.Accessor;
 import org.identityconnectors.ldap.search.LdapSearches;
@@ -111,80 +116,87 @@ public class LdapUpdate extends LdapModifyOperation {
         if (newPosixRefAttrs != null && newPosixRefAttrs.isEmpty()) {
             checkRemovedPosixRefAttrs(posixMember.getPosixRefAttributes(), posixMember.getPosixGroupMemberships());
         }
-        
+
         if (StringUtil.isNotBlank(options.getRunAsUser())) {
             String dn = new LdapAuthenticate(conn, oclass, options.getRunAsUser(), options).getDn();
             runAsContext = conn.getRunAsContext(dn, options.getRunWithPassword());
         }
-
-        // Rename the entry if needed.
-        String oldEntryDN = null;
-        if ((newName != null) && (!normalizeLdapString(entryDN).equalsIgnoreCase(normalizeLdapString(newEntryDN)))) {
-            if (newPosixRefAttrs != null && conn.getConfiguration().isMaintainPosixGroupMembership() || posixGroups != null) {
-                posixMember.getPosixRefAttributes();
-            }
-            oldEntryDN = entryDN;
-            try {
+        
+        try {
+            // Rename the entry if needed.
+            String oldEntryDN = null;
+            if ((newName != null) && (!normalizeLdapString(entryDN).equalsIgnoreCase(normalizeLdapString(newEntryDN)))) {
+                if (newPosixRefAttrs != null && conn.getConfiguration().isMaintainPosixGroupMembership() || posixGroups != null) {
+                    posixMember.getPosixRefAttributes();
+                }
+                oldEntryDN = entryDN;
                 if (runAsContext == null) {
                     conn.getInitialContext().rename(oldEntryDN, newEntryDN);
                 } else {
                     runAsContext.rename(oldEntryDN, newEntryDN);
                 }
-            } catch (NameAlreadyBoundException e) {
-                throw new AlreadyExistsException(e);
-            } catch (NamingException e) {
-                throw new ConnectorException(e);
+                entryDN = newEntryDN;
             }
-            entryDN = newEntryDN;
-        }
-        // Update the attributes.
-        modifyAttributes(entryDN, attrToModify, DirContext.REPLACE_ATTRIBUTE, runAsContext);
+            // Update the attributes.
+            modifyAttributes(entryDN, attrToModify, DirContext.REPLACE_ATTRIBUTE, runAsContext);
 
-        // Update the LDAP groups.
-        Modification<GroupMembership> ldapGroupMod = new Modification<GroupMembership>();
-        if (oldEntryDN != null && conn.getConfiguration().isMaintainLdapGroupMembership()) {
-            Set<GroupMembership> members = groupHelper.getLdapGroupMemberships(oldEntryDN);
-            ldapGroupMod.removeAll(members);
-            for (GroupMembership member : members) {
-                ldapGroupMod.add(new GroupMembership(entryDN, member.getGroupDN()));
-            }
-        }
-        if (ldapGroups != null) {
-            Set<GroupMembership> members = groupHelper.getLdapGroupMemberships(entryDN);
-            ldapGroupMod.removeAll(members);
-            ldapGroupMod.clearAdded(); // Since we will be replacing with the new groups.
-            for (String ldapGroup : ldapGroups) {
-                ldapGroupMod.add(new GroupMembership(entryDN, ldapGroup));
-            }
-        }
-        groupHelper.modifyLdapGroupMemberships(ldapGroupMod, runAsContext);
-
-        // Update the POSIX groups.
-        Modification<GroupMembership> posixGroupMod = new Modification<GroupMembership>();
-        if (newPosixRefAttrs != null && conn.getConfiguration().isMaintainPosixGroupMembership()) {
-            Set<String> removedPosixRefAttrs = new HashSet<String>(posixMember.getPosixRefAttributes());
-            removedPosixRefAttrs.removeAll(newPosixRefAttrs);
-            Set<GroupMembership> members = posixMember.getPosixGroupMembershipsByAttrs(removedPosixRefAttrs);
-            posixGroupMod.removeAll(members);
-            if (!members.isEmpty()) {
-                String firstPosixRefAttr = getFirstPosixRefAttr(entryDN, newPosixRefAttrs);
+            // Update the LDAP groups.
+            Modification<GroupMembership> ldapGroupMod = new Modification<GroupMembership>();
+            if (oldEntryDN != null && conn.getConfiguration().isMaintainLdapGroupMembership()) {
+                Set<GroupMembership> members = groupHelper.getLdapGroupMemberships(oldEntryDN);
+                ldapGroupMod.removeAll(members);
                 for (GroupMembership member : members) {
-                    posixGroupMod.add(new GroupMembership(firstPosixRefAttr, member.getGroupDN()));
+                    ldapGroupMod.add(new GroupMembership(entryDN, member.getGroupDN()));
+                }
+            }
+            if (ldapGroups != null) {
+                Set<GroupMembership> members = groupHelper.getLdapGroupMemberships(entryDN);
+                ldapGroupMod.removeAll(members);
+                ldapGroupMod.clearAdded(); // Since we will be replacing with the new groups.
+                for (String ldapGroup : ldapGroups) {
+                    ldapGroupMod.add(new GroupMembership(entryDN, ldapGroup));
+                }
+            }
+            groupHelper.modifyLdapGroupMemberships(ldapGroupMod, runAsContext);
+
+            // Update the POSIX groups.
+            Modification<GroupMembership> posixGroupMod = new Modification<GroupMembership>();
+            if (newPosixRefAttrs != null && conn.getConfiguration().isMaintainPosixGroupMembership()) {
+                Set<String> removedPosixRefAttrs = new HashSet<String>(posixMember.getPosixRefAttributes());
+                removedPosixRefAttrs.removeAll(newPosixRefAttrs);
+                Set<GroupMembership> members = posixMember.getPosixGroupMembershipsByAttrs(removedPosixRefAttrs);
+                posixGroupMod.removeAll(members);
+                if (!members.isEmpty()) {
+                    String firstPosixRefAttr = getFirstPosixRefAttr(entryDN, newPosixRefAttrs);
+                    for (GroupMembership member : members) {
+                        posixGroupMod.add(new GroupMembership(firstPosixRefAttr, member.getGroupDN()));
+                    }
+                }
+            }
+            if (posixGroups != null) {
+                Set<GroupMembership> members = posixMember.getPosixGroupMemberships();
+                posixGroupMod.removeAll(members);
+                posixGroupMod.clearAdded(); // Since we will be replacing with the new groups.
+                if (!posixGroups.isEmpty()) {
+                    String firstPosixRefAttr = getFirstPosixRefAttr(entryDN, newPosixRefAttrs);
+                    for (String posixGroup : posixGroups) {
+                        posixGroupMod.add(new GroupMembership(firstPosixRefAttr, posixGroup));
+                    }
+                }
+            }
+            groupHelper.modifyPosixGroupMemberships(posixGroupMod, runAsContext);
+        } catch (NameAlreadyBoundException e) {
+            throw new AlreadyExistsException(e);
+        } catch (NamingException e) {
+            throw new ConnectorException(e);
+        } finally {
+            if (runAsContext != null) {
+                try {
+                    runAsContext.close();
+                } catch (NamingException e) {
                 }
             }
         }
-        if (posixGroups != null) {
-            Set<GroupMembership> members = posixMember.getPosixGroupMemberships();
-            posixGroupMod.removeAll(members);
-            posixGroupMod.clearAdded(); // Since we will be replacing with the new groups.
-            if (!posixGroups.isEmpty()) {
-                String firstPosixRefAttr = getFirstPosixRefAttr(entryDN, newPosixRefAttrs);
-                for (String posixGroup : posixGroups) {
-                    posixGroupMod.add(new GroupMembership(firstPosixRefAttr, posixGroup));
-                }
-            }
-        }
-        groupHelper.modifyPosixGroupMemberships(posixGroupMod, runAsContext);
 
         return conn.getSchemaMapping().createUid(oclass, entryDN);
     }
@@ -193,7 +205,7 @@ public class LdapUpdate extends LdapModifyOperation {
         String entryDN = LdapSearches.findEntryDN(conn, oclass, uid);
         PosixGroupMember posixMember = new PosixGroupMember(entryDN);
         LdapContext runAsContext = null;
-        
+
         if (StringUtil.isNotBlank(options.getRunAsUser())) {
             String dn = new LdapAuthenticate(conn, oclass, options.getRunAsUser(), options).getDn();
             runAsContext = conn.getRunAsContext(dn, options.getRunWithPassword());
@@ -212,7 +224,7 @@ public class LdapUpdate extends LdapModifyOperation {
             Set<String> posixRefAttrs = posixMember.getPosixRefAttributes();
             String posixRefAttr = getFirstPosixRefAttr(entryDN, posixRefAttrs);
             groupHelper.addPosixGroupMemberships(posixRefAttr, posixGroups, runAsContext);
-        }
+        } 
 
         return uid;
     }
@@ -221,7 +233,7 @@ public class LdapUpdate extends LdapModifyOperation {
         String entryDN = LdapSearches.findEntryDN(conn, oclass, uid);
         PosixGroupMember posixMember = new PosixGroupMember(entryDN);
         LdapContext runAsContext = null;
-        
+
         if (StringUtil.isNotBlank(options.getRunAsUser())) {
             String dn = new LdapAuthenticate(conn, oclass, options.getRunAsUser(), options).getDn();
             runAsContext = conn.getRunAsContext(dn, options.getRunWithPassword());
@@ -307,10 +319,26 @@ public class LdapUpdate extends LdapModifyOperation {
         if (attrs.second != null) {
             attrs.second.access(new Accessor() {
                 public void access(javax.naming.directory.Attribute passwordAttr) {
-                    // Do not add the password to the result Attributes because
-                    // it is a guarded value.
                     hashPassword(passwordAttr, entryDN);
-                    modItems.add(new ModificationItem(ldapModifyOp, passwordAttr));
+                    // Password self service - we assume user is not admin.
+                    // and the target dn is the same as the "Run as" dn
+                    if (context == null || !LdapUtil.isSameDistinguishedName(entryDN, context)) {
+                        modItems.add(new ModificationItem(ldapModifyOp, passwordAttr));
+                    } else {
+                        // We may have different implementation of Password Self service depending on the target directory
+                        switch (conn.getServerType()) {
+                            case MSAD_LDS:
+                            case MSAD:
+                                // Password change has to be done in 2 operations. Remove old, Add new
+                                BasicAttribute oldPasswordAttr = new BasicAttribute("unicodePwd", SecurityUtil.decrypt(options.getRunWithPassword()).getBytes());
+                                hashPassword(oldPasswordAttr, entryDN);
+                                modItems.add(new ModificationItem(DirContext.REMOVE_ATTRIBUTE, oldPasswordAttr));
+                                modItems.add(new ModificationItem(DirContext.ADD_ATTRIBUTE, passwordAttr));
+                                break;
+                            default:
+                                modItems.add(new ModificationItem(ldapModifyOp, passwordAttr));
+                        }
+                    }
                     modifyAttributes(entryDN, modItems, context);
                 }
             });
@@ -320,20 +348,30 @@ public class LdapUpdate extends LdapModifyOperation {
     }
 
     private void modifyAttributes(String entryDN, List<ModificationItem> modItems, LdapContext context) {
-        LdapContext runAsContext = null;
         try {
-            if (StringUtil.isNotBlank(options.getRunAsUser())) {
-                String dn = new LdapAuthenticate(conn, oclass, options.getRunAsUser(), options).getDn();
-                runAsContext = conn.getRunAsContext(dn, options.getRunWithPassword());
-            }
             if (context == null) {
                 conn.getInitialContext().modifyAttributes(entryDN, modItems.toArray(new ModificationItem[modItems.size()]));
-            }
-            else {
+            } else {
                 context.modifyAttributes(entryDN, modItems.toArray(new ModificationItem[modItems.size()]));
             }
         } catch (NameNotFoundException e) {
             throw (UnknownUidException) new UnknownUidException(uid, oclass).initCause(e);
+        } catch (InvalidAttributeValueException e) {
+            // Need to investigate the content of the error message
+            String message = e.getMessage().toLowerCase();
+            switch (conn.getServerType()) {
+                case MSAD:
+                case MSAD_LDS:
+                    if (message.contains("ldap: error code 19 ")) {
+                        if (message.contains("(unicodepwd)")) {
+                            throw new ConnectorException("New password does not comply with password policy");
+                        }
+                    }
+                    break;
+                default:
+            }
+        } catch (NoPermissionException e) {
+            throw new ConnectorException("Insufficient Access Rights to perform");
         } catch (NamingException e) {
             throw new ConnectorException(e);
         }
