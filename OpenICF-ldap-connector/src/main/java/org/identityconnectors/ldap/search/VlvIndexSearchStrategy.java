@@ -98,7 +98,7 @@ public class VlvIndexSearchStrategy extends LdapSearchStrategy {
         
         index = 1;
         lastListSize = 0;
-        cookie = null;
+        cookie = new byte[0];
 
         String lastResultName = null;
 
