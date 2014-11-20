@@ -53,7 +53,11 @@
             <artifactId>groovy-all</artifactId>
             <scope>compile</scope>
         </dependency>
-    </dependencies>
+    </dependencies> 
+    <properties>
+        <!-- If we release this project, we need to include the Forgerock binary license -->
+        <include.binary.license>${project.build.directory}</include.binary.license>
+    </properties>
     <build>
         <finalName>openicf-${project.version}</finalName>
         <plugins>
@@ -70,6 +74,20 @@
                                 <resourceBundle>${licenseResourceBundle}</resourceBundle>
                             </resourceBundles>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <!-- Check Open Source licenses for all the dependencies -->
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                        <id>generate-oss-license-report</id>
+                        <goals>
+                            <goal>add-third-party</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

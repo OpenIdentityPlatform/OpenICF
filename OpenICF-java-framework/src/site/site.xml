@@ -19,7 +19,7 @@
   !
   ! CCPL HEADER END
   !
-  !      Copyright 2010-2013 ForgeRock AS.
+  !      Copyright 2010-2014 ForgeRock AS.
   !
 -->
 
@@ -35,7 +35,6 @@
     <version position="right"/>
     <body>
         <breadcrumbs>
-            <item name="Developer Community" href="http://www.forgerock.org/" />
             <item name="OpenICF" href="http://openicf.forgerock.org/"/>
         </breadcrumbs>
 

@@ -62,6 +62,12 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
+    <properties>
+        <!-- If we release this project, we need to include the Forgerock binary license -->
+        <include.binary.license>
+            ${project.build.directory}/maven-shared-archive-resources/legal-notices
+        </include.binary.license>
+    </properties>
     <build>
         <plugins>
             <plugin>

@@ -49,6 +49,14 @@
         <fileSet>
             <directory>${basedir}/src/main/resources</directory>
             <outputDirectory>/openicf/</outputDirectory>
+            <filtered>true</filtered>
+            <includes>
+                <include>**/*.txt</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/src/main/resources</directory>
+            <outputDirectory>/openicf/</outputDirectory>
         </fileSet>
         <fileSet>
             <directory>${project.build.directory}/maven-shared-archive-resources</directory>
@@ -57,7 +65,15 @@
         <fileSet>
             <directory>${project.build.directory}/licenseResource</directory>
             <outputDirectory>/openicf/</outputDirectory>
-        </fileSet>
+         </fileSet>
+         <!-- Include the Forgerock binary license file if exists -->
+         <fileSet>
+            <directory>${project.build.directory}</directory>
+            <outputDirectory>/openicf/legal-notices/</outputDirectory>
+            <includes>
+               <include>license.txt</include>
+            </includes>
+         </fileSet>
     </fileSets>
     <dependencySets>
         <dependencySet>
