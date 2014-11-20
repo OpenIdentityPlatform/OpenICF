@@ -28,7 +28,7 @@
     <parent>
         <groupId>org.forgerock.openicf.connectors</groupId>
         <artifactId>connectors-parent</artifactId>
-        <version>1.4.0.0</version>
+        <version>1.4.1.0</version>
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>groovy-connector</artifactId>
@@ -67,6 +67,10 @@
         </openicf.osgi.import.defaults>
         <openicf.osgi.embed/>
         <forgerock.rest.version>2.4.0</forgerock.rest.version>
+        <!-- If we release this project, we need to include the Forgerock binary license -->
+        <include.binary.license>
+            ${project.build.directory}/maven-shared-archive-resources/legal-notices
+        </include.binary.license>
     </properties>
     <repositories>
         <repository>
