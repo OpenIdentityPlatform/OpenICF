@@ -201,6 +201,7 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
 
         if (deltaType.equals(SyncDeltaType.DELETE)) {
             log.ok("Creating sync delta for deleted entry");
+            syncDeltaBuilder.setObjectClass(oclass);
             // XXX fix this!
             if (filterOutDeleteByModifiersNames(changeLogEntry)) {
                 log.ok("Skipping entry because modifiersName is in the list of modifiersName's to filter out");
