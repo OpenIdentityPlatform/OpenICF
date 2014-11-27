@@ -74,6 +74,7 @@
  <xinclude:include href="chap-using-connectors.xml" />
  <xinclude:include href="chap-connector-servers.xml" />
  <xinclude:include href="chap-writing-connectors.xml" />
+ <!--<xinclude:include href="chap-troubleshooting.xml" /> -->
 
  <!-- Foreach connector mentioned as a resourceBundle for the
       maven-remote-resources-plugin in pom.xml, add
