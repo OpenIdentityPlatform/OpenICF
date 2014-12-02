@@ -5,10 +5,6 @@ DO NOT TRANSLATE OR LOCALIZE
 Apache Software License, Version 2.0
 ***************************************************************************
 
-The following softwares may be included in this product:
-
-
-Name: Groovy Scripting Language
 Version: org.codehaus.groovy:groovy-all:2.2.2
 Copyright: Copyright 2003-2014 The respective authors and developers. Developers and Contributors are listed in the project POM file and Gradle build file.
 
@@ -87,17 +83,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
+
 ***************************************************************************
 Eclipse Public License - v 1.0
 ***************************************************************************
 
-The following softwares may be included in this product:
-
-Name: Logback Classic Module
 Version: ch.qos.logback:logback-classic:1.1.1
 Copyright: Copyright (C) 1999-2012, QOS.ch. All rights reserved.
 
-Name: Logback Core Module
 Version: ch.qos.logback:logback-core:1.1.1
 Copyright: Copyright (C) 1999-2012, QOS.ch. All rights reserved.
 
@@ -176,14 +169,11 @@ Everyone is permitted to copy and distribute copies of this Agreement, but in or
 
 This Agreement is governed by the laws of the State of New York and the intellectual property laws of the United States of America. No party to this Agreement will bring a legal action under this Agreement more than one year after the cause of action arose. Each party waives its rights to a jury trial in any resulting litigation.
 
+
 ***************************************************************************
 The MIT License
 ***************************************************************************
 
-The following softwares may be included in this product:
-
-
-Name: SLF4J API Module
 Version: org.slf4j:slf4j-api:1.7.6
 Copyright: Copyright (c) 2004-2013 QOS.ch
 
@@ -212,5 +202,3 @@ Full license text:
  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
  OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
