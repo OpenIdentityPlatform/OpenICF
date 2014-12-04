@@ -78,15 +78,11 @@ public class MapFilterVisitor implements FilterVisitor<Map<String, Object>, Void
         Map<String, Object> map = new LinkedHashMap<String, Object>(4);
         String name = filter.getAttribute().getName();
         String value = AttributeUtil.getAsStringValue(filter.getAttribute());
-        if (StringUtil.isBlank(value)) {
-            return null;
-        } else {
-            map.put("not", false);
-            map.put("operation", operation);
-            map.put("left", name);
-            map.put("right", value);
-            return map;
-        }
+        map.put("not", false);
+        map.put("operation", operation);
+        map.put("left", name);
+        map.put("right", value);
+        return map;
     }
 
     public Map<String, Object> visitAndFilter(Void parameter, AndFilter subFilters) {
