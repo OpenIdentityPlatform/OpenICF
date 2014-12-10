@@ -419,12 +419,11 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
     private SyncDeltaType getSyncDeltaType(String changeType) {
         if ("delete".equalsIgnoreCase(changeType)) {
             return SyncDeltaType.DELETE;
-        } else if ("modify".equalsIgnoreCase(changeType)){
-            return SyncDeltaType.UPDATE;
         } else if ("add".equalsIgnoreCase(changeType)){
             return SyncDeltaType.CREATE;
+        } else {
+            return SyncDeltaType.UPDATE;
         }
-        throw new IllegalArgumentException("Unknown change type: " + changeType);
     }
 
     private String getModifiedEntrySearchFilter() {
