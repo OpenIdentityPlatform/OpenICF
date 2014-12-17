@@ -31,17 +31,18 @@
     </parent>
     <artifactId>openicf-zip</artifactId>
     <packaging>pom</packaging>
-    <name>OpenICF Java ZIP file assembly</name>
+    <name>OpenICF Java ZIP</name>
     <description>OpenICF Connector server</description>
     <dependencies>
         <dependency>
             <groupId>org.forgerock.openicf.framework</groupId>
             <artifactId>connector-framework-internal</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.forgerock.openicf.framework</groupId>
             <artifactId>icfl-over-slf4j</artifactId>
-            <version>1.4.2.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -74,20 +75,6 @@
                                 <resourceBundle>${licenseResourceBundle}</resourceBundle>
                             </resourceBundles>
                         </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <!-- Check Open Source licenses for all the dependencies -->
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>license-maven-plugin</artifactId>
-                <version>1.7</version>
-                <executions>
-                    <execution>
-                        <id>generate-oss-license-report</id>
-                        <goals>
-                            <goal>add-third-party</goal>
-                        </goals>
                     </execution>
                 </executions>
             </plugin>

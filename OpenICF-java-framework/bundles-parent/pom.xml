@@ -33,11 +33,11 @@
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>connectors-parent</artifactId>
     <packaging>pom</packaging>
-    <name>OpenICF Connectors</name>
+    <name>OpenICF Connector Bundle Parent</name>
     <description>
         This pom module is the parent for all connector bundles. It defines the dependencies on framework, building the
         connector bundle and common reporting for connectors.
-        This is not multimodule project, it does not aggregate the connectors, it is just common parent.
+        This is not multi module project, it does not aggregate the connectors, it is just common parent.
     </description>
     <distributionManagement>
         <site>
@@ -75,7 +75,7 @@
 
         <!-- OSGi Properties -->
         <openicf.osgi.exclude.dependencies>false</openicf.osgi.exclude.dependencies>
-        <framework.version>1.4.2.0-SNAPSHOT</framework.version>
+        <framework.version>${project.version}</framework.version>
 
         <openicf.osgi.import.framework.version>
             version="[$(version;==;${framework.version}),$(version;+;${framework.version}))"
@@ -119,7 +119,8 @@
             [$(version;==;$(@)),$(version;=+;$(@)))
         </openicf.osgi.import.default.version>
         <openicf.osgi.remove.headers>
-            Ignore-Package,Include-Resource,Private-Package,Bundle-DocURL,Embedded-Artifacts,Embed-Dependency,Built-By
+            Ignore-Package,Include-Resource,Private-Package,Bundle-DocURL,Embedded-Artifacts,Embed-Dependency,Built-By,
+            Build-Jdk,Tool
         </openicf.osgi.remove.headers>
         <openicf.osgi.failok>false</openicf.osgi.failok>
         <openicf.osgi.export.service/>
@@ -128,24 +129,34 @@
 
     </properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
-            <artifactId>connector-framework</artifactId>
-        </dependency>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.forgerock.openicf.framework</groupId>
+                <artifactId>connector-framework</artifactId>
+                <version>${framework.version}</version>
+            </dependency>
 
-        <!-- Test Dependencies -->
-        <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
-            <artifactId>connector-test-common</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-all</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+            <!-- Test Dependencies -->
+            <dependency>
+                <groupId>org.forgerock.openicf.framework</groupId>
+                <artifactId>connector-framework-internal</artifactId>
+                <version>${framework.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.forgerock.openicf.framework</groupId>
+                <artifactId>connector-test-common</artifactId>
+                <version>${framework.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.codehaus.groovy</groupId>
+                <artifactId>groovy-all</artifactId>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <testResources>
@@ -205,7 +216,7 @@
                         <dependency>
                             <groupId>org.forgerock.maven.plugins</groupId>
                             <artifactId>openicf-maven-plugin</artifactId>
-                            <version>1.2.0</version>
+                            <version>${openic.maven.plugin.version}</version>
                         </dependency>
                     </dependencies>
                 </plugin>
@@ -213,7 +224,7 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-scm-plugin</artifactId>
                     <configuration>
-                        <tag>${project.artifactId}-${project.version}</tag>
+                        <tag>openicf-${project.artifactId}-${project.version}</tag>
                         <message>[ForgeRock Connector Release] ${project.name}</message>
                     </configuration>
                 </plugin>
@@ -338,7 +349,7 @@
                 <plugin>
                     <groupId>org.forgerock.maven.plugins</groupId>
                     <artifactId>openicf-maven-plugin</artifactId>
-                    <version>1.2.0</version>
+                    <version>${openic.maven.plugin.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -348,7 +359,7 @@
             <plugin>
                 <groupId>org.forgerock.maven.plugins</groupId>
                 <artifactId>openicf-maven-plugin</artifactId>
-                <version>1.2.0</version>
+                <version>${openic.maven.plugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

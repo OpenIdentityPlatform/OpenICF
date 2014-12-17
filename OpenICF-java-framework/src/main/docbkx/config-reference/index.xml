@@ -96,14 +96,14 @@
     -->
  <part xml:id="csv-connector-ref">
   <title>File CSV Connector Reference</title>
-  <xinclude:include href="csvfile-connector-1.1.0.1/chap-install-csvfile-connector.xml" />
-  <xinclude:include href="csvfile-connector-1.1.0.1/chap-config-csvfile-connector.xml" />
+  <xinclude:include href="csvfile-connector-1.1.0.2/chap-install-csvfile-connector.xml" />
+  <xinclude:include href="csvfile-connector-1.1.0.2/chap-config-csvfile-connector.xml" />
  </part>
 
  <part xml:id="db-table-connector-ref">
   <title>Database Table Connector Reference</title>
-  <xinclude:include href="databasetable-connector-1.1.0.0/chap-install-databasetable-connector.xml" />
-  <xinclude:include href="databasetable-connector-1.1.0.0/chap-config-databasetable-connector.xml" />
+  <xinclude:include href="databasetable-connector-1.1.0.1/chap-install-databasetable-connector.xml" />
+  <xinclude:include href="databasetable-connector-1.1.0.1/chap-config-databasetable-connector.xml" />
  </part>
 
  <part xml:id="groovy-connector-ref">
@@ -124,8 +124,8 @@
 
  <part xml:id="xml-connector-ref">
   <title>XML Connector Reference</title>
-  <xinclude:include href="xml-connector-1.1.0.1/chap-install-xml-connector.xml" />
-  <xinclude:include href="xml-connector-1.1.0.1/chap-config-xml-connector.xml" />
+  <xinclude:include href="xml-connector-1.1.0.2/chap-install-xml-connector.xml" />
+  <xinclude:include href="xml-connector-1.1.0.2/chap-config-xml-connector.xml" />
  </part>
 
  <xinclude:include href='../shared/appendix-interfaces.xml' />
