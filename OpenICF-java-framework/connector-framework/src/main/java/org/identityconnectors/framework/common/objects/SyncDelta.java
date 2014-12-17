@@ -60,7 +60,6 @@ public final class SyncDelta {
             Uid uid, ConnectorObject object) {
         Assertions.nullCheck(token, "token");
         Assertions.nullCheck(deltaType, "deltaType");
-        Assertions.nullCheck(objectClass, "objectClass");
         Assertions.nullCheck(uid, "uid");
 
         // do not allow previous Uid for anything else than create or update
