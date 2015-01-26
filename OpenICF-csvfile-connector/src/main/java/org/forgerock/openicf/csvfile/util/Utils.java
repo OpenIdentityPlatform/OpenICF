@@ -160,8 +160,10 @@ public class Utils {
         }
         Matcher matcher = linePattern.matcher(line);
         while (matcher.find()) {
-            String value = matcher.group(1).trim().replace(configuration.getValueQualifier(), "");
-            values.add(value);
+            // Strip the surounding value qualifiers from the string and replace
+            // consecutive double-quotes with a single escaped double-quote.
+            String value = matcher.group(1).trim().replaceAll("^" + configuration.getValueQualifier() + "|" + configuration.getValueQualifier() + "$", "");
+            values.add(value.replace("\"\"", "\""));
         }
         return values;
     }
