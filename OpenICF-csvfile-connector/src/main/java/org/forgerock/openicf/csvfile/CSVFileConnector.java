@@ -749,7 +749,7 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
             String name = header.get(i);
             if (name.equals(configuration.getUniqueAttribute())) {
                 builder.setUid(item.getAttribute(i));
-//                builder.addAttribute(name, item.getAttribute(i));
+                builder.addAttribute(name, createAttributeValues(item.getAttribute(i)));
 
                 if (!configuration.isUniqueAndNameAttributeEqual()) {
                     continue;
