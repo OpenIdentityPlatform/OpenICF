@@ -80,9 +80,10 @@ public class SpecialCharactersTest {
         assertNotNull(object);
         assertNotNull(object.getUid());
         assertEquals("mmouse", object.getUid().getUidValue());
-        assertEquals(object.getAttributes().size(), 7);
+        assertEquals(object.getAttributes().size(), 8);
         testAttribute(object, "__NAME__", "mmouse");
         testAttribute(object, "__UID__", "mmouse");
+        testAttribute(object, "uid", "mmouse");
         testAttribute(object, "firstName", "Mickey");
         testAttribute(object, "lastName", "Mouse");
         testAttribute(object, "__PASSWORD__", new GuardedString("Z29vZA==".toCharArray()));
@@ -94,9 +95,10 @@ public class SpecialCharactersTest {
         assertNotNull(object);
         assertNotNull(object.getUid());
         assertEquals("dduck", object.getUid().getUidValue());
-        assertEquals(object.getAttributes().size(), 7);
+        assertEquals(object.getAttributes().size(), 8);
         testAttribute(object, "__NAME__", "dduck");
         testAttribute(object, "__UID__", "dduck");
+        testAttribute(object, "uid", "dduck");
         testAttribute(object, "firstName", "Daffy");
         testAttribute(object, "lastName", "Duck");
         testAttribute(object, "__PASSWORD__", new GuardedString("Z29vZA==".toCharArray()));
@@ -108,9 +110,10 @@ public class SpecialCharactersTest {
         assertNotNull(object);
         assertNotNull(object.getUid());
         assertEquals("rrabbit", object.getUid().getUidValue());
-        assertEquals(object.getAttributes().size(), 7);
+        assertEquals(object.getAttributes().size(), 8);
         testAttribute(object, "__NAME__", "rrabbit");
         testAttribute(object, "__UID__", "rrabbit");
+        testAttribute(object, "uid", "rrabbit");
         testAttribute(object, "firstName", "Roger");
         testAttribute(object, "lastName", "Rabbit");
         testAttribute(object, "__PASSWORD__", new GuardedString("Z29vZA==".toCharArray()));
@@ -122,9 +125,10 @@ public class SpecialCharactersTest {
         assertNotNull(object);
         assertNotNull(object.getUid());
         assertEquals("rrabbit", object.getUid().getUidValue());
-        assertEquals(object.getAttributes().size(), 7);
+        assertEquals(object.getAttributes().size(), 8);
         testAttribute(object, "__NAME__", "rrabbit");
         testAttribute(object, "__UID__", "rrabbit");
+        testAttribute(object, "uid", "rrabbit");
         testAttribute(object, "firstName", "Roger");
         testAttribute(object, "lastName", "Rabbit");
         testAttribute(object, "__PASSWORD__", new GuardedString("Z29vZA==".toCharArray()));

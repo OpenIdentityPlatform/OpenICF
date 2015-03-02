@@ -156,10 +156,10 @@ public class SearchOpTest {
         assertNotNull(object);
         assertNotNull(object.getUid());
         assertEquals("vilo", object.getUid().getUidValue());
-        assertEquals(object.getAttributes().size(), 5);
+        assertEquals(object.getAttributes().size(), 6);
         testAttribute(object, "__NAME__", "vilo");
         testAttribute(object, "__UID__", "vilo");
-//        testAttribute(object, "uid", "vilo"); //we're not returning unique attribute, it's already there as __UID__
+        testAttribute(object, "uid", "vilo");
         testAttribute(object, "firstName", "viliam");
         testAttribute(object, "lastName", "repan");
         testAttribute(object, "__PASSWORD__", new GuardedString("Z29vZA==".toCharArray()));
@@ -170,10 +170,10 @@ public class SearchOpTest {
         assertNotNull(object);
         assertNotNull(object.getUid());
         assertEquals("miso", object.getUid().getUidValue());
-        assertEquals(object.getAttributes().size(), 4);
+        assertEquals(object.getAttributes().size(), 5);
         testAttribute(object, "__NAME__", "miso");
         testAttribute(object, "__UID__", "miso");
-//        testAttribute(object, "uid", "miso"); //we're not returning unique attribute, it's already there as __UID__
+        testAttribute(object, "uid", "miso"); 
         testAttribute(object, "firstName", "michal");
         testAttribute(object, "lastName");
         testAttribute(object, "__PASSWORD__", new GuardedString("bad=".toCharArray()));

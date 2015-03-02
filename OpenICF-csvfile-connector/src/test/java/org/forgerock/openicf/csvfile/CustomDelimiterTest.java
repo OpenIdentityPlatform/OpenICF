@@ -106,9 +106,10 @@ public class CustomDelimiterTest {
         assertNotNull(object);
         assertNotNull(object.getUid());
         assertEquals("vilo", object.getUid().getUidValue());
-        assertEquals(object.getAttributes().size(), 5);
+        assertEquals(object.getAttributes().size(), 6);
         testAttribute(object, "__NAME__", "vilo");
         testAttribute(object, "__UID__", "vilo");
+        testAttribute(object, "uid", "vilo");
         testAttribute(object, "firstName", "viliam");
         testAttribute(object, "lastName", "repan");
         testAttribute(object, "__PASSWORD__", new GuardedString("Z29vZA==".toCharArray()));
@@ -118,9 +119,10 @@ public class CustomDelimiterTest {
         assertNotNull(object);
         assertNotNull(object.getUid());
         assertEquals("miso", object.getUid().getUidValue());
-        assertEquals(object.getAttributes().size(), 5);
+        assertEquals(object.getAttributes().size(), 6);
         testAttribute(object, "__NAME__", "miso");
         testAttribute(object, "__UID__", "miso");
+        testAttribute(object, "uid", "miso");
         testAttribute(object, "firstName", "michal");
         testAttribute(object, "lastName", "mlok");
         testAttribute(object, "__PASSWORD__", new GuardedString("asdf".toCharArray()));

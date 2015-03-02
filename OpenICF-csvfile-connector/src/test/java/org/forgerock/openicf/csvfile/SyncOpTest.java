@@ -200,7 +200,7 @@ public class SyncOpTest {
         cBuilder.setName("miso");
         cBuilder.setUid("miso");
         cBuilder.setObjectClass(ObjectClass.ACCOUNT);
-//        cBuilder.addAttribute("uid", "miso"); //we're not returning unique attribute, it's already there as __UID__
+        cBuilder.addAttribute("uid", "miso"); 
         cBuilder.addAttribute("firstName", "michal");
         cBuilder.addAttribute("lastName", "LastnameChange");
         cBuilder.addAttribute("__PASSWORD__", new GuardedString("Z29vZA==".toCharArray()));
@@ -215,7 +215,7 @@ public class SyncOpTest {
         cBuilder.setName("fanfi");
         cBuilder.setUid("fanfi");
         cBuilder.setObjectClass(ObjectClass.ACCOUNT);
-//        cBuilder.addAttribute("uid", "fanfi"); //we're not returning unique attribute, it's already there as __UID__
+        cBuilder.addAttribute("uid", "fanfi"); 
         cBuilder.addAttribute("firstName", "igor");
         cBuilder.addAttribute("lastName", "farinicNewRecord");
         cBuilder.addAttribute("__PASSWORD__", new GuardedString("Z29vZA==".toCharArray()));
