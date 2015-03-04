@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2011-2015 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -104,8 +104,6 @@ import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
  * Main implementation of the CSVFile Connector
  *
  * @author Viliam Repan (lazyman)
- * @author $author$
- * @version $Revision$ $Date$
  */
 @ConnectorClass(displayNameKey = "UI_CONNECTOR_NAME",
 configurationClass = CSVFileConfiguration.class)
@@ -149,21 +147,22 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
         this.configuration = (CSVFileConfiguration) initialConfiguration1;
 
         String fieldDelimiter = Pattern.quote(configuration.getFieldDelimiter());
+        String valueQualifier = Pattern.quote(configuration.getValueQualifier());
 
         // regexp with ," chars is (?:^|,)(\"(?:[^\"]+|\"\")*\"|[^,]*)
         StringBuilder builder = new StringBuilder();
         builder.append("(?:^|");
         builder.append(fieldDelimiter);
         builder.append(")(");
-        builder.append(this.configuration.getValueQualifier());
+        builder.append(valueQualifier);
         builder.append("(?:[^");
-        builder.append(this.configuration.getValueQualifier());
+        builder.append(valueQualifier);
         builder.append("]+|");
-        builder.append(this.configuration.getValueQualifier());
-        builder.append(this.configuration.getValueQualifier());
-        builder.append(")*");
-        builder.append(this.configuration.getValueQualifier());
-        builder.append("|[^");
+        builder.append(valueQualifier);
+        builder.append(valueQualifier);
+        builder.append(")*[");
+        builder.append(valueQualifier);
+        builder.append("|$]|[^");
         builder.append(fieldDelimiter);
         builder.append("]*)");
         linePattern = Pattern.compile(builder.toString());

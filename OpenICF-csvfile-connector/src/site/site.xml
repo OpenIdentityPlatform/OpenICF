@@ -19,7 +19,7 @@
  !
  ! CCPL HEADER END
  !
- !      Copyright 2012 ForgeRock Inc.
+ !      Copyright 2012-2015 ForgeRock AS.
  !
 -->
 
@@ -49,7 +49,7 @@
         <menu name="CSVFile Core Docs">
             <!--item name="All Formats" href="docs.html" /-->
             <!--item name="Release Notes" href="./doc/release-notes/index.html" /-->
-            <item name="Developer Guide" href="./doc/csvfile-connector-1.1.1.0-SNAPSHOT/index.html" />
+            <item name="Developer Guide" href="./doc/csvfile-connector-${project.version}/index.html" />
         </menu>
 
         <menu ref="reports"/>

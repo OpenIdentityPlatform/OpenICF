@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2010 ForgeRock Inc. All Rights Reserved
+ * Copyright (c) 2010-2015 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -23,7 +23,6 @@
  *
  * Portions Copyrighted 2011 Viliam Repan (lazyman)
  *
- * $Id$
  */
 package org.forgerock.openicf.csvfile;
 

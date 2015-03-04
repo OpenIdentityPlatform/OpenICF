@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2010-2014 ForgeRock AS. All Rights Reserved
+ * Copyright (c) 2010-2015 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -87,6 +87,23 @@ public class UtilsTest {
         for (Entry<String, String> entry : set) {
             assertEquals(entry.getValue(), Arrays.toString(Utils.parseValues(entry.getKey(),
                     connector.getLinePattern(), (CSVFileConfiguration) connector.getConfiguration()).toArray()));
+        }
+    }
+
+    @Test
+    public void parseValuesIncorrectTest() throws Exception {
+        initConnector("\"", "|", "|");
+
+
+        Map<String, String> testCases = new HashMap<String, String>();
+        testCases.put("10001|\"My silly string without a closing double quote|MyValue",
+                "[10001, My silly string without a closing double quote|]");
+
+        Set<Entry<String, String>> set = testCases.entrySet();
+        for (Entry<String, String> entry : set) {
+            assertEquals(Arrays.toString(Utils.parseValues(entry.getKey(),
+                    connector.getLinePattern(), (CSVFileConfiguration) connector.getConfiguration()).toArray()),
+                    entry.getValue());
         }
     }
     

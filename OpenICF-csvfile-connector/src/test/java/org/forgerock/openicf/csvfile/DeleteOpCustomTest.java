@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2010 ForgeRock Inc. All Rights Reserved
+ * Copyright (c) 2010-2015 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -23,7 +23,6 @@
  *
  * Portions Copyrighted 2011 Viliam Repan (lazyman)
  *
- * $Id$
  */
 package org.forgerock.openicf.csvfile;
 
@@ -39,7 +38,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.testng.annotations.Test;
 
-import static org.junit.Assert.*;
+import static org.testng.Assert.*;
 
 /**
  *
@@ -72,7 +71,7 @@ public class DeleteOpCustomTest {
         assertEquals(uidValue, uid.getUidValue());
 
         String result = TestUtils.compareFiles(config.getFilePath(), TestUtils.getTestFile(TEST_FOLDER + "expected-after-create.csv"));
-        assertNull("File updated incorrectly (create): " + result, result);
+        assertNull(result, "File updated incorrectly (create): " + result);
 
         connector.delete(ObjectClass.ACCOUNT, uid, null);
 
@@ -80,7 +79,7 @@ public class DeleteOpCustomTest {
         connector = null;
 
         result = TestUtils.compareFiles(config.getFilePath(), backup);
-        assertNull("File updated incorrectly (delete): " + result, result);
+        assertNull(result, "File updated incorrectly (delete): " + result);
 
         beforeDeleteFile.delete();
     }
@@ -117,7 +116,7 @@ public class DeleteOpCustomTest {
         assertEquals(uidValue, uidSecond.getUidValue());
 
         String result = TestUtils.compareFiles(config.getFilePath(), TestUtils.getTestFile(TEST_FOLDER + "expected-double-create.csv"));
-        assertNull("File updated incorrectly (create): " + result, result);
+        assertNull(result, "File updated incorrectly (create): " + result);
 
         connector.delete(ObjectClass.ACCOUNT, uidFirst, null);
 
@@ -125,7 +124,7 @@ public class DeleteOpCustomTest {
         connector = null;
 
         result = TestUtils.compareFiles(config.getFilePath(), TestUtils.getTestFile(TEST_FOLDER + "expected-double-create-delete.csv"));
-        assertNull("File updated incorrectly (delete): " + result, result);
+        assertNull(result, "File updated incorrectly (delete): " + result);
 
         configFile.delete();
     }
@@ -162,7 +161,7 @@ public class DeleteOpCustomTest {
         assertEquals(uidValue, uidSecond.getUidValue());
 
         String result = TestUtils.compareFiles(config.getFilePath(), TestUtils.getTestFile(TEST_FOLDER + "expected-double-create.csv"));
-        assertNull("File updated incorrectly (create): " + result, result);
+        assertNull(result, "File updated incorrectly (create): " + result);
 
         connector.delete(ObjectClass.ACCOUNT, uidSecond, null);
 
@@ -170,7 +169,7 @@ public class DeleteOpCustomTest {
         connector = null;
 
         result = TestUtils.compareFiles(config.getFilePath(), TestUtils.getTestFile(TEST_FOLDER + "expected-double-create-delete-second.csv"));
-        assertNull("File updated incorrectly (delete): " + result, result);
+        assertNull(result, "File updated incorrectly (delete): " + result);
 
         configFile.delete();
     }
