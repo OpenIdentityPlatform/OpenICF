@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright © 2011 ForgeRock AS. All rights reserved.
+ * Copyright © 2011-2015 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -208,12 +208,12 @@ public class CSVFileConfiguration extends AbstractConfiguration {
         }
 
         if (StringUtil.isEmpty(nameAttribute)) {
-            log.warn("Name attribute not defined, value from unique attribute will be used (" + uniqueAttribute + ").");
+            log.info("Name attribute not defined, value from unique attribute will be used (" + uniqueAttribute + ").");
             nameAttribute = uniqueAttribute;
         }
 
         if (StringUtil.isEmpty(passwordAttribute)) {
-            log.warn("Password attribute is not defined.");
+            log.info("Password attribute is not defined.");
         }
 
         Assertions.nullCheck(filePath, "File path");
