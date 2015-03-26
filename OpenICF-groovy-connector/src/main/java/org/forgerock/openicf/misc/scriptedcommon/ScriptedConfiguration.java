@@ -843,17 +843,26 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         if (null != customRoots && customRoots.length > 0) {
             for (String sr : customRoots) {
                 if (null != sr) {
+                    URL root = null;
                     try {
-                        URL root =  new File(sr).toURI().toURL();
-                        if (forbiddenLocation.equals(root)) {
-                            logger.info(
-                                    "The connector source location is removed from the roots. This url is not allowed: {0}",
-                                    forbiddenLocation);
-                        }
-                        safeRoots.add(root);
+                        root = new URL(sr);
                     } catch (MalformedURLException e) {
-                        throw new ConfigurationException(e.getMessage(), e);
+                        // Fall back to File
+                        try {
+                            root = new File(sr).toURI().toURL();
+                        } catch (MalformedURLException ignore) {
+                            logger.error(ignore, "Invalid script root, Invalid URL or File path");
+                            // Throw the original exception
+                            throw new ConfigurationException(
+                                    "Invalid script root, Invalid URL or File path", e);
+                        }
                     }
+                    if (forbiddenLocation.equals(root)) {
+                        logger.info(
+                                "The connector source location is removed from the roots. This url is not allowed: {0}",
+                                forbiddenLocation);
+                    }
+                    safeRoots.add(root);
                 }
             }
         } else {
