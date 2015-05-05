@@ -1,7 +1,7 @@
 /*
  * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2010-2015 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -34,7 +34,7 @@ package org.identityconnectors.common.event;
 public interface ConnectorEventHandler {
     /**
      * Called by the
-     * {@link org.identityconnectors.framework.impl.api.remote.RemoteConnectorInfoManagerImpl}
+     * {@link org.identityconnectors.common.event.ConnectorEventPublisher}
      * service to notify the listener of an event.
      *
      * @param event

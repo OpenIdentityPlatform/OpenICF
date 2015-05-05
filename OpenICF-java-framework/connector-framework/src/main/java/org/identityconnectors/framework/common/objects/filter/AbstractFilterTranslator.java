@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2015 ForgeRock AS.
  */
 package org.identityconnectors.framework.common.objects.filter;
 
@@ -107,7 +108,6 @@ abstract public class AbstractFilterTranslator<T> implements FilterTranslator<T>
             return new ArrayList<T>();
         }
         // this must come first
-        filter = eliminateExternallyChainedFilters(filter);
         filter = normalizeNot(filter);
         filter = simplifyAndDistribute(filter);
         // might have simplified it to the everything filter
@@ -124,13 +124,6 @@ abstract public class AbstractFilterTranslator<T> implements FilterTranslator<T>
             }
         }
         return optimized;
-    }
-
-    private Filter eliminateExternallyChainedFilters(Filter filter) {
-        while (filter instanceof ExternallyChainedFilter) {
-            filter = ((ExternallyChainedFilter) filter).getFilter();
-        }
-        return filter;
     }
 
     /**

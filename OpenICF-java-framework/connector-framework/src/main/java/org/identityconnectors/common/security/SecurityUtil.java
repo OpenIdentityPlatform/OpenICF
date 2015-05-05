@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2015 ForgeRock AS.
  */
 package org.identityconnectors.common.security;
 
@@ -29,6 +30,9 @@ import org.identityconnectors.common.Base64;
 
 public final class SecurityUtil {
 
+    final protected static char[] LOWER_HEX_ARRAY = "0123456789abcdef".toCharArray();
+    final protected static char[] UPPER_HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+    
     private SecurityUtil() {
     }
 
@@ -134,12 +138,54 @@ public final class SecurityUtil {
         try {
             MessageDigest hasher = MessageDigest.getInstance("SHA");
             data = hasher.digest(bytes);
-        } catch (RuntimeException e) {
-            throw e;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
         return Base64.encode(data);
+    }
+
+    /**
+     * Computes the Hex encoded SHA1 hash of the input.
+     *
+     * @param bytes
+     *            The input bytes.
+     * @param toLowerCase
+     *            {@code true} converts to lowercase or {@code false} to
+     *            uppercase
+     * @return the hash (computed from the input bytes).
+     * @since 1.5
+     */
+    public static String computeHexSHA1Hash(byte[] bytes, final boolean toLowerCase) {
+        byte[] data;
+        try {
+            MessageDigest hasher = MessageDigest.getInstance("SHA");
+            data = hasher.digest(bytes);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return bytesToHex(data, toLowerCase);
+    }
+
+    /**
+     * Computes the Hex encoded input.
+     * 
+     * @param bytes
+     *            The input bytes to convert to Hex characters
+     * @param toLowerCase
+     *            {@code true} converts to lowercase or {@code false} to
+     *            uppercase
+     * @return A String containing hexadecimal characters
+     * @since 1.5
+     */
+    public static String bytesToHex(final byte[] bytes, final boolean toLowerCase) {
+        char[] hexChars = new char[bytes.length * 2];
+        char[] hexArray = toLowerCase ? LOWER_HEX_ARRAY : UPPER_HEX_ARRAY;
+        for (int j = 0; j < bytes.length; j++) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = hexArray[v >>> 4];
+            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+        }
+        return new String(hexChars);
     }
 
     /**

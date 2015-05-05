@@ -19,7 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- * Portions Copyrighted 2014 ForgeRock AS.
+ * Portions Copyrighted 2014-2015 ForgeRock AS.
  */
 package org.identityconnectors.framework.common.objects.filter;
 
@@ -44,6 +44,9 @@ public class ContainsAllValuesFilter extends AttributeFilter {
         super(attr);
         name = attr.getName();
         values = attr.getValue();
+        if (null == values) {
+            throw new IllegalArgumentException("Must be a non null value!");
+        }
     }
 
     /**
@@ -56,15 +59,7 @@ public class ContainsAllValuesFilter extends AttributeFilter {
      */
     public boolean accept(ConnectorObject obj) {
         Attribute found = obj.getAttributeByName(name);
-        if (found != null) {
-            // TODO: possible optimization using 'Set'
-        	final List<Object> value = found.getValue();
-        	if (value == null) {
-        		throw new IllegalStateException("Null value found in attribute "+name+" of connector object "+obj);
-        	}
-            return value.containsAll(values);
-        }
-        return false;
+        return found != null && found.getValue() != null && found.getValue().containsAll(values);
     }
 
     public <R, P> R accept(FilterVisitor<R, P> v, P p) {

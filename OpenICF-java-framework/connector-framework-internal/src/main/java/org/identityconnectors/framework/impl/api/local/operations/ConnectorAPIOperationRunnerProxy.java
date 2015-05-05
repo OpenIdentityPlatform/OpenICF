@@ -19,7 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- * Portions Copyrighted 2010-2013 ForgeRock AS.
+ * Portions Copyrighted 2010-2015 ForgeRock AS.
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -68,6 +68,11 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
         this.runnerImplConstructor = runnerImplConstructor;
     }
 
+    protected APIOperationRunner getApiOperationRunner(final ConnectorOperationalContext operationalContext, final Connector connector)
+            throws Exception {
+        return runnerImplConstructor.newInstance(operationalContext, connector);
+    }
+    
     public Object invoke(Object proxy, Method method, Object[] args)
             throws Throwable {
         //do not proxy equals, hashCode, toString
@@ -92,10 +97,14 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
                 // initialize the connector..
                 connector.init(context.getConfiguration());
             }
-            APIOperationRunner runner =
-                runnerImplConstructor.newInstance(context,connector);
+            APIOperationRunner runner = getApiOperationRunner(context, connector);
             ret = method.invoke(runner, args);
             // call out to the operation..
+            if (ret instanceof SubscriptionImpl.AsyncOperationResultHandler){
+                //Dispose later
+                ((SubscriptionImpl.AsyncOperationResultHandler)ret).onComplete(new DisposeRunner(connector, poolEntry));
+                connector = null;
+            }
         } catch (InvocationTargetException e) {
             Throwable root = e.getCause();
             throw root;
@@ -103,37 +112,56 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
 
             // make sure dispose of the connector properly
             if (connector != null) {
-                // determine if there was a pool..
-                if (poolEntry != null) {
-                    try {
-                        //try to return it to the pool even though an
-                        //exception may have happened that leaves it in
-                        //a bad state. The contract of checkAlive
-                        //is that it will tell you if the connector is
-                        //still valid and so we leave it up to the pool
-                        //and connector to work it out.
-                        poolEntry.close();
-                    } catch (Exception e) {
-                        //don't let pool exceptions propagate or mask
-                        //other exceptions. do log it though.
-                        LOG.error(e, null);
-                    }
-                }
-                //not pooled - just dispose
-                else {
-                    //dispose it not supposed to throw, but just in case,
-                    //catch the exception and log it so we know about it
-                    //but don't let the exception prevent additional
-                    //cleanup that needs to happen
-                    try {
-                        connector.dispose();
-                    } catch (Exception e) {
-                        //log this though
-                        LOG.error(e, null);
-                    }
-                }
+                disposeConnector(connector, poolEntry);
             }
         }
         return ret;
+    }
+
+    private static void disposeConnector(Connector connector, ObjectPoolEntry<PoolableConnector> poolEntry) {
+        // determine if there was a pool..
+        if (poolEntry != null) {
+            try {
+                //try to return it to the pool even though an
+                //exception may have happened that leaves it in
+                //a bad state. The contract of checkAlive
+                //is that it will tell you if the connector is
+                //still valid and so we leave it up to the pool
+                //and connector to work it out.
+                poolEntry.close();
+            } catch (Exception e) {
+                //don't let pool exceptions propagate or mask
+                //other exceptions. do log it though.
+                LOG.error(e, null);
+            }
+        }
+        //not pooled - just dispose
+        else {
+            //dispose it not supposed to throw, but just in case,
+            //catch the exception and log it so we know about it
+            //but don't let the exception prevent additional
+            //cleanup that needs to happen
+            try {
+                connector.dispose();
+            } catch (Exception e) {
+                //log this though
+                LOG.error(e, null);
+            }
+        }
+    }
+    
+    private static class DisposeRunner implements Runnable {
+        private final Connector connector;
+        private final ObjectPoolEntry<PoolableConnector> poolEntry;
+
+        public DisposeRunner(final Connector connector,
+                             final ObjectPoolEntry<PoolableConnector> poolEntry) {
+            this.connector = connector;
+            this.poolEntry = poolEntry;
+        }
+
+        public void run() {
+            disposeConnector(connector, poolEntry);
+        }
     }
 }

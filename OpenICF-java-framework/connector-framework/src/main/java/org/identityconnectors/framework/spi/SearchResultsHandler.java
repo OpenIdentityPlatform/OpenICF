@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 ForgeRock AS. All Rights Reserved
+ * Copyright (c) 2013-2015 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -24,6 +24,7 @@
 
 package org.identityconnectors.framework.spi;
 
+import org.identityconnectors.common.SuccessHandler;
 import org.identityconnectors.framework.common.objects.SearchResult;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 
@@ -45,7 +46,7 @@ import org.identityconnectors.framework.common.objects.ResultsHandler;
  * @author Laszlo Hordos
  * @since 1.4
  */
-public interface SearchResultsHandler extends ResultsHandler {
+public interface SearchResultsHandler extends ResultsHandler, SuccessHandler<SearchResult> {
 
     /**
      * Invoked when the request has completed successfully.

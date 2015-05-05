@@ -19,7 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- * Portions Copyrighted 2010-2014 ForgeRock AS.
+ * Portions Copyrighted 2010-2015 ForgeRock AS.
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -38,6 +38,7 @@ import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.SearchResult;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
+import org.identityconnectors.framework.common.objects.filter.FilteredResultsHandlerVisitor;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.SearchResultsHandler;
 import org.identityconnectors.framework.spi.operations.SearchOp;
@@ -82,12 +83,6 @@ public class SearchImpl extends ConnectorAPIOperationRunner implements SearchApi
 
         Filter actualFilter = originalFilter;               // actualFilter is used for chaining filters - it points to the filter where new filters should be chained
 
-        if (hdlCfg.isEnableFilteredResultsHandler() && hdlCfg.isEnableCaseInsensitiveFilter() && actualFilter != null) {
-            logger.ok("Creating case insensitive filter");
-            ObjectNormalizerFacade normalizer = new ObjectNormalizerFacade(objectClass, new CaseNormalizer());
-            actualFilter = new NormalizingFilter(actualFilter, normalizer);
-        }
-
         if (hdlCfg.isEnableNormalizingResultsHandler()) {
             final ObjectNormalizerFacade normalizer = getNormalizer(objectClass);
             // chain a normalizing handler (must come before
@@ -98,18 +93,22 @@ public class SearchImpl extends ConnectorAPIOperationRunner implements SearchApi
             if (hdlCfg.isEnableFilteredResultsHandler()) {
                 // chain a filter handler..
                 final Filter normalizedFilter = normalizer.normalizeFilter(actualFilter);
-                handler = new FilteredResultsHandler(normalizingHandler, normalizedFilter);
+                handler =
+                        new FilteredResultsHandler(normalizingHandler,
+                                FilteredResultsHandlerVisitor.wrapFilter(normalizedFilter, hdlCfg
+                                        .isEnableCaseInsensitiveFilter()));
                 actualFilter = normalizedFilter;
             } else {
                 handler = normalizingHandler;
             }
         } else if (hdlCfg.isEnableFilteredResultsHandler()) {
             // chain a filter handler..
-            handler = new FilteredResultsHandler(handler, actualFilter);
+            handler =
+                    new FilteredResultsHandler(handler, FilteredResultsHandlerVisitor.wrapFilter(
+                            actualFilter, hdlCfg.isEnableCaseInsensitiveFilter()));
         }
         // chain an attributes to get handler..
-        String[] attrsToGet = options.getAttributesToGet();
-        if (attrsToGet != null && attrsToGet.length > 0 && hdlCfg.isEnableAttributesToGetSearchResultsHandler()) {
+        if (hdlCfg.isEnableAttributesToGetSearchResultsHandler()) {
             handler = getAttributesToGetResutlsHandler(handler, options);
         }
 

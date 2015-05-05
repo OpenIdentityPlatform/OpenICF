@@ -19,7 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- * Portions Copyrighted 2010-2014 ForgeRock AS.
+ * Portions Copyrighted 2010-2015 ForgeRock AS.
  */
 package org.identityconnectors.framework.common;
 
@@ -48,6 +48,7 @@ import org.identityconnectors.common.security.GuardedByteArray;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
+import org.identityconnectors.framework.api.operations.ConnectorEventSubscriptionApiOp;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
 import org.identityconnectors.framework.api.operations.GetApiOp;
@@ -57,15 +58,20 @@ import org.identityconnectors.framework.api.operations.ScriptOnConnectorApiOp;
 import org.identityconnectors.framework.api.operations.ScriptOnResourceApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
 import org.identityconnectors.framework.api.operations.SyncApiOp;
+import org.identityconnectors.framework.api.operations.SyncEventSubscriptionApiOp;
 import org.identityconnectors.framework.api.operations.TestApiOp;
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.api.operations.ValidateApiOp;
+import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.QualifiedUid;
 import org.identityconnectors.framework.common.objects.SortKey;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
+import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
+import org.identityconnectors.framework.spi.operations.ConnectorEventSubscriptionOp;
 import org.identityconnectors.framework.spi.operations.CreateOp;
 import org.identityconnectors.framework.spi.operations.DeleteOp;
 import org.identityconnectors.framework.spi.operations.ResolveUsernameOp;
@@ -74,6 +80,7 @@ import org.identityconnectors.framework.spi.operations.SchemaOp;
 import org.identityconnectors.framework.spi.operations.ScriptOnConnectorOp;
 import org.identityconnectors.framework.spi.operations.ScriptOnResourceOp;
 import org.identityconnectors.framework.spi.operations.SearchOp;
+import org.identityconnectors.framework.spi.operations.SyncEventSubscriptionOp;
 import org.identityconnectors.framework.spi.operations.SyncOp;
 import org.identityconnectors.framework.spi.operations.TestOp;
 import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
@@ -113,6 +120,8 @@ public final class FrameworkUtil {
         SPI_TO_API.put(ScriptOnConnectorOp.class, ScriptOnConnectorApiOp.class);
         SPI_TO_API.put(ScriptOnResourceOp.class, ScriptOnResourceApiOp.class);
         SPI_TO_API.put(SyncOp.class, SyncApiOp.class);
+        SPI_TO_API.put(ConnectorEventSubscriptionOp.class, ConnectorEventSubscriptionApiOp.class);
+        SPI_TO_API.put(SyncEventSubscriptionOp.class, SyncEventSubscriptionApiOp.class);
     }
 
     /**
@@ -441,13 +450,41 @@ public final class FrameworkUtil {
     }
 
     /**
+     * Check if {@link org.identityconnectors.framework.spi.operations.SearchOp}
+     * was invoked from
+     * {@link org.identityconnectors.framework.api.operations.GetApiOp} or
+     * {@link org.identityconnectors.framework.api.operations.SearchApiOp}.
+     * 
+     * @param filter
+     *            the query parameter of
+     *            {@link org.identityconnectors.framework.spi.operations.SearchOp#executeQuery(org.identityconnectors.framework.common.objects.ObjectClass, Object, org.identityconnectors.framework.common.objects.ResultsHandler, org.identityconnectors.framework.common.objects.OperationOptions)}
+     * @return {@code null} if invoked from
+     *         {@link org.identityconnectors.framework.api.operations.SearchApiOp}
+     *         or {@link Uid} value if invoked
+     *         {@link org.identityconnectors.framework.api.operations.GetApiOp}
+     * @since 1.5
+     */
+    public Uid getUidIfGetOperation(Filter filter) {
+        Uid uidToGet = null;
+        if (filter instanceof EqualsFilter) {
+            EqualsFilter equalsFilter = (EqualsFilter) filter;
+            if (equalsFilter.getAttribute() instanceof Uid) {
+                uidToGet = (Uid) equalsFilter.getAttribute();
+            } else if (equalsFilter.getAttribute().is(Uid.NAME)) {
+                uidToGet = new Uid(AttributeUtil.getStringValue(equalsFilter.getAttribute()));
+            }
+        }
+        return uidToGet;
+    }
+    
+    /**
      * Returns the version of the framework.
      *
      * @return the framework version; never null.
      */
     public static Version getFrameworkVersion() {
         if (frameworkVersion == null) {
-            frameworkVersion = Version.create(1, 4);
+            frameworkVersion = Version.create(1, 5);
         }
         return frameworkVersion;
     }

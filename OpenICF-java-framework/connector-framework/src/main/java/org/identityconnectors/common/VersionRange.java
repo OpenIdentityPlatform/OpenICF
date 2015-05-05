@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 ForgeRock AS. All Rights Reserved
+ * Copyright (c) 2013-2015 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -204,9 +204,13 @@ public class VersionRange {
                 return floorVersion.equals(ceilingVersion);
             } else {
                 // [f,c): exact if f++ >= c
+                Integer major = floorVersion.getMajor();
+                Integer minor = floorVersion.getMinor();
+                Integer micro = floorVersion.getMicro();
+                Integer revision = floorVersion.getRevision();
                 Version adjacent1 =
-                        new Version(floorVersion.getMajor(), floorVersion.getMinor(), floorVersion
-                                .getMicro(), floorVersion.getRevision() + 1);
+                        new Version(major != null ? major : 0, minor != null ? minor : 0,
+                                micro != null ? micro : 0, revision != null ? revision + 1 : 1);
                 return adjacent1.compareTo(ceilingVersion) >= 0;
             }
         } else {

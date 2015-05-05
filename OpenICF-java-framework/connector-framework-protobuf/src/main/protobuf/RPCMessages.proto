@@ -1,0 +1,82 @@
+package org.forgerock.openicf.common.protobuf;
+
+import "OperationMessages.proto";
+
+
+//Handshake Message
+message HandshakeMessage {
+    enum ServerType {
+        JAVA = 1;
+        DOTNET = 2;
+    }
+    required string sessionId = 1;
+    repeated ServerType serverType = 3;
+    optional bytes publicKey = 4;
+}
+
+message ExceptionMessage {
+    message Cause {
+        required string exceptionClass = 1;
+        optional string message = 2;
+        optional Cause cause = 3;
+    }
+    required string exceptionClass = 1;
+    optional string message = 2;
+    optional Cause cause = 3;
+    optional string stackTrace = 4;
+}
+
+message CancelOpRequest {
+
+}
+
+message ControlRequest {
+    enum InfoLevel {
+        CONNECTOR_INFO = 1;
+        CONTEXT_INFO = 2;
+        REQUESTS = 3;
+    }
+    repeated InfoLevel infoLevel = 1;
+}
+
+message ControlResponse {
+    message StringMapFieldEntry {
+        //option map_entry = true;
+        optional string key = 1;
+        optional string value = 2;
+    }
+    repeated StringMapFieldEntry contextInfoMap = 1;
+    optional bytes connectorInfos = 2;
+    repeated int64 requestIds = 3;
+}
+
+//Maximum 125 byte
+message PingMessage {
+    
+}
+
+message RPCRequest {
+    //oneof request {
+    optional HandshakeMessage handshakeMessage = 1;
+    optional ControlRequest controlRequest = 2;
+    optional OperationRequest operationRequest = 3;
+    optional CancelOpRequest cancelOpRequest = 4;
+    //}
+}
+
+message RPCResponse {
+    //oneof response {
+    optional HandshakeMessage handshakeMessage = 1;
+    optional ControlResponse controlResponse = 2;
+    optional OperationResponse operationResponse = 3;
+    optional ExceptionMessage error = 4;
+    //}
+}
+
+message RemoteMessage {
+    optional int64 messageId = 1;
+    //oneof message {
+    optional RPCRequest request = 2;
+    optional RPCResponse response = 3;
+    //}
+}

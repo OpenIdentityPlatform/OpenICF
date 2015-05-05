@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2015 ForgeRock AS.
  */
 package org.identityconnectors.common.script;
 
@@ -36,6 +37,7 @@ import java.util.Set;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.operations.ScriptOnConnectorApiOp;
 import org.identityconnectors.framework.spi.operations.ScriptOnConnectorOp;
 import org.identityconnectors.framework.spi.operations.ScriptOnResourceOp;
@@ -54,6 +56,8 @@ import org.identityconnectors.framework.spi.operations.ScriptOnResourceOp;
  * {@link ScriptOnResourceOp}.
  */
 public abstract class ScriptExecutorFactory {
+    
+    private static final Log logger = Log.getLog(ScriptExecutorFactory.class);
 
     private static Map<String, Class<?>> factoryCache;
 
@@ -74,10 +78,10 @@ public abstract class ScriptExecutorFactory {
                     }
                 } catch (RuntimeException e) {
                     throw e;
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     // Probably an error loading or instantiating the SEF
                     // implementation.
-                    // Do not report.
+                    logger.ok("ScriptExecutorFactory {0} can not be activated. Exception:{1}", factory, e.getMessage());
                 }
             }
         }

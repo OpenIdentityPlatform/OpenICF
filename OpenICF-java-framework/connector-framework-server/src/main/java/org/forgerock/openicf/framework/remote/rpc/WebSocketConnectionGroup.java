@@ -1,0 +1,255 @@
+/*
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+ *
+ * Copyright (c) 2015 ForgeRock AS. All rights reserved.
+ *
+ * The contents of this file are subject to the terms
+ * of the Common Development and Distribution License
+ * (the License). You may not use this file except in
+ * compliance with the License.
+ *
+ * You can obtain a copy of the License at
+ * http://forgerock.org/license/CDDLv1.0.html
+ * See the License for the specific language governing
+ * permission and limitations under the License.
+ *
+ * When distributing Covered Code, include this CDDL
+ * Header Notice in each file and include the License file
+ * at http://forgerock.org/license/CDDLv1.0.html
+ * If applicable, add the following below the CDDL Header,
+ * with the fields enclosed by brackets [] replaced by
+ * your own identifying information:
+ * "Portions Copyrighted [year] [name of copyright owner]"
+ */
+
+package org.forgerock.openicf.framework.remote.rpc;
+
+import java.security.Principal;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+
+import org.forgerock.openicf.common.protobuf.RPCMessages;
+import org.forgerock.openicf.common.protobuf.RPCMessages.ControlRequest;
+import org.forgerock.openicf.common.protobuf.RPCMessages.ControlRequest.InfoLevel;
+import org.forgerock.openicf.common.protobuf.RPCMessages.ControlResponse;
+import org.forgerock.openicf.common.protobuf.RPCMessages.HandshakeMessage;
+import org.forgerock.openicf.common.rpc.LocalRequest;
+import org.forgerock.openicf.common.rpc.RemoteConnectionGroup;
+import org.forgerock.openicf.common.rpc.RemoteRequest;
+import org.forgerock.openicf.common.rpc.RemoteRequestFactory;
+import org.forgerock.openicf.framework.CloseListener;
+import org.forgerock.openicf.framework.async.AsyncConnectorInfoManager;
+import org.forgerock.openicf.framework.remote.ManagedAsyncConnectorInfoManager;
+import org.forgerock.openicf.framework.remote.MessagesUtil;
+import org.forgerock.openicf.framework.remote.RemoteConnectorInfoImpl;
+import org.forgerock.util.Pair;
+import org.forgerock.util.promise.Function;
+import org.forgerock.util.promise.Promise;
+import org.identityconnectors.common.ConnectorKeyRange;
+import org.identityconnectors.common.security.Encryptor;
+import org.identityconnectors.framework.api.ConnectorInfo;
+import org.identityconnectors.framework.api.ConnectorKey;
+import org.identityconnectors.framework.impl.api.AbstractConnectorInfo;
+
+import com.google.protobuf.MessageLite;
+
+public class WebSocketConnectionGroup
+        extends
+        RemoteConnectionGroup<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>
+        implements AsyncConnectorInfoManager {
+
+    private Encryptor encryptor = null;
+
+    private RemoteOperationContext operationContext = null;
+
+    private final Set<String> principals = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+
+    private final CloseListener<WebSocketConnectionHolder> closeListener =
+            new CloseListener<WebSocketConnectionHolder>() {
+                public void onClosed(final WebSocketConnectionHolder connection) {
+                    for (Pair<String, WebSocketConnectionHolder> p : webSockets) {
+                        if (connection.equals(p.getSecond())) {
+                            webSockets.remove(p);
+                        }
+                    }
+                }
+            };
+
+    private final RemoteConnectorInfoManager delegate = new RemoteConnectorInfoManager();
+
+    public WebSocketConnectionGroup(final String remoteSessionId) {
+        super(remoteSessionId);
+    }
+
+    public RemoteOperationContext handshake(final Principal connectionPrincipal,
+            final WebSocketConnectionHolder webSocketConnection, final HandshakeMessage message) {
+        if (null == operationContext) {
+            synchronized (this) {
+                if (null == operationContext) {
+                    operationContext = new RemoteOperationContext(connectionPrincipal, this);
+                }
+            }
+        }
+        if (remoteSessionId.equals(message.getSessionId())) {
+            final Pair<String, WebSocketConnectionHolder> entry =
+                    Pair.of(connectionPrincipal.getName(), webSocketConnection);
+            webSockets.add(entry);
+            webSocketConnection.listeners.add(closeListener);
+            principals.add(connectionPrincipal.getName());
+            if (webSockets.indexOf(entry) == 0) {
+                ControlMessageRequestFactory requestFactory = new ControlMessageRequestFactory();
+                requestFactory.infoLevels.add(InfoLevel.CONNECTOR_INFO);
+                trySubmitRequest(requestFactory);
+            }
+        }
+        return operationContext;
+    }
+
+    public void principalIsShuttingDown(final Principal connectionPrincipal) {
+        final String name = connectionPrincipal.getName();
+        if (principals.remove(name)) {
+            if (principals.isEmpty()) {
+                // Gracefully close all request and shut down this group.
+                for (LocalRequest<MessageLite, ?, ?, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> local : localRequests
+                        .values()) {
+                    local.cancel();
+                }
+                for (RemoteRequest<MessageLite, ?, ?, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remote : remoteRequests
+                        .values()) {
+                    remote.getPromise().cancel(true);
+                }
+                delegate.close();
+            }
+            for (Pair<String, WebSocketConnectionHolder> e : webSockets) {
+                if (name.equalsIgnoreCase(e.getFirst())) {
+                    webSockets.remove(e);
+                }
+            }
+        }
+    }
+
+    public <M extends MessageLite> boolean trySendMessage(final M message) {
+        final byte[] messageBytes = message.toByteArray();
+        return Boolean.TRUE
+                .equals(trySendMessage(new Function<WebSocketConnectionHolder, Boolean, Exception>() {
+                    public Boolean apply(WebSocketConnectionHolder value) throws Exception {
+                        value.sendBytes(messageBytes).get();
+                        return Boolean.TRUE;
+                    }
+                }));
+    }
+
+    protected RemoteOperationContext getRemoteConnectionContext() {
+        return operationContext;
+    }
+
+    public boolean isOperational() {
+        for (Pair<String, WebSocketConnectionHolder> e : webSockets) {
+            if (e.getSecond().isOperational()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Encryptor getEncryptor() {
+        return encryptor;
+    }
+
+    // --- AsyncConnectorInfoManager implementation ---
+
+    public Promise<ConnectorInfo, RuntimeException> findConnectorInfoAsync(final ConnectorKey key) {
+        return delegate.findConnectorInfoAsync(key);
+    }
+
+    public Promise<ConnectorInfo, RuntimeException> findConnectorInfoAsync(
+            final ConnectorKeyRange keyRange) {
+        return delegate.findConnectorInfoAsync(keyRange);
+    }
+
+    public List<ConnectorInfo> getConnectorInfos() {
+        return delegate.getConnectorInfos();
+    }
+
+    public ConnectorInfo findConnectorInfo(final ConnectorKey key) {
+        return delegate.findConnectorInfo(key);
+    }
+
+    // --- AsyncConnectorInfoManager implementation ---
+
+    // -- Static Classes
+
+    private class RemoteConnectorInfoManager extends
+            ManagedAsyncConnectorInfoManager<RemoteConnectorInfoImpl, RemoteConnectorInfoManager> {
+        void addAll(List<? extends AbstractConnectorInfo> connectorInfos) {
+            for (AbstractConnectorInfo connectorInfo : connectorInfos) {
+                addConnectorInfo(new RemoteConnectorInfoImpl(WebSocketConnectionGroup.this,
+                        connectorInfo));
+            }
+        }
+    }
+
+    private static class ControlMessageRequestFactory
+            implements
+            RemoteRequestFactory<MessageLite, ControlMessageRequest, Boolean, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> {
+
+        public final EnumSet<InfoLevel> infoLevels = EnumSet.noneOf(InfoLevel.class);
+
+        public ControlMessageRequest createRemoteRequest(
+                RemoteOperationContext context,
+                long requestId,
+                CompletionCallback<MessageLite, Boolean, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
+            return new ControlMessageRequest(context, requestId, completionCallback, infoLevels);
+        }
+    }
+
+    private static class ControlMessageRequest extends RemoteOperationRequest<Boolean> {
+
+        private final EnumSet<InfoLevel> infoLevels;
+
+        public ControlMessageRequest(
+                final RemoteOperationContext context,
+                final long requestId,
+                final RemoteRequestFactory.CompletionCallback<MessageLite, Boolean, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
+                final EnumSet<InfoLevel> infoLevels) {
+            super(context, requestId, completionCallback);
+            this.infoLevels = infoLevels;
+        }
+
+        protected RPCMessages.RPCRequest.Builder createOperationRequest(
+                RemoteOperationContext remoteContext) {
+
+            ControlRequest.Builder builder = ControlRequest.newBuilder();
+            for (InfoLevel infoLevel : infoLevels) {
+                builder.addInfoLevel(infoLevel);
+            }
+            return RPCMessages.RPCRequest.newBuilder().setControlRequest(builder);
+        }
+
+        protected boolean handleResponseMessage(WebSocketConnectionHolder sourceConnection,
+                MessageLite message) {
+            if (message instanceof ControlResponse) {
+                final ControlResponse response = (ControlResponse) message;
+
+                if (response.hasConnectorInfos()) {
+                    List<org.identityconnectors.framework.impl.api.remote.RemoteConnectorInfoImpl> connectorInfos =
+                            MessagesUtil.deserializeLegacy(((ControlResponse) message)
+                                    .getConnectorInfos());
+                    if (null != connectorInfos) {
+                        sourceConnection.getRemoteConnectionContext().getRemoteConnectionGroup().delegate
+                                .addAll(connectorInfos);
+                    }
+                }
+
+                getSuccessHandler().handleResult(Boolean.TRUE);
+
+            } else {
+                return false;
+            }
+            return true;
+        }
+    }
+
+}

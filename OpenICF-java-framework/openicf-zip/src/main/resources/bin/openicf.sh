@@ -48,7 +48,8 @@ fi
 CLASS_PATH="$OPENICF_HOME"/lib/framework/*:"$OPENICF_HOME"/lib/framework
 
 # The fully qualified name of the class to execute
-CLASS="org.identityconnectors.framework.server.Main"
+CLASS_LEGACY="org.identityconnectors.framework.server.Main"
+CLASS="org.forgerock.openicf.framework.server.Main"
 
 # Any command line arguments to be passed to the our Java Daemon implementations init() method
 ARGS="-properties conf/ConnectorServer.properties"

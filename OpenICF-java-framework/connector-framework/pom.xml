@@ -2,7 +2,7 @@
 <!--
  DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
- Copyright (c) 2010-2014 ForgeRock AS. All rights reserved.
+ Copyright (c) 2010-2015 ForgeRock AS. All rights reserved.
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -27,7 +27,7 @@
     <parent>
         <groupId>org.forgerock.openicf.framework</groupId>
         <artifactId>framework</artifactId>
-        <version>1.4.2.0-SNAPSHOT</version>
+        <version>1.5.0.0-SNAPSHOT</version>
     </parent>
     <artifactId>connector-framework</artifactId>
     <packaging>bundle</packaging>

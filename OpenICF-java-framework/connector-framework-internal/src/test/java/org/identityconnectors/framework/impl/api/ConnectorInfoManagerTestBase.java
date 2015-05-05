@@ -19,7 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- * Portions Copyrighted 2010-2014 ForgeRock AS.
+ * Portions Copyrighted 2010-2015 ForgeRock AS.
  */
 package org.identityconnectors.framework.impl.api;
 
@@ -43,8 +43,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.common.FailureHandler;
 import org.identityconnectors.common.Version;
 import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.common.security.GuardedString;
@@ -56,6 +60,7 @@ import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.api.ConnectorInfoManager;
 import org.identityconnectors.framework.api.ConnectorKey;
+import org.identityconnectors.framework.api.SubscriptionHandler;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
@@ -86,6 +91,9 @@ import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.framework.impl.api.local.ConnectorPoolManager;
 import org.identityconnectors.framework.impl.api.local.LocalConnectorFacadeImpl;
 import org.identityconnectors.framework.impl.api.remote.RemoteWrappedException;
+import org.identityconnectors.test.common.ToListResultsHandler;
+import org.testng.Assert;
+import org.testng.Reporter;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
@@ -94,7 +102,7 @@ import org.testng.annotations.Test;
 public abstract class ConnectorInfoManagerTestBase {
 
     protected static ConnectorInfo findConnectorInfo(ConnectorInfoManager manager, String version,
-                                                     String connectorName) {
+            String connectorName) {
         for (ConnectorInfo info : manager.getConnectorInfos()) {
             ConnectorKey key = info.getConnectorKey();
             if (version.equals(key.getBundleVersion())
@@ -140,14 +148,13 @@ public abstract class ConnectorInfoManagerTestBase {
         ConfigurationProperty property = props.getProperty("numResults");
         property.setValue(1);
 
-        ConnectorFacade facade1 = ConnectorFacadeFactory.getInstance().newInstance(
-                apiConfig1);
+        ConnectorFacade facade1 = ConnectorFacadeFactory.getInstance().newInstance(apiConfig1);
 
         ConnectorFacade facade2 =
                 ConnectorFacadeFactory.getInstance().newInstance(
                         info2.createDefaultAPIConfiguration());
 
-        Set<Attribute> attrs = CollectionUtil.<Attribute>newReadOnlySet();
+        Set<Attribute> attrs = CollectionUtil.<Attribute> newReadOnlySet();
         assertEquals(facade1.create(ObjectClass.ACCOUNT, attrs, null).getUidValue(), "1.0");
         assertEquals(facade2.create(ObjectClass.ACCOUNT, attrs, null).getUidValue(), "2.0");
 
@@ -193,21 +200,19 @@ public abstract class ConnectorInfoManagerTestBase {
             // platform-independent).
             assertTrue(e.getMessage().contains(errorMessageBundle.getString("filetooshort"))
                     || e.getMessage()
-                    .contains(errorMessageBundle.getString("nosuitableimagefound"))
-                    || e.getMessage()
-                    .contains(errorMessageBundle.getString("notvalidwin32application"))
-                    || e.getMessage()
-                    .contains(errorMessageBundle.getString("nonativein")));
+                            .contains(errorMessageBundle.getString("nosuitableimagefound"))
+                    || e.getMessage().contains(
+                    errorMessageBundle.getString("notvalidwin32application"))
+                    || e.getMessage().contains(errorMessageBundle.getString("nonativein")));
         } catch (RuntimeException e) {
             // Remote framework serializes UnsatisfiedLinkError as
             // RuntimeException.
             assertTrue(e.getMessage().contains(errorMessageBundle.getString("filetooshort"))
                     || e.getMessage()
-                    .contains(errorMessageBundle.getString("nosuitableimagefound"))
-                    || e.getMessage()
-                    .contains(errorMessageBundle.getString("notvalidwin32application"))
-                    || e.getMessage()
-                    .contains(errorMessageBundle.getString("nonativein")));
+                            .contains(errorMessageBundle.getString("nosuitableimagefound"))
+                    || e.getMessage().contains(
+                    errorMessageBundle.getString("notvalidwin32application"))
+                    || e.getMessage().contains(errorMessageBundle.getString("nonativein")));
         }
     }
 
@@ -215,7 +220,7 @@ public abstract class ConnectorInfoManagerTestBase {
      * Attempt to test the information from the configuration.
      *
      * @throws Exception
-     *         if there is an issue.
+     *             if there is an issue.
      */
     @Test
     public void testAPIConfiguration() throws Exception {
@@ -268,7 +273,7 @@ public abstract class ConnectorInfoManagerTestBase {
      * Attempt to test the information from the configuration.
      *
      * @throws Exception
-     *         if there is an issue.
+     *             if there is an issue.
      */
     @Test
     public void testValidate() throws Exception {
@@ -314,9 +319,10 @@ public abstract class ConnectorInfoManagerTestBase {
     }
 
     /**
-     * Main purpose of this is to test searching with many results and that we can properly handle stopping in the
-     * middle of this. There's a bunch of code in the remote stuff that is there to handle this in particular that we
-     * want to excercise.
+     * Main purpose of this is to test searching with many results and that we
+     * can properly handle stopping in the middle of this. There's a bunch of
+     * code in the remote stuff that is there to handle this in particular that
+     * we want to excercise.
      */
     @Test
     public void testSearchWithManyResults() throws Exception {
@@ -369,7 +375,8 @@ public abstract class ConnectorInfoManagerTestBase {
         }, null);
 
         assertEquals(results.size(), 500);
-        assertTrue(searchResult.getRemainingPagedResults() == 500 || searchResult.getRemainingPagedResults() == 401);
+        assertTrue(searchResult.getRemainingPagedResults() == 500
+                || searchResult.getRemainingPagedResults() == 401);
         for (int i = 0; i < results.size(); i++) {
             ConnectorObject obj = results.get(i);
             assertEquals(obj.getUid().getUidValue(), String.valueOf(i));
@@ -440,13 +447,14 @@ public abstract class ConnectorInfoManagerTestBase {
         for (int j = 0; j < 50; j++) {
             attrs.add(AttributeBuilder.build("myattributename" + j, "myattributevalue" + j));
         }
-        return new Object[][]{{attrs}};
+        return new Object[][] { { attrs } };
     }
 
     /**
-     * Main purpose of this is to test sync with many results and that we can properly handle stopping in the middle of
-     * this. There's a bunch of code in the remote stuff that is there to handle this in particular that we want to
-     * excercise.
+     * Main purpose of this is to test sync with many results and that we can
+     * properly handle stopping in the middle of this. There's a bunch of code
+     * in the remote stuff that is there to handle this in particular that we
+     * want to excercise.
      */
     @Test
     public void testSyncWithManyResults() throws Exception {
@@ -509,7 +517,7 @@ public abstract class ConnectorInfoManagerTestBase {
     @Test(dataProvider = "statefulConnectors")
     public void testSyncTokenResults(ConnectorFacade facade) {
         Uid uid =
-                facade.create(ObjectClass.ACCOUNT, CollectionUtil.<Attribute>newReadOnlySet(),
+                facade.create(ObjectClass.ACCOUNT, CollectionUtil.<Attribute> newReadOnlySet(),
                         null);
 
         SyncToken latest = facade.getLatestSyncToken(ObjectClass.ACCOUNT);
@@ -524,6 +532,58 @@ public abstract class ConnectorInfoManagerTestBase {
             }, null);
             assertNotNull(lastToken);
             assertEquals(lastToken.getValue(), latest.getValue());
+        }
+    }
+
+    @Test(dataProvider = "statefulConnectors")
+    public void testSubscriptionOperation(ConnectorFacade facade) throws Exception {
+        if (facade instanceof LocalConnectorFacadeImpl) {
+            final ToListResultsHandler handler = new ToListResultsHandler();
+            final CountDownLatch latch = new CountDownLatch(1);
+            final AtomicReference<SubscriptionHandler> subscriptionHandler =
+                    new AtomicReference<SubscriptionHandler>(facade.subscribe(ObjectClass.ACCOUNT,
+                            null, new ResultsHandler() {
+                                public boolean handle(ConnectorObject connectorObject) {
+                                    Reporter.log("Connector Event received:"
+                                            + connectorObject.getUid(), true);
+                                    return handler.handle(connectorObject);
+                                }
+                            }, null));
+
+            subscriptionHandler.get().onFailure(new FailureHandler<RuntimeException>() {
+                public void handleError(RuntimeException error) {
+                    latch.countDown();
+                    Assert.assertEquals(handler.getObjects().size(), 10,
+                            "Uncompleted  subscription");
+                }
+            });
+
+            latch.await(25, TimeUnit.SECONDS);
+
+            final CountDownLatch syncLatch = new CountDownLatch(1);
+            handler.getObjects().clear();
+
+            subscriptionHandler.set((facade.subscribe(ObjectClass.ACCOUNT, null,
+                    new SyncResultsHandler() {
+                        public boolean handle(SyncDelta delta) {
+                            Reporter.log("Sync Event received:"
+                                    + delta.getToken(), true);
+                            if (((Integer) delta.getToken().getValue()) > 2) {
+                                subscriptionHandler.get().unsubscribe();
+                                syncLatch.countDown();
+                            }
+                            return handler.handle(delta.getObject());
+                        }
+                    }, null)));
+
+            subscriptionHandler.get().onFailure(new FailureHandler<RuntimeException>() {
+                public void handleError(RuntimeException error) {
+                    syncLatch.countDown();
+                    Assert.fail("Failed Subscription", error);
+                }
+            });
+            syncLatch.await(25, TimeUnit.SECONDS);
+            Assert.assertTrue(handler.getObjects().size() < 10 && handler.getObjects().size() > 2);
         }
     }
 
@@ -616,7 +676,7 @@ public abstract class ConnectorInfoManagerTestBase {
         OperationOptionsBuilder builder = new OperationOptionsBuilder();
         builder.setOption("testPooling", "true");
         OperationOptions options = builder.build();
-        Set<Attribute> attrs = CollectionUtil.<Attribute>newReadOnlySet();
+        Set<Attribute> attrs = CollectionUtil.<Attribute> newReadOnlySet();
         assertEquals(facade1.create(ObjectClass.ACCOUNT, attrs, options).getUidValue(), "1");
         assertEquals(facade1.create(ObjectClass.ACCOUNT, attrs, options).getUidValue(), "2");
         assertEquals(facade1.create(ObjectClass.ACCOUNT, attrs, options).getUidValue(), "3");
@@ -647,7 +707,7 @@ public abstract class ConnectorInfoManagerTestBase {
 
         ConnectorFacade facade1 = ConnectorFacadeFactory.getInstance().newInstance(config);
 
-        Set<Attribute> attrs = CollectionUtil.<Attribute>newReadOnlySet();
+        Set<Attribute> attrs = CollectionUtil.<Attribute> newReadOnlySet();
         String uid = facade1.create(ObjectClass.ACCOUNT, attrs, null).getUidValue();
         assertEquals(facade1.create(ObjectClass.ACCOUNT, attrs, null).getUidValue(), uid);
         assertEquals(facade1.create(ObjectClass.ACCOUNT, attrs, null).getUidValue(), uid);
@@ -812,7 +872,7 @@ public abstract class ConnectorInfoManagerTestBase {
 
         ConnectorFacade facade1 = ConnectorFacadeFactory.getInstance().newInstance(config);
 
-        Set<Attribute> attrs = CollectionUtil.<Attribute>newReadOnlySet();
+        Set<Attribute> attrs = CollectionUtil.<Attribute> newReadOnlySet();
         try {
             facade1.create(ObjectClass.ACCOUNT, attrs, opBuilder.build()).getUidValue();
             fail("expected timeout");
@@ -836,7 +896,7 @@ public abstract class ConnectorInfoManagerTestBase {
     @Test(dataProvider = "statefulConnectors")
     public void testMVCCControl(AbstractConnectorFacade facade) {
         Uid uid =
-                facade.create(ObjectClass.ACCOUNT, CollectionUtil.<Attribute>newReadOnlySet(),
+                facade.create(ObjectClass.ACCOUNT, CollectionUtil.<Attribute> newReadOnlySet(),
                         null);
 
         if (facade instanceof LocalConnectorFacadeImpl) {
@@ -890,7 +950,7 @@ public abstract class ConnectorInfoManagerTestBase {
 
         APIConfiguration config = info.createDefaultAPIConfiguration();
 
-        test.add(new Object[]{ConnectorFacadeFactory.getInstance().newInstance(config)});
+        test.add(new Object[] { ConnectorFacadeFactory.getInstance().newInstance(config) });
 
         info =
                 findConnectorInfo(manager, "1.0.0.0",
@@ -902,7 +962,7 @@ public abstract class ConnectorInfoManagerTestBase {
         config.getConnectorPoolConfiguration().setMinIdle(0);
         config.getConnectorPoolConfiguration().setMaxIdle(0);
 
-        test.add(new Object[]{ConnectorFacadeFactory.getInstance().newInstance(config)});
+        test.add(new Object[] { ConnectorFacadeFactory.getInstance().newInstance(config) });
 
         return test.iterator();
     }

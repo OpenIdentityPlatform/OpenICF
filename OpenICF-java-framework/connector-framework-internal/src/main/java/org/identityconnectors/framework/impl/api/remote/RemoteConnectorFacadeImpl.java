@@ -19,7 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- * Portions Copyrighted 2010-2014 ForgeRock AS.
+ * Portions Copyrighted 2010-2015 ForgeRock AS.
  */
 package org.identityconnectors.framework.impl.api.remote;
 
@@ -27,6 +27,8 @@ import java.lang.reflect.InvocationHandler;
 import java.util.HashMap;
 
 import org.identityconnectors.framework.api.operations.APIOperation;
+import org.identityconnectors.framework.api.operations.ConnectorEventSubscriptionApiOp;
+import org.identityconnectors.framework.api.operations.SyncEventSubscriptionApiOp;
 import org.identityconnectors.framework.common.serializer.SerializerUtil;
 import org.identityconnectors.framework.impl.api.APIConfigurationImpl;
 import org.identityconnectors.framework.impl.api.AbstractConnectorFacade;
@@ -65,6 +67,10 @@ public class RemoteConnectorFacadeImpl extends AbstractConnectorFacade {
 
     @Override
     protected APIOperation getOperationImplementation(final Class<? extends APIOperation> api) {
+        if (api == ConnectorEventSubscriptionApiOp.class || api == SyncEventSubscriptionApiOp.class) {
+            //Not supported remotely with legacy communication protocol 
+            return null;
+        }
         // add remote proxy
         InvocationHandler handler =
                 new RemoteOperationInvocationHandler((RemoteConnectorInfoImpl) getAPIConfiguration()

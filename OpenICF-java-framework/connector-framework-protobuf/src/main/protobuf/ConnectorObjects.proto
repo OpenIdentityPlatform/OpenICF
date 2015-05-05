@@ -1,0 +1,212 @@
+package org.forgerock.openicf.common.protobuf;
+
+import "CommonObjectMessages.proto";
+
+
+message ObjectPoolConfiguration {
+    required int32 maxObjects = 1 [default = 10];
+    required int32 maxIdle = 2 [default = 10];
+    required int64 maxWait = 3 [default = 150000];
+    required int64 minEvictableIdleTimeMillis = 4 [default = 120000];
+    required int32 minIdle = 5 [default = 1];
+}
+
+message ResultsHandlerConfiguration {
+    required bool enableNormalizingResultsHandler = 1 [default = true];
+    required bool enableFilteredResultsHandler = 2 [default = true];
+    required bool enableCaseInsensitiveFilter = 3 [default = false];
+    required bool enableAttributesToGetSearchResultsHandler = 4 [default = true];
+}
+
+message ConfigurationProperty {
+    required int32 order = 1 [default = -1];
+    required bool required = 2 [default = false];
+    required bool confidential = 3 [default = false];
+    required string name = 4;
+    required string helpMessageKey = 5;
+    required string displayMessageKey = 6;
+    required string groupMessageKey = 7;
+
+    required string type = 8;
+    required string value = 9;
+
+    repeated SPIOperation operations = 10;
+}
+
+enum SPIOperation {
+    AUTHENTICATIONOP = 1;
+    CREATEOP = 2;
+    DELETEOP = 3;
+    RESOLVEUSERNAMEOP = 4;
+    SCHEMAOP = 5;
+    SCRIPTONCONNECTOROP = 6;
+    SCRIPTONRESOURCEOP = 7;
+    SEARCHOP = 8;
+    SYNCOP = 9;
+    TESTOP = 10;
+    UPDATEATTRIBUTEVALUESOP = 11;
+    UPDATEOP = 12;
+}
+
+enum APIOperation {
+    AUTHENTICATIONAPIOP = 1;
+    CREATEAPIOP = 2;
+    DELETEAPIOP = 3;
+    GETAPIOP = 4;
+    RESOLVEUSERNAMEAPIOP = 5;
+    SCHEMAAPIOP = 6;
+    SCRIPTONCONNECTORAPIOP = 7;
+    SCRIPTONRESOURCEAPIOP = 8;
+    SEARCHAPIOP = 9;
+    SYNCAPIOP = 10;
+    TESTAPIOP = 11;
+    UPDATEAPIOP = 12;
+    VALIDATEAPIOP = 13;
+}
+
+message APIConfiguration {
+    required int32 order = 1 [default = 0];
+    required bool connectorPoolingSupported = 2 [default = false];
+    required ObjectPoolConfiguration connectorPoolConfiguration = 3;
+    required ResultsHandlerConfiguration resultsHandlerConfiguration = 4;
+    repeated ConfigurationProperty configurationProperties = 5;
+    repeated TimeoutMapFieldEntry timeoutMap = 6;
+    repeated APIOperation supportedOperations = 7;
+    optional int32 producerBufferSize = 8 [default = 0];
+}
+
+
+message TimeoutMapFieldEntry {
+    //option map_entry = true;
+    optional APIOperation key = 1;
+    optional int32 value = 2 [default = -1];
+}
+
+message StringMapFieldEntry {
+    //option map_entry = true;
+    optional string key = 1;
+    optional string value = 2;
+}
+
+message CatalogMapFieldEntry {
+    //option map_entry = true;
+    optional Locale key = 1;
+    repeated StringMapFieldEntry value = 2;
+}
+
+message ConnectorMessages {
+    repeated CatalogMapFieldEntry catalogs = 1; //Map<Locale, Map<String, String>>
+}
+
+message ConnectorInfo {
+    optional string connectorDisplayNameKey = 1;
+    optional string connectorCategoryKey = 2 [deprecated = true];
+    optional ConnectorKey connectorKey = 3;
+    optional ConnectorMessages connectorMessages = 4;
+    optional APIConfiguration APIConfiguration = 5;
+}
+
+
+
+message SyncTokenTest {
+    required AttributeUnionValue value = 1;
+}
+
+
+// Map<String, Object> and Collection<Object> Support
+
+message ConfigurationCollectionValue {
+    optional bool caseInsensitive = 1 [default = false];
+    repeated ConfigurationUnionValue configuration = 2;
+}
+
+
+
+message ConfigurationUnionValue {
+    oneof payload {
+        string stringValue = 1;
+        int64 longValue = 2;
+        string characterValue =3;
+        double doubleValue = 4;
+        float floatValue = 5;
+        int32 integerValue = 6;
+        bool booleanValue = 7;
+        string uriValue = 8;
+        string fileValue = 9;
+        bytes guardedByteArrayValue = 10;
+        bytes guardedStringValue = 11;
+        Script scriptValue = 12;
+    }
+}
+
+message AttributeCollectionValue {
+    optional bool caseInsensitive = 1 [default = false];
+    repeated AttributeUnionValue attribute = 2;
+}
+
+message AttributeMapValue {
+    required bool caseInsensitive = 1 [default = false];
+    repeated AttributeMapFieldEntry value = 2;
+}
+
+message AttributeMapFieldEntry {
+    //option map_entry = true;
+    optional string key = 1;
+    oneof value {
+        AttributeUnionValue attribute = 2;
+        AttributeCollectionValue collectionAttribute = 3;
+    }
+}
+
+message AttributeMessage {
+    //option map_entry = true;
+    required string name = 1;
+    repeated AttributeUnionValue value = 2;
+}
+
+message AttributeUnionValue {
+    oneof payload {
+        string stringValue = 1;
+        int64 longValue = 2;
+        string characterValue =3;
+        double doubleValue = 4;
+        float floatValue = 5;
+        int32 integerValue = 6;
+        bool booleanValue = 7;
+        bytes byteValue = 8;
+        bytes byteArrayValue = 9;
+        BigDecimal bigDecimalValue = 10;
+        string bigIntegerValue = 11;
+        bytes guardedByteArrayValue = 12;
+        bytes guardedStringValue = 13;
+        AttributeMapValue mapValue = 14;
+    }
+}
+
+message OperationOptionUnionValue {
+    oneof payload {
+        string stringValue = 1;
+        int64 longValue = 2;
+        string characterValue =3;
+        double doubleValue = 4;
+        float floatValue = 5;
+        int32 integerValue = 6;
+        bool booleanValue = 7;
+        string uriValue = 8;
+        string fileValue = 9;
+        bytes guardedByteArrayValue = 10;
+        bytes guardedStringValue = 11;
+        Script scriptValue = 12;
+        string objectClassValue = 13;
+        Uid uidValue = 14;
+        QualifiedUid qualifiedUidValue = 15;
+        SortKey sortKeyValue = 16;
+    }
+}
+
+message OperationOptionMapFieldEntry {
+    //option map_entry = true;
+    optional string key = 1;
+    repeated OperationOptionUnionValue values = 2;
+    optional bool isArray = 3 [default = false];
+}

@@ -19,7 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- * Portions Copyrighted 2010-2013 ForgeRock AS.
+ * Portions Copyrighted 2010-2015 ForgeRock AS.
  */
 
 package org.identityconnectors.framework.impl.api.local;
@@ -287,7 +287,12 @@ public class ObjectPool<T> {
                     if (totalPermit.tryAcquire()) {
                         // If the pool is empty and there are available permits
                         // then create a new instance.
-                        return makeObject();
+                        try {
+                            return makeObject();
+                        } catch (Throwable t){
+                            totalPermit.release();
+                            throw ConnectorException.wrap(t);
+                        }
                     } else {
                         // Wait for permit or object to became available
                         try {

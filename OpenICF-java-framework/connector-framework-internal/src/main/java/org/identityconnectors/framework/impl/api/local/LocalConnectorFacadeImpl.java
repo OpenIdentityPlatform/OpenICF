@@ -19,16 +19,23 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- * Portions Copyrighted 2010-2014 ForgeRock AS.
+ * Portions Copyrighted 2010-2015 ForgeRock AS.
  */
 package org.identityconnectors.framework.impl.api.local;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
+import org.identityconnectors.framework.api.operations.ConnectorEventSubscriptionApiOp;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
 import org.identityconnectors.framework.api.operations.GetApiOp;
@@ -38,6 +45,7 @@ import org.identityconnectors.framework.api.operations.ScriptOnConnectorApiOp;
 import org.identityconnectors.framework.api.operations.ScriptOnResourceApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
 import org.identityconnectors.framework.api.operations.SyncApiOp;
+import org.identityconnectors.framework.api.operations.SyncEventSubscriptionApiOp;
 import org.identityconnectors.framework.api.operations.TestApiOp;
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.api.operations.ValidateApiOp;
@@ -59,6 +67,7 @@ import org.identityconnectors.framework.impl.api.local.operations.SchemaImpl;
 import org.identityconnectors.framework.impl.api.local.operations.ScriptOnConnectorImpl;
 import org.identityconnectors.framework.impl.api.local.operations.ScriptOnResourceImpl;
 import org.identityconnectors.framework.impl.api.local.operations.SearchImpl;
+import org.identityconnectors.framework.impl.api.local.operations.SubscriptionImpl;
 import org.identityconnectors.framework.impl.api.local.operations.SyncImpl;
 import org.identityconnectors.framework.impl.api.local.operations.TestImpl;
 import org.identityconnectors.framework.impl.api.local.operations.ThreadClassLoaderManagerProxy;
@@ -122,6 +131,11 @@ public class LocalConnectorFacadeImpl extends AbstractConnectorFacade {
     private final ConnectorOperationalContext operationalContext;
 
     /**
+     * Shared thread counter. 
+     */
+    private final ReferenceCounter referenceCounter = new ReferenceCounter();
+    
+    /**
      * Builds up the maps of supported operations and calls.
      */
     public LocalConnectorFacadeImpl(final LocalConnectorInfoImpl connectorInfo,
@@ -170,6 +184,7 @@ public class LocalConnectorFacadeImpl extends AbstractConnectorFacade {
     protected APIOperation getOperationImplementation(final Class<? extends APIOperation> api) {
 
         APIOperation proxy;
+        boolean enableTimeoutProxy = true;
         // first create the inner proxy - this is the proxy that obtaining
         // a connector from the pool, etc
         // NOTE: we want to skip this part of the proxy for
@@ -184,6 +199,24 @@ public class LocalConnectorFacadeImpl extends AbstractConnectorFacade {
             final ConnectorAPIOperationRunnerProxy handler =
                     new ConnectorAPIOperationRunnerProxy(getOperationalContext(), constructor);
             proxy = new GetImpl((SearchApiOp) newAPIOperationProxy(SearchApiOp.class, handler));
+        } else if (api == ConnectorEventSubscriptionApiOp.class
+                || api == SyncEventSubscriptionApiOp.class) {
+            final ConnectorAPIOperationRunnerProxy handler =
+                    new ConnectorAPIOperationRunnerProxy(getOperationalContext(), null) {
+                        protected APIOperationRunner getApiOperationRunner(
+                                final ConnectorOperationalContext operationalContext,
+                                final Connector connector) throws Exception {
+                            if (api == ConnectorEventSubscriptionApiOp.class) {
+                                return new SubscriptionImpl.ConnectorEventSubscriptionApiOpImp(
+                                        operationalContext, connector, referenceCounter);
+                            } else {
+                                return new SubscriptionImpl.SyncEventSubscriptionApiOpImpl(
+                                        operationalContext, connector, referenceCounter);
+                            }
+                        }
+                    };
+            proxy = newAPIOperationProxy(api, handler);
+            enableTimeoutProxy = false;
         } else {
             final Constructor<? extends APIOperationRunner> constructor = API_TO_IMPL.get(api);
             final ConnectorAPIOperationRunnerProxy handler =
@@ -196,12 +229,67 @@ public class LocalConnectorFacadeImpl extends AbstractConnectorFacade {
                 newAPIOperationProxy(api, new ThreadClassLoaderManagerProxy(connectorInfo
                         .getConnectorClass().getClassLoader(), proxy));
 
-        // now wrap the proxy in the appropriate timeout proxy
-        proxy = createTimeoutProxy(api, proxy);
+        if (enableTimeoutProxy) {
+            // now wrap the proxy in the appropriate timeout proxy
+            proxy = createTimeoutProxy(api, proxy);
+        }
         // wrap in a logging proxy..
         if (LoggingProxy.isLoggable()) {
             proxy = createLoggingProxy(api, proxy);
         }
+        proxy = newAPIOperationProxy(api, new ReferenceCountingProxy(proxy));
+        
         return proxy;
+    }
+    
+    public boolean isUnusedFor(long duration, TimeUnit timeUnit){
+        return referenceCounter.isUnusedFor(duration, timeUnit);
+    }
+    
+    public static class ReferenceCounter {
+        private final AtomicInteger threadCounts = new AtomicInteger(0);
+        private final AtomicLong lastUsed = new AtomicLong(System.nanoTime());
+
+        public boolean isUnusedFor(long duration, TimeUnit timeUnit){
+            return threadCounts.get() == 0 && System.nanoTime() - lastUsed.get() > timeUnit.toNanos(duration);
+        }
+        
+        
+        public void acquire(){
+            threadCounts.incrementAndGet();
+        }
+        
+        public void release(){
+            if (threadCounts.decrementAndGet() <= 0){
+                lastUsed.set(System.nanoTime());
+                
+            }
+        }
+        
+    }
+    
+    private class ReferenceCountingProxy implements InvocationHandler {
+
+        private final Object target;
+
+        public ReferenceCountingProxy(final Object target) {
+            this.target = target;
+        }
+
+        @SuppressWarnings("unchecked")
+        public Object invoke(Object proxy, Method method, Object[] arguments) throws Throwable {
+            // do not log equals, hashCode, toString
+            if (method.getDeclaringClass() == Object.class) {
+                return method.invoke(target, arguments);
+            }
+            try {
+                referenceCounter.acquire();
+                return method.invoke(target, arguments);
+            } catch (InvocationTargetException e) {
+                throw e.getTargetException();
+            } finally {
+                referenceCounter.release();
+            }
+        }
     }
 }

@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2015 ForgeRock AS.
  */
 package org.identityconnectors.common;
 
@@ -474,7 +475,33 @@ public final class CollectionUtil {
      *            The second object. May be null.
      * @return true if the two objects are equal.
      */
-    public static boolean equals(Object o1, Object o2) {
+    public static boolean equals(final Object o1, final Object o2) {
+      return equals(o1, o2, false);
+    }
+
+
+    /**
+     * Equality function that properly handles arrays, lists, maps, lists of
+     * arrays, and maps of arrays.
+     * <p>
+     * NOTE: For Sets, this relies on the equals method of the Set to do the
+     * right thing. This is a reasonable assumption since, in order for Sets to
+     * behave properly as Sets, their values must already have a proper
+     * implementation of equals. (Or they must be specialized Sets that define a
+     * custom comparator that knows how to do the right thing). The same holds
+     * true for Map keys. Map values, on the other hand, are compared (so Map
+     * values can be arrays).
+     *
+     * @param o1
+     *            The first object. May be null.
+     * @param o2
+     *            The second object. May be null.
+     * @param equalsIgnoreCase
+     *            if true the String and Character comparison is case-ignore
+     * @return true if the two objects are equal.
+     * @since 1.5
+     */
+    public static boolean equals(final Object o1, final Object o2, boolean equalsIgnoreCase) {
         if (o1 == o2) { // same object or both null
             return true;
         } else if (o1 == null) {
@@ -495,7 +522,7 @@ public final class CollectionUtil {
             for (int i = 0; i < length1; i++) {
                 Object el1 = Array.get(o1, i);
                 Object el2 = Array.get(o2, i);
-                if (!CollectionUtil.equals(el1, el2)) {
+                if (!CollectionUtil.equals(el1, el2, equalsIgnoreCase)) {
                     return false;
                 }
             }
@@ -510,7 +537,7 @@ public final class CollectionUtil {
                 for (int i = 0; i < l1.size(); i++) {
                     Object el1 = l1.get(i);
                     Object el2 = l2.get(i);
-                    if (!CollectionUtil.equals(el1, el2)) {
+                    if (!CollectionUtil.equals(el1, el2, equalsIgnoreCase)) {
                         return false;
                     }
                 }
@@ -543,7 +570,7 @@ public final class CollectionUtil {
                         return false;
                     }
                     Object val2 = m2.get(key1);
-                    if (!CollectionUtil.equals(val1, val2)) {
+                    if (!CollectionUtil.equals(val1, val2, equalsIgnoreCase)) {
                         return false;
                     }
                 }
@@ -551,6 +578,11 @@ public final class CollectionUtil {
             } else {
                 return false;
             }
+        } else if (equalsIgnoreCase && o1 instanceof String && o2 instanceof String) {
+            return ((String) o1).equalsIgnoreCase((String) o2);
+        } else if (equalsIgnoreCase && o1 instanceof Character
+                && o2 instanceof Character) {
+            return Character.toLowerCase((Character) o1) == Character.toLowerCase((Character) o2);
         } else {
             return o1.equals(o2);
         }

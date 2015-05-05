@@ -19,7 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- * Portions Copyrighted 2010-2014 ForgeRock AS.
+ * Portions Copyrighted 2010-2015 ForgeRock AS.
  * Portions Copyrighted 2010-2014 Tirasa.
  */
 package org.identityconnectors.framework.impl.api.local;
@@ -105,7 +105,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         return rv;
     }
 
-    private static WorkingBundleInfo processDirectory(final File dir) throws ConfigurationException {
+    public static WorkingBundleInfo processDirectory(final File dir) throws ConfigurationException {
         final WorkingBundleInfo info = new WorkingBundleInfo(dir.getAbsolutePath());
         try {
             // easy case - nothing needs to be copied
@@ -168,7 +168,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         }
     }
 
-    private static WorkingBundleInfo processURL(final URL url, final boolean topLevel)
+    public static WorkingBundleInfo processURL(final URL url, final boolean topLevel)
             throws ConfigurationException {
         final WorkingBundleInfo info = new WorkingBundleInfo(url.toString());
         final BundleTempDirectory tempDir = new BundleTempDirectory();
@@ -236,7 +236,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
     /**
      * Final pass - create connector infos
      */
-    private static List<ConnectorInfo> createConnectorInfo(
+    public static List<ConnectorInfo> createConnectorInfo(
             final Collection<WorkingBundleInfo> parsed, final ClassLoader bundleParentClassLoader)
             throws ConfigurationException {
         final List<ConnectorInfo> rv = new ArrayList<ConnectorInfo>();

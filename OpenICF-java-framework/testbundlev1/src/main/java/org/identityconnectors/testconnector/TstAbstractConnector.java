@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 ForgeRock AS. All Rights Reserved
+ * Copyright (c) 2013-2015 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -35,7 +35,15 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.common.l10n.CurrentLocale;
+import org.identityconnectors.common.script.ScriptExecutorFactory;
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException;
@@ -49,24 +57,45 @@ import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
 import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.OperationalAttributeInfos;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
+import org.identityconnectors.framework.common.objects.Schema;
+import org.identityconnectors.framework.common.objects.SchemaBuilder;
+import org.identityconnectors.framework.common.objects.ScriptContext;
 import org.identityconnectors.framework.common.objects.SearchResult;
 import org.identityconnectors.framework.common.objects.SortKey;
+import org.identityconnectors.framework.common.objects.SyncDelta;
+import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
+import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
+import org.identityconnectors.framework.common.objects.filter.FilteredResultsHandlerVisitor;
+import org.identityconnectors.framework.spi.AsyncCallbackHandler;
 import org.identityconnectors.framework.spi.Configuration;
+import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.SearchResultsHandler;
 import org.identityconnectors.framework.spi.SyncTokenResultsHandler;
+import org.identityconnectors.framework.spi.operations.AuthenticateOp;
+import org.identityconnectors.framework.spi.operations.ConnectorEventSubscriptionOp;
 import org.identityconnectors.framework.spi.operations.CreateOp;
 import org.identityconnectors.framework.spi.operations.DeleteOp;
+import org.identityconnectors.framework.spi.operations.ResolveUsernameOp;
+import org.identityconnectors.framework.spi.operations.SchemaOp;
+import org.identityconnectors.framework.spi.operations.ScriptOnResourceOp;
 import org.identityconnectors.framework.spi.operations.SearchOp;
+import org.identityconnectors.framework.spi.operations.SyncEventSubscriptionOp;
 import org.identityconnectors.framework.spi.operations.SyncOp;
+import org.identityconnectors.framework.spi.operations.TestOp;
+import org.identityconnectors.framework.spi.operations.UpdateOp;
 
-public abstract class TstAbstractConnector implements CreateOp, SearchOp<Filter>, SyncOp, DeleteOp {
+public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorEventSubscriptionOp,
+        CreateOp, DeleteOp, ResolveUsernameOp, SchemaOp, ScriptOnResourceOp, SearchOp<Filter>,
+        SyncEventSubscriptionOp, SyncOp, TestOp, UpdateOp {
 
     private static final class ResourceComparator implements Comparator<ConnectorObject> {
         private final List<SortKey> sortKeys;
@@ -100,7 +129,8 @@ public abstract class TstAbstractConnector implements CreateOp, SearchOp<Filter>
             } else {
                 final Object v1 = vs1.get(0);
                 final Object v2 = vs2.get(0);
-                return sortKey.isAscendingOrder() ? compareValues(v1, v2) : -compareValues(v1, v2);
+                return sortKey.isAscendingOrder() ? CollectionUtil.forceCompare(v1, v2) : -1
+                        * CollectionUtil.forceCompare(v1, v2);
             }
         }
 
@@ -121,27 +151,9 @@ public abstract class TstAbstractConnector implements CreateOp, SearchOp<Filter>
     private static final Comparator<Object> VALUE_COMPARATOR = new Comparator<Object>() {
 
         public int compare(final Object o1, final Object o2) {
-            return compareValues(o1, o2);
+            return CollectionUtil.forceCompare(o1, o2);
         }
     };
-
-    private static int compareValues(final Object v1, final Object v2) {
-        if (v1 instanceof String && v2 instanceof String) {
-            final String s1 = (String) v1;
-            final String s2 = (String) v2;
-            return s1.compareToIgnoreCase(s2);
-        } else if (v1 instanceof Number && v2 instanceof Number) {
-            final Double n1 = ((Number) v1).doubleValue();
-            final Double n2 = ((Number) v2).doubleValue();
-            return n1.compareTo(n2);
-        } else if (v1 instanceof Boolean && v2 instanceof Boolean) {
-            final Boolean b1 = (Boolean) v1;
-            final Boolean b2 = (Boolean) v2;
-            return b1.compareTo(b2);
-        } else {
-            return v1.getClass().getName().compareTo(v2.getClass().getName());
-        }
-    }
 
     protected TstStatefulConnectorConfig config;
 
@@ -150,32 +162,156 @@ public abstract class TstAbstractConnector implements CreateOp, SearchOp<Filter>
         config.getGuid();
     }
 
+    public Uid authenticate(ObjectClass objectClass, String username, GuardedString password,
+            OperationOptions options) {
+        if (config.isReturnNullTest()) {
+            return null;
+        } else {
+            return config.authenticate(objectClass, username, password);
+        }
+    }
+
+    public void subscribe(final ObjectClass objectClass, final Filter eventFilter,
+            final AsyncCallbackHandler asyncHandler, final ResultsHandler handler,
+            final OperationOptions operationOptions) {
+
+        final ConnectorObjectBuilder builder =
+                new ConnectorObjectBuilder().setObjectClass(objectClass);
+
+        final SelfAwareExecutionRunnable runnable = new SelfAwareExecutionRunnable() {
+            protected boolean doAction(int runCount) {
+                builder.setUid(String.valueOf(runCount));
+                builder.setName(String.valueOf(runCount));
+                handler.handle(builder.build());
+
+                if (runCount >= 10) {
+                    // Locally stop serving subscription
+                    asyncHandler.handleError(new ConnectorException(
+                            "Subscription channel is closed"));
+                    // ScheduledFuture should be stopped from here.
+                    return false;
+                }
+                return true;
+            }
+        };
+        runnable.runAction(config.getExecutorService(), 1000, 500, TimeUnit.MILLISECONDS);
+
+        // Remotely request stop processing subscription
+        asyncHandler.onCancel(new Runnable() {
+            public void run() {
+                runnable.cancel();
+            }
+        });
+    }
+
+    public void subscribe(final ObjectClass objectClass, final SyncToken token,
+            final AsyncCallbackHandler asyncHandler, final SyncResultsHandler handler,
+            final OperationOptions operationOptions) {
+
+        final SyncDeltaBuilder builder =
+                new SyncDeltaBuilder().setDeltaType(SyncDeltaType.CREATE_OR_UPDATE).setObject(
+                        new ConnectorObjectBuilder().setObjectClass(objectClass).setUid("0")
+                                .setName("SYNC_EVENT").build());
+
+        final SelfAwareExecutionRunnable runnable = new SelfAwareExecutionRunnable() {
+            protected boolean doAction(int runCount) {
+                builder.setToken(new SyncToken(runCount));
+                handler.handle(builder.build());
+
+                if (runCount >= 10) {
+                    // Locally stop serving subscription
+                    asyncHandler.handleError(new ConnectorException(
+                            "Subscription channel is closed"));
+                    // ScheduledFuture should be stopped from here.
+                    return false;
+                }
+                return true;
+            }
+        };
+        runnable.runAction(config.getExecutorService(), 1000, 500, TimeUnit.MILLISECONDS);
+
+        // Remotely request stop processing subscription
+        asyncHandler.onCancel(new Runnable() {
+            public void run() {
+                runnable.cancel();
+            }
+        });
+    }
+
     public Uid create(ObjectClass objectClass, Set<Attribute> createAttributes,
             OperationOptions options) {
         AttributesAccessor accessor = new AttributesAccessor(createAttributes);
-        if (accessor.hasAttribute("fail")) {
-            throw new ConnectorException("Test Exception");
-        } else if (accessor.hasAttribute("exist") && accessor.findBoolean("exist")) {
-            throw new AlreadyExistsException(accessor.getName().getNameValue());
-        } else if (accessor.hasAttribute("emails")) {
-            Object value = AttributeUtil.getSingleValue(accessor.find("emails"));
-            if (value instanceof Map) {
-                return new Uid((String) ((Map) value).get("email"));
-            } else {
-                throw new InvalidAttributeValueException("Expecting Map");
+        if (config.isReturnNullTest()) {
+            return null;
+        } else if (config.isTestObjectClass(objectClass)) {
+            return config.geObjectCache(objectClass).create(createAttributes);
+        } else {
+            if (accessor.hasAttribute("fail")) {
+                throw new ConnectorException("Test Exception");
+            } else if (accessor.hasAttribute("exist") && accessor.findBoolean("exist")) {
+                throw new AlreadyExistsException(accessor.getName().getNameValue());
+            } else if (accessor.hasAttribute("emails")) {
+                Object value = AttributeUtil.getSingleValue(accessor.find("emails"));
+                if (value instanceof Map) {
+                    return new Uid((String) ((Map) value).get("email"));
+                } else {
+                    throw new InvalidAttributeValueException("Expecting Map");
+                }
             }
+            return new Uid(config.getGuid().toString());
         }
-        return new Uid(config.getGuid().toString());
     }
 
     public void delete(ObjectClass objectClass, Uid uid, OperationOptions options) {
-        if (null == uid.getRevision()) {
-            throw new PreconditionRequiredException("Version is required for MVCC");
-        } else if (config.getGuid().toString().equals(uid.getRevision())) {
-            // Delete
+        if (config.isReturnNullTest()) {
+            return;
+        } else if (config.isTestObjectClass(objectClass)) {
+            config.geObjectCache(objectClass).delete(uid);
         } else {
-            throw new PreconditionFailedException(
-                    "Current version of resource is 0 and not match with: " + uid.getRevision());
+            if (null == uid.getRevision()) {
+                throw new PreconditionRequiredException("Version is required for MVCC");
+            } else if (config.getGuid().toString().equals(uid.getRevision())) {
+                // Delete
+            } else {
+                throw new PreconditionFailedException(
+                        "Current version of resource is 0 and not match with: " + uid.getRevision());
+            }
+        }
+    }
+
+    public Uid resolveUsername(ObjectClass objectClass, String username, OperationOptions options) {
+        if (config.isReturnNullTest()) {
+            return null;
+        } else {
+            return config.resolveByUsername(objectClass, username);
+        }
+    }
+
+    public Schema schema() {
+        if (config.isReturnNullTest()) {
+            return null;
+        } else {
+            SchemaBuilder builder = new SchemaBuilder((Class<? extends Connector>) getClass());
+            for (String type : config.getTestObjectClass()) {
+                ObjectClassInfoBuilder classInfoBuilder = new ObjectClassInfoBuilder();
+                classInfoBuilder.setType(type).addAttributeInfo(OperationalAttributeInfos.PASSWORD);
+                builder.defineObjectClass(classInfoBuilder.build());
+            }
+            return builder.build();
+        }
+    }
+
+    public Object runScriptOnResource(ScriptContext request, OperationOptions options) {
+        if (config.isReturnNullTest()) {
+            return null;
+        } else {
+            try {
+                return ScriptExecutorFactory.newInstance(request.getScriptLanguage())
+                        .newScriptExecutor(null, request.getScriptText(), true).execute(
+                                request.getScriptArguments());
+            } catch (Exception e) {
+                throw new ConnectorException(e.getMessage(), e);
+            }
         }
     }
 
@@ -201,16 +337,24 @@ public abstract class TstAbstractConnector implements CreateOp, SearchOp<Filter>
         TreeSet<ConnectorObject> resultSet =
                 new TreeSet<ConnectorObject>(new ResourceComparator(sortKeys));
 
-        if (null != query) {
-            for (ConnectorObject co : collection.values()) {
-                if (query.accept(co)) {
-                    resultSet.add(co);
-                }
+        if (config.isReturnNullTest()) {
+            return;
+        } else if (config.isTestObjectClass(objectClass)) {
+            Filter filter = FilteredResultsHandlerVisitor.wrapFilter(query, config.isCaseIgnore());
+            for (ConnectorObject co : config.geObjectCache(objectClass).getIterable(filter)) {
+                resultSet.add(co);
             }
         } else {
-            resultSet.addAll(collection.values());
+            if (null != query) {
+                for (ConnectorObject co : collection.values()) {
+                    if (query.accept(co)) {
+                        resultSet.add(co);
+                    }
+                }
+            } else {
+                resultSet.addAll(collection.values());
+            }
         }
-
         // Handle the results
         if (null != options.getPageSize()) {
             // Paged Search
@@ -274,13 +418,51 @@ public abstract class TstAbstractConnector implements CreateOp, SearchOp<Filter>
 
     public void sync(ObjectClass objectClass, SyncToken token, SyncResultsHandler handler,
             OperationOptions options) {
-        if (handler instanceof SyncTokenResultsHandler) {
-            ((SyncTokenResultsHandler) handler).handleResult(getLatestSyncToken(objectClass));
+        if (config.isReturnNullTest()) {
+            return;
+        } else if (config.isTestObjectClass(objectClass)) {
+            for (SyncDelta delta : config.sync(objectClass, (Integer) token.getValue()).values()) {
+                if (!handler.handle(delta)) {
+                    break;
+                }
+            }
+            if (handler instanceof SyncTokenResultsHandler) {
+                ((SyncTokenResultsHandler) handler).handleResult(new SyncToken(config
+                        .getLatestSyncToken()));
+            }
+        } else {
+            if (handler instanceof SyncTokenResultsHandler) {
+                ((SyncTokenResultsHandler) handler).handleResult(getLatestSyncToken(objectClass));
+            }
         }
     }
 
     public SyncToken getLatestSyncToken(ObjectClass objectClass) {
-        return new SyncToken(config.getGuid().toString());
+        if (config.isReturnNullTest()) {
+            return null;
+        } else if (config.isTestObjectClass(objectClass)) {
+            return new SyncToken(config.getLatestSyncToken());
+        } else {
+            return new SyncToken(config.getGuid().toString());
+        }
+    }
+
+    public void test() {
+        if (config.getFailValidation()) {
+            throw new ConnectorException("test failed " + CurrentLocale.get().getLanguage());
+        }
+    }
+
+    public Uid update(ObjectClass objectClass, Uid uid, Set<Attribute> replaceAttributes,
+            OperationOptions options) {
+        if (config.isReturnNullTest()) {
+            return null;
+        } else if (config.isTestObjectClass(objectClass)) {
+            return config.geObjectCache(objectClass).update(uid, replaceAttributes);
+        } else {
+            throw new UnsupportedOperationException("Object Update is not supported: "
+                    + objectClass.getObjectClassValue());
+        }
     }
 
     private final static SortedMap<String, ConnectorObject> collection =
@@ -300,6 +482,28 @@ public abstract class TstAbstractConnector implements CreateOp, SearchOp<Filter>
             ConnectorObject co = builder.build();
             collection.put(co.getName().getNameValue(), co);
             enabled = !enabled;
+        }
+    }
+
+    private static abstract class SelfAwareExecutionRunnable implements Runnable {
+        private final AtomicInteger runCount = new AtomicInteger();
+        private volatile ScheduledFuture<?> self;
+
+        public void run() {
+            if (!doAction(runCount.incrementAndGet())) {
+                cancel();
+            }
+        }
+
+        protected abstract boolean doAction(int runCount);
+
+        public void runAction(final ScheduledExecutorService executor, long initialDelay,
+                long period, TimeUnit unit) {
+            self = executor.scheduleAtFixedRate(this, initialDelay, period, unit);
+        }
+
+        public void cancel() {
+            self.cancel(false);
         }
     }
 }

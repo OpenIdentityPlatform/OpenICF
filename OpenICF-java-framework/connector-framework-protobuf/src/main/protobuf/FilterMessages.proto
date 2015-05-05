@@ -1,0 +1,84 @@
+package org.forgerock.openicf.common.protobuf;
+
+import "CommonObjectMessages.proto";
+import "ConnectorObjects.proto";
+
+message FilterUnionMessage {
+    oneof filter {
+        AndFilter andFilter = 1;
+        OrFilter orFilter = 2;
+        NotFilter notFilter = 3;
+        ContainsAllValuesFilter containsAllValuesFilter = 4;
+        EqualsFilter equalsFilter = 5;
+        StartsWithFilter startsWithFilter = 6;
+        ContainsFilter containsFilter = 7;
+        EndsWithFilter endsWithFilter = 8;
+        GreaterThanFilter greaterThanFilter = 9;
+        GreaterThanOrEqualFilter greaterThanOrEqualFilter = 10;
+        LessThanFilter lessThanFilter = 11;
+        LessThanOrEqualFilter lessThanOrEqualFilter = 12;
+    }
+}
+
+message PresenceFilter{
+    required string name = 1; 
+}
+
+//CompositeFilter
+message AndFilter {
+    repeated FilterUnionMessage subFilters = 1;
+}
+message OrFilter {
+    repeated FilterUnionMessage subFilters = 1;
+}
+
+message NotFilter {
+    required FilterUnionMessage subFilter = 1;
+}
+
+//AttributeFilter 
+message ContainsAllValuesFilter {
+    required string name = 1;
+    required AttributeCollectionValue value = 2;
+}
+message EqualsFilter {
+    required string name = 1;
+    required AttributeCollectionValue value = 2;
+}
+
+//StringFilter
+message StartsWithFilter {
+    required string name = 1;
+    required string value = 2;
+}
+
+message ContainsFilter {
+    required string name = 1;
+    required string value = 2;
+}
+
+message EndsWithFilter {
+    required string name = 1;
+    required string value = 2;
+}
+
+//ComparableAttributeFilter
+message GreaterThanFilter {
+    required string name = 1;
+    required AttributeUnionValue value = 2;
+}
+
+message GreaterThanOrEqualFilter {
+    required string name = 1;
+    required AttributeUnionValue value = 2;
+}
+
+message LessThanFilter {
+    required string name = 1;
+    required AttributeUnionValue value = 2;
+}
+
+message LessThanOrEqualFilter {
+    required string name = 1;
+    required AttributeUnionValue value = 2;
+}

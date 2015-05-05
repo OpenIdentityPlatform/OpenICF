@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2013 ConnId
+ * Portions Copyrighted 2015 ForgeRock AS.
  */
 package org.identityconnectors.common;
 
@@ -691,7 +692,7 @@ public final class IOUtil {
      */
     public static URL makeURL(final File dir, final String path) throws IOException {
         final File file = new File(dir, path);
-        if (!file.isFile()) {
+        if (!file.exists()) {
             throw new IOException(file.getPath() + " does not exist");
         }
         return file.toURI().toURL();

@@ -2,7 +2,7 @@
 <!--
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
- Copyright (c) 2010-2014 ForgeRock AS. All rights reserved.
+ Copyright (c) 2010-2015 ForgeRock AS. All rights reserved.
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -82,6 +82,12 @@
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <includes>
                 <include>org.forgerock.openicf.framework:*</include>
+                <include>org.glassfish.grizzly:*</include>
+                <include>javax.servlet:javax.servlet-api</include>
+                <include>org.forgerock.commons:*</include>
+                <include>commons-codec:*</include>
+                <include>com.google.protobuf:*</include>
+                <include>org.bouncycastle:*</include>
                 <include>org.slf4j:*</include>
                 <include>ch.qos.logback:*</include>
                 <include>org.codehaus.groovy:groovy-all</include>

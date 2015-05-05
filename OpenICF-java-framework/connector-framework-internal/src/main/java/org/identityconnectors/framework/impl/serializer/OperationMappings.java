@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2015 ForgeRock AS.
  */
 package org.identityconnectors.framework.impl.serializer;
 
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
+import org.identityconnectors.framework.api.operations.ConnectorEventSubscriptionApiOp;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
 import org.identityconnectors.framework.api.operations.GetApiOp;
@@ -35,6 +37,7 @@ import org.identityconnectors.framework.api.operations.ScriptOnConnectorApiOp;
 import org.identityconnectors.framework.api.operations.ScriptOnResourceApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
 import org.identityconnectors.framework.api.operations.SyncApiOp;
+import org.identityconnectors.framework.api.operations.SyncEventSubscriptionApiOp;
 import org.identityconnectors.framework.api.operations.TestApiOp;
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.api.operations.ValidateApiOp;
@@ -72,5 +75,9 @@ class OperationMappings {
         "ScriptOnConnectorApiOp"));
         MAPPINGS.add(new ObjectTypeMapperImpl(SyncApiOp.class,
         "SyncApiOp"));
+        MAPPINGS.add(new ObjectTypeMapperImpl(ConnectorEventSubscriptionApiOp.class,
+                "ConnectorEventSubscriptionApiOp"));
+        MAPPINGS.add(new ObjectTypeMapperImpl(SyncEventSubscriptionApiOp.class,
+                "SyncEventSubscriptionApiOp"));
     }
 }

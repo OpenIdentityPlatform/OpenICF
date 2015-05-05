@@ -19,8 +19,11 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2015 ForgeRock AS.
  */
 package org.identityconnectors.framework.api;
+
+import org.identityconnectors.common.StringUtil;
 
 /**
  * Uniquely identifies a connector within an installation. Consists of the
@@ -32,14 +35,14 @@ public final class ConnectorKey {
     private final String connectorName;
 
     public ConnectorKey(String bundleName, String bundleVersion, String connectorName) {
-        if (bundleName == null) {
-            throw new IllegalArgumentException("bundleName may not be null");
+        if (StringUtil.isBlank(bundleName)) {
+            throw new IllegalArgumentException("bundleName may not be blank");
         }
-        if (bundleVersion == null) {
-            throw new IllegalArgumentException("bundleVersion may not be null");
+        if (StringUtil.isBlank(bundleVersion)) {
+            throw new IllegalArgumentException("bundleVersion may not be blank");
         }
-        if (connectorName == null) {
-            throw new IllegalArgumentException("connectorName may not be null");
+        if (StringUtil.isBlank(connectorName)) {
+            throw new IllegalArgumentException("connectorName may not be blank");
         }
         this.bundleName = bundleName;
         this.bundleVersion = bundleVersion;
@@ -78,9 +81,10 @@ public final class ConnectorKey {
 
     @Override
     public int hashCode() {
-        int rv = 0;
-        rv ^= connectorName.hashCode();
-        return rv;
+        int result = bundleName.hashCode();
+        result = 31 * result + bundleVersion.hashCode();
+        result = 31 * result + connectorName.hashCode();
+        return result;
     }
 
     @Override

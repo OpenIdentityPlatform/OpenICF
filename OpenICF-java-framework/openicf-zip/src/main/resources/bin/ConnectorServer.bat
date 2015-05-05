@@ -78,6 +78,8 @@ rem Set CLASSPATH for starting connector server
 rem Only Java 6 and above supports wildcard (*)
 set CP="lib\framework\*;lib\framework"
 
+set MAIN_CLASS=org.forgerock.openicf.framework.server.Main
+
 if %java_version% LSS 16 (
     rem setup the classpath
     set CP=lib\framework\connector-framework.jar
@@ -90,6 +92,7 @@ if %java_version% LSS 16 (
     set CP=!CP!;lib\framework
     rem Start the 32bit binary with Java 5
     set ARCH=i386
+    set MAIN_CLASS=org.identityconnectors.framework.server.Main
 )
 
 rem Run java options, separated by space
@@ -99,7 +102,6 @@ rem Service java options, needs to be separated by ;
 set JAVA_OPTS_SERVICE=-Xmx512m;
 rem Enable SSL 
 rem set JAVA_OPTS_SERVICE=-Xmx500m;-Djavax.net.ssl.keyStore=conf\keystore.jks;-Djavax.net.ssl.keyStorePassword=changeit;
-set MAIN_CLASS=org.identityconnectors.framework.server.Main
 set SERVER_PROPERTIES="conf\ConnectorServer.properties"
 set JVM_OPTION_IDENTIFIER=-J
 

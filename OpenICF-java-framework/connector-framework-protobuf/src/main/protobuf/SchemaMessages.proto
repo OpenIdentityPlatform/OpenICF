@@ -1,0 +1,74 @@
+package org.forgerock.openicf.common.protobuf;
+
+import "ConnectorObjects.proto";
+
+message AttributeInfo {
+    enum AttributeType {
+        STRING = 1;
+        LONG = 2;
+        CHARACTER = 3;
+        DOUBLE = 4;
+        FLOAT = 5;
+        INTEGER = 6;
+        BOOLEAN = 7;
+        BYTE = 8;
+        BYTEARRAY = 9;
+        BIGDECIMAL = 10;
+        BIGINTEGER = 11;
+        MAP = 12;
+    }
+    enum Flags {
+        REQUIRED = 1;
+        MULTIVALUED = 2;
+        NOT_CREATABLE = 3;
+        NOT_UPDATEABLE = 4;
+        NOT_READABLE = 5;
+        NOT_RETURNED_BY_DEFAULT = 6;
+    }
+    required string name = 1;
+    required AttributeType type = 2;
+    repeated Flags flags = 3;
+}
+
+message ObjectClassInfo {
+    required string type = 1;
+    required AttributeInfo attributeInfos = 2;
+    optional bool isContainer = 3 [default = false];
+}
+
+message OperationOptionInfo {
+    enum OperationOptionType {
+        STRING = 1;
+        LONG = 2;
+        CHARACTER = 3;
+        DOUBLE = 4;
+        FLOAT = 5;
+        INTEGER = 6;
+        BOOLEAN = 7;
+        URI = 8;
+        FILE = 9;
+        GUARDEDBYTEARRAY = 10;
+        GUARDEDSTRING = 11;
+        SCRIPT = 12;
+        OBJECTCLASS = 13;
+        UID = 14;
+        QUALIFIEDUID = 15;
+        SORTKEY = 16;
+    }
+    required string name = 1;
+    required OperationOptionType type = 2;
+    required bool isArray = 3 [default = false];
+}
+
+message SupportedMapFieldEntry {
+    required APIOperation key = 1;
+    required string name = 2;
+}
+
+message Schema {
+    repeated string declaredObjectClasses = 1;
+    repeated string declaredOperationOptions = 2;
+    repeated SupportedMapFieldEntry supportedObjectClassesByOperation = 3;
+    repeated SupportedMapFieldEntry supportedOptionsByOperation = 4;
+}
+

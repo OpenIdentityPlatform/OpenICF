@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2015 ForgeRock AS.
  */
 
 package org.identityconnectors.common;
@@ -98,11 +99,13 @@ public class PrettyStringBuilder {
             final Iterator it = map.keySet().iterator();
             int i = 0;
             s.append('{');
-            while ((it.hasNext() && (i < maxArrayLen))) {
+            while ((it.hasNext() && (i++ < maxArrayLen))) {
                 final Object key = it.next();
                 s.append(key).append(':');
                 s.append(toPrettyString(map.get(key)));
-                i++;
+                if (it.hasNext()) {
+                    s.append(",");
+                }
             }
             if (i < map.size()) {
                 s.append("...");

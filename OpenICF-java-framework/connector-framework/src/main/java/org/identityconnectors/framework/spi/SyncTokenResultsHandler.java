@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 ForgeRock AS. All Rights Reserved
+ * Copyright (c) 2013-2015 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -24,6 +24,7 @@
 
 package org.identityconnectors.framework.spi;
 
+import org.identityconnectors.common.SuccessHandler;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 
@@ -36,7 +37,7 @@ import org.identityconnectors.framework.common.objects.SyncToken;
  * @author Laszlo Hordos
  * @since 1.4
  */
-public interface SyncTokenResultsHandler extends SyncResultsHandler {
+public interface SyncTokenResultsHandler extends SyncResultsHandler, SuccessHandler<SyncToken> {
 
     /**
      * Invoked when the request has completed successfully.

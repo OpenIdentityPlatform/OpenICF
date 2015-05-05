@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2015 ForgeRock AS.
  */
 package org.identityconnectors.common;
 
@@ -973,6 +974,11 @@ public class EqualsHashCodeBuilderTests {
             }
             return false;
         }
+        
+        @Override
+        public int hashCode() {
+            return super.hashCode();
+        }
 
         public int getA() {
             return this.a;
@@ -998,6 +1004,11 @@ public class EqualsHashCodeBuilderTests {
                 return this.b == ((TestBCanEqualA) o).getB();
             }
             return false;
+        }
+        
+        @Override
+        public int hashCode() {
+            return super.hashCode();
         }
 
         public int getB() {

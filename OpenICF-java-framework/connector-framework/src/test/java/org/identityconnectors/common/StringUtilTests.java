@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2015 ForgeRock AS.
  */
 package org.identityconnectors.common;
 
@@ -33,6 +34,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class StringUtilTests {
@@ -82,7 +84,9 @@ public class StringUtilTests {
     /**
      */
     @Test
-    public void testSubDigitString() {
+    public void testPrettyStringBuilder() {
+        Assert.assertEquals(new PrettyStringBuilder(2, 2, "NULL").toPrettyString(CollectionUtil
+                .newMap("K1", "V1", "K2", "V2", "K3", "V3", "K4", "V4", "K5", null)), "{K1:V1,K2:V2,...}");
     }
 
     /**

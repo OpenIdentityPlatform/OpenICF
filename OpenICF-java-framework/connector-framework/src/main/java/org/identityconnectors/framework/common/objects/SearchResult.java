@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 ForgeRock AS. All Rights Reserved
+ * Copyright (c) 2013-2015 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -90,4 +90,23 @@ public final class SearchResult {
         return remainingPagedResults;
     }
 
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (!(o instanceof SearchResult))
+            return false;
+
+        SearchResult result = (SearchResult) o;
+
+        return remainingPagedResults == result.remainingPagedResults
+                && !(pagedResultsCookie != null ? !pagedResultsCookie
+                        .equals(result.pagedResultsCookie) : result.pagedResultsCookie != null);
+
+    }
+
+    public int hashCode() {
+        int result = pagedResultsCookie != null ? pagedResultsCookie.hashCode() : 0;
+        result = 31 * result + remainingPagedResults;
+        return result;
+    }
 }

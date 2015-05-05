@@ -19,7 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- * Portions Copyrighted 2014 ForgeRock AS. 
+ * Portions Copyrighted 2014-2015 ForgeRock AS. 
  */
 package org.identityconnectors.framework.common.objects;
 
@@ -29,6 +29,7 @@ import static org.testng.Assert.assertTrue;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.framework.common.objects.filter.FilterVisitor;
+import org.identityconnectors.framework.common.objects.filter.FilteredResultsHandlerVisitor;
 import org.testng.annotations.Test;
 
 public class FilterBuilderTests {
@@ -49,15 +50,18 @@ public class FilterBuilderTests {
         ConnectorObject obj = bld.build();
         Filter f = FilterBuilder.equalTo(attr);
         assertTrue(f.accept(obj));
+        assertTrue(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(obj));
         bld.addAttribute("email", "something@different.com");
         obj = bld.build();
         assertFalse(f.accept(obj));
+        assertFalse(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(obj));
         // check when the attribute doesn't exist in the object..
         bld = new ConnectorObjectBuilder();
         bld.setUid("3234");
         bld.setName(Integer.toString(3234));
         bld.addAttribute("adflk", "fafkajwe");
         assertFalse(f.accept(bld.build()));
+        assertFalse(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(bld.build()));
     }
 
     // =======================================================================
@@ -73,11 +77,11 @@ public class FilterBuilderTests {
         bld.addAttribute("count", 4);
         bld.setUid("1");
         bld.setName(Integer.toString(1));
-        boolean ret = f.accept(bld.build());
-        assertTrue(ret);
+        assertTrue(f.accept(bld.build()));
+        assertTrue(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(bld.build()));
         bld.addAttribute("count", 2);
-        ret = f.accept(bld.build());
-        assertFalse(ret);
+        assertFalse(f.accept(bld.build()));
+        assertFalse(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(bld.build()));
     }
 
     @Test
@@ -89,14 +93,14 @@ public class FilterBuilderTests {
         bld.addAttribute("count", 4);
         bld.setUid("1");
         bld.setName(Integer.toString(1));
-        boolean ret = f.accept(bld.build());
-        assertTrue(ret);
+        assertTrue(f.accept(bld.build()));
+        assertTrue(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(bld.build()));
         bld.addAttribute("count", 2);
-        ret = f.accept(bld.build());
-        assertFalse(ret);
+        assertFalse(f.accept(bld.build()));
+        assertFalse(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(bld.build()));
         bld.addAttribute("count", 3);
-        ret = f.accept(bld.build());
-        assertTrue(ret);
+        assertTrue(f.accept(bld.build()));
+        assertTrue(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(bld.build()));
     }
 
     @Test
@@ -108,11 +112,11 @@ public class FilterBuilderTests {
         bld.addAttribute("count", 49);
         bld.setUid("1");
         bld.setName(Integer.toString(1));
-        boolean ret = f.accept(bld.build());
-        assertTrue(ret);
+        assertTrue(f.accept(bld.build()));
+        assertTrue(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(bld.build()));
         bld.addAttribute("count", 51);
-        ret = f.accept(bld.build());
-        assertFalse(ret);
+        assertFalse(f.accept(bld.build()));
+        assertFalse(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(bld.build()));
     }
 
     @Test
@@ -124,14 +128,14 @@ public class FilterBuilderTests {
         bld.addAttribute("count", 49);
         bld.setUid("1");
         bld.setName(Integer.toString(1));
-        boolean ret = f.accept(bld.build());
-        assertTrue(ret);
+        assertTrue(f.accept(bld.build()));
+        assertTrue(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(bld.build()));
         bld.addAttribute("count", 51);
-        ret = f.accept(bld.build());
-        assertFalse(ret);
+        assertFalse(f.accept(bld.build()));
+        assertFalse(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(bld.build()));
         bld.addAttribute("count", 50);
-        ret = f.accept(bld.build());
-        assertTrue(ret);
+        assertTrue(f.accept(bld.build()));
+        assertTrue(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(bld.build()));
     }
 
     // =======================================================================
@@ -146,8 +150,15 @@ public class FilterBuilderTests {
         bld.setName(Integer.toString(1));
         bld.addAttribute("name", "fredrick");
         assertTrue(f.accept(bld.build()));
+        assertTrue(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(bld.build()));
         bld.addAttribute("name", "fasdfklj");
         assertFalse(f.accept(bld.build()));
+        assertFalse(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(bld.build()));
+
+        bld.addAttribute("name", "FREDERICK");
+        assertFalse(f.accept(bld.build()));
+        assertFalse(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(bld.build()));
+        assertTrue(FilteredResultsHandlerVisitor.wrapFilter(f, true).accept(bld.build()));
     }
 
     @Test
@@ -159,12 +170,19 @@ public class FilterBuilderTests {
         bld.setName(Integer.toString(1));
         bld.addAttribute("name", "fredrick");
         assertTrue(f.accept(bld.build()));
+        assertTrue(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(bld.build()));
         bld.addAttribute("name", "fakljffd");
         assertFalse(f.accept(bld.build()));
+        assertFalse(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(bld.build()));
+
+        bld.addAttribute("name", "FREDERICK");
+        assertFalse(f.accept(bld.build()));
+        assertFalse(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(bld.build()));
+        assertTrue(FilteredResultsHandlerVisitor.wrapFilter(f, true).accept(bld.build()));
     }
 
     @Test
-    public void constainsWithFilter() {
+    public void containsFilter() {
         ConnectorObjectBuilder bld = new ConnectorObjectBuilder();
         Attribute attr = AttributeBuilder.build("name", "red");
         Filter f = FilterBuilder.contains(attr);
@@ -172,8 +190,15 @@ public class FilterBuilderTests {
         bld.setName(Integer.toString(1));
         bld.addAttribute("name", "fredrick");
         assertTrue(f.accept(bld.build()));
+        assertTrue(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(bld.build()));
         bld.addAttribute("name", "falkjfklj");
         assertFalse(f.accept(bld.build()));
+        assertFalse(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(bld.build()));
+
+        bld.addAttribute("name", "Red Hood");
+        assertFalse(f.accept(bld.build()));
+        assertFalse(FilteredResultsHandlerVisitor.wrapFilter(f, false).accept(bld.build()));
+        assertTrue(FilteredResultsHandlerVisitor.wrapFilter(f, true).accept(bld.build()));
     }
 
     // =======================================================================
@@ -230,7 +255,13 @@ public class FilterBuilderTests {
         bld.setUid("1");
         bld.setName("1");
         bld.addAttribute("a", "a", "b", "c");
-        f = FilterBuilder.containsAllValues(AttributeBuilder.build("a", "a"));
+        f = FilterBuilder.containsAllValues(AttributeBuilder.build("a", "a", "b"));
+        assertTrue(f.accept(bld.build()));
+        f = FilteredResultsHandlerVisitor.wrapFilter(f, false);
+        assertTrue(f.accept(bld.build()));
+        f = FilterBuilder.containsAllValues(AttributeBuilder.build("a", "A", "b"));
+        assertFalse(f.accept(bld.build()));
+        f = FilteredResultsHandlerVisitor.wrapFilter(f, true);
         assertTrue(f.accept(bld.build()));
     }
 
@@ -243,7 +274,12 @@ public class FilterBuilderTests {
         bld.addAttribute("a", "a", "b", "c");
         f = FilterBuilder.containsAllValues(AttributeBuilder.build("b", "a"));
         assertFalse(f.accept(bld.build()));
+        f = FilteredResultsHandlerVisitor.wrapFilter(f, false);
+        assertFalse(f.accept(bld.build()));
+        
         f = FilterBuilder.containsAllValues(AttributeBuilder.build("a", "d"));
+        assertFalse(f.accept(bld.build()));
+        f = FilteredResultsHandlerVisitor.wrapFilter(f, false);
         assertFalse(f.accept(bld.build()));
     }
 

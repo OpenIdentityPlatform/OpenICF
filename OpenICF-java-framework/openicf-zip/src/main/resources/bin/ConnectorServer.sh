@@ -42,7 +42,7 @@ setupClasspath(){
 
 main_exec(){
     exec java $OPENICF_OPTS -classpath "$CLASSPATH" \
-     org.identityconnectors.framework.server.Main $1 -properties "$CONNECTOR_SERVER_HOME/conf/ConnectorServer.properties"
+     $MAIN_CLASS $1 -properties "$CONNECTOR_SERVER_HOME/conf/ConnectorServer.properties"
 }
 
 service_exec(){
@@ -51,7 +51,7 @@ service_exec(){
     echo "OPENICF_OPTS:   "$OPENICF_OPTS
     echo "CLASSPATH:      "$CLASSPATH
     exec java $OPENICF_OPTS -server -classpath "$CLASSPATH" \
-        org.identityconnectors.framework.server.Main $1 -properties "$CONNECTOR_SERVER_HOME/conf/ConnectorServer.properties"
+        $MAIN_CLASS $1 -properties "$CONNECTOR_SERVER_HOME/conf/ConnectorServer.properties"
 }
 
 usage(){
@@ -121,12 +121,15 @@ else
     exit 1
 fi
 
+MAIN_CLASS=org.forgerock.openicf.framework.server.Main
+
 java_version=$("$JAVA" -version 2>&1 | awk -F '"' '/version/ {print $2}')
 if [[ "$java_version" > "1.5" ]]; then
     CLASSPATH="$CONNECTOR_SERVER_HOME/lib/framework/*:$CONNECTOR_SERVER_HOME/lib/framework/"
 else         
     echo "Running on Java 1.5"
     setupClasspath
+    MAIN_CLASS=org.identityconnectors.framework.server.Main
 fi
 
 if [ "$1" = "jpda" ] ; then
@@ -156,10 +159,10 @@ elif [[ "$1" == "/setDefaults" ]]; then
 elif [[ "$1" == "/setKey" ]]; then
     if [[ -n "$2" ]]; then
         exec java $OPENICF_OPTS -classpath "$CLASSPATH" \
-          org.identityconnectors.framework.server.Main -setKey -key $2 -properties "$CONNECTOR_SERVER_HOME/conf/ConnectorServer.properties"      
+          $MAIN_CLASS -setKey -key $2 -properties "$CONNECTOR_SERVER_HOME/conf/ConnectorServer.properties"      
     else
         exec java $OPENICF_OPTS -classpath "$CLASSPATH" \
-          org.identityconnectors.framework.server.Main -setKey -properties "$CONNECTOR_SERVER_HOME/conf/ConnectorServer.properties"   
+          $MAIN_CLASS -setKey -properties "$CONNECTOR_SERVER_HOME/conf/ConnectorServer.properties"   
     fi      
 else
       usage

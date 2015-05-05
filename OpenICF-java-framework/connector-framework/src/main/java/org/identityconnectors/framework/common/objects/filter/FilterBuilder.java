@@ -19,7 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- * Portions Copyrighted 2014 ForgeRock AS.
+ * Portions Copyrighted 2014-2015 ForgeRock AS.
  */
 package org.identityconnectors.framework.common.objects.filter;
 
@@ -476,6 +476,18 @@ public final class FilterBuilder {
         return new NotFilter(filter);
     }
 
+    /**
+     * Creates a new {@code presence} filter using the provided attribute name.
+     *
+     * @param attributeName
+     *            The name of field within the {@link org.identityconnectors.framework.common.objects.ConnectorObject} which must be
+     *            present.
+     * @return The newly created {@code presence} filter.
+     */
+    public static Filter present(final String attributeName){
+        return new PresenceFilter(attributeName);
+    }
+    
     /**
      * Select only an input {@link ConnectorObject} with a value for the
      * specified <code>Attribute</code> that contains all the values from the

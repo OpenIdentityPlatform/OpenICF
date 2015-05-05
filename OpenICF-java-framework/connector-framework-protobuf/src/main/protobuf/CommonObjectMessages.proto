@@ -1,0 +1,79 @@
+package org.forgerock.openicf.common.protobuf;
+
+message Uid {
+    required string value = 1;
+    optional string revision = 2;
+}
+
+message BigDecimal {
+    required string unscaled = 1;
+    required int32 scale = 2;
+}
+
+message ConnectorKey {
+    required string bundleName = 1;
+    required string bundleVersion = 2;
+    required string connectorName = 3;
+}
+
+message Locale {
+    optional string language = 1;
+    optional string country = 2;
+    optional string variant = 3;
+}
+
+message Script {
+    required string scriptLanguage = 1;
+    required string scriptText = 2;
+}
+
+message ScriptContext {
+    required Script script = 1;
+    optional bytes scriptArguments = 2;
+}
+
+message SearchResult {
+    optional string pagedResultsCookie = 1;
+    optional int32 remainingPagedResults = 2 [default = -1];
+}
+
+message SortKey {
+    required string field = 1;
+    required bool isAscending = 2;
+}
+
+message SyncToken {
+    optional bytes value = 1;
+}
+
+message SyncDelta {
+    enum SyncDeltaType {
+        CREATE_OR_UPDATE = 1;
+        DELETE = 2;
+        CREATE = 3;
+        UPDATE = 4;
+    }
+    required SyncToken token = 1;
+    required SyncDeltaType deltaType = 2;
+    optional Uid previousUid = 3;
+    optional string objectClass = 4;
+    optional Uid uid = 5;
+    optional bytes connectorObject = 6;
+    
+}
+
+message ConnectorObject {
+    /*message MapFieldEntry {
+        //option map_entry = true;
+        optional string key = 1;
+        optional AttributeCollectionValue value = 2;
+    }*/
+    required string objectClass = 1;
+    required bytes attriutes = 2;
+    //repeated MapFieldEntry map_field = 2;
+}
+
+message QualifiedUid {
+    required string objectClass = 1;
+    required Uid uid = 2;
+}

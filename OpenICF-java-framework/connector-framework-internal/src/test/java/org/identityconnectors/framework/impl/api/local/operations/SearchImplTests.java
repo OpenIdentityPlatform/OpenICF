@@ -19,11 +19,13 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- * Portions Copyrighted 2014 ForgeRock AS. 
+ * Portions Copyrighted 2014-2015 ForgeRock AS. 
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
+import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.FilterVisitor;
+import org.identityconnectors.framework.common.objects.filter.PresenceFilter;
 import org.testng.annotations.Test;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -155,28 +157,24 @@ public class SearchImplTests {
         // Do nothing methods for search impl call..
         //
         public void dispose() {
-            // TODO Auto-generated method stub
-
         }
 
         public Configuration getConfiguration() {
-            // TODO Auto-generated method stub
             return null;
         }
 
         public void init(Configuration cfg) {
-            // TODO Auto-generated method stub
-
         }
     }
 
     /**
      * Use the filter to pass objects to the filter translator.
      */
-    public static class MockFilter implements Filter {
+    public static class MockFilter extends PresenceFilter {
         public final List<List<ConnectorObject>> _objs;
 
         public MockFilter(List<List<ConnectorObject>> objs) {
+            super(Uid.NAME);
             _objs = objs;
         }
 

@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2015 ForgeRock AS.
  */
 package org.identityconnectors.framework.api;
 
@@ -41,6 +42,7 @@ public final class RemoteFrameworkConnectionInfo {
     private final boolean useSSL;
     private final List<TrustManager> trustManagers;
     private final int timeout;
+    private final long heartbeatInterval;
 
     /**
      * Creates a new instance of RemoteFrameworkConnectionInfo, using a clear
@@ -87,6 +89,44 @@ public final class RemoteFrameworkConnectionInfo {
         this.useSSL = useSSL;
         this.trustManagers = CollectionUtil.newReadOnlyList(trustManagers);
         this.timeout = timeout;
+        this.heartbeatInterval = 60L;
+    }
+
+    /**
+     * Creates a new instance of RemoteFrameworkConnectionInfo.
+     *
+     * @param host
+     *            The host to connect to
+     * @param port
+     *            The port to connect to
+     * @param key
+     *            The remote framework key
+     * @param useSSL
+     *            Set to true if we are to connect via SSL.
+     * @param trustManagers
+     *            List of {@link TrustManager}'s to use for establising the SSL
+     *            connection. May be null or empty, in which case the default
+     *            installed providers for the JVM will be used. Ignored if
+     *            'useSSL' is false.
+     * @param timeout
+     *            The timeout to use (in milliseconds). A value of 0 means
+     *            infinite timeout;
+     * @param heartbeatInterval
+     *            The connection check interval to use (in seconds). A value of
+     *            0 means the default 60 seconds.
+     * @since 1.5
+     */
+    public RemoteFrameworkConnectionInfo(String host, int port, GuardedString key, boolean useSSL,
+                                         List<TrustManager> trustManagers, int timeout, long heartbeatInterval) {
+        Assertions.nullCheck(host, "host");
+        Assertions.nullCheck(key, "key");
+        this.host = host;
+        this.port = port;
+        this.key = key;
+        this.useSSL = useSSL;
+        this.trustManagers = CollectionUtil.newReadOnlyList(trustManagers);
+        this.timeout = timeout;
+        this.heartbeatInterval = heartbeatInterval;
     }
 
     /**
@@ -143,6 +183,16 @@ public final class RemoteFrameworkConnectionInfo {
      */
     public int getTimeout() {
         return timeout;
+    }
+
+    /**
+     * Returns the heartbeat interval (in seconds) to use for the connection. A value
+     * of zero means default 60 seconds timeout.
+     *
+     * @return the heartbeat interval (in seconds) to use for the connection.
+     */
+    public long getHeartbeatInterval() {
+        return heartbeatInterval;
     }
 
     /**

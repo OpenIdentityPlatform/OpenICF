@@ -1,7 +1,7 @@
 /*
  * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2010-2015 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -32,10 +32,6 @@ import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.framework.api.ConnectorKey;
 
 /**
- * NOTICE: This package is an early specification of the Events API for 1.2.x.x
- * version. Use carefully, this package may change before the final 1.2.0.0
- * release.
- * <p/>
  *
  * @author Laszlo Hordos
  * @since 1.4
