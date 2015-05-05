@@ -369,6 +369,7 @@ public class LdapUpdate extends LdapModifyOperation {
                     }
                     break;
                 default:
+                    throw new org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException(e.getCause());
             }
         } catch (NoPermissionException e) {
             throw new ConnectorException("Insufficient Access Rights to perform");
