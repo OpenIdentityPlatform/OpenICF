@@ -43,7 +43,6 @@ import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorKey;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
@@ -156,17 +155,11 @@ public class CreateAsyncApiOpImpl extends AbstractAPIOperation implements Create
 
         protected void handleOperationResponseMessages(WebSocketConnectionHolder sourceConnection,
                 OperationMessages.CreateOpResponse message) {
-            try {
-                if (message.hasUid()) {
-                    getSuccessHandler().handleResult(
-                            MessagesUtil.deserializeMessage(message.getUid(), Uid.class));
-                } else {
-                    getSuccessHandler().handleResult(null);
-                }
-
-            } catch (Throwable t) {
-                getFailureHandler().handleError(
-                        new ConnectorException("Failed to read success response", t));
+            if (message.hasUid()) {
+                getSuccessHandler().handleResult(
+                        MessagesUtil.deserializeMessage(message.getUid(), Uid.class));
+            } else {
+                getSuccessHandler().handleResult(null);
             }
         }
     }

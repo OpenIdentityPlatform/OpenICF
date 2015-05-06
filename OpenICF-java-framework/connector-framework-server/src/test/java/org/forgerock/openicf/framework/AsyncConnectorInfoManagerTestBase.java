@@ -378,10 +378,6 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
                     }
                 }, null);
 
-        // The Complete response is processed quicker then delta result
-//        for (int i = 0; i < 10 && changes.size() < 2; i++) {
-//            Thread.sleep(500);
-//        }
         Assert.assertEquals(changes.size(), 2);
         Assert.assertEquals(facade.getObject(ObjectClass.ACCOUNT, uid1, null).getUid(), uid1);
         Assert.assertEquals(token, lastToken);
@@ -389,9 +385,6 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
         ToListResultsHandler handler = new ToListResultsHandler();
         facade.search(ObjectClass.ACCOUNT, FilterBuilder.or(FilterBuilder.equalTo(new Name(
                 "CREATE_02")), FilterBuilder.startsWith(new Name("CREATE"))), handler, null);
-//        for (int i = 0; i < 10 && handler.getObjects().size() < 2; i++) {
-//            Thread.sleep(500);
-//        }
         Assert.assertEquals(handler.getObjects().size(), 2);
 
         handler = new ToListResultsHandler();
@@ -479,6 +472,10 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
         syncLatch.await(25, TimeUnit.SECONDS);
         if (null != assertionError.get()) {
             throw assertionError.get();
+        }
+        for (int i = 0; i < 5 && !(handler.getObjects().size() > 2); i++) {
+            Reporter.log("Wait for result handler thread to complete: " + i, true);
+            Thread.sleep(200); // Wait to complete all other threads
         }
         Assert.assertTrue(handler.getObjects().size() < 10 && handler.getObjects().size() > 2);
     }

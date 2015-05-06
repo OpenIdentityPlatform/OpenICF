@@ -156,6 +156,10 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestMessage
 
             TestRemoteRequest<H> request = client.trySubmitRequest(new TestRequestFactory<H>(1));
             Assert.assertEquals(request.getPromise().getOrThrowUninterruptibly(), "OK");
+            for (int i = 0; i < 5 && request.getResults().size() != 3; i++) {
+                Reporter.log("Wait for complete request cleanup: " + i, true);
+                Thread.sleep(1000); // Wait to complete all other threads
+            }
             Assert.assertEquals(request.getResults().size(), 3);
             Assert.assertTrue(client.getRemoteRequests().isEmpty());
             Assert.assertTrue(server.getLocalRequests().isEmpty());
@@ -175,6 +179,11 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestMessage
             TestRemoteRequest<H> request = client.trySubmitRequest(new TestRequestFactory<H>(2));
             Assert.assertEquals(request.getPromise().getOrThrowUninterruptibly(), "OK");
             Assert.assertEquals(request.getResults().size(), 3);
+            for (int i = 0; i < 5 && !client.getLocalRequests().isEmpty()
+                    && !server.getLocalRequests().isEmpty(); i++) {
+                Reporter.log("Wait for complete request cleanup: " + i, true);
+                Thread.sleep(1000); // Wait to complete all other threads
+            }
             Assert.assertTrue(client.getRemoteRequests().isEmpty());
             Assert.assertTrue(server.getLocalRequests().isEmpty());
         } finally {
@@ -212,11 +221,12 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestMessage
             }
 
             Assert.assertEquals(request.getResults().size(), 1);
-            Assert.assertTrue(client.getRemoteRequests().isEmpty());
-            for (int i = 0; i < 5 && !server.getLocalRequests().isEmpty(); i++) {
+            for (int i = 0; i < 5 && !client.getLocalRequests().isEmpty()
+                    && !server.getLocalRequests().isEmpty(); i++) {
                 Reporter.log("Wait for Cancel complete: " + i, true);
                 Thread.sleep(1000); // Wait to complete all other threads
             }
+            Assert.assertTrue(client.getRemoteRequests().isEmpty());
             Assert.assertTrue(server.getLocalRequests().isEmpty());
         } finally {
             connection.close();

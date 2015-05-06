@@ -112,7 +112,7 @@ public abstract class RemoteRequest<M, V, E extends Exception, G extends RemoteC
                             try {
                                 if (null == promise) {
 
-                                    PromiseImpl<V, E> result = new PromiseImpl<V, E>() {
+                                    promise = new PromiseImpl<V, E>() {
 
                                         protected E tryCancel(boolean mayInterruptIfRunning) {
                                             if (mayInterruptIfRunning) {
@@ -127,21 +127,29 @@ public abstract class RemoteRequest<M, V, E extends Exception, G extends RemoteC
 
                                     };
 
-                                    result.onSuccessOrFailure(new Runnable() {
+                                    promise.onSuccessOrFailure(new Runnable() {
                                         public void run() {
                                             completionCallback.complete(RemoteRequest.this);
                                         }
                                     });
 
-                                    if (message.isByte()) {
-                                        remoteConnectionHolder.sendBytes(message.byteMessage).get();
-                                    } else if (message.isString()) {
-                                        remoteConnectionHolder.sendString(message.stringMessage)
-                                                .get();
+                                    try {
+                                        if (message.isByte()) {
+                                            remoteConnectionHolder.sendBytes(message.byteMessage)
+                                                    .get();
+                                        } else if (message.isString()) {
+                                            remoteConnectionHolder
+                                                    .sendString(message.stringMessage).get();
+                                        }
+                                    } catch (final Exception e) {
+                                        promise = null;
+                                        throw e;
+                                    } catch (final Throwable t) {
+                                        promise = null;
+                                        throw new Exception(t);
                                     }
                                     // Message has been delivered - Report
                                     // success
-                                    promise = result;
                                     requestTime = System.currentTimeMillis();
                                 }
                             } finally {

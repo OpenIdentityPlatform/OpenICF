@@ -183,13 +183,7 @@ public abstract class RemoteConnectionGroup<M, G extends RemoteConnectionGroup<M
         final R remoteRequest = allocateRequest(requestFactory);
         if (null != remoteRequest) {
             Promise<V, E> result = trySendMessage(remoteRequest.getSendFunction());
-            if (null != result) {
-                result.thenAlways(new Runnable() {
-                    public void run() {
-                        remoteRequests.remove(remoteRequest.getRequestId());
-                    }
-                });
-            } else {
+            if (null == result) {
                 remoteRequests.remove(remoteRequest.getRequestId());
                 return null;
             }

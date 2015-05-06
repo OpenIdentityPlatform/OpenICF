@@ -25,7 +25,6 @@
 package org.forgerock.openicf.framework.async.impl;
 
 import org.forgerock.openicf.common.protobuf.CommonObjectMessages;
-import org.forgerock.openicf.common.protobuf.ConnectorObjects;
 import org.forgerock.openicf.common.protobuf.OperationMessages;
 import org.forgerock.openicf.common.protobuf.RPCMessages;
 import org.forgerock.openicf.common.rpc.RemoteRequestFactory;
@@ -35,6 +34,8 @@ import org.forgerock.openicf.framework.remote.rpc.RemoteOperationRequest;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
 import org.identityconnectors.common.l10n.CurrentLocale;
+import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageLite;
@@ -42,6 +43,8 @@ import com.google.protobuf.MessageLite;
 public abstract class AbstractRemoteOperationRequestFactory<V, R extends RemoteOperationRequest<V>>
         implements
         RemoteRequestFactory<MessageLite, R, V, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> {
+
+    private static final Log logger = Log.getLog(AbstractRemoteOperationRequestFactory.class);
 
     protected abstract CommonObjectMessages.ConnectorKey.Builder createConnectorKey();
 
@@ -99,7 +102,15 @@ public abstract class AbstractRemoteOperationRequestFactory<V, R extends RemoteO
                 M responseMessage =
                         getOperationResponseMessages((OperationMessages.OperationResponse) message);
                 if (null != responseMessage) {
-                    handleOperationResponseMessages(sourceConnection, responseMessage);
+                    try {
+                        handleOperationResponseMessages(sourceConnection, responseMessage);
+                    } catch (RuntimeException e) {
+                        logger.ok(e, "Failed to handle the result of operation");
+                        getFailureHandler().handleError(e);
+                    } catch (Throwable t) {
+                        logger.ok(t, "Failed to handle the result of operation");
+                        getFailureHandler().handleError(new ConnectorException(t));
+                    }
                     return true;
                 }
             }

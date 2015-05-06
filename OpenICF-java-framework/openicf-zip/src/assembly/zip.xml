@@ -85,7 +85,6 @@
                 <include>org.glassfish.grizzly:*</include>
                 <include>javax.servlet:javax.servlet-api</include>
                 <include>org.forgerock.commons:*</include>
-                <include>commons-codec:*</include>
                 <include>com.google.protobuf:*</include>
                 <include>org.bouncycastle:*</include>
                 <include>org.slf4j:*</include>

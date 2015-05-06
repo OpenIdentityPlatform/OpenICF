@@ -583,6 +583,10 @@ public abstract class ConnectorInfoManagerTestBase {
                 }
             });
             syncLatch.await(25, TimeUnit.SECONDS);
+            for (int i = 0; i < 5 && !(handler.getObjects().size() > 2); i++) {
+                Reporter.log("Wait for result handler thread to complete: " + i, true);
+                Thread.sleep(200); // Wait to complete all other threads
+            }
             Assert.assertTrue(handler.getObjects().size() < 10 && handler.getObjects().size() > 2);
         }
     }
