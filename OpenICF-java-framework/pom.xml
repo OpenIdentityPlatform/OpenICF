@@ -169,7 +169,7 @@
         <javadocStylesheet>org/forgerock/javadoc/javadoc.css</javadocStylesheet>
 
         <!-- Core documentation properties -->
-        <frDocPluginVersion>2.1.5</frDocPluginVersion>
+        <frDocPluginVersion>3.0.0-SNAPSHOT</frDocPluginVersion>
         <docTargetVersion>${project.version}</docTargetVersion>
         <googleAnalyticsAccountId>UA-23412190-10</googleAnalyticsAccountId>
         <!--
@@ -186,6 +186,11 @@
         <publishedDocBase>http://docs.forgerock.org/en/</publishedDocBase>
         <forgerockSite>http://forgerock.com</forgerockSite>
         -->
+        <!-- Doc Branding -->
+        <brandingGroupId>org.forgerock.commons</brandingGroupId>
+        <brandingArtifactId>forgerock-doc-default-branding</brandingArtifactId>
+        <brandingVersion>3.0.0-SNAPSHOT</brandingVersion>
+
     </properties>
 
     <modules>
@@ -415,52 +420,43 @@
             <plugin>
                 <groupId>org.forgerock.commons</groupId>
                 <artifactId>forgerock-doc-maven-plugin</artifactId>
+                <version>${frDocPluginVersion}</version>
                 <inherited>false</inherited>
                 <configuration>
                     <projectName>OpenICF</projectName>
                     <googleAnalyticsId>${googleAnalyticsAccountId}</googleAnalyticsId>
                     <projectVersion>${docTargetVersion}</projectVersion>
-                    <latestJson>http://mcraig.org/fr/latest.php</latestJson><!-- Temporary workaround pending #QOZ-985-23233 -->
+                    <releaseVersion>${docTargetVersion}</releaseVersion>
                     <docbkxSourceDirectory>${basedir}/src/main/docbkx</docbkxSourceDirectory>
                 </configuration>
                 <executions>
-                    <execution>
-                        <id>copy-common</id>
-                        <phase>pre-site</phase>
-                        <goals>
-                            <goal>boilerplate</goal>
-                        </goals>
-                        <configuration>
-                            <overwriteGeneratedSource>true</overwriteGeneratedSource>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>filter-sources</id>
-                        <phase>pre-site</phase>
-                        <goals>
-                            <goal>filter</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>prepare-sources</id>
-                        <phase>pre-site</phase>
-                        <goals>
-                            <goal>prepare</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>build-doc</id>
-                        <phase>pre-site</phase>
-                        <goals>
-                            <goal>build</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>layout-doc</id>
-                        <phase>site</phase>
-                        <goals>
-                            <goal>layout</goal>
-                        </goals>
+                       <execution>
+                           <id>pre-process-doc</id>
+                           <phase>pre-site</phase>
+                           <goals>
+                               <goal>process</goal>
+                           </goals>
+                       </execution>
+                       <execution>
+                           <id>build-doc</id>
+                           <phase>pre-site</phase>
+                           <goals>
+                               <goal>build</goal>
+                           </goals>
+                       </execution>
+                       <execution>
+                           <id>layout-site</id>
+                           <phase>site</phase>
+                           <goals>
+                               <goal>site</goal>
+                           </goals>
+                       </execution>
+                       <execution>
+                           <id>layout-release</id>
+                           <phase>site</phase>
+                           <goals>
+                               <goal>release</goal>
+                           </goals>
                     </execution>
                 </executions>
             </plugin>
