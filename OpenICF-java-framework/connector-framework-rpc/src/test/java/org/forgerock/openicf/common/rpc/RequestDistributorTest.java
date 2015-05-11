@@ -25,6 +25,8 @@
 package org.forgerock.openicf.common.rpc;
 
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.forgerock.openicf.common.rpc.impl.NIOSimulator;
 import org.forgerock.openicf.common.rpc.impl.TestConnectionContext;
@@ -136,8 +138,16 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestMessage
         try {
             Assert.assertTrue(client.isOperational());
             Assert.assertTrue(server.isOperational());
-
-            Assert.assertEquals(client.trySubmitRequest(new TestRequestFactory<H>(0)).getPromise()
+            final CountDownLatch latch = new CountDownLatch(1);
+            TestRemoteRequest<H> request = client.trySubmitRequest(new TestRequestFactory<H>(0));
+            request.getPromise().thenAlways(new Runnable() {
+                public void run() {
+                    latch.countDown();
+                }
+            });
+            Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
+            
+            Assert.assertEquals(request.getPromise()
                     .getOrThrowUninterruptibly(), "OK");
             Assert.assertTrue(client.getRemoteRequests().isEmpty());
             Assert.assertTrue(server.getLocalRequests().isEmpty());
@@ -153,8 +163,14 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestMessage
         try {
             Assert.assertTrue(client.isOperational());
             Assert.assertTrue(server.isOperational());
-
+            final CountDownLatch latch = new CountDownLatch(1);
             TestRemoteRequest<H> request = client.trySubmitRequest(new TestRequestFactory<H>(1));
+            request.getPromise().thenAlways(new Runnable() {
+                public void run() {
+                    latch.countDown();
+                }
+            });
+            Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
             Assert.assertEquals(request.getPromise().getOrThrowUninterruptibly(), "OK");
             for (int i = 0; i < 5 && request.getResults().size() != 3; i++) {
                 Reporter.log("Wait for complete request cleanup: " + i, true);
@@ -175,15 +191,18 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestMessage
         try {
             Assert.assertTrue(client.isOperational());
             Assert.assertTrue(server.isOperational());
-
+            
+            final CountDownLatch latch = new CountDownLatch(1);
             TestRemoteRequest<H> request = client.trySubmitRequest(new TestRequestFactory<H>(2));
+            request.getPromise().thenAlways(new Runnable() {
+                public void run() {
+                    latch.countDown();
+                }
+            });
+            Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
+            
             Assert.assertEquals(request.getPromise().getOrThrowUninterruptibly(), "OK");
             Assert.assertEquals(request.getResults().size(), 3);
-            for (int i = 0; i < 5 && !client.getLocalRequests().isEmpty()
-                    && !server.getLocalRequests().isEmpty(); i++) {
-                Reporter.log("Wait for complete request cleanup: " + i, true);
-                Thread.sleep(1000); // Wait to complete all other threads
-            }
             Assert.assertTrue(client.getRemoteRequests().isEmpty());
             Assert.assertTrue(server.getLocalRequests().isEmpty());
         } finally {
@@ -198,6 +217,7 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestMessage
         try {
             Assert.assertTrue(client.isOperational());
             Assert.assertTrue(server.isOperational());
+            final CountDownLatch latch = new CountDownLatch(1);
 
             TestRemoteRequest<H> request = client.trySubmitRequest(new TestRequestFactory<H>(2) {
                 public void handleCallback(H sourceConnection, TestRemoteRequest<H> request,
@@ -214,12 +234,16 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestMessage
                     public void handleError(Exception error) {
                         Assert.assertTrue(error instanceof CancellationException);
                     }
+                }).thenAlways(new Runnable() {
+                    public void run() {
+                        latch.countDown();
+                    }
                 }).getOrThrowUninterruptibly();
                 Assert.fail("Not Canceled");
             } catch (CancellationException e) {
                 // Expected
             }
-
+            Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
             Assert.assertEquals(request.getResults().size(), 1);
             for (int i = 0; i < 5 && !client.getLocalRequests().isEmpty()
                     && !server.getLocalRequests().isEmpty(); i++) {

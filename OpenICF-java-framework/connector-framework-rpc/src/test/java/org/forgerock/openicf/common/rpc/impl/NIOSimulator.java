@@ -42,6 +42,7 @@ import org.forgerock.openicf.common.rpc.RemoteConnectionGroup;
 import org.forgerock.openicf.common.rpc.RemoteConnectionHolder;
 import org.testng.Reporter;
 
+@SuppressWarnings("unchecked")
 public class NIOSimulator<M, G extends RemoteConnectionGroup<M, G, H, P>, H extends RemoteConnectionHolder<M, G, H, P>, P extends RemoteConnectionContext<M, G, H, P>>
         implements Closeable {
 

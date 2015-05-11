@@ -149,7 +149,6 @@ public class TestLocalRequest<H extends RemoteConnectionHolder<TestMessage, Test
 
     public void handleIncomingMessage(H sourceConnection, TestMessage message) {
         if (Boolean.TRUE.equals(message.cancel)) {
-            Reporter.log("Cancel", true);
             cancel();
         }
         synchronized (this) {
