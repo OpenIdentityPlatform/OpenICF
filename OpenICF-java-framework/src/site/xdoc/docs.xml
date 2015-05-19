@@ -37,25 +37,29 @@
    href="http://docs.forgerock.org/en/index.html?product=openicf">docs.forgerock.org</a>.</p>
    <dl>
     <dt>Release Notes</dt>
-    <dd><a href="./doc/OpenICF-Release-Notes.epub">EPUB</a>,
-    <a href="./doc/release-notes/index.html">HTML (single page)</a>,
-    <a href="./doc/release-notes/index/index.html">HTML (1 page/chapter)</a>,
-    <a href="./doc/OpenICF-Release-Notes.pdf">PDF</a>,
-    <a href="./doc/webhelp/release-notes/index.html">Webhelp</a></dd>
+    <dd>
+     <a href="./doc/bootstrap/release-notes/index.html">HTML</a>,
+     <a href="./doc/OpenICF-Release-Notes">PDF</a>
+    </dd>
 
     <dt>Configuration Reference</dt>
-    <dd><a href="./doc/OpenICF-Release-Notes.epub">EPUB</a>,
-    <a href="./doc/config-reference/index.html">HTML (single page)</a>,
-    <a href="./doc/config-reference/index/index.html">HTML (1 page/chapter)</a>,
-    <a href="./doc/OpenICF-Config-Reference.pdf">PDF</a>,
-    <a href="./doc/webhelp/config-reference/index.html">Webhelp</a></dd>
+    <dd><a href="./doc/config-reference/index.html">HTML</a>,
+    <a href="./doc/OpenICF-Config-Reference.pdf">PDF</a>
+    </dd>
 
-    <dt>Developer Guide</dt>
-    <dd><a href="./doc/OpenICF-Dev-Guide.epub">EPUB</a>,
-    <a href="./doc/dev-guide/index.html">HTML (single page)</a>,
-    <a href="./doc/dev-guide/index/index.html">HTML (1 page/chapter)</a>,
-    <a href="./doc/OpenICF-Dev-Guide.pdf">PDF</a>,
-    <a href="./doc/webhelp/dev-guide/index.html">Webhelp</a></dd>
+    <!-- Add bootstrap format when Config Ref builds with 3.0 doc plugin
+    <dt>Configuration Reference</dt>
+    <dd>
+     <a href="./doc/bootstrap/config-reference/index.html">HTML</a>,
+     <a href="./doc/OpenICF-Config-Reference.pdf">PDF</a>
+    </dd> -->
+
+    <dt>Developer's Guide</dt>
+    <dd>
+     <a href="./doc/bootstrap/dev-guide/index.html">HTML</a>,
+     <a href="./doc/OpenICF-Dev-Guide-Guide.pdf">PDF</a>
+    </dd>
+
 
    </dl>
   </section>
