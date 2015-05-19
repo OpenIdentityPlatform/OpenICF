@@ -20,7 +20,7 @@
   !
   ! CCPL HEADER END
   !
-  !      Copyright 2012-2014 ForgeRock AS
+  !      Copyright 2012-2015 ForgeRock AS
   !
 -->
 <chapter xml:id='chap-get-started'
@@ -28,29 +28,91 @@
  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
  xsi:schemaLocation='http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd'
  xmlns:xlink='http://www.w3.org/1999/xlink'
- xmlns:xinclude='http://www.w3.org/2001/XInclude'>
- <title>Getting Started</title>
+ xmlns:xi="http://www.w3.org/2001/XInclude">
+ <title>Getting Started With the OpenICF Framework and OpenICF Connectors</title>
+ <para>
+  This chapter describes what is required before you begin to integrate an
+  existing OpenICF connector into your Identity Management application.
+ </para>
 
- <itemizedlist>
-  <para>To use connectors in your application, first download the <link
-  xlink:href="http://openicf.forgerock.org/downloads.html" xlink:show="new"
-  >Connector Framework</link>. Next, add the following jars to your
-  CLASSPATH:</para>
-  <listitem>
-   <para><filename>connector-framework.jar</filename> (compile and runtime
-   dependency)</para>
-  </listitem>
-  <listitem>
-   <para><filename>connector-framework-internal.jar</filename> (runtime
-   dependency only)</para>
-  </listitem>
- </itemizedlist>
-
- <para>Also download the Connector Bundles you need, and add them to the
- CLASSPATH as well. At this point you can start using the connectors in your
- application.</para>
-
- <para>You can also download builds from the <link
- xlink:href="http://openicf.forgerock.org/downloads.html"
- xlink:show="new">OpenICF download page</link>.</para>
+ <procedure>
+  <para>
+   Before you can use an OpenICF connector in your application, you must
+   download the OpenICF framework bundles, and the required connector bundles,
+   and add them to your CLASSPATH.
+  </para>
+  <para>
+   The easiest way to start a new OpenICF project is to use the following
+   Maven project file as a starting point. This sample project includes
+   comprehensive comments about its use.
+  </para>
+  <programlisting language="xml">
+  [resources/pom.xml]
+  </programlisting>
+  <para>
+   Alternatively, follow these steps:
+  </para>
+  <step>
+   <para>
+    Download the OpenICF Connector Framework. If you are planning to use the
+    PowerShell connector or the Active Directory connector, download the <link
+    xlink:href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=releases%3Aorg%2Fforgerock%2Fopenicf%2Fframework%2Fopenicf-zip%2F1.4.1.0%2Fopenicf-zip-1.4.1.0-dotnet.zip"
+    xlink:show="new">.NET Framework</link>. For all other connectors, download
+    the Java Framework from the <link
+    xlink:href="http://maven.forgerock.org/repo/webapp/browserepo.html?15&amp;pathId=releases:org/forgerock/openicf/framework"
+    xlink:show="new">ForgeRock Maven repository</link>.
+   </para>
+  </step>
+  <step>
+   <para>
+    Add the following JAR files to your CLASSPATH:
+   </para>
+   <itemizedlist>
+    <listitem>
+     <para>
+      <filename>connector-framework.jar</filename> (compile and runtime
+      dependency)
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      <filename>connector-framework-internal.jar</filename> (runtime dependency
+      only)
+     </para>
+    </listitem>
+   </itemizedlist>
+  </step>
+  <step>
+   <para>
+    Download the specific connector bundle or bundles that you want to use, from
+    the <link xlink:href="http://openicf.forgerock.org/connectors/index.html"
+    xlink:show="new">OpenICF Connector Bundles</link> page.
+   </para>
+  </step>
+  <step>
+   <para>
+    Add the connector bundle or bundles to your CLASSPATH.
+   </para>
+   <para>
+    You can now start integrating the connector with your application, as
+    described in <link xlink:show="new"
+    xlink:href="dev-guide#chap-openicf-api"
+    xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Implementing the
+    OpenICF API</citetitle></link>.
+   </para>
+  </step>
+ </procedure>
+ <note>
+  <para>
+   If you are building a new connector by using one of the OpenICF Maven
+   connector archetypes, you do not need to download the Connector Framework
+   separately. The required Connector Framework JAR files are downloaded
+   automatically, because the Maven project defines the framework as a
+   dependency.
+  </para>
+ </note>
+ <para>
+  After you have set up your project, you must implement the OpenICF API to call
+  the connector implementations from your application.
+ </para>
 </chapter>

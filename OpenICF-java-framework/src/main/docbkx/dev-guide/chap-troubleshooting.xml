@@ -20,7 +20,7 @@
   !
   ! CCPL HEADER END
   !
-  !      Copyright 2012-2014 ForgeRock AS
+  !      Copyright 2012-2015 ForgeRock AS
   !
 -->
 <chapter xml:id='chap-troubleshooting'
@@ -32,12 +32,12 @@
  <title>Troubleshooting Connectors</title>
 
  <para>
-  Sometimes it is difficult to assess whether the root a problem is at the
+  Sometimes it is difficult to assess whether the root of a problem is at the
   OpenICF or connector level, or at the application level.
  </para>
  <para>
-  In the case of OpenIDM, you can adjust log levels for specific parts of the
-  system in the
+  If you are using OpenICF connectors with OpenIDM, you can adjust the log
+  levels for specific parts of the system in the
   <filename>path/to/openidm/conf/logging.properties</filename> file.
  </para>
  <para>

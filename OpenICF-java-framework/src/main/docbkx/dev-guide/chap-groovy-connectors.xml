@@ -1,0 +1,555 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ! CCPL HEADER START
+  !
+  ! This work is licensed under the Creative Commons
+  ! Attribution-NonCommercial-NoDerivs 3.0 Unported License.
+  ! To view a copy of this license, visit
+  ! http://creativecommons.org/licenses/by-nc-nd/3.0/
+  ! or send a letter to Creative Commons, 444 Castro Street,
+  ! Suite 900, Mountain View, California, 94041, USA.
+  !
+  ! You can also obtain a copy of the license at
+  ! legal-notices/CC-BY-NC-ND.txt.
+  ! See the License for the specific language governing permissions
+  ! and limitations under the License.
+  !
+  ! If applicable, add the following below this CCPL HEADER, with the fields
+  ! enclosed by brackets "[]" replaced with your own identifying information:
+  !      Portions Copyright [yyyy] [name of copyright owner]
+  !
+  ! CCPL HEADER END
+  !
+  !      Copyright 2015 ForgeRock AS
+  !
+-->
+<chapter xml:id='chap-groovy-connectors'
+ xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
+ xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+ xsi:schemaLocation='http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd'
+ xmlns:xlink='http://www.w3.org/1999/xlink'
+ xmlns:xinclude='http://www.w3.org/2001/XInclude'>
+ <title>Writing Scripted Connectors With the Groovy Connector Toolkit</title>
+
+ <para>
+  The Groovy Connector Toolkit enables you to run Groovy scripts to interact
+  with any external resource.
+ </para>
+ <para>
+  The Groovy Connector Toolkit is not a complete connector, in the traditional
+  sense. Rather, it is a framework within which you must write your own Groovy
+  scripts to address the requirements of your implementation.
+ </para>
+ <para>
+  OpenICF and the OpenIDM project provide utilities to help you get started with
+  the Groovy Groovy Connector Toolkit.
+ </para>
+ <para>
+  A number of deployment-specific scripts
+  are provided in the samples that are delivered with OpenIDM. These scripts
+  demonstrate how the Groovy Connector Toolkit can be used. The scripts cannot
+  be used "as is" in your deployment, but can be used as a starting point on
+  which to base your customization. OpenIDM also provides a custom connector
+  bundler, that does much of the development work for you. For more information,
+  see <link xlink:show="new" xlink:href="dev-guide#chap-custom-bundler"
+  xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Building
+  Connectors With the Custom Scripted Connector Bundler</citetitle></link>.
+ </para>
+ <para>
+  This chapter describes how to use a Maven archetype for the Groovy Connector
+  Toolkit, to build your own custom connector from scratch.
+ </para>
+ <para>
+  The Groovy Connector Toolkit can be used with any OpenICF-enabled project
+  (that is, any project in which the OpenICF Connector Framework is installed).
+ </para>
+
+ <section xml:id="about-groovy">
+  <title>About the Groovy Scripting Language</title>
+  <para>
+   Groovy is a powerful, convenient scripting language for the Java platform.
+   Groovy enables you to take advantage of existing Java resources, and
+   generally makes development quicker. Extensive information about Groovy is
+   available on the Groovy <link xlink:show="new"
+   xlink:href="http://www.groovy-lang.org/documentation.html">documentation
+   site</link>.
+  </para>
+ </section>
+
+ <section xml:id="implementing-operations">
+  <title>Implementing OpenICF Operations</title>
+  <para>
+   The Groovy Connector Toolkit enables you to run a Groovy script for any
+   OpenICF operation, such as search, update, create, and so forth, on any
+   external resource.
+  </para>
+  <itemizedlist>
+   <para>
+    The Groovy Connector supports scripts that perform the following operations:
+   </para>
+   <listitem>
+    <para>
+     Authenticating to an external resource
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     Testing the connection to the external resource
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     Creating an object on the resource
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     Searching for an object on the resource
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     Updating an object on the resource
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     Deleting an object from the resource
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     Synchronizing a set of objects between two resources
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     Building the schema from an external resource
+    </para>
+   </listitem>
+  </itemizedlist>
+
+  <section xml:id="script-authenticate">
+   <title>Authenticating to an External Resource</title>
+   <para>
+    An authentication script is <emphasis>required</emphasis> in every connector
+    implementation. If authentication is not required on the resource, the
+    script should allow the <literal>authId</literal> to pass through by
+    default.
+   </para>
+  <variablelist>
+   <para>
+    The following variables are available to the authentication script:
+   </para>
+   <varlistentry>
+    <term>operation</term>
+    <listitem>
+     <para>
+      The operation type is <literal>AUTHENTICATION</literal> for this script.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>configuration</term>
+    <listitem>
+     <para>
+      The configuration class created for this connector.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>log</term>
+    <listitem>
+     <para>
+      The default logging facility.
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </section>
+
+ <section xml:id="script-test">
+  <title>Testing the Connection to the External Resource</title>
+  <para>
+   A test script tests the connection to the external resource to ensure that
+   the other actions provided by the connector can succeed.
+  </para>
+  <variablelist>
+   <para>
+    The following variables are available to the test script:
+   </para>
+   <varlistentry>
+    <term>operation</term>
+    <listitem>
+     <para>
+      The operation type is <literal>TEST</literal> for this script.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>configuration</term>
+    <listitem>
+     <para>
+      The configuration class created for this connector.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>log</term>
+    <listitem>
+     <para>
+      The default logging facility.
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </section>
+
+ <section xml:id="script-create">
+  <title>Creating an Object</title>
+  <para>
+   A create script creates a new object on the external resource. If your
+   connector does not support creating an object, this script should throw an
+   <literal>UnsupportedOperationException</literal>. On success, the script
+   should return a <literal>Uid</literal> object that represents the ID of the
+   newly created object.
+  </para>
+  <variablelist>
+   <para>
+    The following variables are available to the create script:
+   </para>
+   <varlistentry>
+    <term>operation</term>
+    <listitem>
+     <para>
+      The operation type is <literal>CREATE</literal> for this script.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>configuration</term>
+    <listitem>
+     <para>
+      The configuration class created for this connector.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>log</term>
+    <listitem>
+     <para>
+      The default logging facility.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>createAttributes</term>
+    <listitem>
+     <para>
+      The set of attributes that describe the object to be created.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>uid</term>
+    <listitem>
+     <para>
+      The UID of the object to be created, if specified. If the UID is
+      <literal>null</literal>, the UID should be generated by the server.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>objectClass</term>
+    <listitem>
+     <para>
+      The objectClass of the object to be created, for example,
+      <literal>ACCOUNT</literal> or <literal>GROUP</literal>.
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </section>
+
+ <section xml:id="script-search">
+  <title>Searching for an Object</title>
+  <para>
+   A search script searches for one or more objects on the external resource.
+   Connectors that do not support searches should throw an
+   <literal>UnsupportedOperationException</literal>. A search script should
+   use the <literal>handler</literal> object to process the result set
+  </para>
+  <variablelist>
+   <para>
+    The following variables are available to the search script:
+   </para>
+   <varlistentry>
+    <term>operation</term>
+    <listitem>
+     <para>
+      The operation type is <literal>SEARCH</literal> for this script.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>configuration</term>
+    <listitem>
+     <para>
+      The configuration class created for this connector.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>log</term>
+    <listitem>
+     <para>
+      The default logging facility.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>objectClass</term>
+    <listitem>
+     <para>
+      The objectClass of the object to be searched, for example,
+      <literal>ACCOUNT</literal> or <literal>GROUP</literal>.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>filter</term>
+    <listitem>
+     <para>
+      The search filter for this operation.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>options</term>
+    <listitem>
+     <para>
+      Additional options for this operation.
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </section>
+
+ <section xml:id="script-update">
+  <title>Updating an Object</title>
+  <para>
+   An update script updates an object in the external source. Connectors that do
+   not support update operations should throw an
+   <literal>UnsupportedOperationException</literal>. An update script must
+   return the <literal>uid</literal> of the updated object.
+  </para>
+  <variablelist>
+   <para>
+    The following variables are available to the update script:
+   </para>
+   <varlistentry>
+    <term>operation</term>
+    <listitem>
+     <para>
+      The operation type is <literal>UPDATE</literal> for this script.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>configuration</term>
+    <listitem>
+     <para>
+      The configuration class created for this connector.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>log</term>
+    <listitem>
+     <para>
+      The default logging facility.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>updateAttributes</term>
+    <listitem>
+     <para>
+      The set of attributes that describe the object to be updated.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>uid</term>
+    <listitem>
+     <para>
+      The UID of the object to be updated.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>objectClass</term>
+    <listitem>
+     <para>
+      The objectClass of the object to be updated, for example,
+      <literal>ACCOUNT</literal> or <literal>GROUP</literal>.
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </section>
+
+ <section xml:id="script-delete">
+  <title>Deleting an Object</title>
+  <para>
+   A delete script deletes an object in the external resource. Connectors that
+   do not support delete operations should throw an
+   <literal>UnsupportedOperationException</literal>. This script has no return
+   value but should throw an exception if the delete is unsuccessful for any
+   reason.
+  </para>
+  <variablelist>
+   <para>
+    The following variables are available to the delete script:
+   </para>
+   <varlistentry>
+    <term>operation</term>
+    <listitem>
+     <para>
+      The operation type is <literal>DELETE</literal> for this script.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>configuration</term>
+    <listitem>
+     <para>
+      The configuration class created for this connector.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>log</term>
+    <listitem>
+     <para>
+      The default logging facility.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>uid</term>
+    <listitem>
+     <para>
+      The UID of the object to be deleted.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>objectClass</term>
+    <listitem>
+     <para>
+      The objectClass of the object to be deleted, for example,
+      <literal>ACCOUNT</literal> or <literal>GROUP</literal>.
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </section>
+
+ <section xml:id="script-sync">
+  <title>Synchronizing Two Resources</title>
+  <para>
+   A synchronization script synchronizes objects between two resources. The
+   script should retrieve all objects in the external resource that have been
+   updated since some defined token. The script should use the
+   <literal>handler</literal> object to process the result set.
+  </para>
+  <variablelist>
+   <para>
+    The following variables are available to the sync script:
+   </para>
+   <varlistentry>
+    <term>operation</term>
+    <listitem>
+     <para>
+      The operation type for this script is <literal>SYNC</literal> or
+      <literal>GET_LATEST_SYNC_TOKEN</literal>.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>configuration</term>
+    <listitem>
+     <para>
+      The configuration class created for this connector.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>log</term>
+    <listitem>
+     <para>
+      The default logging facility.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>objectClass</term>
+    <listitem>
+     <para>
+      The objectClass of object to be created, for example,
+      <literal>ACCOUNT</literal> or <literal>GROUP</literal>.
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </section>
+
+ <section xml:id="script-schema">
+  <title>Building the Schema For a Connector</title>
+  <para>
+   A schema script builds the schema for the connector, either from a static,
+   predefined schema, or by reading the schema from the external resource. The
+   script should use the <literal>builder</literal> object to create the schema.
+  </para>
+  <variablelist>
+   <para>
+    The following variables are available to the create script:
+   </para>
+   <varlistentry>
+    <term>operation</term>
+    <listitem>
+     <para>
+      The operation type is <literal>SCHEMA</literal> for this script.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>configuration</term>
+    <listitem>
+     <para>
+      The configuration class created for this connector.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>log</term>
+    <listitem>
+     <para>
+      The default logging facility.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>builder</term>
+    <listitem>
+     <para>
+      The schema builder object.
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </section>
+ </section>
+
+</chapter>

@@ -20,7 +20,7 @@
   !
   ! CCPL HEADER END
   !
-  !      Copyright 2014 ForgeRock AS
+  !      Copyright 2014-2015 ForgeRock AS
   !
 -->
 <chapter xml:id='chap-logging'
@@ -29,18 +29,22 @@
          xsi:schemaLocation='http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd'
          xmlns:xlink='http://www.w3.org/1999/xlink'
          xmlns:xinclude='http://www.w3.org/2001/XInclude'>
-    <title>OpenICF Logging</title>
+ <title>OpenICF Logging</title>
 
-    <section xml:id="logging-dotnet-trace">
-        <title>Logging on .NET Connector Server</title>
-        <para>The .NET Connector Server tracing is built on top of <link
-                xlink:href="http://msdn.microsoft.com/en-us/library/ms733025(v=vs.110).aspx"
-                >System.Diagnostics</link>. </para>
-
-        <para>Logging with <link
-                xlink:href="http://msdn.microsoft.com/en-us/library/vstudio/system.diagnostics.trace(v=vs.110).aspx"
-                >Trace</link></para>
-        <para>The Framework and Connectors by default use this method everywhere. TODO Write
+ <section xml:id="logging-dotnet-trace">
+  <title>Logging on a .NET Connector Server</title>
+  <para>
+   The .NET Connector Server tracing is built on top of <link
+   xlink:href="http://msdn.microsoft.com/en-us/library/ms733025(v=vs.110).aspx"
+   >System.Diagnostics</link>.
+  </para>
+  <para>
+   Logging with <link
+   xlink:href="http://msdn.microsoft.com/en-us/library/vstudio/system.diagnostics.trace(v=vs.110).aspx"
+   >Trace</link></para>
+   <para>
+    The OpenICF Framework and the Connectors use the <literal>trace</literal>
+    method everywhere, by default. TODO Write
             something short because the Microsoft page contains everything.</para>
 
         <para>Logging with <link
