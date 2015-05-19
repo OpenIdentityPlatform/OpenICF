@@ -55,7 +55,7 @@
             <item name="All Formats" href="docs.html" />
             <item name="Release Notes" href="./doc/bootstrap/release-notes/index.html" />
             <item name="Configuration Reference" href="./doc/config-reference/index.html" />
-            <item name="Developer Guide" href="./doc/dev-guide/index.html" />
+            <item name="Developer Guide" href="./doc/bootstrap/dev-guide/index.html" />
             <item name="Javadoc" href="./apidocs/index.html" />
         </menu>
 
