@@ -45,20 +45,21 @@
   the Groovy Groovy Connector Toolkit.
  </para>
  <para>
-  A number of deployment-specific scripts
-  are provided in the samples that are delivered with OpenIDM. These scripts
-  demonstrate how the Groovy Connector Toolkit can be used. The scripts cannot
-  be used "as is" in your deployment, but can be used as a starting point on
-  which to base your customization. OpenIDM also provides a custom connector
-  bundler, that does much of the development work for you. For more information,
-  see <link xlink:show="new" xlink:href="dev-guide#chap-custom-bundler"
+  A number of deployment-specific scripts are provided in the samples that are
+  delivered with OpenIDM. These scripts demonstrate how the Groovy Connector
+  Toolkit can be used. The scripts cannot be used "as is" in your deployment,
+  but can be used as a starting point on which to base your customization.
+  OpenIDM also provides a custom connector bundler, that does much of the
+  development work for you. For more information, see
+  <link xlink:show="new" xlink:href="dev-guide#chap-custom-bundler"
   xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Building
   Connectors With the Custom Scripted Connector Bundler</citetitle></link>.
  </para>
+ <!--TODO Describe when Laszlo has done the archetype for this
  <para>
   This chapter describes how to use a Maven archetype for the Groovy Connector
   Toolkit, to build your own custom connector from scratch.
- </para>
+ </para> -->
  <para>
   The Groovy Connector Toolkit can be used with any OpenICF-enabled project
   (that is, any project in which the OpenICF Connector Framework is installed).
@@ -69,8 +70,9 @@
   <para>
    Groovy is a powerful, convenient scripting language for the Java platform.
    Groovy enables you to take advantage of existing Java resources, and
-   generally makes development quicker. Extensive information about Groovy is
-   available on the Groovy <link xlink:show="new"
+   generally makes development quicker. Syntactically, Groovy is similar to
+   JavaScript. Extensive information about Groovy is available on the Groovy
+   <link xlink:show="new"
    xlink:href="http://www.groovy-lang.org/documentation.html">documentation
    site</link>.
   </para>
@@ -81,56 +83,159 @@
   <para>
    The Groovy Connector Toolkit enables you to run a Groovy script for any
    OpenICF operation, such as search, update, create, and so forth, on any
-   external resource.
+   external resource. For more information about the operations supported by the
+   OpenICF framework, see <link xlink:show="new"
+   xlink:href="dev-guide#chap-openicf-spi"
+   xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Implementing the
+   OpenICF SPI</citetitle></link>.
   </para>
-  <itemizedlist>
+  <variablelist>
    <para>
-    The Groovy Connector supports scripts that perform the following operations:
+    The Groovy Connector implements the following OpenICF interfaces:
    </para>
-   <listitem>
-    <para>
-     Authenticating to an external resource
-    </para>
-   </listitem>
-   <listitem>
-    <para>
-     Testing the connection to the external resource
-    </para>
-   </listitem>
-   <listitem>
-    <para>
-     Creating an object on the resource
-    </para>
-   </listitem>
-   <listitem>
-    <para>
-     Searching for an object on the resource
-    </para>
-   </listitem>
-   <listitem>
-    <para>
-     Updating an object on the resource
-    </para>
-   </listitem>
-   <listitem>
-    <para>
-     Deleting an object from the resource
-    </para>
-   </listitem>
-   <listitem>
-    <para>
-     Synchronizing a set of objects between two resources
-    </para>
-   </listitem>
-   <listitem>
-    <para>
-     Building the schema from an external resource
-    </para>
-   </listitem>
-  </itemizedlist>
+   <varlistentry>
+    <term><link xlink:show="new" xlink:href="dev-guide#operation-authenticate"
+    xlink:role="http://docbook.org/xlink/role/olink">Authenticate</link></term>
+    <listitem>
+     <para>
+      Provides simple authentication with two parameters, presumed to be a user
+      name and password.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><link xlink:show="new" xlink:href="dev-guide#operation-create"
+    xlink:role="http://docbook.org/xlink/role/olink">Create</link></term>
+    <listitem>
+     <para>
+      Creates an object and its <literal>uid</literal>.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><link xlink:show="new" xlink:href="dev-guide#operation-delete"
+    xlink:role="http://docbook.org/xlink/role/olink">Delete</link></term>
+    <listitem>
+     <para>
+      Deletes an object, referenced by its <literal>uid</literal>.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><link xlink:show="new" xlink:href="dev-guide#operation-resolve-username"
+    xlink:role="http://docbook.org/xlink/role/olink">Resolve Username</link></term>
+    <listitem>
+     <para>
+      Deletes an object, referenced by its <literal>uid</literal>.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><link xlink:show="new" xlink:href="dev-guide#operation-schema"
+    xlink:role="http://docbook.org/xlink/role/olink">Schema</link></term>
+    <listitem>
+     <para>
+      Describes the object types, operations, and options that the connector supports.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><link xlink:show="new" xlink:href="dev-guide#operation-script-on-connector"
+    xlink:role="http://docbook.org/xlink/role/olink">Script on Connector</link></term>
+    <listitem>
+     <para>
+      Enables an application to run a script in the context of the connector.
+      Any script that runs on the connector has the following characteristics:
+     </para>
+     <itemizedlist>
+      <listitem>
+       <para>
+        The script runs in the same execution environment as the connector and
+        has access to all the classes to which the connector has access.
+       </para>
+      </listitem>
+      <listitem>
+       <para>
+        The script has access to a connector variable that is equivalent to an
+        initialized instance of the connector. At a minimum, the script can
+        access the connector configuration.
+       </para>
+      </listitem>
+      <listitem>
+       <para>
+        The script has access to any script-arguments passed in by the
+        application.
+       </para>
+      </listitem>
+     </itemizedlist>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><link xlink:show="new" xlink:href="dev-guide#operation-script-on-resource"
+    xlink:role="http://docbook.org/xlink/role/olink">Script on Resource</link></term>
+    <listitem>
+     <para>
+      Runs a script on the target resource that is managed by the connector.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><link xlink:show="new" xlink:href="dev-guide#operation-search"
+    xlink:role="http://docbook.org/xlink/role/olink">Search</link></term>
+    <listitem>
+     <para>
+      Searches the target resource for all objects that match the specified
+      object class and filter.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><link xlink:show="new" xlink:href="dev-guide#operation-sync"
+    xlink:role="http://docbook.org/xlink/role/olink">Sync</link></term>
+    <listitem>
+     <para>
+      Polls the target resource for synchronization events, that is, native
+      changes to objects on the target resource.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><link xlink:show="new" xlink:href="dev-guide#operation-test"
+    xlink:role="http://docbook.org/xlink/role/olink">Test</link></term>
+    <listitem>
+     <para>
+      Tests the connector configuration. Testing a configuration checks that all
+      elements of the environment that are referred to by the configuration are
+      available. For example, the connector might make a physical connection to
+      a host that is specified in the configuration to verify that it exists and
+      that the credentials that are specified in the configuration are valid.
+     </para>
+     <para>
+      This operation might need to connect to a resource, and, as such, might
+      take some time. Do not invoke this operation too often, such as before
+      every provisioning operation. The test operation is not intended to check
+      that the connector is alive (that is, that its physical connection to the
+      resource has not timed out).
+     </para>
+     <para>
+      You can invoke the test operation before a connector configuration has
+      been validated.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><link xlink:show="new" xlink:href="dev-guide#operation-update"
+    xlink:role="http://docbook.org/xlink/role/olink">Update</link></term>
+    <listitem>
+     <para>
+      Updates (modifies or replaces) objects on a target resource.
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
 
   <section xml:id="script-authenticate">
-   <title>Authenticating to an External Resource</title>
+   <title>Writing an Authentication Script</title>
    <para>
     An authentication script is <emphasis>required</emphasis> in every connector
     implementation. If authentication is not required on the resource, the

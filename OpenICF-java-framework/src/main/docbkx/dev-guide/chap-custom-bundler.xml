@@ -49,18 +49,23 @@
   develop your scripts.
  </para>
  <para>
-  <link xlink:show="new" xlink:href="install-guide##more-sample3"
-        xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Sample 3 - Using
-  the Groovy Connector Toolkit to Connect to MySQL With ScriptedSQL</citetitle></link>
-  (in the <citetitle>Installation Guide</citetitle>) provides an example of
-  using the connector bundler to create a scripted SQL connector.
+  <link xlink:show="new"
+  xlink:href="http://openidm.forgerock.org/doc/bootstrap/install-guide/index.html#more-sample3"
+  ><citetitle>Sample 3 - Using the Groovy Connector Toolkit to Connect to MySQL
+  With ScriptedSQL</citetitle></link> (in the <citetitle>OpenIDM Installation
+  Guide</citetitle>) provides an example of using the connector bundler to
+  create a scripted SQL connector.
  </para>
 
  <section xml:id="using-connector-bundler">
   <title>Using the Connector Bundler</title>
   <para>
    The Connector Bundler is provided as a .jar file in the OpenIDM delivery. To
-   use the utility, follow these steps:
+   use the utility, download and extract OpenIDM, as described in
+   <link xlink:show="new"
+   xlink:href="http://openidm.forgerock.org/doc/bootstrap/install-guide/index.html#installing-openidm"
+   ><citetitle>Installing and Running OpenIDM</citetitle></link>, then follow
+   these steps:
   </para>
   <procedure>
    <step>
