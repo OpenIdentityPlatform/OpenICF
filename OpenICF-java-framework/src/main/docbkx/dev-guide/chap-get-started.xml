@@ -42,13 +42,11 @@
    and add them to your CLASSPATH.
   </para>
   <para>
-   The easiest way to start a new OpenICF project is to use the following
-   Maven project file as a starting point. This sample project includes
-   comprehensive comments about its use.
+   The easiest way to start a new OpenICF project is to use the <link
+   xlink:href="../resources/pom.xml" xlink:show="new">sample Maven project
+   file</link> as a starting point. This sample project includes comprehensive
+   comments about its use.
   </para>
-  <programlisting language="xml">
-  [resources/pom.xml]
-  </programlisting>
   <para>
    Alternatively, follow these steps:
   </para>

@@ -410,11 +410,11 @@ ConnectorServer /storeCertificate /storeName &lt;certificate-store-name&gt; /cer
      Use different trace files for each server
     </para>
    </step>
-   <para>
-    Each Connector Server can run interactively, or as a Windows Service - they
-    do not need to be run in the same way.
-   </para>
   </procedure>
+  <para>
+   Each Connector Server can run interactively, or as a Windows Service - they
+   do not need to be run in the same way.
+  </para>
  </section>
 
  <section xml:id="java-connector-server">

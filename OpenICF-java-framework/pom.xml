@@ -312,11 +312,6 @@
                     </executions>
                 </plugin>
                 <plugin>
-                    <groupId>org.forgerock.commons</groupId>
-                    <artifactId>forgerock-doc-maven-plugin</artifactId>
-                    <version>${frDocPluginVersion}</version>
-                </plugin>
-                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <version>2.10.3</version>
@@ -428,6 +423,7 @@
                     <projectVersion>${docTargetVersion}</projectVersion>
                     <releaseVersion>${docTargetVersion}</releaseVersion>
                     <docbkxSourceDirectory>${basedir}/src/main/docbkx</docbkxSourceDirectory>
+                    <copyResourceFiles>true</copyResourceFiles>
                 </configuration>
                 <executions>
                        <execution>
