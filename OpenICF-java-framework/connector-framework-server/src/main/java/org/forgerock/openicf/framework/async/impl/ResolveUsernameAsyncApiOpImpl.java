@@ -159,15 +159,13 @@ public class ResolveUsernameAsyncApiOpImpl extends AbstractAPIOperation implemen
 
     // ----
 
-    public static OperationExecutorFactory.OperationExecutor<OperationMessages.ResolveUsernameOpRequest> createProcessor(
-            long requestId, WebSocketConnectionHolder socket,
-            OperationMessages.ResolveUsernameOpRequest message) {
+    public static AbstractLocalOperationProcessor<Uid, OperationMessages.ResolveUsernameOpRequest> createProcessor(long requestId,
+            WebSocketConnectionHolder socket, OperationMessages.ResolveUsernameOpRequest message) {
         return new InternalLocalOperationProcessor(requestId, socket, message);
     }
 
-    private static class InternalLocalOperationProcessor
-            extends
-            OperationExecutorFactory.AbstractLocalOperationProcessor<Uid, OperationMessages.ResolveUsernameOpRequest> {
+    private static class InternalLocalOperationProcessor extends
+            AbstractLocalOperationProcessor<Uid, OperationMessages.ResolveUsernameOpRequest> {
 
         protected InternalLocalOperationProcessor(long requestId, WebSocketConnectionHolder socket,
                 OperationMessages.ResolveUsernameOpRequest message) {

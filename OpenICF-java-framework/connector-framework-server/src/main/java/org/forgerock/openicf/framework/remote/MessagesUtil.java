@@ -280,6 +280,7 @@ public class MessagesUtil {
         return buffer;
     }
 
+    @SuppressWarnings("unchecked")
     public static <T, M extends MessageLite> T deserializeMessage(M source, Class<T> target) {
         if (source != null) {
             Pair<Class<T>, ? extends Class<? extends MessageLite>> key =
@@ -294,6 +295,7 @@ public class MessagesUtil {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     public static <T, M extends MessageLite> M serializeMessage(T source, Class<M> target) {
         if (source != null) {
             Pair<? extends Class<?>, Class<M>> key = Pair.of(source.getClass(), target);
@@ -307,6 +309,7 @@ public class MessagesUtil {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     public static <T, M extends MessageLite, B extends MessageLite.Builder> B serializeBuilder(
             T source, Class<M> target) {
         if (source != null) {
@@ -322,6 +325,7 @@ public class MessagesUtil {
     }
 
     @Deprecated
+    @SuppressWarnings("unchecked")
     public static <T> T deserializeLegacy(ByteString byteString) {
         if (byteString.isEmpty()) {
             return null;
@@ -353,6 +357,7 @@ public class MessagesUtil {
         addHandler(new SyncDeltaHandler());
     }
 
+    @SuppressWarnings("unchecked")
     private static <T, P extends MessageLite, B extends MessageLite.Builder> void addHandler(
             ObjectHandler<T, P, B> handler) {
         Type[] types =

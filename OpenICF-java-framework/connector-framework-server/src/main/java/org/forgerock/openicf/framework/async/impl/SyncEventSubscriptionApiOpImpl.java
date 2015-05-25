@@ -28,7 +28,10 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.forgerock.openicf.common.protobuf.CommonObjectMessages;
-import org.forgerock.openicf.common.protobuf.OperationMessages;
+import org.forgerock.openicf.common.protobuf.OperationMessages.OperationRequest;
+import org.forgerock.openicf.common.protobuf.OperationMessages.OperationResponse;
+import org.forgerock.openicf.common.protobuf.OperationMessages.SyncEventSubscriptionOpRequest;
+import org.forgerock.openicf.common.protobuf.OperationMessages.SyncEventSubscriptionOpResponse;
 import org.forgerock.openicf.common.protobuf.RPCMessages;
 import org.forgerock.openicf.common.rpc.RemoteRequestFactory;
 import org.forgerock.openicf.common.rpc.RequestDistributor;
@@ -36,20 +39,21 @@ import org.forgerock.openicf.framework.remote.MessagesUtil;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
+import org.forgerock.util.promise.FailureHandler;
 import org.forgerock.util.promise.Function;
 import org.forgerock.util.promise.Promise;
+import org.forgerock.util.promise.SuccessHandler;
 import org.identityconnectors.common.Assertions;
-import org.identityconnectors.common.FailureHandler;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorKey;
-import org.identityconnectors.framework.api.SubscriptionHandler;
+import org.identityconnectors.framework.api.Observer;
 import org.identityconnectors.framework.api.operations.SyncEventSubscriptionApiOp;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.Subscription;
 import org.identityconnectors.framework.common.objects.SyncDelta;
-import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 
 import com.google.protobuf.ByteString;
@@ -67,58 +71,59 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
         super(remoteConnection, connectorKey, facadeKeyFunction);
     }
 
-    public SubscriptionHandler subscribe(final ObjectClass objectClass, final SyncToken token,
-            final SyncResultsHandler handler, final OperationOptions operationOptions) {
+    public Subscription subscribe(final ObjectClass objectClass, final SyncToken token,
+            final Observer<SyncDelta> handler, final OperationOptions operationOptions) {
         final Promise<Void, RuntimeException> promise =
-                trySubscribe(objectClass, token, handler, operationOptions);
-
-        return new SubscriptionHandler() {
+                trySubscribe(objectClass, token, handler, operationOptions).onFailure(
+                        new FailureHandler<RuntimeException>() {
+                            public void handleError(RuntimeException error) {
+                                if (!(error instanceof CancellationException)) {
+                                    handler.onError(error);
+                                }
+                            }
+                        }).onSuccess(new SuccessHandler<Void>() {
+                    public void handleResult(Void result) {
+                        handler.onCompleted();
+                    }
+                });
+        return new Subscription() {
             public void unsubscribe() {
                 promise.cancel(true);
             }
 
-            public void onFailure(final FailureHandler<RuntimeException> onFailure) {
-                promise.onFailure(new org.forgerock.util.promise.FailureHandler<RuntimeException>() {
-                    public void handleError(final RuntimeException error) {
-                        if (!(error instanceof CancellationException)) {
-                            onFailure.handleError(error);
-                        } else {
-                            logger.ok("Subscription is cancelled");
-                        }
-                    }
-                });
+            public boolean isUnsubscribed() {
+                return promise.isDone();
             }
         };
     }
 
     public Promise<Void, RuntimeException> trySubscribe(final ObjectClass objectClass,
-            final SyncToken token, final SyncResultsHandler handler, final OperationOptions options) {
+            final SyncToken token, final Observer<SyncDelta> handler, final OperationOptions options) {
         Assertions.nullCheck(objectClass, "objectClass");
         Assertions.nullCheck(handler, "handler");
-        OperationMessages.SyncEventSubscriptionOpRequest.Builder requestBuilder =
-                OperationMessages.SyncEventSubscriptionOpRequest.newBuilder().setObjectClass(
+        SyncEventSubscriptionOpRequest.Builder requestBuilder =
+                SyncEventSubscriptionOpRequest.newBuilder().setObjectClass(
                         objectClass.getObjectClassValue());
         if (token != null) {
             requestBuilder.setToken(MessagesUtil.serializeMessage(token,
                     CommonObjectMessages.SyncToken.class));
         }
 
-        if (options != null) {
+        if (options != null && !options.getOptions().isEmpty()) {
             requestBuilder.setOptions(MessagesUtil.serializeLegacy(options));
         }
 
-        return submitRequest(new InternalRequestFactory(OperationMessages.OperationRequest
-                .newBuilder().setSyncEventSubscriptionOpRequest(requestBuilder), handler));
+        return submitRequest(new InternalRequestFactory(OperationRequest.newBuilder()
+                .setSyncEventSubscriptionOpRequest(requestBuilder), handler));
     }
 
     private class InternalRequestFactory extends
             AbstractRemoteOperationRequestFactory<Void, InternalRequest> {
-        private final OperationMessages.OperationRequest.Builder operationRequest;
-        final SyncResultsHandler handler;
+        private final OperationRequest.Builder operationRequest;
+        final Observer<SyncDelta> handler;
 
-        public InternalRequestFactory(
-                final OperationMessages.OperationRequest.Builder operationRequest,
-                final SyncResultsHandler handler) {
+        public InternalRequestFactory(final OperationRequest.Builder operationRequest,
+                final Observer<SyncDelta> handler) {
             this.operationRequest = operationRequest;
             this.handler = handler;
         }
@@ -144,7 +149,7 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
             return SyncEventSubscriptionApiOpImpl.this.createConnectorFacadeKey(context);
         }
 
-        protected OperationMessages.OperationRequest.Builder createOperationRequest(
+        protected OperationRequest.Builder createOperationRequest(
                 final RemoteOperationContext remoteContext) {
             return operationRequest;
         }
@@ -152,9 +157,9 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
 
     private static class InternalRequest
             extends
-            AbstractRemoteOperationRequestFactory.AbstractRemoteOperationRequest<Void, OperationMessages.SyncEventSubscriptionOpResponse> {
+            AbstractRemoteOperationRequestFactory.AbstractRemoteOperationRequest<Void, SyncEventSubscriptionOpResponse> {
 
-        final SyncResultsHandler handler;
+        final Observer<SyncDelta> handler;
         final AtomicBoolean confirmed = new AtomicBoolean(Boolean.FALSE);
 
         public InternalRequest(
@@ -162,14 +167,14 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
                 final long requestId,
                 final RemoteRequestFactory.CompletionCallback<MessageLite, Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
                 final RPCMessages.RPCRequest.Builder requestBuilder,
-                final SyncResultsHandler handler) {
+                final Observer<SyncDelta> handler) {
             super(context, requestId, completionCallback, requestBuilder);
             this.handler = handler;
 
         }
 
-        protected OperationMessages.SyncEventSubscriptionOpResponse getOperationResponseMessages(
-                OperationMessages.OperationResponse message) {
+        protected SyncEventSubscriptionOpResponse getOperationResponseMessages(
+                OperationResponse message) {
             if (message.hasSyncEventSubscriptionOpResponse()) {
                 return message.getSyncEventSubscriptionOpResponse();
             } else {
@@ -180,19 +185,24 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
         }
 
         protected void handleOperationResponseMessages(WebSocketConnectionHolder sourceConnection,
-                OperationMessages.SyncEventSubscriptionOpResponse message) {
+                SyncEventSubscriptionOpResponse message) {
             if (null != handler && message.hasSyncDelta()) {
                 SyncDelta delta =
                         MessagesUtil.deserializeMessage(message.getSyncDelta(), SyncDelta.class);
-                if (!handler.handle(delta) && !getPromise().isDone()) {
-                    getFailureHandler()
-                            .handleError(
-                                    new ConnectorException(
-                                            "SyncResultsHandler stopped processing results"));
-                    tryCancelRemote(getConnectionContext(), getRequestId());
+                try {
+                    handler.onNext(delta);
+                } catch (Throwable t) {
+                    if (!getPromise().isDone()) {
+                        getFailureHandler().handleError(
+                                new ConnectorException(
+                                        "SyncResultsHandler stopped processing results"));
+                        tryCancelRemote(getConnectionContext(), getRequestId());
+                    }
                 }
-            }
-            if (!message.hasSyncDelta() && confirmed.compareAndSet(Boolean.FALSE, Boolean.TRUE)) {
+            } else if (message.hasCompleted() && message.getCompleted()) {
+                getSuccessHandler().handleResult(null);
+                logger.ok("Subscription is completed");
+            } else if (confirmed.compareAndSet(Boolean.FALSE, Boolean.TRUE)) {
                 logger.ok("Subscription has been made successfully on remote side");
             }
         }
@@ -200,41 +210,33 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
 
     // ----
 
-    public static OperationExecutorFactory.OperationExecutor<OperationMessages.SyncEventSubscriptionOpRequest> createProcessor(
-            long requestId, WebSocketConnectionHolder socket,
-            OperationMessages.SyncEventSubscriptionOpRequest message) {
+    public static AbstractLocalOperationProcessor<SyncEventSubscriptionOpResponse, SyncEventSubscriptionOpRequest> createProcessor(
+            long requestId, WebSocketConnectionHolder socket, SyncEventSubscriptionOpRequest message) {
         return new InternalLocalOperationProcessor(requestId, socket, message);
     }
 
     private static class InternalLocalOperationProcessor
             extends
-            OperationExecutorFactory.AbstractLocalOperationProcessor<SyncDelta, OperationMessages.SyncEventSubscriptionOpRequest> {
+            AbstractLocalOperationProcessor<SyncEventSubscriptionOpResponse, SyncEventSubscriptionOpRequest> {
 
-        private final AtomicBoolean doContinue = new AtomicBoolean(Boolean.TRUE);
-        private SubscriptionHandler subscriptionHandler = null;
+        private Subscription subscription = null;
 
         protected InternalLocalOperationProcessor(long requestId, WebSocketConnectionHolder socket,
-                OperationMessages.SyncEventSubscriptionOpRequest message) {
+                SyncEventSubscriptionOpRequest message) {
             super(requestId, socket, message);
             stickToConnection = false;
         }
 
         protected RPCMessages.RPCResponse.Builder createOperationResponse(
-                RemoteOperationContext remoteContext, SyncDelta result) {
-            OperationMessages.SyncEventSubscriptionOpResponse.Builder builder =
-                    OperationMessages.SyncEventSubscriptionOpResponse.newBuilder();
-            if (null != result) {
-                builder.setSyncDelta(MessagesUtil.serializeMessage(result,
-                        CommonObjectMessages.SyncDelta.class));
-            }
+                RemoteOperationContext remoteContext, SyncEventSubscriptionOpResponse result) {
 
             return RPCMessages.RPCResponse.newBuilder().setOperationResponse(
-                    OperationMessages.OperationResponse.newBuilder()
-                            .setSyncEventSubscriptionOpResponse(builder));
+                    OperationResponse.newBuilder().setSyncEventSubscriptionOpResponse(result));
         }
 
-        protected SyncDelta executeOperation(final ConnectorFacade connectorFacade,
-                final OperationMessages.SyncEventSubscriptionOpRequest requestMessage) {
+        protected SyncEventSubscriptionOpResponse executeOperation(
+                final ConnectorFacade connectorFacade,
+                final SyncEventSubscriptionOpRequest requestMessage) {
 
             final ObjectClass objectClass = new ObjectClass(requestMessage.getObjectClass());
 
@@ -248,26 +250,40 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
                 operationOptions = MessagesUtil.deserializeLegacy(requestMessage.getOptions());
             }
 
-            subscriptionHandler =
-                    connectorFacade.subscribe(objectClass, token, new SyncResultsHandler() {
-                        public boolean handle(SyncDelta delta) {
-                            tryHandleResult(delta);
-                            return doContinue.get();
-                        }
-                    }, operationOptions);
+            subscription = connectorFacade.subscribe(objectClass, token, new Observer<SyncDelta>() {
 
-            subscriptionHandler.onFailure(new FailureHandler<RuntimeException>() {
-                public void handleError(final RuntimeException error) {
-                    tryHandleError(error);
+                public void onCompleted() {
+                    tryHandleResult(SyncEventSubscriptionOpResponse.newBuilder().setCompleted(
+                            Boolean.TRUE).build());
                 }
-            });
 
-            return null;
+                public void onError(Throwable error) {
+                    try {
+                        final byte[] responseMessage =
+                                MessagesUtil.createErrorResponse(getRequestId(), error).build()
+                                        .toByteArray();
+                        trySendBytes(responseMessage, true);
+                    } catch (Throwable t) {
+                        logger.ok(t,
+                                "Operation encountered an exception and failed to send the exception response");
+                    }
+                }
+
+                public void onNext(SyncDelta syncDelta) {
+                    if (null != syncDelta) {
+                        tryHandleResult(SyncEventSubscriptionOpResponse.newBuilder().setSyncDelta(
+                                MessagesUtil.serializeMessage(syncDelta,
+                                        CommonObjectMessages.SyncDelta.class)).build());
+                    }
+                }
+
+            }, operationOptions);
+
+            return SyncEventSubscriptionOpResponse.getDefaultInstance();
         }
 
         protected boolean tryCancel() {
-            doContinue.set(Boolean.FALSE);
-            subscriptionHandler.unsubscribe();
+            subscription.unsubscribe();
             return super.tryCancel();
         }
     }

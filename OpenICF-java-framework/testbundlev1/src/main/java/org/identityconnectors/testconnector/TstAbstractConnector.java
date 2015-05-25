@@ -38,12 +38,14 @@ import java.util.TreeSet;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.common.script.ScriptExecutorFactory;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.api.Observer;
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException;
@@ -66,6 +68,7 @@ import org.identityconnectors.framework.common.objects.SchemaBuilder;
 import org.identityconnectors.framework.common.objects.ScriptContext;
 import org.identityconnectors.framework.common.objects.SearchResult;
 import org.identityconnectors.framework.common.objects.SortKey;
+import org.identityconnectors.framework.common.objects.Subscription;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
 import org.identityconnectors.framework.common.objects.SyncDeltaType;
@@ -171,10 +174,8 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         }
     }
 
-    public void subscribe(final ObjectClass objectClass, final Filter eventFilter,
-            final AsyncCallbackHandler asyncHandler, final ResultsHandler handler,
-            final OperationOptions operationOptions) {
-
+    public Subscription subscribe(final ObjectClass objectClass,final Filter eventFilter,final Observer<ConnectorObject> handler,
+                                  final OperationOptions operationOptions) {
         final ConnectorObjectBuilder builder =
                 new ConnectorObjectBuilder().setObjectClass(objectClass);
 
@@ -182,11 +183,11 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
             protected boolean doAction(int runCount) {
                 builder.setUid(String.valueOf(runCount));
                 builder.setName(String.valueOf(runCount));
-                handler.handle(builder.build());
+                handler.onNext(builder.build());
 
                 if (runCount >= 10) {
                     // Locally stop serving subscription
-                    asyncHandler.handleError(new ConnectorException(
+                    handler.onError(new ConnectorException(
                             "Subscription channel is closed"));
                     // ScheduledFuture should be stopped from here.
                     return false;
@@ -195,19 +196,21 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
             }
         };
         runnable.runAction(config.getExecutorService(), 1000, 500, TimeUnit.MILLISECONDS);
-
-        // Remotely request stop processing subscription
-        asyncHandler.onCancel(new Runnable() {
-            public void run() {
+        
+        return new Subscription() {
+            // Remotely request stop processing subscription
+            public void unsubscribe() {
                 runnable.cancel();
             }
-        });
+
+            public boolean isUnsubscribed() {
+                return !runnable.getRunning();
+            }
+        };
     }
 
-    public void subscribe(final ObjectClass objectClass, final SyncToken token,
-            final AsyncCallbackHandler asyncHandler, final SyncResultsHandler handler,
-            final OperationOptions operationOptions) {
-
+    public Subscription subscribe(final ObjectClass objectClass,final SyncToken token,final Observer<SyncDelta> handler,
+                                  final OperationOptions operationOptions) {
         final SyncDeltaBuilder builder =
                 new SyncDeltaBuilder().setDeltaType(SyncDeltaType.CREATE_OR_UPDATE).setObject(
                         new ConnectorObjectBuilder().setObjectClass(objectClass).setUid("0")
@@ -216,11 +219,11 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         final SelfAwareExecutionRunnable runnable = new SelfAwareExecutionRunnable() {
             protected boolean doAction(int runCount) {
                 builder.setToken(new SyncToken(runCount));
-                handler.handle(builder.build());
+                handler.onNext(builder.build());
 
                 if (runCount >= 10) {
                     // Locally stop serving subscription
-                    asyncHandler.handleError(new ConnectorException(
+                    handler.onError(new ConnectorException(
                             "Subscription channel is closed"));
                     // ScheduledFuture should be stopped from here.
                     return false;
@@ -230,12 +233,16 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         };
         runnable.runAction(config.getExecutorService(), 1000, 500, TimeUnit.MILLISECONDS);
 
-        // Remotely request stop processing subscription
-        asyncHandler.onCancel(new Runnable() {
-            public void run() {
+        return new Subscription() {
+            // Remotely request stop processing subscription
+            public void unsubscribe() {
                 runnable.cancel();
             }
-        });
+
+            public boolean isUnsubscribed() {
+                return !runnable.getRunning();
+            }
+        };
     }
 
     public Uid create(ObjectClass objectClass, Set<Attribute> createAttributes,
@@ -287,6 +294,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         }
     }
 
+    @SuppressWarnings("unchecked")
     public Schema schema() {
         if (config.isReturnNullTest()) {
             return null;
@@ -488,6 +496,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
     private static abstract class SelfAwareExecutionRunnable implements Runnable {
         private final AtomicInteger runCount = new AtomicInteger();
         private volatile ScheduledFuture<?> self;
+        private AtomicBoolean running = new AtomicBoolean(Boolean.TRUE);
 
         public void run() {
             if (!doAction(runCount.incrementAndGet())) {
@@ -503,7 +512,13 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         }
 
         public void cancel() {
-            self.cancel(false);
+            if (running.compareAndSet(Boolean.TRUE, Boolean.FALSE)) {
+                self.cancel(false);
+            }
+        }
+
+        public Boolean getRunning() {
+            return running.get();
         }
     }
 }

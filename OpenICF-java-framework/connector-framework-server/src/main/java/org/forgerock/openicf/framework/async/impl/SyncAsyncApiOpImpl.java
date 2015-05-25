@@ -226,15 +226,14 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncAsyn
 
     // ----
 
-    public static OperationExecutorFactory.OperationExecutor<OperationMessages.SyncOpRequest> createProcessor(
-            long requestId, WebSocketConnectionHolder socket,
-            OperationMessages.SyncOpRequest message) {
+    public static AbstractLocalOperationProcessor<OperationMessages.SyncOpResponse.Builder, OperationMessages.SyncOpRequest> createProcessor(long requestId,
+            WebSocketConnectionHolder socket, OperationMessages.SyncOpRequest message) {
         return new InternalLocalOperationProcessor(requestId, socket, message);
     }
 
     private static class InternalLocalOperationProcessor
             extends
-            OperationExecutorFactory.AbstractLocalOperationProcessor<OperationMessages.SyncOpResponse.Builder, OperationMessages.SyncOpRequest> {
+            AbstractLocalOperationProcessor<OperationMessages.SyncOpResponse.Builder, OperationMessages.SyncOpRequest> {
 
         private final AtomicBoolean doContinue = new AtomicBoolean(Boolean.TRUE);
         final AtomicLong sequence = new AtomicLong(0);

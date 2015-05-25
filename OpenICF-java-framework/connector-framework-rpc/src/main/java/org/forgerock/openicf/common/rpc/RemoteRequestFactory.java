@@ -32,13 +32,13 @@ package org.forgerock.openicf.common.rpc;
  */
 public interface RemoteRequestFactory<M, R extends RemoteRequest<M, V, E, G, H, P>, V, E extends Exception, G extends RemoteConnectionGroup<M, G, H, P>, H extends RemoteConnectionHolder<M, G, H, P>, P extends RemoteConnectionContext<M, G, H, P>> {
 
-    public interface CompletionCallback<M, V, E extends Exception, G extends RemoteConnectionGroup<M, G, H, P>, H extends RemoteConnectionHolder<M, G, H, P>, P extends RemoteConnectionContext<M, G, H, P>> {
+    interface CompletionCallback<M, V, E extends Exception, G extends RemoteConnectionGroup<M, G, H, P>, H extends RemoteConnectionHolder<M, G, H, P>, P extends RemoteConnectionContext<M, G, H, P>> {
 
         void complete(RemoteRequest<M, V, E, G, H, P> request);
 
     }
 
-    public R createRemoteRequest(final P context, final long requestId,
+    R createRemoteRequest(final P context, final long requestId,
             final CompletionCallback<M, V, E, G, H, P> completionCallback);
 
 }

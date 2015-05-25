@@ -137,15 +137,13 @@ public class SchemaAsyncApiOpImpl extends AbstractAPIOperation implements Schema
 
     // -------
 
-    public static OperationExecutorFactory.OperationExecutor<OperationMessages.SchemaOpRequest> createProcessor(
-            long requestId, WebSocketConnectionHolder socket,
-            OperationMessages.SchemaOpRequest message) {
+    public static AbstractLocalOperationProcessor<ByteString, OperationMessages.SchemaOpRequest> createProcessor(long requestId,
+            WebSocketConnectionHolder socket, OperationMessages.SchemaOpRequest message) {
         return new InternalLocalOperationProcessor(requestId, socket, message);
     }
 
-    private static class InternalLocalOperationProcessor
-            extends
-            OperationExecutorFactory.AbstractLocalOperationProcessor<ByteString, OperationMessages.SchemaOpRequest> {
+    private static class InternalLocalOperationProcessor extends
+            AbstractLocalOperationProcessor<ByteString, OperationMessages.SchemaOpRequest> {
 
         protected InternalLocalOperationProcessor(long requestId, WebSocketConnectionHolder socket,
                 OperationMessages.SchemaOpRequest message) {

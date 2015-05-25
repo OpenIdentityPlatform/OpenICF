@@ -53,6 +53,7 @@ public class ConnectionManagerFactory {
      *
      * @return The instance of this factory
      */
+    @SuppressWarnings("unchecked")
     public synchronized RemoteConnectionInfoManagerFactory getNewInstance(
             final OperationMessageListener messageListener,
             final ConnectionManagerConfig managerConfig) throws Exception {

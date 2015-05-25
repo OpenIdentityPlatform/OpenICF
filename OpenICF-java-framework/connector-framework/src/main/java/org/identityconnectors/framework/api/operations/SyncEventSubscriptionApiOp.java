@@ -24,10 +24,11 @@
 
 package org.identityconnectors.framework.api.operations;
 
-import org.identityconnectors.framework.api.SubscriptionHandler;
+import org.identityconnectors.framework.api.Observer;
+import org.identityconnectors.framework.common.objects.Subscription;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
-import org.identityconnectors.framework.common.objects.SyncResultsHandler;
+import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncToken;
 
 /**
@@ -41,11 +42,14 @@ public interface SyncEventSubscriptionApiOp extends APIOperation {
      * 
      * @param objectClass
      * @param handler
+     *            the Observer that will handle emissions and notifications from
+     *            the Observable
      * @param operationOptions
-     * @return
+     * @return a {@link Subscription} reference with which the {@link Observer}
+     *         can stop receiving items before the Observable has completed
      * @throws java.lang.RuntimeException
      *             when the operation failed to create subscription.
      */
-    SubscriptionHandler subscribe(ObjectClass objectClass, SyncToken token,
-            SyncResultsHandler handler, OperationOptions operationOptions);
+    Subscription subscribe(ObjectClass objectClass, SyncToken token, Observer<SyncDelta> handler,
+            OperationOptions operationOptions);
 }

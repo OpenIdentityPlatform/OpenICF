@@ -66,7 +66,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication {
     protected final ConcurrentMap<String, WebSocketConnectionGroup> globalConnectionGroups =
             new ConcurrentHashMap<String, WebSocketConnectionGroup>();
 
-    protected final SinglePrincipal singleTenant;
+    protected final ConnectionPrincipal<?> singleTenant;
 
     protected final String keyHash;
 
@@ -104,7 +104,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication {
                 "[Server]ConnectionManager is not set. OpenICFWebSocketFilter is required in FilterChain.");
     }
 
-    public ConnectionPrincipal authenticate(Principal principal) {
+    public  ConnectionPrincipal<?> authenticate(Principal principal) {
         if (principal instanceof SharedSecretPrincipal
                 && ((SharedSecretPrincipal) principal).verify(keyHash)) {
             return singleTenant;
@@ -113,7 +113,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication {
         }
     }
 
-    public static class SinglePrincipal extends ConnectionPrincipal {
+    public static class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> {
 
         public SinglePrincipal(final OperationMessageListener listener,
                 final ConcurrentMap<String, WebSocketConnectionGroup> globalConnectionGroups) {
@@ -135,7 +135,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication {
         protected final Queue<OperationMessageListener> listeners =
                 new ConcurrentLinkedQueue<OperationMessageListener>();
 
-        private final ConnectionPrincipal connectionPrincipal;
+        private final ConnectionPrincipal<?> connectionPrincipal;
         private RemoteOperationContext context = null;
 
         private final WebSocketConnectionHolder adapter = new WebSocketConnectionHolder() {
@@ -200,7 +200,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication {
         };
 
         public OpenICFWebSocket(final ProtocolHandler protocolHandler,
-                final HttpRequestPacket request, final ConnectionPrincipal principal,
+                final HttpRequestPacket request, final ConnectionPrincipal<?> principal,
                 final WebSocketListener... listeners) {
             super(protocolHandler, request, listeners);
             this.connectionPrincipal = principal;

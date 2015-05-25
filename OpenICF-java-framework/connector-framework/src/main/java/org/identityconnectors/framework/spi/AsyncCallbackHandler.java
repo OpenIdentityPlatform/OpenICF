@@ -27,10 +27,9 @@ package org.identityconnectors.framework.spi;
 import org.identityconnectors.common.FailureHandler;
 
 /**
- * A AsyncCallbackHandler controls the communication between the application and
+ * An AsyncCallbackHandler controls the communication between the application and
  * Asynchronous task.
  *
- * @author Laszlo Hordos
  */
 public interface AsyncCallbackHandler extends FailureHandler<RuntimeException> {
 

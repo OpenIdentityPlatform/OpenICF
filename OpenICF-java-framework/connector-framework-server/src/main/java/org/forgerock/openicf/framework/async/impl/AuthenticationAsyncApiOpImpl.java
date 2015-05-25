@@ -163,15 +163,13 @@ public class AuthenticationAsyncApiOpImpl extends AbstractAPIOperation implement
 
     // ----
 
-    public static OperationExecutorFactory.OperationExecutor<OperationMessages.AuthenticateOpRequest> createProcessor(
-            long requestId, WebSocketConnectionHolder socket,
-            OperationMessages.AuthenticateOpRequest message) {
+    public static AbstractLocalOperationProcessor<Uid, OperationMessages.AuthenticateOpRequest> createProcessor(long requestId,
+            WebSocketConnectionHolder socket, OperationMessages.AuthenticateOpRequest message) {
         return new InternalLocalOperationProcessor(requestId, socket, message);
     }
 
-    private static class InternalLocalOperationProcessor
-            extends
-            OperationExecutorFactory.AbstractLocalOperationProcessor<Uid, OperationMessages.AuthenticateOpRequest> {
+    private static class InternalLocalOperationProcessor extends
+            AbstractLocalOperationProcessor<Uid, OperationMessages.AuthenticateOpRequest> {
 
         protected InternalLocalOperationProcessor(long requestId, WebSocketConnectionHolder socket,
                 OperationMessages.AuthenticateOpRequest message) {

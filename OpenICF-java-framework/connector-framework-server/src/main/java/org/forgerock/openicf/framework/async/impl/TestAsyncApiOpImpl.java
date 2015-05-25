@@ -134,13 +134,13 @@ public class TestAsyncApiOpImpl extends AbstractAPIOperation implements TestAsyn
 
     // ----
 
-    public static OperationExecutorFactory.OperationExecutor<TestOpRequest> createProcessor(
-            long requestId, WebSocketConnectionHolder socket, TestOpRequest message) {
+    public static AbstractLocalOperationProcessor<Void, TestOpRequest> createProcessor(long requestId,
+            WebSocketConnectionHolder socket, TestOpRequest message) {
         return new TestLocalOperationProcessor(requestId, socket, message);
     }
 
     private static class TestLocalOperationProcessor extends
-            OperationExecutorFactory.AbstractLocalOperationProcessor<Void, TestOpRequest> {
+            AbstractLocalOperationProcessor<Void, TestOpRequest> {
 
         protected TestLocalOperationProcessor(long requestId, WebSocketConnectionHolder socket,
                 TestOpRequest message) {

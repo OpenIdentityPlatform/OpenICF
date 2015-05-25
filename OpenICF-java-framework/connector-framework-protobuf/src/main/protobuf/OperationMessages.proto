@@ -44,6 +44,7 @@ message ConnectorEventSubscriptionOpRequest {
 
 message ConnectorEventSubscriptionOpResponse {
     optional ConnectorObject connectorObject = 1;
+    optional bool completed = 2 [default = false];
 }
 
 //Interface DeleteOp
@@ -155,7 +156,8 @@ message SyncEventSubscriptionOpRequest {
 }
 
 message SyncEventSubscriptionOpResponse {
-    optional SyncDelta syncDelta = 2;
+    optional SyncDelta syncDelta = 1;
+    optional bool completed = 2 [default = false];
 }
 
 //Interface TestOp

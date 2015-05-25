@@ -43,10 +43,10 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.testconnector.TstConnector;
 import org.testng.Assert;
 import org.testng.ITestContext;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-public class AsyncLocalConnectorInfoManagerTest extends AsyncConnectorInfoManagerTestBase {
+public class AsyncLocalConnectorInfoManagerTest extends
+        AsyncConnectorInfoManagerTestBase<AsyncLocalConnectorInfoManager> {
 
     private final ConnectorFrameworkFactory internalFrameworkFactory =
             new ConnectorFrameworkFactory();
@@ -54,7 +54,7 @@ public class AsyncLocalConnectorInfoManagerTest extends AsyncConnectorInfoManage
     protected ConnectorFrameworkFactory getConnectorFrameworkFactory() throws Exception {
         return internalFrameworkFactory;
     }
-    
+
     protected void setupClass(ITestContext context) throws Exception {
         getConnectorFramework().getLocalManager().addConnectorBundle(
                 TstConnector.class.getProtectionDomain().getCodeSource().getLocation());

@@ -152,15 +152,14 @@ public class ScriptOnConnectorAsyncApiOpImpl extends AbstractAPIOperation implem
 
     // ----
 
-    public static OperationExecutorFactory.OperationExecutor<OperationMessages.ScriptOnConnectorOpRequest> createProcessor(
-            long requestId, WebSocketConnectionHolder socket,
-            OperationMessages.ScriptOnConnectorOpRequest message) {
+    public static AbstractLocalOperationProcessor<ByteString, OperationMessages.ScriptOnConnectorOpRequest> createProcessor(long requestId,
+            WebSocketConnectionHolder socket, OperationMessages.ScriptOnConnectorOpRequest message) {
         return new InternalLocalOperationProcessor(requestId, socket, message);
     }
 
     private static class InternalLocalOperationProcessor
             extends
-            OperationExecutorFactory.AbstractLocalOperationProcessor<ByteString, OperationMessages.ScriptOnConnectorOpRequest> {
+            AbstractLocalOperationProcessor<ByteString, OperationMessages.ScriptOnConnectorOpRequest> {
 
         protected InternalLocalOperationProcessor(long requestId, WebSocketConnectionHolder socket,
                 OperationMessages.ScriptOnConnectorOpRequest message) {

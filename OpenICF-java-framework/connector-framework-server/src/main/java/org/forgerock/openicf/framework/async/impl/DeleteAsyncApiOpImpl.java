@@ -75,8 +75,7 @@ public class DeleteAsyncApiOpImpl extends AbstractAPIOperation implements Delete
                 OperationMessages.DeleteOpRequest.newBuilder().setObjectClass(
                         objectClass.getObjectClassValue());
 
-        requestBuilder.setUid(MessagesUtil.serializeMessage(uid,
-                CommonObjectMessages.Uid.class));
+        requestBuilder.setUid(MessagesUtil.serializeMessage(uid, CommonObjectMessages.Uid.class));
 
         if (options != null) {
             requestBuilder.setOptions(MessagesUtil.serializeLegacy(options));
@@ -153,15 +152,13 @@ public class DeleteAsyncApiOpImpl extends AbstractAPIOperation implements Delete
 
     // ----
 
-    public static OperationExecutorFactory.OperationExecutor<OperationMessages.DeleteOpRequest> createProcessor(
-            long requestId, WebSocketConnectionHolder socket,
-            OperationMessages.DeleteOpRequest message) {
+    public static AbstractLocalOperationProcessor<Void, OperationMessages.DeleteOpRequest> createProcessor(long requestId,
+            WebSocketConnectionHolder socket, OperationMessages.DeleteOpRequest message) {
         return new InternalLocalOperationProcessor(requestId, socket, message);
     }
 
-    private static class InternalLocalOperationProcessor
-            extends
-            OperationExecutorFactory.AbstractLocalOperationProcessor<Void, OperationMessages.DeleteOpRequest> {
+    private static class InternalLocalOperationProcessor extends
+            AbstractLocalOperationProcessor<Void, OperationMessages.DeleteOpRequest> {
 
         protected InternalLocalOperationProcessor(long requestId, WebSocketConnectionHolder socket,
                 OperationMessages.DeleteOpRequest message) {
@@ -178,13 +175,11 @@ public class DeleteAsyncApiOpImpl extends AbstractAPIOperation implements Delete
         protected Void executeOperation(ConnectorFacade connectorFacade,
                 OperationMessages.DeleteOpRequest requestMessage) {
             final ObjectClass objectClass = new ObjectClass(requestMessage.getObjectClass());
-            final Uid uid =
-                    MessagesUtil.deserializeMessage(requestMessage.getUid(), Uid.class);
+            final Uid uid = MessagesUtil.deserializeMessage(requestMessage.getUid(), Uid.class);
 
             OperationOptions operationOptions = null;
             if (requestMessage.hasOptions()) {
-                operationOptions =
-                        MessagesUtil.deserializeLegacy(requestMessage.getOptions());
+                operationOptions = MessagesUtil.deserializeLegacy(requestMessage.getOptions());
             }
             connectorFacade.delete(objectClass, uid, operationOptions);
             return null;

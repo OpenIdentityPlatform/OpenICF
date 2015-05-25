@@ -76,6 +76,12 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.reactivex</groupId>
+            <artifactId>rxjava</artifactId>
+            <version>1.0.10</version>
+            <scope>test</scope>
+        </dependency>
         <!-- Force to build the test bundles before -->
         <dependency>
             <groupId>org.forgerock.openicf.framework</groupId>

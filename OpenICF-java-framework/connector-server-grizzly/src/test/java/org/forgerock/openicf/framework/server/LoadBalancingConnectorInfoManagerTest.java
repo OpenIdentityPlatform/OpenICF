@@ -175,7 +175,7 @@ public class LoadBalancingConnectorInfoManagerTest {
             protected OpenICFWebSocketApplication createOpenICFWebSocketApplication(
                     final ConnectorFramework framework, final String sharedKeyHash) {
                 return new OpenICFWebSocketApplication(framework, sharedKeyHash) {
-                    public ConnectionPrincipal authenticate(Principal principal) {
+                    public ConnectionPrincipal<?> authenticate(Principal principal) {
                         if (principal instanceof SharedSecretPrincipal) {
                             final SharedSecretPrincipal sharedSecretPrincipal =
                                     (SharedSecretPrincipal) principal;

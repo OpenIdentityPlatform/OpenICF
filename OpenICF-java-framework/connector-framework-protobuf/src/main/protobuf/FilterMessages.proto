@@ -1,6 +1,5 @@
 package org.forgerock.openicf.common.protobuf;
 
-import "CommonObjectMessages.proto";
 import "ConnectorObjects.proto";
 
 message FilterUnionMessage {

@@ -56,6 +56,6 @@ public interface SearchResultsHandler extends ResultsHandler, SuccessHandler<Sea
      *            returned and, if applicable, including information which
      *            should be used for subsequent paged results query requests.
      */
-    public void handleResult(SearchResult result);
+     void handleResult(SearchResult result);
 
 }

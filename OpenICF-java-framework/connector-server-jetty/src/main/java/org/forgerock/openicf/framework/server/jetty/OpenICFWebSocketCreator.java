@@ -71,7 +71,7 @@ public class OpenICFWebSocketCreator implements WebSocketCreator {
 
         if (null != principal) {
 
-            ConnectionPrincipal connectionPrincipal = authenticate(principal);
+            ConnectionPrincipal<?> connectionPrincipal = authenticate(principal);
             if (null != connectionPrincipal) {
                 return connectionPrincipal;
             } else {
@@ -98,7 +98,7 @@ public class OpenICFWebSocketCreator implements WebSocketCreator {
         return singleTenant;
     }
 
-    public static class SinglePrincipal extends ConnectionPrincipal {
+    public static class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> {
 
         public SinglePrincipal(final OperationMessageListener listener,
                 final ConcurrentMap<String, WebSocketConnectionGroup> globalConnectionGroups) {

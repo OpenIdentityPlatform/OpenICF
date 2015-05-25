@@ -77,8 +77,7 @@ public class GetAsyncApiOpImpl extends AbstractAPIOperation implements GetAsyncA
                 OperationMessages.GetOpRequest.newBuilder().setObjectClass(
                         objectClass.getObjectClassValue());
 
-        requestBuilder.setUid(MessagesUtil.serializeMessage(uid,
-                CommonObjectMessages.Uid.class));
+        requestBuilder.setUid(MessagesUtil.serializeMessage(uid, CommonObjectMessages.Uid.class));
 
         if (options != null) {
             requestBuilder.setOptions(MessagesUtil.serializeLegacy(options));
@@ -161,14 +160,13 @@ public class GetAsyncApiOpImpl extends AbstractAPIOperation implements GetAsyncA
 
     // -------
 
-    public static OperationExecutorFactory.OperationExecutor<OperationMessages.GetOpRequest> createProcessor(
-            long requestId, WebSocketConnectionHolder socket, OperationMessages.GetOpRequest message) {
+    public static AbstractLocalOperationProcessor<ConnectorObject, OperationMessages.GetOpRequest> createProcessor(long requestId,
+            WebSocketConnectionHolder socket, OperationMessages.GetOpRequest message) {
         return new InternalLocalOperationProcessor(requestId, socket, message);
     }
 
-    private static class InternalLocalOperationProcessor
-            extends
-            OperationExecutorFactory.AbstractLocalOperationProcessor<ConnectorObject, OperationMessages.GetOpRequest> {
+    private static class InternalLocalOperationProcessor extends
+            AbstractLocalOperationProcessor<ConnectorObject, OperationMessages.GetOpRequest> {
 
         protected InternalLocalOperationProcessor(long requestId, WebSocketConnectionHolder socket,
                 OperationMessages.GetOpRequest message) {
@@ -189,13 +187,11 @@ public class GetAsyncApiOpImpl extends AbstractAPIOperation implements GetAsyncA
         protected ConnectorObject executeOperation(ConnectorFacade connectorFacade,
                 OperationMessages.GetOpRequest requestMessage) {
             final ObjectClass objectClass = new ObjectClass(requestMessage.getObjectClass());
-            final Uid uid =
-                    MessagesUtil.deserializeMessage(requestMessage.getUid(), Uid.class);
+            final Uid uid = MessagesUtil.deserializeMessage(requestMessage.getUid(), Uid.class);
 
             OperationOptions operationOptions = null;
             if (requestMessage.hasOptions()) {
-                operationOptions =
-                        MessagesUtil.deserializeLegacy(requestMessage.getOptions());
+                operationOptions = MessagesUtil.deserializeLegacy(requestMessage.getOptions());
             }
             return connectorFacade.getObject(objectClass, uid, operationOptions);
         }

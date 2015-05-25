@@ -99,20 +99,20 @@ public abstract class RemoteConnectionGroup<M, G extends RemoteConnectionGroup<M
 
         V result = null;
         do {
-            // Reset the loop if we reached the end
-            if (index >= webSockets.size()) {
-                index = 0;
-            }
             if (!webSockets.isEmpty()) {
-
+                // Reset the loop if we reached the end
+                if (index >= webSockets.size()) {
+                    index = 0;
+                }
                 try {
                     connectionInfo = webSockets.get(index).getSecond();
                     if (null != failed) {
-                        if (failed.containsAll(webSockets)) {
-                            // We have tried all
+                        if (failed.size() >= webSockets.size()) {
+                            // Assume we have tried all
                             break;
                         } else if (failed.contains(connectionInfo)) {
                             // Try next
+                            index++;
                             continue;
                         }
                     }
@@ -132,11 +132,10 @@ public abstract class RemoteConnectionGroup<M, G extends RemoteConnectionGroup<M
 
                 } catch (IndexOutOfBoundsException e) {
                     // We have looped and reached the end of array
-                    if (index < p || p == 0)
+                    if (index < p || p == 0) {
                         break;
-                    else {
-                        index = 0;
                     }
+                    index = 0;
                 }
                 index++;
             } else {

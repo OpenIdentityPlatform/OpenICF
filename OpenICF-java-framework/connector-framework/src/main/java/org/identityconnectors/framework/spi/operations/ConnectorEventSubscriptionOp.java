@@ -24,11 +24,12 @@
 
 package org.identityconnectors.framework.spi.operations;
 
+import org.identityconnectors.framework.api.Observer;
+import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
-import org.identityconnectors.framework.common.objects.ResultsHandler;
+import org.identityconnectors.framework.common.objects.Subscription;
 import org.identityconnectors.framework.common.objects.filter.Filter;
-import org.identityconnectors.framework.spi.AsyncCallbackHandler;
 
 /**
  * A ConnectorEventSubscriptionOp.
@@ -37,6 +38,6 @@ import org.identityconnectors.framework.spi.AsyncCallbackHandler;
  */
 public interface ConnectorEventSubscriptionOp extends SPIOperation {
 
-    void subscribe(ObjectClass objectClass, Filter eventFilter, AsyncCallbackHandler asyncHandler,
-            ResultsHandler handler, OperationOptions operationOptions);
+    Subscription subscribe(ObjectClass objectClass, Filter eventFilter,
+            Observer<ConnectorObject> handler, OperationOptions operationOptions);
 }

@@ -202,15 +202,14 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
 
     // ----
 
-    public static OperationExecutorFactory.OperationExecutor<OperationMessages.SearchOpRequest> createProcessor(
-            long requestId, WebSocketConnectionHolder socket,
-            OperationMessages.SearchOpRequest message) {
+    public static AbstractLocalOperationProcessor<SearchOpResponse.Builder, OperationMessages.SearchOpRequest> createProcessor(long requestId,
+            WebSocketConnectionHolder socket, OperationMessages.SearchOpRequest message) {
         return new InternalLocalOperationProcessor(requestId, socket, message);
     }
 
     private static class InternalLocalOperationProcessor
             extends
-            OperationExecutorFactory.AbstractLocalOperationProcessor<SearchOpResponse.Builder, OperationMessages.SearchOpRequest> {
+            AbstractLocalOperationProcessor<SearchOpResponse.Builder, OperationMessages.SearchOpRequest> {
 
         private final AtomicBoolean doContinue = new AtomicBoolean(Boolean.TRUE);
         final AtomicLong sequence = new AtomicLong(0);

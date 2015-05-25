@@ -130,7 +130,7 @@ public class OpenICFWebSocketFilter extends WebSocketFilter {
             try {
                 final HttpResponsePacket response = request.getResponse();
                 if (null != principal) {
-                    ConnectionPrincipal connectionManager = app.authenticate(principal);
+                    ConnectionPrincipal<?> connectionManager = app.authenticate(principal);
                     if (null != connectionManager) {
                         request.setAttribute(ConnectionPrincipal.class.getName(), connectionManager);
                         if (doServerUpgrade(ctx, content)) {

@@ -31,36 +31,27 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 import com.google.protobuf.MessageLite;
 
-public final class OperationExecutorFactory {
+public abstract class AbstractLocalOperationProcessor<V, M extends MessageLite> extends
+        LocalOperationProcessor<V> {
 
-    public interface OperationExecutor<M extends MessageLite> {
+    private final M requestMessage;
 
-        public void execute(ConnectorFacade connectorFacade);
-
+    protected AbstractLocalOperationProcessor(long requestId,
+            final WebSocketConnectionHolder socket, final M message) {
+        super(requestId, socket);
+        requestMessage = message;
     }
 
-    public abstract static class AbstractLocalOperationProcessor<V, M extends MessageLite> extends
-            LocalOperationProcessor<V> implements OperationExecutor<M> {
+    protected abstract V executeOperation(final ConnectorFacade connectorFacade,
+            final M requestMessage);
 
-        private final M requestMessage;
-
-        protected AbstractLocalOperationProcessor(long requestId,
-                final WebSocketConnectionHolder socket, final M message) {
-            super(requestId, socket);
-            requestMessage = message;
-        }
-
-        protected abstract V executeOperation(final ConnectorFacade connectorFacade,
-                final M requestMessage);
-
-        public void execute(final ConnectorFacade connectorFacade) {
-            try {
-                handleResult(executeOperation(connectorFacade, requestMessage));
-            } catch (Error t) {
-                handleError(ConnectorException.wrap(t));
-            } catch (RuntimeException error) {
-                handleError(error);
-            }
+    public void execute(final ConnectorFacade connectorFacade) {
+        try {
+            handleResult(executeOperation(connectorFacade, requestMessage));
+        } catch (Error t) {
+            handleError(ConnectorException.wrap(t));
+        } catch (RuntimeException error) {
+            handleError(error);
         }
     }
 }

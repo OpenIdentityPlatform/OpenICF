@@ -166,15 +166,13 @@ public class CreateAsyncApiOpImpl extends AbstractAPIOperation implements Create
 
     // ----
 
-    public static OperationExecutorFactory.OperationExecutor<OperationMessages.CreateOpRequest> createProcessor(
-            long requestId, WebSocketConnectionHolder socket,
-            OperationMessages.CreateOpRequest message) {
+    public static AbstractLocalOperationProcessor<Uid, OperationMessages.CreateOpRequest> createProcessor(long requestId,
+            WebSocketConnectionHolder socket, OperationMessages.CreateOpRequest message) {
         return new TestLocalOperationProcessor(requestId, socket, message);
     }
 
-    private static class TestLocalOperationProcessor
-            extends
-            OperationExecutorFactory.AbstractLocalOperationProcessor<Uid, OperationMessages.CreateOpRequest> {
+    private static class TestLocalOperationProcessor extends
+            AbstractLocalOperationProcessor<Uid, OperationMessages.CreateOpRequest> {
 
         protected TestLocalOperationProcessor(long requestId, WebSocketConnectionHolder socket,
                 OperationMessages.CreateOpRequest message) {

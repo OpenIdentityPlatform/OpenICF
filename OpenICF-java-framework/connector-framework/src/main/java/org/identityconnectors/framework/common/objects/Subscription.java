@@ -22,7 +22,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
 
-package org.identityconnectors.framework.api;
+package org.identityconnectors.framework.common.objects;
 
 import org.identityconnectors.common.FailureHandler;
 
@@ -32,7 +32,7 @@ import org.identityconnectors.common.FailureHandler;
  *
  * @since 1.5
  */
-public interface SubscriptionHandler {
+public interface Subscription {
 
     /**
      * Unsubscribes this {@code SubscriptionHandler} from receiving messages
@@ -49,17 +49,24 @@ public interface SubscriptionHandler {
      */
     void unsubscribe();
 
+//    /**
+//     * Registers the provided completion handler for notification if this
+//     * {@code SubscriptionHandler} does not complete successfully. If this
+//     * {@code SubscriptionHandler} completes successfully then the completion
+//     * handler will not be notified.
+//     * <p>
+//     * This method can be used for asynchronous completion notification.
+//     *
+//     * @param onFailure
+//     *            The completion handler which will be notified upon
+//     *            unsuccessful completion of this {@code SubscriptionHandler}.
+//     */
+//    void onFailure(FailureHandler<RuntimeException> onFailure);
+
     /**
-     * Registers the provided completion handler for notification if this
-     * {@code SubscriptionHandler} does not complete successfully. If this
-     * {@code SubscriptionHandler} completes successfully then the completion
-     * handler will not be notified.
-     * <p>
-     * This method can be used for asynchronous completion notification.
+     * Indicates whether this {@code Subscription} is currently unsubscribed.
      *
-     * @param onFailure
-     *            The completion handler which will be notified upon
-     *            unsuccessful completion of this {@code SubscriptionHandler}.
+     * @return {@code true} if this {@code Subscription} is currently unsubscribed, {@code false} otherwise
      */
-    void onFailure(FailureHandler<RuntimeException> onFailure);
+    boolean isUnsubscribed();
 }

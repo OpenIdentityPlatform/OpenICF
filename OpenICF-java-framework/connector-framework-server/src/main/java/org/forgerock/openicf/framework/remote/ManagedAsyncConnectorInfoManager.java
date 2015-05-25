@@ -95,7 +95,7 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
     }
 
     protected void doClose() {
-        for (ConnectorEntry entry : managedConnectorInfos.values()) {
+        for (ConnectorEntry<V> entry : managedConnectorInfos.values()) {
             entry.shutdown();
         }
         managedConnectorInfos.clear();
@@ -147,7 +147,7 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
     public List<ConnectorInfo> getConnectorInfos() {
         ArrayList<ConnectorInfo> resultList =
                 new ArrayList<ConnectorInfo>(managedConnectorInfos.size());
-        for (ConnectorEntry entry : managedConnectorInfos.values()) {
+        for (ConnectorEntry<V> entry : managedConnectorInfos.values()) {
             if (null != entry.connectorInfo) {
                 resultList.add(entry.connectorInfo);
             }
@@ -156,7 +156,7 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
     }
 
     public ConnectorInfo findConnectorInfo(ConnectorKey key) {
-        ConnectorEntry entry = managedConnectorInfos.get(key);
+        ConnectorEntry<V> entry = managedConnectorInfos.get(key);
         if (null != entry) {
             return entry.connectorInfo;
         }

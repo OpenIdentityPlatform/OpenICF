@@ -188,15 +188,13 @@ public class UpdateAsyncApiOpImpl extends AbstractAPIOperation implements Update
 
     // ----
 
-    public static OperationExecutorFactory.OperationExecutor<OperationMessages.UpdateOpRequest> createProcessor(
-            long requestId, WebSocketConnectionHolder socket,
-            OperationMessages.UpdateOpRequest message) {
+    public static AbstractLocalOperationProcessor<Uid, OperationMessages.UpdateOpRequest> createProcessor(long requestId,
+            WebSocketConnectionHolder socket, OperationMessages.UpdateOpRequest message) {
         return new InternalLocalOperationProcessor(requestId, socket, message);
     }
 
-    private static class InternalLocalOperationProcessor
-            extends
-            OperationExecutorFactory.AbstractLocalOperationProcessor<Uid, OperationMessages.UpdateOpRequest> {
+    private static class InternalLocalOperationProcessor extends
+            AbstractLocalOperationProcessor<Uid, OperationMessages.UpdateOpRequest> {
 
         protected InternalLocalOperationProcessor(long requestId, WebSocketConnectionHolder socket,
                 OperationMessages.UpdateOpRequest message) {
@@ -220,15 +218,13 @@ public class UpdateAsyncApiOpImpl extends AbstractAPIOperation implements Update
                 OperationMessages.UpdateOpRequest requestMessage) {
 
             final ObjectClass objectClass = new ObjectClass(requestMessage.getObjectClass());
-            final Uid uid =
-                    MessagesUtil.deserializeMessage(requestMessage.getUid(), Uid.class);
+            final Uid uid = MessagesUtil.deserializeMessage(requestMessage.getUid(), Uid.class);
             final Set<Attribute> attributes =
                     MessagesUtil.deserializeLegacy(requestMessage.getReplaceAttributes());
 
             OperationOptions operationOptions = null;
             if (requestMessage.hasOptions()) {
-                operationOptions =
-                        MessagesUtil.deserializeLegacy(requestMessage.getOptions());
+                operationOptions = MessagesUtil.deserializeLegacy(requestMessage.getOptions());
             }
 
             switch (requestMessage.getUpdateType()) {

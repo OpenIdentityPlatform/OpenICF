@@ -55,7 +55,8 @@ import org.identityconnectors.framework.api.ConfigurationProperty;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.api.ConnectorKey;
-import org.identityconnectors.framework.api.SubscriptionHandler;
+import org.identityconnectors.framework.api.Observer;
+import org.identityconnectors.framework.common.objects.Subscription;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
@@ -71,6 +72,7 @@ import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
+import org.identityconnectors.framework.impl.api.local.LocalConnectorFacadeImpl;
 import org.testng.Assert;
 import org.testng.ITestContext;
 import org.testng.Reporter;
@@ -79,6 +81,10 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
+
+import rx.Observable;
+import rx.Subscriber;
+import rx.functions.Action1;
 
 @Test
 public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnectorInfoManager> {
@@ -407,27 +413,53 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
         o = facade.runScriptOnResource(contextBuilder.build(), null);
         Assert.assertEquals(o, "test");
     }
-
+    
     @Test
-    public void testSubscriptionOperation() throws Exception {
+    public void testSubscriptionOperation() throws Throwable {
         final ConnectorFacade facade = getConnectorFacade();
         final ToListResultsHandler handler = new ToListResultsHandler();
         final CountDownLatch latch = new CountDownLatch(1);
-        final AtomicReference<Exception> assertionError = new AtomicReference<Exception>(null);
+        final AtomicReference<Throwable> assertionError = new AtomicReference<Throwable>(null);
 
-        final AtomicReference<SubscriptionHandler> subscriptionHandler =
-                new AtomicReference<SubscriptionHandler>(facade.subscribe(ObjectClass.ACCOUNT,
-                        null, new ResultsHandler() {
-                            public boolean handle(ConnectorObject connectorObject) {
-                                Reporter.log(
-                                        "Connector Event received:" + connectorObject.getUid(),
-                                        true);
-                                return handler.handle(connectorObject);
+        Observable<ConnectorObject> connectorObjectObservable =
+                Observable.create(new Observable.OnSubscribe<ConnectorObject>() {
+                    public void call(final Subscriber<? super ConnectorObject> subscriber) {
+
+                        final Subscription subscription =
+                                facade.subscribe(ObjectClass.ACCOUNT, null,
+                                        new Observer<ConnectorObject>() {
+                                            public void onCompleted() {
+                                                subscriber.onCompleted();
+                                            }
+
+                                            public void onError(Throwable e) {
+                                                subscriber.onError(e);
+                                            }
+
+                                            public void onNext(ConnectorObject connectorObject) {
+                                                subscriber.onNext(connectorObject);
+                                            }
+                                        }, null);
+
+                        subscriber.add(new rx.Subscription() {
+                            public void unsubscribe() {
+                                subscription.unsubscribe();
                             }
-                        }, null));
 
-        subscriptionHandler.get().onFailure(new FailureHandler<RuntimeException>() {
-            public void handleError(RuntimeException error) {
+                            public boolean isUnsubscribed() {
+                                return subscription.isUnsubscribed();
+                            }
+                        });
+                    }
+                });
+        final rx.Subscription[] subscription = new rx.Subscription[1];
+        subscription[0] = connectorObjectObservable.subscribe(new Action1<ConnectorObject>() {
+            public void call(ConnectorObject connectorObject) {
+                Reporter.log("Connector Event received:" + connectorObject.getUid(), true);
+                handler.handle(connectorObject);
+            }
+        }, new Action1<Throwable>() {
+            public void call(Throwable throwable) {
                 try {
                     Assert.assertEquals(handler.getObjects().size(), 10, "Uncompleted subscription");
                 } catch (final Exception t) {
@@ -437,7 +469,7 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
                 }
             }
         });
-
+        
         latch.await(25, TimeUnit.MINUTES);
         if (null != assertionError.get()) {
             throw assertionError.get();
@@ -445,23 +477,55 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
 
         final CountDownLatch syncLatch = new CountDownLatch(1);
         handler.getObjects().clear();
+        
+        Observable<SyncDelta> syncDeltaObservable =
+                Observable.create(new Observable.OnSubscribe<SyncDelta>() {
+                    public void call(final Subscriber<? super SyncDelta> subscriber) {
+                        final Subscription subscription =
+                                facade.subscribe(ObjectClass.ACCOUNT, null,
+                                        new Observer<SyncDelta>() {
+                                            public void onCompleted() {
+                                                subscriber.onCompleted();
+                                            }
 
-        subscriptionHandler.set((facade.subscribe(ObjectClass.ACCOUNT, null,
-                new SyncResultsHandler() {
-                    public boolean handle(SyncDelta delta) {
-                        Reporter.log("Sync Event received:" + delta.getToken(), true);
-                        if (((Integer) delta.getToken().getValue()) > 2) {
-                            subscriptionHandler.get().unsubscribe();
-                            syncLatch.countDown();
-                        }
-                        return handler.handle(delta.getObject());
+                                            public void onError(Throwable e) {
+                                                subscriber.onError(e);
+                                            }
+
+                                            public void onNext(SyncDelta syncDelta) {
+                                                subscriber.onNext(syncDelta);
+                                            }
+                                        }, null);
+
+                        subscriber.add(new rx.Subscription() {
+                            public void unsubscribe() {
+                                subscription.unsubscribe();
+                            }
+
+                            public boolean isUnsubscribed() {
+                                return subscription.isUnsubscribed();
+                            }
+                        });
                     }
-                }, null)));
+                });
 
-        subscriptionHandler.get().onFailure(new FailureHandler<RuntimeException>() {
-            public void handleError(RuntimeException error) {
+        subscription[0] = syncDeltaObservable.subscribe(new Action1<SyncDelta>() {
+            public void call(SyncDelta delta) {
+                Reporter.log("Sync Event received:" + delta.getToken(), true);
+                handler.handle(delta.getObject());
+                if (((Integer) delta.getToken().getValue()) > 2) {
+                    try {
+                        subscription[0].unsubscribe();
+                    } catch (Exception  e){
+                        e.printStackTrace();
+                    }
+                    syncLatch.countDown();
+                }
+            }
+        }, new Action1<Throwable>() {
+            public void call(Throwable throwable) {
                 try {
-                    Assert.fail("Failed Subscription", error);
+                    assertionError.set(throwable);
                 } catch (final Exception t) {
                     assertionError.set(t);
                 } finally {

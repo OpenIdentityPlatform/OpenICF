@@ -132,13 +132,13 @@ public class ValidateAsyncApiOpImpl extends AbstractAPIOperation implements Vali
 
     // ----
 
-    public static OperationExecutorFactory.OperationExecutor<ValidateOpRequest> createProcessor(
-            long requestId, WebSocketConnectionHolder socket, ValidateOpRequest message) {
+    public static AbstractLocalOperationProcessor<Void, ValidateOpRequest> createProcessor(long requestId,
+            WebSocketConnectionHolder socket, ValidateOpRequest message) {
         return new ValidateLocalOperationProcessor(requestId, socket, message);
     }
 
     private static class ValidateLocalOperationProcessor extends
-            OperationExecutorFactory.AbstractLocalOperationProcessor<Void, ValidateOpRequest> {
+            AbstractLocalOperationProcessor<Void, ValidateOpRequest> {
 
         protected ValidateLocalOperationProcessor(long requestId, WebSocketConnectionHolder socket,
                 ValidateOpRequest message) {

@@ -138,6 +138,7 @@ public class ConnectorFrameworkFactory extends ReferenceCountedObject<ConnectorF
         return new ConnectorFramework(getDefaultConnectorBundleParentClassLoader());
     }
 
+    @SuppressWarnings("unchecked")
     protected Constructor<RemoteConnectionInfoManagerFactory> init() throws Exception {
         try {
             Class<?> clazz =

@@ -27,8 +27,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.framework.common.objects.Subscription;
 import org.identityconnectors.framework.impl.api.local.ObjectPool;
 import org.identityconnectors.framework.impl.api.local.ObjectPoolEntry;
 import org.identityconnectors.framework.spi.Connector;
@@ -100,14 +102,13 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
             APIOperationRunner runner = getApiOperationRunner(context, connector);
             ret = method.invoke(runner, args);
             // call out to the operation..
-            if (ret instanceof SubscriptionImpl.AsyncOperationResultHandler){
+            if (ret instanceof Subscription){
                 //Dispose later
-                ((SubscriptionImpl.AsyncOperationResultHandler)ret).onComplete(new DisposeRunner(connector, poolEntry));
+                ret = new DeferredSubscriptionDisposer((Subscription)ret,connector, poolEntry);
                 connector = null;
             }
         } catch (InvocationTargetException e) {
-            Throwable root = e.getCause();
-            throw root;
+            throw e.getCause();
         } finally {
 
             // make sure dispose of the connector properly
@@ -150,18 +151,32 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
         }
     }
     
-    private static class DisposeRunner implements Runnable {
+    private static class DeferredSubscriptionDisposer implements Subscription {
         private final Connector connector;
         private final ObjectPoolEntry<PoolableConnector> poolEntry;
+        private final Subscription subscription;
+        private final AtomicBoolean disposed = new AtomicBoolean(Boolean.FALSE);
 
-        public DisposeRunner(final Connector connector,
-                             final ObjectPoolEntry<PoolableConnector> poolEntry) {
+        public DeferredSubscriptionDisposer(final Subscription subscription,
+                                            final Connector connector,
+                                            final ObjectPoolEntry<PoolableConnector> poolEntry) {
+            this.subscription = subscription;
             this.connector = connector;
             this.poolEntry = poolEntry;
         }
 
-        public void run() {
-            disposeConnector(connector, poolEntry);
+        public void unsubscribe() {
+            try {
+                subscription.unsubscribe();
+            } finally {
+                if (disposed.compareAndSet(Boolean.FALSE, Boolean.TRUE)){
+                    disposeConnector(connector, poolEntry);
+                }
+            }
+        }
+
+        public boolean isUnsubscribed() {
+            return subscription.isUnsubscribed();
         }
     }
 }

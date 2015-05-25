@@ -24,10 +24,11 @@
 
 package org.identityconnectors.framework.api.operations;
 
-import org.identityconnectors.framework.api.SubscriptionHandler;
+import org.identityconnectors.framework.api.Observer;
+import org.identityconnectors.framework.common.objects.Subscription;
+import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
-import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
 /**
@@ -36,6 +37,6 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
  */
 public interface ConnectorEventSubscriptionApiOp extends APIOperation {
 
-    SubscriptionHandler subscribe(ObjectClass objectClass, Filter eventFilter,
-            ResultsHandler handler, OperationOptions operationOptions);
+    Subscription subscribe(ObjectClass objectClass, Filter eventFilter,
+            Observer<ConnectorObject> handler, OperationOptions operationOptions);
 }

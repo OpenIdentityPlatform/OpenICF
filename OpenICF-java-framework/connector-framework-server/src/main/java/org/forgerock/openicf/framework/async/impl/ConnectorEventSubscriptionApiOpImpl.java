@@ -28,7 +28,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.forgerock.openicf.common.protobuf.CommonObjectMessages;
-import org.forgerock.openicf.common.protobuf.OperationMessages;
+import org.forgerock.openicf.common.protobuf.OperationMessages.*;
 import org.forgerock.openicf.common.protobuf.RPCMessages;
 import org.forgerock.openicf.common.rpc.RemoteRequestFactory;
 import org.forgerock.openicf.common.rpc.RequestDistributor;
@@ -36,20 +36,21 @@ import org.forgerock.openicf.framework.remote.MessagesUtil;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
+import org.forgerock.util.promise.FailureHandler;
 import org.forgerock.util.promise.Function;
 import org.forgerock.util.promise.Promise;
+import org.forgerock.util.promise.SuccessHandler;
 import org.identityconnectors.common.Assertions;
-import org.identityconnectors.common.FailureHandler;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorKey;
-import org.identityconnectors.framework.api.SubscriptionHandler;
+import org.identityconnectors.framework.api.Observer;
 import org.identityconnectors.framework.api.operations.ConnectorEventSubscriptionApiOp;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
-import org.identityconnectors.framework.common.objects.ResultsHandler;
+import org.identityconnectors.framework.common.objects.Subscription;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
 import com.google.protobuf.ByteString;
@@ -67,57 +68,61 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
         super(remoteConnection, connectorKey, facadeKeyFunction);
     }
 
-    public SubscriptionHandler subscribe(final ObjectClass objectClass, final Filter eventFilter,
-            final ResultsHandler handler, final OperationOptions operationOptions) {
+    public Subscription subscribe(final ObjectClass objectClass, final Filter eventFilter,
+            final Observer<ConnectorObject> handler, final OperationOptions operationOptions) {
         final Promise<Void, RuntimeException> promise =
-                trySubscribe(objectClass, eventFilter, handler, operationOptions);
+                trySubscribe(objectClass, eventFilter, handler, operationOptions).onFailure(
+                        new FailureHandler<RuntimeException>() {
+                            public void handleError(RuntimeException error) {
+                                if (!(error instanceof CancellationException)) {
+                                    handler.onError(error);
+                                }
+                            }
+                        }).onSuccess(new SuccessHandler<Void>() {
+                    public void handleResult(Void result) {
+                        handler.onCompleted();
+                    }
+                });
 
-        return new SubscriptionHandler() {
+        return new Subscription() {
             public void unsubscribe() {
                 promise.cancel(true);
             }
 
-            public void onFailure(final FailureHandler<RuntimeException> onFailure) {
-                promise.onFailure(new org.forgerock.util.promise.FailureHandler<RuntimeException>() {
-                    public void handleError(final RuntimeException error) {
-                        if (!(error instanceof CancellationException)) {
-                            onFailure.handleError(error);
-                        } else {
-                            logger.ok("Subscription is cancelled");
-                        }
-                    }
-                });
+            public boolean isUnsubscribed() {
+                return promise.isDone();
             }
         };
     }
 
     public Promise<Void, RuntimeException> trySubscribe(final ObjectClass objectClass,
-            final Filter eventFilter, final ResultsHandler handler, final OperationOptions options) {
+            final Filter eventFilter, final Observer<ConnectorObject> handler,
+            final OperationOptions options) {
         Assertions.nullCheck(objectClass, "objectClass");
         Assertions.nullCheck(handler, "handler");
-        OperationMessages.ConnectorEventSubscriptionOpRequest.Builder requestBuilder =
-                OperationMessages.ConnectorEventSubscriptionOpRequest.newBuilder().setObjectClass(
+        ConnectorEventSubscriptionOpRequest.Builder requestBuilder =
+                ConnectorEventSubscriptionOpRequest.newBuilder().setObjectClass(
                         objectClass.getObjectClassValue());
         if (eventFilter != null) {
             requestBuilder.setEventFilter(MessagesUtil.serializeLegacy(eventFilter));
         }
 
-        if (options != null) {
+        if (options != null && !options.getOptions().isEmpty()) {
             requestBuilder.setOptions(MessagesUtil.serializeLegacy(options));
         }
 
-        return submitRequest(new InternalRequestFactory(OperationMessages.OperationRequest
+        return submitRequest(new InternalRequestFactory(OperationRequest
                 .newBuilder().setConnectorEventSubscriptionOpRequest(requestBuilder), handler));
     }
 
     private class InternalRequestFactory extends
             AbstractRemoteOperationRequestFactory<Void, InternalRequest> {
-        private final OperationMessages.OperationRequest.Builder operationRequest;
-        final ResultsHandler handler;
+        private final OperationRequest.Builder operationRequest;
+        final Observer<ConnectorObject> handler;
 
         public InternalRequestFactory(
-                final OperationMessages.OperationRequest.Builder operationRequest,
-                final ResultsHandler handler) {
+                final OperationRequest.Builder operationRequest,
+                final Observer<ConnectorObject> handler) {
             this.operationRequest = operationRequest;
             this.handler = handler;
         }
@@ -143,7 +148,7 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
             return ConnectorEventSubscriptionApiOpImpl.this.createConnectorFacadeKey(context);
         }
 
-        protected OperationMessages.OperationRequest.Builder createOperationRequest(
+        protected OperationRequest.Builder createOperationRequest(
                 final RemoteOperationContext remoteContext) {
             return operationRequest;
         }
@@ -151,23 +156,24 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
 
     private static class InternalRequest
             extends
-            AbstractRemoteOperationRequestFactory.AbstractRemoteOperationRequest<Void, OperationMessages.ConnectorEventSubscriptionOpResponse> {
+            AbstractRemoteOperationRequestFactory.AbstractRemoteOperationRequest<Void, ConnectorEventSubscriptionOpResponse> {
 
-        final ResultsHandler handler;
+        final Observer<ConnectorObject> handler;
         final AtomicBoolean confirmed = new AtomicBoolean(Boolean.FALSE);
 
         public InternalRequest(
                 final RemoteOperationContext context,
                 final long requestId,
                 final RemoteRequestFactory.CompletionCallback<MessageLite, Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
-                final RPCMessages.RPCRequest.Builder requestBuilder, final ResultsHandler handler) {
+                final RPCMessages.RPCRequest.Builder requestBuilder,
+                final Observer<ConnectorObject> handler) {
             super(context, requestId, completionCallback, requestBuilder);
             this.handler = handler;
 
         }
 
-        protected OperationMessages.ConnectorEventSubscriptionOpResponse getOperationResponseMessages(
-                OperationMessages.OperationResponse message) {
+        protected ConnectorEventSubscriptionOpResponse getOperationResponseMessages(
+                OperationResponse message) {
             if (message.hasConnectorEventSubscriptionOpResponse()) {
                 return message.getConnectorEventSubscriptionOpResponse();
             } else {
@@ -178,19 +184,26 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
         }
 
         protected void handleOperationResponseMessages(WebSocketConnectionHolder sourceConnection,
-                OperationMessages.ConnectorEventSubscriptionOpResponse message) {
+                ConnectorEventSubscriptionOpResponse message) {
             if (null != handler && message.hasConnectorObject()) {
                 ConnectorObject delta =
                         MessagesUtil.deserializeMessage(message.getConnectorObject(),
                                 ConnectorObject.class);
-                if (!handler.handle(delta) && !getPromise().isDone()) {
-                    getFailureHandler().handleError(
-                            new ConnectorException("ResultsHandler stopped processing results"));
-                    tryCancelRemote(getConnectionContext(), getRequestId());
+                try {
+                    handler.onNext(delta);
+                } catch (Throwable t) {
+                    if (!getPromise().isDone()) {
+                        getFailureHandler()
+                                .handleError(
+                                        new ConnectorException(
+                                                "ResultsHandler stopped processing results"));
+                        tryCancelRemote(getConnectionContext(), getRequestId());
+                    }
                 }
-            }
-            if (!message.hasConnectorObject()
-                    && confirmed.compareAndSet(Boolean.FALSE, Boolean.TRUE)) {
+            } else if (message.hasCompleted() && message.getCompleted()) {
+                getSuccessHandler().handleResult(null);
+                logger.ok("Subscription is completed");
+            } else if (confirmed.compareAndSet(Boolean.FALSE, Boolean.TRUE)) {
                 logger.ok("Subscription has been made successfully on remote side");
             }
         }
@@ -198,41 +211,34 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
 
     // ----
 
-    public static OperationExecutorFactory.OperationExecutor<OperationMessages.ConnectorEventSubscriptionOpRequest> createProcessor(
-            long requestId, WebSocketConnectionHolder socket,
-            OperationMessages.ConnectorEventSubscriptionOpRequest message) {
+    public static AbstractLocalOperationProcessor<ConnectorEventSubscriptionOpResponse, ConnectorEventSubscriptionOpRequest>  createProcessor(long requestId,
+            WebSocketConnectionHolder socket,
+            ConnectorEventSubscriptionOpRequest message) {
         return new InternalLocalOperationProcessor(requestId, socket, message);
     }
 
     private static class InternalLocalOperationProcessor
             extends
-            OperationExecutorFactory.AbstractLocalOperationProcessor<ConnectorObject, OperationMessages.ConnectorEventSubscriptionOpRequest> {
-
-        private final AtomicBoolean doContinue = new AtomicBoolean(Boolean.TRUE);
-        private SubscriptionHandler subscriptionHandler = null;
+            AbstractLocalOperationProcessor<ConnectorEventSubscriptionOpResponse, ConnectorEventSubscriptionOpRequest> {
+        private Subscription subscription = null;
 
         protected InternalLocalOperationProcessor(long requestId, WebSocketConnectionHolder socket,
-                OperationMessages.ConnectorEventSubscriptionOpRequest message) {
+                ConnectorEventSubscriptionOpRequest message) {
             super(requestId, socket, message);
             stickToConnection = false;
         }
 
         protected RPCMessages.RPCResponse.Builder createOperationResponse(
-                RemoteOperationContext remoteContext, ConnectorObject result) {
-            OperationMessages.ConnectorEventSubscriptionOpResponse.Builder builder =
-                    OperationMessages.ConnectorEventSubscriptionOpResponse.newBuilder();
-            if (null != result) {
-                builder.setConnectorObject(MessagesUtil.serializeMessage(result,
-                        CommonObjectMessages.ConnectorObject.class));
-            }
-
+                RemoteOperationContext remoteContext,
+                ConnectorEventSubscriptionOpResponse result) {
             return RPCMessages.RPCResponse.newBuilder().setOperationResponse(
-                    OperationMessages.OperationResponse.newBuilder()
-                            .setConnectorEventSubscriptionOpResponse(builder));
+                    OperationResponse.newBuilder()
+                            .setConnectorEventSubscriptionOpResponse(result));
         }
 
-        protected ConnectorObject executeOperation(final ConnectorFacade connectorFacade,
-                final OperationMessages.ConnectorEventSubscriptionOpRequest requestMessage) {
+        protected ConnectorEventSubscriptionOpResponse executeOperation(
+                final ConnectorFacade connectorFacade,
+                final ConnectorEventSubscriptionOpRequest requestMessage) {
 
             final ObjectClass objectClass = new ObjectClass(requestMessage.getObjectClass());
 
@@ -246,26 +252,44 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
                 operationOptions = MessagesUtil.deserializeLegacy(requestMessage.getOptions());
             }
 
-            subscriptionHandler =
-                    connectorFacade.subscribe(objectClass, token, new ResultsHandler() {
-                        public boolean handle(final ConnectorObject delta) {
-                            tryHandleResult(delta);
-                            return doContinue.get();
+            subscription =
+                    connectorFacade.subscribe(objectClass, token, new Observer<ConnectorObject>() {
+
+                        public void onCompleted() {
+                            tryHandleResult(ConnectorEventSubscriptionOpResponse
+                                    .newBuilder().setCompleted(Boolean.TRUE).build());
                         }
+
+                        public void onError(Throwable error) {
+                            try {
+                                final byte[] responseMessage =
+                                        MessagesUtil.createErrorResponse(getRequestId(), error)
+                                                .build().toByteArray();
+                                trySendBytes(responseMessage, true);
+                            } catch (Throwable t) {
+                                logger.ok(t,
+                                        "Operation encountered an exception and failed to send the exception response");
+                            }
+                        }
+
+                        public void onNext(ConnectorObject syncDelta) {
+                            if (null != syncDelta) {
+                                tryHandleResult(ConnectorEventSubscriptionOpResponse
+                                        .newBuilder()
+                                        .setConnectorObject(
+                                                MessagesUtil.serializeMessage(syncDelta,
+                                                        CommonObjectMessages.ConnectorObject.class))
+                                        .build());
+                            }
+                        }
+
                     }, operationOptions);
 
-            subscriptionHandler.onFailure(new FailureHandler<RuntimeException>() {
-                public void handleError(final RuntimeException error) {
-                    tryHandleError(error);
-                }
-            });
-
-            return null;
+            return ConnectorEventSubscriptionOpResponse.getDefaultInstance();
         }
 
         protected boolean tryCancel() {
-            doContinue.set(Boolean.FALSE);
-            subscriptionHandler.unsubscribe();
+            subscription.unsubscribe();
             return super.tryCancel();
         }
     }

@@ -47,6 +47,6 @@ public interface SyncTokenResultsHandler extends SyncResultsHandler, SuccessHand
      *            returned and, if applicable, including information which
      *            should be used for next sync requests.
      */
-    public void handleResult(SyncToken result);
+     void handleResult(SyncToken result);
 
 }

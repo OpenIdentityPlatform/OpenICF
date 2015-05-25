@@ -24,9 +24,11 @@
 
 package org.forgerock.openicf.common.rpc;
 
+import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.forgerock.openicf.common.rpc.impl.NIOSimulator;
 import org.forgerock.openicf.common.rpc.impl.TestConnectionContext;

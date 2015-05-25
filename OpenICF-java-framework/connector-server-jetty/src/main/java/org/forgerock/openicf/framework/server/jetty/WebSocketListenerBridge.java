@@ -113,11 +113,11 @@ public class WebSocketListenerBridge extends AbstractEventDriver {
 
     };
 
-    public WebSocketListenerBridge(WebSocketPolicy policy, ConnectionPrincipal webSocket) {
+    public WebSocketListenerBridge(WebSocketPolicy policy, ConnectionPrincipal<?> webSocket) {
         super(policy, webSocket);
     }
 
-    protected ConnectionPrincipal getConnectionPrincipal() {
+    protected ConnectionPrincipal<?> getConnectionPrincipal() {
         return ConnectionPrincipal.class.cast(websocket);
     }
 

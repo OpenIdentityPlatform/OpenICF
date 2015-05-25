@@ -32,7 +32,7 @@ import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.Base64;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.ConnectorFacade;
-import org.identityconnectors.framework.api.SubscriptionHandler;
+import org.identityconnectors.framework.api.Observer;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
 import org.identityconnectors.framework.api.operations.ConnectorEventSubscriptionApiOp;
@@ -57,6 +57,8 @@ import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.ScriptContext;
 import org.identityconnectors.framework.common.objects.SearchResult;
+import org.identityconnectors.framework.common.objects.Subscription;
+import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -100,6 +102,31 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
         this.configuration.setConnectorInfo(connectorInfo);
     }
 
+    /**
+     * Creates a reference to an externally managed ConnectorFacade.
+     * 
+     * This constructor creates an uninitialised facade with empty/default
+     * configuration with a given <code>facadeAlias</code> which holds the
+     * reference to an another externally managed ConnectorFacade.
+     * 
+     * @param facadeAlias
+     *            the unique identifier to the remote facade.
+     * @param configuration
+     *            the connector info and the timeout map configuration of the
+     *            remote facade.
+     */
+    public AbstractConnectorFacade(final String facadeAlias,
+            final APIConfigurationImpl configuration) {
+        this.connectorFacadeKey = Assertions.blankChecked(facadeAlias, "facadeURI");
+        Assertions.nullCheck(configuration, "configuration");
+        this.configuration =
+                (APIConfigurationImpl) configuration.getConnectorInfo()
+                        .createDefaultAPIConfiguration();
+        // Copy only the TimeoutMap
+        this.configuration.getTimeoutMap().clear();
+        this.configuration.getTimeoutMap().putAll(configuration.getTimeoutMap());
+    }
+    
     /**
      * Return an instance of an API operation.
      *
@@ -174,7 +201,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
-    public SubscriptionHandler subscribe(final ObjectClass objectClass, final Filter eventFilter, final ResultsHandler handler,
+    public Subscription subscribe(final ObjectClass objectClass, final Filter eventFilter, final Observer<ConnectorObject> handler,
                                          final OperationOptions operationOptions) {
         return ((ConnectorEventSubscriptionApiOp) this.getOperationCheckSupported(ConnectorEventSubscriptionApiOp.class)).subscribe(
                 objectClass, eventFilter, handler, operationOptions);
@@ -183,7 +210,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
-    public SubscriptionHandler subscribe(final ObjectClass objectClass,final SyncToken token,final SyncResultsHandler handler,
+    public Subscription subscribe(final ObjectClass objectClass,final SyncToken token,final Observer<SyncDelta> handler,
                                          final OperationOptions operationOptions) {
         return ((SyncEventSubscriptionApiOp) this.getOperationCheckSupported(SyncEventSubscriptionApiOp.class)).subscribe(
                 objectClass, token, handler, operationOptions);
