@@ -155,7 +155,7 @@
      example sets the secret key to <literal>Passw0rd</literal>.
     </para>
     <screen><userinput>ConnectorServer /setkey Passw0rd</userinput>
-<computeroutput>Key Updated.</computeroutput></screen>
+<computeroutput>Key has been successfully updated.</computeroutput></screen>
     <para>
      This key is used by clients that connect to the Connector Server.
     </para>
