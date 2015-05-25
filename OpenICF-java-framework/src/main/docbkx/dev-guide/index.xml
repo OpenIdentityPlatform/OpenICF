@@ -78,6 +78,7 @@
  <xinclude:include href="chap-java-connectors.xml" />
  <xinclude:include href="chap-groovy-connectors.xml" />
  <xinclude:include href="chap-custom-bundler.xml" />
+ <xinclude:include href="chap-powershell.xml" />
 
  <!--
  <xinclude:include href="chap-troubleshooting.xml" />
