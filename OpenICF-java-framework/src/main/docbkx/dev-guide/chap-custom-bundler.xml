@@ -32,35 +32,43 @@
  <title>Building Connectors With the Custom Scripted Connector Bundler</title>
 
  <para>
-  OpenIDM ${docTargetVersion} provides a utility that facilitates the creation,
+  OpenIDM ${openidmVersion} provides a utility that facilitates the creation,
   packaging and distribution of custom connectors based on the Groovy Connector
-  Toolkit. The utility takes a JSON configuration file as an argument, and
-  produces all the required source code to build an OSGi-compatible
-  <filename>jar</filename> file that can be used in any OpenICF-compliant
-  project, such as OpenIDM.
+  Toolkit.
  </para>
  <para>
-  The utility generates a connector template that includes placeholders
-  for meta-data, a structure for scripts, and a pom file to instruct maven in
-  how to build the connector jar. For the connector to be useable in a
-  deployment, the generated Groovy templates must be populated with code
-  appropriate to the resource that is being accessed. The templates that are
-  generated include notes and, where appropriate, "starter code" to help you
-  develop your scripts.
+  The Custom Scripted Connector Bundler enables you to create connectors using
+  one of the default implementations described in <link xlink:show="new"
+  xlink:href="dev-guide#groovy-connector-types"
+  xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Selecting a
+  Scripted Connector Implementation</citetitle></link>. The utility takes a JSON
+  configuration file as an argument, and produces all the required source code
+  to build an OSGi-compatible <filename>jar</filename> file that can be used in
+  any OpenICF-compliant project, such as OpenIDM.
  </para>
  <para>
+  The Connector Bundler generates a connector template that includes
+  placeholders for meta-data, a structure for scripts, and a Maven project
+  (<filename>pom.xml</filename>) file to instruct Maven how to build the
+  connector JAR. To be able to use the connector in a deployment, you must
+  populate the generated Groovy templates with code that is appropriate to the
+  resource that your connector is accessing. The generated templates include
+  notes and, where appropriate, "starter code" to help you develop your scripts.
+ </para>
+ <para>
+  OpenIDM ${openidmVersion} also provides a sample that shows how the connector
+  bundler is used to create a scripted SQL connector. For more information, see
   <link xlink:show="new"
   xlink:href="http://openidm.forgerock.org/doc/bootstrap/install-guide/index.html#more-sample3"
   ><citetitle>Sample 3 - Using the Groovy Connector Toolkit to Connect to MySQL
-  With ScriptedSQL</citetitle></link> (in the <citetitle>OpenIDM Installation
-  Guide</citetitle>) provides an example of using the connector bundler to
-  create a scripted SQL connector.
+  With ScriptedSQL</citetitle></link> in the <citetitle>OpenIDM Installation
+  Guide</citetitle>.
  </para>
 
  <section xml:id="using-connector-bundler">
   <title>Using the Connector Bundler</title>
   <para>
-   The Connector Bundler is provided as a .jar file in the OpenIDM delivery. To
+   The Connector Bundler is provided as a JAR file in the OpenIDM delivery. To
    use the utility, download and extract OpenIDM, as described in
    <link xlink:show="new"
    xlink:href="http://openidm.forgerock.org/doc/bootstrap/install-guide/index.html#installing-openidm"
@@ -79,12 +87,14 @@
     <para>
      The Connector Bundler takes a JSON configuration file as an argument. The
      configuration file includes the connector name and version, a description
-     of the connector, the author, and any properties and object types supported
-     by the connector. A sample JSON configuration file can be obtained by
-     running the following command.
+     of the connector, the author, and any properties and object types that must
+     be supported by the connector.
     </para>
-    <screen>$ <userinput>java -jar custom-scripted-connector-bundler-${docTargetVersion}.jar -h</userinput>
-<computeroutput>Custom Scripted Connector Bundler for OpenIDM ${docTargetVersion}
+    <para>
+     To display a sample JSON configuration file, run the following command:
+    </para>
+    <screen>$ <userinput>java -jar custom-scripted-connector-bundler-${openidmVersion}.jar -h</userinput>
+<computeroutput>Custom Scripted Connector Bundler for OpenIDM ${openidmVersion}
 usage: bundle [OPTIONS] -c &lt;FILE>
  -c,--config &lt;file>   bundle configuration file for this connector
  -h,--help            print this help
@@ -127,140 +137,18 @@ Configuration format:
     "group" : "default"
   } ],
   "objectTypes" : [ ],
-  "baseConnectorType" : "GROOVY",
-  "hasProvidedProperties" : true,
-  "hasProperties" : true,
-  "hasObjectTypes" : false
+  "baseConnectorType" : "GROOVY"
 }</computeroutput></screen>
+   </step>
+   <step>
     <para>
-     You can use this sample configuration file as a starting point for writing
-     your own configuration file to describe the connector bundle.
+     Use the sample configuration file as a starting point for writing your own
+     configuration file to describe your connector bundle.
     </para>
     <para>
-     A sample complete configuration file follows:
+     This example assumes that you are writing a connector for an SQL database
+     named ExampleDB.
     </para>
-    <programlisting language="javascript">    {
-        "packageName" : "Awesome",
-        "displayName" : "Awesome Connector",
-        "description" : "This is my super awesome connector",
-        "version" : "1.0",
-        "author" : "Coder McLightningfingers",
-        "baseConnectorType" : "GROOVY",
-        "providedProperties" : [ {
-            "name" : "provided1",
-            "value" : "default",
-            "type" : "String"
-        }, {
-            "name" : "provided2",
-            "value" : 2,
-            "type" : "Integer"
-        } ],
-        "properties" : [ {
-            "order" : 0,
-            "type" : "String",
-            "name" : "FirstProperty",
-            "value" : "firstValue",
-            "required" : true,
-            "confidential" : false,
-            "displayMessage" : "This is my first property",
-            "helpMessage" : "This should be a String value",
-            "group" : "default"
-        }, {
-            "order" : 1,
-            "type" : "Double",
-            "name" : "SecondProperty",
-            "value" : 1.234,
-            "required" : false,
-            "confidential" : false,
-            "displayMessage" : "This is my second property",
-            "helpMessage" : "This should be a Double value",
-            "group" : "default"
-        } ],
-        "objectTypes" : [ {
-            "name" : "group",
-            "id" : "__GROUP__",
-            "type" : "object",
-            "nativeType" : "__GROUP__",
-            "objectClass" : "ObjectClass.GROUP",
-            "properties" : [ {
-                "name" : "name",
-                "type" : "string",
-                "required" : true,
-                "nativeName" : "__NAME__",
-                "nativeType" : "string"
-            },{
-                "name" : "gid",
-                "type" : "string",
-                "required" : true,
-                "nativeName" : "gid",
-                "nativeType" : "string"
-            },{
-                "name" : "description",
-                "type" : "string",
-                "required" : false,
-                "nativeName" : "description",
-                "nativeType" : "string"
-            },{
-                "name" : "users",
-                "type" : "array",
-                "nativeName" : "users",
-                "nativeType" : "object",
-                "items" : [
-                    {
-                        "type" : "object",
-                        "properties" : [{
-                            "name" : "uid",
-                            "type" : "string"
-                        }]
-                    }
-                ]
-            } ]
-        },{
-            "name" : "account",
-            "id" : "__ACCOUNT__",
-            "type" : "object",
-            "nativeType" : "__ACCOUNT__",
-            "objectClass" : "ObjectClass.ACCOUNT",
-            "properties" : [ {
-                "name" : "firstName",
-                "type" : "string",
-                "nativeName" : "firstname",
-                "nativeType" : "string",
-                "required" : true
-            },{
-                "name" : "email",
-                "type" : "string",
-                "nativeName" : "email",
-                "nativeType" : "string"
-            },{
-                "name" : "password",
-                "type" : "string",
-                "nativeName" : "password",
-                "nativeType" : "string",
-                "flags" : [
-                    "NOT_READABLE",
-                    "NOT_RETURNED_BY_DEFAULT"
-                ]
-            },{
-                "name" : "uid",
-                "type" : "string",
-                "nativeName" : "__NAME__",
-                "required" : true,
-                "nativeType" : "string"
-            },{
-                "name" : "fullName",
-                "type" : "string",
-                "nativeName" : "fullname",
-                "nativeType" : "string"
-            },{
-                "name" : "lastName",
-                "type" : "string",
-                "required" : true,
-                "nativeName" : "lastname",
-                "nativeType" : "string"
-            } ]
-        } ]
-    }</programlisting>
     <variablelist>
      <para>
       Set the following properties in the configuration file:
@@ -271,6 +159,10 @@ Configuration format:
        <para>
         The name of the connector package.
        </para>
+       <para>
+        For this example, the <literal>packageName</literal> is
+        <literal>ExampleDB</literal>.
+       </para>
       </listitem>
      </varlistentry>
      <varlistentry>
@@ -279,6 +171,10 @@ Configuration format:
        <para>
         The name of the connector.
        </para>
+       <para>
+        For this example, the <literal>displayName</literal> is
+        <literal>ExampleDB Connector</literal>.
+       </para>
       </listitem>
      </varlistentry>
      <varlistentry>
@@ -286,6 +182,10 @@ Configuration format:
       <listitem>
        <para>
         Any string that describes your custom connector.
+       </para>
+       <para>
+        For this example, the <literal>description</literal> is <literal>An SQL
+        connector that connects to the ExampleDB database</literal>.
        </para>
       </listitem>
      </varlistentry>
@@ -296,6 +196,10 @@ Configuration format:
         The version number of the connector. Set this to a string that you
         update incrementally, as you develop/publish your connector.
        </para>
+       <para>
+        For this example, the <literal>version</literal> is
+        <literal>1.0</literal>.
+       </para>
       </listitem>
      </varlistentry>
      <varlistentry>
@@ -303,6 +207,10 @@ Configuration format:
       <listitem>
        <para>
         The author of the connector.
+       </para>
+       <para>
+        For this example, the <literal>author</literal> is
+        <literal>Babs Jensen</literal>.
        </para>
       </listitem>
      </varlistentry>
@@ -338,6 +246,10 @@ Configuration format:
          scripts to interact with a JDBC database.
         </member>
        </simplelist>
+       <para>
+        For this example, the <literal>baseConnectorType</literal> is
+        <literal>SQL</literal>.
+       </para>
       </listitem>
      </varlistentry>
      <varlistentry>
@@ -358,8 +270,11 @@ Configuration format:
        <para>
         For a list of the properties that are provided by the base configuration
         class, see the <link xlink:show="new"
-                             xlink:href="http://openicf.forgerock.org/doc/config-reference/index/groovy-connector-ref.html">Groovy
+        xlink:href="http://openicf.forgerock.org/doc/config-reference/index/groovy-connector-ref.html">Groovy
         Connector Reference</link> documentation.
+       </para>
+       <para>
+        This example, sets the following properties: <!--TODO -->.
        </para>
       </listitem>
      </varlistentry>
@@ -433,6 +348,9 @@ Configuration format:
          </para>
         </listitem>
        </itemizedlist>
+       <para>
+        This example, sets the following custom properties: <!--TODO -->.
+       </para>
       </listitem>
      </varlistentry>
      <varlistentry>
@@ -488,28 +406,195 @@ Configuration format:
           <member>Any arbitrary string. Although the bundler will accept an
            arbitrary string, you might need to edit the resulting provisioner
            file and Groovy scripts to work with the arbitrary string.
-         </member>
+          </member>
          </simplelist>
         </listitem>
        </itemizedlist>
+       <para>
+        This example defines an <literal>account</literal> and a
+        <literal>group</literal> object class.
+       </para>
       </listitem>
      </varlistentry>
     </variablelist>
+    <para>
+     The complete configuration file for the ExampleDB connector follows:
+    </para>
+    <programlisting language="javascript">{
+  "packageName": "ExampleDB",
+  "displayName": "ExampleDB Connector",
+  "description": "Connector for the ExampleDB database",
+  "version": "1.0",
+  "author": "Babs Jensen",
+  "baseConnectorType": "SQL",
+  "providedProperties": [
+    {
+      "name": "username",
+      "value": "changeme",
+      "type": "string"
+    },
+    {
+      "name": "password",
+      "value": "changeme",
+      "type": "string"
+    },
+    {
+      "name": "fullName",
+      "value": "myfullname",
+      "type": "string"
+    },
+    {
+      "name": "lastName",
+      "value": "mylastname",
+      "type": "string"
+    },
+    {
+      "name": "organization",
+      "value": "myorg",
+      "type": "string"
+    }
+  ],
+  "properties": [
+    {
+      "order": 0,
+      "type": "String",
+      "name": "Name",
+      "value": "firstValue",
+      "required": true,
+      "confidential": false,
+      "displayMessage": "This is my first property",
+      "helpMessage": "This should be a String value",
+      "group": "default"
+    },
+    {
+      "order": 1,
+      "type": "Double",
+      "name": "SecondProperty",
+      "value": 1.234,
+      "required": false,
+      "confidential": false,
+      "displayMessage": "This is my second property",
+      "helpMessage": "This should be a Double value",
+      "group": "default"
+    }
+  ],
+  "objectTypes": [
+    {
+      "name": "group",
+      "id": "__GROUP__",
+      "type": "object",
+      "nativeType": "__GROUP__",
+      "objectClass": "ObjectClass.GROUP",
+      "properties": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "nativeName": "__NAME__",
+          "nativeType": "string"
+        },
+        {
+          "name": "gid",
+          "type": "string",
+          "required": true,
+          "nativeName": "gid",
+          "nativeType": "string"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false,
+          "nativeName": "description",
+          "nativeType": "string"
+        },
+        {
+          "name": "users",
+          "type": "array",
+          "nativeName": "users",
+          "nativeType": "object",
+          "items": [
+            {
+              "type": "object",
+              "properties": [
+                {
+                  "name": "uid",
+                  "type": "string"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "account",
+      "id": "__ACCOUNT__",
+      "type": "object",
+      "nativeType": "__ACCOUNT__",
+      "objectClass": "ObjectClass.ACCOUNT",
+      "properties": [
+        {
+          "name": "firstName",
+          "type": "string",
+          "nativeName": "firstname",
+          "nativeType": "string",
+          "required": true
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "nativeName": "email",
+          "nativeType": "string"
+        },
+        {
+          "name": "password",
+          "type": "string",
+          "nativeName": "password",
+          "nativeType": "string",
+          "flags": [
+            "NOT_READABLE",
+            "NOT_RETURNED_BY_DEFAULT"
+          ]
+        },
+        {
+          "name": "uid",
+          "type": "string",
+          "nativeName": "__NAME__",
+          "required": true,
+          "nativeType": "string"
+        },
+        {
+          "name": "fullName",
+          "type": "string",
+          "nativeName": "fullname",
+          "nativeType": "string"
+        },
+        {
+          "name": "lastName",
+          "type": "string",
+          "required": true,
+          "nativeName": "lastname",
+          "nativeType": "string"
+        }
+      ]
+    }
+  ]
+}    </programlisting>
    </step>
    <step>
     <para>
      Save your customised connector configuration file as a JSON file, in a
      clean directory, for example:
     </para>
-    <screen>$ <userinput>ls /path/to/openidm/myconnector</userinput>
-<computeroutput>myconnector.json</computeroutput></screen>
+    <screen>$ <userinput>ls /path/to/openidm/ExampleDBconnector</userinput>
+<computeroutput>ExampleDB.json</computeroutput></screen>
    </step>
    <step>
     <para>
      Run the Connector Bundler, providing the path to your connector
      configuration file:
     </para>
-    <screen>$ <userinput>java -jar custom-scripted-connector-bundler-${docTargetVersion}-SNAPSHOT.jar --config ../myconnector/myconnector.json</userinput></screen>
+    <screen>$ <userinput>java -jar custom-scripted-connector-bundler-${openidmVersion}.jar --config ../ExampleDBConnector/ExampleDB.json</userinput></screen>
     <para>
      This step generates a directory tree of source files that can be used to
      build your custom connector.
@@ -524,14 +609,15 @@ Configuration format:
     <para>
      These scripts must be enhanced with the code that will perform the
      operations on the resource. For more information, see <link
-    xlink:show="new" xlink:href="groovy-guide#chap-scripts"
-    xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Writing Scripts
-     For the Groovy Connector</citetitle></link>.
+     xlink:show="new" xlink:href="dev-guide#implementing-operations-groovy"
+     xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Implementing
+     OpenICF Operations With Groovy Scripts</citetitle></link>.
     </para>
    </step>
    <step>
     <para>
-     When you have completed the scripts, build the custom connector as follows:
+     When you have completed the scripts for all the operations that you want
+     your connector to perform, build the custom connector as follows:
     </para>
     <screen>$ <userinput>mvn install</userinput></screen>
     <para>

@@ -171,6 +171,8 @@
         <!-- Core documentation properties -->
         <frDocPluginVersion>3.0.0</frDocPluginVersion>
         <docTargetVersion>${project.version}</docTargetVersion>
+        <openidmVersion>3.2.0-SNAPSHOT</openidmVersion>
+        <groovyVersion>1.4.1.0</groovyVersion>
         <googleAnalyticsAccountId>UA-23412190-10</googleAnalyticsAccountId>
         <!--
             Release date is specified only when building the documentation

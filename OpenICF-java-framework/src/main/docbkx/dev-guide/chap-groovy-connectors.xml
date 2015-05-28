@@ -38,11 +38,15 @@
  <para>
   The Groovy Connector Toolkit is not a complete connector, in the traditional
   sense. Rather, it is a framework within which you must write your own Groovy
-  scripts to address the requirements of your implementation.
+  scripts to address the requirements of your deployment. OpenICF and the
+  OpenIDM project provide specific utilities to help you get started with the
+  Groovy Connector Toolkit.
  </para>
  <para>
-  OpenICF and the OpenIDM project provide utilities to help you get started with
-  the Groovy Groovy Connector Toolkit.
+  The Groovy Connector Toolkit is bundled with OpenIDM ${openidmVersion}, and
+  can also be downloaded from the <link xlink:show="new"
+  xlink:href="http://maven.forgerock.org/repo/simple/releases/org/forgerock/openicf/connectors/groovy-connector/1.4.1.0">Forgerock
+  Maven repository.</link>
  </para>
  <para>
   A number of deployment-specific scripts are provided in the samples that are
@@ -78,20 +82,87 @@
   </para>
  </section>
 
- <section xml:id="implementing-operations">
-  <title>Implementing OpenICF Operations</title>
+ <section xml:id="groovy-connector-types">
+  <title>Selecting a Scripted Connector Implementation</title>
+  <para>
+   The Groovy Connector Toolkit provides five default connector implementations.
+   These default implementations should address the requirements of most target
+   resources. If you use one of the default implementations, you need only write
+   the accompanying scripts, and point your connector to their location. If your
+   target resource is not covered by the default implementations, you can use
+   the Maven archetype to create a new connector project, and write a custom
+   Groovy-based connector from scratch. <!--TODO link to Maven archetype -->
+  </para>
+  <para>
+   The following list describes the default scripted connector implementations
+   provided with the Groovy Connector Toolkit:
+  </para>
+  <itemizedlist>
+   <listitem>
+    <para>
+     <literal>GROOVY</literal> - a basic non-pooled Groovy connector, provided
+     in the
+     <literal>org.forgerock.openicf.connectors.groovy.ScriptedConnector</literal>
+     class.
+    </para>
+    <para>
+     <literal>POOLABLEGROOVY</literal> - a poolable Groovy connector, provided
+     in the
+     <literal>org.forgerock.openicf.connectors.groovy.ScriptedPoolableConnector</literal>
+     class.
+    </para>
+    <para>
+     <literal>CREST</literal> - a connector based on the ForgeRock Commons
+     REST (CREST) API, and provided in the
+     <literal>org.forgerock.openicf.connectors.groovy.ScriptedCRESTConnector</literal>
+     class. The scripted CREST connector takes a schema configuration file to
+     define the attribute mapping from the OpenICF connector object to the
+     CREST resource.
+    </para>
+    <para>
+     <literal>REST</literal> -  a scripted REST connector, provided in the
+     <literal>org.forgerock.openicf.connectors.groovy.ScriptedRESTConnector</literal>
+     class. The scripted REST connector enables you to connect to any resource,
+     over HTTP/REST. The connector creates the HTTP/REST context (specifying the
+     content type, authentication mode, encoding, and so on), and manages the
+     connection. The connector relies on the Groovy scripting language and its
+     RESTClient package.
+    </para>
+    <para>
+     <literal>SQL</literal> - a scripted SQL connector, provided in the
+     <literal>org.forgerock.openicf.connectors.groovy.ScriptedSQLConnector</literal>
+     class. The scripted SQL connector uses Groovy scripts to interact with a
+     JDBC database.
+    </para>
+   </listitem>
+  </itemizedlist>
+  <para>
+   When you have selected a scripted connector implementation, write the
+   required scripts that correspond to that connector type.
+   <xref linkend="implementing-operations" /> provides information and examples
+   on how to write scripts for the basic scripted connector implementation, and
+   information on the extensions available for the other implementations.
+  </para>
+ </section>
+
+ <section xml:id="implementing-operations-groovy">
+  <title>Implementing OpenICF Operations With Groovy Scripts</title>
   <para>
    The Groovy Connector Toolkit enables you to run a Groovy script for any
    OpenICF operation, such as search, update, create, and so forth, on any
-   external resource. For more information about the operations supported by the
-   OpenICF framework, see <link xlink:show="new"
+   external resource.
+  </para>
+  <para>
+   You must write a Groovy script that corresponds to each operation that your
+   connector will support. For information about all the operations that are
+   supported by the OpenICF framework, see <link xlink:show="new"
    xlink:href="dev-guide#chap-openicf-spi"
    xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Implementing the
    OpenICF SPI</citetitle></link>.
   </para>
   <variablelist>
    <para>
-    The Groovy Connector implements the following OpenICF interfaces:
+    Your scripted connector can implement the following OpenICF interfaces:
    </para>
    <varlistentry>
     <term><link xlink:show="new" xlink:href="dev-guide#operation-authenticate"
@@ -234,50 +305,116 @@
    </varlistentry>
   </variablelist>
 
+  <para>
+   The following sections provide more information and sample scripts for all
+   the operations that are implemented in the Groovy Connector toolkit. Sample
+   scripts are provided for the basic scripted connector implementation, with
+   additional information provided for the remaining implementations.
+  </para>
+
   <section xml:id="script-authenticate">
-   <title>Writing an Authentication Script</title>
+   <title>Writing a Groovy Authentication Script</title>
    <para>
     An authentication script is <emphasis>required</emphasis> in every connector
-    implementation. If authentication is not required on the resource, the
-    script should allow the <literal>authId</literal> to pass through by
-    default.
+    implementation. If your connector does not need to authenticate to the
+    resource, the authentication script should allow the
+    <literal>authId</literal> to pass through by default.
    </para>
-  <variablelist>
+   <variablelist>
+    <para>
+     The following variables are available to the authentication script:
+    </para>
+    <varlistentry>
+     <term>operation</term>
+     <listitem>
+      <para>
+       The operation type is <literal>AUTHENTICATION</literal> for this script.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>configuration</term>
+     <listitem>
+      <para>
+       The configuration class created for this connector. For the basic
+       scripted connector, the configuration class is
+       <literal>ScriptedConfiguration</literal>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>log</term>
+     <listitem>
+      <para>
+       The default logging facility.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>objectClass</term>
+     <listitem>
+      <para>
+       The object classes that are managed by the connector.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>options</term>
+     <listitem>
+      <para>
+       Additional operation options supported by the connector.
+      </para>
+     </listitem>
+    </varlistentry>
+
+    <varlistentry>
+     <term>username</term>
+     <listitem>
+      <para>
+       A string that provides the username to authenticate.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>password</term>
+     <listitem>
+      <para>
+       A guarded string that provides the password with which to authenticate.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
    <para>
-    The following variables are available to the authentication script:
+    Sample <link xlink:href="../resources/AuthenticateScript.groovy"
+    xlink:show="new">AuthenticateScript.groovy</link>.
    </para>
-   <varlistentry>
-    <term>operation</term>
-    <listitem>
-     <para>
-      The operation type is <literal>AUTHENTICATION</literal> for this script.
-     </para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>configuration</term>
-    <listitem>
-     <para>
-      The configuration class created for this connector.
-     </para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>log</term>
-    <listitem>
-     <para>
-      The default logging facility.
-     </para>
-    </listitem>
-   </varlistentry>
-  </variablelist>
- </section>
+
+   <section xml:id="authenticate-script-extensions">
+    <title>Authenticate Script Extensions</title>
+    <para>
+     In addition to the variables available to the basic scripted connector,
+     the following variables are available to the extended connector
+     implementations:
+    </para>
+    <variablelist>
+     <varlistentry>
+      <term>ScriptedREST Connector</term>
+      <listitem>
+       <para>
+        <literal>httpClient</literal> and <literal>connection</literal>
+        variables, to initiate the HTTP connection.
+       </para>
+      </listitem>
+     </varlistentry>
+    </variablelist>
+   </section>
+  </section>
 
  <section xml:id="script-test">
-  <title>Testing the Connection to the External Resource</title>
+  <title>Writing a Groovy Test Script</title>
   <para>
    A test script tests the connection to the external resource to ensure that
-   the other actions provided by the connector can succeed.
+   the other operations that are provided by the connector can succeed.
   </para>
   <variablelist>
    <para>
@@ -308,10 +445,50 @@
     </listitem>
    </varlistentry>
   </variablelist>
+  <para>
+   Sample <link xlink:href="../resources/TestScript.groovy"
+   xlink:show="new">TestScript.groovy</link>.
+  </para>
+
+  <section xml:id="test-script-extensions">
+   <title>Test Script Extensions</title>
+   <para>
+    In addition to the variables available to the basic scripted connector,
+    the following variables are available to the extended connector
+    implementations:
+   </para>
+   <variablelist>
+    <varlistentry>
+     <term>ScriptedREST Connector</term>
+     <listitem>
+      <para>
+       <literal>httpClient</literal> and <literal>connection</literal>
+       variables, to initiate the HTTP connection.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>ScriptedCREST Connector</term>
+     <listitem>
+      <para>
+       <literal>connection</literal> variable, to initiate the HTTP connection.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>ScriptedSQL Connector</term>
+     <listitem>
+      <para>
+       <literal>connection</literal> variable, to initiate the SQL connection.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </section>
  </section>
 
  <section xml:id="script-create">
-  <title>Creating an Object</title>
+  <title>Writing a Groovy Create Script</title>
   <para>
    A create script creates a new object on the external resource. If your
    connector does not support creating an object, this script should throw an
@@ -374,10 +551,14 @@
     </listitem>
    </varlistentry>
   </variablelist>
+  <para>
+   Sample <link xlink:href="../resources/CreateScript.groovy"
+   xlink:show="new">CreateScript.groovy</link>.
+  </para>
  </section>
 
  <section xml:id="script-search">
-  <title>Searching for an Object</title>
+  <title>Writing a Groovy Search Script</title>
   <para>
    A search script searches for one or more objects on the external resource.
    Connectors that do not support searches should throw an
@@ -438,10 +619,14 @@
     </listitem>
    </varlistentry>
   </variablelist>
+  <para>
+   Sample <link xlink:href="../resources/SearchScript.groovy"
+   xlink:show="new">SearchScript.groovy</link>.
+  </para>
  </section>
 
  <section xml:id="script-update">
-  <title>Updating an Object</title>
+  <title>Writing a Groovy Update Script</title>
   <para>
    An update script updates an object in the external source. Connectors that do
    not support update operations should throw an
@@ -502,10 +687,14 @@
     </listitem>
    </varlistentry>
   </variablelist>
+  <para>
+   Sample <link xlink:href="../resources/UpdateScript.groovy"
+   xlink:show="new">UpdateScript.groovy</link>.
+  </para>
  </section>
 
  <section xml:id="script-delete">
-  <title>Deleting an Object</title>
+  <title>Writing a Groovy Delete Script</title>
   <para>
    A delete script deletes an object in the external resource. Connectors that
    do not support delete operations should throw an
@@ -559,10 +748,14 @@
     </listitem>
    </varlistentry>
   </variablelist>
+  <para>
+   Sample <link xlink:href="../resources/DeleteScript.groovy"
+   xlink:show="new">DeleteScript.groovy</link>.
+  </para>
  </section>
 
  <section xml:id="script-sync">
-  <title>Synchronizing Two Resources</title>
+  <title>Writing a Groovy Synchronization Script</title>
   <para>
    A synchronization script synchronizes objects between two resources. The
    script should retrieve all objects in the external resource that have been
@@ -608,10 +801,14 @@
     </listitem>
    </varlistentry>
   </variablelist>
+  <para>
+   Sample <link xlink:href="../resources/SyncScript.groovy"
+   xlink:show="new">SyncScript.groovy</link>.
+  </para>
  </section>
 
  <section xml:id="script-schema">
-  <title>Building the Schema For a Connector</title>
+  <title>Writing a Groovy Schema Script</title>
   <para>
    A schema script builds the schema for the connector, either from a static,
    predefined schema, or by reading the schema from the external resource. The
@@ -654,7 +851,40 @@
     </listitem>
    </varlistentry>
   </variablelist>
+  <para>
+   Sample <link xlink:href="../resources/SchemaScript.groovy"
+   xlink:show="new">SchemaScript.groovy</link>.
+  </para>
  </section>
+ </section>
+
+ <section xml:id="advanced-custom-config">
+  <title>Advanced - Customizing the Configuration Initialization</title>
+  <para>
+   Connectors created with the Groovy Connector Toolkit are, by default,
+   stateful connectors. This means that the connector configuration instance is
+   created only once.
+  </para>
+  <para>
+   The Groovy Connector Toolkit is precompiled code, and connector
+   configurations are initialized in a specific way. If you have specific
+   initialization requirements, you can customize the way in which the connector
+   configuration instance is initialized, before the first script is evaluated.
+   The <filename>CustomizerScript.groovy</filename> file enables you to define
+   custom closures to interact with the default implementation.
+  </para>
+  <para>
+   The <filename>CustomizerScript.groovy</filename> file, provided with each
+   compiled connector implementation, defines closures, such as
+   <literal>init {}</literal>, <literal>decorate {}</literal>, and
+   <literal>destroy {}</literal>. These closures are called during the lifecycle
+   of the configuration.
+  </para>
+  <para>
+   When you unpack the Groovy Connector Toolkit JAR file, the
+   <filename>CustomizerScript.groovy</filename> file is located at
+   <filename>org/forgerock/openicf/connectors/<replaceable>connector-implementation</replaceable></filename>.
+  </para>
  </section>
 
 </chapter>
