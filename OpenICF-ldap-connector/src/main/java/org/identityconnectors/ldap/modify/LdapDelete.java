@@ -30,9 +30,9 @@ import java.util.Set;
 
 import javax.naming.NamingException;
 import javax.naming.ldap.LdapContext;
+
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
-
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
@@ -77,7 +77,6 @@ public class LdapDelete extends LdapModifyOperation {
             Set<GroupMembership> memberships = posixMember.getPosixGroupMemberships();
             groupHelper.removePosixGroupMemberships(memberships, runAsContext);
         }
-        
 
         log.ok("Deleting LDAP entry {0}", entryDN);
         try {
@@ -86,7 +85,7 @@ public class LdapDelete extends LdapModifyOperation {
             }
             else {
                 runAsContext.destroySubcontext(entryDN);
-            }
+                }
         } catch (NamingException e) {
             throw new ConnectorException(e);
         }

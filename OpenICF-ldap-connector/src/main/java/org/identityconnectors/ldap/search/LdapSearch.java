@@ -20,23 +20,21 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * 
- * Portions Copyrighted [2013-2014] Forgerock
+ * "Portions Copyrighted 2013-2015 Forgerock AS"
  */
 package org.identityconnectors.ldap.search;
-
-import org.forgerock.opendj.ldap.controls.VirtualListViewRequestControl;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import static java.util.Collections.singletonList;
-import java.util.Date;
 
 import javax.naming.NamingException;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.PagedResultsControl;
 import javax.naming.ldap.SortControl;
+
+import org.forgerock.opendj.ldap.controls.VirtualListViewRequestControl;
 
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
@@ -53,26 +51,29 @@ import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.QualifiedUid;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.common.objects.SortKey;
+import org.identityconnectors.framework.spi.SearchResultsHandler;
 import org.identityconnectors.ldap.ADUserAccountControl;
+import org.identityconnectors.ldap.ADGroupType;
+import org.identityconnectors.ldap.ADLdapUtil;
 import org.identityconnectors.ldap.GroupHelper;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapConstants;
 import org.identityconnectors.ldap.LdapEntry;
 import org.identityconnectors.ldap.schema.LdapSchemaMapping;
+
+import static java.util.Collections.singletonList;
+
 import static org.identityconnectors.common.CollectionUtil.newCaseInsensitiveSet;
 import static org.identityconnectors.common.CollectionUtil.newSet;
 import static org.identityconnectors.common.StringUtil.isBlank;
-import org.identityconnectors.framework.common.objects.OperationalAttributeInfos;
-import org.identityconnectors.framework.common.objects.SortKey;
-import org.identityconnectors.framework.spi.SearchResultsHandler;
-import org.identityconnectors.ldap.ADLdapUtil;
+import static org.identityconnectors.ldap.ADLdapUtil.convertMSEpochToISO8601;
 import static org.identityconnectors.ldap.LdapUtil.buildMemberIdAttribute;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValues;
 import static org.identityconnectors.ldap.ADLdapUtil.objectGUIDtoString;
+import static org.identityconnectors.ldap.ADLdapUtil.objectSIDtoString;
+import static org.identityconnectors.ldap.ADLdapUtil.fetchTokenGroupsByDn;
 import static org.identityconnectors.ldap.ADLdapUtil.fetchGroupMembersByRange;
-import static org.identityconnectors.ldap.ADLdapUtil.getADLdapDatefromJavaDate;
-import static org.identityconnectors.ldap.ADLdapUtil.getJavaDateFromADTime;
-import org.identityconnectors.ldap.LdapConnection.ServerType;
 
 /**
  * A class to perform an LDAP search against a {@link LdapConnection}.
@@ -81,7 +82,7 @@ import org.identityconnectors.ldap.LdapConnection.ServerType;
  */
 public class LdapSearch {
 
-    private static final Log log = Log.getLog(LdapSearch.class);
+    private static final Log logger = Log.getLog(LdapSearch.class);
     private final LdapConnection conn;
     private final ObjectClass oclass;
     private final LdapFilter filter;
@@ -210,6 +211,7 @@ public class LdapSearch {
     private Set<String> getLdapAttributesToGet(Set<String> attrsToGet) {
         Set<String> cleanAttrsToGet = newCaseInsensitiveSet();
         cleanAttrsToGet.addAll(attrsToGet);
+        cleanAttrsToGet.remove(LdapConstants.MS_TOKEN_GROUPS_ATTR);
         cleanAttrsToGet.remove(LdapConstants.LDAP_GROUPS_NAME);
         boolean posixGroups = cleanAttrsToGet.remove(LdapConstants.POSIX_GROUPS_NAME);
         Set<String> result = conn.getSchemaMapping().getLdapAttributes(oclass, cleanAttrsToGet, true);
@@ -235,6 +237,53 @@ public class LdapSearch {
         builder.setObjectClass(oclass);
         builder.setUid(conn.getSchemaMapping().createUid(oclass, entry));
         builder.setName(conn.getSchemaMapping().createName(oclass, entry));
+        
+        // Some server type specific account control
+        if (oclass.equals(ObjectClass.ACCOUNT)) {
+            try {
+                switch (conn.getServerType()) {
+                    case MSAD_GC:
+                    case MSAD:
+                        if (entry.getAttributes().get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR) != null) {
+                            String uac = entry.getAttributes().get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR).get().toString();
+                            builder.addAttribute(AttributeBuilder.buildEnabled(!ADUserAccountControl.isAccountDisabled(uac)));
+                            builder.addAttribute(AttributeBuilder.build(ADUserAccountControl.DONT_EXPIRE_PASSWORD_NAME, ADUserAccountControl.isDontExpirePassword(uac)));
+                            builder.addAttribute(AttributeBuilder.build(ADUserAccountControl.PASSWORD_NOTREQD_NAME, ADUserAccountControl.isPasswordNotReq(uac)));
+                            builder.addAttribute(AttributeBuilder.build(ADUserAccountControl.SMARTCARD_REQUIRED_NAME, ADUserAccountControl.isSmartCardRequired(uac)));
+                        }
+                        if (entry.getAttributes().get(ADUserAccountControl.MSDS_USR_ACCT_CTRL_ATTR) != null) {
+                            String uac2 = entry.getAttributes().get(ADUserAccountControl.MSDS_USR_ACCT_CTRL_ATTR).get().toString();
+                            builder.addAttribute(AttributeBuilder.buildLockOut(ADUserAccountControl.isAccountLockOut(uac2)));
+                            builder.addAttribute(AttributeBuilder.buildPasswordExpired(ADUserAccountControl.isPasswordExpired(uac2)));
+                        }
+                        break;
+                    case MSAD_LDS:
+                        if (entry.getAttributes().get(LdapConstants.MS_DS_USER_ACCOUNT_DISABLED) != null) {
+                            builder.addAttribute(AttributeBuilder.buildEnabled(!Boolean.parseBoolean(entry.getAttributes().get(LdapConstants.MS_DS_USER_ACCOUNT_DISABLED).get().toString())));
+                        } else if (entry.getAttributes().get(LdapConstants.MS_DS_USER_PASSWORD_EXPIRED) != null) {
+                            builder.addAttribute(AttributeBuilder.buildPasswordExpired(Boolean.parseBoolean(entry.getAttributes().get(LdapConstants.MS_DS_USER_PASSWORD_EXPIRED).get().toString())));
+                        } else if (entry.getAttributes().get(LdapConstants.MS_DS_USER_ACCOUNT_AUTOLOCKED) != null) {
+                            builder.addAttribute(AttributeBuilder.buildLockOut(Boolean.parseBoolean(entry.getAttributes().get(LdapConstants.MS_DS_USER_ACCOUNT_AUTOLOCKED).get().toString())));
+                        }
+                        break;
+                    default:
+                }
+            } catch (NamingException e) {
+                logger.warn(e, "Can't read special control attribute: " + e.getExplanation());
+            }
+        }
+        
+        if (oclass.equals(ObjectClass.GROUP) && ADLdapUtil.isServerMSADFamily(conn.getServerType())){
+            try {
+                if (entry.getAttributes().get(ADGroupType.GROUPTYPE) != null){
+                    String groupType = entry.getAttributes().get(ADGroupType.GROUPTYPE).get().toString();
+                    builder.addAttribute(AttributeBuilder.build(ADGroupType.GROUP_SCOPE_NAME, ADGroupType.getScope(groupType)));
+                    builder.addAttribute(AttributeBuilder.build(ADGroupType.GROUP_TYPE_NAME, ADGroupType.getType(groupType)));
+                }
+            } catch (NamingException e) {
+                logger.warn(e, "Can't read groupType attribute: " + e.getExplanation());
+            }
+        }
 
         for (String attrName : attrsToGet) {
             Attribute attribute = null;
@@ -252,72 +301,18 @@ public class LdapSearch {
                 attribute = AttributeBuilder.build(attrName, new GuardedString());
             } else if (LdapConstants.MS_GUID_ATTR.equalsIgnoreCase(attrName)) {
                 attribute = AttributeBuilder.build(LdapConstants.MS_GUID_ATTR, objectGUIDtoString(entry.getAttributes().get(LdapConstants.MS_GUID_ATTR)));
-            } else if (oclass.equals(ObjectClass.ACCOUNT) && OperationalAttributes.OPERATIONAL_ATTRIBUTE_NAMES.contains(attrName)) {
-                try {
-                    switch (conn.getServerType()) {
-                        case MSAD_GC:
-                        case MSAD:
-                            String controls = entry.getAttributes().get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR).get().toString();
-                            if (OperationalAttributeInfos.ENABLE.is(attrName)) {
-                                builder.addAttribute(AttributeBuilder.buildEnabled(!ADUserAccountControl.isAccountDisabled(controls)));
-                            } else if (OperationalAttributeInfos.LOCK_OUT.is(attrName)) {
-                                builder.addAttribute(AttributeBuilder.buildLockOut(ADUserAccountControl.isAccountLockOut(controls)));
-                            } else if (OperationalAttributeInfos.PASSWORD_EXPIRED.is(attrName)) {
-                                builder.addAttribute(AttributeBuilder.buildPasswordExpired(ADUserAccountControl.isPasswordExpired(controls)));
-                            }
-                            break;
-                        case MSAD_LDS:
-                            if (OperationalAttributeInfos.ENABLE.is(attrName) && entry.getAttributes().get(LdapConstants.MS_DS_USER_ACCOUNT_DISABLED) != null) {
-                                builder.addAttribute(AttributeBuilder.buildEnabled(!Boolean.parseBoolean(entry.getAttributes().get(LdapConstants.MS_DS_USER_ACCOUNT_DISABLED).get().toString())));
-                            } else if (OperationalAttributeInfos.PASSWORD_EXPIRED.is(attrName) && entry.getAttributes().get(LdapConstants.MS_DS_USER_PASSWORD_EXPIRED) != null) {
-                                builder.addAttribute(AttributeBuilder.buildPasswordExpired(Boolean.parseBoolean(entry.getAttributes().get(LdapConstants.MS_DS_USER_PASSWORD_EXPIRED).get().toString())));
-                            } else if (OperationalAttributeInfos.LOCK_OUT.is(attrName) && entry.getAttributes().get(LdapConstants.MS_DS_USER_ACCOUNT_AUTOLOCKED) != null) {
-                                builder.addAttribute(AttributeBuilder.buildLockOut(Boolean.parseBoolean(entry.getAttributes().get(LdapConstants.MS_DS_USER_ACCOUNT_AUTOLOCKED).get().toString())));
-                            }
-                            break;
-                        default:
-                            log.warn("Special Attribute {0} of object class {1} is not mapped to an LDAP attribute",
-                                    attrName, oclass.getObjectClassValue());
-                    }
-                } catch (NamingException e) {
-                    log.error(e, "Can't read " + ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR);
-                }
+            } else if (LdapConstants.MS_SID_ATTR.equalsIgnoreCase(attrName)) {
+                attribute = AttributeBuilder.build(LdapConstants.MS_SID_ATTR, objectSIDtoString(entry.getAttributes().get(LdapConstants.MS_SID_ATTR)));
+            } else if (LdapConstants.MS_TOKEN_GROUPS_ATTR.equalsIgnoreCase(attrName)) {
+                attribute = AttributeBuilder.build(LdapConstants.MS_TOKEN_GROUPS_ATTR, fetchTokenGroupsByDn(conn, entry));
+            } else if ( ADLdapUtil.isServerMSADFamily(conn.getServerType()) && ADUserAccountControl.AD_CONTROLS_DATES.contains(attrName)) {
+                    attribute = convertMSEpochToISO8601(entry.getAttributes().get(attrName));
             } else {
-                attribute = conn.getSchemaMapping().createAttribute(oclass, attrName, entry, emptyAttrWhenNotFound);
-            }
-
-            // Some AD specifics
-            if (conn.getServerType().equals(ServerType.MSAD)) {
-                if (oclass.equals(ObjectClass.ACCOUNT)) {
-                    try {
-                        if (ADLdapUtil.ACCOUNT_EXPIRES.equalsIgnoreCase(attrName)) {
-                            String value = (String) entry.getAttributes().get(ADLdapUtil.ACCOUNT_EXPIRES).get(0);
-                            if ("0".equalsIgnoreCase(value) || ADLdapUtil.ACCOUNT_NEVER_EXPIRES.equalsIgnoreCase(value)) {
-                                // Let's set it to zero - this is equivalent: it means Never
-                                attribute = AttributeBuilder.build(ADLdapUtil.ACCOUNT_EXPIRES, "0");
-                            } else {
-                                Date date = getJavaDateFromADTime(value);
-                                attribute = AttributeBuilder.build(ADLdapUtil.ACCOUNT_EXPIRES, getADLdapDatefromJavaDate(date));
-                            }
-                        } else if (ADLdapUtil.PWD_LAST_SET.equalsIgnoreCase(attrName)) {
-                            String value = (String) entry.getAttributes().get(ADLdapUtil.PWD_LAST_SET).get(0);
-                            if ("0".equalsIgnoreCase(value)) {
-                                attribute = AttributeBuilder.build(ADLdapUtil.PWD_LAST_SET, "0");
-                            } else {
-                                Date date = getJavaDateFromADTime(value);
-                                attribute = AttributeBuilder.build(ADLdapUtil.PWD_LAST_SET, getADLdapDatefromJavaDate(date));
-                            }
-                        }
-                    } catch (NamingException ex) {
-                        log.warn("Special Attribute {0} of object class {1} can not be read from entry", attrName, oclass.getObjectClassValue());
-                    }
-                }
+                    attribute = conn.getSchemaMapping().createAttribute(oclass, attrName, entry, emptyAttrWhenNotFound);
             }
 
             if (ObjectClass.GROUP.equals(oclass) && conn.getConfiguration().getGroupMemberAttribute().equalsIgnoreCase(attrName)) {
-                if (ServerType.MSAD.equals(conn.getServerType())
-                        || ServerType.MSAD_GC.equals(conn.getServerType())
-                        || ServerType.MSAD_LDS.equals(conn.getServerType())) {
+                if (ADLdapUtil.isServerMSADFamily(conn.getServerType())) {
                     // Make sure we're not hitting AD large group issue
                     // see: http://msdn.microsoft.com/en-us/library/ms817827.aspx
                     if (entry.getAttributes().get("member;range=0-1499") != null) {
@@ -451,7 +446,7 @@ public class LdapSearch {
         result.add(Uid.NAME);
         // Our password is marked as readable because of sync(). We really can't return it from search.
         if (result.contains(OperationalAttributes.PASSWORD_NAME)) {
-            log.warn("Reading passwords not supported");
+            logger.warn("Reading passwords not supported");
             // throw new ConnectorException(conn.format("readingPasswordsNotSupported", null));
         }
         return result;
@@ -469,6 +464,35 @@ public class LdapSearch {
         }
         if (posixGroups) {
             attributes.add(LdapConstants.POSIX_GROUPS_NAME);
+        }
+        
+        // We don't want to send AD account control
+        // instead we add the user account control attributes
+        if (ObjectClass.ACCOUNT.equals(oclass)) {
+            switch (conn.getServerType()) {
+                case MSAD_LDS:
+                    attributes.add(LdapConstants.MS_DS_USER_ACCOUNT_DISABLED);
+                    attributes.add(LdapConstants.MS_DS_USER_ACCOUNT_AUTOLOCKED);
+                    attributes.add(LdapConstants.MS_DS_USER_PASSWORD_EXPIRED);
+                case MSAD_GC:
+                case MSAD:
+                    for (String special : ADUserAccountControl.AD_SPECIAL_ATTRIBUTES) {
+                        attributes.remove(special);
+                    }
+                    attributes.remove(OperationalAttributes.ENABLE_NAME);
+                    attributes.remove(OperationalAttributes.LOCK_OUT_NAME);
+                    attributes.remove(OperationalAttributes.PASSWORD_EXPIRED_NAME);
+
+                    attributes.add(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR);
+                    attributes.add(ADUserAccountControl.MSDS_USR_ACCT_CTRL_ATTR);
+                    break;
+                default:
+            }
+        }
+        if (ObjectClass.GROUP.equals(oclass) && ADLdapUtil.isServerMSADFamily(conn.getServerType())){
+            attributes.remove(ADGroupType.GROUP_SCOPE_NAME);
+            attributes.remove(ADGroupType.GROUP_TYPE_NAME);
+            attributes.add(ADGroupType.GROUPTYPE);
         }
     }
 

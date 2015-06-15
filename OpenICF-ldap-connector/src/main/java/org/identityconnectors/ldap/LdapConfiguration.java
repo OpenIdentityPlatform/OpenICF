@@ -79,6 +79,11 @@ public class LdapConfiguration extends AbstractConfiguration {
      * Whether the port is a secure SSL port.
      */
     private boolean ssl;
+    
+    /**
+     * Whether to use startTLS.
+     */
+    private boolean startTLS = false;
 
     /**
      * LDAP URL's to connect to if the main server specified through the host and port
@@ -404,9 +409,17 @@ public class LdapConfiguration extends AbstractConfiguration {
     public boolean isSsl() {
         return ssl;
     }
-
+    
     public void setSsl(boolean ssl) {
         this.ssl = ssl;
+    }
+    
+    public boolean isStartTLS() {
+        return startTLS;
+    }
+
+    public void setStartTLS(boolean startTLS) {
+        this.startTLS = startTLS;
     }
 
     public String[] getFailover() {

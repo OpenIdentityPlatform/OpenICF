@@ -1,7 +1,7 @@
 /**
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  * 
-* Copyright (c) 2014 ForgeRock AS. All Rights Reserved
+* Copyright (c) 2014-2015 ForgeRock AS. All Rights Reserved
  * 
 * The contents of this file are subject to the terms of the Common Development
  * and Distribution License (the License). You may not use this file except in
@@ -20,8 +20,11 @@
 */
 package org.identityconnectors.ldap.search;
 
+import static org.identityconnectors.ldap.search.LdapSearchStrategy.searchControlsToString;
+
 import java.io.IOException;
 import java.util.List;
+
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.OperationNotSupportedException;
@@ -33,21 +36,17 @@ import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.PagedResultsControl;
 import javax.naming.ldap.PagedResultsResponseControl;
 import javax.naming.ldap.SortControl;
+
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.spi.SearchResultsHandler;
 import org.identityconnectors.common.Base64;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.SortKey;
-import static org.identityconnectors.ldap.search.LdapSearchStrategy.searchControlsToString;
 
-/**
- *
- * @author gael.allioux@forgerock.com
- */
 public class PagedSearchStrategy extends LdapSearchStrategy {
 
-    private static final Log log = Log.getLog(SimplePagedSearchStrategy.class);
+    private static final Log logger = Log.getLog(SimplePagedSearchStrategy.class);
 
     private final int pageSize;
     private final int pagedResultsOffset;
@@ -65,9 +64,8 @@ public class PagedSearchStrategy extends LdapSearchStrategy {
 
     @Override
     public void doSearch(LdapContext initCtx, List<String> baseDNs, String query, SearchControls searchControls, LdapSearchResultsHandler handler) throws IOException, NamingException {
-        log.ok("Searching in {0} with filter {1} and {2}", baseDNs, query, searchControlsToString(searchControls));
+        logger.ok("Searching in {0} with filter {1} and {2}", baseDNs, query, searchControlsToString(searchControls));
 
-        LdapContext ctx = initCtx.newInstance(null);
         String returnedCookie = null;
         int context = 0;
         int records = 0;
@@ -77,11 +75,11 @@ public class PagedSearchStrategy extends LdapSearchStrategy {
         byte[] cookie = null;
         PagedResultsResponseControl pagedControl = null;
         SortControl sortControl = null;
-        
-        if (sortKeys != null && sortKeys.length > 0){
+
+        if (sortKeys != null && sortKeys.length > 0) {
             javax.naming.ldap.SortKey[] skis = new javax.naming.ldap.SortKey[sortKeys.length];
-            for(int i = 0; i < sortKeys.length; i++){
-                skis[i] = new javax.naming.ldap.SortKey(sortKeys[i].getField(),sortKeys[i].isAscendingOrder(),null);
+            for (int i = 0; i < sortKeys.length; i++) {
+                skis[i] = new javax.naming.ldap.SortKey(sortKeys[i].getField(), sortKeys[i].isAscendingOrder(), null);
             }
             // We don't want to make this critical... better return unsorted results than nothing.
             sortControl = new SortControl(skis, Control.NONCRITICAL);
@@ -93,10 +91,10 @@ public class PagedSearchStrategy extends LdapSearchStrategy {
             String[] split = pagedResultsCookie.split(":", 2);
             // bit of sanity check...
             if (split.length == 2) {
-                try{
+                try {
                     cookie = Base64.decode(split[0]);
                 } catch (RuntimeException e) {
-                    throw new ConnectorException("PagedResultsCookie is not properly encoded",e);
+                    throw new ConnectorException("PagedResultsCookie is not properly encoded", e);
                 }
                 context = Integer.valueOf(split[1]);
             } else {
@@ -104,6 +102,7 @@ public class PagedSearchStrategy extends LdapSearchStrategy {
             }
         }
 
+        LdapContext ctx = initCtx.newInstance(null);
         try {
             do {
                 if (sortControl != null) {
@@ -137,10 +136,10 @@ public class PagedSearchStrategy extends LdapSearchStrategy {
                 results.close();
             } while (needMore);
         } catch (OperationNotSupportedException e) {
-            log.ok("OperationNotSupportedException caught: {0}. Check the Cookie validity", e.getRemainingName());
+            logger.ok("OperationNotSupportedException caught: {0}. Check the Cookie validity", e.getRemainingName());
             throw new ConnectorException("Operation Not Supported. Bad cookie");
         } catch (PartialResultException e) {
-            log.ok("PartialResultException caught: {0}", e.getRemainingName());
+            logger.ok("PartialResultException caught: {0}", e.getRemainingName());
         } finally {
             ctx.close();
         }
@@ -173,5 +172,4 @@ public class PagedSearchStrategy extends LdapSearchStrategy {
         }
         return null;
     }
-
 }

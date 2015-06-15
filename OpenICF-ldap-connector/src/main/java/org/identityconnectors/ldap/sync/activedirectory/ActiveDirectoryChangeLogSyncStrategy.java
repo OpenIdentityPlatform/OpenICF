@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 ForgeRock AS. All Rights Reserved
+ * Copyright (c) 2013-2015 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -23,12 +23,22 @@
  */
 package org.identityconnectors.ldap.sync.activedirectory;
 
+import static org.identityconnectors.framework.common.objects.ObjectClassUtil.createSpecialName;
+import static org.identityconnectors.ldap.ADLdapUtil.objectGUIDtoString;
+import static org.identityconnectors.ldap.ADLdapUtil.fetchGroupMembersByRange;
+import static org.identityconnectors.ldap.LdapConstants.OBJECTCLASS_ATTR;
+import static org.identityconnectors.ldap.LdapUtil.getObjectClassFilter;
+import static org.identityconnectors.ldap.LdapUtil.buildMemberIdAttribute;
+import static org.identityconnectors.ldap.LdapUtil.getStringAttrValue;
+import static org.identityconnectors.ldap.LdapUtil.guessObjectClass;
+
 import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Map;
 import java.util.TreeMap;
+
 import javax.naming.InvalidNameException;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -40,13 +50,13 @@ import javax.naming.ldap.BasicControl;
 import javax.naming.ldap.Control;
 import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.LdapName;
+
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
-import static org.identityconnectors.framework.common.objects.ObjectClassUtil.createSpecialName;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
@@ -59,24 +69,12 @@ import org.identityconnectors.ldap.ADLdapUtil;
 import org.identityconnectors.ldap.ADUserAccountControl;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapConstants;
-import static org.identityconnectors.ldap.LdapUtil.buildMemberIdAttribute;
-import static org.identityconnectors.ldap.LdapUtil.getStringAttrValue;
 import org.identityconnectors.ldap.search.LdapInternalSearch;
 import org.identityconnectors.ldap.search.LdapSearchResultsHandler;
 import org.identityconnectors.ldap.search.SimplePagedSearchStrategy;
 import org.identityconnectors.ldap.sync.LdapSyncStrategy;
-import static org.identityconnectors.ldap.ADLdapUtil.objectGUIDtoString;
-import static org.identityconnectors.ldap.ADLdapUtil.fetchGroupMembersByRange;
-import static org.identityconnectors.ldap.ADLdapUtil.getADLdapDatefromJavaDate;
-import static org.identityconnectors.ldap.ADLdapUtil.getJavaDateFromADTime;
-import static org.identityconnectors.ldap.LdapConstants.OBJECTCLASS_ATTR;
-import static org.identityconnectors.ldap.LdapUtil.getObjectClassFilter;
-import static org.identityconnectors.ldap.LdapUtil.guessObjectClass;
+import org.identityconnectors.ldap.ADGroupType;
 
-/**
- *
- * @author Gael Allioux <gael.allioux@forgerock.com>
- */
 /**
  * An implementation of the sync operation based on the Update Sequence Numbers
  * in Active Directory.
@@ -86,7 +84,6 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
     private static final String DELETE_CTRL = "1.2.840.113556.1.4.417";
     private static final String DELETED_PREFIX = "cn=deleted objects,";
     private static final String NAMING_CTX_ATTR = "defaultNamingContext";
-    private static final String OBJSID_ATTR = "objectSID";
     private static final String USN_CHANGED_ATTR = "uSNChanged";
     private static final String USN_CREATED_ATTR = "uSNCreated";
     private static final String HCU_CHANGED_ATTR = "highestCommittedUSN";
@@ -123,6 +120,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
             SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
             controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
             controls.setDerefLinkFlag(false);
+            controls.setReturningAttributes(new String[]{"*", ADUserAccountControl.MSDS_USR_ACCT_CTRL_ATTR});
 
             LdapInternalSearch search = new LdapInternalSearch(conn,
                     generateUSNChangedFilter(oclass, token, false),
@@ -137,7 +135,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                         // build the object first
                         ConnectorObjectBuilder cob = new ConnectorObjectBuilder();
                         cob.setUid(uid);
-                        if (ObjectClass.ALL.equals(oclass)){
+                        if (ObjectClass.ALL.equals(oclass)) {
                             cob.setObjectClass(guessObjectClass(conn, attrs.get(OBJECTCLASS_ATTR)));
                         } else {
                             cob.setObjectClass(oclass);
@@ -148,7 +146,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                             attrs.remove(LdapConstants.MS_GUID_ATTR);
                         }
                         // Make sure we remove the SID
-                        attrs.remove(OBJSID_ATTR);
+                        attrs.remove(LdapConstants.MS_SID_ATTR);
 
                         // Make sure we're not hitting AD large group issue
                         if (ObjectClass.GROUP.equals(oclass)) {
@@ -163,6 +161,15 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                                 attrs.remove("member;range=0-1499");
                                 attrs.remove("member");
                             }
+                            try {
+                                if (attrs.get(ADGroupType.GROUPTYPE) != null) {
+                                    String groupType = attrs.get(ADGroupType.GROUPTYPE).get().toString();
+                                    cob.addAttribute(AttributeBuilder.build(ADGroupType.GROUP_SCOPE_NAME, ADGroupType.getScope(groupType)));
+                                    cob.addAttribute(AttributeBuilder.build(ADGroupType.GROUP_TYPE_NAME, ADGroupType.getType(groupType)));
+                                }
+                            } catch (NamingException e) {
+                                logger.warn(e, "Can't read groupType attribute: " + e.getExplanation());
+                            }
                         }
                         // Process Account specifics (ENABLE/PASSWORD_EXPIRED/LOCKOUT/accountExpires/pwdLastSet)
                         if (oclass.equals(ObjectClass.ACCOUNT)) {
@@ -170,10 +177,16 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                                 case MSAD_GC:
                                 case MSAD:
                                     if (attrs.get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR) != null) {
-                                        String controls = attrs.get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR).get(0).toString();
-                                        cob.addAttribute(AttributeBuilder.buildEnabled(!ADUserAccountControl.isAccountDisabled(controls)));
-                                        cob.addAttribute(AttributeBuilder.buildLockOut(ADUserAccountControl.isAccountLockOut(controls)));
-                                        cob.addAttribute(AttributeBuilder.buildPasswordExpired(ADUserAccountControl.isPasswordExpired(controls)));
+                                        String uac = attrs.get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR).get().toString();
+                                        cob.addAttribute(AttributeBuilder.buildEnabled(!ADUserAccountControl.isAccountDisabled(uac)));
+                                        cob.addAttribute(AttributeBuilder.build(ADUserAccountControl.DONT_EXPIRE_PASSWORD_NAME, ADUserAccountControl.isDontExpirePassword(uac)));
+                                        cob.addAttribute(AttributeBuilder.build(ADUserAccountControl.PASSWORD_NOTREQD_NAME, ADUserAccountControl.isPasswordNotReq(uac)));
+                                        cob.addAttribute(AttributeBuilder.build(ADUserAccountControl.SMARTCARD_REQUIRED_NAME, ADUserAccountControl.isSmartCardRequired(uac)));
+                                    }
+                                    if (attrs.get(ADUserAccountControl.MSDS_USR_ACCT_CTRL_ATTR) != null) {
+                                        String uac2 = attrs.get(ADUserAccountControl.MSDS_USR_ACCT_CTRL_ATTR).get().toString();
+                                        cob.addAttribute(AttributeBuilder.buildLockOut(ADUserAccountControl.isAccountLockOut(uac2)));
+                                        cob.addAttribute(AttributeBuilder.buildPasswordExpired(ADUserAccountControl.isPasswordExpired(uac2)));
                                     }
                                     break;
                                 case MSAD_LDS:
@@ -187,26 +200,21 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                                     break;
                                 default:
                             }
-                            if (attrs.get(ADLdapUtil.ACCOUNT_EXPIRES) != null) {
-                                String value = (String) attrs.get(ADLdapUtil.ACCOUNT_EXPIRES).get();
-                                if ("0".equalsIgnoreCase(value) || ADLdapUtil.ACCOUNT_NEVER_EXPIRES.equalsIgnoreCase(value)) {
-                                    // Let's set it to zero - this is equivalent: it means Never
-                                    cob.addAttribute(AttributeBuilder.build(ADLdapUtil.ACCOUNT_EXPIRES, "0"));
-                                } else {
-                                    Date date = getJavaDateFromADTime(value);
-                                    cob.addAttribute(AttributeBuilder.build(ADLdapUtil.ACCOUNT_EXPIRES, getADLdapDatefromJavaDate(date)));
-                                }
-                                attrs.remove(ADLdapUtil.ACCOUNT_EXPIRES);
+                            if (attrs.get(ADUserAccountControl.ACCOUNT_EXPIRES) != null) {
+                                cob.addAttribute(ADLdapUtil.convertMSEpochToISO8601(attrs.get(ADUserAccountControl.ACCOUNT_EXPIRES)));
+                                attrs.remove(ADUserAccountControl.ACCOUNT_EXPIRES);
                             }
-                            if (attrs.get(ADLdapUtil.PWD_LAST_SET) != null) {
-                                String value = (String) attrs.get(ADLdapUtil.PWD_LAST_SET).get();
-                                if ("0".equalsIgnoreCase(value)) {
-                                    cob.addAttribute(AttributeBuilder.build(ADLdapUtil.PWD_LAST_SET, "0"));
-                                } else {
-                                    Date date = getJavaDateFromADTime(value);
-                                    cob.addAttribute(AttributeBuilder.build(ADLdapUtil.PWD_LAST_SET, getADLdapDatefromJavaDate(date)));
-                                }
-                                attrs.remove(ADLdapUtil.PWD_LAST_SET);
+                            if (attrs.get(ADUserAccountControl.PWD_LAST_SET) != null) {
+                                cob.addAttribute(ADLdapUtil.convertMSEpochToISO8601(attrs.get(ADUserAccountControl.PWD_LAST_SET)));
+                                attrs.remove(ADUserAccountControl.PWD_LAST_SET);
+                            }
+                            if (attrs.get(ADUserAccountControl.LAST_LOGON) != null) {
+                                cob.addAttribute(ADLdapUtil.convertMSEpochToISO8601(attrs.get(ADUserAccountControl.LAST_LOGON)));
+                                attrs.remove(ADUserAccountControl.LAST_LOGON);
+                            }
+                            if (attrs.get(ADUserAccountControl.LOCKOUT_TIME) != null) {
+                                cob.addAttribute(ADLdapUtil.convertMSEpochToISO8601(attrs.get(ADUserAccountControl.LOCKOUT_TIME)));
+                                attrs.remove(ADUserAccountControl.LOCKOUT_TIME);
                             }
                         }
 
@@ -227,7 +235,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                         }
                         SyncDeltaBuilder syncDeltaBuilder = new SyncDeltaBuilder();
                         usnChanged[0] = attrs.get(USN_CHANGED_ATTR).get().toString();
-                        if (usnChanged[0].equalsIgnoreCase(attrs.get(USN_CREATED_ATTR).get().toString())){
+                        if (usnChanged[0].equalsIgnoreCase(attrs.get(USN_CREATED_ATTR).get().toString())) {
                             syncDeltaBuilder.setDeltaType(SyncDeltaType.CREATE);
                         } else {
                             syncDeltaBuilder.setDeltaType(SyncDeltaType.UPDATE);
@@ -295,7 +303,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                 }
             }
             // ICF 1.4 now allows us to send the Token even if no entries were actually processed
-            ((SyncTokenResultsHandler)handler).handleResult(new SyncToken(waterMark));
+            ((SyncTokenResultsHandler) handler).handleResult(new SyncToken(waterMark));
         }
     }
 
@@ -314,7 +322,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
         }
         return hcUSN;
     }
-    
+
     private String generateUSNChangedFilter(ObjectClass oc, SyncToken token, boolean isDeleted) {
         StringBuilder filter = new StringBuilder();
 
@@ -351,7 +359,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
         filter.append(")");
         return filter.toString();
     }
-    
+
     private byte[] getDirSyncCookie() {
         try {
             Attributes rootAttrs = conn.getInitialContext().getAttributes("", new String[]{NAMING_CTX_ATTR});
@@ -438,6 +446,9 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                         if (attrs.get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR) != null) {
                             change = true;
                         }
+                        if (attrs.get(ADUserAccountControl.MSDS_USR_ACCT_CTRL_ATTR) != null) {
+                            change = true;
+                        }
                         // The modified entry is of interest
                         if (change) {
                             changes.add(sr);
@@ -480,7 +491,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
         }
         return outOfScope;
     }
-    
+
     private void processChanges(SyncResultsHandler handler, ArrayList<SearchResult> changes, SyncToken syncToken) throws NamingException {
         for (SearchResult change : changes) {
             Attributes attrs = change.getAttributes();
@@ -520,7 +531,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                 syncDeltaBuilder.setUid(new Uid(memberGuid));
                 syncDeltaBuilder.setObject(cob.build());
                 if (!handler.handle(syncDeltaBuilder.build())) {
-                   break;
+                    break;
                 }
             }
         }
@@ -558,10 +569,16 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
         ConnectorObjectBuilder cob = new ConnectorObjectBuilder();
 
         if (attrs.get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR) != null) {
-            String controls = attrs.get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR).get(0).toString();
-            cob.addAttribute(AttributeBuilder.buildEnabled(!ADUserAccountControl.isAccountDisabled(controls)));
-            cob.addAttribute(AttributeBuilder.buildLockOut(ADUserAccountControl.isAccountLockOut(controls)));
-            cob.addAttribute(AttributeBuilder.buildPasswordExpired(ADUserAccountControl.isPasswordExpired(controls)));
+            String uac = attrs.get(ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR).get().toString();
+            cob.addAttribute(AttributeBuilder.buildEnabled(!ADUserAccountControl.isAccountDisabled(uac)));
+            cob.addAttribute(AttributeBuilder.build(ADUserAccountControl.DONT_EXPIRE_PASSWORD_NAME, ADUserAccountControl.isDontExpirePassword(uac)));
+            cob.addAttribute(AttributeBuilder.build(ADUserAccountControl.PASSWORD_NOTREQD_NAME, ADUserAccountControl.isPasswordNotReq(uac)));
+            cob.addAttribute(AttributeBuilder.build(ADUserAccountControl.SMARTCARD_REQUIRED_NAME, ADUserAccountControl.isSmartCardRequired(uac)));
+        }
+        if (attrs.get(ADUserAccountControl.MSDS_USR_ACCT_CTRL_ATTR) != null) {
+            String uac2 = attrs.get(ADUserAccountControl.MSDS_USR_ACCT_CTRL_ATTR).get().toString();
+            cob.addAttribute(AttributeBuilder.buildLockOut(ADUserAccountControl.isAccountLockOut(uac2)));
+            cob.addAttribute(AttributeBuilder.buildPasswordExpired(ADUserAccountControl.isPasswordExpired(uac2)));
         }
         if (attrs.get("parentGUID") != null) {
             // move/rename that was out of scope

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 ForgeRock AS. All Rights Reserved
+ * Copyright (c) 2013-2015 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -23,26 +23,28 @@
  */
 package org.identityconnectors.ldap;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
+import javax.naming.directory.Attributes;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.LdapContext;
+
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.ldap.search.LdapInternalSearch;
-
-/**
- *
- * @author Gael Allioux <gael.allioux@forgerock.com>
- */
+import static org.identityconnectors.ldap.LdapUtil.escapeDNValueOfJNDIReservedChars;
 
 /* 
  * This class provides static helper methods to handle 
@@ -61,22 +63,6 @@ public class ADLdapUtil {
     * The time difference between Java and .Net for Dates
     */
     public static final long DIFF_NET_JAVA_FOR_DATE_AND_TIMES = 11644473600000L;
-    
-    /*
-     * The Pwd-Last-Set attribute represents the date and time that the password for this account was last changed.
-     * for read purpose, only values that can be set:
-     * 0 - To force a user to change his password at next logon
-     * -1 - To set it to current date
-    */
-    public static final String PWD_LAST_SET = "pwdLastSet";
-    
-    /*
-     * The date when a Microsoft Active Directory account expires.
-     * For read purpose
-     * A value of 0 or 9,223,372,036,854,775,807 indicates that the account never expires.
-    */
-    public static final String ACCOUNT_EXPIRES = "accountExpires";
-    public static final String ACCOUNT_NEVER_EXPIRES = "9223372036854775807";
     
     static String AddLeadingZero(int k) {
             return (k<=0xF)?"0" + Integer.toHexString(k):Integer.toHexString(k);
@@ -127,7 +113,9 @@ public class ADLdapUtil {
                 throw new ConnectorException(LdapConstants.MS_GUID_ATTR+" attribute has the wrong length ("+GUID.length+"). Should be 16 bytes.");
             }
         }
-        catch(NamingException e){}
+        catch(NamingException e){
+            log.error(e, "Error reading " + attr.getID() + " attribute");
+        }
         
         StringBuilder sGUID = new StringBuilder(39);
         sGUID.append("<GUID=");
@@ -194,6 +182,76 @@ public class ADLdapUtil {
         return bString.toString();
     }
     
+    public static String objectSIDtoString(Attribute attr) {
+        byte[] SID = null;
+        try{
+            SID = (byte[])attr.get();
+        }
+        catch(NamingException e){
+            log.error(e, "Error reading " + attr.getID() + " attribute");
+        }
+        return objectSIDtoString(SID);
+    }
+
+    public static String objectSIDtoString(byte[] SID) {
+        if (SID == null) {
+            return null;
+        }
+        
+        if (SID.length < 8 || SID.length > 68){
+            throw new ConnectorException(LdapConstants.MS_SID_ATTR+" attribute has the wrong length ("+SID.length+"). Should be between 8 and 68 bytes.");
+        }
+        
+        // Add the 'S' prefix
+        StringBuilder strSID = new StringBuilder("S-");
+
+        // bytes[0] : in the array is the version (must be 1 but might 
+        // change in the future)
+        strSID.append(SID[0]).append('-');
+
+        // bytes[2..7] : the Authority
+        StringBuilder tmpBuff = new StringBuilder();
+        for (int t = 2; t <= 7; t++) {
+            tmpBuff.append(AddLeadingZero((int) SID[t] & 0xFF));
+        }
+        strSID.append(Long.parseLong(tmpBuff.toString(), 16));
+
+        // bytes[1] : the sub authorities count
+        int count = SID[1];
+
+        // bytes[8..end] : the sub authorities (these are Integers - notice
+        // the endian)
+        for (int i = 0; i < count; i++) {
+            int currSubAuthOffset = i * 4;
+            tmpBuff.setLength(0);
+            tmpBuff.append(String.format("%02X%02X%02X%02X",
+                    (SID[11 + currSubAuthOffset] & 0xFF),
+                    (SID[10 + currSubAuthOffset] & 0xFF),
+                    (SID[9 + currSubAuthOffset] & 0xFF),
+                    (SID[8 + currSubAuthOffset] & 0xFF)));
+
+            strSID.append('-').append(Long.parseLong(tmpBuff.toString(), 16));
+        }
+
+        // That's it - we have the SID
+        return strSID.toString();
+    }
+    
+    public static List fetchTokenGroupsByDn(LdapConnection conn, LdapEntry entry) {
+        List groups = new ArrayList();
+        try {
+            Attributes attrs = conn.getInitialContext().getAttributes(escapeDNValueOfJNDIReservedChars(entry.getDN().toString()), new String[]{LdapConstants.MS_TOKEN_GROUPS_ATTR});
+            Attribute attr = attrs.get(LdapConstants.MS_TOKEN_GROUPS_ATTR);
+            NamingEnumeration ae = attr.getAll();
+            while (ae.hasMore()) {
+                groups.add(objectSIDtoString((byte[])ae.next()));
+            }
+        } catch (NamingException e) {
+            log.error(e, "Error reading tokenGroups attribute");
+        }
+        return groups;
+    }
+    
     public static List fetchGroupMembersByRange(LdapConnection conn, SearchResult result){
         return fetchGroupMembersByRange(conn, LdapEntry.create(null, result));
     }
@@ -246,9 +304,58 @@ public class ADLdapUtil {
         return new Date(milliseconds);
     }
     
+    public static String getADTimeFromJavaDate(Date date) {
+        return Long.toString((date.getTime()  + DIFF_NET_JAVA_FOR_DATE_AND_TIMES)* 10000);
+    }
+    
+    public static String getADTimeFromISO8601Date(String date) throws ParseException{
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        df.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return getADTimeFromJavaDate(df.parse(date));
+    }
+    
     public static String getADLdapDatefromJavaDate(Date date) {
-        SimpleDateFormat df = new SimpleDateFormat("YYYYMMddHHmmss");
+        SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
         df.setTimeZone(TimeZone.getTimeZone("UTC"));
         return df.format(date)+".0Z";
+    }
+    
+    public static String getISO8601DatefromJavaDate(Date date) {
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        df.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return df.format(date);
+    }
+    
+    
+    public static org.identityconnectors.framework.common.objects.Attribute convertMSEpochToISO8601(Attribute attr){
+        if (attr != null){
+            String attrName = attr.getID();
+            try {
+                String value = (String) attr.get();
+                if (ADUserAccountControl.ACCOUNT_EXPIRES.equalsIgnoreCase(attrName) && ADUserAccountControl.ACCOUNT_NEVER_EXPIRES.equalsIgnoreCase(value)) {
+                    value = "0";
+                }
+                if ("0".equalsIgnoreCase(value)) {
+                    return AttributeBuilder.build(attrName, "0");
+                } else {
+                    Date date = getJavaDateFromADTime(value);
+                    return AttributeBuilder.build(attrName, getISO8601DatefromJavaDate(date));
+                }
+            } catch (NamingException ex) {
+                log.warn("Attribute {0} can not be read from entry", attrName);
+            }
+        }
+        return null;
+    }
+    
+    public static boolean isServerMSADFamily(LdapConnection.ServerType type){
+        switch (type) {
+            case MSAD:
+            case MSAD_GC:
+            case MSAD_LDS:
+                return true;
+            default:
+                return false;
+        }
     }
 }

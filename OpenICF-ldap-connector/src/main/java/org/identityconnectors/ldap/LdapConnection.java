@@ -20,7 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  *
- * Portions Copyrighted 2013-2014 ForgeRock AS
+ * Portions Copyrighted 2013-2015 ForgeRock AS
  */
 package org.identityconnectors.ldap;
 
@@ -32,15 +32,19 @@ import static org.identityconnectors.ldap.LdapUtil.getStringAttrValue;
 import static org.identityconnectors.ldap.LdapUtil.getStringAttrValues;
 import static org.identityconnectors.ldap.LdapUtil.nullAsEmpty;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 
 import javax.naming.AuthenticationException;
+import javax.naming.CommunicationException;
 import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
+import javax.naming.ldap.StartTlsRequest;
+import javax.naming.ldap.StartTlsResponse;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.Control;
@@ -54,6 +58,9 @@ import org.identityconnectors.framework.common.exceptions.PasswordExpiredExcepti
 import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.identityconnectors.ldap.schema.LdapSchemaMapping;
+import org.identityconnectors.ldap.schema.ADStaticSchema;
+
+import static org.identityconnectors.ldap.ADLdapUtil.isServerMSADFamily;
 
 public class LdapConnection {
 
@@ -97,6 +104,12 @@ public class LdapConnection {
 
         // MS-AD ObjectGUID
         LDAP_BINARY_SYNTAX_ATTRS.add(LdapConstants.MS_GUID_ATTR);
+        
+        // MS-AD ObjectSID
+        LDAP_BINARY_SYNTAX_ATTRS.add(LdapConstants.MS_SID_ATTR);
+        
+        // MS-AD Token-Groups
+        LDAP_BINARY_SYNTAX_ATTRS.add(LdapConstants.MS_TOKEN_GROUPS_ATTR);
     }
     private static final String LDAP_CTX_FACTORY = "com.sun.jndi.ldap.LdapCtxFactory";
     public static final String SASL_GSSAPI = "SASL-GSSAPI";
@@ -105,6 +118,7 @@ public class LdapConnection {
     private final LdapConfiguration config;
     private final LdapSchemaMapping schemaMapping;
     private LdapContext initCtx;
+    private StartTlsResponse startTlsResponse;
     private Set<String> supportedControls;
     private ServerType serverType;
 
@@ -123,7 +137,10 @@ public class LdapConnection {
     
     private Hashtable getDefaultContextEnv(){
         final Hashtable env = new Hashtable(11);
-        env.put("java.naming.ldap.attributes.binary", LdapConstants.MS_GUID_ATTR);
+        env.put("java.naming.ldap.attributes.binary", 
+                LdapConstants.MS_GUID_ATTR + " " + 
+                LdapConstants.MS_SID_ATTR + " " + 
+                LdapConstants.MS_TOKEN_GROUPS_ATTR);
         env.put(Context.INITIAL_CONTEXT_FACTORY, LDAP_CTX_FACTORY);
         env.put(Context.PROVIDER_URL, getLdapUrls());
         env.put(Context.REFERRAL, "follow");
@@ -162,6 +179,7 @@ public class LdapConnection {
         } else {
             initCtx = connect(config.getPrincipal(), config.getCredentials());
         }
+        
         return initCtx;
     }
     
@@ -183,7 +201,7 @@ public class LdapConnection {
 
         final Hashtable<Object, Object> env = getDefaultContextEnv();
         env.put(Context.REFERRAL, config.getReferralsHandling());
-        String authentication = isNotBlank(principal) ? "simple" : "none";
+        String authentication = (isNotBlank(principal) && !config.isStartTLS()) ? "simple" : "none";
         env.put(Context.SECURITY_AUTHENTICATION, authentication);
 
         if (isNotBlank(principal)) {
@@ -192,26 +210,26 @@ public class LdapConnection {
                 credentials.access(new Accessor() {
                     public void access(char[] clearChars) {
                         env.put(Context.SECURITY_CREDENTIALS, new String(clearChars));
-                        // Connect while in the accessor, otherwise clearChars will be cleared.
-                        result.add(createContext(env));
                     }
                 });
-                assert result.size() > 0;
-            } else {
-                result.add(createContext(env));
             }
-        } else {
-            result.add(createContext(env));
         }
-
+        result.add(createContext(env, config.isStartTLS()));
+        assert result.size() == 1;
         return result.get(0);
     }
 
-    private Pair<AuthenticationResult, LdapContext> createContext(Hashtable<?, ?> env) {
+    private Pair<AuthenticationResult, LdapContext> createContext(Hashtable<?, ?> env, boolean useTLS) {
         AuthenticationResult authnResult = null;
         InitialLdapContext context = null;
         try {
             context = new InitialLdapContext(env, null);
+            if (useTLS) {
+                startTlsResponse = (StartTlsResponse)context.extendedOperation(new StartTlsRequest());
+                startTlsResponse.negotiate();
+                context.addToEnvironment(Context.SECURITY_AUTHENTICATION, "simple");
+                context.reconnect(null);
+            }
             if (config.isRespectResourcePasswordPolicyChangeAfterReset()) {
                 if (hasPasswordExpiredControl(context.getResponseControls())) {
                     authnResult = new AuthenticationResult(AuthenticationResultType.PASSWORD_EXPIRED);
@@ -220,6 +238,7 @@ public class LdapConnection {
             // TODO: process Password Policy control.
         } catch (AuthenticationException e) {
             String message = e.getMessage().toLowerCase();
+            authnResult = new AuthenticationResult(AuthenticationResultType.PASSWORD_EXPIRED, e);
             //SUN_DSEE, OPENDS, OPENDJ, IBM, MSAD, MSAD_LDS, MSAD_GC, NOVELL, UNBOUNDID, OPENLDAP, UNKNOWN
             switch (getServerType()) {
                 case MSAD:
@@ -244,7 +263,6 @@ public class LdapConnection {
                             authnResult = new AuthenticationResult(AuthenticationResultType.FAILED, new AuthenticationException("User must reset password"));
                         } else if (message.contains("data 775,")) {
                             authnResult = new AuthenticationResult(AuthenticationResultType.FAILED, new AuthenticationException("User account locked"));
-                        } else {
                         }
                     }
                     break;
@@ -261,18 +279,22 @@ public class LdapConnection {
                 case OPENDJ:
                 case OPENLDAP:
                 default:
-                    authnResult = new AuthenticationResult(AuthenticationResultType.FAILED, e);
+                    break;
             }
+        } catch (CommunicationException e) {
+            authnResult = new AuthenticationResult(AuthenticationResultType.COMMUNICATION_ISSUE, e);
         } catch (NamingException e) {
             authnResult = new AuthenticationResult(AuthenticationResultType.FAILED, e);
+        } catch (IOException e) {
+            authnResult = new AuthenticationResult(AuthenticationResultType.COMMUNICATION_ISSUE, e);
         }
         if (authnResult == null) {
             assert context != null;
             authnResult = new AuthenticationResult(AuthenticationResultType.SUCCESS);
-        }
+    }
         return new Pair<AuthenticationResult, LdapContext>(authnResult, context);
     }
-
+    
     private static boolean hasPasswordExpiredControl(Control[] controls) {
         if (controls != null) {
             for (Control control : controls) {
@@ -298,6 +320,9 @@ public class LdapConnection {
 
     public void close() {
         try {
+            if (config.isStartTLS()) {
+                closeStartTLS(startTlsResponse);
+            }        
             quietClose(initCtx);
         } finally {
             initCtx = null;
@@ -313,6 +338,16 @@ public class LdapConnection {
             log.warn(e, null);
         }
     }
+    
+    private static void closeStartTLS(StartTlsResponse startTlsResponse) {
+        try {
+            if (startTlsResponse != null) {
+                startTlsResponse.close();
+            }
+        } catch (IOException e) {
+            log.warn(e, null);
+        }
+    }
 
     public LdapSchemaMapping getSchemaMapping() {
         return schemaMapping;
@@ -323,6 +358,9 @@ public class LdapConnection {
             if (config.isReadSchema()) {
                 return new ServerNativeSchema(this);
             } else {
+                if (isServerMSADFamily(getServerType())){
+                    return new ADStaticSchema();
+                }
                 return new StaticNativeSchema();
             }
         } catch (NamingException e) {
@@ -383,10 +421,15 @@ public class LdapConnection {
     }
 
     private ServerType detectServerType() {
-        LdapContext anonymousContext = null;
+        LdapContext ctx = initCtx;
+        boolean useAnonContext = false;
         try {
-            anonymousContext = getAnonymousContext();
-            Attributes attrs = anonymousContext.getAttributes("", new String[]{"vendorVersion", "vendorName", "highestCommittedUSN", "rootDomainNamingContext", "structuralObjectClass"});
+            if (ctx == null) {
+                useAnonContext = true;
+                ctx = getAnonymousContext();
+            }
+            
+            Attributes attrs = ctx.getAttributes("", new String[]{"vendorVersion", "vendorName", "highestCommittedUSN", "rootDomainNamingContext", "structuralObjectClass"});
             String vendorName = getStringAttrValue(attrs, "vendorName");
             if (null != vendorName) {
                 vendorName = vendorName.toLowerCase();
@@ -439,15 +482,16 @@ public class LdapConnection {
                     log.info("MS Active Directory Lightweight Directory Services server has been detected");
                     return ServerType.MSAD_LDS;
                 } else if (sOC != null && sOC.equalsIgnoreCase("OpenLDAProotDSE")) {
+                    log.info("OpenLDAP Directory server has been detected");
                     return ServerType.OPENLDAP;
                 }
             }
         } catch (NamingException e) {
             log.warn("Exception while detecting the server type: {0}", e.getExplanation());
         } finally {
-            if (null != anonymousContext) {
+            if (null != ctx && useAnonContext) {
                 try {
-                    anonymousContext.close();
+                    ctx.close();
                 } catch (NamingException ex) {
                     log.ok(ex, "Exception while detecting the server type");
                 }
@@ -476,6 +520,12 @@ public class LdapConnection {
             @Override
             public void propagate(Exception cause) {
                 throw new PasswordExpiredException(cause);
+            }
+        },
+        COMMUNICATION_ISSUE {
+            @Override
+            public void propagate(Exception cause) {
+                throw new ConnectionFailedException(cause);
             }
         },
         FAILED {

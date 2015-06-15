@@ -20,9 +20,12 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  *
- * Portions Copyrighted 2013-2014 ForgeRock AS
+ * "Portions Copyrighted 2013-2015 ForgeRock AS"
  */
 package org.identityconnectors.ldap;
+
+import static org.identityconnectors.framework.common.objects.ObjectClassUtil.createSpecialName;
+import static org.identityconnectors.ldap.LdapEntry.isDNAttribute;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,22 +41,17 @@ import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
-import javax.naming.directory.SearchControls;
-import javax.naming.directory.SearchResult;
 import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.LdapName;
-import org.identityconnectors.common.CollectionUtil;
 
+import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
-import static org.identityconnectors.framework.common.objects.ObjectClassUtil.createSpecialName;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
-import static org.identityconnectors.ldap.LdapEntry.isDNAttribute;
-import org.identityconnectors.ldap.search.LdapInternalSearch;
 
 public class LdapUtil {
 
@@ -506,17 +504,12 @@ public class LdapUtil {
         if (isDNAttribute(conn.getConfiguration().getUidAttribute())) {
             return dn;
         } else {
-            SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
-            controls.setSearchScope(SearchControls.OBJECT_SCOPE);
-            controls.setReturningAttributes(new String[]{conn.getConfiguration().getUidAttribute()});
-            LdapContext context = conn.getInitialContext().newInstance(null);
-            NamingEnumeration<SearchResult> entries = context.search(escapeDNValueOfJNDIReservedChars(dn), "objectclass=*", controls);
-            SearchResult res = entries.next();
+            Attributes attrs = conn.getInitialContext().getAttributes(escapeDNValueOfJNDIReservedChars(dn), new String[]{conn.getConfiguration().getUidAttribute()});
             String uidAttr = conn.getConfiguration().getUidAttribute();
             if (LdapConstants.MS_GUID_ATTR.equalsIgnoreCase(uidAttr)) {
-                return (ADLdapUtil.objectGUIDtoString(res.getAttributes().get(conn.getConfiguration().getUidAttribute())));
+                return (ADLdapUtil.objectGUIDtoString(attrs.get(conn.getConfiguration().getUidAttribute())));
             } else {
-                return (res.getAttributes().get(conn.getConfiguration().getUidAttribute()).get(0).toString());
+                return (attrs.get(conn.getConfiguration().getUidAttribute()).get(0).toString());
             }
         }
     }

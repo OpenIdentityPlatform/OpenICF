@@ -20,7 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * 
- * Portions Copyrighted 2013 Forgerock
+ * "Portions Copyrighted 2013-2015 Forgerock AS"
  */
 package org.identityconnectors.ldap.schema;
 
@@ -62,11 +62,9 @@ import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.ObjectClassUtil;
-import org.identityconnectors.framework.common.objects.OperationalAttributeInfos;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.identityconnectors.ldap.ADUserAccountControl;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapConstants;
 import org.identityconnectors.ldap.LdapEntry;
@@ -80,7 +78,7 @@ import org.identityconnectors.ldap.ObjectClassMappingConfig;
  */
 public class LdapSchemaMapping {
 
-    private static final Log log = Log.getLog(LdapSchemaMapping.class);
+    private static final Log logger = Log.getLog(LdapSchemaMapping.class);
 
     // XXX
     // - which attrs returned by default? Currently only userApplications.
@@ -177,36 +175,12 @@ public class LdapSchemaMapping {
             result = attrName;
         }
         
-        if (result == null && OperationalAttributes.OPERATIONAL_ATTRIBUTE_NAMES.contains(attrName)) {
-            if (oclass.equals(ObjectClass.ACCOUNT)){
-               switch (conn.getServerType()) {
-                   case MSAD_GC:
-                   case MSAD:
-                       result = ADUserAccountControl.MS_USR_ACCT_CTRL_ATTR;
-                       break;
-                   case MSAD_LDS:
-                       //result = ADUserAccountControl.MSDS_USR_ACCT_CTRL_ATTR;
-                       if (OperationalAttributeInfos.ENABLE.is(attrName)) {
-                           result = LdapConstants.MS_DS_USER_ACCOUNT_DISABLED;
-                       } else if (OperationalAttributeInfos.PASSWORD_EXPIRED.is(attrName)) {
-                           result = LdapConstants.MS_DS_USER_PASSWORD_EXPIRED;
-                       } else if (OperationalAttributeInfos.LOCK_OUT.is(attrName)) {
-                           result = LdapConstants.MS_DS_USER_ACCOUNT_AUTOLOCKED;
-                       }
-                       break;
-                   default:
-                       log.warn("Special Attribute {0} of object class {1} is not mapped to an LDAP attribute",
-                        attrName, oclass.getObjectClassValue());
-               }
-            }
-        }
-
         if (result != null && transfer && conn.needsBinaryOption(result)) {
             result = addBinaryOption(result);
         }
 
         if (result == null && !oclass.equals(ANY_OBJECT_CLASS)) {
-            log.warn("Attribute {0} of object class {1} is not mapped to an LDAP attribute",
+            logger.warn("Attribute {0} of object class {1} is not mapped to an LDAP attribute",
                     attrName, oclass.getObjectClassValue());
         }
         return result;
@@ -355,7 +329,7 @@ public class LdapSchemaMapping {
         }
         ldapAttrs.put(objectClass);
 
-        log.ok("Creating LDAP subcontext {0} with attributes {1}", entryName, ldapAttrs);
+        logger.ok("Creating LDAP subcontext {0} with attributes {1}", entryName, ldapAttrs);
         try {
             conn.getInitialContext().createSubcontext(entryName, ldapAttrs).close();
             return entryName.toString();
@@ -385,9 +359,9 @@ public class LdapSchemaMapping {
         }
         return ldapAttr;
     }
-
+    
     public GuardedPasswordAttribute encodePassword(ObjectClass oclass, Attribute attr) {
-        assert attr.is(OperationalAttributes.PASSWORD_NAME);
+        assert attr.is(OperationalAttributes.PASSWORD_NAME) || attr.is(OperationalAttributes.CURRENT_PASSWORD_NAME);
 
         String pwdAttrName = conn.getConfiguration().getPasswordAttribute();
         List<Object> value = attr.getValue();

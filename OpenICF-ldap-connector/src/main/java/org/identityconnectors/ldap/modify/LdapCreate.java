@@ -19,7 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- * "Portions Copyrighted 2014 ForgeRock AS"
+ * "Portions Copyrighted 2014-2015 ForgeRock AS"
  */
 package org.identityconnectors.ldap.modify;
 
@@ -27,21 +27,25 @@ import static org.identityconnectors.common.CollectionUtil.isEmpty;
 import static org.identityconnectors.common.CollectionUtil.nullAsEmpty;
 import static org.identityconnectors.ldap.LdapUtil.checkedListByFilter;
 import static org.identityconnectors.ldap.LdapUtil.escapeDNValueOfJNDIReservedChars;
+import static org.identityconnectors.ldap.LdapUtil.quietCreateLdapName;
 
 import java.util.List;
 import java.util.Set;
+
+import java.text.ParseException;
+
 import javax.naming.NameAlreadyBoundException;
 import javax.naming.NamingEnumeration;
-
 import javax.naming.NamingException;
 import javax.naming.directory.BasicAttribute;
 import javax.naming.directory.BasicAttributes;
 import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.LdapName;
+
+
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
-
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
@@ -50,12 +54,13 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.ldap.ADGroupType;
+import org.identityconnectors.ldap.ADUserAccountControl;
 import org.identityconnectors.ldap.GroupHelper;
 import org.identityconnectors.ldap.LdapAuthenticate;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapModifyOperation;
 import org.identityconnectors.ldap.LdapConstants;
-import static org.identityconnectors.ldap.LdapUtil.quietCreateLdapName;
 import org.identityconnectors.ldap.schema.GuardedPasswordAttribute;
 import org.identityconnectors.ldap.schema.GuardedPasswordAttribute.Accessor;
 
@@ -85,33 +90,59 @@ public class LdapCreate extends LdapModifyOperation {
 
     private Uid executeImpl() throws NamingException {
         final LdapContext runAsContext;
-        final Name nameAttr = AttributeUtil.getNameFromAttributes(attrs);
-
-        if (nameAttr == null) {
-            throw new IllegalArgumentException("No Name attribute provided in the attributes");
-        }
-
         List<String> ldapGroups = null;
         List<String> posixGroups = null;
         GuardedPasswordAttribute pwdAttr = null;
         final BasicAttributes ldapAttrs = new BasicAttributes(true);
 
-        for (Attribute attr : attrs) {
-            javax.naming.directory.Attribute ldapAttr = null;
-            if (attr.is(Name.NAME)) {
-                // Handled already.
-            } else if (LdapConstants.isLdapGroups(attr.getName())) {
+        final Set<Attribute> basicAttributes = AttributeUtil.getBasicAttributes(attrs);
+        final Set<Attribute> specialAttributes = AttributeUtil.getSpecialAttributes(attrs);
+        final Name nameAttr = AttributeUtil.getNameFromAttributes(specialAttributes);
+        final Attribute pwd = AttributeUtil.find(OperationalAttributes.PASSWORD_NAME, specialAttributes);
+
+        if (nameAttr == null) {
+            throw new IllegalArgumentException("No Name attribute provided in the attributes");
+        }
+        specialAttributes.remove(nameAttr);
+
+        if (pwd != null) {
+            pwdAttr = conn.getSchemaMapping().encodePassword(oclass, pwd);
+            specialAttributes.remove(pwd);
+        }
+
+        for (Attribute attr : basicAttributes) {
+            if (LdapConstants.isLdapGroups(attr.getName())) {
                 ldapGroups = checkedListByFilter(nullAsEmpty(attr.getValue()), String.class);
             } else if (LdapConstants.isPosixGroups(attr.getName())) {
                 posixGroups = checkedListByFilter(nullAsEmpty(attr.getValue()), String.class);
-            } else if (attr.is(OperationalAttributes.PASSWORD_NAME)) {
-                pwdAttr = conn.getSchemaMapping().encodePassword(oclass, attr);
             } else {
-                ldapAttr = conn.getSchemaMapping().encodeAttribute(oclass, attr);
+                javax.naming.directory.Attribute ldapAttr = conn.getSchemaMapping().encodeAttribute(oclass, attr);
                 // Do not send empty attributes. The server complains for "uniqueMember", for example.
                 if (ldapAttr != null && ldapAttr.size() > 0) {
                     ldapAttrs.put(ldapAttr);
                 }
+            }
+        }
+
+        if (conn.getServerType().equals(LdapConnection.ServerType.MSAD)) {
+            if (ObjectClass.ACCOUNT.equals(oclass)) {
+                ADUserAccountControl aduac = new ADUserAccountControl();
+                for (Attribute attr : specialAttributes) {
+                    javax.naming.directory.Attribute ldapAttr = null;
+                    try {
+                        ldapAttr = aduac.addControl(attr);
+                    } catch (ParseException ex) {
+                        log.warn("Error parsing AD control: {0}", ex.getMessage());
+                    }
+                    if (ldapAttr != null && ldapAttr.size() > 0) {
+                        ldapAttrs.put(ldapAttr);
+                    }
+                }
+            } else if (ObjectClass.GROUP.equals(oclass)) {
+                ADGroupType adgt = new ADGroupType();
+                adgt.setScope(AttributeUtil.find(ADGroupType.GROUP_SCOPE_NAME, specialAttributes));
+                adgt.setType(AttributeUtil.find(ADGroupType.GROUP_TYPE_NAME, specialAttributes));
+                ldapAttrs.put(adgt.getLdapAttribute());
             }
         }
 
@@ -167,11 +198,13 @@ public class LdapCreate extends LdapModifyOperation {
         while (initialAttrEnum.hasMoreElements()) {
             ldapAttrs.put(initialAttrEnum.nextElement());
         }
-        BasicAttribute objectClass = new BasicAttribute("objectClass");
-        for (String ldapClass : conn.getSchemaMapping().getEffectiveLdapClasses(oclass)) {
-            objectClass.add(ldapClass);
+        if (ldapAttrs.get("objectClass") == null) {
+            BasicAttribute objectClass = new BasicAttribute("objectClass");
+            for (String ldapClass : conn.getSchemaMapping().getEffectiveLdapClasses(oclass)) {
+                objectClass.add(ldapClass);
+            }
+            ldapAttrs.put(objectClass);
         }
-        ldapAttrs.put(objectClass);
 
         log.ok("Creating LDAP entry {0} with attributes {1}", entryName, ldapAttrs);
         try {

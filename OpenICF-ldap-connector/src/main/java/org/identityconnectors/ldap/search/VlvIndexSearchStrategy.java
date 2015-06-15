@@ -19,12 +19,11 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- *  Portions Copyrighted 2013-2014 ForgeRock AS
+ *
+ *  "Portions Copyrighted 2013-2015 ForgeRock AS"
  */
 package org.identityconnectors.ldap.search;
 
-import com.sun.jndi.ldap.Ber;
-import com.sun.jndi.ldap.BerDecoder;
 import static org.identityconnectors.common.StringUtil.isNotBlank;
 
 import java.io.IOException;
@@ -45,9 +44,10 @@ import javax.naming.ldap.SortResponseControl;
 import org.forgerock.opendj.ldap.ByteString;
 import org.forgerock.opendj.ldap.controls.VirtualListViewRequestControl;
 import org.forgerock.opendj.ldap.controls.VirtualListViewResponseControl;
+import org.forgerock.opendj.asn1.ASN1;
+import org.forgerock.opendj.asn1.ASN1Reader;
 
 import org.identityconnectors.common.logging.Log;
-
 
 public class VlvIndexSearchStrategy extends LdapSearchStrategy {
 
@@ -95,7 +95,7 @@ public class VlvIndexSearchStrategy extends LdapSearchStrategy {
 
     private boolean searchBaseDN(LdapContext ctx, String baseDN, String query, SearchControls searchControls, LdapSearchResultsHandler handler) throws IOException, NamingException {
         getLog().ok("Searching in {0}", baseDN);
-        
+
         index = 1;
         lastListSize = 0;
         cookie = new byte[0];
@@ -104,14 +104,14 @@ public class VlvIndexSearchStrategy extends LdapSearchStrategy {
 
         for (;;) {
             SortControl sortControl = new SortControl(vlvIndexAttr, Control.CRITICAL);
-            
+
             int afterCount = blockSize - 1;
-            
+
             VirtualListViewRequestControl vlvreq = VirtualListViewRequestControl.newOffsetControl(Control.CRITICAL, index, lastListSize, 0, afterCount, ByteString.valueOf(cookie));
             BasicControl vlvControl = new BasicControl(VirtualListViewRequestControl.OID, Control.CRITICAL, vlvreq.getValue().toByteArray());
-            
+
             getLog().ok("New search: target = {0}, afterCount = {1}", index, afterCount);
-            ctx.setRequestControls(new Control[] { sortControl, vlvControl });
+            ctx.setRequestControls(new Control[]{sortControl, vlvControl});
 
             // Need to process the response controls, which are available after
             // all results have been processed, before sending anything to the caller
@@ -186,16 +186,17 @@ public class VlvIndexSearchStrategy extends LdapSearchStrategy {
                 if (control.getID().equalsIgnoreCase(VirtualListViewResponseControl.OID)) {
                     byte[] value = control.getEncodedValue();
                     if ((value != null) && (value.length > 0)) {
-                        BerDecoder decoder = new BerDecoder(value, 0, value.length);
-                        
+                        final ASN1Reader reader = ASN1.getReader(value);
+
                         try {
-                            decoder.parseSeq(null);
-                            int offset = decoder.parseInt();
-                            lastListSize = decoder.parseInt();
+                            reader.readStartSequence();
+                            final int offset = (int) reader.readInteger();
+                            lastListSize = (int) reader.readInteger();
+
                             getLog().ok("Response control: lastListSize = {0}", lastListSize);
-                            int code = decoder.parseEnumeration();
-                            if ((decoder.bytesLeft() > 0) && (decoder.peekByte() == Ber.ASN_OCTET_STR)) {
-                                cookie = decoder.parseOctetString(Ber.ASN_OCTET_STR, null);
+                            final int code = reader.readEnumerated();
+                            if (reader.hasNextElement()) {
+                                cookie = reader.readOctetString().toByteArray();
                             }
                             if (code != 0) {
                                 throw new NamingException("The view operation has failed on LDAP server");

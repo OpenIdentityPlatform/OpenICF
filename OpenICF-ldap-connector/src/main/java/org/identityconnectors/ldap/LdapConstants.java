@@ -47,6 +47,10 @@ public class LdapConstants {
     
     public static final String MS_GUID_ATTR = "objectGUID";
     
+    public static final String MS_SID_ATTR = "objectSID";
+
+    public static final String MS_TOKEN_GROUPS_ATTR = "tokenGroups";
+    
     public static final String MS_DS_USER_ACCOUNT_DISABLED = "msDS-UserAccountDisabled";
     
     public static final String MS_DS_USER_PASSWORD_EXPIRED = "msDS-UserPasswordExpired";
