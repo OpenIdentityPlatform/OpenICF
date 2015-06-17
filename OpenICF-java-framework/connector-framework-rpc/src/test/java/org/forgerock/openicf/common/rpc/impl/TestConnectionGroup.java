@@ -35,9 +35,9 @@ import org.forgerock.openicf.common.rpc.RemoteConnectionHolder;
 import org.forgerock.openicf.common.rpc.RemoteRequest;
 import org.forgerock.util.Pair;
 
-public class TestConnectionGroup<H extends RemoteConnectionHolder<TestMessage, TestConnectionGroup<H>, H, TestConnectionContext<H>>>
+public class TestConnectionGroup<H extends RemoteConnectionHolder<TestConnectionGroup<H>, H, TestConnectionContext<H>>>
         extends
-        RemoteConnectionGroup<TestMessage, TestConnectionGroup<H>, H, TestConnectionContext<H>>
+        RemoteConnectionGroup<TestConnectionGroup<H>, H, TestConnectionContext<H>>
         implements Closeable {
 
     private final TestConnectionContext<H> connectionContext = new TestConnectionContext<H>(this);
@@ -71,11 +71,11 @@ public class TestConnectionGroup<H extends RemoteConnectionHolder<TestMessage, T
     }
 
     public void close() throws IOException {
-        for (Map.Entry<Long, RemoteRequest<TestMessage, ?, ?, TestConnectionGroup<H>, H, TestConnectionContext<H>>> m : remoteRequests
+        for (Map.Entry<Long, RemoteRequest<?, ?, TestConnectionGroup<H>, H, TestConnectionContext<H>>> m : remoteRequests
                 .entrySet()) {
             m.getValue().getPromise().cancel(true);
         }
-        for (Map.Entry<Long, LocalRequest<TestMessage, ?, ?, TestConnectionGroup<H>, H, TestConnectionContext<H>>> m : localRequests
+        for (Map.Entry<Long, LocalRequest<?, ?, TestConnectionGroup<H>, H, TestConnectionContext<H>>> m : localRequests
                 .entrySet()) {
             m.getValue().cancel();
         }

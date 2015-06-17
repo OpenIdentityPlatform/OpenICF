@@ -102,7 +102,7 @@ public abstract class DelegatingAsyncConnectorInfoManager extends
         }
     }
 
-    protected abstract RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> getMessageDistributor();
+    protected abstract RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> getMessageDistributor();
 
     protected Collection<? extends AsyncConnectorInfoManager> getDelegates() {
         return delegates;

@@ -30,15 +30,15 @@ package org.forgerock.openicf.common.rpc;
  * {@link org.forgerock.openicf.common.rpc.RemoteRequest} before sending in
  * {@link org.forgerock.openicf.common.rpc.RemoteConnectionGroup}.
  */
-public interface RemoteRequestFactory<M, R extends RemoteRequest<M, V, E, G, H, P>, V, E extends Exception, G extends RemoteConnectionGroup<M, G, H, P>, H extends RemoteConnectionHolder<M, G, H, P>, P extends RemoteConnectionContext<M, G, H, P>> {
+public interface RemoteRequestFactory<R extends RemoteRequest<V, E, G, H, P>, V, E extends Exception, G extends RemoteConnectionGroup<G, H, P>, H extends RemoteConnectionHolder<G, H, P>, P extends RemoteConnectionContext<G, H, P>> {
 
-    interface CompletionCallback<M, V, E extends Exception, G extends RemoteConnectionGroup<M, G, H, P>, H extends RemoteConnectionHolder<M, G, H, P>, P extends RemoteConnectionContext<M, G, H, P>> {
+    interface CompletionCallback<V, E extends Exception, G extends RemoteConnectionGroup<G, H, P>, H extends RemoteConnectionHolder<G, H, P>, P extends RemoteConnectionContext<G, H, P>> {
 
-        void complete(RemoteRequest<M, V, E, G, H, P> request);
+        void complete(RemoteRequest<V, E, G, H, P> request);
 
     }
 
     R createRemoteRequest(final P context, final long requestId,
-            final CompletionCallback<M, V, E, G, H, P> completionCallback);
+            final CompletionCallback<V, E, G, H, P> completionCallback);
 
 }

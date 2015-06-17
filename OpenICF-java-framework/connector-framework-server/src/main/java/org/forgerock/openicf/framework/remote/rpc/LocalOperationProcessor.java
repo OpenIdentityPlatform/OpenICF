@@ -38,7 +38,7 @@ import com.google.protobuf.MessageLite;
 
 public abstract class LocalOperationProcessor<V>
         extends
-        LocalRequest<MessageLite, V, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> {
+        LocalRequest<V, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> {
 
     private static final Log logger = Log.getLog(LocalOperationProcessor.class);
 

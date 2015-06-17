@@ -31,13 +31,13 @@ import java.util.List;
  * LoadBalancingAlgorithm for multiple {@link RequestDistributor}.
  *
  */
-public abstract class AbstractLoadBalancingAlgorithm<M, G extends RemoteConnectionGroup<M, G, H, P>, H extends RemoteConnectionHolder<M, G, H, P>, P extends RemoteConnectionContext<M, G, H, P>>
-        implements RequestDistributor<M, G, H, P> {
+public abstract class AbstractLoadBalancingAlgorithm<G extends RemoteConnectionGroup<G, H, P>, H extends RemoteConnectionHolder<G, H, P>, P extends RemoteConnectionContext<G, H, P>>
+        implements RequestDistributor<G, H, P> {
 
-    protected final List<RequestDistributor<M, G, H, P>> requestDistributors;
+    protected final List<RequestDistributor<G, H, P>> requestDistributors;
 
     protected AbstractLoadBalancingAlgorithm(
-            final List<RequestDistributor<M, G, H, P>> requestDistributors) {
+            final List<RequestDistributor<G, H, P>> requestDistributors) {
         this.requestDistributors = requestDistributors;
     }
 
@@ -45,7 +45,7 @@ public abstract class AbstractLoadBalancingAlgorithm<M, G extends RemoteConnecti
      * {@inheritDoc}
      */
     public boolean isOperational() {
-        for (RequestDistributor<M, G, H, P> e : requestDistributors)
+        for (RequestDistributor<G, H, P> e : requestDistributors)
             if (e.isOperational())
                 return true;
         return false;
@@ -54,17 +54,17 @@ public abstract class AbstractLoadBalancingAlgorithm<M, G extends RemoteConnecti
     /**
      * {@inheritDoc}
      */
-    public <R extends RemoteRequest<M, V, E, G, H, P>, V, E extends Exception> R trySubmitRequest(
-            RemoteRequestFactory<M, R, V, E, G, H, P> requestFactory) {
+    public <R extends RemoteRequest<V, E, G, H, P>, V, E extends Exception> R trySubmitRequest(
+            RemoteRequestFactory<R, V, E, G, H, P> requestFactory) {
         return trySubmitRequest(getInitialConnectionFactoryIndex(), requestFactory);
     }
 
-    protected <R extends RemoteRequest<M, V, E, G, H, P>, V, E extends Exception> R trySubmitRequest(
-            int initialIndex, RemoteRequestFactory<M, R, V, E, G, H, P> requestFactory) {
+    protected <R extends RemoteRequest<V, E, G, H, P>, V, E extends Exception> R trySubmitRequest(
+            int initialIndex, RemoteRequestFactory<R, V, E, G, H, P> requestFactory) {
         int index = initialIndex;
         final int maxIndex = requestDistributors.size();
         do {
-            final RequestDistributor<M, G, H, P> factory = requestDistributors.get(index);
+            final RequestDistributor<G, H, P> factory = requestDistributors.get(index);
             R result = factory.trySubmitRequest(requestFactory);
             if (null != result) {
                 return result;

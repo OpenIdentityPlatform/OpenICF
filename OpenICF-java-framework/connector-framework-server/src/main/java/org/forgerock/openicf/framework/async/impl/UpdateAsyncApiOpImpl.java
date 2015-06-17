@@ -49,14 +49,13 @@ import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.impl.api.local.operations.UpdateImpl;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.MessageLite;
 
 public class UpdateAsyncApiOpImpl extends AbstractAPIOperation implements UpdateAsyncApiOp {
 
     private static final Log logger = Log.getLog(UpdateAsyncApiOpImpl.class);
 
     public UpdateAsyncApiOpImpl(
-            RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
+            RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             ConnectorKey connectorKey,
             Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
         super(remoteConnection, connectorKey, facadeKeyFunction);
@@ -112,23 +111,26 @@ public class UpdateAsyncApiOpImpl extends AbstractAPIOperation implements Update
             requestBuilder.setOptions(MessagesUtil.serializeLegacy(options));
         }
 
-        return submitRequest(new InternalRequestFactory(OperationMessages.OperationRequest
-                .newBuilder().setUpdateOpRequest(requestBuilder)));
+        return submitRequest(new InternalRequestFactory(getConnectorKey(), getFacadeKeyFunction(),
+                OperationMessages.OperationRequest.newBuilder().setUpdateOpRequest(requestBuilder)));
     }
 
-    private class InternalRequestFactory extends
+    private static class InternalRequestFactory extends
             AbstractRemoteOperationRequestFactory<Uid, InternalRequest> {
         private final OperationMessages.OperationRequest.Builder operationRequest;
 
         public InternalRequestFactory(
+                final ConnectorKey connectorKey,
+                final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction,
                 final OperationMessages.OperationRequest.Builder operationRequest) {
+            super(connectorKey, facadeKeyFunction);
             this.operationRequest = operationRequest;
         }
 
         public InternalRequest createRemoteRequest(
                 final RemoteOperationContext context,
                 final long requestId,
-                final CompletionCallback<MessageLite, Uid, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
+                final CompletionCallback<Uid, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
 
             RPCMessages.RPCRequest.Builder builder = createRPCRequest(context);
             if (null != builder) {
@@ -136,14 +138,6 @@ public class UpdateAsyncApiOpImpl extends AbstractAPIOperation implements Update
             } else {
                 return null;
             }
-        }
-
-        protected CommonObjectMessages.ConnectorKey.Builder createConnectorKey() {
-            return UpdateAsyncApiOpImpl.this.createConnectorKey();
-        }
-
-        protected ByteString createConnectorFacadeKey(final RemoteOperationContext context) {
-            return UpdateAsyncApiOpImpl.this.createConnectorFacadeKey(context);
         }
 
         protected OperationMessages.OperationRequest.Builder createOperationRequest(
@@ -159,7 +153,7 @@ public class UpdateAsyncApiOpImpl extends AbstractAPIOperation implements Update
         public InternalRequest(
                 final RemoteOperationContext context,
                 final long requestId,
-                final RemoteRequestFactory.CompletionCallback<MessageLite, Uid, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
+                final RemoteRequestFactory.CompletionCallback<Uid, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
                 final RPCMessages.RPCRequest.Builder requestBuilder) {
             super(context, requestId, completionCallback, requestBuilder);
 
@@ -188,8 +182,9 @@ public class UpdateAsyncApiOpImpl extends AbstractAPIOperation implements Update
 
     // ----
 
-    public static AbstractLocalOperationProcessor<Uid, OperationMessages.UpdateOpRequest> createProcessor(long requestId,
-            WebSocketConnectionHolder socket, OperationMessages.UpdateOpRequest message) {
+    public static AbstractLocalOperationProcessor<Uid, OperationMessages.UpdateOpRequest> createProcessor(
+            long requestId, WebSocketConnectionHolder socket,
+            OperationMessages.UpdateOpRequest message) {
         return new InternalLocalOperationProcessor(requestId, socket, message);
     }
 

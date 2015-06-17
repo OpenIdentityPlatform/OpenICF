@@ -41,25 +41,24 @@ import org.forgerock.util.promise.SuccessHandler;
  * call on caller and receiver side.
  *
  */
-public abstract class RemoteRequest<M, V, E extends Exception, G extends RemoteConnectionGroup<M, G, H, P>, H extends RemoteConnectionHolder<M, G, H, P>, P extends RemoteConnectionContext<M, G, H, P>> {
+public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConnectionGroup<G, H, P>, H extends RemoteConnectionHolder<G, H, P>, P extends RemoteConnectionContext<G, H, P>> {
 
     private final P context;
     private final long requestId;
-    private final RemoteRequestFactory.CompletionCallback<M, V, E, G, H, P> completionCallback;
+    private final RemoteRequestFactory.CompletionCallback<V, E, G, H, P> completionCallback;
 
     private Long requestTime = null;
     private PromiseImpl<V, E> promise = null;
     private final ReentrantLock lock = new ReentrantLock();
 
     public RemoteRequest(P context, long requestId,
-            RemoteRequestFactory.CompletionCallback<M, V, E, G, H, P> completionCallback) {
+            RemoteRequestFactory.CompletionCallback<V, E, G, H, P> completionCallback) {
         this.context = context;
         this.requestId = requestId;
         this.completionCallback = completionCallback;
-
     }
 
-    public abstract void handleIncomingMessage(final H sourceConnection, final M message);
+    public abstract void handleIncomingMessage(final H sourceConnection, final Object message);
 
     protected abstract MessageElement createMessageElement(P remoteContext, long requestId);
 

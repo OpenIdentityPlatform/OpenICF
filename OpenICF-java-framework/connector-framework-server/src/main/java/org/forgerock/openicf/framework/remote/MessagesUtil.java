@@ -90,23 +90,23 @@ public class MessagesUtil {
             builder.setMessage(error.getMessage());
         }
 
-        RPCMessages.ExceptionMessage.Cause.Builder cause = fromCause(error.getCause(), depth);
+        RPCMessages.ExceptionMessage.InnerCause.Builder cause = fromCause(error.getCause(), depth);
         if (null != cause) {
-            builder.setCause(cause);
+            builder.setInnerCause(cause);
         }
 
         return builder;
     }
 
-    private static RPCMessages.ExceptionMessage.Cause.Builder fromCause(Throwable error, int depth) {
+    private static RPCMessages.ExceptionMessage.InnerCause.Builder fromCause(Throwable error, int depth) {
         if (null != error && depth > 0) {
-            RPCMessages.ExceptionMessage.Cause.Builder builder =
-                    RPCMessages.ExceptionMessage.Cause.newBuilder().setExceptionClass(
+            RPCMessages.ExceptionMessage.InnerCause.Builder builder =
+                    RPCMessages.ExceptionMessage.InnerCause.newBuilder().setExceptionClass(
                             error.getClass().getName());
             if (null != error.getMessage()) {
                 builder.setMessage(error.getMessage());
             }
-            RPCMessages.ExceptionMessage.Cause.Builder cause = fromCause(error.getCause(), --depth);
+            RPCMessages.ExceptionMessage.InnerCause.Builder cause = fromCause(error.getCause(), --depth);
             if (null != cause) {
                 builder.setCause(cause);
             }
@@ -128,7 +128,7 @@ public class MessagesUtil {
                     exceptionMessage.hasStackTrace() ? exceptionMessage.getStackTrace() : null;
 
             return new RemoteWrappedException(throwableClass, message, getCause(exceptionMessage
-                    .getCause()), stackTrace);
+                    .getInnerCause()), stackTrace);
 
         } catch (Throwable t) {
             return new ConnectorException(StringUtil.isNotBlank(message) ? message
@@ -136,7 +136,7 @@ public class MessagesUtil {
         }
     }
 
-    private static RemoteWrappedException getCause(RPCMessages.ExceptionMessage.Cause cause) {
+    private static RemoteWrappedException getCause(RPCMessages.ExceptionMessage.InnerCause cause) {
         if (null != cause) {
             String throwableClass =
                     cause.hasExceptionClass() ? cause.getExceptionClass()
@@ -180,7 +180,7 @@ public class MessagesUtil {
         RPCMessages.HandshakeMessage.Builder messageBuilder =
                 RPCMessages.HandshakeMessage.newBuilder();
         messageBuilder.setPublicKey(ByteString.copyFrom(publicKey.getEncoded()));
-        messageBuilder.addServerType(RPCMessages.HandshakeMessage.ServerType.JAVA);
+        messageBuilder.setServerType(RPCMessages.HandshakeMessage.ServerType.JAVA);
         // Make the fingerprint unique sessionId
         messageBuilder.setSessionId(org.identityconnectors.common.security.SecurityUtil
                 .computeHexSHA1Hash(publicKey.getEncoded(), false));

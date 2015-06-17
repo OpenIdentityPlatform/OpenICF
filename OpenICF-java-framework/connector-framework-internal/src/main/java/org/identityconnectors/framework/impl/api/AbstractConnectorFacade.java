@@ -31,6 +31,7 @@ import java.util.Set;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.Base64;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.api.ConfigurationPropertyChangeListener;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.Observer;
 import org.identityconnectors.framework.api.operations.APIOperation;
@@ -88,18 +89,25 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
         this.configuration = (APIConfigurationImpl) SerializerUtil.deserializeBinaryObject(bytes);
         // parent ref not included in the clone
         this.configuration.setConnectorInfo(configuration.getConnectorInfo());
+        this.configuration.setChangeListener(configuration.getChangeListener());
     }
 
     /**
      * Builds up the maps of supported operations and calls.
      */
     public AbstractConnectorFacade(String configuration, final AbstractConnectorInfo connectorInfo) {
+        this(configuration, connectorInfo, null);    
+    }
+    
+    public AbstractConnectorFacade(String configuration, final AbstractConnectorInfo connectorInfo, final
+                                   ConfigurationPropertyChangeListener changeListener) {
         Assertions.nullCheck(configuration, "configuration");
         Assertions.nullCheck(connectorInfo, "connectorInfo");
         this.connectorFacadeKey = configuration;
         this.configuration = (APIConfigurationImpl) SerializerUtil.deserializeBase64Object(configuration);
         // parent ref not included in the clone
         this.configuration.setConnectorInfo(connectorInfo);
+        this.configuration.setChangeListener(changeListener);
     }
 
     /**
@@ -122,6 +130,8 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
         this.configuration =
                 (APIConfigurationImpl) configuration.getConnectorInfo()
                         .createDefaultAPIConfiguration();
+        this.configuration.setConnectorInfo(configuration.getConnectorInfo());
+        this.configuration.setChangeListener(configuration.getChangeListener());
         // Copy only the TimeoutMap
         this.configuration.getTimeoutMap().clear();
         this.configuration.getTimeoutMap().putAll(configuration.getTimeoutMap());

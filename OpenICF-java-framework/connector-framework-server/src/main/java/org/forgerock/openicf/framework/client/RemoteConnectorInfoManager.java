@@ -38,7 +38,7 @@ public interface RemoteConnectorInfoManager extends Closeable {
 
     AsyncConnectorInfoManager getAsyncConnectorInfoManager();
 
-    RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> getRequestDistributor();
+    RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> getRequestDistributor();
 
     public void close();
 

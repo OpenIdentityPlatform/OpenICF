@@ -73,9 +73,9 @@ public class SubscriptionImpl extends ConnectorAPIOperationRunner {
                     operation.subscribe(objectClass, eventFilter, observer, operationOptions);
 
             return new Subscription() {
-                public void unsubscribe() {
+                public void close() {
                     if (observer.doRelease()) {
-                        subscription.unsubscribe();
+                        subscription.close();
                     }
                 }
 
@@ -100,9 +100,9 @@ public class SubscriptionImpl extends ConnectorAPIOperationRunner {
                     operation.subscribe(objectClass, token, observer, operationOptions);
 
             return new Subscription() {
-                public void unsubscribe() {
+                public void close() {
                     if (observer.doRelease()) {
-                        subscription.unsubscribe();
+                        subscription.close();
                     }
                 }
 

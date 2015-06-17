@@ -37,7 +37,7 @@ package org.forgerock.openicf.common.rpc;
  * {@link org.forgerock.openicf.common.rpc.RemoteConnectionGroup#trySendMessage(org.forgerock.util.promise.Function)}
  * sending the message.
  */
-public interface RemoteConnectionContext<M, G extends RemoteConnectionGroup<M, G, H, P>, H extends RemoteConnectionHolder<M, G, H, P>, P extends RemoteConnectionContext<M, G, H, P>> {
+public interface RemoteConnectionContext<G extends RemoteConnectionGroup<G, H, P>, H extends RemoteConnectionHolder<G, H, P>, P extends RemoteConnectionContext<G, H, P>> {
 
     /**
      * Return the {@link org.forgerock.openicf.common.rpc.RemoteConnectionGroup}

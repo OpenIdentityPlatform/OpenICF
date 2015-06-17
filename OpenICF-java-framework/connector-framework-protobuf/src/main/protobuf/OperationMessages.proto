@@ -28,7 +28,7 @@ message CreateOpRequest {
     required string objectClass = 1;
     required bytes createAttributes = 2;
     //repeated AttributeMessage createAttributes = 2;
-    optional bytes options = 4;
+    optional bytes options = 3;
 }
 
 message CreateOpResponse {
@@ -193,7 +193,10 @@ message ValidateOpRequest {
 message ValidateOpResponse {
 }
 
-
+//Configuration Update Event
+message ConfigurationChangeEvent {
+    optional bytes configurationPropertyChange = 1;
+}
 
 //_______
 
@@ -221,6 +224,7 @@ message OperationRequest {
     optional TestOpRequest testOpRequest = 17;
     optional UpdateOpRequest updateOpRequest = 18;
     optional ValidateOpRequest ValidateOpRequest = 19;
+    optional ConfigurationChangeEvent configurationChangeEvent = 20;
     //}
 }
 

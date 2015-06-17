@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.forgerock.openicf.common.protobuf.CommonObjectMessages;
+import org.forgerock.openicf.common.protobuf.OperationMessages;
 import org.forgerock.openicf.common.protobuf.OperationMessages.OperationRequest;
 import org.forgerock.openicf.common.protobuf.OperationMessages.OperationResponse;
 import org.forgerock.openicf.common.protobuf.RPCMessages;
@@ -67,6 +68,8 @@ import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.Encryptor;
+import org.identityconnectors.framework.api.ConfigurationProperty;
+import org.identityconnectors.framework.api.ConfigurationPropertyChangeListener;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.api.ConnectorKey;
@@ -128,7 +131,7 @@ public class OpenICFServerAdapter implements OperationMessageListener {
     }
 
     public void onMessage(WebSocketConnectionHolder socket, String data) {
-        logger.warn("String message is ignored: {1}", data);
+        logger.warn("String message is ignored: {0}", data);
     }
 
     public void onMessage(final WebSocketConnectionHolder socket, byte[] bytes) {
@@ -326,90 +329,106 @@ public class OpenICFServerAdapter implements OperationMessageListener {
             final long messageId, final OperationRequest message) {
         logger.ok("IN Request({0}:{1})", messageId, socket.getRemoteConnectionContext()
                 .getRemotePrincipal().getName());
-        CommonObjectMessages.ConnectorKey connectorKey = message.getConnectorKey();
 
-        ConnectorInfo info = findConnectorInfo(connectorKey);
-        if (info == null) {
-            RemoteMessage.Builder response =
-                    MessagesUtil.createErrorResponse(messageId, new ConnectorException(
-                            "Connector not found: " + connectorKey + " "));
-            socket.getRemoteConnectionContext().getRemoteConnectionGroup().trySendMessage(
-                    response.build());
-            return;
-        }
+        final String connectorFacadeKey = message.getConnectorFacadeKey().toStringUtf8();
 
-        try {
-            try {
-                if (message.hasLocale()) {
-                    Locale local =
-                            MessagesUtil.deserializeMessage(message.getLocale(), Locale.class);
-                    CurrentLocale.set(local);
-                }
-            } catch (Throwable e) {
-                logger.ok(e, "Failed to set request Locale");
-            }
+        if (message.hasConfigurationChangeEvent()) {
+            List<ConfigurationProperty> changes =
+                    MessagesUtil.deserializeLegacy(message.getConfigurationChangeEvent()
+                            .getConfigurationPropertyChange());
 
-            String connectorFacadeKey = message.getConnectorFacadeKey().toStringUtf8();
+            socket.getRemoteConnectionContext().getRemoteConnectionGroup()
+                    .notifyConfigurationChangeListener(connectorFacadeKey, changes);
+        } else {
 
-            ConnectorFacade connectorFacade = newInstance(info, connectorFacadeKey);
+            final CommonObjectMessages.ConnectorKey connectorKey = message.getConnectorKey();
 
-            if (message.hasAuthenticateOpRequest()) {
-                AuthenticationAsyncApiOpImpl.createProcessor(messageId, socket,
-                        message.getAuthenticateOpRequest()).execute(connectorFacade);
-            } else if (message.hasCreateOpRequest()) {
-                CreateAsyncApiOpImpl.createProcessor(messageId, socket,
-                        message.getCreateOpRequest()).execute(connectorFacade);
-            } else if (message.hasConnectorEventSubscriptionOpRequest()) {
-                ConnectorEventSubscriptionApiOpImpl.createProcessor(messageId, socket,
-                        message.getConnectorEventSubscriptionOpRequest()).execute(connectorFacade);
-            } else if (message.hasDeleteOpRequest()) {
-                DeleteAsyncApiOpImpl.createProcessor(messageId, socket,
-                        message.getDeleteOpRequest()).execute(connectorFacade);
-            } else if (message.hasGetOpRequest()) {
-                GetAsyncApiOpImpl.createProcessor(messageId, socket, message.getGetOpRequest())
-                        .execute(connectorFacade);
-            } else if (message.hasResolveUsernameOpRequest()) {
-                ResolveUsernameAsyncApiOpImpl.createProcessor(messageId, socket,
-                        message.getResolveUsernameOpRequest()).execute(connectorFacade);
-            } else if (message.hasSchemaOpRequest()) {
-                SchemaAsyncApiOpImpl.createProcessor(messageId, socket,
-                        message.getSchemaOpRequest()).execute(connectorFacade);
-            } else if (message.hasScriptOnConnectorOpRequest()) {
-                ScriptOnConnectorAsyncApiOpImpl.createProcessor(messageId, socket,
-                        message.getScriptOnConnectorOpRequest()).execute(connectorFacade);
-            } else if (message.hasScriptOnResourceOpRequest()) {
-                ScriptOnResourceAsyncApiOpImpl.createProcessor(messageId, socket,
-                        message.getScriptOnResourceOpRequest()).execute(connectorFacade);
-            } else if (message.hasSearchOpRequest()) {
-                SearchAsyncApiOpImpl.createProcessor(messageId, socket,
-                        message.getSearchOpRequest()).execute(connectorFacade);
-            } else if (message.hasSyncOpRequest()) {
-                SyncAsyncApiOpImpl.createProcessor(messageId, socket, message.getSyncOpRequest())
-                        .execute(connectorFacade);
-            } else if (message.hasSyncEventSubscriptionOpRequest()) {
-                SyncEventSubscriptionApiOpImpl.createProcessor(messageId, socket,
-                        message.getSyncEventSubscriptionOpRequest()).execute(connectorFacade);
-            } else if (message.hasTestOpRequest()) {
-                TestAsyncApiOpImpl.createProcessor(messageId, socket, message.getTestOpRequest())
-                        .execute(connectorFacade);
-            } else if (message.hasUpdateOpRequest()) {
-                UpdateAsyncApiOpImpl.createProcessor(messageId, socket,
-                        message.getUpdateOpRequest()).execute(connectorFacade);
-            } else if (message.hasValidateOpRequest()) {
-                ValidateAsyncApiOpImpl.createProcessor(messageId, socket,
-                        message.getValidateOpRequest()).execute(connectorFacade);
-            } else {
+            ConnectorInfo info = findConnectorInfo(connectorKey);
+            if (info == null) {
+                RemoteMessage.Builder response =
+                        MessagesUtil.createErrorResponse(messageId, new ConnectorException(
+                                "Connector not found: " + connectorKey + " "));
                 socket.getRemoteConnectionContext().getRemoteConnectionGroup().trySendMessage(
-                        MessagesUtil.createErrorResponse(messageId,
-                                new ConnectorException("Unknown OperationRequest")).build());
-            }
-        } catch (Throwable t) {
-            logger.ok(t, "Failed handle OperationRequest {0}", messageId);
-            socket.getRemoteConnectionContext().getRemoteConnectionGroup().trySendMessage(
-                    MessagesUtil.createErrorResponse(messageId, t).build());
+                        response.build());
+            } else {
 
-        } finally {
-            CurrentLocale.clear();
+                try {
+                    try {
+                        if (message.hasLocale()) {
+                            Locale local =
+                                    MessagesUtil.deserializeMessage(message.getLocale(),
+                                            Locale.class);
+                            CurrentLocale.set(local);
+                        }
+                    } catch (Throwable e) {
+                        logger.ok(e, "Failed to set request Locale");
+                    }
+
+                    ConnectorFacade connectorFacade = newInstance(socket, info, connectorFacadeKey);
+
+                    if (message.hasAuthenticateOpRequest()) {
+                        AuthenticationAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getAuthenticateOpRequest()).execute(connectorFacade);
+                    } else if (message.hasCreateOpRequest()) {
+                        CreateAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getCreateOpRequest()).execute(connectorFacade);
+                    } else if (message.hasConnectorEventSubscriptionOpRequest()) {
+                        ConnectorEventSubscriptionApiOpImpl.createProcessor(messageId, socket,
+                                message.getConnectorEventSubscriptionOpRequest()).execute(
+                                connectorFacade);
+                    } else if (message.hasDeleteOpRequest()) {
+                        DeleteAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getDeleteOpRequest()).execute(connectorFacade);
+                    } else if (message.hasGetOpRequest()) {
+                        GetAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getGetOpRequest()).execute(connectorFacade);
+                    } else if (message.hasResolveUsernameOpRequest()) {
+                        ResolveUsernameAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getResolveUsernameOpRequest()).execute(connectorFacade);
+                    } else if (message.hasSchemaOpRequest()) {
+                        SchemaAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getSchemaOpRequest()).execute(connectorFacade);
+                    } else if (message.hasScriptOnConnectorOpRequest()) {
+                        ScriptOnConnectorAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getScriptOnConnectorOpRequest()).execute(connectorFacade);
+                    } else if (message.hasScriptOnResourceOpRequest()) {
+                        ScriptOnResourceAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getScriptOnResourceOpRequest()).execute(connectorFacade);
+                    } else if (message.hasSearchOpRequest()) {
+                        SearchAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getSearchOpRequest()).execute(connectorFacade);
+                    } else if (message.hasSyncOpRequest()) {
+                        SyncAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getSyncOpRequest()).execute(connectorFacade);
+                    } else if (message.hasSyncEventSubscriptionOpRequest()) {
+                        SyncEventSubscriptionApiOpImpl.createProcessor(messageId, socket,
+                                message.getSyncEventSubscriptionOpRequest()).execute(
+                                connectorFacade);
+                    } else if (message.hasTestOpRequest()) {
+                        TestAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getTestOpRequest()).execute(connectorFacade);
+                    } else if (message.hasUpdateOpRequest()) {
+                        UpdateAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getUpdateOpRequest()).execute(connectorFacade);
+                    } else if (message.hasValidateOpRequest()) {
+                        ValidateAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getValidateOpRequest()).execute(connectorFacade);
+                    } else {
+                        socket.getRemoteConnectionContext().getRemoteConnectionGroup()
+                                .trySendMessage(
+                                        MessagesUtil.createErrorResponse(messageId,
+                                                new ConnectorException("Unknown OperationRequest"))
+                                                .build());
+                    }
+                } catch (Throwable t) {
+                    logger.ok(t, "Failed handle OperationRequest {0}", messageId);
+                    socket.getRemoteConnectionContext().getRemoteConnectionGroup().trySendMessage(
+                            MessagesUtil.createErrorResponse(messageId, t).build());
+
+                } finally {
+                    CurrentLocale.clear();
+                }
+            }
         }
     }
 
@@ -454,8 +473,10 @@ public class OpenICFServerAdapter implements OperationMessageListener {
         return isClient() ? "Client" : "Server";
     }
 
-    public ConnectorFacade newInstance(ConnectorInfo connectorInfo, String config) {
-        return connectorFramework.newManagedInstance(connectorInfo, config);
+    public ConnectorFacade newInstance(final WebSocketConnectionHolder socket,
+            final ConnectorInfo connectorInfo, final String config) {
+        return connectorFramework.newManagedInstance(connectorInfo, config,
+                new RemoteConfigurationChangeListener(socket, connectorInfo, config));
     }
 
     public ConnectorInfo findConnectorInfo(CommonObjectMessages.ConnectorKey key) {
@@ -463,4 +484,47 @@ public class OpenICFServerAdapter implements OperationMessageListener {
                 .getBundleVersion(), key.getConnectorName()));
     }
 
+    private static class RemoteConfigurationChangeListener implements
+            ConfigurationPropertyChangeListener {
+        private final WebSocketConnectionHolder socket;
+        private final ConnectorInfo connectorInfo;
+        private final String config;
+
+        public RemoteConfigurationChangeListener(WebSocketConnectionHolder socket,
+                ConnectorInfo connectorInfo, String config) {
+            this.socket = socket;
+            this.connectorInfo = connectorInfo;
+            this.config = config;
+        }
+
+        public void configurationPropertyChange(List<ConfigurationProperty> changes) {
+            try {
+                RemoteMessage.Builder request =
+                        MessagesUtil
+                                .createRequest(
+                                        0,
+                                        RPCMessages.RPCRequest
+                                                .newBuilder()
+                                                .setOperationRequest(
+                                                        OperationRequest
+                                                                .newBuilder()
+                                                                .setConnectorFacadeKey(
+                                                                        ByteString
+                                                                                .copyFromUtf8(config))
+                                                                .setConfigurationChangeEvent(
+                                                                        OperationMessages.ConfigurationChangeEvent
+                                                                                .newBuilder()
+                                                                                .setConfigurationPropertyChange(
+                                                                                        MessagesUtil
+                                                                                                .serializeLegacy(changes)))));
+
+                socket.getRemoteConnectionContext().getRemoteConnectionGroup().trySendMessage(
+                        request.build());
+            } catch (Throwable t) {
+                logger.info(logger.isOk() ? t : null,
+                        "Failed to send ConfigurationChangeEvent event: {0}", connectorInfo);
+
+            }
+        }
+    }
 }

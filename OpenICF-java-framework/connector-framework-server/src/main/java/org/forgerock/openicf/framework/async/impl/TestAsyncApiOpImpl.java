@@ -24,7 +24,6 @@
 
 package org.forgerock.openicf.framework.async.impl;
 
-import org.forgerock.openicf.common.protobuf.CommonObjectMessages;
 import org.forgerock.openicf.common.protobuf.OperationMessages.OperationRequest;
 import org.forgerock.openicf.common.protobuf.OperationMessages.OperationResponse;
 import org.forgerock.openicf.common.protobuf.OperationMessages.TestOpRequest;
@@ -43,14 +42,13 @@ import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorKey;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.MessageLite;
 
 public class TestAsyncApiOpImpl extends AbstractAPIOperation implements TestAsyncApiOp {
 
     private static final Log logger = Log.getLog(TestAsyncApiOpImpl.class);
 
     public TestAsyncApiOpImpl(
-            RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
+            RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             ConnectorKey connectorKey,
             Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
         super(remoteConnection, connectorKey, facadeKeyFunction);
@@ -61,22 +59,26 @@ public class TestAsyncApiOpImpl extends AbstractAPIOperation implements TestAsyn
     }
 
     public Promise<Void, RuntimeException> testAsync() {
-        return submitRequest(new InternalRequestFactory(OperationRequest.newBuilder()
-                .setTestOpRequest(TestOpRequest.getDefaultInstance())));
+        return submitRequest(new InternalRequestFactory(getConnectorKey(), getFacadeKeyFunction(),
+                OperationRequest.newBuilder().setTestOpRequest(TestOpRequest.getDefaultInstance())));
     }
 
-    private class InternalRequestFactory extends
+    private static class InternalRequestFactory extends
             AbstractRemoteOperationRequestFactory<Void, InternalRequest> {
         private final OperationRequest.Builder operationRequest;
 
-        public InternalRequestFactory(final OperationRequest.Builder operationRequest) {
+        public InternalRequestFactory(
+                final ConnectorKey connectorKey,
+                final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction,
+                final OperationRequest.Builder operationRequest) {
+            super(connectorKey, facadeKeyFunction);
             this.operationRequest = operationRequest;
         }
 
         public InternalRequest createRemoteRequest(
                 final RemoteOperationContext context,
                 final long requestId,
-                final CompletionCallback<MessageLite, Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
+                final CompletionCallback<Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
 
             RPCMessages.RPCRequest.Builder builder = createRPCRequest(context);
             if (null != builder) {
@@ -84,14 +86,6 @@ public class TestAsyncApiOpImpl extends AbstractAPIOperation implements TestAsyn
             } else {
                 return null;
             }
-        }
-
-        protected CommonObjectMessages.ConnectorKey.Builder createConnectorKey() {
-            return TestAsyncApiOpImpl.this.createConnectorKey();
-        }
-
-        protected ByteString createConnectorFacadeKey(final RemoteOperationContext context) {
-            return TestAsyncApiOpImpl.this.createConnectorFacadeKey(context);
         }
 
         protected OperationRequest.Builder createOperationRequest(
@@ -107,7 +101,7 @@ public class TestAsyncApiOpImpl extends AbstractAPIOperation implements TestAsyn
         public InternalRequest(
                 final RemoteOperationContext context,
                 final long requestId,
-                final RemoteRequestFactory.CompletionCallback<MessageLite, Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
+                final RemoteRequestFactory.CompletionCallback<Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
                 final RPCMessages.RPCRequest.Builder requestBuilder) {
             super(context, requestId, completionCallback, requestBuilder);
 
@@ -134,8 +128,8 @@ public class TestAsyncApiOpImpl extends AbstractAPIOperation implements TestAsyn
 
     // ----
 
-    public static AbstractLocalOperationProcessor<Void, TestOpRequest> createProcessor(long requestId,
-            WebSocketConnectionHolder socket, TestOpRequest message) {
+    public static AbstractLocalOperationProcessor<Void, TestOpRequest> createProcessor(
+            long requestId, WebSocketConnectionHolder socket, TestOpRequest message) {
         return new TestLocalOperationProcessor(requestId, socket, message);
     }
 

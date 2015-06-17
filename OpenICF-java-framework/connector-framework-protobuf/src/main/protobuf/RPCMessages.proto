@@ -10,19 +10,19 @@ message HandshakeMessage {
         DOTNET = 2;
     }
     required string sessionId = 1;
-    repeated ServerType serverType = 3;
-    optional bytes publicKey = 4;
+    required ServerType serverType = 2;
+    optional bytes publicKey = 3;
 }
 
 message ExceptionMessage {
-    message Cause {
+    message InnerCause {
         required string exceptionClass = 1;
         optional string message = 2;
-        optional Cause cause = 3;
+        optional InnerCause cause = 3;
     }
     required string exceptionClass = 1;
     optional string message = 2;
-    optional Cause cause = 3;
+    optional InnerCause innerCause = 3;
     optional string stackTrace = 4;
 }
 

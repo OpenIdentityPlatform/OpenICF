@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2015 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -22,23 +22,26 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  */
 
-package org.forgerock.openicf.framework;
+package org.identityconnectors.framework.api;
+
+import java.util.List;
 
 /**
- * A factory interface.
+ * A ConfigurationPropertyChangeListener receives the change of
+ * ConfigurationProperty.
  *
- * @param <P>
- *            The type of parameter for creating object by this factory.
- * @param <T>
- *            The type of object created by this factory.
  * @since 1.5
  */
-public interface Factory<T, P> {
+public interface ConfigurationPropertyChangeListener {
 
     /**
-     * Creates and returns a new object instance.
-     *
-     * @return The new object instance.
+     * Receives notification that an ConfigurationProperty has been changed to
+     * connector.
+     * 
+     * @param changes
+     *            containing the property name and value of the
+     *            ConfigurationProperty that was changed.
      */
-    T newInstance(P parameter);
+    void configurationPropertyChange(List<ConfigurationProperty> changes);
+
 }

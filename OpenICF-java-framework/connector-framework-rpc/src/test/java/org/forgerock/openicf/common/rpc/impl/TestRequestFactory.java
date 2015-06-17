@@ -27,13 +27,9 @@ package org.forgerock.openicf.common.rpc.impl;
 import org.forgerock.openicf.common.rpc.RemoteConnectionHolder;
 import org.forgerock.openicf.common.rpc.RemoteRequestFactory;
 
-public class TestRequestFactory<H extends RemoteConnectionHolder<TestMessage, TestConnectionGroup<H>, H, TestConnectionContext<H>>>
+public class TestRequestFactory<H extends RemoteConnectionHolder<TestConnectionGroup<H>, H, TestConnectionContext<H>>>
         implements
-        RemoteRequestFactory<TestMessage, TestRemoteRequest<H>, String, Exception, TestConnectionGroup<H>, H, TestConnectionContext<H>> {
-
-    public interface MessageListener<H extends RemoteConnectionHolder<TestMessage, TestConnectionGroup<H>, H, TestConnectionContext<H>>> {
-        public void handle(H sourceConnection, TestRemoteRequest<H> request, TestMessage message);
-    }
+        RemoteRequestFactory<TestRemoteRequest<H>, String, Exception, TestConnectionGroup<H>, H, TestConnectionContext<H>> {
 
     private final int request;
 
@@ -44,7 +40,7 @@ public class TestRequestFactory<H extends RemoteConnectionHolder<TestMessage, Te
     public TestRemoteRequest<H> createRemoteRequest(
             TestConnectionContext<H> context,
             long requestId,
-            CompletionCallback<TestMessage, String, Exception, TestConnectionGroup<H>, H, TestConnectionContext<H>> completionCallback) {
+            CompletionCallback<String, Exception, TestConnectionGroup<H>, H, TestConnectionContext<H>> completionCallback) {
         return new TestRemoteRequest<H>(context, requestId, completionCallback) {
             protected TestMessage getTestMessage() {
                 TestMessage message = new TestMessage();

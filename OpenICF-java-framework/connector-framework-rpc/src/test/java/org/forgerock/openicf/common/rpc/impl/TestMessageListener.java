@@ -27,9 +27,9 @@ package org.forgerock.openicf.common.rpc.impl;
 import org.forgerock.openicf.common.rpc.MessageListener;
 import org.forgerock.openicf.common.rpc.RemoteConnectionHolder;
 
-public abstract class TestMessageListener<H extends RemoteConnectionHolder<TestMessage, TestConnectionGroup<H>, H, TestConnectionContext<H>>>
+public abstract class TestMessageListener<H extends RemoteConnectionHolder<TestConnectionGroup<H>, H, TestConnectionContext<H>>>
         implements
-        MessageListener<TestMessage, TestConnectionGroup<H>, H, TestConnectionContext<H>> {
+        MessageListener<TestConnectionGroup<H>, H, TestConnectionContext<H>> {
 
     private final TestConnectionGroup<H> connectionGroup;
 

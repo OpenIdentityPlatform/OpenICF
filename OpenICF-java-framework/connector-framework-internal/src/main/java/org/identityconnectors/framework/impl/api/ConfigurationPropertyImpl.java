@@ -162,6 +162,23 @@ public class ConfigurationPropertyImpl implements ConfigurationProperty {
         operations = CollectionUtil.newReadOnlySet(set);
     }
 
+    public ConfigurationPropertyImpl() {
+    }
+
+    public ConfigurationPropertyImpl(ConfigurationPropertyImpl parent) {
+        this.order = parent.order;
+        this.confidential = parent.confidential;
+        this.name = parent.name;
+        this.helpMessageKey = parent.helpMessageKey;
+        this.displayMessageKey = parent.displayMessageKey;
+        this.groupMessageKey = parent.groupMessageKey;
+        this.value = parent.value;
+        this.type = parent.type;
+        this.operations = parent.operations;
+        this.required = parent.required;
+        this.parent = null;
+    }
+
     private String formatMessage(String key, String dflt, Object... args) {
         APIConfigurationImpl apiConfig = getParent().getParent();
         ConnectorMessages messages = apiConfig.getConnectorInfo().getMessages();

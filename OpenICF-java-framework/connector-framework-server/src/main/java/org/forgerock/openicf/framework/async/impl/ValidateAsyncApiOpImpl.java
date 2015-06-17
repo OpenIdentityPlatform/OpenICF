@@ -24,7 +24,6 @@
 
 package org.forgerock.openicf.framework.async.impl;
 
-import org.forgerock.openicf.common.protobuf.CommonObjectMessages;
 import org.forgerock.openicf.common.protobuf.OperationMessages;
 import org.forgerock.openicf.common.protobuf.OperationMessages.OperationResponse;
 import org.forgerock.openicf.common.protobuf.OperationMessages.ValidateOpRequest;
@@ -44,14 +43,13 @@ import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorKey;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.MessageLite;
 
 public class ValidateAsyncApiOpImpl extends AbstractAPIOperation implements ValidateAsyncApiOp {
 
     private static final Log logger = Log.getLog(ValidateAsyncApiOpImpl.class);
 
     public ValidateAsyncApiOpImpl(
-            RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
+            RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             ConnectorKey connectorKey,
             Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
         super(remoteConnection, connectorKey, facadeKeyFunction);
@@ -62,23 +60,27 @@ public class ValidateAsyncApiOpImpl extends AbstractAPIOperation implements Vali
     }
 
     public Promise<Void, RuntimeException> validateAsync() {
-        return submitRequest(new InternalRequestFactory(OperationMessages.OperationRequest
-                .newBuilder().setValidateOpRequest(ValidateOpRequest.getDefaultInstance())));
+        return submitRequest(new InternalRequestFactory(getConnectorKey(), getFacadeKeyFunction(),
+                OperationMessages.OperationRequest.newBuilder().setValidateOpRequest(
+                        ValidateOpRequest.getDefaultInstance())));
     }
 
-    private class InternalRequestFactory extends
+    private static class InternalRequestFactory extends
             AbstractRemoteOperationRequestFactory<Void, InternalRequest> {
         private final OperationMessages.OperationRequest.Builder operationRequest;
 
         public InternalRequestFactory(
+                final ConnectorKey connectorKey,
+                final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction,
                 final OperationMessages.OperationRequest.Builder operationRequest) {
+            super(connectorKey, facadeKeyFunction);
             this.operationRequest = operationRequest;
         }
 
         public InternalRequest createRemoteRequest(
                 final RemoteOperationContext context,
                 final long requestId,
-                final CompletionCallback<MessageLite, Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
+                final CompletionCallback<Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
 
             RPCMessages.RPCRequest.Builder builder = createRPCRequest(context);
             if (null != builder) {
@@ -86,14 +88,6 @@ public class ValidateAsyncApiOpImpl extends AbstractAPIOperation implements Vali
             } else {
                 return null;
             }
-        }
-
-        protected CommonObjectMessages.ConnectorKey.Builder createConnectorKey() {
-            return ValidateAsyncApiOpImpl.this.createConnectorKey();
-        }
-
-        protected ByteString createConnectorFacadeKey(final RemoteOperationContext context) {
-            return ValidateAsyncApiOpImpl.this.createConnectorFacadeKey(context);
         }
 
         protected OperationMessages.OperationRequest.Builder createOperationRequest(
@@ -109,7 +103,7 @@ public class ValidateAsyncApiOpImpl extends AbstractAPIOperation implements Vali
         public InternalRequest(
                 final RemoteOperationContext context,
                 final long requestId,
-                final RemoteRequestFactory.CompletionCallback<MessageLite, Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
+                final RemoteRequestFactory.CompletionCallback<Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
                 final RPCMessages.RPCRequest.Builder requestBuilder) {
             super(context, requestId, completionCallback, requestBuilder);
 
@@ -132,8 +126,8 @@ public class ValidateAsyncApiOpImpl extends AbstractAPIOperation implements Vali
 
     // ----
 
-    public static AbstractLocalOperationProcessor<Void, ValidateOpRequest> createProcessor(long requestId,
-            WebSocketConnectionHolder socket, ValidateOpRequest message) {
+    public static AbstractLocalOperationProcessor<Void, ValidateOpRequest> createProcessor(
+            long requestId, WebSocketConnectionHolder socket, ValidateOpRequest message) {
         return new ValidateLocalOperationProcessor(requestId, socket, message);
     }
 

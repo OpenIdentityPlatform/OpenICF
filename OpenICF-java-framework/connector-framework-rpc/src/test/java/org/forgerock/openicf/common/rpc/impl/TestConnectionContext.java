@@ -32,9 +32,9 @@ import org.forgerock.openicf.common.rpc.RemoteConnectionHolder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class TestConnectionContext<H extends RemoteConnectionHolder<TestMessage, TestConnectionGroup<H>, H, TestConnectionContext<H>>>
+public class TestConnectionContext<H extends RemoteConnectionHolder<TestConnectionGroup<H>, H, TestConnectionContext<H>>>
         implements
-        RemoteConnectionContext<TestMessage, TestConnectionGroup<H>, H, TestConnectionContext<H>> {
+        RemoteConnectionContext<TestConnectionGroup<H>, H, TestConnectionContext<H>> {
 
     private final TestConnectionGroup<H> connectionGroup;
     private final ObjectMapper m = new ObjectMapper();

@@ -165,6 +165,10 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         config.getGuid();
     }
 
+    public void update() {
+        config.updateTest();
+    }
+    
     public Uid authenticate(ObjectClass objectClass, String username, GuardedString password,
             OperationOptions options) {
         if (config.isReturnNullTest()) {
@@ -199,7 +203,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         
         return new Subscription() {
             // Remotely request stop processing subscription
-            public void unsubscribe() {
+            public void close() {
                 runnable.cancel();
             }
 
@@ -235,7 +239,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
 
         return new Subscription() {
             // Remotely request stop processing subscription
-            public void unsubscribe() {
+            public void close() {
                 runnable.cancel();
             }
 

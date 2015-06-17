@@ -44,14 +44,14 @@ import com.google.protobuf.MessageLite;
 
 public abstract class RemoteOperationRequest<V>
         extends
-        RemoteRequest<MessageLite, V, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> {
+        RemoteRequest<V, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> {
 
     private final static Log logger = Log.getLog(RemoteOperationRequest.class);
 
     public RemoteOperationRequest(
             RemoteOperationContext context,
             long requestId,
-            RemoteRequestFactory.CompletionCallback<MessageLite, V, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
+            RemoteRequestFactory.CompletionCallback<V, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
         super(context, requestId, completionCallback);
     }
 
@@ -62,11 +62,11 @@ public abstract class RemoteOperationRequest<V>
             RemoteOperationContext remoteContext);
 
     public void handleIncomingMessage(WebSocketConnectionHolder sourceConnection,
-            MessageLite message) {
+            Object message) {
         if (message instanceof RPCMessages.ExceptionMessage) {
             handleExceptionMessage((RPCMessages.ExceptionMessage) message);
-        } else if (null != message) {
-            if (!handleResponseMessage(sourceConnection, message)) {
+        } else if (message instanceof MessageLite) {
+            if (!handleResponseMessage(sourceConnection, (MessageLite)message)) {
                 logger.ok("Request {0} has unknown response message type:{1}", getRequestId(),
                         getClass().getSimpleName());
                 getFailureHandler().handleError(

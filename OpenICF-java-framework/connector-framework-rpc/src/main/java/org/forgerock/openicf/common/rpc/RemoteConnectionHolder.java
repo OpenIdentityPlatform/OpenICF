@@ -36,7 +36,7 @@ import java.util.concurrent.Future;
  * {@link org.forgerock.openicf.common.rpc.MessageListener}.
  *
  */
-public interface RemoteConnectionHolder<M, G extends RemoteConnectionGroup<M, G, H, P>, H extends RemoteConnectionHolder<M, G, H, P>, P extends RemoteConnectionContext<M, G, H, P>> {
+public interface RemoteConnectionHolder<G extends RemoteConnectionGroup<G, H, P>, H extends RemoteConnectionHolder<G, H, P>, P extends RemoteConnectionContext<G, H, P>> {
 
     P getRemoteConnectionContext();
 

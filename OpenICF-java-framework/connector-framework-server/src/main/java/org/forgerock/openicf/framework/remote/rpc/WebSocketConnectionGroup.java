@@ -29,6 +29,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.forgerock.openicf.common.protobuf.RPCMessages;
 import org.forgerock.openicf.common.protobuf.RPCMessages.ControlRequest;
@@ -49,6 +51,8 @@ import org.forgerock.util.promise.Function;
 import org.forgerock.util.promise.Promise;
 import org.identityconnectors.common.ConnectorKeyRange;
 import org.identityconnectors.common.security.Encryptor;
+import org.identityconnectors.framework.api.ConfigurationProperty;
+import org.identityconnectors.framework.api.ConfigurationPropertyChangeListener;
 import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.api.ConnectorKey;
 import org.identityconnectors.framework.impl.api.AbstractConnectorInfo;
@@ -57,7 +61,7 @@ import com.google.protobuf.MessageLite;
 
 public class WebSocketConnectionGroup
         extends
-        RemoteConnectionGroup<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>
+        RemoteConnectionGroup<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>
         implements AsyncConnectorInfoManager {
 
     private Encryptor encryptor = null;
@@ -65,6 +69,9 @@ public class WebSocketConnectionGroup
     private RemoteOperationContext operationContext = null;
 
     private final Set<String> principals = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+
+    private final ConcurrentMap<String, ConfigurationPropertyChangeListener> configurationChangeListenerMap =
+            new ConcurrentHashMap<String, ConfigurationPropertyChangeListener>();
 
     private final CloseListener<WebSocketConnectionHolder> closeListener =
             new CloseListener<WebSocketConnectionHolder>() {
@@ -112,11 +119,11 @@ public class WebSocketConnectionGroup
         if (principals.remove(name)) {
             if (principals.isEmpty()) {
                 // Gracefully close all request and shut down this group.
-                for (LocalRequest<MessageLite, ?, ?, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> local : localRequests
+                for (LocalRequest<?, ?, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> local : localRequests
                         .values()) {
                     local.cancel();
                 }
-                for (RemoteRequest<MessageLite, ?, ?, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remote : remoteRequests
+                for (RemoteRequest<?, ?, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remote : remoteRequests
                         .values()) {
                     remote.getPromise().cancel(true);
                 }
@@ -179,6 +186,31 @@ public class WebSocketConnectionGroup
 
     // --- AsyncConnectorInfoManager implementation ---
 
+
+    public void addConfigurationChangeListener(String key,
+                                               ConfigurationPropertyChangeListener listener) {
+        if (null != key) {
+            if (null != listener) {
+                configurationChangeListenerMap.put(key, listener);
+            } else {
+                configurationChangeListenerMap.remove(key);
+            }
+        }
+    }
+
+    public void notifyConfigurationChangeListener(String key, List<ConfigurationProperty> change) {
+        if (null != key && null != change) {
+            ConfigurationPropertyChangeListener listener = configurationChangeListenerMap.get(key);
+            if (null != listener) {
+                try {
+                    listener.configurationPropertyChange(change);
+                } catch (Throwable t) {
+                    // Ignore
+                }
+            }
+        }
+    }
+    
     // -- Static Classes
 
     private class RemoteConnectorInfoManager extends
@@ -193,14 +225,14 @@ public class WebSocketConnectionGroup
 
     private static class ControlMessageRequestFactory
             implements
-            RemoteRequestFactory<MessageLite, ControlMessageRequest, Boolean, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> {
+            RemoteRequestFactory<ControlMessageRequest, Boolean, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> {
 
         public final EnumSet<InfoLevel> infoLevels = EnumSet.noneOf(InfoLevel.class);
 
         public ControlMessageRequest createRemoteRequest(
                 RemoteOperationContext context,
                 long requestId,
-                CompletionCallback<MessageLite, Boolean, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
+                CompletionCallback<Boolean, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
             return new ControlMessageRequest(context, requestId, completionCallback, infoLevels);
         }
     }
@@ -212,7 +244,7 @@ public class WebSocketConnectionGroup
         public ControlMessageRequest(
                 final RemoteOperationContext context,
                 final long requestId,
-                final RemoteRequestFactory.CompletionCallback<MessageLite, Boolean, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
+                final RemoteRequestFactory.CompletionCallback<Boolean, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
                 final EnumSet<InfoLevel> infoLevels) {
             super(context, requestId, completionCallback);
             this.infoLevels = infoLevels;

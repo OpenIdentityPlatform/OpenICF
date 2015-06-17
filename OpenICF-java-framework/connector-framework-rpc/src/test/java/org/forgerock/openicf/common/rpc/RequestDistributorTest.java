@@ -46,11 +46,11 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-public class RequestDistributorTest<H extends RemoteConnectionHolder<TestMessage, TestConnectionGroup<H>, H, TestConnectionContext<H>>> {
+public class RequestDistributorTest<H extends RemoteConnectionHolder<TestConnectionGroup<H>, H, TestConnectionContext<H>>> {
 
     private TestConnectionGroup<H> client = null;
     private TestConnectionGroup<H> server = null;
-    private NIOSimulator<TestMessage, TestConnectionGroup<H>, H, TestConnectionContext<H>> simulator =
+    private NIOSimulator<TestConnectionGroup<H>, H, TestConnectionContext<H>> simulator =
             null;
 
     @BeforeClass
@@ -93,7 +93,7 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestMessage
         };
 
         simulator =
-                new NIOSimulator<TestMessage, TestConnectionGroup<H>, H, TestConnectionContext<H>>(
+                new NIOSimulator<TestConnectionGroup<H>, H, TestConnectionContext<H>>(
                         serverListener);
 
         Assert.assertFalse(client.isOperational());
@@ -108,7 +108,7 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestMessage
         simulator.close();
     }
 
-    public RemoteConnectionHolder<TestMessage, TestConnectionGroup<H>, H, TestConnectionContext<H>> getConnection() {
+    public RemoteConnectionHolder<TestConnectionGroup<H>, H, TestConnectionContext<H>> getConnection() {
         return simulator.connect(new TestMessageListener<H>(client) {
             public void onError(Throwable t) {
 
@@ -135,22 +135,16 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestMessage
 
     @Test(dependsOnMethods = { "testNoConnectionRequest" })
     public void testSimpleRequest() throws Exception {
-        RemoteConnectionHolder<TestMessage, TestConnectionGroup<H>, H, TestConnectionContext<H>> connection =
+        RemoteConnectionHolder<TestConnectionGroup<H>, H, TestConnectionContext<H>> connection =
                 getConnection();
         try {
             Assert.assertTrue(client.isOperational());
             Assert.assertTrue(server.isOperational());
-            final CountDownLatch latch = new CountDownLatch(1);
             TestRemoteRequest<H> request = client.trySubmitRequest(new TestRequestFactory<H>(0));
-            request.getPromise().thenAlways(new Runnable() {
-                public void run() {
-                    latch.countDown();
-                }
-            });
-            Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
+            request.getPromise();
             
             Assert.assertEquals(request.getPromise()
-                    .getOrThrowUninterruptibly(), "OK");
+                    .getOrThrowUninterruptibly(5, TimeUnit.SECONDS), "OK");
             Assert.assertTrue(client.getRemoteRequests().isEmpty());
             Assert.assertTrue(server.getLocalRequests().isEmpty());
         } finally {
@@ -160,20 +154,14 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestMessage
 
     @Test(dependsOnMethods = { "testNoConnectionRequest" })
     public void testCallbackRequest() throws Exception {
-        RemoteConnectionHolder<TestMessage, TestConnectionGroup<H>, H, TestConnectionContext<H>> connection =
+        RemoteConnectionHolder<TestConnectionGroup<H>, H, TestConnectionContext<H>> connection =
                 getConnection();
         try {
             Assert.assertTrue(client.isOperational());
             Assert.assertTrue(server.isOperational());
-            final CountDownLatch latch = new CountDownLatch(1);
             TestRemoteRequest<H> request = client.trySubmitRequest(new TestRequestFactory<H>(1));
-            request.getPromise().thenAlways(new Runnable() {
-                public void run() {
-                    latch.countDown();
-                }
-            });
-            Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
-            Assert.assertEquals(request.getPromise().getOrThrowUninterruptibly(), "OK");
+            
+            Assert.assertEquals(request.getPromise().getOrThrowUninterruptibly(5, TimeUnit.SECONDS), "OK");
             for (int i = 0; i < 5 && request.getResults().size() != 3; i++) {
                 Reporter.log("Wait for complete request cleanup: " + i, true);
                 Thread.sleep(1000); // Wait to complete all other threads
@@ -188,22 +176,15 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestMessage
 
     @Test(dependsOnMethods = { "testNoConnectionRequest" })
     public void testBlockingCallbackRequest() throws Exception {
-        RemoteConnectionHolder<TestMessage, TestConnectionGroup<H>, H, TestConnectionContext<H>> connection =
+        RemoteConnectionHolder<TestConnectionGroup<H>, H, TestConnectionContext<H>> connection =
                 getConnection();
         try {
             Assert.assertTrue(client.isOperational());
             Assert.assertTrue(server.isOperational());
             
-            final CountDownLatch latch = new CountDownLatch(1);
             TestRemoteRequest<H> request = client.trySubmitRequest(new TestRequestFactory<H>(2));
-            request.getPromise().thenAlways(new Runnable() {
-                public void run() {
-                    latch.countDown();
-                }
-            });
-            Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
-            
-            Assert.assertEquals(request.getPromise().getOrThrowUninterruptibly(), "OK");
+      
+            Assert.assertEquals(request.getPromise().getOrThrowUninterruptibly(15, TimeUnit.SECONDS), "OK");
             Assert.assertEquals(request.getResults().size(), 3);
             Assert.assertTrue(client.getRemoteRequests().isEmpty());
             Assert.assertTrue(server.getLocalRequests().isEmpty());
@@ -214,12 +195,11 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestMessage
 
     @Test(dependsOnMethods = { "testNoConnectionRequest" })
     public void testCancelRequest() throws Exception {
-        RemoteConnectionHolder<TestMessage, TestConnectionGroup<H>, H, TestConnectionContext<H>> connection =
+        RemoteConnectionHolder<TestConnectionGroup<H>, H, TestConnectionContext<H>> connection =
                 getConnection();
         try {
             Assert.assertTrue(client.isOperational());
             Assert.assertTrue(server.isOperational());
-            final CountDownLatch latch = new CountDownLatch(1);
 
             TestRemoteRequest<H> request = client.trySubmitRequest(new TestRequestFactory<H>(2) {
                 public void handleCallback(H sourceConnection, TestRemoteRequest<H> request,
@@ -236,19 +216,14 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestMessage
                     public void handleError(Exception error) {
                         Assert.assertTrue(error instanceof CancellationException);
                     }
-                }).thenAlways(new Runnable() {
-                    public void run() {
-                        latch.countDown();
-                    }
-                }).getOrThrowUninterruptibly();
+                }).getOrThrowUninterruptibly(15, TimeUnit.SECONDS);
                 Assert.fail("Not Canceled");
             } catch (CancellationException e) {
                 // Expected
             }
-            Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
             Assert.assertEquals(request.getResults().size(), 1);
-            for (int i = 0; i < 5 && !client.getLocalRequests().isEmpty()
-                    && !server.getLocalRequests().isEmpty(); i++) {
+            for (int i = 0; i < 5 && !(client.getRemoteRequests().isEmpty()
+                    && server.getLocalRequests().isEmpty()); i++) {
                 Reporter.log("Wait for Cancel complete: " + i, true);
                 Thread.sleep(1000); // Wait to complete all other threads
             }
@@ -263,7 +238,7 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestMessage
             expectedExceptions = RuntimeException.class,
             expectedExceptionsMessageRegExp = "Unknown Test case number")
     public void testFailedRequest() throws Exception {
-        RemoteConnectionHolder<TestMessage, TestConnectionGroup<H>, H, TestConnectionContext<H>> connection =
+        RemoteConnectionHolder<TestConnectionGroup<H>, H, TestConnectionContext<H>> connection =
                 getConnection();
         try {
 

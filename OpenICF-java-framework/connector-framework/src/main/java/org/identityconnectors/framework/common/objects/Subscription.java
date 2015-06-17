@@ -24,7 +24,10 @@
 
 package org.identityconnectors.framework.common.objects;
 
-import org.identityconnectors.common.FailureHandler;
+import java.io.Closeable;
+
+import org.identityconnectors.framework.api.Observer;
+import org.identityconnectors.framework.common.objects.filter.Filter;
 
 /**
  * A SubscriptionHandler represents a subscription to an asynchronous event
@@ -32,41 +35,24 @@ import org.identityconnectors.common.FailureHandler;
  *
  * @since 1.5
  */
-public interface Subscription {
+public interface Subscription extends Closeable {
 
     /**
      * Unsubscribes this {@code SubscriptionHandler} from receiving messages
      * sent to this channel.
      *
-     * @see org.identityconnectors.framework.api.operations.ConnectorEventSubscriptionApiOp#subscribe(org.identityconnectors.framework.common.objects.ObjectClass,
-     *      org.identityconnectors.framework.common.objects.filter.Filter,
-     *      org.identityconnectors.framework.common.objects.ResultsHandler,
-     *      org.identityconnectors.framework.common.objects.OperationOptions)
-     * @see org.identityconnectors.framework.api.operations.SyncEventSubscriptionApiOp#subscribe(org.identityconnectors.framework.common.objects.ObjectClass,
-     *      org.identityconnectors.framework.common.objects.SyncToken,
-     *      org.identityconnectors.framework.common.objects.SyncResultsHandler,
-     *      org.identityconnectors.framework.common.objects.OperationOptions)
+     * @see org.identityconnectors.framework.api.operations.ConnectorEventSubscriptionApiOp#subscribe(ObjectClass,
+     *      Filter, Observer, OperationOptions)
+     * @see org.identityconnectors.framework.api.operations.SyncEventSubscriptionApiOp#subscribe(ObjectClass,
+     *      SyncToken, Observer, OperationOptions)
      */
-    void unsubscribe();
-
-//    /**
-//     * Registers the provided completion handler for notification if this
-//     * {@code SubscriptionHandler} does not complete successfully. If this
-//     * {@code SubscriptionHandler} completes successfully then the completion
-//     * handler will not be notified.
-//     * <p>
-//     * This method can be used for asynchronous completion notification.
-//     *
-//     * @param onFailure
-//     *            The completion handler which will be notified upon
-//     *            unsuccessful completion of this {@code SubscriptionHandler}.
-//     */
-//    void onFailure(FailureHandler<RuntimeException> onFailure);
+    void close();
 
     /**
      * Indicates whether this {@code Subscription} is currently unsubscribed.
      *
-     * @return {@code true} if this {@code Subscription} is currently unsubscribed, {@code false} otherwise
+     * @return {@code true} if this {@code Subscription} is currently
+     *         unsubscribed, {@code false} otherwise
      */
     boolean isUnsubscribed();
 }

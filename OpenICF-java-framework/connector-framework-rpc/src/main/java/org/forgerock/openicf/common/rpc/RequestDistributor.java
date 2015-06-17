@@ -44,7 +44,7 @@ package org.forgerock.openicf.common.rpc;
  * @see org.forgerock.openicf.common.rpc.RoundRobinLoadBalancingAlgorithm
  * @see org.forgerock.openicf.common.rpc.RemoteConnectionGroup
  */
-public interface RequestDistributor<M, G extends RemoteConnectionGroup<M, G, H, P>, H extends RemoteConnectionHolder<M, G, H, P>, P extends RemoteConnectionContext<M, G, H, P>> {
+public interface RequestDistributor<G extends RemoteConnectionGroup<G, H, P>, H extends RemoteConnectionHolder<G, H, P>, P extends RemoteConnectionContext<G, H, P>> {
 
     /**
      * 
@@ -62,8 +62,8 @@ public interface RequestDistributor<M, G extends RemoteConnectionGroup<M, G, H, 
      *            task cannot fail.
      * @return new promise if succeeded otherwise {@code null}.
      */
-    <R extends RemoteRequest<M, V, E, G, H, P>, V, E extends Exception> R trySubmitRequest(
-            RemoteRequestFactory<M, R, V, E, G, H, P> requestFactory);
+    <R extends RemoteRequest<V, E, G, H, P>, V, E extends Exception> R trySubmitRequest(
+            RemoteRequestFactory<R, V, E, G, H, P> requestFactory);
 
     /**
      * Check if this implementation is operational.

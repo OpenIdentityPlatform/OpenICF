@@ -257,14 +257,14 @@ public class ClientRemoteConnectorInfoManager extends
         return delegatingAsyncConnectorInfoManager;
     }
 
-    public RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> getRequestDistributor() {
+    public RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> getRequestDistributor() {
         return requestDistributor;
     }
 
-    private final RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> requestDistributor =
-            new RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>() {
-                public <R extends RemoteRequest<MessageLite, V, E, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>, V, E extends Exception> R trySubmitRequest(
-                        final RemoteRequestFactory<MessageLite, R, V, E, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> requestFactory) {
+    private final RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> requestDistributor =
+            new RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>() {
+                public <R extends RemoteRequest<V, E, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>, V, E extends Exception> R trySubmitRequest(
+                        final RemoteRequestFactory<R, V, E, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> requestFactory) {
                     return ClientRemoteConnectorInfoManager.this.trySubmitRequest(requestFactory);
                 }
 
@@ -273,8 +273,8 @@ public class ClientRemoteConnectorInfoManager extends
                 }
             };
 
-    public <R extends RemoteRequest<MessageLite, V, E, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>, V, E extends Exception> R trySubmitRequest(
-            final RemoteRequestFactory<MessageLite, R, V, E, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> requestFactory) {
+    public <R extends RemoteRequest<V, E, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>, V, E extends Exception> R trySubmitRequest(
+            final RemoteRequestFactory<R, V, E, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> requestFactory) {
         // Try the existing WS Connections first
         int sizeBefore = privateConnections.size();
         if (sizeBefore > 0) {
@@ -637,7 +637,7 @@ public class ClientRemoteConnectorInfoManager extends
             super(true);
         }
 
-        protected RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> getMessageDistributor() {
+        protected RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> getMessageDistributor() {
             return ClientRemoteConnectorInfoManager.this.getRequestDistributor();
         }
 

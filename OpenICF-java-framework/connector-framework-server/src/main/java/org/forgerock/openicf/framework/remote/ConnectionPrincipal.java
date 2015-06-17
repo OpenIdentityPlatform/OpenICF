@@ -51,7 +51,7 @@ import com.google.protobuf.MessageLite;
 public abstract class ConnectionPrincipal<T extends ConnectionPrincipal<T>>
         implements
         Closeable,
-        RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>,
+        RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>,
         Principal {
 
     private static final Log logger = Log.getLog(ConnectionPrincipal.class);
@@ -104,8 +104,8 @@ public abstract class ConnectionPrincipal<T extends ConnectionPrincipal<T>>
         return listener;
     }
 
-    public <R extends RemoteRequest<MessageLite, V, E, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>, V, E extends Exception> R trySubmitRequest(
-            RemoteRequestFactory<MessageLite, R, V, E, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> requestFactory) {
+    public <R extends RemoteRequest<V, E, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>, V, E extends Exception> R trySubmitRequest(
+            RemoteRequestFactory<R, V, E, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> requestFactory) {
         for (WebSocketConnectionGroup e : connectionGroups.values()) {
             if (e.isOperational()) {
                 R result = e.trySubmitRequest(requestFactory);

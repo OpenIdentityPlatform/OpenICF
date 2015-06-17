@@ -44,7 +44,21 @@ public interface APIConfiguration {
      * These are initialized to their default values based on meta information.
      * Caller can then modify the properties as needed.
      */
-    public ConfigurationProperties getConfigurationProperties();
+    ConfigurationProperties getConfigurationProperties();
+
+    /**
+     * Add a configuration change listener callback handler.
+     * 
+     * This callback handler will be notified when connector push an event back
+     * to application to notify the initial configuration has to be changed
+     * before next time creating a new Connectorfacade in order to continue
+     * operate properly.
+     * 
+     * @param changeListener
+     *            the callback handler to receive the change event.
+     * @return a closeable to unregister the change listener.
+     */
+   void setChangeListener(ConfigurationPropertyChangeListener changeListener);
 
     /**
      * Determines if this {@link Connector} uses the framework's connector

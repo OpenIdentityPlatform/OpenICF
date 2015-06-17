@@ -32,7 +32,7 @@ import com.google.protobuf.MessageLite;
 
 public class RemoteOperationContext
         implements
-        RemoteConnectionContext<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> {
+        RemoteConnectionContext<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> {
 
     private final WebSocketConnectionGroup connectionGroup;
     private final Principal connectionPrincipal;

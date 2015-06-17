@@ -120,6 +120,13 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
     /**
      * Used by the script tests
      */
+    public void update() {
+        _config.updateTest();
+    }
+    
+    /**
+     * Used by the script tests
+     */
     public String concat(String s1, String s2) {
         checkClassLoader();
         return s1+s2;

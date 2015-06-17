@@ -103,7 +103,6 @@ import org.identityconnectors.framework.impl.api.APIConfigurationImpl;
 import org.identityconnectors.framework.impl.api.AbstractConnectorFacade;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.MessageLite;
 
 public class RemoteAsyncConnectorFacade extends AbstractConnectorFacade implements
         AsyncConnectorFacade {
@@ -133,7 +132,7 @@ public class RemoteAsyncConnectorFacade extends AbstractConnectorFacade implemen
             final Function<LoadBalancingConnectorFacadeContext, APIConfiguration, RuntimeException> transformer) {
         super(configuration);
         if (configuration.getConnectorInfo() instanceof RemoteConnectorInfoImpl) {
-            RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection =
+            RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection =
                     Assertions.nullChecked(((RemoteConnectorInfoImpl) configuration
                             .getConnectorInfo()).messageDistributor, "messageDistributor");
 
@@ -175,10 +174,19 @@ public class RemoteAsyncConnectorFacade extends AbstractConnectorFacade implemen
                                                                 }
                                                             });
                                             if (null != fullConfiguration) {
-                                                facadeKey =
-                                                        ByteString
-                                                                .copyFromUtf8((SerializerUtil
-                                                                        .serializeBase64Object(fullConfiguration)));
+                                                String connectorFacadeKey =
+                                                        (SerializerUtil
+                                                                .serializeBase64Object(fullConfiguration));
+                                                facadeKey = ByteString
+                                                        .copyFromUtf8(connectorFacadeKey);
+                                                if (null != getAPIConfiguration()
+                                                        .getChangeListener()) {
+                                                    value.getRemoteConnectionGroup()
+                                                            .addConfigurationChangeListener(
+                                                                    connectorFacadeKey,
+                                                                    getAPIConfiguration()
+                                                                            .getChangeListener());
+                                                }
                                                 facadeKeys.putIfAbsent(value.getRemotePrincipal()
                                                         .getName(), facadeKey);
                                             }
@@ -205,6 +213,12 @@ public class RemoteAsyncConnectorFacade extends AbstractConnectorFacade implemen
                                     throws RuntimeException {
                                 context.getRemoteConnectionGroup().findConnectorInfo(
                                         getAPIConfiguration().getConnectorInfo().getConnectorKey());
+                                if (null != getAPIConfiguration().getChangeListener()) {
+                                    context.getRemoteConnectionGroup()
+                                            .addConfigurationChangeListener(
+                                                    getConnectorFacadeKey(),
+                                                    getAPIConfiguration().getChangeListener());
+                                }
                                 return facadeKey;
                             }
                         };

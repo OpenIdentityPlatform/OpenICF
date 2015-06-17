@@ -45,14 +45,13 @@ import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.Uid;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.MessageLite;
 
 public class DeleteAsyncApiOpImpl extends AbstractAPIOperation implements DeleteAsyncApiOp {
 
     private static final Log logger = Log.getLog(DeleteAsyncApiOpImpl.class);
 
     public DeleteAsyncApiOpImpl(
-            RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
+            RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             ConnectorKey connectorKey,
             Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
         super(remoteConnection, connectorKey, facadeKeyFunction);
@@ -81,23 +80,26 @@ public class DeleteAsyncApiOpImpl extends AbstractAPIOperation implements Delete
             requestBuilder.setOptions(MessagesUtil.serializeLegacy(options));
         }
 
-        return submitRequest(new InternalRequestFactory(OperationMessages.OperationRequest
-                .newBuilder().setDeleteOpRequest(requestBuilder)));
+        return submitRequest(new InternalRequestFactory(getConnectorKey(), getFacadeKeyFunction(),
+                OperationMessages.OperationRequest.newBuilder().setDeleteOpRequest(requestBuilder)));
     }
 
-    private class InternalRequestFactory extends
+    private static class InternalRequestFactory extends
             AbstractRemoteOperationRequestFactory<Void, InternalRequest> {
         private final OperationMessages.OperationRequest.Builder operationRequest;
 
         public InternalRequestFactory(
+                final ConnectorKey connectorKey,
+                final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction,
                 final OperationMessages.OperationRequest.Builder operationRequest) {
+            super(connectorKey, facadeKeyFunction);
             this.operationRequest = operationRequest;
         }
 
         public InternalRequest createRemoteRequest(
                 final RemoteOperationContext context,
                 final long requestId,
-                final CompletionCallback<MessageLite, Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
+                final CompletionCallback<Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
 
             RPCMessages.RPCRequest.Builder builder = createRPCRequest(context);
             if (null != builder) {
@@ -105,14 +107,6 @@ public class DeleteAsyncApiOpImpl extends AbstractAPIOperation implements Delete
             } else {
                 return null;
             }
-        }
-
-        protected CommonObjectMessages.ConnectorKey.Builder createConnectorKey() {
-            return DeleteAsyncApiOpImpl.this.createConnectorKey();
-        }
-
-        protected ByteString createConnectorFacadeKey(final RemoteOperationContext context) {
-            return DeleteAsyncApiOpImpl.this.createConnectorFacadeKey(context);
         }
 
         protected OperationMessages.OperationRequest.Builder createOperationRequest(
@@ -128,7 +122,7 @@ public class DeleteAsyncApiOpImpl extends AbstractAPIOperation implements Delete
         public InternalRequest(
                 final RemoteOperationContext context,
                 final long requestId,
-                final RemoteRequestFactory.CompletionCallback<MessageLite, Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
+                final RemoteRequestFactory.CompletionCallback<Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
                 final RPCMessages.RPCRequest.Builder requestBuilder) {
             super(context, requestId, completionCallback, requestBuilder);
 
@@ -152,8 +146,9 @@ public class DeleteAsyncApiOpImpl extends AbstractAPIOperation implements Delete
 
     // ----
 
-    public static AbstractLocalOperationProcessor<Void, OperationMessages.DeleteOpRequest> createProcessor(long requestId,
-            WebSocketConnectionHolder socket, OperationMessages.DeleteOpRequest message) {
+    public static AbstractLocalOperationProcessor<Void, OperationMessages.DeleteOpRequest> createProcessor(
+            long requestId, WebSocketConnectionHolder socket,
+            OperationMessages.DeleteOpRequest message) {
         return new InternalLocalOperationProcessor(requestId, socket, message);
     }
 

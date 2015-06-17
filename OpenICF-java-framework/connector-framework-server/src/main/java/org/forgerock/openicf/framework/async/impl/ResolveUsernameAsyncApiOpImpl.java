@@ -45,7 +45,6 @@ import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.Uid;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.MessageLite;
 
 public class ResolveUsernameAsyncApiOpImpl extends AbstractAPIOperation implements
         ResolveUsernameAsyncApiOp {
@@ -53,7 +52,7 @@ public class ResolveUsernameAsyncApiOpImpl extends AbstractAPIOperation implemen
     private static final Log logger = Log.getLog(ResolveUsernameAsyncApiOpImpl.class);
 
     public ResolveUsernameAsyncApiOpImpl(
-            RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
+            RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             ConnectorKey connectorKey,
             Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
         super(remoteConnection, connectorKey, facadeKeyFunction);
@@ -83,23 +82,27 @@ public class ResolveUsernameAsyncApiOpImpl extends AbstractAPIOperation implemen
             requestBuilder.setOptions(MessagesUtil.serializeLegacy(options));
         }
 
-        return submitRequest(new InternalRequestFactory(OperationMessages.OperationRequest
-                .newBuilder().setResolveUsernameOpRequest(requestBuilder)));
+        return submitRequest(new InternalRequestFactory(getConnectorKey(), getFacadeKeyFunction(),
+                OperationMessages.OperationRequest.newBuilder().setResolveUsernameOpRequest(
+                        requestBuilder)));
     }
 
-    private class InternalRequestFactory extends
+    private static class InternalRequestFactory extends
             AbstractRemoteOperationRequestFactory<Uid, InternalRequest> {
         private final OperationMessages.OperationRequest.Builder operationRequest;
 
         public InternalRequestFactory(
+                final ConnectorKey connectorKey,
+                final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction,
                 final OperationMessages.OperationRequest.Builder operationRequest) {
+            super(connectorKey, facadeKeyFunction);
             this.operationRequest = operationRequest;
         }
 
         public InternalRequest createRemoteRequest(
                 final RemoteOperationContext context,
                 final long requestId,
-                final CompletionCallback<MessageLite, Uid, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
+                final CompletionCallback<Uid, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
 
             RPCMessages.RPCRequest.Builder builder = createRPCRequest(context);
             if (null != builder) {
@@ -107,14 +110,6 @@ public class ResolveUsernameAsyncApiOpImpl extends AbstractAPIOperation implemen
             } else {
                 return null;
             }
-        }
-
-        protected CommonObjectMessages.ConnectorKey.Builder createConnectorKey() {
-            return ResolveUsernameAsyncApiOpImpl.this.createConnectorKey();
-        }
-
-        protected ByteString createConnectorFacadeKey(final RemoteOperationContext context) {
-            return ResolveUsernameAsyncApiOpImpl.this.createConnectorFacadeKey(context);
         }
 
         protected OperationMessages.OperationRequest.Builder createOperationRequest(
@@ -130,7 +125,7 @@ public class ResolveUsernameAsyncApiOpImpl extends AbstractAPIOperation implemen
         public InternalRequest(
                 final RemoteOperationContext context,
                 final long requestId,
-                final RemoteRequestFactory.CompletionCallback<MessageLite, Uid, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
+                final RemoteRequestFactory.CompletionCallback<Uid, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
                 final RPCMessages.RPCRequest.Builder requestBuilder) {
             super(context, requestId, completionCallback, requestBuilder);
 
@@ -159,8 +154,9 @@ public class ResolveUsernameAsyncApiOpImpl extends AbstractAPIOperation implemen
 
     // ----
 
-    public static AbstractLocalOperationProcessor<Uid, OperationMessages.ResolveUsernameOpRequest> createProcessor(long requestId,
-            WebSocketConnectionHolder socket, OperationMessages.ResolveUsernameOpRequest message) {
+    public static AbstractLocalOperationProcessor<Uid, OperationMessages.ResolveUsernameOpRequest> createProcessor(
+            long requestId, WebSocketConnectionHolder socket,
+            OperationMessages.ResolveUsernameOpRequest message) {
         return new InternalLocalOperationProcessor(requestId, socket, message);
     }
 

@@ -29,7 +29,13 @@ import org.identityconnectors.framework.common.objects.ConnectorMessages;
  */
 public abstract class AbstractConfiguration implements Configuration {
 
+    public interface ConfigurationChangeCallback {
+        void notifyUpdate();
+    }
+
     private ConnectorMessages connectorMessages;
+
+    private ConfigurationChangeCallback callback;
 
     public final ConnectorMessages getConnectorMessages() {
         return connectorMessages;
@@ -39,6 +45,20 @@ public abstract class AbstractConfiguration implements Configuration {
         connectorMessages = messages;
     }
 
-    public abstract void validate();
+    public final void addChangeCallback(final ConfigurationChangeCallback handler) {
+        if (null != callback){
+            throw new IllegalStateException("Configuration change update handler has been set");
+        }
+        this.callback = handler;
+    }
 
+    protected void notifyConfigurationUpdate() {
+        if (null != callback) {
+            try {
+                callback.notifyUpdate();
+            } catch (Throwable t) {
+                // Ignored
+            }
+        }
+    }
 }

@@ -47,16 +47,16 @@ import org.forgerock.util.promise.Promise;
  * with the remote instance of {@link RemoteConnectionGroup#localRequests}.
  *
  */
-public abstract class RemoteConnectionGroup<M, G extends RemoteConnectionGroup<M, G, H, P>, H extends RemoteConnectionHolder<M, G, H, P>, P extends RemoteConnectionContext<M, G, H, P>>
-        implements RequestDistributor<M, G, H, P> {
+public abstract class RemoteConnectionGroup<G extends RemoteConnectionGroup<G, H, P>, H extends RemoteConnectionHolder<G, H, P>, P extends RemoteConnectionContext<G, H, P>>
+        implements RequestDistributor<G, H, P> {
 
     protected final String remoteSessionId;
 
-    protected final ConcurrentNavigableMap<Long, RemoteRequest<M, ?, ?, G, H, P>> remoteRequests =
-            new ConcurrentSkipListMap<Long, RemoteRequest<M, ?, ?, G, H, P>>();
+    protected final ConcurrentNavigableMap<Long, RemoteRequest<?, ?, G, H, P>> remoteRequests =
+            new ConcurrentSkipListMap<Long, RemoteRequest<?, ?, G, H, P>>();
 
-    protected final ConcurrentNavigableMap<Long, LocalRequest<M, ?, ?, G, H, P>> localRequests =
-            new ConcurrentSkipListMap<Long, LocalRequest<M, ?, ?, G, H, P>>();
+    protected final ConcurrentNavigableMap<Long, LocalRequest<?, ?, G, H, P>> localRequests =
+            new ConcurrentSkipListMap<Long, LocalRequest<?, ?, G, H, P>>();
 
     protected final CopyOnWriteArrayList<Pair<String, H>> webSockets =
             new CopyOnWriteArrayList<Pair<String, H>>();
@@ -154,16 +154,16 @@ public abstract class RemoteConnectionGroup<M, G extends RemoteConnectionGroup<M
         return next;
     }
 
-    protected <R extends RemoteRequest<M, V, E, G, H, P>, V, E extends Exception> R allocateRequest(
-            RemoteRequestFactory<M, R, V, E, G, H, P> requestFactory) {
+    protected <R extends RemoteRequest<V, E, G, H, P>, V, E extends Exception> R allocateRequest(
+            RemoteRequestFactory<R, V, E, G, H, P> requestFactory) {
         long messageId;
         R request;
         do {
             messageId = getNextRequestId();
             request =
                     requestFactory.createRemoteRequest(getRemoteConnectionContext(), messageId,
-                            new RemoteRequestFactory.CompletionCallback<M, V, E, G, H, P>() {
-                                public void complete(RemoteRequest<M, V, E, G, H, P> request) {
+                            new RemoteRequestFactory.CompletionCallback<V, E, G, H, P>() {
+                                public void complete(RemoteRequest<V, E, G, H, P> request) {
                                     remoteRequests.remove(request.getRequestId());
                                 }
                             });
@@ -176,8 +176,8 @@ public abstract class RemoteConnectionGroup<M, G extends RemoteConnectionGroup<M
 
     // -- Pair of methods to Submit and Receive the new Request Start --
 
-    public <R extends RemoteRequest<M, V, E, G, H, P>, V, E extends Exception> R trySubmitRequest(
-            RemoteRequestFactory<M, R, V, E, G, H, P> requestFactory) {
+    public <R extends RemoteRequest<V, E, G, H, P>, V, E extends Exception> R trySubmitRequest(
+            RemoteRequestFactory<R, V, E, G, H, P> requestFactory) {
 
         final R remoteRequest = allocateRequest(requestFactory);
         if (null != remoteRequest) {
@@ -190,9 +190,9 @@ public abstract class RemoteConnectionGroup<M, G extends RemoteConnectionGroup<M
         return remoteRequest;
     }
 
-    public <V, E extends Exception, R extends LocalRequest<M, V, E, G, H, P>> R receiveRequest(
+    public <V, E extends Exception, R extends LocalRequest<V, E, G, H, P>> R receiveRequest(
             final R localRequest) {
-        LocalRequest<M, ?, ?, G, H, P> tmp =
+        LocalRequest<?, ?, G, H, P> tmp =
                 localRequests.putIfAbsent(localRequest.getRequestId(), localRequest);
         if (null != tmp && !tmp.equals(localRequest)) {
             throw new IllegalStateException("Request has been registered with id: "
@@ -205,16 +205,16 @@ public abstract class RemoteConnectionGroup<M, G extends RemoteConnectionGroup<M
 
     // -- Pair of methods to Cancel pending Request Start --
 
-    public RemoteRequest<M, ?, ?, G, H, P> submitRequestCancel(final long messageId) {
-        RemoteRequest<M, ?, ?, G, H, P> tmp = remoteRequests.remove(messageId);
+    public RemoteRequest<?, ?, G, H, P> submitRequestCancel(final long messageId) {
+        RemoteRequest<?, ?, G, H, P> tmp = remoteRequests.remove(messageId);
         if (null != tmp) {
             tmp.getPromise().cancel(true);
         }
         return tmp;
     }
 
-    public LocalRequest<M, ?, ?, G, H, P> receiveRequestCancel(long messageId) {
-        LocalRequest<M, ?, ?, G, H, P> tmp = localRequests.remove(messageId);
+    public LocalRequest<?, ?, G, H, P> receiveRequestCancel(long messageId) {
+        LocalRequest<?, ?, G, H, P> tmp = localRequests.remove(messageId);
         if (null != tmp) {
             tmp.cancel();
         }
@@ -225,18 +225,18 @@ public abstract class RemoteConnectionGroup<M, G extends RemoteConnectionGroup<M
 
     // -- Pair of methods to Communicate pending Request Start --
 
-    public RemoteRequest<M, ?, ?, G, H, P> receiveRequestResponse(final H sourceConnection,
-            final long messageId, M message) {
-        RemoteRequest<M, ?, ?, G, H, P> tmp = remoteRequests.get(messageId);
+    public RemoteRequest<?, ?, G, H, P> receiveRequestResponse(final H sourceConnection,
+            final long messageId, Object message) {
+        RemoteRequest<?, ?, G, H, P> tmp = remoteRequests.get(messageId);
         if (null != tmp) {
             tmp.handleIncomingMessage(sourceConnection, message);
         }
         return tmp;
     }
 
-    public LocalRequest<M, ?, ?, G, H, P> receiveRequestUpdate(final H sourceConnection,
-            long messageId, M message) {
-        LocalRequest<M, ?, ?, G, H, P> tmp = localRequests.get(messageId);
+    public LocalRequest<?, ?, G, H, P> receiveRequestUpdate(final H sourceConnection,
+            long messageId, Object message) {
+        LocalRequest<?, ?, G, H, P> tmp = localRequests.get(messageId);
         if (null != tmp) {
             tmp.handleIncomingMessage(sourceConnection, message);
         }
@@ -245,7 +245,7 @@ public abstract class RemoteConnectionGroup<M, G extends RemoteConnectionGroup<M
 
     // -- Pair of methods to Communicate pending Request End --
 
-    public LocalRequest<M, ?, ?, G, H, P> removeRequest(long messageId) {
+    public LocalRequest<?, ?, G, H, P> removeRequest(long messageId) {
         return localRequests.remove(messageId);
     }
 

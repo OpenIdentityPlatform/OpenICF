@@ -39,5 +39,5 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 public interface ConnectorEventSubscriptionOp extends SPIOperation {
 
     Subscription subscribe(ObjectClass objectClass, Filter eventFilter,
-            Observer<ConnectorObject> handler, OperationOptions operationOptions);
+            Observer<ConnectorObject> observer, OperationOptions operationOptions);
 }

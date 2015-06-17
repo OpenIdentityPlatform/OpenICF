@@ -24,18 +24,21 @@
 
 package org.identityconnectors.framework.impl.api.local;
 
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.identityconnectors.common.Pair;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.pooling.ObjectPoolConfiguration;
+import org.identityconnectors.framework.api.ConfigurationPropertyChangeListener;
 import org.identityconnectors.framework.api.ConnectorKey;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.serializer.SerializerUtil;
 import org.identityconnectors.framework.impl.api.APIConfigurationImpl;
 import org.identityconnectors.framework.impl.api.ConfigurationPropertiesImpl;
 import org.identityconnectors.framework.impl.api.local.operations.OperationalContext;
+import org.identityconnectors.framework.spi.AbstractConfiguration;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.PoolableConnector;
@@ -80,6 +83,37 @@ public class ConnectorPoolManager {
         }
     }
 
+    private static class InternalConfigurationChangeHandler implements
+            AbstractConfiguration.ConfigurationChangeCallback {
+        private final APIConfigurationImpl apiConfiguration;
+        private final Configuration configuration;
+
+        public InternalConfigurationChangeHandler(final APIConfigurationImpl apiConfiguration,
+                final Configuration configuration) {
+            this.apiConfiguration = apiConfiguration;
+            this.configuration = configuration;
+        }
+
+        public void notifyUpdate() {
+            try {
+                final ConfigurationPropertyChangeListener listener =
+                        apiConfiguration.getChangeListener();
+                if (null != listener) {
+                    List<org.identityconnectors.framework.api.ConfigurationProperty> diff =
+                            JavaClassProperties.calculateDiff(apiConfiguration
+                                    .getConfigurationProperties(), configuration);
+                    if (!diff.isEmpty()) {
+                        listener.configurationPropertyChange(diff);
+                    }
+                }
+            } catch (Throwable e) {
+                LOG.warn(LOG.isOk() ? e : null,
+                        "Configuration change notification is failed for {0}", configuration
+                                .getClass());
+            }
+        }
+    }
+
     private static class ConnectorPoolHandler implements ObjectPoolHandler<PoolableConnector> {
         private final APIConfigurationImpl apiConfiguration;
         private final LocalConnectorInfoImpl localConnectorInfo;
@@ -121,6 +155,12 @@ public class ConnectorPoolManager {
                                 JavaClassProperties.createBean(apiConfiguration
                                         .getConfigurationProperties(), localConnectorInfo
                                         .getConnectorConfigurationClass());
+                        if (null != apiConfiguration.getChangeListener()
+                                && config instanceof AbstractConfiguration) {
+                            ((AbstractConfiguration) config)
+                                    .addChangeCallback(new InternalConfigurationChangeHandler(
+                                            apiConfiguration, config));
+                        }
                     } else {
                         config = context.getConfiguration();
                     }

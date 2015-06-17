@@ -29,11 +29,10 @@ import java.util.concurrent.ExecutionException;
 import org.forgerock.openicf.common.rpc.LocalRequest;
 import org.forgerock.openicf.common.rpc.RemoteConnectionHolder;
 import org.forgerock.util.promise.Function;
-import org.testng.Reporter;
 
-public class TestLocalRequest<H extends RemoteConnectionHolder<TestMessage, TestConnectionGroup<H>, H, TestConnectionContext<H>>>
+public class TestLocalRequest<H extends RemoteConnectionHolder<TestConnectionGroup<H>, H, TestConnectionContext<H>>>
         extends
-        LocalRequest<TestMessage, String, Exception, TestConnectionGroup<H>, H, TestConnectionContext<H>> {
+        LocalRequest<String, Exception, TestConnectionGroup<H>, H, TestConnectionContext<H>> {
 
     private H connection = null;
     private boolean cancelled = false;
@@ -120,21 +119,21 @@ public class TestLocalRequest<H extends RemoteConnectionHolder<TestMessage, Test
         case 2: {
             synchronized (this) {
                 callbackMessage("Result0");
-                this.wait(30000, 0);
+                this.wait(3000, 0);
             }
             if (cancelled) {
                 return;
             }
             synchronized (this) {
                 callbackMessage("Result2");
-                this.wait(30000, 0);
+                this.wait(3000, 0);
             }
             if (cancelled) {
                 return;
             }
             synchronized (this) {
                 callbackMessage("Result3");
-                this.wait(30000, 0);
+                this.wait(3000, 0);
             }
             if (cancelled) {
                 return;
@@ -147,12 +146,15 @@ public class TestLocalRequest<H extends RemoteConnectionHolder<TestMessage, Test
         }
     }
 
-    public void handleIncomingMessage(H sourceConnection, TestMessage message) {
-        if (Boolean.TRUE.equals(message.cancel)) {
-            cancel();
-        }
-        synchronized (this) {
-            notifyAll();
+    public void handleIncomingMessage(H sourceConnection, Object incommingMessage) {
+        if (incommingMessage instanceof TestMessage) {
+            TestMessage message = (TestMessage) incommingMessage;
+            if (Boolean.TRUE.equals(message.cancel)) {
+                cancel();
+            }
+            synchronized (this) {
+                notifyAll();
+            }
         }
     }
 }

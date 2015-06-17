@@ -57,7 +57,6 @@ import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncToken;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.MessageLite;
 
 public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation implements
         SyncEventSubscriptionApiOp {
@@ -65,7 +64,7 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
     private static final Log logger = Log.getLog(SyncEventSubscriptionApiOpImpl.class);
 
     public SyncEventSubscriptionApiOpImpl(
-            final RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
+            final RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             final ConnectorKey connectorKey,
             final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
         super(remoteConnection, connectorKey, facadeKeyFunction);
@@ -87,7 +86,7 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
                     }
                 });
         return new Subscription() {
-            public void unsubscribe() {
+            public void close() {
                 promise.cancel(true);
             }
 
@@ -113,17 +112,21 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
             requestBuilder.setOptions(MessagesUtil.serializeLegacy(options));
         }
 
-        return submitRequest(new InternalRequestFactory(OperationRequest.newBuilder()
-                .setSyncEventSubscriptionOpRequest(requestBuilder), handler));
+        return submitRequest(new InternalRequestFactory(getConnectorKey(), getFacadeKeyFunction(),
+                OperationRequest.newBuilder().setSyncEventSubscriptionOpRequest(requestBuilder),
+                handler));
     }
 
-    private class InternalRequestFactory extends
+    private static class InternalRequestFactory extends
             AbstractRemoteOperationRequestFactory<Void, InternalRequest> {
         private final OperationRequest.Builder operationRequest;
         final Observer<SyncDelta> handler;
 
-        public InternalRequestFactory(final OperationRequest.Builder operationRequest,
-                final Observer<SyncDelta> handler) {
+        public InternalRequestFactory(
+                final ConnectorKey connectorKey,
+                final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction,
+                final OperationRequest.Builder operationRequest, final Observer<SyncDelta> handler) {
+            super(connectorKey, facadeKeyFunction);
             this.operationRequest = operationRequest;
             this.handler = handler;
         }
@@ -131,7 +134,7 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
         public InternalRequest createRemoteRequest(
                 final RemoteOperationContext context,
                 final long requestId,
-                final CompletionCallback<MessageLite, Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
+                final CompletionCallback<Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
 
             RPCMessages.RPCRequest.Builder builder = createRPCRequest(context);
             if (null != builder) {
@@ -139,14 +142,6 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
             } else {
                 return null;
             }
-        }
-
-        protected CommonObjectMessages.ConnectorKey.Builder createConnectorKey() {
-            return SyncEventSubscriptionApiOpImpl.this.createConnectorKey();
-        }
-
-        protected ByteString createConnectorFacadeKey(final RemoteOperationContext context) {
-            return SyncEventSubscriptionApiOpImpl.this.createConnectorFacadeKey(context);
         }
 
         protected OperationRequest.Builder createOperationRequest(
@@ -165,7 +160,7 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
         public InternalRequest(
                 final RemoteOperationContext context,
                 final long requestId,
-                final RemoteRequestFactory.CompletionCallback<MessageLite, Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
+                final RemoteRequestFactory.CompletionCallback<Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
                 final RPCMessages.RPCRequest.Builder requestBuilder,
                 final Observer<SyncDelta> handler) {
             super(context, requestId, completionCallback, requestBuilder);
@@ -283,7 +278,7 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
         }
 
         protected boolean tryCancel() {
-            subscription.unsubscribe();
+            subscription.close();
             return super.tryCancel();
         }
     }

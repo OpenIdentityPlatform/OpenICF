@@ -47,13 +47,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @see FailoverLoadBalancingAlgorithm
  */
-public class RoundRobinLoadBalancingAlgorithm<M, G extends RemoteConnectionGroup<M, G, H, P>, H extends RemoteConnectionHolder<M, G, H, P>, P extends RemoteConnectionContext<M, G, H, P>>
-        extends AbstractLoadBalancingAlgorithm<M, G, H, P> {
+public class RoundRobinLoadBalancingAlgorithm<G extends RemoteConnectionGroup<G, H, P>, H extends RemoteConnectionHolder<G, H, P>, P extends RemoteConnectionContext<G, H, P>>
+        extends AbstractLoadBalancingAlgorithm<G, H, P> {
 
     private final AtomicInteger counter = new AtomicInteger(0);
 
     public RoundRobinLoadBalancingAlgorithm(
-            final List<RequestDistributor<M, G, H, P>> requestDistributors) {
+            final List<RequestDistributor<G, H, P>> requestDistributors) {
         super(requestDistributors);
     }
 

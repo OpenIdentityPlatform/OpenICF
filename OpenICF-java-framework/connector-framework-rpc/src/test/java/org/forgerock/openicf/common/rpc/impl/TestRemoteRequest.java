@@ -33,27 +33,30 @@ import org.forgerock.openicf.common.rpc.RemoteRequest;
 import org.forgerock.openicf.common.rpc.RemoteRequestFactory;
 import org.forgerock.util.promise.Function;
 
-public abstract class TestRemoteRequest<H extends RemoteConnectionHolder<TestMessage, TestConnectionGroup<H>, H, TestConnectionContext<H>>>
+public abstract class TestRemoteRequest<H extends RemoteConnectionHolder<TestConnectionGroup<H>, H, TestConnectionContext<H>>>
         extends
-        RemoteRequest<TestMessage, String, Exception, TestConnectionGroup<H>, H, TestConnectionContext<H>> {
+        RemoteRequest<String, Exception, TestConnectionGroup<H>, H, TestConnectionContext<H>> {
 
     protected final List<String> results = new ArrayList<String>();
 
     public TestRemoteRequest(
             TestConnectionContext<H> context,
             long requestId,
-            RemoteRequestFactory.CompletionCallback<TestMessage, String, Exception, TestConnectionGroup<H>, H, TestConnectionContext<H>> completionCallback) {
+            RemoteRequestFactory.CompletionCallback<String, Exception, TestConnectionGroup<H>, H, TestConnectionContext<H>> completionCallback) {
         super(context, requestId, completionCallback);
     }
 
-    public void handleIncomingMessage(H sourceConnection, TestMessage message) {
-        if (message.response != null) {
-            getSuccessHandler().handleResult(message.response);
-        } else if (message.exception != null) {
-            getFailureHandler().handleError(new RuntimeException(message.exception));
-        } else if (message.message != null) {
-            results.add(message.message);
-            handle(sourceConnection, this, message);
+    public void handleIncomingMessage(H sourceConnection, Object incomeMessage) {
+        if (incomeMessage instanceof TestMessage) {
+            TestMessage message = (TestMessage) incomeMessage;
+            if (message.response != null) {
+                getSuccessHandler().handleResult(message.response);
+            } else if (message.exception != null) {
+                getFailureHandler().handleError(new RuntimeException(message.exception));
+            } else if (message.message != null) {
+                results.add(message.message);
+                handle(sourceConnection, this, message);
+            }
         }
     }
 

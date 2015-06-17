@@ -25,16 +25,15 @@ package org.identityconnectors.framework.impl.api;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.pooling.ObjectPoolConfiguration;
 import org.identityconnectors.framework.api.APIConfiguration;
+import org.identityconnectors.framework.api.ConfigurationPropertyChangeListener;
 import org.identityconnectors.framework.api.ResultsHandlerConfiguration;
 import org.identityconnectors.framework.api.operations.APIOperation;
-
 
 public class APIConfigurationImpl implements APIConfiguration {
 
@@ -60,20 +59,25 @@ public class APIConfigurationImpl implements APIConfiguration {
     /**
      * Map of timeout per operation.
      */
-    private Map<Class<? extends APIOperation>, Integer> timeoutMap
-    = new HashMap<Class<? extends APIOperation>, Integer>();
+    private Map<Class<? extends APIOperation>, Integer> timeoutMap =
+            new HashMap<Class<? extends APIOperation>, Integer>();
 
     /**
      * Set of supported operations;
      */
     private Set<Class<? extends APIOperation>> supportedOperations;
 
-
     /**
      * The connector info from which this was created. Not serialized in this
      * object. Set when returned from the parent
      */
     private transient AbstractConnectorInfo connectorInfo;
+
+    /**
+     * The configuration change listener to notified from connector
+     * 
+     */
+    private transient ConfigurationPropertyChangeListener configurationChangeListener;
 
     // =======================================================================
     // Constructors
@@ -84,10 +88,12 @@ public class APIConfigurationImpl implements APIConfiguration {
 
     public APIConfigurationImpl(APIConfigurationImpl other) {
         if (null != other.connectorPoolConfiguration) {
-            this.setConnectorPoolConfiguration(new ObjectPoolConfiguration(other.connectorPoolConfiguration));
+            this.setConnectorPoolConfiguration(new ObjectPoolConfiguration(
+                    other.connectorPoolConfiguration));
         }
         if (null != other.resultsHandlerConfiguration) {
-            this.setResultsHandlerConfiguration(new ResultsHandlerConfiguration(other.resultsHandlerConfiguration));
+            this.setResultsHandlerConfiguration(new ResultsHandlerConfiguration(
+                    other.resultsHandlerConfiguration));
         }
         this.isConnectorPoolingSupported = other.isConnectorPoolingSupported;
         ConfigurationPropertiesImpl prop = new ConfigurationPropertiesImpl();
@@ -95,23 +101,24 @@ public class APIConfigurationImpl implements APIConfiguration {
         setConfigurationProperties(prop);
 
         this.bufferSize = other.bufferSize;
-        this.timeoutMap = new HashMap<Class<? extends APIOperation>, Integer>( other.timeoutMap);
-        this.supportedOperations = new HashSet<Class<? extends APIOperation>>( other.supportedOperations);
+        this.timeoutMap = new HashMap<Class<? extends APIOperation>, Integer>(other.timeoutMap);
+        this.supportedOperations =
+                new HashSet<Class<? extends APIOperation>>(other.supportedOperations);
 
         this.connectorInfo = other.connectorInfo;
+        this.configurationChangeListener = other.configurationChangeListener;
     }
 
     // =======================================================================
     // Internal Methods
     // =======================================================================
 
-
     public AbstractConnectorInfo getConnectorInfo() {
         return connectorInfo;
     }
 
     public void setConnectorInfo(AbstractConnectorInfo connectorInfo) {
-       this.connectorInfo = connectorInfo;
+        this.connectorInfo = connectorInfo;
     }
 
     public void setConnectorPoolingSupported(boolean supported) {
@@ -131,7 +138,6 @@ public class APIConfigurationImpl implements APIConfiguration {
             configurationProperties.setParent(this);
         }
     }
-
 
     public Map<Class<? extends APIOperation>, Integer> getTimeoutMap() {
         return timeoutMap;
@@ -199,8 +205,7 @@ public class APIConfigurationImpl implements APIConfiguration {
     /**
      * {@inheritDoc}
      */
-    public void setTimeout(Class<? extends APIOperation> operation,
-            int timeout) {
+    public void setTimeout(Class<? extends APIOperation> operation, int timeout) {
         this.timeoutMap.put(operation, timeout);
     }
 
@@ -230,5 +235,13 @@ public class APIConfigurationImpl implements APIConfiguration {
 
     public void setResultsHandlerConfiguration(ResultsHandlerConfiguration config) {
         this.resultsHandlerConfiguration = config;
+    }
+
+    public void setChangeListener(ConfigurationPropertyChangeListener changeListener) {
+        configurationChangeListener = changeListener;
+    }
+
+    public ConfigurationPropertyChangeListener getChangeListener() {
+        return configurationChangeListener;
     }
 }

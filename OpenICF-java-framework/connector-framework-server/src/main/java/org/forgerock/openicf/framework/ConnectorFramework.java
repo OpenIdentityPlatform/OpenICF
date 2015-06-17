@@ -25,7 +25,6 @@
 package org.forgerock.openicf.framework;
 
 import java.io.Closeable;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
@@ -39,8 +38,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.forgerock.openicf.framework.async.AsyncConnectorInfoManager;
-import org.forgerock.openicf.framework.remote.LoadBalancingAlgorithmFactory;
-import org.forgerock.openicf.framework.remote.LoadBalancingConnectorInfoManager;
 import org.forgerock.openicf.framework.client.ConnectionManagerConfig;
 import org.forgerock.openicf.framework.client.ConnectionManagerFactory;
 import org.forgerock.openicf.framework.client.RemoteConnectionInfoManagerFactory;
@@ -49,6 +46,8 @@ import org.forgerock.openicf.framework.client.RemoteWSFrameworkConnectionInfo;
 import org.forgerock.openicf.framework.local.AsyncLocalConnectorInfoManager;
 import org.forgerock.openicf.framework.remote.AsyncRemoteConnectorInfoManager;
 import org.forgerock.openicf.framework.remote.AsyncRemoteLegacyConnectorInfoManager;
+import org.forgerock.openicf.framework.remote.LoadBalancingAlgorithmFactory;
+import org.forgerock.openicf.framework.remote.LoadBalancingConnectorInfoManager;
 import org.forgerock.openicf.framework.remote.OpenICFServerAdapter;
 import org.forgerock.openicf.framework.remote.RemoteAsyncConnectorFacade;
 import org.forgerock.openicf.framework.remote.RemoteConnectorInfoImpl;
@@ -58,6 +57,7 @@ import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.Pair;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.APIConfiguration;
+import org.identityconnectors.framework.api.ConfigurationPropertyChangeListener;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.api.ConnectorKey;
@@ -211,10 +211,15 @@ public class ConnectorFramework implements Closeable {
     private ScheduledFuture<?> scheduledManagedFacadeCacheFuture = null;
 
     public ConnectorFacade newManagedInstance(ConnectorInfo connectorInfo, String config) {
+        return newManagedInstance(connectorInfo, config, null);
+    }
+    
+    public ConnectorFacade newManagedInstance(ConnectorInfo connectorInfo, String config,
+            final ConfigurationPropertyChangeListener changeListener) {
         ConnectorFacade facade = MANAGED_FACADE_CACHE.get(config);
         if (null == facade) {
             // new ConnectorFacade creation must remain cheap operation
-            facade = newInstance(connectorInfo, config);
+            facade = newInstance(connectorInfo, config, changeListener);
             if (facade instanceof LocalConnectorFacadeImpl) {
                 ConnectorFacade ret =
                         MANAGED_FACADE_CACHE.putIfAbsent(facade.getConnectorFacadeKey(), facade);
@@ -236,11 +241,18 @@ public class ConnectorFramework implements Closeable {
     }
 
     public ConnectorFacade newInstance(final ConnectorInfo connectorInfo, String config) {
+        return newInstance(connectorInfo, config, null);
+    }
+
+    public ConnectorFacade newInstance(final ConnectorInfo connectorInfo, String config,
+            final ConfigurationPropertyChangeListener changeListener) {
         ConnectorFacade ret = null;
         if (connectorInfo instanceof LocalConnectorInfoImpl) {
             try {
                 // create a new Provisioner.
-                ret = new LocalConnectorFacadeImpl((LocalConnectorInfoImpl) connectorInfo, config);
+                ret =
+                        new LocalConnectorFacadeImpl((LocalConnectorInfoImpl) connectorInfo,
+                                config, changeListener);
 
             } catch (Exception ex) {
                 String connector = connectorInfo.getConnectorKey().toString();
@@ -252,11 +264,15 @@ public class ConnectorFramework implements Closeable {
             ret =
                     new RemoteConnectorFacadeImpl(
                             (org.identityconnectors.framework.impl.api.remote.RemoteConnectorInfoImpl) connectorInfo,
-                            config);
+                            config, changeListener);
         } else if (connectorInfo instanceof RemoteConnectorInfoImpl) {
             Assertions.nullCheck(connectorInfo, "connectorInfo");
-            final APIConfigurationImpl configuration = (APIConfigurationImpl) SerializerUtil.deserializeBase64Object(Assertions.nullChecked(config,"configuration"));
-            configuration.setConnectorInfo((RemoteConnectorInfoImpl)connectorInfo);
+            final APIConfigurationImpl configuration =
+                    (APIConfigurationImpl) SerializerUtil.deserializeBase64Object(Assertions
+                            .nullChecked(config, "configuration"));
+            configuration.setConnectorInfo((RemoteConnectorInfoImpl) connectorInfo);
+
+            configuration.setChangeListener(changeListener);
             ret = newInstance(configuration);
         } else {
             throw new IllegalArgumentException("Unknown ConnectorInfo type");
@@ -350,7 +366,7 @@ public class ConnectorFramework implements Closeable {
         return new AsyncRemoteConnectorInfoManager(getRemoteConnectionInfoManagerFactory().connect(
                 info));
     }
-    
+
     public LoadBalancingConnectorInfoManager getRemoteManager(
             final LoadBalancingAlgorithmFactory loadBalancingAlgorithmFactory) {
         if (null != loadBalancingAlgorithmFactory
@@ -361,8 +377,6 @@ public class ConnectorFramework implements Closeable {
         }
     }
 
-    
-    
     public ConnectorFacade newInstance(ConnectorInfo connectorInfo,
             Function<RemoteConnectorInfoImpl, APIConfiguration, RuntimeException> transformer) {
         if (null != remoteConnectionInfoManagerFactory) {
@@ -378,15 +392,6 @@ public class ConnectorFramework implements Closeable {
         }
         throw new UnsupportedOperationException(REMOTE_LIBRARY_MISSING_EXCEPTION);
     }
-    
-    
-    
-    
-    public interface Maki {
-        APIConfiguration getConfiguration();
-        String getPrincipalName();
-    }
-    
 
     // ------ RemoteConnectorFramework Implementation End ------
 
@@ -399,7 +404,7 @@ public class ConnectorFramework implements Closeable {
                         getConnectionManagerFactory().getNewInstance(listener,
                                 getConnectionManagerConfig());
             } catch (final Exception e) {
-                logger.warn(e,"RemoteConnectionInfoManagerFactory is not available");
+                logger.warn(e, "RemoteConnectionInfoManagerFactory is not available");
                 remoteConnectionInfoManagerFactory =
                         new RemoteConnectionInfoManagerFactory(listener,
                                 getConnectionManagerConfig()) {

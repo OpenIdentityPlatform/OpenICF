@@ -27,6 +27,7 @@ import static org.fest.assertions.Assertions.assertThat;
 import static org.identityconnectors.common.IOUtil.makeURL;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
@@ -45,6 +46,7 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.Version;
@@ -53,6 +55,7 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConfigurationProperties;
 import org.identityconnectors.framework.api.ConfigurationProperty;
+import org.identityconnectors.framework.api.ConfigurationPropertyChangeListener;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.api.ConnectorInfo;
@@ -89,10 +92,12 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.framework.impl.api.local.ConnectorPoolManager;
 import org.identityconnectors.framework.impl.api.local.LocalConnectorFacadeImpl;
+import org.identityconnectors.framework.impl.api.local.LocalConnectorInfoManagerImpl;
 import org.identityconnectors.framework.impl.api.remote.RemoteWrappedException;
 import org.identityconnectors.test.common.ToListResultsHandler;
 import org.testng.Assert;
 import org.testng.Reporter;
+import org.testng.SkipException;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
@@ -566,7 +571,7 @@ public abstract class ConnectorInfoManagerTestBase {
 
                             subscriber.add(new rx.Subscription() {
                                 public void unsubscribe() {
-                                    subscription.unsubscribe();
+                                    subscription.close();
                                 }
 
                                 public boolean isUnsubscribed() {
@@ -590,6 +595,8 @@ public abstract class ConnectorInfoManagerTestBase {
             });
 
             latch.await(25, TimeUnit.SECONDS);
+            subscription[0].unsubscribe();
+            Assert.assertEquals(handler.getObjects().size(), 10);
 
             final CountDownLatch syncLatch = new CountDownLatch(1);
             handler.getObjects().clear();
@@ -615,7 +622,7 @@ public abstract class ConnectorInfoManagerTestBase {
 
                             subscriber.add(new rx.Subscription() {
                                 public void unsubscribe() {
-                                    subscription.unsubscribe();
+                                    subscription.close();
                                 }
 
                                 public boolean isUnsubscribed() {
@@ -650,6 +657,45 @@ public abstract class ConnectorInfoManagerTestBase {
         }
     }
 
+    @Test
+    public void testConfigurationUpdate() throws Exception {
+        ConnectorInfoManager manager = getConnectorInfoManager();
+        if (manager instanceof LocalConnectorInfoManagerImpl) {
+            ConnectorInfo[] infos = new ConnectorInfo[]{
+                    findConnectorInfo(manager, "1.0.0.0",
+                            "org.identityconnectors.testconnector.TstConnector"),
+                    findConnectorInfo(manager, "1.0.0.0",
+                            "org.identityconnectors.testconnector.TstStatefulConnector")};
+            for (ConnectorInfo info: infos) {
+                APIConfiguration api = info.createDefaultAPIConfiguration();
+
+                final AtomicReference<List<ConfigurationProperty>> current =
+                        new AtomicReference<List<ConfigurationProperty>>();
+                api.setChangeListener(new ConfigurationPropertyChangeListener() {
+                    public void configurationPropertyChange(List<ConfigurationProperty> changes) {
+                        current.set(changes);
+                    }
+                });
+
+                ConnectorFacadeFactory facf = ConnectorFacadeFactory.getInstance();
+                ConnectorFacade facade = facf.newInstance(api);
+
+                ScriptContextBuilder builder = new ScriptContextBuilder();
+                builder.setScriptLanguage("GROOVY");
+
+                builder.setScriptText("connector.update()");
+                facade.runScriptOnConnector(builder.build(), null);
+
+                assertNotNull(current.get());
+                assertEquals(current.get().size(), 1);
+                assertEquals(current.get().get(0).getValue(), "change");
+                ((LocalConnectorFacadeImpl)facade).dispose();
+            }
+        } else {
+          throw new SkipException("Test is local only"); 
+        }
+    }
+    
     // TODO: this needs to overridden for C# testing
     @Test
     public void testScripting() throws Exception {

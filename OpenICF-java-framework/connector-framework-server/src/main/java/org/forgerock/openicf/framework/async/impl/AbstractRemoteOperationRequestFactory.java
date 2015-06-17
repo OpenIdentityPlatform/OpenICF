@@ -33,8 +33,10 @@ import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationRequest;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
+import org.forgerock.util.promise.Function;
 import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.framework.api.ConnectorKey;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 import com.google.protobuf.ByteString;
@@ -42,13 +44,18 @@ import com.google.protobuf.MessageLite;
 
 public abstract class AbstractRemoteOperationRequestFactory<V, R extends RemoteOperationRequest<V>>
         implements
-        RemoteRequestFactory<MessageLite, R, V, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> {
+        RemoteRequestFactory<R, V, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> {
 
     private static final Log logger = Log.getLog(AbstractRemoteOperationRequestFactory.class);
 
-    protected abstract CommonObjectMessages.ConnectorKey.Builder createConnectorKey();
+    private final ConnectorKey connectorKey;
+    private final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction;
 
-    protected abstract ByteString createConnectorFacadeKey(final RemoteOperationContext context);
+    public AbstractRemoteOperationRequestFactory(final ConnectorKey connectorKey,
+            final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
+        this.connectorKey = connectorKey;
+        this.facadeKeyFunction = facadeKeyFunction;
+    }
 
     protected abstract OperationMessages.OperationRequest.Builder createOperationRequest(
             RemoteOperationContext remoteContext);
@@ -69,6 +76,16 @@ public abstract class AbstractRemoteOperationRequestFactory<V, R extends RemoteO
         }
     }
 
+    protected ByteString createConnectorFacadeKey(final RemoteOperationContext context) {
+        return facadeKeyFunction.apply(context);
+    }
+
+    protected CommonObjectMessages.ConnectorKey.Builder createConnectorKey() {
+        return CommonObjectMessages.ConnectorKey.newBuilder().setBundleName(
+                connectorKey.getBundleName()).setBundleVersion(connectorKey.getBundleVersion())
+                .setConnectorName(connectorKey.getConnectorName());
+    }
+
     public static abstract class AbstractRemoteOperationRequest<V, M extends MessageLite> extends
             RemoteOperationRequest<V> {
 
@@ -79,7 +96,7 @@ public abstract class AbstractRemoteOperationRequestFactory<V, R extends RemoteO
         public AbstractRemoteOperationRequest(
                 RemoteOperationContext context,
                 long requestId,
-                RemoteRequestFactory.CompletionCallback<MessageLite, V, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
+                RemoteRequestFactory.CompletionCallback<V, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
                 RPCMessages.RPCRequest.Builder requestBuilder) {
             super(context, requestId, completionCallback);
             request = requestBuilder;

@@ -26,6 +26,7 @@ package org.forgerock.openicf.framework;
 
 import static org.fest.assertions.Assertions.assertThat;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.fail;
 
 import java.io.IOException;
@@ -44,7 +45,6 @@ import org.forgerock.openicf.framework.remote.ReferenceCountedObject;
 import org.forgerock.util.promise.Function;
 import org.forgerock.util.promise.Promise;
 import org.identityconnectors.common.CollectionUtil;
-import org.identityconnectors.common.FailureHandler;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.common.security.GuardedString;
@@ -52,11 +52,11 @@ import org.identityconnectors.common.security.SecurityUtil;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConfigurationProperties;
 import org.identityconnectors.framework.api.ConfigurationProperty;
+import org.identityconnectors.framework.api.ConfigurationPropertyChangeListener;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.api.ConnectorKey;
 import org.identityconnectors.framework.api.Observer;
-import org.identityconnectors.framework.common.objects.Subscription;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
@@ -67,12 +67,12 @@ import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.ScriptContextBuilder;
 import org.identityconnectors.framework.common.objects.SearchResult;
+import org.identityconnectors.framework.common.objects.Subscription;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
-import org.identityconnectors.framework.impl.api.local.LocalConnectorFacadeImpl;
 import org.testng.Assert;
 import org.testng.ITestContext;
 import org.testng.Reporter;
@@ -273,6 +273,46 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
     }
 
     @Test
+    public void testConfigurationUpdate() throws Exception {
+        ConnectorInfo[] infos =
+                new ConnectorInfo[] {
+                    getConnectorInfoManager().findConnectorInfoAsync(TEST_STATEFUL_CONNECTOR_KEY)
+                            .get(5, TimeUnit.MINUTES),
+                    getConnectorInfoManager().findConnectorInfoAsync(
+                            TEST_POOLABLE_STATEFUL_CONNECTOR_KEY).get(5, TimeUnit.MINUTES) };
+        for (ConnectorInfo info : infos) {
+            APIConfiguration api = info.createDefaultAPIConfiguration();
+
+            ConfigurationProperties props = api.getConfigurationProperties();
+            props.getProperty("randomString").setValue(StringUtil.randomString());
+            api.setProducerBufferSize(0);
+
+            final AtomicReference<List<ConfigurationProperty>> current =
+                    new AtomicReference<List<ConfigurationProperty>>();
+            api.setChangeListener(new ConfigurationPropertyChangeListener() {
+                public void configurationPropertyChange(List<ConfigurationProperty> changes) {
+                    current.set(changes);
+                }
+            });
+            
+            ConnectorFacade facade = getConnectorFramework().newInstance(api);
+
+            ScriptContextBuilder builder = new ScriptContextBuilder();
+            builder.setScriptLanguage("GROOVY");
+
+            builder.setScriptText("connector.update()");
+            facade.runScriptOnConnector(builder.build(), null);
+
+            for (int i = 0; (i < 5 && null == current.get()); i++) {
+                Thread.sleep(1000);
+            }
+            assertNotNull(current.get());
+            assertEquals(current.get().size(), 1);
+            assertEquals(current.get().get(0).getValue(), "change");
+        }
+    }
+
+    @Test
     public void testNullOperations() throws Exception {
         final ConnectorFacade facade = getConnectorFacade(true, true);
         OperationOptionsBuilder optionsBuilder = new OperationOptionsBuilder();
@@ -320,11 +360,14 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
                         .newSet(AttributeBuilder.buildLockOut(true)), optionsBuilder.build());
         Assert.assertNull(updatedUid);
 
-        ConnectorObject co = facade.getObject(ObjectClass.ACCOUNT, new Uid("1"), optionsBuilder.build());
+        ConnectorObject co =
+                facade.getObject(ObjectClass.ACCOUNT, new Uid("1"), optionsBuilder.build());
         Assert.assertNull(co);
 
-        ScriptContextBuilder contextBuilder = new ScriptContextBuilder().setScriptLanguage("JavaScript").setScriptText("function foo() {return arg; }\nfoo();").addScriptArgument("arg", "test");
-        
+        ScriptContextBuilder contextBuilder =
+                new ScriptContextBuilder().setScriptLanguage("JavaScript").setScriptText(
+                        "function foo() {return arg; }\nfoo();").addScriptArgument("arg", "test");
+
         Object o = facade.runScriptOnConnector(contextBuilder.build(), optionsBuilder.build());
         Assert.assertEquals(o, "test");
         o = facade.runScriptOnResource(contextBuilder.build(), optionsBuilder.build());
@@ -406,14 +449,16 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
         facade.delete(ObjectClass.ACCOUNT, updatedUid, null);
         Assert.assertNull(facade.getObject(ObjectClass.ACCOUNT, updatedUid, null));
 
-        ScriptContextBuilder contextBuilder = new ScriptContextBuilder().setScriptLanguage("JavaScript").setScriptText("function foo() {return arg; }\nfoo();").addScriptArgument("arg", "test");
+        ScriptContextBuilder contextBuilder =
+                new ScriptContextBuilder().setScriptLanguage("JavaScript").setScriptText(
+                        "function foo() {return arg; }\nfoo();").addScriptArgument("arg", "test");
 
         Object o = facade.runScriptOnConnector(contextBuilder.build(), null);
         Assert.assertEquals(o, "test");
         o = facade.runScriptOnResource(contextBuilder.build(), null);
         Assert.assertEquals(o, "test");
     }
-    
+
     @Test
     public void testSubscriptionOperation() throws Throwable {
         final ConnectorFacade facade = getConnectorFacade();
@@ -443,7 +488,7 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
 
                         subscriber.add(new rx.Subscription() {
                             public void unsubscribe() {
-                                subscription.unsubscribe();
+                                subscription.close();
                             }
 
                             public boolean isUnsubscribed() {
@@ -469,7 +514,7 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
                 }
             }
         });
-        
+
         latch.await(25, TimeUnit.MINUTES);
         if (null != assertionError.get()) {
             throw assertionError.get();
@@ -477,7 +522,7 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
 
         final CountDownLatch syncLatch = new CountDownLatch(1);
         handler.getObjects().clear();
-        
+
         Observable<SyncDelta> syncDeltaObservable =
                 Observable.create(new Observable.OnSubscribe<SyncDelta>() {
                     public void call(final Subscriber<? super SyncDelta> subscriber) {
@@ -499,7 +544,7 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
 
                         subscriber.add(new rx.Subscription() {
                             public void unsubscribe() {
-                                subscription.unsubscribe();
+                                subscription.close();
                             }
 
                             public boolean isUnsubscribed() {
@@ -516,7 +561,7 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
                 if (((Integer) delta.getToken().getValue()) > 2) {
                     try {
                         subscription[0].unsubscribe();
-                    } catch (Exception  e){
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                     syncLatch.countDown();

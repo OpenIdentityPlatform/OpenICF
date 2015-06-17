@@ -43,15 +43,15 @@ import org.forgerock.openicf.common.rpc.RemoteConnectionHolder;
 import org.testng.Reporter;
 
 @SuppressWarnings("unchecked")
-public class NIOSimulator<M, G extends RemoteConnectionGroup<M, G, H, P>, H extends RemoteConnectionHolder<M, G, H, P>, P extends RemoteConnectionContext<M, G, H, P>>
+public class NIOSimulator<G extends RemoteConnectionGroup<G, H, P>, H extends RemoteConnectionHolder<G, H, P>, P extends RemoteConnectionContext<G, H, P>>
         implements Closeable {
 
-    private final MessageListener<M, G, H, P> serverListener;
+    private final MessageListener<G, H, P> serverListener;
     private final Future<?> processorFuture;
-    private final List<RemoteConnectionHolder<M, G, H, P>> connections =
-            new CopyOnWriteArrayList<RemoteConnectionHolder<M, G, H, P>>();
+    private final List<RemoteConnectionHolder<G, H, P>> connections =
+            new CopyOnWriteArrayList<RemoteConnectionHolder<G, H, P>>();
 
-    public NIOSimulator(MessageListener<M, G, H, P> serverListener) {
+    public NIOSimulator(MessageListener<G, H, P> serverListener) {
         this.serverListener = serverListener;
         processorFuture = executorService.submit(new Runnable() {
             public void run() {
@@ -69,8 +69,8 @@ public class NIOSimulator<M, G extends RemoteConnectionGroup<M, G, H, P>, H exte
     private final ExecutorService executorService = Executors.newFixedThreadPool(10);
     private final BlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>();
 
-    public RemoteConnectionHolder<M, G, H, P> connect(
-            final MessageListener<M, G, H, P> clientListener, P serverContext, P clientContext) {
+    public RemoteConnectionHolder<G, H, P> connect(
+            final MessageListener<G, H, P> clientListener, P serverContext, P clientContext) {
         RemoteConnectionHolderImpl connection =
                 new RemoteConnectionHolderImpl(serverListener, clientListener, serverContext,
                         clientContext);
@@ -79,7 +79,7 @@ public class NIOSimulator<M, G extends RemoteConnectionGroup<M, G, H, P>, H exte
     }
 
     public void close() throws IOException {
-        for (RemoteConnectionHolder<M, G, H, P> o : connections) {
+        for (RemoteConnectionHolder<G, H, P> o : connections) {
             o.close();
         }
         processorFuture.cancel(true);
@@ -87,15 +87,15 @@ public class NIOSimulator<M, G extends RemoteConnectionGroup<M, G, H, P>, H exte
         executorService.shutdownNow();
     }
 
-    public class RemoteConnectionHolderImpl implements RemoteConnectionHolder<M, G, H, P> {
+    public class RemoteConnectionHolderImpl implements RemoteConnectionHolder<G, H, P> {
 
         private final H reverseConnection;
         private final P context;
-        private final MessageListener<M, G, H, P> remoteListener;
+        private final MessageListener<G, H, P> remoteListener;
         private AtomicBoolean active = new AtomicBoolean(true);
 
-        public RemoteConnectionHolderImpl(final MessageListener<M, G, H, P> serverListener,
-                final MessageListener<M, G, H, P> clientListener, P serverContext, P clientContext) {
+        public RemoteConnectionHolderImpl(final MessageListener<G, H, P> serverListener,
+                final MessageListener<G, H, P> clientListener, P serverContext, P clientContext) {
             reverseConnection =
                     (H) new RemoteConnectionHolderImpl((H) this, clientListener, serverContext);
             remoteListener = serverListener;
@@ -105,7 +105,7 @@ public class NIOSimulator<M, G extends RemoteConnectionGroup<M, G, H, P>, H exte
         }
 
         public RemoteConnectionHolderImpl(H reverseConnection,
-                MessageListener<M, G, H, P> clientListener, P serverContext) {
+                MessageListener<G, H, P> clientListener, P serverContext) {
             this.reverseConnection = reverseConnection;
             remoteListener = clientListener;
             context = serverContext;
@@ -194,7 +194,7 @@ public class NIOSimulator<M, G extends RemoteConnectionGroup<M, G, H, P>, H exte
             return reverseConnection;
         }
 
-        protected MessageListener<M, G, H, P> getMessageListener() {
+        protected MessageListener<G, H, P> getMessageListener() {
             return remoteListener;
         }
 

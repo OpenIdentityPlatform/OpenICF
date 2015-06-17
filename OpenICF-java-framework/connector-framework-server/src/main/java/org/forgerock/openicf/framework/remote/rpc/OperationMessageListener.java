@@ -30,5 +30,5 @@ import com.google.protobuf.MessageLite;
 
 public interface OperationMessageListener
         extends
-        MessageListener<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> {
+        MessageListener<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> {
 }

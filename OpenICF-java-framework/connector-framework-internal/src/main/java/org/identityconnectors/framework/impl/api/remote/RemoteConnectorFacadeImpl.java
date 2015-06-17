@@ -26,6 +26,7 @@ package org.identityconnectors.framework.impl.api.remote;
 import java.lang.reflect.InvocationHandler;
 import java.util.HashMap;
 
+import org.identityconnectors.framework.api.ConfigurationPropertyChangeListener;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.ConnectorEventSubscriptionApiOp;
 import org.identityconnectors.framework.api.operations.SyncEventSubscriptionApiOp;
@@ -56,6 +57,12 @@ public class RemoteConnectorFacadeImpl extends AbstractConnectorFacade {
                                      String configuration) {
         super(configuration, connectorInfo);
         remoteConnectorFacadeKey = generateRemoteConnectorFacadeKey(getAPIConfiguration());
+    }
+
+    public RemoteConnectorFacadeImpl(final RemoteConnectorInfoImpl connectorInfo, String config,
+                                     final ConfigurationPropertyChangeListener changeListener) {
+        this(connectorInfo, config);
+        getAPIConfiguration().setChangeListener(changeListener);
     }
 
     private static String generateRemoteConnectorFacadeKey(final APIConfigurationImpl configuration) {

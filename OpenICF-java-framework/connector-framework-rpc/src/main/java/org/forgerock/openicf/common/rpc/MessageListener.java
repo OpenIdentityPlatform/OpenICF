@@ -24,7 +24,7 @@
 
 package org.forgerock.openicf.common.rpc;
 
-public interface MessageListener<M, G extends RemoteConnectionGroup<M, G, H, P>, H extends RemoteConnectionHolder<M, G, H, P>, P extends RemoteConnectionContext<M, G, H, P>> {
+public interface MessageListener<G extends RemoteConnectionGroup<G, H, P>, H extends RemoteConnectionHolder<G, H, P>, P extends RemoteConnectionContext<G, H, P>> {
 
     /**
      * <p>

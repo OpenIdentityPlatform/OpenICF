@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.TimerTask;
 import java.util.Vector;
 
 import org.identityconnectors.common.CollectionUtil;

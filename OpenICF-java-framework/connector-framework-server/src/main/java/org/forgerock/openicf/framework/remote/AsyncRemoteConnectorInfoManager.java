@@ -49,11 +49,11 @@ public class AsyncRemoteConnectorInfoManager extends DelegatingAsyncConnectorInf
 
     private static final Log logger = Log.getLog(AsyncRemoteConnectorInfoManager.class);
     protected final Closeable remoteCloseable;
-    protected final RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> messageDistributor;
+    protected final RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> messageDistributor;
 
     public AsyncRemoteConnectorInfoManager(
             final Closeable remoteCloseable,
-            final RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> messageDistributor) {
+            final RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> messageDistributor) {
         super(false);
         this.remoteCloseable = remoteCloseable;
         this.messageDistributor = messageDistributor;
@@ -72,8 +72,8 @@ public class AsyncRemoteConnectorInfoManager extends DelegatingAsyncConnectorInf
                         .newInstance(Iterables
                                 .map(loadBalancingAlgorithmFactory
                                         .getAsyncRemoteConnectorInfoManager(),
-                                        new Function<AsyncRemoteConnectorInfoManager, RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>, RuntimeException>() {
-                                            public RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> apply(
+                                        new Function<AsyncRemoteConnectorInfoManager, RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>, RuntimeException>() {
+                                            public RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> apply(
                                                     AsyncRemoteConnectorInfoManager value)
                                                     throws RuntimeException {
                                                 return value.getMessageDistributor();
@@ -91,7 +91,7 @@ public class AsyncRemoteConnectorInfoManager extends DelegatingAsyncConnectorInf
         }
     }
 
-    protected RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> getMessageDistributor() {
+    protected RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> getMessageDistributor() {
         return messageDistributor;
     }
 

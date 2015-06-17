@@ -36,9 +36,9 @@ import com.google.protobuf.MessageLite;
 
 public class RoundRobinLoadBalancingAlgorithmFactory extends LoadBalancingAlgorithmFactory {
 
-    protected RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> createLoadBalancer(
-            List<RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>> delegates) {
-        return new RoundRobinLoadBalancingAlgorithm<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>(
+    protected RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> createLoadBalancer(
+            List<RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>> delegates) {
+        return new RoundRobinLoadBalancingAlgorithm<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>(
                 delegates);
     }
 }

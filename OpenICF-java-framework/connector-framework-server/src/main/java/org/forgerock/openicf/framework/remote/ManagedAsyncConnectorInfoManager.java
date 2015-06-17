@@ -108,7 +108,7 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
         rangePromiseCacheList.clear();
     }
 
-    private static final AtomicInteger revision = new AtomicInteger(0);
+    private final AtomicInteger revision = new AtomicInteger(0);
 
     public boolean isChanged(int lastRevision) {
         return lastRevision != revision.get();

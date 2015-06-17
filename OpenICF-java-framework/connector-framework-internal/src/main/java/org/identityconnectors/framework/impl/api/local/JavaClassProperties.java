@@ -33,11 +33,13 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.ReflectionUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.framework.api.operations.APIOperation;
@@ -91,6 +93,41 @@ public class JavaClassProperties {
         }
     }
 
+    /**
+     * Calculate the difference between the given config and the properties.
+     * 
+     * @param properties
+     * @param config
+     * @return
+     * @throws Exception
+     */
+    public static List<org.identityconnectors.framework.api.ConfigurationProperty> calculateDiff(ConfigurationPropertiesImpl properties, Configuration config)
+            throws Exception {
+        Class<? extends Configuration> configClass = config.getClass();
+        Map<String, PropertyDescriptor> descriptors = getFilteredProperties(configClass);
+        List<org.identityconnectors.framework.api.ConfigurationProperty> result = new LinkedList<org.identityconnectors.framework.api.ConfigurationProperty>();
+        for (ConfigurationPropertyImpl property : properties.getProperties()) {
+            String name = property.getName();
+            PropertyDescriptor desc = descriptors.get(name);
+            if (desc == null) {
+                continue;
+            }
+            Object oldValue = property.getValue();
+            Method getter = desc.getReadMethod();
+            try {
+                Object newValue = getter.invoke(config);
+                if (!CollectionUtil.equals(oldValue, newValue)) {
+                    ConfigurationPropertyImpl change = new ConfigurationPropertyImpl(property);
+                    change.setValue(SerializerUtil.cloneObject(newValue));
+                    result.add(change);
+                }
+            } catch (IllegalArgumentException ex) {
+                //Ignore
+            }
+        }
+        return result;
+    }
+    
     private static ConfigurationPropertiesImpl createConfigurationProperties2(
             Configuration defaultObject) throws Exception {
         Class<? extends Configuration> config = defaultObject.getClass();

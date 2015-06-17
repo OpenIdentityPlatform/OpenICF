@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.identityconnectors.framework.api.ConfigurationPropertyChangeListener;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
 import org.identityconnectors.framework.api.operations.ConnectorEventSubscriptionApiOp;
@@ -161,6 +162,13 @@ public class LocalConnectorFacadeImpl extends AbstractConnectorFacade {
             operationalContext =
                     new ConnectorOperationalContext(connectorInfo, getAPIConfiguration());
         }
+    }
+
+
+    public LocalConnectorFacadeImpl(
+            LocalConnectorInfoImpl connectorInfo, String config, ConfigurationPropertyChangeListener changeListener) {
+        this(connectorInfo, config);
+        getAPIConfiguration().setChangeListener(changeListener);
     }
 
     public void dispose() {

@@ -24,7 +24,6 @@
 
 package org.forgerock.openicf.framework.async.impl;
 
-import org.forgerock.openicf.common.protobuf.CommonObjectMessages;
 import org.forgerock.openicf.common.rpc.RequestDistributor;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
@@ -48,12 +47,12 @@ public abstract class AbstractAPIOperation {
         FAILED_EXCEPTION.setStackTrace(new StackTraceElement[0]);
     }
 
-    private final RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection;
+    private final RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection;
     private final ConnectorKey connectorKey;
     private final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction;
 
     public AbstractAPIOperation(
-            final RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
+            final RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             final ConnectorKey connectorKey,
             final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
         this.remoteConnection = Assertions.nullChecked(remoteConnection, "remoteConnection");
@@ -65,18 +64,12 @@ public abstract class AbstractAPIOperation {
         return connectorKey;
     }
 
-    protected RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> getRemoteConnection() {
+    protected RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> getRemoteConnection() {
         return remoteConnection;
     }
 
-    protected CommonObjectMessages.ConnectorKey.Builder createConnectorKey() {
-        return CommonObjectMessages.ConnectorKey.newBuilder().setBundleName(
-                connectorKey.getBundleName()).setBundleVersion(connectorKey.getBundleVersion())
-                .setConnectorName(connectorKey.getConnectorName());
-    }
-
-    protected ByteString createConnectorFacadeKey(final RemoteOperationContext context) {
-        return facadeKeyFunction.apply(context);
+    protected Function<RemoteOperationContext, ByteString, RuntimeException> getFacadeKeyFunction() {
+        return facadeKeyFunction;
     }
 
     protected <V, M extends MessageLite, R extends AbstractRemoteOperationRequestFactory.AbstractRemoteOperationRequest<V, M>> Promise<V, RuntimeException> submitRequest(

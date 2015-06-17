@@ -29,16 +29,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.forgerock.openicf.common.rpc.RequestDistributor;
-import org.forgerock.openicf.framework.Factory;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
 
 import com.google.protobuf.MessageLite;
 
-public abstract class LoadBalancingAlgorithmFactory
-        implements
-        Factory<RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>, Iterable<RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>>> {
+public abstract class LoadBalancingAlgorithmFactory {
 
     private final List<AsyncRemoteConnectorInfoManager> remoteConnectorInfoManagers =
             new LinkedList<AsyncRemoteConnectorInfoManager>();
@@ -53,12 +50,12 @@ public abstract class LoadBalancingAlgorithmFactory
         return remoteConnectorInfoManagers;
     }
 
-    public RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> newInstance(
-            final Iterable<RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>> parameter) {
+    public RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> newInstance(
+            final Iterable<RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>> parameter) {
 
-        List<RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>> delegates =
-                new LinkedList<RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>>();
-        for (RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> dist : parameter) {
+        List<RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>> delegates =
+                new LinkedList<RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>>();
+        for (RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> dist : parameter) {
             if (null != dist) {
                 delegates.add(dist);
             }
@@ -69,7 +66,7 @@ public abstract class LoadBalancingAlgorithmFactory
         return createLoadBalancer(delegates);
     }
 
-    protected abstract RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> createLoadBalancer(
-            List<RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>> delegates);
+    protected abstract RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> createLoadBalancer(
+            List<RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>> delegates);
 
 }

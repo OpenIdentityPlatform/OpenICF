@@ -34,7 +34,7 @@ import org.forgerock.util.promise.SuccessHandler;
  * call on caller and receiver side.
  *
  */
-public abstract class LocalRequest<M, V, E extends Exception, G extends RemoteConnectionGroup<M, G, H, P>, H extends RemoteConnectionHolder<M, G, H, P>, P extends RemoteConnectionContext<M, G, H, P>>
+public abstract class LocalRequest<V, E extends Exception, G extends RemoteConnectionGroup<G, H, P>, H extends RemoteConnectionHolder<G, H, P>, P extends RemoteConnectionContext<G, H, P>>
         implements SuccessHandler<V>, FailureHandler<E> {
 
     private final long requestId;
@@ -77,7 +77,7 @@ public abstract class LocalRequest<M, V, E extends Exception, G extends RemoteCo
 
     }
 
-    public void handleIncomingMessage(final H sourceConnection, final M message) {
+    public void handleIncomingMessage(final H sourceConnection, final Object message) {
         throw new UnsupportedOperationException("This request does not supports");
     }
 

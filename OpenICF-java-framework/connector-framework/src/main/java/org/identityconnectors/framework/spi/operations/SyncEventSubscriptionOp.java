@@ -38,7 +38,7 @@ import org.identityconnectors.framework.common.objects.SyncToken;
  */
 public interface SyncEventSubscriptionOp extends SPIOperation {
 
-    Subscription subscribe(ObjectClass objectClass, SyncToken token, Observer<SyncDelta> handler,
+    Subscription subscribe(ObjectClass objectClass, SyncToken token, Observer<SyncDelta> observer,
             OperationOptions operationOptions);
 
 }

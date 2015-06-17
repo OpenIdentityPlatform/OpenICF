@@ -28,7 +28,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.forgerock.openicf.common.protobuf.CommonObjectMessages;
-import org.forgerock.openicf.common.protobuf.CommonObjectMessages.ConnectorKey;
 import org.forgerock.openicf.common.protobuf.OperationMessages;
 import org.forgerock.openicf.common.protobuf.OperationMessages.OperationRequest;
 import org.forgerock.openicf.common.protobuf.OperationMessages.SearchOpRequest;
@@ -55,14 +54,13 @@ import org.identityconnectors.framework.common.objects.SearchResult;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.MessageLite;
 
 public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements SearchAsyncApiOp {
 
     private static final Log logger = Log.getLog(SearchAsyncApiOpImpl.class);
 
     public SearchAsyncApiOpImpl(
-            RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
+            RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             org.identityconnectors.framework.api.ConnectorKey connectorKey,
             Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
         super(remoteConnection, connectorKey, facadeKeyFunction);
@@ -92,17 +90,20 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
             requestBuilder.setOptions(MessagesUtil.serializeLegacy(options));
         }
 
-        return submitRequest(new InternalRequestFactory(OperationRequest.newBuilder()
-                .setSearchOpRequest(requestBuilder), handler));
+        return submitRequest(new InternalRequestFactory(getConnectorKey(), getFacadeKeyFunction(),
+                OperationRequest.newBuilder().setSearchOpRequest(requestBuilder), handler));
     }
 
-    private class InternalRequestFactory extends
+    private static class InternalRequestFactory extends
             AbstractRemoteOperationRequestFactory<SearchResult, InternalRequest> {
         private final OperationRequest.Builder operationRequest;
         private final ResultsHandler handler;
 
-        public InternalRequestFactory(final OperationRequest.Builder operationRequest,
-                final ResultsHandler handler) {
+        public InternalRequestFactory(
+                final org.identityconnectors.framework.api.ConnectorKey connectorKey,
+                final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction,
+                final OperationRequest.Builder operationRequest, final ResultsHandler handler) {
+            super(connectorKey, facadeKeyFunction);
             this.operationRequest = operationRequest;
             this.handler = handler;
         }
@@ -110,7 +111,7 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
         public InternalRequest createRemoteRequest(
                 RemoteOperationContext context,
                 long requestId,
-                CompletionCallback<MessageLite, SearchResult, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
+                CompletionCallback<SearchResult, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
 
             // This is the context aware request
             RPCMessages.RPCRequest.Builder builder = createRPCRequest(context);
@@ -119,14 +120,6 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
             } else {
                 return null;
             }
-        }
-
-        protected ConnectorKey.Builder createConnectorKey() {
-            return SearchAsyncApiOpImpl.this.createConnectorKey();
-        }
-
-        protected ByteString createConnectorFacadeKey(RemoteOperationContext context) {
-            return SearchAsyncApiOpImpl.this.createConnectorFacadeKey(context);
         }
 
         protected OperationRequest.Builder createOperationRequest(
@@ -147,7 +140,7 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
         public InternalRequest(
                 RemoteOperationContext context,
                 long requestId,
-                RemoteRequestFactory.CompletionCallback<MessageLite, SearchResult, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
+                RemoteRequestFactory.CompletionCallback<SearchResult, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
                 RPCMessages.RPCRequest.Builder requestBuilder, ResultsHandler handler) {
             super(context, requestId, completionCallback, requestBuilder);
             this.handler = handler;
@@ -202,8 +195,9 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
 
     // ----
 
-    public static AbstractLocalOperationProcessor<SearchOpResponse.Builder, OperationMessages.SearchOpRequest> createProcessor(long requestId,
-            WebSocketConnectionHolder socket, OperationMessages.SearchOpRequest message) {
+    public static AbstractLocalOperationProcessor<SearchOpResponse.Builder, OperationMessages.SearchOpRequest> createProcessor(
+            long requestId, WebSocketConnectionHolder socket,
+            OperationMessages.SearchOpRequest message) {
         return new InternalLocalOperationProcessor(requestId, socket, message);
     }
 

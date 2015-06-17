@@ -28,7 +28,10 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.forgerock.openicf.common.protobuf.CommonObjectMessages;
-import org.forgerock.openicf.common.protobuf.OperationMessages.*;
+import org.forgerock.openicf.common.protobuf.OperationMessages.ConnectorEventSubscriptionOpRequest;
+import org.forgerock.openicf.common.protobuf.OperationMessages.ConnectorEventSubscriptionOpResponse;
+import org.forgerock.openicf.common.protobuf.OperationMessages.OperationRequest;
+import org.forgerock.openicf.common.protobuf.OperationMessages.OperationResponse;
 import org.forgerock.openicf.common.protobuf.RPCMessages;
 import org.forgerock.openicf.common.rpc.RemoteRequestFactory;
 import org.forgerock.openicf.common.rpc.RequestDistributor;
@@ -54,7 +57,6 @@ import org.identityconnectors.framework.common.objects.Subscription;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.MessageLite;
 
 public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation implements
         ConnectorEventSubscriptionApiOp {
@@ -62,7 +64,7 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
     private static final Log logger = Log.getLog(ConnectorEventSubscriptionApiOpImpl.class);
 
     public ConnectorEventSubscriptionApiOpImpl(
-            final RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
+            final RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             final ConnectorKey connectorKey,
             final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
         super(remoteConnection, connectorKey, facadeKeyFunction);
@@ -85,7 +87,7 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
                 });
 
         return new Subscription() {
-            public void unsubscribe() {
+            public void close() {
                 promise.cancel(true);
             }
 
@@ -111,8 +113,9 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
             requestBuilder.setOptions(MessagesUtil.serializeLegacy(options));
         }
 
-        return submitRequest(new InternalRequestFactory(OperationRequest
-                .newBuilder().setConnectorEventSubscriptionOpRequest(requestBuilder), handler));
+        return submitRequest(new InternalRequestFactory(getConnectorKey(), getFacadeKeyFunction(),
+                OperationRequest.newBuilder()
+                        .setConnectorEventSubscriptionOpRequest(requestBuilder), handler));
     }
 
     private class InternalRequestFactory extends
@@ -121,8 +124,11 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
         final Observer<ConnectorObject> handler;
 
         public InternalRequestFactory(
+                final ConnectorKey connectorKey,
+                final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction,
                 final OperationRequest.Builder operationRequest,
                 final Observer<ConnectorObject> handler) {
+            super(connectorKey, facadeKeyFunction);
             this.operationRequest = operationRequest;
             this.handler = handler;
         }
@@ -130,7 +136,7 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
         public InternalRequest createRemoteRequest(
                 final RemoteOperationContext context,
                 final long requestId,
-                final CompletionCallback<MessageLite, Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
+                final CompletionCallback<Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
 
             RPCMessages.RPCRequest.Builder builder = createRPCRequest(context);
             if (null != builder) {
@@ -138,14 +144,6 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
             } else {
                 return null;
             }
-        }
-
-        protected CommonObjectMessages.ConnectorKey.Builder createConnectorKey() {
-            return ConnectorEventSubscriptionApiOpImpl.this.createConnectorKey();
-        }
-
-        protected ByteString createConnectorFacadeKey(final RemoteOperationContext context) {
-            return ConnectorEventSubscriptionApiOpImpl.this.createConnectorFacadeKey(context);
         }
 
         protected OperationRequest.Builder createOperationRequest(
@@ -164,7 +162,7 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
         public InternalRequest(
                 final RemoteOperationContext context,
                 final long requestId,
-                final RemoteRequestFactory.CompletionCallback<MessageLite, Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
+                final RemoteRequestFactory.CompletionCallback<Void, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
                 final RPCMessages.RPCRequest.Builder requestBuilder,
                 final Observer<ConnectorObject> handler) {
             super(context, requestId, completionCallback, requestBuilder);
@@ -211,8 +209,8 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
 
     // ----
 
-    public static AbstractLocalOperationProcessor<ConnectorEventSubscriptionOpResponse, ConnectorEventSubscriptionOpRequest>  createProcessor(long requestId,
-            WebSocketConnectionHolder socket,
+    public static AbstractLocalOperationProcessor<ConnectorEventSubscriptionOpResponse, ConnectorEventSubscriptionOpRequest> createProcessor(
+            long requestId, WebSocketConnectionHolder socket,
             ConnectorEventSubscriptionOpRequest message) {
         return new InternalLocalOperationProcessor(requestId, socket, message);
     }
@@ -229,11 +227,9 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
         }
 
         protected RPCMessages.RPCResponse.Builder createOperationResponse(
-                RemoteOperationContext remoteContext,
-                ConnectorEventSubscriptionOpResponse result) {
+                RemoteOperationContext remoteContext, ConnectorEventSubscriptionOpResponse result) {
             return RPCMessages.RPCResponse.newBuilder().setOperationResponse(
-                    OperationResponse.newBuilder()
-                            .setConnectorEventSubscriptionOpResponse(result));
+                    OperationResponse.newBuilder().setConnectorEventSubscriptionOpResponse(result));
         }
 
         protected ConnectorEventSubscriptionOpResponse executeOperation(
@@ -256,8 +252,8 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
                     connectorFacade.subscribe(objectClass, token, new Observer<ConnectorObject>() {
 
                         public void onCompleted() {
-                            tryHandleResult(ConnectorEventSubscriptionOpResponse
-                                    .newBuilder().setCompleted(Boolean.TRUE).build());
+                            tryHandleResult(ConnectorEventSubscriptionOpResponse.newBuilder()
+                                    .setCompleted(Boolean.TRUE).build());
                         }
 
                         public void onError(Throwable error) {
@@ -289,7 +285,7 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
         }
 
         protected boolean tryCancel() {
-            subscription.unsubscribe();
+            subscription.close();
             return super.tryCancel();
         }
     }

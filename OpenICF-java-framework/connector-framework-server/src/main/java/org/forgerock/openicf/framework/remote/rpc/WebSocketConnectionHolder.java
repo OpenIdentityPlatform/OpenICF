@@ -37,7 +37,7 @@ import com.google.protobuf.MessageLite;
 public abstract class WebSocketConnectionHolder
         implements
         Closeable,
-        RemoteConnectionHolder<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> {
+        RemoteConnectionHolder<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> {
 
     protected final Queue<CloseListener<WebSocketConnectionHolder>> listeners =
             new ConcurrentLinkedQueue<CloseListener<WebSocketConnectionHolder>>();

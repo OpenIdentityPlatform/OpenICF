@@ -36,9 +36,9 @@ import com.google.protobuf.MessageLite;
 
 public class FailoverLoadBalancingAlgorithmFactory extends LoadBalancingAlgorithmFactory {
 
-    protected RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> createLoadBalancer(
-            List<RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>> delegates) {
-        return new FailoverLoadBalancingAlgorithm<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>(
+    protected RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> createLoadBalancer(
+            List<RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>> delegates) {
+        return new FailoverLoadBalancingAlgorithm<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>(
                 delegates);
     }
 }

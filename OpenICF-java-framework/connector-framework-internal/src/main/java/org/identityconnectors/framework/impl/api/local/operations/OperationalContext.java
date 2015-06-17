@@ -23,11 +23,15 @@
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
+import java.util.List;
+
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.framework.api.ConfigurationPropertyChangeListener;
 import org.identityconnectors.framework.api.ResultsHandlerConfiguration;
 import org.identityconnectors.framework.impl.api.APIConfigurationImpl;
 import org.identityconnectors.framework.impl.api.local.JavaClassProperties;
 import org.identityconnectors.framework.impl.api.local.LocalConnectorInfoImpl;
+import org.identityconnectors.framework.spi.AbstractConfiguration;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.StatefulConfiguration;
@@ -36,7 +40,7 @@ import org.identityconnectors.framework.spi.StatefulConfiguration;
  * OperationalContext - base class for operations that do not require a
  * connector instance.
  */
-public class OperationalContext {
+public class OperationalContext implements AbstractConfiguration.ConfigurationChangeCallback {
 
     private static final Log LOG = Log.getLog(OperationalContext.class);
 
@@ -80,6 +84,10 @@ public class OperationalContext {
                             JavaClassProperties.createBean(apiConfiguration
                                     .getConfigurationProperties(), connectorInfo
                                     .getConnectorConfigurationClass());
+                    if (null != apiConfiguration.getChangeListener()
+                            && configuration instanceof AbstractConfiguration) {
+                        ((AbstractConfiguration) configuration).addChangeCallback(this);
+                    }
                 }
             }
         }
@@ -110,4 +118,23 @@ public class OperationalContext {
             }
         }
     }
+
+    public void notifyUpdate() {
+        try {
+            final ConfigurationPropertyChangeListener listener =
+                    apiConfiguration.getChangeListener();
+            if (null != listener) {
+                List<org.identityconnectors.framework.api.ConfigurationProperty> diff =
+                        JavaClassProperties.calculateDiff(apiConfiguration
+                                .getConfigurationProperties(), configuration);
+                if (!diff.isEmpty()) {
+                    listener.configurationPropertyChange(diff);
+                }
+            }
+        } catch (Throwable e) {
+            LOG.warn(LOG.isOk() ? e : null, "Configuration change notification is failed for {0}",
+                    configuration.getClass());
+        }
+    }
+
 }

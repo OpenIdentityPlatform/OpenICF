@@ -51,14 +51,13 @@ import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.MessageLite;
 
 public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncAsyncApiOp {
 
     private static final Log logger = Log.getLog(SyncAsyncApiOpImpl.class);
 
     public SyncAsyncApiOpImpl(
-            RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
+            RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             ConnectorKey connectorKey,
             Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
         super(remoteConnection, connectorKey, facadeKeyFunction);
@@ -76,8 +75,8 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncAsyn
     public Promise<SyncToken, RuntimeException> getLatestSyncTokenAsync(
             final ObjectClass objectClass) {
         Assertions.nullCheck(objectClass, "objectClass");
-        return submitRequest(new InternalRequestFactory(OperationMessages.OperationRequest
-                .newBuilder().setSyncOpRequest(
+        return submitRequest(new InternalRequestFactory(getConnectorKey(), getFacadeKeyFunction(),
+                OperationMessages.OperationRequest.newBuilder().setSyncOpRequest(
                         OperationMessages.SyncOpRequest.newBuilder().setLatestSyncToken(
                                 OperationMessages.SyncOpRequest.LatestSyncToken.newBuilder()
                                         .setObjectClass(objectClass.getObjectClassValue()))), null));
@@ -99,20 +98,23 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncAsyn
             requestBuilder.setOptions(MessagesUtil.serializeLegacy(options));
         }
 
-        return submitRequest(new InternalRequestFactory(OperationMessages.OperationRequest
-                .newBuilder().setSyncOpRequest(
+        return submitRequest(new InternalRequestFactory(getConnectorKey(), getFacadeKeyFunction(),
+                OperationMessages.OperationRequest.newBuilder().setSyncOpRequest(
                         OperationMessages.SyncOpRequest.newBuilder().setSync(requestBuilder)),
                 handler));
     }
 
-    private class InternalRequestFactory extends
+    private static class InternalRequestFactory extends
             AbstractRemoteOperationRequestFactory<SyncToken, InternalRequest> {
         private final OperationMessages.OperationRequest.Builder operationRequest;
         final SyncResultsHandler handler;
 
         public InternalRequestFactory(
+                final ConnectorKey connectorKey,
+                final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction,
                 final OperationMessages.OperationRequest.Builder operationRequest,
                 final SyncResultsHandler handler) {
+            super(connectorKey, facadeKeyFunction);
             this.operationRequest = operationRequest;
             this.handler = handler;
         }
@@ -120,7 +122,7 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncAsyn
         public InternalRequest createRemoteRequest(
                 final RemoteOperationContext context,
                 final long requestId,
-                final CompletionCallback<MessageLite, SyncToken, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
+                final CompletionCallback<SyncToken, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback) {
 
             RPCMessages.RPCRequest.Builder builder = createRPCRequest(context);
             if (null != builder) {
@@ -128,14 +130,6 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncAsyn
             } else {
                 return null;
             }
-        }
-
-        protected CommonObjectMessages.ConnectorKey.Builder createConnectorKey() {
-            return SyncAsyncApiOpImpl.this.createConnectorKey();
-        }
-
-        protected ByteString createConnectorFacadeKey(final RemoteOperationContext context) {
-            return SyncAsyncApiOpImpl.this.createConnectorFacadeKey(context);
         }
 
         protected OperationMessages.OperationRequest.Builder createOperationRequest(
@@ -156,7 +150,7 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncAsyn
         public InternalRequest(
                 final RemoteOperationContext context,
                 final long requestId,
-                final RemoteRequestFactory.CompletionCallback<MessageLite, SyncToken, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
+                final RemoteRequestFactory.CompletionCallback<SyncToken, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
                 final RPCMessages.RPCRequest.Builder requestBuilder,
                 final SyncResultsHandler handler) {
             super(context, requestId, completionCallback, requestBuilder);
@@ -226,8 +220,9 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncAsyn
 
     // ----
 
-    public static AbstractLocalOperationProcessor<OperationMessages.SyncOpResponse.Builder, OperationMessages.SyncOpRequest> createProcessor(long requestId,
-            WebSocketConnectionHolder socket, OperationMessages.SyncOpRequest message) {
+    public static AbstractLocalOperationProcessor<OperationMessages.SyncOpResponse.Builder, OperationMessages.SyncOpRequest> createProcessor(
+            long requestId, WebSocketConnectionHolder socket,
+            OperationMessages.SyncOpRequest message) {
         return new InternalLocalOperationProcessor(requestId, socket, message);
     }
 

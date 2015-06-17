@@ -165,9 +165,9 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
             this.poolEntry = poolEntry;
         }
 
-        public void unsubscribe() {
+        public void close() {
             try {
-                subscription.unsubscribe();
+                subscription.close();
             } finally {
                 if (disposed.compareAndSet(Boolean.FALSE, Boolean.TRUE)){
                     disposeConnector(connector, poolEntry);

@@ -38,10 +38,10 @@ import com.google.protobuf.MessageLite;
  */
 public class RemoteConnectorInfoImpl extends AbstractConnectorInfo {
 
-    final RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> messageDistributor;
+    final RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> messageDistributor;
 
     public RemoteConnectorInfoImpl(
-            final RequestDistributor<MessageLite, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
+            final RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             final AbstractConnectorInfo copyFrom) {
         messageDistributor = Assertions.nullChecked(remoteConnection, "remoteConnection");
         Assertions.nullCheck(copyFrom, "copyFrom");
