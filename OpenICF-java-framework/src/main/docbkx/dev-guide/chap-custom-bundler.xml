@@ -594,7 +594,8 @@ Configuration format:
      Run the Connector Bundler, providing the path to your connector
      configuration file:
     </para>
-    <screen>$ <userinput>java -jar custom-scripted-connector-bundler-${openidmVersion}.jar --config ../ExampleDBConnector/ExampleDB.json</userinput></screen>
+    <screen>$ <userinput>java -jar custom-scripted-connector-bundler-${openidmVersion}.jar \
+ --config ../ExampleDBConnector/ExampleDB.json</userinput></screen>
     <para>
      This step generates a directory tree of source files that can be used to
      build your custom connector.
