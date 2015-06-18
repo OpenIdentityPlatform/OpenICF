@@ -76,7 +76,7 @@ public class ADStaticSchema implements LdapNativeSchema {
         "co", "countryCode", "c", "info", "telephoneNumber", "title"
     };
     private static final String[] USER_MULTI_RO_STRING = {"memberOf", "directReports"};
-    private static final String[] USER_MULTI_STRING = {"otherHomePhone", "seeAlso", "uid", "o", "url", "ou"};
+    private static final String[] USER_MULTI_STRING = {"otherHomePhone", "seeAlso", "uid", "o", "url", "ou", "ldapGroups"};
     private static final String[] USER_SPECIAL_BOOLEAN = {ADUserAccountControl.SMARTCARD_REQUIRED_NAME,
         ADUserAccountControl.DONT_EXPIRE_PASSWORD_NAME, ADUserAccountControl.PASSWORD_NOTREQD_NAME,
         OperationalAttributes.ENABLE_NAME, OperationalAttributes.PASSWORD_EXPIRED_NAME,
