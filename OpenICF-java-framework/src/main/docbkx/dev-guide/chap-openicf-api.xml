@@ -37,6 +37,414 @@
   connectors, and then how to call the various OpenICF operations from your
   application.
  </para>
+ <section xml:id="api-before-you-start">
+  <title>Before You Start Using the OpenICF API</title>
+  <para>
+   Before you can use an OpenICF connector in your application, you must
+   download the OpenICF framework libraries, and the required connector
+   bundles.
+  </para>
+  <para>
+   The easiest way to start using the OpenICF framework, from Java, is to use
+   the <link xlink:href="../resources/pom.xml" xlink:show="new">sample Maven
+   project file</link> as a starting point. This sample project includes
+   comprehensive comments about its use.
+  </para>
+  <para>
+   To use a .NET connector remotely, you must install the .NET remote connector
+   server, as described in <link xlink:show="new"
+   xlink:href="dev-guide#dotnet-connector-server"
+   xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Installing,
+   Configuring and Running a .NET Connector Server</citetitle></link>. You must
+   also download and install the specific connector assemblies that you want to
+   use, from the <link xlink:show="new"
+   xlink:href="https://forgerock.org/resource-category/connectors/">ForgeRock
+   Resource Catalog</link> page.
+  </para>
+  <para>
+   You can now start integrating the connector with your application.
+  </para>
+ </section>
+
+ <section xml:id="connector-facade-about">
+  <title>About the Connector Facade</title>
+  <para>
+   An application interacts with a connector through an instance of the
+   <literal>ConnectorFacade</literal> class. The following diagram shows the
+   creation and configuration of the connector facade. The components shown here
+   are described in more detail in the sections that follow.
+  </para>
+  <mediaobject>
+   <alt>OpenICF Connector Facade</alt>
+   <imageobject>
+    <imagedata fileref="images/connector-info.png" format="PNG" />
+   </imageobject>
+  </mediaobject>
+  <para>
+   The connector facade is instantiated and configured in the following steps:
+  </para>
+  <orderedlist>
+   <listitem>
+    <para>
+     The application creates a <literal>LocalConnectorInfoManager</literal>
+     instance (or instances) and adds the individual connector bundles (or
+     assemblies).
+    </para>
+    <para>
+     The <literal>LocalConnectorInfoManager</literal> processes these bundles or
+     assemblies to instantiate a <literal>ConnectorInfo</literal> object.
+    </para>
+    <variablelist>
+     <para>
+      To be processed by the connector info manager, the connector bundle or
+      assembly must have the following characteristics:
+     </para>
+     <varlistentry>
+      <term>Java Connector Bundle</term>
+      <listitem>
+       <para>
+        The <literal>META-INF/MANIFEST.MF</literal> file <emphasis>must</emphasis>
+        include the following entries:
+       </para>
+       <simplelist>
+        <member>
+         <literal>ConnectorBundle-FrameworkVersion</literal> - Minimum required
+         OpenICF Framework version (either 1.1, 1.4, or 1.5)
+        </member>
+        <member>
+         <literal>ConnectorBundle-Name</literal> - Unique name of the connector
+         bundle
+        </member>
+        <member>
+         <literal>ConnectorBundle-Version</literal> - Version of the connector
+         bundle
+        </member>
+       </simplelist>
+       <para>
+        The combination of the <literal>ConnectorBundle-Name</literal> and the
+        <literal>ConnectorBundle-Version</literal> must be unique.
+       </para>
+       <para>
+        The connector bundle JAR must contain at least one class, that has the
+        <literal>ConnectorClass</literal> annotation and implements the
+        <literal>Connector</literal> interface.
+       </para>
+      </listitem>
+     </varlistentry>
+     <varlistentry>
+      <term>.NET Connector Assembly</term>
+      <listitem>
+       <para>
+        The <literal>AssemblyInfo.cs</literal> is used to determine the bundle
+        version, from the <literal>AssemblyVersion</literal> property.
+       </para>
+       <para>
+        The bundle name is derived from the <literal>Name</literal> property of
+        the assembly. For more information, see the corresponding <link
+        xlink:show="new"
+        xlink:href="https://msdn.microsoft.com/en-us/library/system.reflection.assemblyname.name(v=vs.110).aspx">Microsoft
+        documentation</link>.
+       </para>
+       <warning>
+        <para>
+         If you change the name of your assembly, you must adjust the
+         <literal>bundleName</literal> property in your connector configuration
+         file, accordingly.
+        </para>
+       </warning>
+       <para>
+        The connector assembly DLL must contain at least one class, that has the
+        <literal>ConnectorClassAttribute</literal> attribute and implements the
+        <literal>Connector</literal> interface.
+       </para>
+      </listitem>
+     </varlistentry>
+    </variablelist>
+   </listitem>
+   <listitem>
+    <para>
+     For each connector, the <literal>LocalConnectorInfoManager</literal>
+     processes the <literal>MessageCatalog</literal>, which contains the
+     localized help and description messages for the configuration, and any log
+     or error messages for the connector.
+    </para>
+    <para>
+     Your application can use this information to provide additional help during
+     the connector configuration process.
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     For each connector, the <literal>LocalConnectorInfoManager</literal> then
+     processes the <literal>ConfigurationClass</literal>, to build the
+     configuration properties for the connector.
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     Your application finds the connector info by its
+     <emphasis>connector key</emphasis>. When the application has the connector
+     info, it creates an API Configuration object that customises the
+     following components:
+    </para>
+    <itemizedlist>
+     <listitem>
+      <para>
+       Object pool configuration
+      </para>
+     </listitem>
+     <listitem>
+      <para>
+       Result handler configuration
+      </para>
+     </listitem>
+     <listitem>
+      <para>
+       Configuration properties
+      </para>
+     </listitem>
+     <listitem>
+      <para>
+       Timeout configuration
+      </para>
+     </listitem>
+    </itemizedlist>
+    <para>
+     The API Configuration object is described in more detail in
+     <xref linkend="api-config-object" />.
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     The <literal>ConnectorFacade</literal> takes this customized API
+     configuration object, determines which connector to use and how to
+     configure it, and implements all of the OpenICF API operations.
+    </para>
+   </listitem>
+  </orderedlist>
+ </section>
+
+ <section xml:id="message-catalog">
+  <title>The Connector Messages Object</title>
+  <para>
+   The Connector Messages interface sets the message catalog for each connector,
+   and enables messages to be localized. The interface has one method
+   (<literal>format()</literal>), which formats a given message key in the
+   current locale.
+  </para>
+  <para>
+   For more information, see the corresponding <link xlink:show="new"
+   xlink:href="http://openicf.forgerock.org/connector-framework/apidocs/index.html?org/identityconnectors/framework/common/objects/ConnectorMessages.html">Javadoc</link>.
+  </para>
+ </section>
+
+ <section xml:id="api-config-object">
+  <title>The API Configuration Object</title>
+  <para>
+   The API Configuration Object holds the runtime configuration of the connector
+   facade instance. The OpenICF framework creates a default API Configuration
+   Object inside the Connector Info Object. The application creates a copy of
+   the API Configuration Object and customises it according to its requirements.
+   The API Configuration Object includes the following components:
+  </para>
+  <variablelist>
+   <varlistentry xml:id="object-pool-config">
+    <term>Object Pool Configuration</term>
+    <listitem>
+     <para>
+      The object pool configuration specifies the pool configuration for
+      poolable connectors only. Non-poolable connectors ignore this parameter.
+      The object pool configuration includes the following parameters:
+     </para>
+     <variablelist>
+      <varlistentry>
+       <term>maxObjects</term>
+       <listitem>
+        <para>
+         The maximum number of idle and active instances of the connector.
+        </para>
+       </listitem>
+      </varlistentry>
+      <varlistentry>
+       <term>maxIdle</term>
+       <listitem>
+        <para>
+         The maximum number of idle instances of the connector.
+        </para>
+       </listitem>
+      </varlistentry>
+      <varlistentry>
+       <term>maxWait</term>
+       <listitem>
+        <para>
+         The maximum time, in milliseconds, that the pool waits for an object
+         before timing out. A value of <literal>0</literal> means that there is no
+         timeout.
+        </para>
+       </listitem>
+      </varlistentry>
+      <varlistentry>
+       <term>minEvictableIdleTimeMillis</term>
+       <listitem>
+        <para>
+         The maximum time, in milliseconds, that an object can be idle before it is
+         removed. A value of <literal>0</literal> means that there is no idle
+         timeout.</para>
+       </listitem>
+      </varlistentry>
+      <varlistentry>
+       <term>minIdle</term>
+       <listitem>
+        <para>
+         The minimum number of idle instances of the connector.
+        </para>
+       </listitem>
+      </varlistentry>
+     </variablelist>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term xml:id="results-handler-config">Results Handler Configuration</term>
+    <listitem>
+     <para>
+      The results handler configuration defines how the OpenICF framework chains
+      together the different results handlers to filter search results.
+     </para>
+     <variablelist>
+      <varlistentry>
+       <term>enableNormalizingResultsHandler</term>
+       <listitem>
+        <para>boolean</para>
+        <para>
+         If the connector implements the attribute normalizer interface, you can
+         enable this interface by setting this configuration property to
+         <literal>true</literal>. If the connector does not implement the attribute
+         normalizer interface, the value of this property has no effect.
+        </para>
+       </listitem>
+      </varlistentry>
+      <varlistentry>
+       <term>enableFilteredResultsHandler</term>
+       <listitem>
+        <para>boolean</para>
+        <para>
+         If the connector uses the filtering and search capabilities of the remote
+         connected system, you can set this property to <literal>false</literal>.
+         If the connector does not use the remote system's filtering and search
+         capabilities (for example, the CSV file connector), you
+         <emphasis>must</emphasis> set this property to <literal>true</literal>,
+         otherwise the connector performs an additional, case-sensitive search,
+         which can cause problems.
+        </para>
+       </listitem>
+      </varlistentry>
+      <varlistentry>
+       <term>enableCaseInsensitiveFilter</term>
+       <listitem>
+        <para>boolean</para>
+        <para>
+         By default, the filtered results handler (described previously) is case
+         sensitive. If the filtered results handler is enabled this property allows
+         you to enable case insensitive filtering. When case insensitive filtering
+         is not enabled, a search will not return results unless the case matches
+         exactly. For example, a search for <literal>lastName = "Jensen"</literal>
+         will not match a stored user with <literal>lastName : jensen</literal>.
+        </para>
+       </listitem>
+      </varlistentry>
+      <varlistentry>
+       <term>enableAttributesToGetSearchResultsHandler</term>
+       <listitem>
+        <para>boolean</para>
+        <para>
+         By default, OpenIDM determines which attributes that should be retrieved
+         in a search. If the
+         <literal>enableAttributesToGetSearchResultsHandler</literal> property is
+         set to <literal>true</literal> the OpenICF framework removes all
+         attributes from the READ/QUERY response, except for those that are
+         specifically requested. For performance reasons, it is recommended that
+         you set this property to <literal>false</literal> for local connectors,
+         and to <literal>true</literal> for remote connectors.
+        </para>
+       </listitem>
+      </varlistentry>
+     </variablelist>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>Configuration Properties</term>
+    <listitem>
+     <para>
+      The Configuration Properties object is built and populated by the
+      framework as it parses the connectors configuration class.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>Timeout Configuration</term>
+    <listitem>
+     <para>
+      The timeout configuration enables you to configure timeout values per
+      operation type. By default, there is no timeout configured for any
+      operation type.
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </section>
+
+ <section xml:id="create-connector-info-manager">
+  <title>Creating the Connector Info Manager</title>
+  <para>
+   You must initiate a specific connector info manager type, depending on
+   whether your connector is local or remote. The following samples show how to
+   create a local connector info manager and a remote connector info manager.
+  </para>
+  <orderedlist>
+  <listitem>
+   <para>
+    Create a <literal>ConnectorInfoManager</literal> and a
+    <literal>ConnectorKey</literal> for the connector.
+   </para>
+   <para>
+    The <literal>ConnectorKey</literal> uniquely identifies the connector
+    instance. The <literal>ConnectorKey</literal> class takes a
+    <literal>bundleName</literal> (the name of the Connector bundle), a
+    <literal>bundleVersion</literal> (the version of the Connector bundle) and
+    a connectorName (the name of the Connector)
+   </para>
+   <para>
+    The <literal>ConnectorInfoManager</literal> retrieves a
+    <literal>ConnectorInfo</literal> object for the connector by its connector
+    key.
+   </para>
+   <example>
+    <title>Acquiring a Local Connector Info Object</title>
+    <programlisting language="java">
+     ConnectorInfoManagerFactory fact = ConnectorInfoManagerFactory.getInstance();
+     File bundleDirectory = new File("/connectorDir/bundles/myconnector");
+     URL url = IOUtil.makeURL(bundleDirectory,
+     "/dist/org.identityconnectors.myconnector-1.0.jar");
+     ConnectorInfoManager manager = fact.getLocalManager(url);
+     ConnectorKey key = new ConnectorKey("org.identityconnectors.myconnector",
+     "1.0", "MyConnector");
+    </programlisting>
+   </example>
+   <example>
+    <title>Acquiring a Remote Connector Info Object</title>
+    <programlisting language="java">
+     ConnectorInfoManagerFactory fact = ConnectorInfoManagerFactory.getInstance();
+     File bundleDirectory = new File("/connectorDir/bundles/myconnector");
+     URL url = IOUtil.makeURL(bundleDirectory,
+     "/dist/org.identityconnectors.myconnector-1.0.jar");
+     ConnectorInfoManager manager = fact.getLocalManager(url);
+     ConnectorKey key = new ConnectorKey("org.identityconnectors.myconnector",
+     "1.0", "MyConnector");
+    </programlisting>
+   </example>
+  </listitem>
+  </orderedlist>
+ </section>
 
  <section xml:id="create-connector-facade">
   <title>Creating the Connector Facade</title>
@@ -52,38 +460,10 @@
    </para>
    <listitem>
     <para>
-     Create a <literal>ConnectorInfoManager</literal> and a
-     <literal>ConnectorKey</literal> for the connector.
+     Create a <literal>ConnectorInfoManager</literal> and acquire the
+     <literal>ConnectorInfo</literal> object for your connector, as
+     described in the previous section.
     </para>
-    <para>
-     The <literal>ConnectorKey</literal> uniquely identifies the Connector
-     instance. The <literal>ConnectorKey</literal> class takes a
-     <literal>bundleName</literal> (the name of the Connector bundle), a
-     <literal>bundleVersion</literal> (the version of the Connector bundle) and
-     a connectorName (the name of the Connector)
-    </para>
-    <para>
-     The <literal>ConnectorInfoManager</literal> retrieves a
-     <literal>ConnectorInfo</literal> object for the connector.
-    </para>
-<programlisting language="java">
-ConnectorInfoManagerFactory fact = ConnectorInfoManagerFactory.getInstance();
-File bundleDirectory = new File("/connectorDir/bundles/myconnector");
-URL url = IOUtil.makeURL(bundleDirectory,
-        "/dist/org.identityconnectors.myconnector-1.0.jar");
-ConnectorInfoManager manager = fact.getLocalManager(url);
-ConnectorKey key = new ConnectorKey("org.identityconnectors.myconnector",
-        "1.0", "MyConnector");
-</programlisting>
-   </listitem>
-   <listitem>
-    <para>
-     Use the connector info manager and the connector key to create a
-     <literal>ConnectorInfo</literal> instance.
-    </para>
-    <programlisting language="java">
-ConnectorInfo info = manager.findConnectorInfo(key);
-    </programlisting>
    </listitem>
    <listitem>
     <para>
@@ -96,23 +476,15 @@ APIConfiguration apiConfig = info.createDefaultAPIConfiguration();
    </listitem>
    <listitem>
     <para>
-     Use the default <literal>APIConfiguration</literal> to retrieve the
-     <literal>ConfigurationProperties</literal>.
+     Use the default <literal>APIConfiguration</literal> to set the
+     <literal>ObjectPoolConfiguration</literal>,
+     <literal>ResultsHandlerConfiguration</literal>,
+     <literal>ConfigurationProperties</literal>, and
+     <literal>TimeoutConfiguration</literal>.
     </para>
 <programlisting language="java">
-ConfigurationProperties properties = apiConfig.getConfigurationProperties();</programlisting>
-   </listitem>
-   <listitem>
-    <para>
-     Optionally, print out the list of configuration properties.
-    </para>
-    <programlisting language="java">
-List&lt;String&gt; propertyNames = properties.getPropertyNames();
-for(String propName : propertyNames) {
-    ConfigurationProperty prop = properties.getProperty(propName);
-    System.out.println("Property Name: " + prop.getName() +
-            "\tProperty Type: " + prop.getType());
-}   </programlisting>
+ConfigurationProperties properties = apiConfig.getConfigurationProperties();
+<!--TODO more to this sample from Laszlo --></programlisting>
    </listitem>
    <listitem>
     <para>
@@ -153,8 +525,8 @@ conn.[authenticate|create|update|delete|search|...]  </programlisting>
   </orderedlist>
  </section>
 
- <section xml:id="getting-supported-operations">
-  <title>Checking Which Operations Are Supported</title>
+ <section xml:id="getting-schema-and-supported-operations">
+  <title>Checking the Schema and the Supported Operations</title>
   <para>
    Different connectors support different subsets of the overall set of
    operations provided by OpenICF. When your connector is ready to use, you can
@@ -173,10 +545,13 @@ return ops.contains(CreateApiOp.class);</programlisting>
   <para>
    Note that a connector might support a particular operation, only for specific
    object classes. For example, the connector might allow you to
-   <emphasis>create</emphasis> a user, but not a group. A more thorough check
-   to determine whether the connector supports an operation therefore involves
-   checking the object class on which you plan to perform the operation, as
-   shown in the following example.
+   <emphasis>create</emphasis> a user, but not a group.
+  </para>
+  <para>
+   To be able to determine the list of supported operations for each object
+   class, you need to check the schema. To determine whether the connector
+   supports an operation for a specific object class, check the object class on
+   which you plan to perform the operation, as shown in the following example.
   </para>
   <programlisting language="java">
 Schema schema = conn.schema();
@@ -190,10 +565,6 @@ for(ObjectClassInfo oci : objectClasses) {
         // object class is supported
     }
 }</programlisting>
- </section>
-
- <section xml:id="checking-schema">
-  <title>Checking the Schema</title>
   <para>
    In addition to determining the supported operations for an object class, your
    application can check which attributes are <emphasis>required</emphasis> and
@@ -217,10 +588,21 @@ for(ObjectClassInfo oci : objectClasses) {
         }
     }
 }</programlisting>
- </section>
-
- <section xml:id="getting-the-object-class">
-  <title>Retrieving a List of Object Classes</title>
+  <para>
+   Using the schema object, you can obtain the following information:
+  </para>
+  <itemizedlist>
+   <listitem>
+    <para>
+     Object classes and their attributes
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     Operation options per operation
+    </para>
+   </listitem>
+  </itemizedlist>
   <para>
    The following example shows how to retrieve the schema as a list of
    <literal>ObjectClass</literal> objects, from the
@@ -228,7 +610,398 @@ for(ObjectClassInfo oci : objectClasses) {
   </para>
   <programlisting language="java">
 ObjectClass objectClass = new ObjectClass(objectClassInfo.getType());</programlisting>
+
+  <section xml:id="operation-option">
+   <title>Operation Options</title>
+   <para>
+    Operation options provide an extension point to an operation, enabling you
+    to request additional information from the application, for each operation.
+    The connector framework includes a number of predefined operation options
+    for the most common use cases. For example, the option
+    <literal>OP_ATTRIBUTES_TO_GET</literal> enables you to specify a list of
+    attributes that should be returned by an operation. When you write a
+    connector, you must define the operation options that your connector
+    supports in the schema, so that the application knows which operation
+    options are supported.
+   </para>
+   <para>
+    For a list of the predefined operation options, see the corresponding
+    <link xlink:show="new"
+    xlink:href="http://openicf.forgerock.org/apidocs/org/identityconnectors/framework/common/objects/OperationOptions.html">Javadoc</link>.
+   </para>
+  </section>
+
+  <section xml:id="openicf-special-attributes">
+   <title>OpenICF Special Attributes</title>
+   <para>
+    OpenICF includes a number of <emphasis>special</emphasis> attributes, that
+    all begin and end with <literal>__</literal> (for example
+    <literal>__NAME__</literal>, and <literal>__UID__</literal>). These special
+    attributes are essentially functional aliases for specific attributes or
+    object types. The purpose of the special attributes is to enable a connector
+    developer to create a contract regarding how a property can be referenced,
+    regardless of the application that is using the connector. In this way, the
+    connector can map specific object information between an arbitrary
+    application and the resource, without knowing how that information is
+    referenced in the application.
+   </para>
+   <para>
+    The special attributes are used extensively in the generic LDAP connector,
+    which can be used with OpenDJ, Active Directory, OpenLDAP, and other LDAP
+    directories. Each of these directories might use a different attribute name
+    to represent the same type of information. For example, Active Directory
+    uses <literal>unicodePassword</literal> and OpenDJ uses
+    <literal>userPassword</literal> to represent the same thing, a user's
+    password. The LDAP connector uses the special OpenICF
+    <literal>__PASSWORD__</literal> attribute to abstract that difference.
+   </para>
+   <para>
+    For a list of the special attributes, see the corresponding
+    <link xlink:show="new"
+    xlink:href="http://openicf.forgerock.org/apidocs/org/identityconnectors/framework/common/objects/OperationalAttributeInfos.html">Javadoc</link>.
+   </para>
+  </section>
  </section>
+
+ <section xml:id="framework-connector-instantiation">
+  <title>How the OpenICF Framework Manages Connector Instances</title>
+  <para>
+   The OpenICF framework supports multiple <emphasis>connector types</emphasis>,
+   based on the implementation of the <literal>connector</literal> interface,
+   and the <literal>configuration</literal> interface. These two interfaces
+   determine the following:
+  </para>
+  <itemizedlist>
+   <listitem>
+    <para>
+     Whether the connector instance is obtained from a pool or whether a new
+     instance is created <emphasis>for each operation</emphasis>
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     Whether the connector configuration instance is retained, and reused for
+     each operation, (stateful configuration) or a new configuration instance is
+     created for each operation (stateless).
+    </para>
+   </listitem>
+  </itemizedlist>
+  <para>
+   Connector developers determine what type of connector to implement, assessing
+   the best match for the resource to which they are connecting. The interaction
+   between the <literal>connector</literal> and <literal>configuration</literal>
+   interface implementations is described in detail in <link xlink:show="new"
+   xlink:role="http://docbook.org/xlink/role/olink"
+   xlink:href="dev-guide#connector-types"><citetitle>Deciding on the Connector
+   Type</citetitle></link>. This section illustrates how the OpenICF framework
+   manages connector instantiation, depending on the connector type.
+  </para>
+
+  <section xml:id="connector-instantiation-basic">
+   <title>Connector Instantiation for a Stateless, Non-Poolable Connector</title>
+   <para>
+    The most basic connector has a stateless configuration, and is not pooled. A
+    basic connector is initialized as follows:
+   </para>
+   <orderedlist>
+    <listitem>
+     <para>
+      The application calls an operation (for example, CREATE) on the connector
+      facade.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      The OpenICF framework creates a new
+      <emphasis>configuration instance</emphasis>, and initializes it with its
+      configuration properties.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      When the framework has the configuration instance, with all the attributes
+      in the configuration set, the framework creates a new
+      <emphasis>connector instance</emphasis>, and initializes it, with the
+      configuration that has been set.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      The framework executes the operation (for example, CREATE) on the
+      connector instance.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      The connector instance executes the operation on the resource.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      The framework calls the <literal>dispose()</literal> method to release all
+      resources that the connector instance was using.
+     </para>
+    </listitem>
+   </orderedlist>
+   <para>
+    The following illustration shows the initialization process for a basic
+    connector, and references the numbered steps in the preceding list.
+   </para>
+   <mediaobject>
+    <alt>Connector initialization for a stateless, non-pooled connector</alt>
+    <imageobject>
+     <imagedata fileref="images/connector-init-1.png" format="PNG"/>
+    </imageobject>
+   </mediaobject>
+  </section>
+
+  <section xml:id="connector-instantiation-pooled">
+   <title>Connector Instantiation for a Stateless, Poolable Connector</title>
+   <para>
+    The second connector type has a stateless configuration, but can be pooled.
+    A stateless, poolable connector is instantiated as follows:
+   </para>
+   <orderedlist>
+    <listitem>
+     <para>
+      The application calls an operation (for example, CREATE) on the connector
+      facade.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      The OpenICF framework calls on the object pool, to borrow a
+      <emphasis>live</emphasis> connector instance to execute the operation.
+     </para>
+     <para>
+      If the object pool has an idle connector instance available, the
+      framework <emphasis>borrows</emphasis> that one instance (step 5a in the
+      illustration that follows).
+     </para>
+     <para>
+      The framework calls the <literal>checkAlive</literal> method on the
+      customized connector instance with its configuration, to check if the
+      instance that was borrowed from the pool is still alive, and ready to
+      execute the operation. If the instance is no longer alive and ready, the
+      framework disposes of the instance and borrows another one.
+     </para>
+     <para>
+      The thread that borrows the object has exclusive access to that
+      connector instance, that is, it is thread-safe.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      If the object pool has no idle connector instances, the pool creates a
+      new connector instance.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      The framework creates a new <emphasis>configuration instance</emphasis>,
+      and initializes it with its configuration properties.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      The framework initializes the borrowed connector instance, with the
+      configuration that has been set.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      The framework executes the operation (for example, CREATE) on the
+      connector instance.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      The connector instance executes the operation on the resource.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      When the operation is complete, the framework releases the connector
+      instance back into the pool. No <literal>dispose()</literal> method is
+      called.
+     </para>
+    </listitem>
+   </orderedlist>
+   <para>
+    The following illustration shows the initialization process for a stateless,
+    poolable connector, and references the numbered steps in the preceding list.
+   </para>
+   <mediaobject>
+    <alt>Connector initialization for a stateless, poolable connector</alt>
+    <imageobject>
+     <imagedata fileref="images/connector-init-2.png" format="PNG"/>
+    </imageobject>
+   </mediaobject>
+  </section>
+
+  <section xml:id="connector-instantiation-stateful">
+   <title>Connector Instantiation for a Stateful, Non-Poolable Connector</title>
+   <para>
+    The third connector type has a stateful configuration, and cannot be pooled.
+    A stateful, non-poolable connector is instantiated as follows:
+   </para>
+   <orderedlist>
+    <listitem>
+     <para>
+      The OpenICF framework creates a new <emphasis>configuration
+      instance</emphasis>, initializes it with its configuration properties, and
+      stores it in the connector facade, before any operations are called.
+     </para>
+     <para>
+      This single configuration instance is shared between multiple threads. The
+      framework does not guarantee isolation, so connector developers must
+      ensure that their implementation is thread-safe.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      The application calls an operation (for example, CREATE) on the connector
+      facade.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      The OpenICF framework creates a new connector instance, and calls the
+      <literal>init()</literal> method on that connector instance, with the
+      stored configuration. In other words, the framework initializes the
+      connector, with the single configuration instance stored within the
+      connector facade.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      The framework executes the operation (for example, CREATE) on the
+      connector instance.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      The connector instance executes the operation on the resource.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      The framework calls the <literal>dispose()</literal> method to release all
+      resources that the connector instance was using.
+     </para>
+     <para>
+      Note that the customized config instance remains in the connector facade,
+      and is reused for the next operation.
+     </para>
+    </listitem>
+   </orderedlist>
+   <para>
+    The following illustration shows the initialization process for a
+    non-poolable connector, with a stateful configuration. The illustration
+    references the numbered steps in the preceding list.
+   </para>
+   <mediaobject>
+    <alt>Connector initialization for a stateful, non-pooled connector</alt>
+    <imageobject>
+     <imagedata fileref="images/connector-init-3.png" format="PNG"/>
+    </imageobject>
+   </mediaobject>
+  </section>
+
+  <section xml:id="connector-instantiation-pooled-stateful">
+   <title>Connector Instantiation for a Stateful, Poolable Connector</title>
+   <para>
+    The fourth connector type has a stateful configuration, and can be pooled.
+    A stateful, poolable connector is instantiated as follows:
+   </para>
+   <orderedlist>
+   <listitem>
+    <para>
+     The OpenICF framework creates a new <emphasis>configuration
+     instance</emphasis>, initializes it with its configuration properties, and
+     stores it in the connector facade, before any operations are called.
+    </para>
+    <para>
+     This single configuration instance is shared between multiple threads. The
+     framework does not guarantee isolation, so connector developers must
+     ensure that their implementation is thread-safe.
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     The application calls an operation (for example, CREATE) on the connector
+     facade.
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     The framework calls on the object pool, to borrow a <emphasis>live</emphasis>
+     connector instance to execute the operation.
+    </para>
+    <para>
+     If the object pool has an idle connector instance available, the
+     framework <emphasis>borrows</emphasis> that one instance (step 5a in the
+     illustration that follows).
+    </para>
+    <para>
+     The framework calls the <literal>checkAlive</literal> method on the
+     customized connector instance with its configuration, to check if the
+     instance that was borrowed from the pool is still alive, and ready to
+     execute the operation. If the instance is no longer alive and ready, the
+     framework disposes of the instance and borrows another one.
+    </para>
+    <para>
+     The thread that borrows the object has exclusive access to that
+     connector instance, that is, it is thread-safe.
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     If the object pool has no idle connector instances, the pool creates a
+     new connector instance.
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     The framework initializes the borrowed connector instance, with the
+     stored configuration.
+    </para>
+   </listitem>
+    <listitem>
+     <para>
+      The framework executes the operation (for example, CREATE) on the
+      connector instance.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      The connector instance executes the operation on the resource.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      When the operation is complete, the framework releases the connector
+      instance back into the pool. No <literal>dispose()</literal> method is
+      called.
+     </para>
+    </listitem>
+   </orderedlist>
+   <para>
+    The following illustration shows the initialization process for a stateful,
+    poolable connector, and references the numbered steps in the preceding list.
+   </para>
+   <mediaobject>
+    <alt>Connector initialization for a stateful, pooled connector</alt>
+    <imageobject>
+     <imagedata fileref="images/connector-init-4.png" format="PNG"/>
+    </imageobject>
+   </mediaobject>
+  </section>
+
+ </section>
+
+ <!--TODO Removing because the same content is described in the SPI chapter.
+ Double-check for loss of info, then delete this section
 
  <section xml:id="creating-objects">
   <title>Creating Objects</title>
@@ -347,5 +1120,5 @@ for(ConnectorObject obj : results ) {
             "\tUID: " + obj.getUid());
 }</programlisting>
  </section>
-
+-->
 </chapter>

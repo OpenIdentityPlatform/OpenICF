@@ -68,17 +68,17 @@
  <section xml:id="dotnet-connector-server">
   <title>Installing, Configuring and Running a .NET Connector Server</title>
   <para>
-   The .NET connector server requires the .NET framework (version 4.0.30319 or
-   later) and is supported on Windows Server 2008 and 2008 R2.
+   The .NET connector server requires the .NET framework (version 4.5 or later)
+   and is supported on Windows Server 2008 and 2008 R2.
   </para>
   <para>
    By default, the connector server outputs log messages to a file named
-   <filename>connectorserver.log</filename>, in the
-   <filename>C:\path\to\openicf</filename>directory. To change the location of
-   the log file, set the <literal>initializeData</literal> parameter in the
-   configuration file, <emphasis>before</emphasis> before you install the
-   connector server. For example, the following excerpt sets the log directory
-   to <filename>C:\openicf\logs\connectorserver.log</filename>.
+   <filename>connectorserver.log</filename>, in the installation directory. To
+   change the location of the log file, set the
+   <literal>initializeData</literal> parameter in the configuration file,
+   <emphasis>before</emphasis> before you start the connector server. For
+   example, the following excerpt sets the log directory to
+   <filename>C:\openicf\logs\connectorserver.log</filename>.
   </para>
   <programlisting>&lt;add name="file"
      type="System.Diagnostics.TextWriterTraceListener"
@@ -86,6 +86,10 @@
      traceOutputOptions="DateTime">
      &lt;filter type="System.Diagnostics.EventTypeFilter" initializeData="Information"/>
 &lt;/add> </programlisting>
+  <para>
+   For more information about adjusting the logging parameters, see <link>Logging
+   and Troubleshooting</link>.
+  </para>
 
  <procedure xml:id="install-dotnet-connector-server">
   <title>Installing a .NET Connector Server</title>
@@ -209,8 +213,16 @@
        <listitem>
         <para>
          Indicates whether client connections to the Connector Server should be
-         over SSL. This property is set to <literal>false</literal> by default.
+         over SSL.
         </para>
+        <warning>
+         <para>
+          This property is set to <literal>false</literal> by default. In
+          production environments you must set this property to
+          <literal>true</literal> for security reasons, otherwise all messages
+          going over the network are obfuscated rather than encrypted.
+         </para>
+        </warning>
         <para>
          To secure connections to the Connector Server, set this property to
          <literal>true</literal> and store the server certificate in your
@@ -226,6 +238,10 @@ ConnectorServer /storeCertificate /storeName &lt;certificate-store-name&gt; /cer
         <para>
          Specifies the name of the certificate store, into which your server
          certificate has been installed.
+        </para>
+        <para>
+         This parameter is optional. If you do not set it, the default
+         certificate store name is <literal>ConnectorServerSSLCertificate</literal>.
         </para>
        </listitem>
       </varlistentry>
@@ -299,6 +315,10 @@ ConnectorServer /storeCertificate /storeName &lt;certificate-store-name&gt; /cer
       performance of the Connector Servers, so take care when setting this
       level.
      </para>
+     <para>
+      For more information on adjusting the logging and trace settings, see
+      <link>Logging and Troubleshooting</link>.
+     </para>
     </step>
   </procedure>
 
@@ -310,7 +330,7 @@ ConnectorServer /storeCertificate /storeName &lt;certificate-store-name&gt; /cer
    <step>
     <para>
      Start the server as a Windows service, by using the Microsoft Services
-     Console.
+     Console (<filename>services.msc</filename>).
     </para>
     <para>
      Locate the connector server service
@@ -318,8 +338,9 @@ ConnectorServer /storeCertificate /storeName &lt;certificate-store-name&gt; /cer
      the service</literal> or <literal>Restart the service</literal>.
     </para>
     <para>
-     The service is executed with the credentials of the "run as" user
-     (<literal>System</literal>, by default).
+     The service is executed with the credentials of the service user
+     (<literal>System</literal>, by default). In production mode, you must
+     change this to a user with more restrictions.
     </para>
    </step>
    <step>
@@ -361,24 +382,28 @@ ConnectorServer /storeCertificate /storeName &lt;certificate-store-name&gt; /cer
    <title>Installing Connectors on a .NET Connector Server</title>
    <para>
     When your .NET Connector Server is up and running, you must install the
-    individual connector bundles that will run on the Connector Server. This
-    section assumes that your connector bundles are available as .zip files,
-    either downloaded from the OpenICF download page, or bundled after their
-    development.
+    individual connector assemblies that will run on the Connector Server. This
+    section assumes that your connector assemblies are available as .zip files,
+    either downloaded from the <link>ForgeRock Resources Catalog</link>, or
+    packaged after their development.
    </para>
    <step>
     <para>
-     Change to the directory where you installed the Connector Server.
+     Change to the directory where you installed the connector server.
     </para>
    </step>
    <step>
     <para>
-     Unzip the connector .zip delivery.
+     Unzip the connector .zip file.
+    </para>
+    <para>
+     The .NET connector server scans the install directory for files named
+     <literal>*.Connector.dll</literal> or <literal>*.Connector-*.dll</literal>.
     </para>
    </step>
    <step>
     <para>
-     Restart the Connector Server.
+     Restart the connector server.
     </para>
    </step>
   </procedure>
@@ -430,71 +455,51 @@ ConnectorServer /storeCertificate /storeName &lt;certificate-store-name&gt; /cer
    <title>Installing the Java Connector Server</title>
    <step>
     <para>
-     Download the OpenICF Java Connector Server JARs from the <link
-    xlink:href="http://maven.forgerock.org/repo/webapp/browserepo.html?0&amp;pathId=releases:org/forgerock/openicf/framework"
-    xlink:show="new">ForgeRock Maven Repository</link>.
-    </para>
-    <para>
-     The following JARs are required:
-    </para>
-    <itemizedlist>
-     <listitem>
-      <para>
-       <filename>connector-framework.jar</filename>
-      </para>
-     </listitem>
-     <listitem>
-      <para>
-       <filename>connector-framework-internal.jar</filename>
-      </para>
-     </listitem>
-    </itemizedlist>
-    <para>
-     If you intend to execute Groovy scripts (<literal>ScriptOnConnector</literal>),
-     or if your connector is based on the scripted Groovy connector framework,
-     also download the <filename>groovy-all.jar</filename>.
+     Download and extract the OpenICF Java Connector Server .zip file from the
+     <link>ForgeRock Downloads</link> page.
     </para>
    </step>
    <step>
     <para>
-     On the remote server, create a new directory, for example,
-     <filename>/path/to/jconnsrv</filename>.
+     Start the Java Connector Server from the install directory.
     </para>
+    <screen>$ <userinput>/<replaceable>install-dir</replaceable>/bin/ConnectorServer.sh</userinput>
+<computeroutput>
+ Usage: ConnectorServer &lt;command> [option], where command is one of the following:
+ /run ["-J&lt;java option>"] - Runs the server from the console.
+ /setKey [&lt;key>] - Sets the connector server key.
+ /setDefaults - Sets the default ConnectorServer.properties.
+
+ example:
+ ConnectorServer.sh /run "-J-Djavax.net.ssl.keyStore=mykeystore.jks" "-J-Djavax.net.ssl.keyStorePassword=changeit"
+ - this will run connector server with SSL
+
+ ConnectorServer.sh jpda /run
+ - this will run connector server in debug mode</computeroutput></screen>
     <para>
-     Copy the JARs you downloaded in the previous step to this directory.
+     Your Java Connector Server is now up and running.
     </para>
+   </step>
+  </procedure>
+
+  <procedure>
+   <title>Starting the Java Connector Server as a Service</title>
+   <step>
+   <para>
+    For information on starting the Java Connector Server as a Linux service,
+    see <link xlink:show="new"
+    xlink:href="http://openidm.forgerock.org/doc/bootstrap/integrators-guide/#java-connector-server-linux">
+    <citetitle>Installing a Remote Java Connector Server for Unix/Linux</citetitle>
+    in the <citetitle>OpenIDM Integrator's Guide</citetitle></link>.
+   </para>
    </step>
    <step>
     <para>
-     Create a <filename>bundles/</filename> directory in the
-     <filename>jconnsrv</filename> directory.
-    </para>
-   </step>
-   <step>
-    <para>
-     Extract
-    <filename>org/identityconnectors/framework/server/connectorserver.properties</filename>
-     from the <filename>connector-framework-internal.jar</filename> into the
-     <filename>jconnsrv</filename> directory.
-    </para>
-   </step>
-   <step>
-    <para>
-     Test your installation by running the Java Connector Server with no
-     arguments, to display the usage message.
-    </para>
-    <screen>$ <userinput>cd /path/to/jconnsrv</userinput>
-$ <userinput>java -jar connector-framework-internal.jar</userinput>
-<computeroutput>Usage: Main -run -properties &lt;connectorserver.properties>
-Main -setKey -key &lt;key> -properties &lt;connectorserver.properties>
-Main -setDefaults -properties &lt;connectorserver.properties>
-NOTE: If using SSL, you must specify the system config
-properties:
- -Djavax.net.ssl.keyStore
- -Djavax.net.ssl.keyStoreType (optional)
- -Djavax.net.ssl.keyStorePassword</computeroutput></screen>
-    <para>
-     The Java Connector Server is now successfully installed.
+     For information on starting the Java Connector Server as a Windows service,
+     see <link xlink:show="new"
+     xlink:href="http://openidm.forgerock.org/doc/bootstrap/integrators-guide/#java-connector-server-windows">
+     <citetitle>Installing a Remote Java Connector Server for Windows</citetitle>
+     in the <citetitle>OpenIDM Integrator's Guide</citetitle></link>.
     </para>
    </step>
   </procedure>
@@ -555,8 +560,12 @@ connectorserver.key=xOS4IeeE6eb/AhMbhxZEC37PgtE\=</programlisting>
       <term><literal>connectorserver.libDir</literal></term>
       <listitem>
        <para>
-        The directory in which runtime libraries required by the connectors are
-        located. The default directory is <literal>lib</literal>.
+        The directory in which runtime libraries that are required by the
+        connectors are located. The default directory is <literal>lib</literal>.
+       </para>
+       <para>
+        The runtime libraries directory enables you to prevent library conflicts,
+        by using Java classloader isolation.
        </para>
       </listitem>
      </varlistentry>
@@ -566,13 +575,14 @@ connectorserver.key=xOS4IeeE6eb/AhMbhxZEC37PgtE\=</programlisting>
        <para>
         Indicates whether client connections to the connector server should be
         over SSL. This property is set to <literal>false</literal> by default.
-        </para>
-        <para>
-         To secure connections to the connector server, set this property to
-         <literal>true</literal> and set the following system config properties
-         (on the command line) before you start the connector server:
-        </para>
-        <screen>-Djavax.net.ssl.keyStore=mySrvKeystore
+        You must set it to <literal>true</literal> in production environments.
+       </para>
+       <para>
+        To secure connections to the connector server, set this property to
+        <literal>true</literal> and set the following system config properties
+        (on the command line) before you start the connector server:
+       </para>
+       <screen>-Djavax.net.ssl.keyStore=mySrvKeystore
 -Djavax.net.ssl.keyStoreType (optional)
 -Djavax.net.ssl.keyStorePassword</screen>
       </listitem>
@@ -648,12 +658,13 @@ connectorserver.key=xOS4IeeE6eb/AhMbhxZEC37PgtE\=</programlisting>
      Log files are available in the <literal>/path/to/jconnsrv/logs</literal>
      directory.
     </para>
-    <screen><userinput>$ ls logs/</userinput>
+    <screen>$ <userinput>ls logs/</userinput>
 <computeroutput>Connector.log  ConnectorServer.log  ConnectorServerTrace.log</computeroutput></screen>
     </step>
     <step>
      <para>
-      If required, stop the Java Connector Server by pressing CTRL-C.
+      If required, stop the Java Connector Server by pressing
+      <literal>q</literal>.
      </para>
     </step>
    </procedure>
@@ -663,19 +674,20 @@ connectorserver.key=xOS4IeeE6eb/AhMbhxZEC37PgtE\=</programlisting>
    <para>
     When your Java Connector Server is up and running, you must install the
     individual connector bundles that will run on the Connector Server. This
-    section assumes that your connector bundles are available as .zip files,
+    section assumes that your connector bundles are available as JAR files,
     either downloaded from the OpenICF download page, or bundled after their
     development.
    </para>
     <step>
      <para>
       Copy the connector bundle .jar to the <filename>bundles/</filename>
-      directory.
+      folder.
      </para>
     </step>
     <step>
      <para>
-      Add any required third-party .jar files to the CLASSPATH.
+      Add any required third-party .jar files to the <literal>lib/</literal>
+      folder.
      </para>
     </step>
     <step>
@@ -689,13 +701,21 @@ connectorserver.key=xOS4IeeE6eb/AhMbhxZEC37PgtE\=</programlisting>
  <section xml:id="access-connector-server-ssl">
   <title>Accessing Connector Servers Over SSL</title>
   <para>
-   If your application must access either a .NET or a remote Java Connector
-   Server over SSL, follow these steps.
+   In production environments, your application should access either the .NET
+   or remote Java Connector Server over SSL.
+  </para>
+  <para>
+   To configure secure access to the connector server, follow these steps:
   </para>
   <orderedlist>
    <listitem>
     <para>
      Configure the Connector Server to use an SSL certificate.
+    </para>
+    <para>
+     Edit the <filename>ConnectorServer.properties</filename> file (in the
+     <literal>/path/to/openicf/conf</literal> folder), to set
+     <literal>connectorserver.usessl=true</literal>.
     </para>
    </listitem>
    <listitem>

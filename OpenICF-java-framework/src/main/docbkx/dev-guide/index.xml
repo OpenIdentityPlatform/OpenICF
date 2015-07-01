@@ -71,7 +71,7 @@
 
  <xinclude:include href="preface.xml" />
  <xinclude:include href="chap-about.xml" />
- <xinclude:include href="chap-get-started.xml" />
+ <!--<xinclude:include href="chap-get-started.xml" /> -->
  <xinclude:include href="chap-openicf-api.xml" />
  <xinclude:include href="chap-connector-servers.xml" />
  <xinclude:include href="chap-openicf-spi.xml" />
@@ -79,9 +79,8 @@
  <xinclude:include href="chap-groovy-connectors.xml" />
  <xinclude:include href="chap-custom-bundler.xml" />
  <xinclude:include href="chap-powershell.xml" />
-
- <!--
  <xinclude:include href="chap-troubleshooting.xml" />
+ <!--
  <xinclude:include href="chap-logging.xml" />
  -->
 

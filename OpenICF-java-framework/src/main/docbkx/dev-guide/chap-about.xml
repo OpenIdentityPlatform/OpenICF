@@ -40,9 +40,7 @@
   OpenICF connectors provide a consistent layer between identity applications
   and target resources, and expose a set of operations for the complete
   lifecycle of an identity. The connectors provide a way to decouple
-  applications from the target resources to which data is provisioned. OpenICF
-  connectors are, by design, compatible with OpenIDM, Sun Identity Manager and
-  Oracle Waveset as well as the Brinqa GRC Platform.
+  applications from the target resources to which data is provisioned.
  </para>
  <para>
   OpenICF focuses on provisioning and identity management, but also provides
@@ -59,6 +57,11 @@
   is not covered by one of the existing connectors. In addition, OpenICF
   provides two <emphasis>scripted connector toolkits</emphasis>, that enable you
   to write your own connectors based on Groovy or PowerShell scripts.
+ </para>
+ <para>
+  Version ${docTargetVersion} of the OpenICF framework can use OpenIDM, Sun
+  Identity Manager, and Oracle Waveset connectors (version 1.1) and can use
+  ConnID connectors up to version 1.4.
  </para>
  <itemizedlist>
   <para>
@@ -77,8 +80,8 @@
   </listitem>
   <listitem>
    <para>
-    Information on how to write your own Java connectors, scripted Groovy
-    connectors, or scripted PowerShell connectors
+    Information on how to write your own Java and .NET connectors, scripted
+    Groovy connectors, or scripted PowerShell connectors
    </para>
   </listitem>
  </itemizedlist>
@@ -92,9 +95,8 @@
    framework implements an API, that includes a defined set of operations. When
    you are building a connector, you implement the Service Provider Interface
    (SPI), and include only those operations that are supported by your target
-   resource. You might have several SPI implementations, one for each connector
-   bundle that accesses your target resources. The API operations call the SPI
-   operations that you implement.
+   resource. Each connector implements a set of SPI operations. The
+   API operations call the SPI operations that you implement.
   </para>
   <para>
    The following image shows a high-level overview of an OpenICF deployment.
@@ -109,53 +111,84 @@
    </imageobject>
   </mediaobject>
 
-  <section xml:id="overview-api-spi">
-  <title>Overview of the OpenICF API and SPI</title>
+  <section xml:id="framework-components">
+  <title>Understanding the OpenICF Framework Components</title>
   <para>
    When you are building, or modifying, an identity management application to
-   use the OpenICF Framework and its connectors, you implement the API,
-   including the following main interfaces:
+   use the OpenICF Framework and its connectors, you use the following
+   interfaces of the API:
   </para>
   <itemizedlist>
    <listitem>
     <para>
-     Connector Info Interface
+     Connector Info Manager Component
     </para>
     <para>
-     The connector info interface provides meta information (display name,
-     category, messages, and so forth) for a given connector. For more
-     information, see XREF.
+     The connector info manager maintains a set of connector info instances,
+     each of which describes an available connector. The OpenICF Framework
+     provides three different types of connector info manager:
+    </para>
+    <itemizedlist>
+     <listitem>
+      <para>Local</para>
+      <para>
+       A local connector info manager accesses the connector bundle or assembly
+       directly.
+      </para>
+     </listitem>
+     <listitem>
+      <para>Remote</para>
+      <para>
+       A remote connector info manager accesses the connector bundle or assembly
+       through a remote connector server.
+      </para>
+     </listitem>
+     <listitem>
+      <para>OSGi</para>
+      <para>
+       An OSGi connector info manager accesses the connector bundle within the
+       OSGi context.
+      </para>
+     </listitem>
+    </itemizedlist>
+    <para>
+     For more information, see <link xlink:show="new"
+     xlink:role="http://docbook.org/xlink/role/olink"
+     xlink:href="dev-guide#create-connector-info-manager"><citetitle>Creating
+     the Connector Info Manager</citetitle></link>.
     </para>
    </listitem>
    <listitem>
     <para>
-     Connector Info Manager Interface
+     Connector Info Component
     </para>
     <para>
-     The connector info manage interface maintains a list of connector info
-     instances, each of which describes an available connector. For more
-     information, see XREF.
-    </para>
-   </listitem>
-   <listitem>
-    <para>
-     API Configuration Interface
-    </para>
-    <para>
-     The API configuration interface shows the available configuration
-     properties from both the API, and the SPI, based on the connector type. For
-     more information, see XREF.
+     The connector info component provides meta information (display name,
+     category, messages, and so forth) for a given connector.
     </para>
    </listitem>
    <listitem>
     <para>
-     Configuration Properties Interface
+     Connector Key Component
     </para>
     <para>
-     The configuration properties interface encapsulates the configuration at
-     the SPI layer, and uses reflection to identify the individual properties
-     that are available for an application to manipulate. For more information,
-     see XREF.
+     The connector key component uniquely identifies a specific connector
+     implementation.
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     API Configuration
+    </para>
+    <para>
+     The API configuration holds the available configuration properties and
+     values from both the API, and the SPI, based on the connector type.
+    </para>
+    <para>
+     For more information, see <link xlink:show="new"
+     xlink:role="http://docbook.org/xlink/role/olink"
+     xlink:href="dev-guide#configuration-implementation"><citetitle>Implementing
+     the Configuration Interface</citetitle></link>.
     </para>
    </listitem>
    <listitem>
@@ -184,10 +217,8 @@
     </para>
     <para>
      The connector interface handles initialization and disposal of the
-     connector, and determines whether the connector is poolable. The framework
-     pools <emphasis>instances</emphasis> of a poolable connector, rather than
-     pooling connections within the connector. For more information, see
-     <link xlink:show="new" xlink:href="dev-guide#connector-implementation"
+     connector, and determines whether the connector is poolable. For more
+     information, see <link xlink:show="new" xlink:href="dev-guide#connector-implementation"
      xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Implementing
      the Connector Interface</citetitle></link>
     </para>
@@ -206,6 +237,15 @@
      xlink:href="dev-guide#configuration-implementation"
      xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Implementing
      the Configuration Interface</citetitle></link>.
+    </para>
+    <para>
+     The OpenICF framework uses the configuration interface implementation to
+     build the <emphasis>configuration properties</emphasis> inside the API
+     configuration.
+    </para>
+    <para>
+     When the configuration interface is implemented, it becomes available to
+     the default API configuration.
     </para>
    </listitem>
    <listitem>
@@ -232,15 +272,9 @@
    <emphasis>through</emphasis> the connector server.
   </para>
   <para>
-   The connector server is essentially a simple identity management application
-   that implements only the OpenICF service. It is easy to change the network
-   communication protocol and to proxy the local API call over the network to
-   call the API on the remote server.
-  </para>
-  <para>
-   Connector servers also enable you to run connector bundles
-   that are written in C# on a .NET platform, and to access them over the
-   network from a Java application.
+   Connector servers also enable you to run connector bundles that are written
+   in C# on a .NET platform, and to access them over the network from a Java or
+   .NET application.
   </para>
   <para>
    The following image shows a high-level overview of an OpenICF deployment,
@@ -271,7 +305,7 @@
     OpenICF provides many capabilities, including the following:
    </para>
    <listitem>
-    <para>Connection pooling</para>
+    <para>Connector pooling</para>
    </listitem>
    <listitem>
     <para>Timeouts on all operations</para>
@@ -283,13 +317,13 @@
     <para>Search and synchronization buffering and result streaming</para>
    </listitem>
    <listitem>
-    <para>Scripting with Groovy and Boo .NET</para>
+    <para>Scripting with Groovy, JavaScript, shell, and PowerShell</para>
    </listitem>
    <listitem>
-    <para>Classloader and JVM isolation</para>
+    <para>Classloader isolation</para>
    </listitem>
    <listitem>
-    <para>An independent logging API/SPI similar to Apache Commons logging</para>
+    <para>An independent logging API/SPI</para>
    </listitem>
    <listitem>
     <para>Java and .NET platform support</para>
@@ -302,9 +336,9 @@
     <para>A logging proxy that captures all API calls</para>
    </listitem>
    <listitem>
-    <para>A connector archetype to create connectors with support for Ant,
-    NetBeans, and Eclipse</para>
+    <para>A Maven connector archetype to create connectors</para>
    </listitem>
   </itemizedlist>
  </section>
+
 </chapter>
