@@ -271,6 +271,12 @@
    as the connector. Applications access the connector implementation
    <emphasis>through</emphasis> the connector server.
   </para>
+  <note>
+   <para>
+    The OpenICF framework can support both local and remote connector
+    implementations simultaneously.
+   </para>
+  </note>
   <para>
    Connector servers also enable you to run connector bundles that are written
    in C# on a .NET platform, and to access them over the network from a Java or
