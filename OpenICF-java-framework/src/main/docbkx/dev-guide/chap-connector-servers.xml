@@ -722,12 +722,6 @@ connectorserver.key=xOS4IeeE6eb/AhMbhxZEC37PgtE\=</programlisting>
     <para>
      Configure the Connector Server to provide SSL sockets.
     </para>
-   </listitem>
-   <listitem>
-    <para>
-     Configure your application to communicate with the Connector Server over
-     SSL.
-    </para>
     <itemizedlist>
      <para>
       If you use self-signed or other certificates that Java cannot verify
