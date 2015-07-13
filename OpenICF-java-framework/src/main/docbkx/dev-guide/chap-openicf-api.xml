@@ -419,28 +419,26 @@
     key.
    </para>
    <example>
-    <title>Acquiring a Local Connector Info Object</title>
+    <title>Acquiring a Local Connector Info Object (Java)</title>
     <programlisting language="java">
-     ConnectorInfoManagerFactory fact = ConnectorInfoManagerFactory.getInstance();
-     File bundleDirectory = new File("/connectorDir/bundles/myconnector");
-     URL url = IOUtil.makeURL(bundleDirectory,
+ConnectorInfoManagerFactory fact = ConnectorInfoManagerFactory.getInstance();
+File bundleDirectory = new File("/connectorDir/bundles/myconnector");
+URL url = IOUtil.makeURL(bundleDirectory,
      "/dist/org.identityconnectors.myconnector-1.0.jar");
-     ConnectorInfoManager manager = fact.getLocalManager(url);
-     ConnectorKey key = new ConnectorKey("org.identityconnectors.myconnector",
-     "1.0", "MyConnector");
-    </programlisting>
+ConnectorInfoManager manager = fact.getLocalManager(url);
+ConnectorKey key = new ConnectorKey("org.identityconnectors.myconnector",
+     "1.0", "MyConnector");</programlisting>
    </example>
    <example>
-    <title>Acquiring a Remote Connector Info Object</title>
+    <title>Acquiring a Remote Connector Info Object (Java)</title>
     <programlisting language="java">
-     ConnectorInfoManagerFactory fact = ConnectorInfoManagerFactory.getInstance();
-     File bundleDirectory = new File("/connectorDir/bundles/myconnector");
-     URL url = IOUtil.makeURL(bundleDirectory,
+ConnectorInfoManagerFactory fact = ConnectorInfoManagerFactory.getInstance();
+File bundleDirectory = new File("/connectorDir/bundles/myconnector");
+URL url = IOUtil.makeURL(bundleDirectory,
      "/dist/org.identityconnectors.myconnector-1.0.jar");
-     ConnectorInfoManager manager = fact.getLocalManager(url);
-     ConnectorKey key = new ConnectorKey("org.identityconnectors.myconnector",
-     "1.0", "MyConnector");
-    </programlisting>
+ConnectorInfoManager manager = fact.getLocalManager(url);
+ConnectorKey key = new ConnectorKey("org.identityconnectors.myconnector",
+     "1.0", "MyConnector");</programlisting>
    </example>
   </listitem>
   </orderedlist>
