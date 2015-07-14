@@ -46,6 +46,32 @@
   xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Writing Scripted
   Connectors With the Groovy Connector Toolkit</citetitle></link>.
  </para>
+ <para>
+  The order in which you implement your connector is as follows:
+ </para>
+ <orderedlist>
+  <listitem>
+   <para>
+    Decide on the connector type (see <xref linkend="connector-types" />.
+   </para>
+  </listitem>
+  <listitem>
+   <para>
+    Implement the configuration interface (see
+    <xref linkend="configuration-implementation" />.
+   </para>
+  </listitem>
+  <listitem>
+   <para>
+    Implement the connector interface (see <xref linkend="connector-implementation" />.
+   </para>
+  </listitem>
+  <listitem>
+   <para>
+    Implement the operation interfaces (see <xref linkend="operation-implementation" />.
+   </para>
+  </listitem>
+ </orderedlist>
 
  <section xml:id="connector-types">
   <title>Deciding on the Connector Type</title>
@@ -56,7 +82,14 @@
    whether the connector can be pooled, and whether its configuration is
    stateful. Before you begin developing your connector, decide on the
    <emphasis>connector type</emphasis>, based on the system to which you are
-   connecting. This section outlines the different connector types.
+   connecting. For an overview of how the OpenICF framework manages each
+   connector type, see <link xlink:show="new"
+   xlink:role="http://docbook.org/xlink/role/olink"
+   xlink:href="dev-guide/#framework-connector-instantiation"><citetitle>How the
+   OpenICF Framework Manages Connector Instances</citetitle></link>.
+  </para>
+  <para>
+   This section outlines the different connector types.
   </para>
   <variablelist>
    <varlistentry>
@@ -80,6 +113,10 @@
       from the Connector Pool. If there is no existing instance, a new instance
       is created. After the operation execution, the Connector instance is
       released and placed back into pool.
+     </para>
+     <para>
+      The OpenICF framework pools <emphasis>instances</emphasis> of a poolable
+      connector, rather than pooling connections within the connector.
      </para>
     </listitem>
    </varlistentry>
@@ -149,86 +186,29 @@
     </tbody>
    </tgroup>
   </table>
- </section>
-
- <section xml:id="connector-implementation">
-  <title>Implementing the Connector Interface</title>
   <para>
-   This is the main interface to declare a connector, and to manage its life
-   cycle. The <literal>connector</literal> interface <emphasis>must</emphasis>
-   be implemented. A typical connector lifecycle is as follows:
-  </para>
-  <itemizedlist>
-   <listitem>
-    <para>
-     The connector creates a connection to the target system.
-    </para>
-   </listitem>
-   <listitem>
-    <para>
-     Any operations implemented in the connector are called.
-    </para>
-   </listitem>
-   <listitem>
-    <para>
-     The connector discards the connection and disposes of any resources it has
-     used.
-    </para>
-   </listitem>
-  </itemizedlist>
-  <para>
-   The <literal>connector</literal> interface has only three methods:
-  </para>
-  <itemizedlist>
-   <listitem>
-    <para>
-     <literal>init(Configuration)</literal> initializes the connector with its
-     configuration
-    </para>
-   </listitem>
-   <listitem>
-    <para>
-     <literal>getConfiguration()</literal> returns the configuration that was
-     passed to <literal>init(Configuration)</literal>
-    </para>
-   </listitem>
-   <listitem>
-    <para>
-     <literal>dispose()</literal> disposes of any resources that the connector
-     uses.
-    </para>
-   </listitem>
-  </itemizedlist>
-  <para>
-   Both the <literal>init(Configuration)</literal> and
-   <literal>dispose()</literal> methods permit block operations (which enable
-   bulk creates or deletes) and the use of <literal>before</literal> and
-   <literal>after</literal> actions.
-  </para>
-  <para>
-   The <literal>PoolableConnector</literal> extends this interface with the
-   <literal>checkAlive()</literal> method. You should use a
-   <literal>PoolableConnector</literal> when the
-   <literal>init(Configuration)</literal> method is so expensive that it is
-   worth keeping the connector instance in a pool and reusing it between
-   operations. When an existing connector instance is pooled, the framework
-   calls the <literal>checkAlive()</literal> method. If it throws an error, the
-   framework disposes it from the pool and obtains another one, or creates a
-   new connector instance and calls the <literal>init()</literal> method. The
-   <literal>checkAlive()</literal> method is used to make sure that the
-   instance in the pool is still operational.
+   For detailed information on how the OpenICF framework manages each of these
+   connector types, see <link xlink:show="new"
+   xlink:role="http://docbook.org/xlink/role/olink"
+   xlink:href="dev-guide#framework-connector-instantiation"><citetitle>How the
+   OpenICF Framework Manages Connector Instances</citetitle></link>.
   </para>
  </section>
 
  <section xml:id='configuration-implementation'>
   <title>Implementing the Configuration Interface</title>
   <para>
-   The configuration interface implementation includes all of the required
-   information to enable the connector to connect to the target system, and to
-   perform its operations. The configuration interface implements getters and
-   setters for each of its defined properties. It also provides a validate
-   method that determines whether all the required properties are available, and
-   valid, before passing them to the connector.
+   The OpenICF connector framework uses the configuration interface
+   implementation to build the <emphasis>configuration properties</emphasis>
+   inside the API configuration.
+  </para>
+  <para>
+   The configuration interface implementation includes the required information
+   to enable the connector to connect to the target system, and to perform its
+   operations. The configuration interface implements getters and setters for
+   each of its defined properties. It also provides a validate method that your
+   application can use to check whether all the required properties are
+   available, and valid, before passing them to the connector.
   </para>
   <para>
    The configuration interface has three methods:
@@ -237,8 +217,20 @@
    <listitem>
     <para>
      <literal>setConnectorMessages(ConnectorMessages messages)</literal> sets
-     the message catalog instance that allows the connector to localize
-     messages.
+     the message catalog instance, that enables the connector to provide
+     localized messages.
+    </para>
+    <para>
+     The message catalog is defined in the file
+     <filename>Messages.properties</filename>, and can be localized as required
+     by appending the locale to the file name, for example,
+     <filename>Messages_fr.properties</filename>.
+    </para>
+    <para>
+     For more information on the message catalog, see <link xlink:show="new"
+     xlink:role="http://docbook.org/xlink/role/olink"
+     xlink:href="dev-guide#message-catalog"><citetitle>The Connector Messages
+     Object</citetitle></link>.
     </para>
    </listitem>
    <listitem>
@@ -252,6 +244,10 @@
      <literal>validate()</literal> checks that all the required properties have
      been set and that their values are valid
     </para>
+    <para>
+     The purpose of this method is to test that the configuration that the
+     application provides to your connector is valid.
+    </para>
    </listitem>
   </itemizedlist>
   <para>
@@ -260,10 +256,12 @@
    annotation.
   </para>
   <para>
-   The configuration interface is traversed through reflection. The
-   <literal>ConfigurationProperty</literal> annotation provides a way to
-   override the default configuration operation for each property. The
-   annotation includes the following elements:
+   The <literal>ConfigurationProperty</literal> annotation (Java) or attribute
+   (.NET) enables you to add custom meta information to properties. The OpenICF
+   framework scans the meta information and collects this information to build
+   the <literal>ConfigurationProperties</literal> object inside the
+   <literal>APIConfiguration</literal>. The following meta information can be
+   provided:
   </para>
   <informaltable>
    <tgroup cols="4">
@@ -322,9 +320,12 @@
     </tbody>
    </tgroup>
   </informaltable>
-
-  <example xml:id='configuration-java-implementation'>
-   <title>Configuration Implementation in Java</title>
+  <para>
+   The following examples show how the meta information is provided, in both
+   Java and C#.
+  </para>
+  <example xml:id='stateless-configuration-java-implementation'>
+   <title>Stateless Configuration Implementation (Java)</title>
    <programlisting language="java">
 public class SampleConfiguration extends AbstractConfiguration  {
 
@@ -341,7 +342,7 @@ public class SampleConfiguration extends AbstractConfiguration  {
         groupMessageKey = "authenticateOp.group",
         confidential = false,
         required = false,
-        operations = AuthenticateOp.class
+        operations = {AuthenticateOp.class,CreateOp.class}
     )
     public String getPasswordFieldName() {
         return passwordFieldName;
@@ -351,7 +352,9 @@ public class SampleConfiguration extends AbstractConfiguration  {
         passwordFieldName = value;
     }
 }  </programlisting>
-
+  </example>
+  <example xml:id='stateful-configuration-java-implementation'>
+   <title>Stateful Configuration Implementation (Java)</title>
    <programlisting language="java">
 public class SampleConfiguration extends AbstractConfiguration
     implements StatefulConfiguration {
@@ -370,8 +373,8 @@ public class SampleConfiguration extends AbstractConfiguration
 }  </programlisting>
   </example>
 
-  <example xml:id='configuration-csharp-implementation'>
-   <title>Configuration Implementation in C#</title>
+  <example xml:id='stateless-configuration-csharp-implementation'>
+   <title>Stateless Configuration Implementation (C#)</title>
    <programlisting language="csharp">
 public class ActiveDirectoryConfiguration : AbstractConfiguration
     {
@@ -394,7 +397,10 @@ public class ActiveDirectoryConfiguration : AbstractConfiguration
         }
     }
    </programlisting>
+  </example>
 
+  <example xml:id='stateful-configuration-csharp-implementation'>
+   <title>Stateful Configuration Implementation (C#)</title>
    <programlisting language="csharp">
 public class ActiveDirectoryConfiguration : AbstractConfiguration,
     StatefulConfiguration
@@ -413,31 +419,94 @@ public class ActiveDirectoryConfiguration : AbstractConfiguration,
     </programlisting>
    </example>
 
-   <section xml:id='AbstractConfiguration-spi-level-rules'>
-    <title>Configuration Implementation Rules</title>
+  <section xml:id='operation-validate'>
+   <title>Validate Operation</title>
+   <para>
+    The validate operation validates the connector configuration. A valid
+    configuration is one that is <emphasis>ready to be used</emphasis> by the
+    connector.
+   </para>
+   <itemizedlist>
     <para>
-     The <literal>validate()</literal> method of the configuration operation
-     must return one of the following:
+     A configuration that is <emphasis>ready</emphasis>, has the following
+     characteristics:
+    </para>
+    <listitem>
+     <para>
+      It is complete, that is all required properties are present and have
+      values
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      All property values are well-formed, that is, they are in the expected
+      range and have the expected format
+     </para>
+    </listitem>
+   </itemizedlist>
+
+   <section xml:id='ValidateApiOp-api-level-rules'>
+    <title>ValidateApiOp</title>
+    <para>
+     The validate operation returns a <literal>ConfigurationException</literal>
+     in the following situations:
     </para>
     <itemizedlist>
      <listitem>
       <para>
-       <literal>RuntimeException</literal> if the configuration is not valid
+       The Framework version is not compatible with the connector
       </para>
      </listitem>
      <listitem>
       <para>
-       <literal>NullPointerException</literal> if a required configuration
-       property is null
+       The connector does not have the required attributes in
+       <literal>MANIFEST.MF</literal>
       </para>
      </listitem>
      <listitem>
       <para>
-       <literal>IllegalArgumentException</literal> if a required configuration
-       property is blank
+       The <literal>ConfigurationProperties</literal> cannot be merged into
+       the configuration
       </para>
      </listitem>
     </itemizedlist>
+    <example>
+     <title>Implementation of the valid operation, at the API Level</title>
+     <programlisting language="java">@Test
+      public void ValidateTest() {
+      logger.info("Running Validate Test");
+      final ConnectorFacade facade = createConnectorFacade(BasicConnector.class, null);
+      facade.validate();
+      }</programlisting>
+    </example>
+   </section>
+  </section>
+
+  <section xml:id='validate-spi-level-rules'>
+   <title>Validate SPI Implementation</title>
+   <para>
+    The <literal>validate()</literal> method of the configuration operation
+    must return one of the following:
+   </para>
+   <itemizedlist>
+    <listitem>
+     <para>
+      <literal>RuntimeException</literal> if the configuration is not valid
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      <literal>NullPointerException</literal> if a required configuration
+      property is null
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      <literal>IllegalArgumentException</literal> if a required configuration
+      property is blank
+     </para>
+    </listitem>
+   </itemizedlist>
     <example>
      <title>Implementation of the validate method</title>
      <programlisting language="java">public void validate() {
@@ -462,7 +531,7 @@ public class ActiveDirectoryConfiguration : AbstractConfiguration,
     </para>
     <para>
      You can use any of the following types, or an array of these types. Lists
-     sets of types are not supported.
+     of types are not supported.
     </para>
     <screen>
     String.class
@@ -505,23 +574,245 @@ public class ActiveDirectoryConfiguration : AbstractConfiguration,
     typeof(Script)
     </screen>
     <para>
-     The framework introspects the Configuration class and adds all properties
-     that have a <literal>set/get</literal> method to the configuration
-     properties. If the type of an added property is not supported, the
-     framework throws an exception. If you want to avoid the exception (and
-     simply ignore all unsupported types) use the following construction:
+     The framework introspects the implemented configuration class and adds all
+     properties that have a <literal>set/get</literal> method to the
+     <literal>ConfigurationProperties</literal> object.
     </para>
     <para>
-     In Java:
+     The <literal>ConfigurationClass</literal> annotation (Java) or attribute
+     (.NET) provides additional information to the OpenICF framework about the
+     configuration class. The following information is provided:
     </para>
-    <programlisting language="java">
-@ConfigurationClass(ignore = { "privateProperty", "internalProperty" }, skipUnsupported = true)    </programlisting>
-    <para>
-     In C#:
-    </para>
-    <programlisting language="csharp">
-[ConfigurationClass(Ignore = { "privateProperty", "internalProperty" }, SkipUnsupported = true)]    </programlisting>
+    <informaltable>
+     <tgroup cols="2">
+      <thead>
+       <row>
+        <entry>Element</entry>
+        <entry>Description</entry>
+       </row>
+      </thead>
+      <tbody>
+       <row>
+        <entry>privateProperty</entry>
+        <entry>
+         If this is set, the property is hidden from the application, and the
+         application cannot set the property through the
+         <literal>APIConfiguration</literal>.
+        </entry>
+       </row>
+       <row>
+        <entry>skipUnsupported</entry>
+        <entry>
+         If the type of an added property is not supported, the framework throws
+         an exception. To avoid the exception, set the value of
+         <literal>skipUnsupported</literal> to <literal>true</literal>.
+        </entry>
+       </row>
+      </tbody>
+     </tgroup>
+    </informaltable>
+    <example>
+     <title>ConfigurationClass Annotation in Java</title>
+<programlisting language="java">@ConfigurationClass(ignore = { "privateProperty", "internalProperty" }, skipUnsupported = true)</programlisting>
+    </example>
+    <example>
+     <title>ConfigurationClass Attribute in C#</title>
+<programlisting language="csharp">[ConfigurationClass(Ignore = { "privateProperty", "internalProperty" }, SkipUnsupported = true)]</programlisting>
+    </example>
    </section>
+ </section>
+
+ <section xml:id="connector-implementation">
+  <title>Implementing the Connector Interface</title>
+  <para>
+   The connector interface declares a connector, and manages its life cycle. You
+   <emphasis>must</emphasis> implement the <literal>connector</literal>
+   interface. A typical connector lifecycle is as follows:
+  </para>
+  <itemizedlist>
+   <listitem>
+    <para>
+     The connector creates a connection to the target system.
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     Any operations implemented in the connector are called.
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     The connector discards the connection and disposes of any resources it has
+     used.
+    </para>
+   </listitem>
+  </itemizedlist>
+  <para>
+   The <literal>connector</literal> interface has only three methods:
+  </para>
+  <itemizedlist>
+   <listitem>
+    <para>
+     <literal>init(Configuration)</literal> initializes the connector with its
+     configuration
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     <literal>getConfiguration()</literal> returns the configuration that was
+     passed to <literal>init(Configuration)</literal>
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     <literal>dispose()</literal> disposes of any resources that the connector
+     uses.
+    </para>
+   </listitem>
+  </itemizedlist>
+  <para>
+   The <literal>ConnectorClass</literal>, which is the implementation of the
+   connector interface, must have the <literal>ConnectorClass</literal>
+   annotation (Java) or attribute (.NET) so that the OpenICF framework can
+   find the connector class. The following table shows the elements within the
+   connector class.
+  </para>
+  <informaltable>
+   <tgroup cols="4">
+    <thead>
+     <row>
+      <entry>Element</entry>
+      <entry>Description</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>configurationClass</entry>
+      <entry>The configuration class for the connector.</entry>
+     </row>
+     <row>
+      <entry>displayNameKey</entry>
+      <entry>A key in the message catalog that holds a human readable name for
+       the connector.</entry>
+     </row>
+     <row>
+      <entry>categoryKey</entry>
+      <entry>The category to which the connector belongs, such as LDAP, or DB.</entry>
+     </row>
+     <row>
+      <entry>messageCatalogPaths</entry>
+      <entry>The resource path(s) to the message catalog. If multiple paths are
+       provided, the message catalogs are collated. By default, if no path is
+       specified, the <literal>connector-package.Messages.properties</literal>
+       is used</entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+  <para>
+   The following examples show the connector interface implementation, in Java
+   and C#.
+  </para>
+  <example>
+   <title>Connector Interface Implementation in Java</title>
+   <programlisting language="java">@ConnectorClass(
+    displayNameKey = "Sample.connector.display",
+    configurationClass = SampleConfiguration.class)
+public class SampleConnector implements Connector...
+   </programlisting>
+  </example>
+  <example>
+   <title>Connector Interface Implementation in C#</title>
+   <programlisting language="java">[ConnectorClass(
+    "connector_displayName",
+    typeof (SampleConfiguration)
+    ]
+public class SampleConnector : Connector ...
+   </programlisting>
+  </example>
+  <section>
+   <title>Implementing a Poolable Connector Interface</title>
+   <para>
+    Certain connectors support the ability to be pooled. For a pooled connector,
+    OpenICF maintains a pool of connector instances and reuses these instances
+    for multiple provisioning and reconciliation operations. When an operation
+    must be executed, an existing connector instance is taken from the connector
+    pool. If no connector instance exists, a new instance is initialized. When
+    the operation has been executed, the connector instance is released back
+    into the connector pool, ready to be used for a subsequent operation.
+   </para>
+   <para>
+    For an unpooled connector, a new connector instance is initialized for every
+    operation. When the operation has been executed, OpenICF disposes of the
+    connector instance. Because the initialization of a connector is an
+    expensive operation, reducing the number of connector initializations can
+    substantially improve performance.
+   </para>
+   <variablelist>
+    <para>
+     The following connection pooling configuration parameters can be set:
+    </para>
+    <varlistentry>
+     <term>maxObjects</term>
+     <listitem>
+      <para>
+       The maximum number of connector instances in the pool (both idle and
+       active). The default value is 10 instances.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>maxIdle</term>
+     <listitem>
+      <para>
+       The maximum number of idle connector instances in the pool. The default
+       value is 10 idle instances.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>maxWait</term>
+     <listitem>
+      <para>
+       The maximum period to wait for a free connector instance to become
+       available before failing. The default period is 150000 milliseconds, or
+       15 seconds.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>minEvictableIdleTimeMillis</term>
+     <listitem>
+      <para>
+       The minimum period to wait before evicting an idle connector instance
+       from the pool. The default period is 120000 milliseconds, or 12 seconds.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>minIdle</term>
+     <listitem>
+      <para>
+       The minimum number of idle connector instances in the pool. The default
+       value is 1 instance.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+   <para>
+    A <literal>PoolableConnector</literal> extends the connector interface with
+    the <literal>checkAlive()</literal> method. You should use a
+    <literal>PoolableConnector</literal> when the
+    <literal>init(Configuration)</literal> method is so expensive that it is
+    worth keeping the connector instance in a pool and reusing it between
+    operations. When an existing connector instance is pooled, the framework
+    calls the <literal>checkAlive()</literal> method. If this method throws an
+    error, the framework discards it from the pool and obtains another instance,
+    or creates a new connector instance and calls the <literal>init()</literal>
+    method. The <literal>checkAlive()</literal> method is used to make sure that
+    the instance in the pool is still operational.
+   </para>
+  </section>
  </section>
 
  <section xml:id="operation-implementation">
@@ -543,17 +834,18 @@ public class ActiveDirectoryConfiguration : AbstractConfiguration,
    <title>Authenticate Operation</title>
    <para>
     The authenticate operation authenticates an object on the target system,
-    based on two parameters, usually a unique identifier (username) and
+    based on two parameters, usually a unique identifier (username) and a
     password. If possible, your connector should try to authenticate these
     credentials natively.
    </para>
    <para>
     If authentication fails, the connector should throw a runtime
-    exception, either an <literal>IllegalArgumentException</literal> or, if a
-    native exception is available and is of type
-    <literal>RuntimeException</literal>, simply throw that exception. If the
-    native exception is not a <literal>RuntimeException</literal>, it should be
-    wrapped in a <literal>RuntimeException</literal>, and then thrown.
+    exception. The exception must be an
+    <literal>IllegalArgumentException</literal> or, if a native exception is
+    available and is of type <literal>RuntimeException</literal>, that native
+    runtime exception. If the native exception is not a
+    <literal>RuntimeException</literal>, it should be wrapped in a
+    <literal>RuntimeException</literal>, and then thrown.
    </para>
    <para>
     The exception should provide as much detail as possible for logging problems
@@ -562,33 +854,58 @@ public class ActiveDirectoryConfiguration : AbstractConfiguration,
     the most common authentication exceptions is the
     <literal>InvalidPasswordException</literal>.
    </para>
+   <para>
+    For more information about the common exceptions provided in the OpenICF
+    framework, see <xref linkend="common-exceptions" />.
+   </para>
+   <!--TODO For each operation, add C# examples from resources/Sample.cs -> use xcite plugin to extract -->
+   <!--TODO Laszlo to create a similar sample file for Java samples -->
+   <!--TODO Repeat this format for all the other SPI operations -->
 
    <section xml:id='AuthenticationApiOp-api-level-rules'>
-    <title>AuthenticationApiOp</title>
+    <title>Using the OpenICF Authenticate Operation</title>
     <para>
-     API-level rules:
+     This section shows how your application can use the framework's
+     <literal>authentication</literal> operation, and how to write a unit test
+     for this operation, when you are developing your connector.
     </para>
     <para>
-     The operation throws a <literal>RuntimeException</literal> if the
-     credentials do not pass authentication, otherwise throws nothing.
+     The <literal>authentication</literal> operation throws a
+     <literal>RuntimeException</literal> if the credentials do not pass
+     authentication, otherwise returns the <literal>UID</literal>.
     </para>
     <example>
-     <title>Implementation of the Authentication Operation, at the API Level</title>
+     <title>Sample Unit Test for the Authentication Operation (Java)</title>
 <programlisting language="java">@Test
 public void authenticateTest() {
     logger.info("Running Authentication Test");
     final ConnectorFacade facade = createConnectorFacade(BasicConnector.class, null);
     final OperationOptionsBuilder builder = new OperationOptionsBuilder();
     Uid uid =
-            facade.authenticate(ObjectClass.ACCOUNT, "username", new GuardedString("Passw0rd"
-                    .toCharArray()), builder.build());
+        facade.authenticate(ObjectClass.ACCOUNT, "username", new GuardedString("Passw0rd"
+        .toCharArray()), builder.build());
     Assert.assertEquals(uid.getUidValue(), "username");
 }</programlisting>
     </example>
    </section>
 
    <section xml:id='AuthenticateOp-spi-level-rules'>
-    <title>AuthenticateOp</title>
+    <title>Implementing the Authenticate Operation in Your Connector</title>
+    <para>
+     To implement the <literal>authenticate</literal> operation in your
+     connector, add the <literal>AuthenticateOp</literal> interface to your
+     connector class, for example:
+    </para>
+    <programlisting language="java">@ConnectorClass(
+    displayNameKey = "Sample.connector.display",
+    configurationClass = SampleConfiguration.class)
+public class SampleConnector implements Connector, AuthenticateOp...
+    </programlisting>
+    <para>
+     For more information, see the <link xlink:show="new"
+     xlink:href="http://openicf.forgerock.org/apidocs/org/identityconnectors/framework/spi/operations/AuthenticateOp.html"
+     >AuthenticateOp JavaDoc</link>.
+    </para>
     <para>
      The SPI provides the following detailed exceptions:
     </para>
@@ -670,7 +987,7 @@ public void authenticateTest() {
     the target system. The operation includes one method
     (<literal>create()</literal>). The method takes an
     <literal>ObjectClass</literal>, and any provided attributes, and creates the
-    object and its Uid. The connector must return the Uid so that the caller can
+    object and its UID. The connector must return the UID so that the caller can
     refer to the created object.
    </para>
    <para>
@@ -680,13 +997,24 @@ public void authenticateTest() {
     any required attributes, as long as the defaults are documented.
    </para>
    <para>
-    The Uid is never passed in with the attribute set for this method. If the
-    resource supports a mutable Uid, you can create a resource-specific
+    The UID is never passed in with the attribute set for this method. If the
+    resource supports a mutable UID, you can create a resource-specific
     attribute for the ID, such as <literal>unix_uid</literal>.
    </para>
+   <para>
+    If the <literal>create</literal> operation is only partially successful, the
+    connector should attempt to roll back the partial change. If the target
+    system does not allow this, the connector should report the partial success
+    of the create operation and throw a <literal>RetryableException</literal>.
+    For example:
+   </para>
+   <programlisting language="java">public static RetryableException wrap(final String message, final Uid uid) {
+    return new RetryableException(message, new AlreadyExistsException().initUid(Assertions
+    .nullChecked(uid, "Uid")));
+}</programlisting>
 
    <section xml:id='CreateApiOp-api-level-rules'>
-    <title>CreateApiOp</title>
+    <title>Using the OpenICF Create Operation</title>
     <para>
      The following exceptions are thrown by the Create API operation:
     </para>
@@ -712,7 +1040,7 @@ public void authenticateTest() {
      </listitem>
     </itemizedlist>
     <example>
-     <title>Implementation of the Create Operation, at the API Level</title>
+     <title>Consumption of the Create Operation, at the API Level</title>
      <programlisting language="java">@Test
 public void createTest() {
     logger.info("Running Create Test");
@@ -729,7 +1057,7 @@ public void createTest() {
    </section>
 
    <section xml:id='CreateOp-spi-level-rules'>
-    <title>CreateOp</title>
+    <title>Implementing the Create Operation in Your Connector</title>
     <para>
      The SPI provides the following detailed exceptions:
     </para>
@@ -774,7 +1102,7 @@ public void createTest() {
      </listitem>
     </itemizedlist>
     <example>
-     <title>Implementation of the Create Operation, at the API Level</title>
+     <title>Implementation of the Create Operation, at the SPI Level</title>
      <programlisting language="java">public Uid create(final ObjectClass objectClass, final Set&lt;Attribute> createAttributes,
         final OperationOptions options) {
     if (ObjectClass.ACCOUNT.equals(objectClass) || ObjectClass.GROUP.equals(objectClass)) {
@@ -811,20 +1139,20 @@ public void createTest() {
    </para>
 
    <section xml:id='DeleteApiOp-api-level-rules'>
-    <title>DeleteApiOp</title>
+    <title>Using the OpenICF Delete Operation</title>
     <para>
      The following exceptions are thrown by the Delete API operation:
     </para>
     <itemizedlist>
      <listitem>
       <para>
-       <literal>UnknownUidException</literal> - the Uid does not exist on the
+       <literal>UnknownUidException</literal> - the UID does not exist on the
        resource
       </para>
      </listitem>
     </itemizedlist>
     <example>
-     <title>Implementation of the Delete Operation, at the API Level</title>
+     <title>Consumption of the Delete Operation, at the API Level</title>
      <programlisting language="java">@Test
 public void deleteTest() {
     logger.info("Running Delete Test");
@@ -836,7 +1164,7 @@ public void deleteTest() {
    </section>
 
    <section xml:id='DeleteOp-spi-level-rules'>
-    <title>DeleteOp</title>
+    <title>Implementing the Delete Operation in Your Connector</title>
     <example>
      <title>Implementation of the Delete Operation, at the SPI Level</title>
      <programlisting language="java">public void delete(final ObjectClass objectClass, final Uid uid, final OperationOptions options) {
@@ -857,10 +1185,10 @@ public void deleteTest() {
    <title>Resolve Username Operation</title>
    <para>
     The resolve username operation enables the connector to resolve an object to
-    its Uid, based on its username. This operation is similar to the simple
+    its UID, based on its username. This operation is similar to the simple
     authentication operation. However, the resolve username operation does not
     include a password parameter, and does not attempt to authenticate the
-    credentials. Instead, it returns the Uid that corresponds to the supplied
+    credentials. Instead, it returns the UID that corresponds to the supplied
     username.
    </para>
    <para>
@@ -882,16 +1210,13 @@ public void deleteTest() {
    </para>
 
    <section xml:id='ResolveUsernameApiOp-api-level-rules'>
-    <title>ResolveUsernameApiOp</title>
-    <para>
-     API-level rules:
-    </para>
+    <title>Using the OpenICF Resolve Username Operation</title>
     <para>
      The operation throws a <literal>RuntimeException</literal> if the
-     username validation fails, otherwise throws nothing.
+     username validation fails, otherwise returns the <literal>UID</literal>.
     </para>
     <example>
-     <title>Implementation of the ResolveUsername operation, at the API Level</title>
+     <title>Consumption of the ResolveUsername operation, at the API Level</title>
      <programlisting language="java">@Test
 public void resolveUsernameTest() {
     logger.info("Running ResolveUsername Test");
@@ -904,7 +1229,7 @@ public void resolveUsernameTest() {
    </section>
 
    <section xml:id='ResolveUsernameOp-spi-level-rules'>
-    <title>ResolveUsernameOp</title>
+    <title>Implementing the Resolve Username Operation in Your Connector</title>
     <para>
      The SPI provides the following detailed exceptions:
     </para>
@@ -950,17 +1275,23 @@ public void resolveUsernameTest() {
     The implementation of this operation includes a mapping between the native
     object class and the corresponding connector object. The special
     <literal>Uid</literal> attribute should not be returned, because it is not a
-    true attribute of the object, but a reference to it. If your resource
-    object class has a writable unique ID attribute that is different to its
-    <literal>Name</literal>, your schema should contain a resource-specific
-    attribute that represents this unique ID. For example, a Unix account object
-    might contain a <literal>unix_uid</literal>.
+    true attribute of the object, but a reference to it. For more information
+    about special attributes in OpenICF, see <link xlink:show="new"
+    xlink:href="dev-guide#openicf-special-attributes"
+    xlink:role="http://docbook.org/xlink/role/olink"><citetitle>OpenICF Special
+    Attributes</citetitle></link>.
+   </para>
+   <para>
+    If your resource object class has a writable unique ID attribute that is
+    different to its <literal>Name</literal>, your schema should contain a
+    resource-specific attribute that represents this unique ID. For example, a
+    Unix account object might contain a <literal>unix_uid</literal>.
    </para>
 
    <section xml:id='SchemaApiOp-api-level-rules'>
-    <title>SchemaApiOp</title>
+    <title>Using the OpenICF Schema Operation</title>
     <example>
-     <title>Implementation of the SchemaOp operation, at the API Level</title>
+     <title>Consumption of the Schema Operation, at the API Level</title>
      <programlisting language="java">@Test
 public void schemaTest() {
     logger.info("Running Schema Test");
@@ -972,7 +1303,7 @@ public void schemaTest() {
    </section>
 
    <section xml:id='SchemaOp-spi-level-rules'>
-    <title>SchemaOp</title>
+    <title>Implementing the Schema Operation in Your Connector</title>
     <example>
      <title>Implementation of the SchemaOp operation, at the SPI Level</title>
      <programlisting language="java">public Schema schema() {
@@ -1034,13 +1365,15 @@ public void schemaTest() {
     provides a minimum contract to which the connector must adhere. (See the
     <link
     xlink:href="http://openicf.forgerock.org/apidocs/org/identityconnectors/framework/api/operations/ScriptOnConnectorApiOp.html">javadoc</link>
-    for more information). If you intend your connector to provide more
-    to the script than what is required by this minimum contract, you must
-    implement the <literal>scriptOnConnectorOp</literal> interface.
+    for more information). If you do not implement the
+    <literal>scriptOnConnector</literal> interface in your connector, the
+    framework provides a default implementation. If you intend your connector to
+    provide more to the script than what is required by this minimum contract,
+    you must implement the <literal>scriptOnConnectorOp</literal> interface.
    </para>
 
    <section xml:id='ScriptOnConnectorApiOp-api-level-rules'>
-    <title>ScriptOnConnectorApiOp</title>
+    <title>Using the OpenICF Script on Connector Operation</title>
     <para>
      The API operation allows an application to run a script in the context of
      any connector.
@@ -1052,7 +1385,7 @@ public void schemaTest() {
      the remote JVM or .Net Runtime.
     </para>
     <example>
-     <title>Implementation of the ScriptOnConnector operation, at the API Level</title>
+     <title>Consumption of the ScriptOnConnector operation, at the API Level</title>
      <programlisting language="java">@Test
 public void runScriptOnConnectorTest() {
     logger.info("Running RunScriptOnConnector Test");
@@ -1072,7 +1405,7 @@ public void runScriptOnConnectorTest() {
    </section>
 
    <section xml:id='ScriptOnConnectorOp-spi-level-rules'>
-    <title>ScriptOnConnectorOp</title>
+    <title>Implementing the Script on Connector Operation in Your Connector</title>
     <para>
      The <literal>scriptOnConnector</literal> SPI operation takes the following
      parameters:
@@ -1136,7 +1469,7 @@ public void runScriptOnConnectorTest() {
    </para>
 
    <section xml:id='ScriptOnResourceApiOp-api-level-rules'>
-    <title>ScriptOnResourceApiOp</title>
+    <title>Using the OpenICF Script on Resource Operation</title>
     <para>
      The contract at the API level is intentionally very loose. Each connector
      decides what script languages it supports, what running a script on a
@@ -1144,7 +1477,7 @@ public void runScriptOnConnectorTest() {
      connector supports.
     </para>
     <example>
-     <title>Implementation of the ScriptOnResource operation, at the API Level</title>
+     <title>Consumption of the ScriptOnResource operation, at the API Level</title>
      <programlisting language="java">@Test
 public void runScriptOnResourceTest() {
     logger.info("Running RunScriptOnResource Test");
@@ -1162,7 +1495,7 @@ public void runScriptOnResourceTest() {
    </section>
 
    <section xml:id='ScriptOnResourceOp-spi-level-rules'>
-    <title>ScriptOnResourceOp</title>
+    <title>Implementing the Script on Resource Operation in Your Connector</title>
     <para>
      The <literal>scriptOnResource</literal> SPI operation takes the following
      parameters:
@@ -1212,22 +1545,74 @@ public void runScriptOnResourceTest() {
     The search operation enables the connector to search for objects on the
     target system.
    </para>
+   <para>
+    The OpenICF framework handles searches as follows:
+   </para>
+   <orderedlist>
+    <listitem>
+     <para>
+      The application sends a query, with a search filter, to the OpenICF
+      framework
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      The framework submits the query, with the filter, to the connector
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      The connector implements the <literal>createFilterTranslator()</literal>
+      method to obtain a <literal>FilterTranslator</literal> object
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      The framework then uses this <literal>FilterTranslator</literal> object to
+      transform the filter to a format that the <literal>executeQuery()</literal>
+      method expects
+     </para>
+    </listitem>
+   </orderedlist>
    <itemizedlist>
     <para>
-     The search operation implementation includes two steps:
+     You can implement the <literal>FilterTranslator</literal> object in two
+     ways:
     </para>
     <listitem>
      <para>
-      Creating a filter translator that translates the specified filter into one
-      or more native queries
+      The <literal>FilterTranslator</literal> translates the original filter
+      into one or more native queries.
+     </para>
+     <para>
+      The framework then calls the <literal>executeQuery()</literal> method for
+      each native query.
      </para>
     </listitem>
     <listitem>
      <para>
-      Executing the query
+      The <literal>FilterTranslator</literal> does not modify the original
+      filter.
+     </para>
+     <para>
+      The framework then calls the <literal>executeQuery()</literal> method with
+      the original OpenICF filter.
+     </para>
+     <para>
+      Using this second approach enables your connector to distinguish between a
+      search and a get operation and to benefit from the visitor design pattern.
      </para>
     </listitem>
    </itemizedlist>
+
+   <para>
+    Based on the <literal>resultsHandlerConfiguration</literal>, the OpenICF
+    framework can perform additional filtering on the returning results. For
+    more information on the <literal>resultsHandlerConfiguration</literal>, see
+    <link xlink:show="new" xlink:href="dev-guide#results-handler-config"
+    xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Results
+    Handler Configuration</citetitle></link>.
+   </para>
    <para>
     The connector facade calls the <literal>executeQuery</literal> method once
     for each native query that the filter translator produces. If the filter
@@ -1241,16 +1626,20 @@ public void runScriptOnResourceTest() {
     translator for the connector implement <literal>OR</literal> operators, if
     possible.
    </para>
+   <para>
+    Whether the application calls a <literal>get</literal> API operation, or a
+    <literal>search</literal> API operation, the OpenICF framework translates
+    that request to a <literal>search</literal> request on the connector.
+   </para>
 
    <section xml:id='GetApiOp-api-level-rules'>
-    <title>GetApiOp</title>
+    <title>Using the OpenICF Get Operation</title>
     <para>
-     The <literal>GetApiOp</literal> returns an
-     <literal>UnknownUidException</literal> when the Uid does not exist on the
-     resource.
+     The <literal>GetApiOp</literal> returns <literal>null</literal> when the
+     UID does not exist on the resource.
     </para>
     <example>
-     <title>Implementation of the Get operation, at the API Level</title>
+     <title>Consumption of the Get operation, at the API Level</title>
      <programlisting language="java">@Test
 public void getObjectTest() {
     logger.info("Running GetObject Test");
@@ -1266,9 +1655,9 @@ public void getObjectTest() {
    </section>
 
    <section xml:id='SearchApiOp-api-level-rules'>
-    <title>SearchApiOp</title>
+    <title>Using the OpenICF Search Operation</title>
     <example>
-     <title>Implementation of the Search operation, at the API Level</title>
+     <title>Consumption of the Search operation, at the API Level</title>
       <programlisting language="java">@Test
 public void searchTest() {
     logger.info("Running Search Test");
@@ -1287,7 +1676,7 @@ public void searchTest() {
    </section>
 
    <section xml:id='SearchOp-spi-level-rules'>
-    <title>SearchOp</title>
+    <title>Implementing the Search Operation in Your Connector</title>
     <example>
      <title>Implementation of the Search operation, at the SPI Level</title>
      <programlisting language="java">public FilterTranslator&lt;String> createFilterTranslator(ObjectClass objectClass,
@@ -1347,10 +1736,10 @@ public void executeQuery(ObjectClass objectClass, String query, ResultsHandler h
    </itemizedlist>
 
    <section xml:id='SyncApiOp-api-level-rules'>
-    <title>SyncApiOp</title>
+    <title>Using the OpenICF Sync Operation</title>
     <example>
-     <title>Implementation of the sync operation
-      (<literal>getLatestSyncToken()</literal> method), at the API Level</title>
+     <title>Consumption of the Sync Operation
+      (<literal>getLatestSyncToken()</literal> Method)at the API Level</title>
      <programlisting language="java">@Test
 public void getLatestSyncTokenTest() {
     logger.info("Running GetLatestSyncToken Test");
@@ -1366,8 +1755,8 @@ public void getLatestSyncTokenTest() {
     </example>
 
     <example>
-     <title>Implementation of the sync operation (<literal>sync()</literal>
-      method), at the API Level</title>
+     <title>Consumption of the Sync Operation (<literal>sync()</literal>
+      Method), at the API Level</title>
      <programlisting language="java">@Test
 public void syncTest() {
     logger.info("Running Sync Test");
@@ -1394,9 +1783,9 @@ public void syncTest() {
    </section>
 
    <section xml:id='SyncOp-spi-level-rules'>
-    <title>SyncOp</title>
+    <title>Implementing the Sync Operation in Your Connector</title>
     <example>
-     <title>Implementation of the sync operation at the SPI Level</title>
+     <title>Implementation of the Sync Operation at the SPI Level</title>
      <programlisting language="java">public void sync(ObjectClass objectClass, SyncToken token, SyncResultsHandler handler,
         final OperationOptions options) {
     if (ObjectClass.ALL.equals(objectClass)) {
@@ -1445,8 +1834,10 @@ public SyncToken getLatestSyncToken(ObjectClass objectClass) {
    <title>Test Operation</title>
    <para>
     The test operation tests the connector configuration. Unlike validation,
-    testing a configuration checks that every part of the environment that is
-    referred to by the configuration is available.
+    testing a configuration verifies that every part of the environment that is
+    referred to by the configuration is available. The operation therefore
+    validates that the connection details that are provided in the configuration
+    are accurate, and that the backend is accessible when using them.
    </para>
    <para>
     For example, the connector might make a physical connection to the host that
@@ -1459,7 +1850,7 @@ public SyncToken getLatestSyncToken(ObjectClass objectClass) {
    </para>
 
    <section xml:id='TestApiOp-api-level-rules'>
-    <title>TestApiOp</title>
+    <title>Using the OpenICF Test Operation</title>
     <para>
      At the API level, the test operation throws a
      <literal>RuntimeException</literal> if the configuration is not valid, or
@@ -1468,7 +1859,7 @@ public SyncToken getLatestSyncToken(ObjectClass objectClass) {
      your connector implementation should throw a <literal>ConnectorException</literal>.
     </para>
     <example>
-     <title>Implementation of the test operation at the API Level</title>
+     <title>Consumption of the Test Operation at the API Level</title>
      <programlisting language="java">@Test
 public void testTest() {
     logger.info("Running Test Test");
@@ -1479,9 +1870,9 @@ public void testTest() {
    </section>
 
    <section xml:id='TestOp-spi-level-rules'>
-    <title>TestOp</title>
+    <title>Implementing the Test Operation in Your Connector</title>
     <example>
-     <title>Implementation of the test operation at the SPI Level</title>
+     <title>Implementation of the Test Operation at the SPI Level</title>
      <programlisting language="java">public void test() {
     logger.ok("Test works well");
 }</programlisting>
@@ -1507,16 +1898,17 @@ public void testTest() {
     attribute values operation offers better performance and atomicity
     semantics.
    </para>
+
    <section xml:id='UpdateApiOp-api-level-rules'>
-    <title>UpdateApiOp</title>
+    <title>Using the OpenICF Update Operation</title>
     <para>
      At the API level, the update operation returns an
-     <literal>UnknownUidException</literal> if the Uid does not exist on the
+     <literal>UnknownUidException</literal> if the UID does not exist on the
      target system resource and if the connector does not implement the
      <xref linkend="operation-update-attribute-values" /> interface.
     </para>
     <example>
-     <title>Implementation of the update operation at the API Level</title>
+     <title>Consumption of the Update Operation at the API Level</title>
      <programlisting language="java">@Test
 public void updateTest() {
     logger.info("Running Update Test");
@@ -1525,23 +1917,22 @@ public void updateTest() {
     Set&lt;Attribute> updateAttributes = new HashSet&lt;Attribute>();
     updateAttributes.add(new Name("Foo"));
 
-    Uid uid =
-            facade.update(ObjectClass.ACCOUNT, new Uid("Foo"), updateAttributes, builder
-                    .build());
+    Uid uid = facade.update(ObjectClass.ACCOUNT, new Uid("Foo"), updateAttributes, builder
+                  .build());
     Assert.assertEquals(uid.getUidValue(), "foo");
 }</programlisting>
     </example>
    </section>
 
    <section xml:id='UpdateOp-spi-level-rules'>
-    <title>UpdateOp</title>
+    <title>Implementing the Update Operation in Your Connector</title>
     <para>
      At the SPI level, the update operation returns an
-     <literal>UnknownUidException</literal> if the Uid does not exist on the
+     <literal>UnknownUidException</literal> if the UID does not exist on the
      target system.
     </para>
     <example>
-     <title>Implementation of the update operation at the SPI Level</title>
+     <title>Implementation of the Update Operation at the SPI Level</title>
      <programlisting language="java">public Uid update(ObjectClass objectClass, Uid uid, Set&lt;Attribute> replaceAttributes,
         OperationOptions options) {
     AttributesAccessor attributesAccessor = new AttributesAccessor(replaceAttributes);
@@ -1569,6 +1960,47 @@ public void updateTest() {
     return uidAfterUpdate;
 }    </programlisting>
     </example>
+
+    <section xml:id="update-op-remove-attributes">
+     <title>Suggested Approach for Deleting Attributes and Removing Attribute Values</title>
+     <para>
+      If the target resource to which you are connecting supports the removal of
+      attributes, you can implement the removal in several ways. All the samples
+      in this document assume the following syntax rules for deleting attributes
+      or removing their values.
+     </para>
+     <informaltable>
+      <tgroup cols="3">
+       <thead>
+        <row>
+         <entry>Update</entry>
+         <entry>Syntax rule</entry>
+         <entry>Query filter</entry>
+        </row>
+       </thead>
+       <tbody>
+        <row>
+         <entry>Set an empty attribute value</entry>
+         <entry><literal>[""]</literal> (application sends an attribute value
+          that is a list containing one empty string)</entry>
+         <entry><literal>equal=""</literal></entry>
+        </row>
+        <row>
+         <entry>Set an attribute value to null</entry>
+         <entry><literal>[]</literal> (application sends an attribute value
+          that is an empty list)</entry>
+         <entry><literal>ispresent</literal> search returns 1</entry>
+        </row>
+        <row>
+         <entry>Removing an attribute</entry>
+         <entry><literal>null</literal> (application sends an attribute value
+         that is <literal>null</literal></entry>
+         <entry><literal>ispresent</literal> search returns 1</entry>
+        </row>
+       </tbody>
+      </tgroup>
+     </informaltable>
+    </section>
    </section>
   </section>
 
@@ -1593,8 +2025,8 @@ public void updateTest() {
     </listitem>
    </itemizedlist>
     <example>
-     <title>Implementation of the add and remove attribute values methods, at
-      the API Level</title>
+     <title>Consumption of the Add and Remove Attribute Values Methods at the
+      API Level</title>
      <programlisting language="java">@Test
 public void addAttributeValuesTest() {
     logger.info("Running AddAttributeValues Test");
@@ -1627,10 +2059,10 @@ public void removeAttributeValuesTest() {
    </example>
 
    <section xml:id='UpdateAttributeValuesOp-spi-level-rules'>
-    <title>UpdateAttributeValuesOp</title>
+    <title>Implementing the Update Attribute Values Operation in Your Connector</title>
     <para>
      At the SPI level, the update attribute values operation returns an
-     <literal>UnknownUidException</literal> when the Uid does not exist on the
+     <literal>UnknownUidException</literal> when the UID does not exist on the
      resource.
     </para>
     <example>
@@ -1649,71 +2081,9 @@ public Uid removeAttributeValues(ObjectClass objectClass, Uid uid,
    </section>
   </section>
 
-  <section xml:id='operation-validate'>
-    <title>Validate Operation</title>
-    <para>
-     The validate operation is implemented only at the API level. This operation
-     validates the connector configuration. A valid configuration is one that is
-     <emphasis>ready to be used</emphasis> by the connector.
-    </para>
-    <itemizedlist>
-     <para>
-      A configuration that is <emphasis>ready</emphasis>, has the following
-      characteristics:
-     </para>
-     <listitem>
-      <para>
-       It is complete, that is all required properties are present and have
-       values
-      </para>
-     </listitem>
-     <listitem>
-      <para>
-       All property values are well-formed, that is, they are in the expected
-       range and have the expected format
-      </para>
-     </listitem>
-    </itemizedlist>
-
-    <section xml:id='ValidateApiOp-api-level-rules'>
-     <title>ValidateApiOp</title>
-      <para>
-       The validate operation returns a <literal>ConfigurationException</literal>
-       in the following situations:
-      </para>
-      <itemizedlist>
-       <listitem>
-        <para>
-         The Framework version is not compatible with the connector
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         The connector does not have the required attributes in
-         <literal>MANIFEST.MF</literal>
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         The <literal>ConfigurationProperties</literal> cannot be merged into
-         the configuration
-        </para>
-       </listitem>
-      </itemizedlist>
-      <example>
-       <title>Implementation of the valid operation, at the API Level</title>
-       <programlisting language="java">@Test
-public void ValidateTest() {
-    logger.info("Running Validate Test");
-    final ConnectorFacade facade = createConnectorFacade(BasicConnector.class, null);
-    facade.validate();
-}</programlisting>
-     </example>
-    </section>
-   </section>
   </section>
 
-  <section xml:id='commons-exceptions'>
+  <section xml:id='common-exceptions'>
    <title>Common Exceptions</title>
    <para>
     The following sections describe the commonly used exceptions that can be
@@ -1904,7 +2274,7 @@ public void ValidateTest() {
    <section xml:id='UnknownUidException-exception'>
     <title>UnknownUidException</title>
     <para>
-     An <literal>UnknownUidException</literal> is thrown when a Uid that is
+     An <literal>UnknownUidException</literal> is thrown when a UID that is
      specified as input to a connector operation identifies no object on the
      target resource. When you implement the <literal>AuthenticateOp</literal>,
      your connector can throw this exception if it is unable to locate the
@@ -1915,35 +2285,162 @@ public void ValidateTest() {
    <section xml:id='NullPointerException-exception'>
     <title>NullPointerException (c# NullReferenceException)</title>
     <para>
-     TODO
+     Generic native exception
     </para>
    </section>
 
    <section xml:id='UnsupportedOperationException-exception'>
     <title>UnsupportedOperationException (c# NotSupportedException)</title>
     <para>
-     TODO
+     Generic native exception
     </para>
    </section>
 
    <section xml:id='IllegalStateException-exception'>
     <title>IllegalStateException (c# InvalidOperationException)</title>
     <para>
-     TODO
+     Generic native exception
     </para>
    </section>
 
    <section xml:id='IllegalArgumentException-exception'>
     <title>IllegalArgumentException (c# ArgumentException)</title>
     <para>
-     TODO
+     Generic native exception
     </para>
    </section>
+
+   <section xml:id="openicf-crest-exceptions">
+    <title>Mapping OpenICF Exceptions to ForgeRock CREST Exceptions</title>
+    <para>
+     The following table maps the errors that are thrown by the OpenICF
+     framework to the errors that are returned by the ForgeRock Commons REST
+     (CREST) implementation.
+    </para>
+    <informaltable>
+     <tgroup cols="3">
+     <thead>
+      <row>
+       <entry>OpenICF Exception</entry>
+       <entry>CREST Exception</entry>
+       <entry>HTTP Error Code</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>AlreadyExistsException</entry>
+       <entry>ConflictException</entry>
+       <entry> </entry>
+      </row>
+      <row>
+       <entry>ConfigurationException</entry>
+       <entry>InternalServerErrorException</entry>
+       <entry> </entry>
+      </row>
+      <row>
+       <entry>ConnectionBrokenException</entry>
+       <entry>InternalServerErrorException</entry>
+       <entry> </entry>
+      </row>
+      <row>
+       <entry>ConnectionFailedException</entry>
+       <entry>ConnectionFailedException</entry>
+       <entry> </entry>
+      </row>
+      <row>
+       <entry>ConnectorException</entry>
+       <entry>InternalServerErrorException</entry>
+       <entry> </entry>
+      </row>
+      <row>
+       <entry>ConnectorIOException</entry>
+       <entry>InternalServerErrorException</entry>
+       <entry> </entry>
+      </row>
+      <row>
+       <entry>ConnectorSecurityException</entry>
+       <entry>ForbiddenException</entry>
+       <entry> </entry>
+      </row>
+      <row>
+       <entry>InvalidAttributeValueException</entry>
+       <entry>BadRequestException</entry>
+       <entry> </entry>
+      </row>
+      <row>
+       <entry>InvalidCredentialException</entry>
+       <entry>ForbiddenException</entry>
+       <entry> </entry>
+      </row>
+      <row>
+       <entry>InvalidPasswordException</entry>
+       <entry>ForbiddenException</entry>
+       <entry> </entry>
+      </row>
+      <row>
+       <entry>OperationTimeoutException</entry>
+       <entry> </entry>
+       <entry> </entry>
+      </row>
+      <row>
+       <entry>PasswordExpiredException</entry>
+       <entry>ForbiddenException</entry>
+       <entry> </entry>
+      </row>
+      <row>
+       <entry>PermissionDeniedException</entry>
+       <entry>ForbiddenException</entry>
+       <entry> </entry>
+      </row>
+      <row>
+       <entry>PreconditionFailedException</entry>
+       <entry>PreconditionFailedException</entry>
+       <entry> </entry>
+      </row>
+      <row>
+       <entry>PreconditionRequiredException</entry>
+       <entry>PreconditionRequiredException</entry>
+       <entry> </entry>
+      </row>
+      <row>
+       <entry>RetryableException</entry>
+       <entry>RetryableException (ServiceUnavailableException)</entry>
+       <entry> </entry>
+      </row>
+      <row>
+       <entry>UnknownUidException</entry>
+       <entry>NotFoundException</entry>
+       <entry> </entry>
+      </row>
+      <row>
+       <entry>UnsupportedOperationException</entry>
+       <entry>NotSupportedException</entry>
+       <entry> </entry>
+      </row>
+      <row>
+       <entry>IllegalArgumentException</entry>
+       <entry>InternalServerErrorException</entry>
+       <entry> </entry>
+      </row>
+      <row>
+       <entry>NullPointerException</entry>
+       <entry>InternalServerErrorException</entry>
+       <entry> </entry>
+      </row>
+
+     </tbody>
+     </tgroup>
+     </informaltable>
+   </section>
+
   </section>
 
  <section xml:id='generic-exception-rules'>
-  <title>Generic Rules</title>
-  <para>These rules are common for all API or SPI level operations:</para>
+  <title>Generic Exception Rules</title>
+  <para>
+   The generic exception rules are common to all API or SPI level operations
+   and are described in the following sections.
+  </para>
 
   <section xml:id='framework-api-level-rules'>
    <title>Framework (API Level) Exception Rules</title>
@@ -2024,21 +2521,30 @@ public void ValidateTest() {
     </varlistentry>
    </variablelist>
 
-            <para>
-                The pool exceptions may be interesting to IDM.
-                <itemizedlist>
-                    <listitem>
-                        <para>ConnectorException</para>
-                        <para>If the pool has no more available Connector after the {@link
-                            ObjectPoolConfiguration#maxWait} time.</para>
-                    </listitem>
-                    <listitem>
-                        <para>IllegalStateException</para>
-                        <para>If Object pool already shutdown.</para>
-                    </listitem>
-                </itemizedlist>
-            </para>
-        </section>
+   <variablelist>
+    <para>
+     The following exceptions are thrown specifically in the context of a
+     poolable connector.
+    </para>
+    <varlistentry>
+     <term>ConnectorException</term>
+     <listitem>
+      <para>
+       Thrown if the pool has no available connectors after the
+       <literal>maxWait</literal> time has elapsed.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>IllegalStateException</term>
+     <listitem>
+      <para>
+       Thrown if the object pool has already shut down.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </section>
 
   <section xml:id='framework-spi-level-rules'>
    <title>Connector (SPI Level) Exception Rules</title>
@@ -2047,7 +2553,7 @@ public void ValidateTest() {
      <term>InvalidAttributeValueException</term>
      <listitem>
       <para>
-       Thrown when single-valued attribute has multiple values
+       Thrown when single-valued attribute has multiple values.
       </para>
      </listitem>
     </varlistentry>
@@ -2057,7 +2563,7 @@ public void ValidateTest() {
       <para>
        Thrown when the value of the <literal>__PASSWORD__</literal> or the
        <literal>__CURRENT_PASSWORD__</literal> attribute is not a
-       <literal>GuardedString</literal>
+       <literal>GuardedString</literal>.
       </para>
      </listitem>
     </varlistentry>
@@ -2065,7 +2571,7 @@ public void ValidateTest() {
      <term>IllegalStateException</term>
      <listitem>
       <para>
-       Thrown when the <literal>Attribute</literal> name is blank
+       Thrown when the <literal>Attribute</literal> name is blank.
       </para>
      </listitem>
     </varlistentry>
@@ -2084,7 +2590,8 @@ public void ValidateTest() {
      <term>ConnectorIOException, ConnectionBrokenException, ConnectionFailedException</term>
      <listitem>
       <para>
-       Thrown when any problem occurs with the connection to the target resource
+       Thrown when any problem occurs with the connection to the target
+       resource.
       </para>
      </listitem>
     </varlistentry>
@@ -2093,7 +2600,7 @@ public void ValidateTest() {
      <listitem>
       <para>
        Thrown when the current version of the resource object does not match the
-       version provided by the connector
+       version provided by the connector.
       </para>
      </listitem>
     </varlistentry>
@@ -2102,7 +2609,7 @@ public void ValidateTest() {
      <listitem>
       <para>
        Thrown when a resource object requires a version, but no version was
-       supplied in the <literal>Uid#getRevision</literal>
+       supplied in the <literal>getRevision</literal> operation.
       </para>
      </listitem>
     </varlistentry>
