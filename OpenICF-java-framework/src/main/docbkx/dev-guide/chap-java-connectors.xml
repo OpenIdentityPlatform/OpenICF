@@ -27,8 +27,7 @@
  xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
  xsi:schemaLocation='http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd'
- xmlns:xlink='http://www.w3.org/1999/xlink'
- xmlns:xinclude='http://www.w3.org/2001/XInclude'>
+ xmlns:xlink='http://www.w3.org/1999/xlink'>
  <title>Writing Java Connectors</title>
 
  <para>
@@ -45,11 +44,13 @@
   <title>Before You Begin</title>
   <para>
    Before you start developing your own connector, familiarize yourself with the
-   structure of the SPI, by reading the Javadoc for the <link
+   structure of the SPI, by reading the <link xlink:show="new"
+   xlink:role="" xlink:href="dev-guide#chap-openicf-spi">SPI chapter</link> and
+   the corresponding Javadoc for the <link
    xlink:href="http://openicf.forgerock.org/apidocs/org/identityconnectors/framework/spi/package-frame.html"
-   xlink:show="new">OpenICF framework</link> and the supported <link
+   xlink:show="new">OpenICF framework</link> and its supported <link
    xlink:href="http://openicf.forgerock.org/apidocs/org/identityconnectors/framework/spi/operations/package-frame.html"
-   xlink:show="new">OpenICF operations</link>. You can also download and study
+   xlink:show="new">operations</link>. You can also download and study
    the source code for the existing connectors from the
    <link xlink:href="https://forgerock.org/projects/getting-the-source-code/"
    xlink:show="new">ForgeRock Projects page</link>.
@@ -144,10 +145,11 @@ poolableConnector: n
   <para>
    At this point, you can enter Y (YES) to accept the default project, or N (NO)
    to customize the project for your connector. As you can see from the
-   preceding output, the default connector supports only the create, delete,
-   search, test, and update operations, and is not a poolable connector. To add
-   support for additional operations, or to change any of the connector
-   parameters seen in this output, enter N (NO). The archetype then prompts you
+   preceding output, the default connector supports only the
+   <literal>create</literal>, <literal>delete</literal>, <literal>search</literal>,
+   <literal>test</literal>, and <literal>update</literal> operations, and is not
+   a poolable connector. To add support for additional operations, or to change
+   any of the connector parameters, enter N (NO). The archetype then prompts you
    to set values for each parameter.
   </para>
   <para>
@@ -155,13 +157,12 @@ poolableConnector: n
    the archetype, as follows:
   </para>
   <screen>$ mvn archetype:generate -DarchetypeCatalog=local</screen>
-
  </section>
 
  <section xml:id="java-connector-operations">
   <title>Implementing OpenICF Operations</title>
   <para>
-   After you have generated the archetype, implement the OpenICF operations that
+   When you have generated the archetype, implement the OpenICF operations that
    your connector will support.
   </para>
   <para>
@@ -186,13 +187,9 @@ $ mvn install</screen>
   <title>Next Steps</title>
   <para>
    If you are thinking of contributing your connector to the OpenICF project,
-   review the documentation around <link
-   xlink:href="https://wikis.forgerock.org/confluence/display/devcom/Coding+Style+and+Guidelines"
-   xlink:show="new">coding conventions</link> and <link
-   xlink:href="http://openicf.forgerock.org/connector-framework-contract/index.html"
-   xlink:show="new">contract tests</link>. The contract tests are an automated
-   suite of tests designed to ensure that your connector looks, feels, and
-   behaves like a connector should.
+   please review ForgeRock's <link
+   xlink:href="https://forgerock.org/projects/development-process/"
+   xlink:show="new">Development Guidelines</link>.
   </para>
   <para>
    You are welcome to join the community and ask questions on the <link
