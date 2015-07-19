@@ -190,7 +190,7 @@ public class AuthenticationAsyncApiOpImpl extends AbstractAPIOperation implement
                 OperationMessages.AuthenticateOpRequest requestMessage) {
             final ObjectClass objectClass = new ObjectClass(requestMessage.getObjectClass());
             OperationOptions operationOptions = null;
-            if (requestMessage.hasOptions()) {
+            if (!requestMessage.getOptions().isEmpty()) {
                 operationOptions = MessagesUtil.deserializeLegacy(requestMessage.getOptions());
             }
             return connectorFacade.authenticate(objectClass, requestMessage.getUsername(),

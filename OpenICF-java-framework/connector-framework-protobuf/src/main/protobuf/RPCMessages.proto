@@ -1,29 +1,32 @@
+syntax = "proto3";
+
+option csharp_namespace = "Org.ForgeRock.OpenICF.Common.ProtoBuf";
 package org.forgerock.openicf.common.protobuf;
 
 import "OperationMessages.proto";
 
-
 //Handshake Message
 message HandshakeMessage {
     enum ServerType {
+		UNKNOWN = 0;
         JAVA = 1;
         DOTNET = 2;
     }
-    required string sessionId = 1;
-    required ServerType serverType = 2;
-    optional bytes publicKey = 3;
+    string sessionId = 1;
+    ServerType serverType = 2;
+    bytes publicKey = 3;
 }
 
 message ExceptionMessage {
     message InnerCause {
-        required string exceptionClass = 1;
-        optional string message = 2;
-        optional InnerCause cause = 3;
+        string exceptionClass = 1;
+        string message = 2;
+        InnerCause cause = 3;
     }
-    required string exceptionClass = 1;
-    optional string message = 2;
-    optional InnerCause innerCause = 3;
-    optional string stackTrace = 4;
+    string exceptionClass = 1;
+    string message = 2;
+    InnerCause innerCause = 3;
+    string stackTrace = 4;
 }
 
 message CancelOpRequest {
@@ -32,9 +35,9 @@ message CancelOpRequest {
 
 message ControlRequest {
     enum InfoLevel {
-        CONNECTOR_INFO = 1;
-        CONTEXT_INFO = 2;
-        REQUESTS = 3;
+        CONNECTOR_INFO = 0;
+        CONTEXT_INFO = 1;
+        REQUESTS = 2;
     }
     repeated InfoLevel infoLevel = 1;
 }
@@ -42,11 +45,11 @@ message ControlRequest {
 message ControlResponse {
     message StringMapFieldEntry {
         //option map_entry = true;
-        optional string key = 1;
-        optional string value = 2;
+        string key = 1;
+        string value = 2;
     }
     repeated StringMapFieldEntry contextInfoMap = 1;
-    optional bytes connectorInfos = 2;
+    bytes connectorInfos = 2;
     repeated int64 requestIds = 3;
 }
 
@@ -57,26 +60,26 @@ message PingMessage {
 
 message RPCRequest {
     //oneof request {
-    optional HandshakeMessage handshakeMessage = 1;
-    optional ControlRequest controlRequest = 2;
-    optional OperationRequest operationRequest = 3;
-    optional CancelOpRequest cancelOpRequest = 4;
+    HandshakeMessage handshakeMessage = 1;
+    ControlRequest controlRequest = 2;
+    OperationRequest operationRequest = 3;
+    CancelOpRequest cancelOpRequest = 4;
     //}
 }
 
 message RPCResponse {
     //oneof response {
-    optional HandshakeMessage handshakeMessage = 1;
-    optional ControlResponse controlResponse = 2;
-    optional OperationResponse operationResponse = 3;
-    optional ExceptionMessage error = 4;
+    HandshakeMessage handshakeMessage = 1;
+    ControlResponse controlResponse = 2;
+    OperationResponse operationResponse = 3;
+    ExceptionMessage error = 4;
     //}
 }
 
 message RemoteMessage {
-    optional int64 messageId = 1;
+    int64 messageId = 1;
     //oneof message {
-    optional RPCRequest request = 2;
-    optional RPCResponse response = 3;
+    RPCRequest request = 2;
+    RPCResponse response = 3;
     //}
 }

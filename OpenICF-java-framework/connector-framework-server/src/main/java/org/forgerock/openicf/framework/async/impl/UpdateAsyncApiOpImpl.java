@@ -218,7 +218,7 @@ public class UpdateAsyncApiOpImpl extends AbstractAPIOperation implements Update
                     MessagesUtil.deserializeLegacy(requestMessage.getReplaceAttributes());
 
             OperationOptions operationOptions = null;
-            if (requestMessage.hasOptions()) {
+            if (!requestMessage.getOptions().isEmpty()) {
                 operationOptions = MessagesUtil.deserializeLegacy(requestMessage.getOptions());
             }
 

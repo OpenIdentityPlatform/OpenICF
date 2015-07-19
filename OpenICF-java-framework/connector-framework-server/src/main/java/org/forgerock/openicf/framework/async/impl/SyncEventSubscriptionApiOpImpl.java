@@ -194,7 +194,7 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
                         tryCancelRemote(getConnectionContext(), getRequestId());
                     }
                 }
-            } else if (message.hasCompleted() && message.getCompleted()) {
+            } else if (message.getCompleted()) {
                 getSuccessHandler().handleResult(null);
                 logger.ok("Subscription is completed");
             } else if (confirmed.compareAndSet(Boolean.FALSE, Boolean.TRUE)) {
@@ -241,7 +241,7 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
             }
 
             OperationOptions operationOptions = null;
-            if (requestMessage.hasOptions()) {
+            if (!requestMessage.getOptions().isEmpty()) {
                 operationOptions = MessagesUtil.deserializeLegacy(requestMessage.getOptions());
             }
 

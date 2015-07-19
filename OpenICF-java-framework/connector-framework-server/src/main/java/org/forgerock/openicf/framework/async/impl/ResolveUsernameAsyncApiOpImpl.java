@@ -185,7 +185,7 @@ public class ResolveUsernameAsyncApiOpImpl extends AbstractAPIOperation implemen
                 OperationMessages.ResolveUsernameOpRequest requestMessage) {
             final ObjectClass objectClass = new ObjectClass(requestMessage.getObjectClass());
             OperationOptions operationOptions = null;
-            if (requestMessage.hasOptions()) {
+            if (!requestMessage.getOptions().isEmpty()) {
                 operationOptions = MessagesUtil.deserializeLegacy(requestMessage.getOptions());
             }
             return connectorFacade.resolveUsername(objectClass, requestMessage.getUsername(),

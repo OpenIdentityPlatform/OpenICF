@@ -200,13 +200,9 @@ public class OpenICFServerAdapter implements OperationMessageListener {
 
     protected void handleRemoteMessage(final WebSocketConnectionHolder socket,
             final RemoteMessage message) {
-        if (message.hasMessageId()) {
             socket.getRemoteConnectionContext().getRemoteConnectionGroup().trySendMessage(
                     MessagesUtil.createErrorResponse(message.getMessageId(),
                             new ConnectorException("Unknown RemoteMessage")).build());
-        } else {
-            logger.info("{0} Unable process the RemoteMessage", loggerName());
-        }
     }
 
     protected void handleRequestMessage(final WebSocketConnectionHolder socket, long messageId,
@@ -456,7 +452,7 @@ public class OpenICFServerAdapter implements OperationMessageListener {
     protected Encryptor initialiseEncryptor() {
         HandshakeMessage message = null;
         // Create Encryptor
-        if (message.hasPublicKey()) {
+        if (!message.getPublicKey().isEmpty()) {
             PublicKey publicKey =
                     SecurityUtil.createPublicKey(message.getPublicKey().toByteArray());
             try {

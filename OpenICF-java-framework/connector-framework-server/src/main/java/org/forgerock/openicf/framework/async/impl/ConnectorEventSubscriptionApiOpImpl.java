@@ -198,7 +198,7 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
                         tryCancelRemote(getConnectionContext(), getRequestId());
                     }
                 }
-            } else if (message.hasCompleted() && message.getCompleted()) {
+            } else if (message.getCompleted()) {
                 getSuccessHandler().handleResult(null);
                 logger.ok("Subscription is completed");
             } else if (confirmed.compareAndSet(Boolean.FALSE, Boolean.TRUE)) {
@@ -239,12 +239,12 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
             final ObjectClass objectClass = new ObjectClass(requestMessage.getObjectClass());
 
             Filter token = null;
-            if (requestMessage.hasEventFilter()) {
+            if (!requestMessage.getEventFilter().isEmpty()) {
                 token = MessagesUtil.deserializeLegacy(requestMessage.getEventFilter());
             }
 
             OperationOptions operationOptions = null;
-            if (requestMessage.hasOptions()) {
+            if (!requestMessage.getOptions().isEmpty()) {
                 operationOptions = MessagesUtil.deserializeLegacy(requestMessage.getOptions());
             }
 

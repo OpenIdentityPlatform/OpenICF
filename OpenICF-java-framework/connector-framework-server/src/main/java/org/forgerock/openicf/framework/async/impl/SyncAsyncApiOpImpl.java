@@ -268,7 +268,7 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncAsyn
                                 SyncToken.class);
 
                 OperationOptions operationOptions = null;
-                if (requestMessage.getSync().hasOptions()) {
+                if (!requestMessage.getSync().getOptions().isEmpty()) {
                     operationOptions =
                             MessagesUtil.deserializeLegacy(requestMessage.getSync().getOptions());
                 }

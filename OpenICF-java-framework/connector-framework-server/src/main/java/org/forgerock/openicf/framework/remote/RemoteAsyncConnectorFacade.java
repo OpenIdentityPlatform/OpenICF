@@ -225,8 +225,6 @@ public class RemoteAsyncConnectorFacade extends AbstractConnectorFacade implemen
             }
 
             // initialise operations
-            Set<Class<? extends APIOperation>> supportedOperations =
-                    getAPIConfiguration().getSupportedOperations();
             if (configuration.isSupportedOperation(AuthenticationApiOp.class)) {
                 authenticationApiOp =
                         new AuthenticationAsyncApiOpImpl(remoteConnection, connectorKey,

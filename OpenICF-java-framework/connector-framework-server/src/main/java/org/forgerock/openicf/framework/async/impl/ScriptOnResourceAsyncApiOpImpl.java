@@ -136,7 +136,7 @@ public class ScriptOnResourceAsyncApiOpImpl extends AbstractAPIOperation impleme
 
         protected void handleOperationResponseMessages(WebSocketConnectionHolder sourceConnection,
                 OperationMessages.ScriptOnResourceOpResponse message) {
-            if (message.hasObject()) {
+            if (!message.getObject().isEmpty()) {
                 getSuccessHandler().handleResult(
                         MessagesUtil.deserializeLegacy(message.getObject()));
             } else {
@@ -181,7 +181,7 @@ public class ScriptOnResourceAsyncApiOpImpl extends AbstractAPIOperation impleme
                             ScriptContext.class);
 
             OperationOptions operationOptions = null;
-            if (requestMessage.hasOptions()) {
+            if (!requestMessage.getOptions().isEmpty()) {
                 operationOptions = MessagesUtil.deserializeLegacy(requestMessage.getOptions());
             }
             Object result = connectorFacade.runScriptOnResource(request, operationOptions);

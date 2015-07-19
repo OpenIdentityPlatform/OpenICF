@@ -1,79 +1,82 @@
+syntax = "proto3";
+
+option csharp_namespace = "Org.ForgeRock.OpenICF.Common.ProtoBuf";
 package org.forgerock.openicf.common.protobuf;
 
 message Uid {
-    required string value = 1;
-    optional string revision = 2;
+    string value = 1;
+    string revision = 2;
 }
 
 message BigDecimal {
-    required string unscaled = 1;
-    required int32 scale = 2;
+    string unscaled = 1;
+    int32 scale = 2;
 }
 
 message ConnectorKey {
-    required string bundleName = 1;
-    required string bundleVersion = 2;
-    required string connectorName = 3;
+    string bundleName = 1;
+    string bundleVersion = 2;
+    string connectorName = 3;
 }
 
 message Locale {
-    optional string language = 1;
-    optional string country = 2;
-    optional string variant = 3;
+    string language = 1;
+    string country = 2;
+    string variant = 3;
 }
 
 message Script {
-    required string scriptLanguage = 1;
-    required string scriptText = 2;
+    string scriptLanguage = 1;
+    string scriptText = 2;
 }
 
 message ScriptContext {
-    required Script script = 1;
-    optional bytes scriptArguments = 2;
+    Script script = 1;
+    bytes scriptArguments = 2;
 }
 
 message SearchResult {
-    optional string pagedResultsCookie = 1;
-    optional int32 remainingPagedResults = 2 [default = -1];
+    string pagedResultsCookie = 1;
+    int32 remainingPagedResults = 2;
 }
 
 message SortKey {
-    required string field = 1;
-    required bool isAscending = 2;
+    string field = 1;
+    bool isAscending = 2;
 }
 
 message SyncToken {
-    optional bytes value = 1;
+    bytes value = 1;
 }
 
 message SyncDelta {
     enum SyncDeltaType {
-        CREATE_OR_UPDATE = 1;
-        DELETE = 2;
-        CREATE = 3;
-        UPDATE = 4;
+        CREATE_OR_UPDATE = 0;
+        DELETE = 1;
+        CREATE = 2;
+        UPDATE = 3;
     }
-    required SyncToken token = 1;
-    required SyncDeltaType deltaType = 2;
-    optional Uid previousUid = 3;
-    optional string objectClass = 4;
-    optional Uid uid = 5;
-    optional bytes connectorObject = 6;
+    SyncToken token = 1;
+    SyncDeltaType deltaType = 2;
+    Uid previousUid = 3;
+    string objectClass = 4;
+    Uid uid = 5;
+    bytes connectorObject = 6;
     
 }
 
 message ConnectorObject {
     /*message MapFieldEntry {
         //option map_entry = true;
-        optional string key = 1;
-        optional AttributeCollectionValue value = 2;
+        string key = 1;
+        AttributeCollectionValue value = 2;
     }*/
-    required string objectClass = 1;
-    required bytes attriutes = 2;
+    string objectClass = 1;
+    bytes attriutes = 2;
     //repeated MapFieldEntry map_field = 2;
 }
 
 message QualifiedUid {
-    required string objectClass = 1;
-    required Uid uid = 2;
+    string objectClass = 1;
+    Uid uid = 2;
 }

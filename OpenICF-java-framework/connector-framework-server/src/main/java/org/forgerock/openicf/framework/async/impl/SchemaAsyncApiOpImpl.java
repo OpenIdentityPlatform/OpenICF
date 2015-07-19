@@ -119,7 +119,7 @@ public class SchemaAsyncApiOpImpl extends AbstractAPIOperation implements Schema
 
         protected void handleOperationResponseMessages(WebSocketConnectionHolder sourceConnection,
                 OperationMessages.SchemaOpResponse message) {
-            if (message.hasSchema()) {
+            if (!message.getSchema().isEmpty()) {
                 getSuccessHandler().handleResult(
                         MessagesUtil.<Schema> deserializeLegacy(message.getSchema()));
             } else {

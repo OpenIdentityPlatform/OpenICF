@@ -121,11 +121,11 @@ public class MessagesUtil {
         String message = null;
         try {
             String throwableClass =
-                    exceptionMessage.hasExceptionClass() ? exceptionMessage.getExceptionClass()
+                    StringUtil.isNotBlank(exceptionMessage.getExceptionClass()) ? exceptionMessage.getExceptionClass()
                             : ConnectorException.class.getName();
-            message = exceptionMessage.hasMessage() ? exceptionMessage.getMessage() : "";
+            message = StringUtil.isNotBlank(exceptionMessage.getMessage()) ? exceptionMessage.getMessage() : "";
             String stackTrace =
-                    exceptionMessage.hasStackTrace() ? exceptionMessage.getStackTrace() : null;
+                    StringUtil.isNotBlank(exceptionMessage.getStackTrace()) ? exceptionMessage.getStackTrace() : null;
 
             return new RemoteWrappedException(throwableClass, message, getCause(exceptionMessage
                     .getInnerCause()), stackTrace);
@@ -139,9 +139,9 @@ public class MessagesUtil {
     private static RemoteWrappedException getCause(RPCMessages.ExceptionMessage.InnerCause cause) {
         if (null != cause) {
             String throwableClass =
-                    cause.hasExceptionClass() ? cause.getExceptionClass()
+                    StringUtil.isNotBlank(cause.getExceptionClass()) ? cause.getExceptionClass()
                             : ConnectorException.class.getName();
-            String message = cause.hasMessage() ? cause.getMessage() : "";
+            String message = StringUtil.isNotBlank(cause.getMessage()) ? cause.getMessage() : "";
             RemoteWrappedException originalCause =
                     cause.hasCause() ? getCause(cause.getCause()) : null;
             return new RemoteWrappedException(throwableClass, message, originalCause, null);
@@ -383,7 +383,7 @@ public class MessagesUtil {
             ObjectHandler<Uid, CommonObjectMessages.Uid, CommonObjectMessages.Uid.Builder> {
 
         public Uid deserialize(CommonObjectMessages.Uid message) {
-            if (message.hasRevision()) {
+            if (StringUtil.isNotBlank(message.getRevision())) {
                 return new Uid(message.getValue(), message.getRevision());
             } else {
                 return new Uid(message.getValue());
@@ -450,7 +450,7 @@ public class MessagesUtil {
             ObjectHandler<SearchResult, CommonObjectMessages.SearchResult, CommonObjectMessages.SearchResult.Builder> {
 
         public SearchResult deserialize(CommonObjectMessages.SearchResult message) {
-            return new SearchResult(message.hasPagedResultsCookie() ? message
+            return new SearchResult(StringUtil.isNotBlank(message.getPagedResultsCookie()) ? message
                     .getPagedResultsCookie() : null, message.getRemainingPagedResults());
         }
 
@@ -530,13 +530,13 @@ public class MessagesUtil {
             if (message.hasPreviousUid()) {
                 builder.setPreviousUid(deserializeMessage(message.getPreviousUid(), Uid.class));
             }
-            if (message.hasObjectClass()) {
+            if (StringUtil.isNotBlank(message.getObjectClass())) {
                 builder.setObjectClass(new ObjectClass(message.getObjectClass()));
             }
             if (message.hasUid()) {
                 builder.setUid(deserializeMessage(message.getUid(), Uid.class));
             }
-            if (message.hasConnectorObject()) {
+            if (!message.getConnectorObject().isEmpty()) {
                 Set<Attribute> object = deserializeLegacy(message.getConnectorObject());
                 builder.setObject(new ConnectorObject(builder.getObjectClass(), object));
             }

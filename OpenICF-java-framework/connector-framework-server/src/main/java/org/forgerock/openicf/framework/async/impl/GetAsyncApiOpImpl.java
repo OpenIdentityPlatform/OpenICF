@@ -142,7 +142,7 @@ public class GetAsyncApiOpImpl extends AbstractAPIOperation implements GetAsyncA
 
         protected void handleOperationResponseMessages(WebSocketConnectionHolder sourceConnection,
                 OperationMessages.GetOpResponse message) {
-            if (message.hasConnectorObject()) {
+            if (!message.getConnectorObject().isEmpty()) {
                 getSuccessHandler().handleResult(
                         MessagesUtil.<ConnectorObject> deserializeLegacy(message
                                 .getConnectorObject()));
@@ -184,7 +184,7 @@ public class GetAsyncApiOpImpl extends AbstractAPIOperation implements GetAsyncA
             final Uid uid = MessagesUtil.deserializeMessage(requestMessage.getUid(), Uid.class);
 
             OperationOptions operationOptions = null;
-            if (requestMessage.hasOptions()) {
+            if (!requestMessage.getOptions().isEmpty()) {
                 operationOptions = MessagesUtil.deserializeLegacy(requestMessage.getOptions());
             }
             return connectorFacade.getObject(objectClass, uid, operationOptions);

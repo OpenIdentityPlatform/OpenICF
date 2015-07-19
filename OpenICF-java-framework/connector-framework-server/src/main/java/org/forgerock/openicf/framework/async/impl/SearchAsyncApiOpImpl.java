@@ -224,12 +224,12 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
 
             final ObjectClass objectClass = new ObjectClass(requestMessage.getObjectClass());
             Filter filter = null;
-            if (requestMessage.hasFilter()) {
+            if (!requestMessage.getFilter().isEmpty()) {
                 filter = MessagesUtil.deserializeLegacy(requestMessage.getFilter());
             }
 
             OperationOptions operationOptions = null;
-            if (requestMessage.hasOptions()) {
+            if (!requestMessage.getOptions().isEmpty()) {
                 operationOptions = MessagesUtil.deserializeLegacy(requestMessage.getOptions());
             }
             final SearchResult result =

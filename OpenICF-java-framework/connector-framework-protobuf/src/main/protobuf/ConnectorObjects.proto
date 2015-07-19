@@ -1,39 +1,43 @@
+syntax = "proto3";
+
+option csharp_namespace = "Org.ForgeRock.OpenICF.Common.ProtoBuf";
 package org.forgerock.openicf.common.protobuf;
 
 import "CommonObjectMessages.proto";
 
 
 message ObjectPoolConfiguration {
-    required int32 maxObjects = 1 [default = 10];
-    required int32 maxIdle = 2 [default = 10];
-    required int64 maxWait = 3 [default = 150000];
-    required int64 minEvictableIdleTimeMillis = 4 [default = 120000];
-    required int32 minIdle = 5 [default = 1];
+    int32 maxObjects = 1;
+    int32 maxIdle = 2;
+    int64 maxWait = 3;
+    int64 minEvictableIdleTimeMillis = 4;
+    int32 minIdle = 5;
 }
 
 message ResultsHandlerConfiguration {
-    required bool enableNormalizingResultsHandler = 1 [default = true];
-    required bool enableFilteredResultsHandler = 2 [default = true];
-    required bool enableCaseInsensitiveFilter = 3 [default = false];
-    required bool enableAttributesToGetSearchResultsHandler = 4 [default = true];
+    bool enableNormalizingResultsHandler = 1;
+    bool enableFilteredResultsHandler = 2;
+    bool enableCaseInsensitiveFilter = 3;
+    bool enableAttributesToGetSearchResultsHandler = 4;
 }
 
 message ConfigurationProperty {
-    required int32 order = 1 [default = -1];
-    required bool required = 2 [default = false];
-    required bool confidential = 3 [default = false];
-    required string name = 4;
-    required string helpMessageKey = 5;
-    required string displayMessageKey = 6;
-    required string groupMessageKey = 7;
+    int32 order = 1;
+    bool required = 2;
+    bool confidential = 3;
+    string name = 4;
+    string helpMessageKey = 5;
+    string displayMessageKey = 6;
+    string groupMessageKey = 7;
 
-    required string type = 8;
-    required string value = 9;
+    string type = 8;
+    string value = 9;
 
     repeated SPIOperation operations = 10;
 }
 
 enum SPIOperation {
+    UNKNOWNOP = 0;
     AUTHENTICATIONOP = 1;
     CREATEOP = 2;
     DELETEOP = 3;
@@ -49,6 +53,7 @@ enum SPIOperation {
 }
 
 enum APIOperation {
+    UNKNOWNAPIOP = 0;
     AUTHENTICATIONAPIOP = 1;
     CREATEAPIOP = 2;
     DELETEAPIOP = 3;
@@ -65,32 +70,32 @@ enum APIOperation {
 }
 
 message APIConfiguration {
-    required int32 order = 1 [default = 0];
-    required bool connectorPoolingSupported = 2 [default = false];
-    required ObjectPoolConfiguration connectorPoolConfiguration = 3;
-    required ResultsHandlerConfiguration resultsHandlerConfiguration = 4;
+    int32 order = 1;
+    bool connectorPoolingSupported = 2;
+    ObjectPoolConfiguration connectorPoolConfiguration = 3;
+    ResultsHandlerConfiguration resultsHandlerConfiguration = 4;
     repeated ConfigurationProperty configurationProperties = 5;
     repeated TimeoutMapFieldEntry timeoutMap = 6;
     repeated APIOperation supportedOperations = 7;
-    optional int32 producerBufferSize = 8 [default = 0];
+    int32 producerBufferSize = 8;
 }
 
 
 message TimeoutMapFieldEntry {
     //option map_entry = true;
-    optional APIOperation key = 1;
-    optional int32 value = 2 [default = -1];
+    APIOperation key = 1;
+    int32 value = 2;
 }
 
 message StringMapFieldEntry {
     //option map_entry = true;
-    optional string key = 1;
-    optional string value = 2;
+    string key = 1;
+    string value = 2;
 }
 
 message CatalogMapFieldEntry {
     //option map_entry = true;
-    optional Locale key = 1;
+    Locale key = 1;
     repeated StringMapFieldEntry value = 2;
 }
 
@@ -99,24 +104,24 @@ message ConnectorMessages {
 }
 
 message ConnectorInfo {
-    optional string connectorDisplayNameKey = 1;
-    optional string connectorCategoryKey = 2 [deprecated = true];
-    optional ConnectorKey connectorKey = 3;
-    optional ConnectorMessages connectorMessages = 4;
-    optional APIConfiguration APIConfiguration = 5;
+    string connectorDisplayNameKey = 1;
+    string connectorCategoryKey = 2;
+    ConnectorKey connectorKey = 3;
+    ConnectorMessages connectorMessages = 4;
+    APIConfiguration APIConfiguration = 5;
 }
 
 
 
 message SyncTokenTest {
-    required AttributeUnionValue value = 1;
+    AttributeUnionValue value = 1;
 }
 
 
 // Map<String, Object> and Collection<Object> Support
 
 message ConfigurationCollectionValue {
-    optional bool caseInsensitive = 1 [default = false];
+    bool caseInsensitive = 1;
     repeated ConfigurationUnionValue configuration = 2;
 }
 
@@ -140,18 +145,18 @@ message ConfigurationUnionValue {
 }
 
 message AttributeCollectionValue {
-    optional bool caseInsensitive = 1 [default = false];
+    bool caseInsensitive = 1;
     repeated AttributeUnionValue attribute = 2;
 }
 
 message AttributeMapValue {
-    required bool caseInsensitive = 1 [default = false];
+    bool caseInsensitive = 1;
     repeated AttributeMapFieldEntry value = 2;
 }
 
 message AttributeMapFieldEntry {
     //option map_entry = true;
-    optional string key = 1;
+    string key = 1;
     oneof value {
         AttributeUnionValue attribute = 2;
         AttributeCollectionValue collectionAttribute = 3;
@@ -160,7 +165,7 @@ message AttributeMapFieldEntry {
 
 message AttributeMessage {
     //option map_entry = true;
-    required string name = 1;
+    string name = 1;
     repeated AttributeUnionValue value = 2;
 }
 
@@ -206,7 +211,7 @@ message OperationOptionUnionValue {
 
 message OperationOptionMapFieldEntry {
     //option map_entry = true;
-    optional string key = 1;
+    string key = 1;
     repeated OperationOptionUnionValue values = 2;
-    optional bool isArray = 3 [default = false];
+    bool isArray = 3;
 }

@@ -265,7 +265,7 @@ public class WebSocketConnectionGroup
             if (message instanceof ControlResponse) {
                 final ControlResponse response = (ControlResponse) message;
 
-                if (response.hasConnectorInfos()) {
+                if (!response.getConnectorInfos().isEmpty()) {
                     List<org.identityconnectors.framework.impl.api.remote.RemoteConnectorInfoImpl> connectorInfos =
                             MessagesUtil.deserializeLegacy(((ControlResponse) message)
                                     .getConnectorInfos());

@@ -173,7 +173,7 @@ public class DeleteAsyncApiOpImpl extends AbstractAPIOperation implements Delete
             final Uid uid = MessagesUtil.deserializeMessage(requestMessage.getUid(), Uid.class);
 
             OperationOptions operationOptions = null;
-            if (requestMessage.hasOptions()) {
+            if (!requestMessage.getOptions().isEmpty()) {
                 operationOptions = MessagesUtil.deserializeLegacy(requestMessage.getOptions());
             }
             connectorFacade.delete(objectClass, uid, operationOptions);

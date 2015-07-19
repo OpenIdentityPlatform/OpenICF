@@ -1,23 +1,27 @@
+syntax = "proto3";
+
+option csharp_namespace = "Org.ForgeRock.OpenICF.Common.ProtoBuf";
 package org.forgerock.openicf.common.protobuf;
 
 import "ConnectorObjects.proto";
 
 message AttributeInfo {
     enum AttributeType {
-        STRING = 1;
-        LONG = 2;
-        CHARACTER = 3;
-        DOUBLE = 4;
-        FLOAT = 5;
-        INTEGER = 6;
-        BOOLEAN = 7;
-        BYTE = 8;
-        BYTEARRAY = 9;
-        BIGDECIMAL = 10;
-        BIGINTEGER = 11;
-        MAP = 12;
+        STRING = 0;
+        LONG = 1;
+        CHARACTER = 2;
+        DOUBLE = 3;
+        FLOAT = 4;
+        INTEGER = 5;
+        BOOLEAN = 6;
+        BYTE = 7;
+        BYTEARRAY = 8;
+        BIGDECIMAL = 9;
+        BIGINTEGER = 10;
+        MAP = 11;
     }
     enum Flags {
+        NONE = 0;
         REQUIRED = 1;
         MULTIVALUED = 2;
         NOT_CREATABLE = 3;
@@ -25,44 +29,44 @@ message AttributeInfo {
         NOT_READABLE = 5;
         NOT_RETURNED_BY_DEFAULT = 6;
     }
-    required string name = 1;
-    required AttributeType type = 2;
+    string name = 1;
+    AttributeType type = 2;
     repeated Flags flags = 3;
 }
 
 message ObjectClassInfo {
-    required string type = 1;
-    required AttributeInfo attributeInfos = 2;
-    optional bool isContainer = 3 [default = false];
+    string type = 1;
+    AttributeInfo attributeInfos = 2;
+    bool isContainer = 3;
 }
 
 message OperationOptionInfo {
     enum OperationOptionType {
-        STRING = 1;
-        LONG = 2;
-        CHARACTER = 3;
-        DOUBLE = 4;
-        FLOAT = 5;
-        INTEGER = 6;
-        BOOLEAN = 7;
-        URI = 8;
-        FILE = 9;
-        GUARDEDBYTEARRAY = 10;
-        GUARDEDSTRING = 11;
-        SCRIPT = 12;
-        OBJECTCLASS = 13;
-        UID = 14;
-        QUALIFIEDUID = 15;
-        SORTKEY = 16;
+        STRING = 0;
+        LONG = 1;
+        CHARACTER = 2;
+        DOUBLE = 3;
+        FLOAT = 4;
+        INTEGER = 5;
+        BOOLEAN = 6;
+        URI = 7;
+        FILE = 8;
+        GUARDEDBYTEARRAY = 9;
+        GUARDEDSTRING = 10;
+        SCRIPT = 11;
+        OBJECTCLASS = 12;
+        UID = 13;
+        QUALIFIEDUID = 14;
+        SORTKEY = 15;
     }
-    required string name = 1;
-    required OperationOptionType type = 2;
-    required bool isArray = 3 [default = false];
+    string name = 1;
+    OperationOptionType type = 2;
+    bool isArray = 3;
 }
 
 message SupportedMapFieldEntry {
-    required APIOperation key = 1;
-    required string name = 2;
+    APIOperation key = 1;
+    string name = 2;
 }
 
 message Schema {

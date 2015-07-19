@@ -193,7 +193,7 @@ public class CreateAsyncApiOpImpl extends AbstractAPIOperation implements Create
             final Set<Attribute> createAttributes =
                     MessagesUtil.deserializeLegacy(requestMessage.getCreateAttributes());
             OperationOptions operationOptions = null;
-            if (requestMessage.hasOptions()) {
+            if (!requestMessage.getOptions().isEmpty()) {
                 operationOptions = MessagesUtil.deserializeLegacy(requestMessage.getOptions());
             }
             return connectorFacade.create(objectClass, createAttributes, operationOptions);
