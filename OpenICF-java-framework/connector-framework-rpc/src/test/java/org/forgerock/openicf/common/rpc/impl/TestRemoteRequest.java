@@ -31,7 +31,7 @@ import java.util.concurrent.CancellationException;
 import org.forgerock.openicf.common.rpc.RemoteConnectionHolder;
 import org.forgerock.openicf.common.rpc.RemoteRequest;
 import org.forgerock.openicf.common.rpc.RemoteRequestFactory;
-import org.forgerock.util.promise.Function;
+import org.forgerock.util.Function;
 
 public abstract class TestRemoteRequest<H extends RemoteConnectionHolder<TestConnectionGroup<H>, H, TestConnectionContext<H>>>
         extends
@@ -50,9 +50,9 @@ public abstract class TestRemoteRequest<H extends RemoteConnectionHolder<TestCon
         if (incomeMessage instanceof TestMessage) {
             TestMessage message = (TestMessage) incomeMessage;
             if (message.response != null) {
-                getSuccessHandler().handleResult(message.response);
+                getResultHandler().handleResult(message.response);
             } else if (message.exception != null) {
-                getFailureHandler().handleError(new RuntimeException(message.exception));
+                getExceptionHandler().handleException(new RuntimeException(message.exception));
             } else if (message.message != null) {
                 results.add(message.message);
                 handle(sourceConnection, this, message);

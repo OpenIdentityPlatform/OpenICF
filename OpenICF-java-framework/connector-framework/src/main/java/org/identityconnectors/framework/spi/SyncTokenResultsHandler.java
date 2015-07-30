@@ -24,7 +24,6 @@
 
 package org.identityconnectors.framework.spi;
 
-import org.identityconnectors.common.SuccessHandler;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 
@@ -37,7 +36,7 @@ import org.identityconnectors.framework.common.objects.SyncToken;
  * @author Laszlo Hordos
  * @since 1.4
  */
-public interface SyncTokenResultsHandler extends SyncResultsHandler, SuccessHandler<SyncToken> {
+public interface SyncTokenResultsHandler extends SyncResultsHandler {
 
     /**
      * Invoked when the request has completed successfully.

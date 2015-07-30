@@ -32,9 +32,9 @@ import org.forgerock.openicf.framework.AsyncConnectorInfoManagerTestBase;
 import org.forgerock.openicf.framework.ConnectorFramework;
 import org.forgerock.openicf.framework.ConnectorFrameworkFactory;
 import org.forgerock.openicf.framework.remote.ReferenceCountedObject;
-import org.forgerock.util.promise.FailureHandler;
+import org.forgerock.util.promise.ExceptionHandler;
 import org.forgerock.util.promise.Promise;
-import org.forgerock.util.promise.SuccessHandler;
+import org.forgerock.util.promise.ResultHandler;
 import org.identityconnectors.common.ConnectorKeyRange;
 import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.framework.api.ConnectorInfo;
@@ -96,23 +96,23 @@ public class AsyncLocalConnectorInfoManagerTest extends
 
             Assert.assertEquals(manager.getConnectorInfos().size(), 3);
             Assert.assertTrue(keyPromise.isDone());
-            keyPromise.onSuccess(new SuccessHandler<ConnectorInfo>() {
+            keyPromise.thenOnResult(new ResultHandler<ConnectorInfo>() {
                 public void handleResult(ConnectorInfo result) {
                     Assert.assertEquals(result.getConnectorKey(), TEST_CONNECTOR_KEY);
                 }
-            }).onFailure(new FailureHandler<RuntimeException>() {
-                public void handleError(RuntimeException error) {
+            }).thenOnException(new ExceptionHandler<RuntimeException>() {
+                public void handleException(RuntimeException error) {
                     Assert.fail("Key search should succeed", error);
                 }
             });
             Assert.assertTrue(keyRangePromise.isDone());
 
-            keyRangePromise.onSuccess(new SuccessHandler<ConnectorInfo>() {
+            keyRangePromise.thenOnResult(new ResultHandler<ConnectorInfo>() {
                 public void handleResult(ConnectorInfo result) {
                     Assert.assertEquals(result.getConnectorKey(), TEST_CONNECTOR_KEY);
                 }
-            }).onFailure(new FailureHandler<RuntimeException>() {
-                public void handleError(RuntimeException error) {
+            }).thenOnException(new ExceptionHandler<RuntimeException>() {
+                public void handleException(RuntimeException error) {
                     Assert.fail("KeyRange search should succeed", error);
                 }
             });
@@ -121,11 +121,11 @@ public class AsyncLocalConnectorInfoManagerTest extends
         }
         Assert.assertNotNull(failedPromise);
         Assert.assertTrue(failedPromise.isDone());
-        failedPromise.onFailure(new FailureHandler<RuntimeException>() {
-            public void handleError(RuntimeException error) {
+        failedPromise.thenOnException(new ExceptionHandler<RuntimeException>() {
+            public void handleException(RuntimeException error) {
                 Assert.assertTrue(error instanceof IllegalStateException);
             }
-        }).onSuccess(new SuccessHandler<ConnectorInfo>() {
+        }).thenOnResult(new ResultHandler<ConnectorInfo>() {
             public void handleResult(ConnectorInfo result) {
                 Assert.fail("This should not succeed");
             }
@@ -133,11 +133,11 @@ public class AsyncLocalConnectorInfoManagerTest extends
 
         Assert.assertNotNull(failedRangePromise);
         Assert.assertTrue(failedRangePromise.isDone());
-        failedRangePromise.onFailure(new FailureHandler<RuntimeException>() {
-            public void handleError(RuntimeException error) {
+        failedRangePromise.thenOnException(new ExceptionHandler<RuntimeException>() {
+            public void handleException(RuntimeException error) {
                 Assert.assertTrue(error instanceof IllegalStateException);
             }
-        }).onSuccess(new SuccessHandler<ConnectorInfo>() {
+        }).thenOnResult(new ResultHandler<ConnectorInfo>() {
             public void handleResult(ConnectorInfo result) {
                 Assert.fail("This should not succeed");
             }
@@ -167,12 +167,12 @@ public class AsyncLocalConnectorInfoManagerTest extends
 
             Assert.assertTrue(keyRangePromise.isDone());
 
-            keyRangePromise.onSuccess(new SuccessHandler<ConnectorInfo>() {
+            keyRangePromise.thenOnResult(new ResultHandler<ConnectorInfo>() {
                 public void handleResult(ConnectorInfo result) {
                     Assert.assertEquals(result.getConnectorKey().getBundleVersion(), "1.0.0.0");
                 }
-            }).onFailure(new FailureHandler<RuntimeException>() {
-                public void handleError(RuntimeException error) {
+            }).thenOnException(new ExceptionHandler<RuntimeException>() {
+                public void handleException(RuntimeException error) {
                     Assert.fail("KeyRange search should succeed", error);
                 }
             });
@@ -185,12 +185,12 @@ public class AsyncLocalConnectorInfoManagerTest extends
 
             Assert.assertTrue(keyRangePromise.isDone());
 
-            keyRangePromise.onSuccess(new SuccessHandler<ConnectorInfo>() {
+            keyRangePromise.thenOnResult(new ResultHandler<ConnectorInfo>() {
                 public void handleResult(ConnectorInfo result) {
                     Assert.assertEquals(result.getConnectorKey().getBundleVersion(), "1.0.0.0");
                 }
-            }).onFailure(new FailureHandler<RuntimeException>() {
-                public void handleError(RuntimeException error) {
+            }).thenOnException(new ExceptionHandler<RuntimeException>() {
+                public void handleException(RuntimeException error) {
                     Assert.fail("KeyRange search should succeed", error);
                 }
             });
@@ -205,12 +205,12 @@ public class AsyncLocalConnectorInfoManagerTest extends
 
             Assert.assertTrue(keyRangePromise.isDone());
 
-            keyRangePromise.onSuccess(new SuccessHandler<ConnectorInfo>() {
+            keyRangePromise.thenOnResult(new ResultHandler<ConnectorInfo>() {
                 public void handleResult(ConnectorInfo result) {
                     Assert.assertEquals(result.getConnectorKey().getBundleVersion(), "1.1.0.0");
                 }
-            }).onFailure(new FailureHandler<RuntimeException>() {
-                public void handleError(RuntimeException error) {
+            }).thenOnException(new ExceptionHandler<RuntimeException>() {
+                public void handleException(RuntimeException error) {
                     Assert.fail("KeyRange search should succeed", error);
                 }
             });

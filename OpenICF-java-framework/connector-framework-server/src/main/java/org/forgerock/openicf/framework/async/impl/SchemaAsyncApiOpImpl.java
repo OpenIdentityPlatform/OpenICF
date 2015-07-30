@@ -33,7 +33,7 @@ import org.forgerock.openicf.framework.remote.MessagesUtil;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
-import org.forgerock.util.promise.Function;
+import org.forgerock.util.Function;
 import org.forgerock.util.promise.Promise;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.ConnectorFacade;
@@ -120,10 +120,10 @@ public class SchemaAsyncApiOpImpl extends AbstractAPIOperation implements Schema
         protected void handleOperationResponseMessages(WebSocketConnectionHolder sourceConnection,
                 OperationMessages.SchemaOpResponse message) {
             if (!message.getSchema().isEmpty()) {
-                getSuccessHandler().handleResult(
+                getResultHandler().handleResult(
                         MessagesUtil.<Schema> deserializeLegacy(message.getSchema()));
             } else {
-                getSuccessHandler().handleResult(null);
+                getResultHandler().handleResult(null);
             }
         }
     }

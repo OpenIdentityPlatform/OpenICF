@@ -47,7 +47,7 @@ import org.forgerock.openicf.framework.remote.ManagedAsyncConnectorInfoManager;
 import org.forgerock.openicf.framework.remote.MessagesUtil;
 import org.forgerock.openicf.framework.remote.RemoteConnectorInfoImpl;
 import org.forgerock.util.Pair;
-import org.forgerock.util.promise.Function;
+import org.forgerock.util.Function;
 import org.forgerock.util.promise.Promise;
 import org.identityconnectors.common.ConnectorKeyRange;
 import org.identityconnectors.common.security.Encryptor;
@@ -275,7 +275,7 @@ public class WebSocketConnectionGroup
                     }
                 }
 
-                getSuccessHandler().handleResult(Boolean.TRUE);
+                getResultHandler().handleResult(Boolean.TRUE);
 
             } else {
                 return false;

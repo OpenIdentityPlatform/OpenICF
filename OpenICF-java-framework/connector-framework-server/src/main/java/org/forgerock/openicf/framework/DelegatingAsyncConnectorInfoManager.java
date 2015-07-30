@@ -42,12 +42,12 @@ import org.forgerock.openicf.framework.remote.RemoteConnectorInfoImpl;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
-import org.forgerock.util.promise.FailureHandler;
-import org.forgerock.util.promise.Function;
+import org.forgerock.util.promise.ExceptionHandler;
+import org.forgerock.util.Function;
 import org.forgerock.util.promise.Promise;
 import org.forgerock.util.promise.PromiseImpl;
 import org.forgerock.util.promise.Promises;
-import org.forgerock.util.promise.SuccessHandler;
+import org.forgerock.util.promise.ResultHandler;
 import org.identityconnectors.common.ConnectorKeyRange;
 import org.identityconnectors.common.Pair;
 import org.identityconnectors.common.logging.Log;
@@ -143,7 +143,7 @@ public abstract class DelegatingAsyncConnectorInfoManager extends
         }
 
         public void shutdown() {
-            handleError(ManagedAsyncConnectorInfoManager.CLOSED_EXCEPTION);
+            handleException(ManagedAsyncConnectorInfoManager.CLOSED_EXCEPTION);
         }
 
         protected RuntimeException tryCancel(boolean mayInterruptIfRunning) {
@@ -152,17 +152,17 @@ public abstract class DelegatingAsyncConnectorInfoManager extends
 
         protected boolean add(Promise<ConnectorInfo, RuntimeException> promise) {
             remaining.incrementAndGet();
-            promise.onSuccess(new SuccessHandler<ConnectorInfo>() {
+            promise.thenOnResult(new ResultHandler<ConnectorInfo>() {
                 @Override
                 public void handleResult(final ConnectorInfo value) {
                     pending.set(Boolean.FALSE);
                     DeferredPromise.this.handleResult(value);
                 }
-            }).onFailure(new FailureHandler<RuntimeException>() {
+            }).thenOnException(new ExceptionHandler<RuntimeException>() {
                 @Override
-                public void handleError(final RuntimeException error) {
+                public void handleException(final RuntimeException error) {
                     if (remaining.decrementAndGet() == 0) {
-                        DeferredPromise.this.handleError(error);
+                        DeferredPromise.this.handleException(error);
                     }
                 }
             });
@@ -173,7 +173,7 @@ public abstract class DelegatingAsyncConnectorInfoManager extends
     public Promise<ConnectorInfo, RuntimeException> findConnectorInfoAsync(final ConnectorKey key) {
         if (!isRunning.get()) {
             return Promises
-                    .<ConnectorInfo, RuntimeException> newFailedPromise(ManagedAsyncConnectorInfoManager.CLOSED_EXCEPTION);
+                    .<ConnectorInfo, RuntimeException> newExceptionPromise(ManagedAsyncConnectorInfoManager.CLOSED_EXCEPTION);
         } else {
             final Iterator<? extends AsyncConnectorInfoManager> safeDelegates =
                     getDelegates().iterator();
@@ -191,7 +191,7 @@ public abstract class DelegatingAsyncConnectorInfoManager extends
 
             if (allowDeferred && isRunning()) {
                 if (pending) {
-                    promise.onSuccessOrFailure(new Runnable() {
+                    promise.thenOnResultOrException(new Runnable() {
                         public void run() {
                             deferredKeyPromiseCacheList.remove(entry);
                         }
@@ -217,11 +217,11 @@ public abstract class DelegatingAsyncConnectorInfoManager extends
             final ConnectorKeyRange keyRange) {
         if (!isRunning.get()) {
             return Promises
-                    .<ConnectorInfo, RuntimeException> newFailedPromise(ManagedAsyncConnectorInfoManager.CLOSED_EXCEPTION);
+                    .<ConnectorInfo, RuntimeException> newExceptionPromise(ManagedAsyncConnectorInfoManager.CLOSED_EXCEPTION);
         } else {
             if (keyRange.getBundleVersionRange().isEmpty()) {
                 return Promises
-                        .<ConnectorInfo, RuntimeException> newFailedPromise(new IllegalArgumentException(
+                        .<ConnectorInfo, RuntimeException> newExceptionPromise(new IllegalArgumentException(
                                 "ConnectorBundle VersionRange is Empty"));
             } else if (keyRange.getBundleVersionRange().isExact()) {
                 return findConnectorInfoAsync(keyRange.getExactConnectorKey());
@@ -241,7 +241,7 @@ public abstract class DelegatingAsyncConnectorInfoManager extends
                 }
                 if (allowDeferred && isRunning()) {
                     if (pending) {
-                        promise.onSuccessOrFailure(new Runnable() {
+                        promise.thenOnResultOrException(new Runnable() {
                             public void run() {
                                 deferredRangePromiseCacheList.remove(entry);
                             }
@@ -301,16 +301,16 @@ public abstract class DelegatingAsyncConnectorInfoManager extends
         final AtomicInteger remaining = new AtomicInteger(promises.size());
         final PromiseImpl<V, E> composite = PromiseImpl.create();
         for (final Promise<V, E> promise : promises) {
-            promise.onSuccess(new SuccessHandler<V>() {
+            promise.thenOnResult(new ResultHandler<V>() {
                 @Override
                 public void handleResult(final V value) {
                     composite.handleResult(value);
                 }
-            }).onFailure(new FailureHandler<E>() {
+            }).thenOnException(new ExceptionHandler<E>() {
                 @Override
-                public void handleError(final E error) {
+                public void handleException(final E error) {
                     if (remaining.decrementAndGet() == 0) {
-                        composite.handleError(error);
+                        composite.handleException(error);
                     }
                 }
             });

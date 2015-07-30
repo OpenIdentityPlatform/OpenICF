@@ -562,7 +562,7 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
                     ctx.write(requestPacket);
 
                 } catch (IOException e) {
-                    ClientRemoteConnectorInfoManager.CONNECT_PROMISE.get(connection).handleError(
+                    ClientRemoteConnectorInfoManager.CONNECT_PROMISE.get(connection).handleException(
                             new ConnectorIOException(e.getMessage(), e));
                     if (ConnectionManager.logger.isWarning()) {
                         ConnectionManager.logger.warn(e.toString(), e);
@@ -577,7 +577,7 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
 
         protected void onHandshakeFailure(final Connection connection, final HandshakeException e) {
             super.onHandshakeFailure(connection, e);
-            ClientRemoteConnectorInfoManager.CONNECT_PROMISE.get(connection).handleError(
+            ClientRemoteConnectorInfoManager.CONNECT_PROMISE.get(connection).handleException(
                     new ConnectorIOException(e.getMessage(), e));
         }
 
@@ -752,7 +752,7 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
         @Override
         public void exceptionOccurred(FilterChainContext ctx, Throwable error) {
             logger.ok(error, "DEBUG - onHttpHeaderError:{0}", ctx);
-            ClientRemoteConnectorInfoManager.CONNECT_PROMISE.get(ctx.getConnection()).handleError(
+            ClientRemoteConnectorInfoManager.CONNECT_PROMISE.get(ctx.getConnection()).handleException(
                     new ConnectorIOException(error.getMessage(), error));
         }
 
@@ -761,7 +761,7 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
                 final Throwable error) throws IOException {
             logger.ok(error, "DEBUG - onHttpHeaderError:{0}", httpHeader);
             httpHeader.setSkipRemainder(true);
-            ClientRemoteConnectorInfoManager.CONNECT_PROMISE.get(ctx.getConnection()).handleError(
+            ClientRemoteConnectorInfoManager.CONNECT_PROMISE.get(ctx.getConnection()).handleException(
                     new ConnectorIOException(error.getMessage(), error));
         }
 
@@ -770,7 +770,7 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
                 final FilterChainContext ctx, final Throwable error) throws IOException {
             logger.ok(error, "DEBUG - onHttpContentError:{0}", httpHeader);
             httpHeader.setSkipRemainder(true);
-            ClientRemoteConnectorInfoManager.CONNECT_PROMISE.get(ctx.getConnection()).handleError(
+            ClientRemoteConnectorInfoManager.CONNECT_PROMISE.get(ctx.getConnection()).handleException(
                     new ConnectorIOException(error.getMessage(), error));
         }
 

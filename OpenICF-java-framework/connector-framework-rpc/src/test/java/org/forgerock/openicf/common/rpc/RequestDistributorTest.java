@@ -38,8 +38,8 @@ import org.forgerock.openicf.common.rpc.impl.TestMessage;
 import org.forgerock.openicf.common.rpc.impl.TestMessageListener;
 import org.forgerock.openicf.common.rpc.impl.TestRemoteRequest;
 import org.forgerock.openicf.common.rpc.impl.TestRequestFactory;
-import org.forgerock.util.promise.FailureHandler;
-import org.forgerock.util.promise.SuccessHandler;
+import org.forgerock.util.promise.ExceptionHandler;
+import org.forgerock.util.promise.ResultHandler;
 import org.testng.Assert;
 import org.testng.Reporter;
 import org.testng.annotations.AfterClass;
@@ -76,7 +76,7 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestConnect
                         getConnectionGroup().receiveRequest(request).execute(obj.request);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
-                        // request.handleError(e);
+                        // request.handleException(e);
                     }
                 } else {
                     getConnectionGroup().receiveRequestUpdate(socket, obj.messageId, obj);
@@ -208,12 +208,12 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestConnect
                 }
             });
             try {
-                request.getPromise().onSuccess(new SuccessHandler<String>() {
+                request.getPromise().thenOnResult(new ResultHandler<String>() {
                     public void handleResult(String result) {
                         Assert.fail("Canceled");
                     }
-                }).onFailure(new FailureHandler<Exception>() {
-                    public void handleError(Exception error) {
+                }).thenOnException(new ExceptionHandler<Exception>() {
+                    public void handleException(Exception error) {
                         Assert.assertTrue(error instanceof CancellationException);
                     }
                 }).getOrThrowUninterruptibly(15, TimeUnit.SECONDS);

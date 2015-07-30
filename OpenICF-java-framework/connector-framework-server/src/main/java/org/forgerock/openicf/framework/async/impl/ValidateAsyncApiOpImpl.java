@@ -36,7 +36,7 @@ import org.forgerock.openicf.framework.async.ValidateAsyncApiOp;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
-import org.forgerock.util.promise.Function;
+import org.forgerock.util.Function;
 import org.forgerock.util.promise.Promise;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.ConnectorFacade;
@@ -120,7 +120,7 @@ public class ValidateAsyncApiOpImpl extends AbstractAPIOperation implements Vali
 
         protected void handleOperationResponseMessages(WebSocketConnectionHolder sourceConnection,
                 ValidateOpResponse message) {
-            getSuccessHandler().handleResult(null);
+            getResultHandler().handleResult(null);
         }
     }
 

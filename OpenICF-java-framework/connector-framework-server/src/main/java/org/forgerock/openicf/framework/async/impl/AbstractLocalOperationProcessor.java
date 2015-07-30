@@ -49,9 +49,9 @@ public abstract class AbstractLocalOperationProcessor<V, M extends MessageLite> 
         try {
             handleResult(executeOperation(connectorFacade, requestMessage));
         } catch (Error t) {
-            handleError(ConnectorException.wrap(t));
+            handleException(ConnectorException.wrap(t));
         } catch (RuntimeException error) {
-            handleError(error);
+            handleException(error);
         }
     }
 }

@@ -28,7 +28,7 @@ import java.util.concurrent.ExecutionException;
 
 import org.forgerock.openicf.common.rpc.LocalRequest;
 import org.forgerock.openicf.common.rpc.RemoteConnectionHolder;
-import org.forgerock.util.promise.Function;
+import org.forgerock.util.Function;
 
 public class TestLocalRequest<H extends RemoteConnectionHolder<TestConnectionGroup<H>, H, TestConnectionContext<H>>>
         extends
@@ -65,9 +65,9 @@ public class TestLocalRequest<H extends RemoteConnectionHolder<TestConnectionGro
             try {
                 connection.sendString(message).get();
             } catch (InterruptedException e) {
-                handleError(e);
+                handleException(e);
             } catch (ExecutionException e) {
-                handleError(e);
+                handleException(e);
             }
         } else {
             connection =
@@ -79,7 +79,7 @@ public class TestLocalRequest<H extends RemoteConnectionHolder<TestConnectionGro
                                 }
                             });
             if (null == connection) {
-                handleError(new RuntimeException("Failed to send response message"));
+                handleException(new RuntimeException("Failed to send response message"));
             }
         }
     }
@@ -142,7 +142,7 @@ public class TestLocalRequest<H extends RemoteConnectionHolder<TestConnectionGro
             break;
         }
         default:
-            handleError(new RuntimeException("Unknown Test case number"));
+            handleException(new RuntimeException("Unknown Test case number"));
         }
     }
 

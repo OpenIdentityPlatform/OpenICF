@@ -42,7 +42,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.forgerock.openicf.framework.async.AsyncConnectorInfoManager;
 import org.forgerock.openicf.framework.client.RemoteWSFrameworkConnectionInfo;
 import org.forgerock.openicf.framework.remote.ReferenceCountedObject;
-import org.forgerock.util.promise.Function;
+import org.forgerock.util.Function;
 import org.forgerock.util.promise.Promise;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.StringUtil;

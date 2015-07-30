@@ -162,7 +162,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication {
                 if (isConnected()) {
                     return protocolHandler.send(data);
                 } else {
-                    return Promises.newFailedPromise(new ConnectorIOException(
+                    return Promises.newExceptionPromise(new ConnectorIOException(
                             "Socket is not connected."));
                 }
             }
@@ -171,7 +171,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication {
                 if (isConnected()) {
                     return protocolHandler.send(data);
                 } else {
-                    return Promises.newFailedPromise(new ConnectorIOException(
+                    return Promises.newExceptionPromise(new ConnectorIOException(
                             "Socket is not connected."));
                 }
             }

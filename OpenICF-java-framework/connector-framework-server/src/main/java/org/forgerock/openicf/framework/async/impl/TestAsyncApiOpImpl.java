@@ -35,7 +35,7 @@ import org.forgerock.openicf.framework.async.TestAsyncApiOp;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
-import org.forgerock.util.promise.Function;
+import org.forgerock.util.Function;
 import org.forgerock.util.promise.Promise;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.ConnectorFacade;
@@ -118,7 +118,7 @@ public class TestAsyncApiOpImpl extends AbstractAPIOperation implements TestAsyn
 
         protected void handleOperationResponseMessages(WebSocketConnectionHolder sourceConnection,
                 TestOpResponse message) {
-            getSuccessHandler().handleResult(null);
+            getResultHandler().handleResult(null);
         }
 
         public String toString() {

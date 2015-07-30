@@ -58,7 +58,7 @@ import org.forgerock.openicf.framework.remote.RoundRobinLoadBalancingAlgorithmFa
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.security.SharedSecretPrincipal;
 import org.forgerock.openicf.framework.server.grizzly.OpenICFWebSocketApplication;
-import org.forgerock.util.promise.Function;
+import org.forgerock.util.Function;
 import org.forgerock.util.promise.Promise;
 import org.glassfish.grizzly.http.server.NetworkListener;
 import org.identityconnectors.common.CollectionUtil;

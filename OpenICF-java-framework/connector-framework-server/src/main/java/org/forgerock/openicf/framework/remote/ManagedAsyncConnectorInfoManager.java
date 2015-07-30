@@ -35,10 +35,10 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.forgerock.guava.common.base.Predicate;
+import org.forgerock.guava.common.collect.FluentIterable;
 import org.forgerock.openicf.framework.async.AsyncConnectorInfoManager;
 import org.forgerock.openicf.framework.async.CloseableAsyncConnectorInfoManager;
-import org.forgerock.util.Iterables;
-import org.forgerock.util.Predicate;
 import org.forgerock.util.promise.Promise;
 import org.forgerock.util.promise.PromiseImpl;
 import org.forgerock.util.promise.Promises;
@@ -101,7 +101,7 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
         managedConnectorInfos.clear();
         for (Pair<ConnectorKeyRange, PromiseImpl<ConnectorInfo, RuntimeException>> entry : rangePromiseCacheList) {
             entry.getValue()
-                    .handleError(
+                    .handleException(
                             new IllegalStateException(
                                     "ManagedAsyncConnectorInfoManager is shutting down!"));
         }
@@ -131,11 +131,11 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
         entry.setConnectorInfo(connectorInfo);
         revision.incrementAndGet();
 
-        for (Pair<ConnectorKeyRange, PromiseImpl<ConnectorInfo, RuntimeException>> rangeEntry : Iterables
-                .filter(rangePromiseCacheList,
+        for (Pair<ConnectorKeyRange, PromiseImpl<ConnectorInfo, RuntimeException>> rangeEntry : FluentIterable
+                .from(rangePromiseCacheList)
+                .filter(
                         new Predicate<Pair<ConnectorKeyRange, PromiseImpl<ConnectorInfo, RuntimeException>>>() {
-                            public boolean apply(
-                                    Pair<ConnectorKeyRange, PromiseImpl<ConnectorInfo, RuntimeException>> value) {
+                            public boolean apply(Pair<ConnectorKeyRange, PromiseImpl<ConnectorInfo, RuntimeException>> value) {
                                 return value.getKey().isInRange(connectorInfo.getConnectorKey());
                             }
                         })) {
@@ -167,12 +167,12 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
             final ConnectorKeyRange keyRange) {
         if (!isRunning.get()) {
             return Promises
-                    .<ConnectorInfo, RuntimeException> newFailedPromise(new IllegalStateException(
+                    .<ConnectorInfo, RuntimeException> newExceptionPromise(new IllegalStateException(
                             "AsyncConnectorInfoManager is shut down!"));
         } else {
             if (keyRange.getBundleVersionRange().isEmpty()) {
                 return Promises
-                        .<ConnectorInfo, RuntimeException> newFailedPromise(new IllegalArgumentException(
+                        .<ConnectorInfo, RuntimeException> newExceptionPromise(new IllegalArgumentException(
                                 "ConnectorBundle VersionRange is Empty"));
             } else if (keyRange.getBundleVersionRange().isExact()) {
                 return findConnectorInfoAsync(keyRange.getExactConnectorKey());
@@ -181,7 +181,7 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
                 final Pair<ConnectorKeyRange, PromiseImpl<ConnectorInfo, RuntimeException>> cacheEntry =
                         Pair.of(keyRange, PromiseImpl.<ConnectorInfo, RuntimeException> create());
 
-                cacheEntry.getValue().onSuccessOrFailure(new Runnable() {
+                cacheEntry.getValue().thenOnResultOrException(new Runnable() {
                     public void run() {
                         rangePromiseCacheList.remove(cacheEntry);
                     }
@@ -202,7 +202,7 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
                     rangePromiseCacheList.remove(cacheEntry);
 
                     return Promises
-                            .<ConnectorInfo, RuntimeException> newFailedPromise(CLOSED_EXCEPTION);
+                            .<ConnectorInfo, RuntimeException> newExceptionPromise(CLOSED_EXCEPTION);
                 }
                 return cacheEntry.getValue();
             }
@@ -211,7 +211,7 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
 
     public Promise<ConnectorInfo, RuntimeException> findConnectorInfoAsync(final ConnectorKey key) {
         if (!isRunning.get()) {
-            return Promises.<ConnectorInfo, RuntimeException> newFailedPromise(CLOSED_EXCEPTION);
+            return Promises.<ConnectorInfo, RuntimeException> newExceptionPromise(CLOSED_EXCEPTION);
         } else {
             final PromiseImpl<ConnectorInfo, RuntimeException> promise = PromiseImpl.create();
             ConnectorEntry<V> entry = managedConnectorInfos.get(key);
@@ -224,7 +224,7 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
             }
             entry.addOrFirePromise(promise);
             if (!isRunning.get()) {
-                promise.handleError(CLOSED_EXCEPTION);
+                promise.handleException(CLOSED_EXCEPTION);
             }
             return promise;
         }
@@ -270,7 +270,7 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
         void shutdown() {
             PromiseImpl<ConnectorInfo, RuntimeException> listener;
             while ((listener = listeners.poll()) != null) {
-                listener.handleError(CLOSED_EXCEPTION);
+                listener.handleException(CLOSED_EXCEPTION);
             }
         }
 

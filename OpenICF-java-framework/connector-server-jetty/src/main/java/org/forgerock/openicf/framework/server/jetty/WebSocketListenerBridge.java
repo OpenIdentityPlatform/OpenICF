@@ -71,7 +71,7 @@ public class WebSocketListenerBridge extends AbstractEventDriver {
             if (isOperational()) {
                 return getSession().getRemote().sendBytesByFuture(ByteBuffer.wrap(data));
             } else {
-                return Promises.newFailedPromise(new ConnectorIOException(
+                return Promises.newExceptionPromise(new ConnectorIOException(
                         "Socket is not connected."));
             }
         }
@@ -80,7 +80,7 @@ public class WebSocketListenerBridge extends AbstractEventDriver {
             if (isOperational()) {
                 return getSession().getRemote().sendStringByFuture(data);
             } else {
-                return Promises.newFailedPromise(new ConnectorIOException(
+                return Promises.newExceptionPromise(new ConnectorIOException(
                         "Socket is not connected."));
             }
         }

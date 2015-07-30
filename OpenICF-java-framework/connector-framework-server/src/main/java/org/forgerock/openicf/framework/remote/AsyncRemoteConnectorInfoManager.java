@@ -27,6 +27,8 @@ package org.forgerock.openicf.framework.remote;
 import java.io.Closeable;
 import java.io.IOException;
 
+import org.forgerock.guava.common.base.Function;
+import org.forgerock.guava.common.collect.FluentIterable;
 import org.forgerock.openicf.common.rpc.RequestDistributor;
 import org.forgerock.openicf.framework.DelegatingAsyncConnectorInfoManager;
 import org.forgerock.openicf.framework.async.AsyncConnectorInfoManager;
@@ -34,11 +36,8 @@ import org.forgerock.openicf.framework.client.RemoteConnectorInfoManager;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
-import org.forgerock.util.Iterables;
-import org.forgerock.util.promise.Function;
 import org.identityconnectors.common.logging.Log;
 
-import com.google.protobuf.MessageLite;
 
 /**
  * A AsyncRemoteConnectorInfoManager.
@@ -69,13 +68,11 @@ public class AsyncRemoteConnectorInfoManager extends DelegatingAsyncConnectorInf
         this(
                 null,
                 loadBalancingAlgorithmFactory
-                        .newInstance(Iterables
-                                .map(loadBalancingAlgorithmFactory
-                                        .getAsyncRemoteConnectorInfoManager(),
-                                        new Function<AsyncRemoteConnectorInfoManager, RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>, RuntimeException>() {
-                                            public RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> apply(
-                                                    AsyncRemoteConnectorInfoManager value)
-                                                    throws RuntimeException {
+                        .newInstance(FluentIterable
+                                .from(loadBalancingAlgorithmFactory.getAsyncRemoteConnectorInfoManager())
+                                .transform(
+                                        new Function<AsyncRemoteConnectorInfoManager, RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>>() {
+                                            public RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> apply(AsyncRemoteConnectorInfoManager value) {
                                                 return value.getMessageDistributor();
                                             }
                                         })));

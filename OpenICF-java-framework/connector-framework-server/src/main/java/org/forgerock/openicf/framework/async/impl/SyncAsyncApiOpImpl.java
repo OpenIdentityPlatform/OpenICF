@@ -37,7 +37,7 @@ import org.forgerock.openicf.framework.remote.MessagesUtil;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
-import org.forgerock.util.promise.Function;
+import org.forgerock.util.Function;
 import org.forgerock.util.promise.Promise;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.logging.Log;
@@ -172,11 +172,11 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncAsyn
                 OperationMessages.SyncOpResponse message) {
             if (message.hasLatestSyncToken()) {
                 if (message.getLatestSyncToken().hasSyncToken()) {
-                    getSuccessHandler().handleResult(
+                    getResultHandler().handleResult(
                             MessagesUtil.deserializeMessage(message.getLatestSyncToken()
                                     .getSyncToken(), SyncToken.class));
                 } else {
-                    getSuccessHandler().handleResult(null);
+                    getResultHandler().handleResult(null);
                 }
             } else if (message.hasSync()) {
                 logger.ok("SyncOp Response received in sequence:{0} of {1}", message.getSync()
@@ -188,7 +188,7 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncAsyn
                                         SyncDelta.class);
 
                         if (!handler.handle(delta) && !getPromise().isDone()) {
-                            getFailureHandler().handleError(
+                            getExceptionHandler().handleException(
                                     new ConnectorException(
                                             "SyncResultsHandler stopped processing results"));
                             tryCancelRemote(getConnectionContext(), getRequestId());
@@ -204,13 +204,13 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncAsyn
                     }
                     expectedResult = message.getSync().getSequence();
                     if (expectedResult == 0 || sequence.get() == expectedResult) {
-                        getSuccessHandler().handleResult(result);
+                        getResultHandler().handleResult(result);
                     } else {
                         logger.info("Response processed before all result has arrived");
                     }
                 }
                 if (expectedResult > 0 && sequence.get() == expectedResult) {
-                    getSuccessHandler().handleResult(result);
+                    getResultHandler().handleResult(result);
                 }
             } else {
                 logger.info("Invalid SyncOpResponse Response:{0}", getRequestId());

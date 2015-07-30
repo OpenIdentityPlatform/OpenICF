@@ -34,7 +34,7 @@ import org.forgerock.openicf.common.protobuf.RPCMessages.RemoteMessage;
 import org.forgerock.openicf.common.rpc.RemoteRequest;
 import org.forgerock.openicf.common.rpc.RemoteRequestFactory;
 import org.forgerock.openicf.framework.remote.MessagesUtil;
-import org.forgerock.util.promise.Function;
+import org.forgerock.util.Function;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
@@ -69,7 +69,7 @@ public abstract class RemoteOperationRequest<V>
             if (!handleResponseMessage(sourceConnection, (MessageLite)message)) {
                 logger.ok("Request {0} has unknown response message type:{1}", getRequestId(),
                         getClass().getSimpleName());
-                getFailureHandler().handleError(
+                getExceptionHandler().handleException(
                         new ConnectorException("Unknown response message type:"
                                 + message.getClass()));
             }
@@ -118,7 +118,7 @@ public abstract class RemoteOperationRequest<V>
 
     protected void handleExceptionMessage(ExceptionMessage exceptionMessage) {
         try {
-            getFailureHandler().handleError(MessagesUtil.fromExceptionMessage(exceptionMessage));
+            getExceptionHandler().handleException(MessagesUtil.fromExceptionMessage(exceptionMessage));
         } catch (Exception e) {
             logger.info(e, "Exception received but failed to handle it: {0}", getRequestId());
         }

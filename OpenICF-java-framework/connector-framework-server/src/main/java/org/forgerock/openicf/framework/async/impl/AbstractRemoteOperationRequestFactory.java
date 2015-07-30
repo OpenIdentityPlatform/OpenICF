@@ -33,7 +33,7 @@ import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationRequest;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
-import org.forgerock.util.promise.Function;
+import org.forgerock.util.Function;
 import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.ConnectorKey;
@@ -123,10 +123,10 @@ public abstract class AbstractRemoteOperationRequestFactory<V, R extends RemoteO
                         handleOperationResponseMessages(sourceConnection, responseMessage);
                     } catch (RuntimeException e) {
                         logger.ok(e, "Failed to handle the result of operation");
-                        getFailureHandler().handleError(e);
+                        getExceptionHandler().handleException(e);
                     } catch (Throwable t) {
                         logger.ok(t, "Failed to handle the result of operation");
-                        getFailureHandler().handleError(new ConnectorException(t));
+                        getExceptionHandler().handleException(new ConnectorException(t));
                     }
                     return true;
                 }

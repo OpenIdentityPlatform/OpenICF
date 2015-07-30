@@ -24,8 +24,8 @@
 
 package org.forgerock.openicf.common.rpc;
 
-import org.forgerock.util.promise.FailureHandler;
-import org.forgerock.util.promise.SuccessHandler;
+import org.forgerock.util.promise.ExceptionHandler;
+import org.forgerock.util.promise.ResultHandler;
 
 /**
  * A LocalRequest represents a remotely requested procedure call locally.
@@ -35,7 +35,7 @@ import org.forgerock.util.promise.SuccessHandler;
  *
  */
 public abstract class LocalRequest<V, E extends Exception, G extends RemoteConnectionGroup<G, H, P>, H extends RemoteConnectionHolder<G, H, P>, P extends RemoteConnectionContext<G, H, P>>
-        implements SuccessHandler<V>, FailureHandler<E> {
+        implements ResultHandler<V>, ExceptionHandler<E> {
 
     private final long requestId;
 
@@ -71,7 +71,7 @@ public abstract class LocalRequest<V, E extends Exception, G extends RemoteConne
         tryHandleResult(result);
     }
 
-    public final void handleError(final E error) {
+    public final void handleException(final E error) {
         remoteConnectionContext.getRemoteConnectionGroup().removeRequest(getRequestId());
         tryHandleError(error);
 

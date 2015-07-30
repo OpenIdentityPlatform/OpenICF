@@ -30,7 +30,7 @@ import org.forgerock.openicf.common.protobuf.RPCMessages.RPCResponse;
 import org.forgerock.openicf.common.protobuf.RPCMessages.RemoteMessage;
 import org.forgerock.openicf.common.rpc.LocalRequest;
 import org.forgerock.openicf.framework.remote.MessagesUtil;
-import org.forgerock.util.promise.Function;
+import org.forgerock.util.Function;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 

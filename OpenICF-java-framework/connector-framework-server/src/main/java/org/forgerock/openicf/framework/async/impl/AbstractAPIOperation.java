@@ -28,7 +28,7 @@ import org.forgerock.openicf.common.rpc.RequestDistributor;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
-import org.forgerock.util.promise.Function;
+import org.forgerock.util.Function;
 import org.forgerock.util.promise.Promise;
 import org.forgerock.util.promise.Promises;
 import org.identityconnectors.common.Assertions;
@@ -78,6 +78,6 @@ public abstract class AbstractAPIOperation {
         if (null != request) {
             return request.getPromise();
         }
-        return Promises.<V, RuntimeException> newFailedPromise(FAILED_EXCEPTION);
+        return Promises.<V, RuntimeException> newExceptionPromise(FAILED_EXCEPTION);
     }
 }

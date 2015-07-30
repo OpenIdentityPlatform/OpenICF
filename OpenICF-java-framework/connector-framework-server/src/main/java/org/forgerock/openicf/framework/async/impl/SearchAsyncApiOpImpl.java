@@ -40,7 +40,7 @@ import org.forgerock.openicf.framework.remote.MessagesUtil;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
-import org.forgerock.util.promise.Function;
+import org.forgerock.util.Function;
 import org.forgerock.util.promise.Promise;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.logging.Log;
@@ -165,8 +165,8 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
                                     ConnectorObject.class);
 
                     if (!handler.handle(co) && !getPromise().isDone()) {
-                        getFailureHandler()
-                                .handleError(
+                        getExceptionHandler()
+                                .handleException(
                                         new ConnectorException(
                                                 "ResultsHandler stopped processing results"));
                         tryCancelRemote(getConnectionContext(), getRequestId());
@@ -182,13 +182,13 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
                 }
                 expectedResult = message.getSequence();
                 if (expectedResult == 0 || sequence.get() == expectedResult) {
-                    getSuccessHandler().handleResult(result);
+                    getResultHandler().handleResult(result);
                 } else {
                     logger.ok("Response processed before all result has arrived");
                 }
             }
             if (expectedResult > 0 && sequence.get() == expectedResult) {
-                getSuccessHandler().handleResult(result);
+                getResultHandler().handleResult(result);
             }
         }
     }

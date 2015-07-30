@@ -27,11 +27,11 @@ package org.forgerock.openicf.common.rpc;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.forgerock.util.promise.FailureHandler;
-import org.forgerock.util.promise.Function;
+import org.forgerock.util.promise.ExceptionHandler;
+import org.forgerock.util.Function;
 import org.forgerock.util.promise.Promise;
 import org.forgerock.util.promise.PromiseImpl;
-import org.forgerock.util.promise.SuccessHandler;
+import org.forgerock.util.promise.ResultHandler;
 
 /**
  * A RemoteRequest represents a locally requested procedure call executed
@@ -78,11 +78,11 @@ public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConn
         return promise;
     }
 
-    protected SuccessHandler<V> getSuccessHandler() {
+    protected ResultHandler<V> getResultHandler() {
         return promise;
     }
 
-    protected FailureHandler<E> getFailureHandler() {
+    protected ExceptionHandler<E> getExceptionHandler() {
         return promise;
     }
 
@@ -126,7 +126,7 @@ public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConn
 
                                     };
 
-                                    promise.onSuccessOrFailure(new Runnable() {
+                                    promise.thenOnResultOrException(new Runnable() {
                                         public void run() {
                                             completionCallback.complete(RemoteRequest.this);
                                         }

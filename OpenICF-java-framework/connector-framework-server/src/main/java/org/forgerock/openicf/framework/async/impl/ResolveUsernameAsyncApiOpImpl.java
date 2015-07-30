@@ -34,7 +34,7 @@ import org.forgerock.openicf.framework.remote.MessagesUtil;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
-import org.forgerock.util.promise.Function;
+import org.forgerock.util.Function;
 import org.forgerock.util.promise.Promise;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.logging.Log;
@@ -144,10 +144,10 @@ public class ResolveUsernameAsyncApiOpImpl extends AbstractAPIOperation implemen
         protected void handleOperationResponseMessages(WebSocketConnectionHolder sourceConnection,
                 OperationMessages.ResolveUsernameOpResponse message) {
             if (message.hasUid()) {
-                getSuccessHandler().handleResult(
+                getResultHandler().handleResult(
                         MessagesUtil.deserializeMessage(message.getUid(), Uid.class));
             } else {
-                getSuccessHandler().handleResult(null);
+                getResultHandler().handleResult(null);
             }
         }
     }

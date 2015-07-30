@@ -60,12 +60,12 @@ import org.forgerock.openicf.framework.remote.rpc.OperationMessageListener;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
-import org.forgerock.util.promise.AsyncFunction;
-import org.forgerock.util.promise.FailureHandler;
+import org.forgerock.util.AsyncFunction;
+import org.forgerock.util.promise.ExceptionHandler;
 import org.forgerock.util.promise.Promise;
 import org.forgerock.util.promise.PromiseImpl;
 import org.forgerock.util.promise.Promises;
-import org.forgerock.util.promise.SuccessHandler;
+import org.forgerock.util.promise.ResultHandler;
 import org.glassfish.grizzly.CloseListener;
 import org.glassfish.grizzly.Closeable;
 import org.glassfish.grizzly.CompletionHandler;
@@ -175,11 +175,11 @@ public class ClientRemoteConnectorInfoManager extends
                         tryReleaseConnectionPermit();
 
                         if (!socket.connectPromise.isDone()) {
-                            socket.connectPromise.handleError(new ConnectorIOException(
+                            socket.connectPromise.handleException(new ConnectorIOException(
                                     "Connection is closed before WebSocket is established"));
                         }
                         // Immediately try to reconnect
-                        if (System.currentTimeMillis() - lastConnectionFailure.get() > 30000) {
+                        if (System.currentTimeMillis() - lastConnectithenOnException.get() > 30000) {
                             // Try reconnect only if the last error is older
                             // then 30 sec
                             logger.ok("Try attempt to reconnect after connection is closed");
@@ -317,7 +317,7 @@ public class ClientRemoteConnectorInfoManager extends
 
     // ----
 
-    private final AtomicLong lastConnectionFailure = new AtomicLong(0L);
+    private final AtomicLong lastConnectithenOnException = new AtomicLong(0L);
 
     public Promise<WebSocketConnectionHolder, RuntimeException> connect() {
         return connect(true);
@@ -334,15 +334,15 @@ public class ClientRemoteConnectorInfoManager extends
             }
 
             public void failed(Throwable throwable) {
-                lastConnectionFailure.set(System.currentTimeMillis());
+                lastConnectithenOnException.set(System.currentTimeMillis());
                 if (throwable instanceof ConnectException) {
                     // Can not connect to remote server -
-                    outerPromise.handleError(new ConnectionBrokenException(throwable.getMessage(),
+                    outerPromise.handleException(new ConnectionBrokenException(throwable.getMessage(),
                             throwable));
                 } else if (throwable instanceof RuntimeException) {
-                    outerPromise.handleError(((RuntimeException) throwable));
+                    outerPromise.handleException(((RuntimeException) throwable));
                 } else {
-                    outerPromise.handleError(new ConnectorIOException(throwable.getMessage(),
+                    outerPromise.handleException(new ConnectorIOException(throwable.getMessage(),
                             throwable));
                 }
                 logger.info(throwable, "Failed establish remote connection");
@@ -378,8 +378,8 @@ public class ClientRemoteConnectorInfoManager extends
                                                     throws RuntimeException {
                                                 return value;
                                             }
-                                        }).onSuccess(
-                                        new SuccessHandler<WebSocketConnectionHolder>() {
+                                        }).thenOnResult(
+                                        new ResultHandler<WebSocketConnectionHolder>() {
                                             public void handleResult(
                                                     final WebSocketConnectionHolder result) {
                                                 if (isRunning.get()) {
@@ -388,9 +388,9 @@ public class ClientRemoteConnectorInfoManager extends
                                                     result.close();
                                                 }
                                             }
-                                        }).onFailure(new FailureHandler<RuntimeException>() {
-                                    public void handleError(RuntimeException error) {
-                                        lastConnectionFailure.set(System.currentTimeMillis());
+                                        }).thenOnException(new ExceptionHandler<RuntimeException>() {
+                                    public void handleException(RuntimeException error) {
+                                        lastConnectithenOnException.set(System.currentTimeMillis());
                                         logger.ok(error, "Connection to server failed: {0}", error
                                                 .getMessage());
                                     }
@@ -404,7 +404,7 @@ public class ClientRemoteConnectorInfoManager extends
             } else {
                 tryReleaseConnectionPermit();
                 promise =
-                        Promises.<WebSocketConnectionHolder, RuntimeException> newFailedPromise(new IllegalStateException(
+                        Promises.<WebSocketConnectionHolder, RuntimeException> newExceptionPromise(new IllegalStateException(
                                 "Shut down"));
             }
         } else {
@@ -422,12 +422,12 @@ public class ClientRemoteConnectorInfoManager extends
                 } catch (InterruptedException e) {
                     // Thread.currentThread().interrupt();
                     promise =
-                            Promises.<WebSocketConnectionHolder, RuntimeException> newFailedPromise(new ConnectorException(
+                            Promises.<WebSocketConnectionHolder, RuntimeException> newExceptionPromise(new ConnectorException(
                                     e.getMessage(), e));
                 }
                 if (promise == null) {
                     promise =
-                            Promises.<WebSocketConnectionHolder, RuntimeException> newFailedPromise(new ConnectorException(
+                            Promises.<WebSocketConnectionHolder, RuntimeException> newExceptionPromise(new ConnectorException(
                                     "Failed acquire connection. Manager is running:"
                                             + isRunning.get()));
                 }
@@ -507,7 +507,7 @@ public class ClientRemoteConnectorInfoManager extends
                 if (null != context) {
                     connectPromise.handleResult(this);
                 } else {
-                    connectPromise.handleError(new ConnectorException(
+                    connectPromise.handleException(new ConnectorException(
                             "Failed Application HandShake"));
                     tryClose();
                 }
@@ -525,7 +525,7 @@ public class ClientRemoteConnectorInfoManager extends
                 if (isConnected()) {
                     return protocolHandler.send(data);
                 } else {
-                    return Promises.newFailedPromise(new ConnectorIOException(
+                    return Promises.newExceptionPromise(new ConnectorIOException(
                             "Socket is not connected."));
                 }
             }
@@ -534,7 +534,7 @@ public class ClientRemoteConnectorInfoManager extends
                 if (isConnected()) {
                     return protocolHandler.send(data);
                 } else {
-                    return Promises.newFailedPromise(new ConnectorIOException(
+                    return Promises.newExceptionPromise(new ConnectorIOException(
                             "Socket is not connected."));
                 }
             }
@@ -579,7 +579,7 @@ public class ClientRemoteConnectorInfoManager extends
             super.onClose(frame);
             privateConnections.remove(adapter);
             final ClosingFrame closing = (ClosingFrame) frame;
-            connectPromise.handleError(new ConnectorException("Connection is closed: #"
+            connectPromise.handleException(new ConnectorException("Connection is closed: #"
                     + closing.getCode() + " - " + closing.getReason()));
             OperationMessageListener listener;
             while ((listener = listeners.poll()) != null) {

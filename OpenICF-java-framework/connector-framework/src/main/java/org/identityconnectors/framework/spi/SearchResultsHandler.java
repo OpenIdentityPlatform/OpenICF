@@ -24,7 +24,6 @@
 
 package org.identityconnectors.framework.spi;
 
-import org.identityconnectors.common.SuccessHandler;
 import org.identityconnectors.framework.common.objects.SearchResult;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 
@@ -46,7 +45,7 @@ import org.identityconnectors.framework.common.objects.ResultsHandler;
  * @author Laszlo Hordos
  * @since 1.4
  */
-public interface SearchResultsHandler extends ResultsHandler, SuccessHandler<SearchResult> {
+public interface SearchResultsHandler extends ResultsHandler {
 
     /**
      * Invoked when the request has completed successfully.

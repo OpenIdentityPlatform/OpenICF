@@ -51,7 +51,7 @@ import org.forgerock.openicf.framework.remote.LoadBalancingConnectorInfoManager;
 import org.forgerock.openicf.framework.remote.OpenICFServerAdapter;
 import org.forgerock.openicf.framework.remote.RemoteAsyncConnectorFacade;
 import org.forgerock.openicf.framework.remote.RemoteConnectorInfoImpl;
-import org.forgerock.util.promise.Function;
+import org.forgerock.util.Function;
 import org.forgerock.util.promise.Promise;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.Pair;

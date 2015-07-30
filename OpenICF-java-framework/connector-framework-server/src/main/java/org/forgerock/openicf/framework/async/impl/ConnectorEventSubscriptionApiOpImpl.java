@@ -39,10 +39,10 @@ import org.forgerock.openicf.framework.remote.MessagesUtil;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
-import org.forgerock.util.promise.FailureHandler;
-import org.forgerock.util.promise.Function;
+import org.forgerock.util.promise.ExceptionHandler;
+import org.forgerock.util.Function;
 import org.forgerock.util.promise.Promise;
-import org.forgerock.util.promise.SuccessHandler;
+import org.forgerock.util.promise.ResultHandler;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.ConnectorFacade;
@@ -73,14 +73,14 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
     public Subscription subscribe(final ObjectClass objectClass, final Filter eventFilter,
             final Observer<ConnectorObject> handler, final OperationOptions operationOptions) {
         final Promise<Void, RuntimeException> promise =
-                trySubscribe(objectClass, eventFilter, handler, operationOptions).onFailure(
-                        new FailureHandler<RuntimeException>() {
-                            public void handleError(RuntimeException error) {
+                trySubscribe(objectClass, eventFilter, handler, operationOptions).thenOnException(
+                        new ExceptionHandler<RuntimeException>() {
+                            public void handleException(RuntimeException error) {
                                 if (!(error instanceof CancellationException)) {
                                     handler.onError(error);
                                 }
                             }
-                        }).onSuccess(new SuccessHandler<Void>() {
+                        }).thenOnResult(new ResultHandler<Void>() {
                     public void handleResult(Void result) {
                         handler.onCompleted();
                     }
@@ -191,15 +191,15 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
                     handler.onNext(delta);
                 } catch (Throwable t) {
                     if (!getPromise().isDone()) {
-                        getFailureHandler()
-                                .handleError(
+                        getExceptionHandler()
+                                .handleException(
                                         new ConnectorException(
                                                 "ResultsHandler stopped processing results"));
                         tryCancelRemote(getConnectionContext(), getRequestId());
                     }
                 }
             } else if (message.getCompleted()) {
-                getSuccessHandler().handleResult(null);
+                getResultHandler().handleResult(null);
                 logger.ok("Subscription is completed");
             } else if (confirmed.compareAndSet(Boolean.FALSE, Boolean.TRUE)) {
                 logger.ok("Subscription has been made successfully on remote side");
