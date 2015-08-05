@@ -33,7 +33,7 @@ import javax.naming.directory.Attributes;
 
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.ldap.LdapConnection.ServerType;
+import org.identityconnectors.ldap.LdapConstants.ServerType;
 import javax.naming.ldap.PagedResultsControl;
 import org.forgerock.opendj.ldap.controls.VirtualListViewRequestControl;
 

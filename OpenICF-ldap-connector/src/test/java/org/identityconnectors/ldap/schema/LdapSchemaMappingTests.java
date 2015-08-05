@@ -45,7 +45,7 @@ import org.identityconnectors.ldap.LdapConfiguration;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapConnectorTestBase;
 import org.identityconnectors.ldap.LdapConstants;
-import org.identityconnectors.ldap.LdapConnection.ServerType;
+import org.identityconnectors.ldap.LdapConstants.ServerType;
 
 public class LdapSchemaMappingTests extends LdapConnectorTestBase {
 
