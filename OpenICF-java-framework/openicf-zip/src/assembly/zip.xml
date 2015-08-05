@@ -90,6 +90,7 @@
                 <include>org.slf4j:*</include>
                 <include>ch.qos.logback:*</include>
                 <include>org.codehaus.groovy:groovy-all</include>
+                <include>org.forgerock.commons.guava:*</include>
             </includes>
         </dependencySet>
     </dependencySets>
