@@ -51,7 +51,7 @@ import org.identityconnectors.ldap.LdapConnector;
 import org.identityconnectors.ldap.LdapNativeSchema;
 import org.identityconnectors.ldap.LdapUtil;
 import org.identityconnectors.ldap.ObjectClassMappingConfig;
-import org.identityconnectors.ldap.LdapConnection.ServerType;
+import org.identityconnectors.ldap.LdapConstants.ServerType;
 
 class LdapSchemaBuilder {
 

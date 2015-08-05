@@ -20,7 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  *
- * Portions Copyrighted 2013 Forgerock
+ * Portions Copyrighted 2013-2015 Forgerock
  */
 package org.identityconnectors.ldap;
 
@@ -58,6 +58,20 @@ public class LdapConstants {
     public static final String MS_DS_USER_ACCOUNT_AUTOLOCKED = "ms-DS-UserAccountAutoLocked";
     
     public static final String OBJECTCLASS_ATTR = "objectClass";
+    
+    public static enum ServerType {
+        SUN_DSEE, 
+        OPENDS, 
+        OPENDJ, 
+        IBM, 
+        MSAD, 
+        MSAD_LDS, 
+        MSAD_GC, 
+        NOVELL, 
+        UNBOUNDID, 
+        OPENLDAP, 
+        UNKNOWN
+    }
 
     /**
      * Overrides the framework-defined password because ours is readable:

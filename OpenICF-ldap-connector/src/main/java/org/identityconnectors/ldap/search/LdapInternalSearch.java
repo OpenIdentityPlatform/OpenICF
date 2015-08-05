@@ -34,7 +34,7 @@ import javax.naming.directory.SearchControls;
 
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.ldap.LdapConnection;
-import org.identityconnectors.ldap.LdapConnection.ServerType;
+import org.identityconnectors.ldap.LdapConstants.ServerType;
 
 /**
  * A class to perform an LDAP search against a {@link LdapConnection}.

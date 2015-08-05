@@ -319,7 +319,7 @@ public class LdapUpdate extends LdapModifyOperation {
             }
         }
 
-        if (conn.getServerType().equals(LdapConnection.ServerType.MSAD) && !specialAttributes.isEmpty()) {
+        if (conn.getServerType().equals(LdapConstants.ServerType.MSAD) && !specialAttributes.isEmpty()) {
             if (ObjectClass.ACCOUNT.equals(oclass)) {
                 try {
                     ADUserAccountControl aduac = ADUserAccountControl.createADUserAccountControl(conn, uid.getUidValue());

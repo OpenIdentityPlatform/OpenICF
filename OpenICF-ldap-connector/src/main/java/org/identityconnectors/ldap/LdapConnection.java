@@ -61,6 +61,7 @@ import org.identityconnectors.ldap.schema.LdapSchemaMapping;
 import org.identityconnectors.ldap.schema.ADStaticSchema;
 
 import static org.identityconnectors.ldap.ADLdapUtil.isServerMSADFamily;
+import org.identityconnectors.ldap.LdapConstants.ServerType;
 
 public class LdapConnection {
 
@@ -414,10 +415,11 @@ public class LdapConnection {
     }
 
     public ServerType getServerType() {
-        if (serverType == null) {
-            serverType = detectServerType();
+        if (config.getServerType() == null) {
+            config.cacheServerType(detectServerType());
+            log.info("Server Type: {0} has been cached", config.getServerType());
         }
-        return serverType;
+        return config.getServerType();
     }
 
     private ServerType detectServerType() {
@@ -571,10 +573,5 @@ public class LdapConnection {
             result.append(']');
             return result.toString();
         }
-    }
-
-    public enum ServerType {
-
-        SUN_DSEE, OPENDS, OPENDJ, IBM, MSAD, MSAD_LDS, MSAD_GC, NOVELL, UNBOUNDID, OPENLDAP, UNKNOWN
     }
 }

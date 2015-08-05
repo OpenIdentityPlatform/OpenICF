@@ -124,7 +124,7 @@ public class LdapCreate extends LdapModifyOperation {
             }
         }
 
-        if (conn.getServerType().equals(LdapConnection.ServerType.MSAD)) {
+        if (conn.getServerType().equals(LdapConstants.ServerType.MSAD)) {
             if (ObjectClass.ACCOUNT.equals(oclass)) {
                 ADUserAccountControl aduac = new ADUserAccountControl();
                 for (Attribute attr : specialAttributes) {

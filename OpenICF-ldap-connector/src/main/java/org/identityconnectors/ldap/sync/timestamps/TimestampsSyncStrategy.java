@@ -62,7 +62,7 @@ import org.identityconnectors.ldap.ADGroupType;
 import org.identityconnectors.ldap.ADLdapUtil;
 import org.identityconnectors.ldap.ADUserAccountControl;
 import org.identityconnectors.ldap.LdapConnection;
-import org.identityconnectors.ldap.LdapConnection.ServerType;
+import org.identityconnectors.ldap.LdapConstants.ServerType;
 import org.identityconnectors.ldap.LdapConstants;
 import org.identityconnectors.ldap.LdapEntry;
 import org.identityconnectors.ldap.search.DefaultSearchStrategy;

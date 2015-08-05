@@ -43,6 +43,7 @@ import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.ldap.LdapConstants.ServerType;
 import org.identityconnectors.ldap.search.LdapInternalSearch;
 import static org.identityconnectors.ldap.LdapUtil.escapeDNValueOfJNDIReservedChars;
 
@@ -348,7 +349,7 @@ public class ADLdapUtil {
         return null;
     }
     
-    public static boolean isServerMSADFamily(LdapConnection.ServerType type){
+    public static boolean isServerMSADFamily(ServerType type){
         switch (type) {
             case MSAD:
             case MSAD_GC:

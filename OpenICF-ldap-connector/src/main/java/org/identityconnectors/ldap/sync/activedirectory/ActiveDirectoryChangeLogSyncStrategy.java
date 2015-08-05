@@ -293,7 +293,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                             }
                             changes.put(Integer.parseInt(usnChanged[0]), syncDeltaBuilder.build());
                         }
-                    } else if (LdapConnection.ServerType.MSAD_LDS.equals(conn.getServerType())) {
+                    } else if (LdapConstants.ServerType.MSAD_LDS.equals(conn.getServerType())) {
                         logger.error("Active Directory Lightweight Directory Services is used but defaultNamingContext has not been set - impossible to detect deleted objects");
                     }
                 } catch (NamingException e) {

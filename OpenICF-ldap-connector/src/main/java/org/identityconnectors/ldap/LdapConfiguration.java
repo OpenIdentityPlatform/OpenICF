@@ -20,7 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  *
- * Portions Copyrighted 2013-2014 ForgeRock AS
+ * Portions Copyrighted 2013-2015 ForgeRock AS
  */
 package org.identityconnectors.ldap;
 
@@ -48,15 +48,23 @@ import org.identityconnectors.common.security.GuardedByteArray.Accessor;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.spi.AbstractConfiguration;
+import org.identityconnectors.framework.spi.ConfigurationClass;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
+import org.identityconnectors.framework.spi.StatefulConfiguration;
 import org.identityconnectors.framework.spi.operations.SyncOp;
+import org.identityconnectors.ldap.LdapConstants.ServerType;
 
 /**
  * Encapsulates the LDAP connector's configuration.
  *
  * @author Andrei Badea
  */
-public class LdapConfiguration extends AbstractConfiguration {
+@ConfigurationClass(skipUnsupported = true)
+public class LdapConfiguration extends AbstractConfiguration implements StatefulConfiguration {
+    
+    // This variable is not exposed as a config property but is cached
+    // at runtime by the connector
+    private ServerType serverType = null;
 
     // XXX should try to connect to the resource.
     // XXX add @ConfigurationProperty.
@@ -880,4 +888,16 @@ public class LdapConfiguration extends AbstractConfiguration {
         }
         return false;
     }
+    
+    public void cacheServerType(ServerType serverType) {
+        this.serverType = serverType;
+    }
+    
+    public ServerType getServerType() {
+        return serverType;
+    }
+    // =======================================================================
+    // Interface Implementation
+    // =======================================================================
+    public void release() {}
 }
