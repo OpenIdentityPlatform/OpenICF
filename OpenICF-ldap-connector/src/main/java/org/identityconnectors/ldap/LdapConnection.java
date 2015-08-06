@@ -62,6 +62,7 @@ import org.identityconnectors.ldap.schema.ADStaticSchema;
 
 import static org.identityconnectors.ldap.ADLdapUtil.isServerMSADFamily;
 import org.identityconnectors.ldap.LdapConstants.ServerType;
+import org.identityconnectors.ldap.schema.LdapStaticSchema;
 
 public class LdapConnection {
 
@@ -362,7 +363,7 @@ public class LdapConnection {
                 if (isServerMSADFamily(getServerType())){
                     return new ADStaticSchema();
                 }
-                return new StaticNativeSchema();
+                return new LdapStaticSchema();
             }
         } catch (NamingException e) {
             throw new ConnectorException(e);
