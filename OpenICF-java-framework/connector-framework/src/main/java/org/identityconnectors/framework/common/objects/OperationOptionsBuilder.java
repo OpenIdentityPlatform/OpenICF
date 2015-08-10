@@ -19,7 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- * Portions Copyrighted 2010-2013 ForgeRock AS.
+ * Portions Copyrighted 2010-2015 ForgeRock AS.
  */
 package org.identityconnectors.framework.common.objects;
 
@@ -39,6 +39,16 @@ import org.identityconnectors.framework.common.serializer.SerializerUtil;
 public final class OperationOptionsBuilder {
     private final Map<String, Object> options;
 
+    /**
+     * Create a builder with an empty set of options.
+     * 
+     * @return new and empty builder
+     * @since 1.5
+     */
+    public static OperationOptionsBuilder create(){
+        return new OperationOptionsBuilder();
+    }
+    
     /**
      * Create a builder with an empty set of options.
      */

@@ -176,14 +176,13 @@ public class VersionRange {
         if (empty) {
             return false;
         }
-        if (floorVersion.compareTo(version) >= (isFloorInclusive ? 1 : 0)) {
-            return false;
-        }
-        if (ceilingVersion == null) {
+        int c = floorVersion.compareTo(version);
+        if (c == 0 && isFloorInclusive){
             return true;
+        } else if (c < 0 && ceilingVersion != null) {
+            return ceilingVersion.compareTo(version) >= (isCeilingInclusive ? 0 : 1);
         }
-        return ceilingVersion.compareTo(version) >= (isCeilingInclusive ? 0 : 1);
-
+        return false;
     }
 
     /**

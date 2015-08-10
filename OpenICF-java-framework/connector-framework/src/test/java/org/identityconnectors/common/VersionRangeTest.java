@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 ForgeRock AS. All Rights Reserved
+ * Copyright (c) 2013-2015 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -24,6 +24,7 @@
 
 package org.identityconnectors.common;
 
+import org.identityconnectors.framework.api.ConnectorKey;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -101,4 +102,59 @@ public class VersionRangeTest {
         VersionRange range2 = VersionRange.parse(range1.toString());
         Assert.assertTrue(range1.equals(range2));
     }
+
+    @Test
+    public void testConnectorKeysInRange() throws Exception {
+
+        ConnectorKeyRange rS1 =
+                ConnectorKeyRange.newBuilder().setBundleName("B").setConnectorName("C")
+                        .setBundleVersion("1.1.0.0-SNAPSHOT").build();
+        ConnectorKeyRange r1 =
+                ConnectorKeyRange.newBuilder().setBundleName("B").setConnectorName("C")
+                        .setBundleVersion("1.1.0.0-SNAPSHOT").build();
+
+        ConnectorKeyRange rS2 =
+                ConnectorKeyRange.newBuilder().setBundleName("B").setConnectorName("C")
+                        .setBundleVersion("[1.1.0.0,1.2-SNAPSHOT]").build();
+        ConnectorKeyRange r2 =
+                ConnectorKeyRange.newBuilder().setBundleName("B").setConnectorName("C")
+                        .setBundleVersion("[1.1.0.0,1.2]").build();
+
+        ConnectorKey kS1 = new ConnectorKey("B","1.1.0.0-SNAPSHOT","C");
+        ConnectorKey k1 = new ConnectorKey("B","1.1.0.0","C");
+        ConnectorKey kS2 = new ConnectorKey("B","1.2.0.0-SNAPSHOT","C");
+        ConnectorKey k2 = new ConnectorKey("B","1.2.0.0","C");
+
+        
+        Assert.assertTrue(rS1.getBundleVersionRange().isExact());
+        Assert.assertTrue(r1.getBundleVersionRange().isExact());
+        Assert.assertFalse(rS2.getBundleVersionRange().isExact());
+        Assert.assertFalse(r2.getBundleVersionRange().isExact());
+        
+        
+        Assert.assertTrue(rS1.isInRange(kS1));
+        Assert.assertTrue(rS1.isInRange(k1));
+        Assert.assertTrue(r1.isInRange(kS1));
+        Assert.assertTrue(r1.isInRange(k1));
+        
+        //
+
+        Assert.assertFalse(rS1.isInRange(kS2));
+        Assert.assertFalse(rS1.isInRange(k2));
+        Assert.assertFalse(r1.isInRange(kS2));
+        Assert.assertFalse(r1.isInRange(k2));
+
+        //
+
+        Assert.assertTrue(rS2.isInRange(kS1));
+        Assert.assertTrue(rS2.isInRange(k1));
+        Assert.assertTrue(r2.isInRange(kS1));
+        Assert.assertTrue(r2.isInRange(k1));
+
+        Assert.assertTrue(rS2.isInRange(kS2));
+        Assert.assertTrue(rS2.isInRange(k2));
+        Assert.assertTrue(r2.isInRange(kS2));
+        Assert.assertTrue(r2.isInRange(k2));
+    }
+
 }

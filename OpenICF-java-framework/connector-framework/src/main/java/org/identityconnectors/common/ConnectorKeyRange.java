@@ -38,6 +38,7 @@ import org.identityconnectors.framework.api.ConnectorKey;
 public final class ConnectorKeyRange {
     private final String bundleName;
     private final VersionRange bundleVersionRange;
+    private final String exactVersion;
     private final String connectorName;
 
     public String getBundleName() {
@@ -60,17 +61,18 @@ public final class ConnectorKeyRange {
 
     public ConnectorKey getExactConnectorKey() {
         if (bundleVersionRange.isExact()) {
-            return new ConnectorKey(bundleName, bundleVersionRange.getFloor().toString(),
+            return new ConnectorKey(bundleName, exactVersion, //bundleVersionRange.getFloor().getVersion(),
                     connectorName);
         } else {
             throw new IllegalArgumentException("BundleVersion is not exact version");
         }
     }
 
-    private ConnectorKeyRange(String bundleName, VersionRange bundleVersionRange,
+    private ConnectorKeyRange(String bundleName, String bundleVersion,
             String connectorName) {
         this.bundleName = bundleName;
-        this.bundleVersionRange = bundleVersionRange;
+        this.exactVersion = bundleVersion;
+        this.bundleVersionRange = VersionRange.parse(exactVersion);
         this.connectorName = connectorName;
     }
 
@@ -119,7 +121,7 @@ public final class ConnectorKeyRange {
         }
 
         public ConnectorKeyRange build() {
-            return new ConnectorKeyRange(bundleName, VersionRange.parse(bundleVersion),
+            return new ConnectorKeyRange(bundleName, bundleVersion,
                     connectorName);
         }
     }
