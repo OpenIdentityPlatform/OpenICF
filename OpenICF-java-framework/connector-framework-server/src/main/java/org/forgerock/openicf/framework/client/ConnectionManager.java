@@ -804,7 +804,16 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
             logger.ok("RESPONSE: {0}", httpHeader);
             if (httpHeader.containsHeader(Header.Connection)) {
                 if ("close".equals(httpHeader.getHeader(Header.Connection))) {
-                    WebSocketHolder.get(ctx.getConnection()).handler.doClose();
+                    //@formatter:off
+                    /*
+                    HTTP/1.0 200 Connection Established
+                    FiddlerGateway: Direct
+                    StartTime: 02:46:39.539
+                    Connection: close
+                    */
+                    //@formatter:on
+                    //WebSocketHolder.get(ctx.getConnection()).handler.doClose();
+                    logger.ok("Response header contains: 'Connection: close'");
                 }
             }
         }

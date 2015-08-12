@@ -84,11 +84,11 @@ public class AsyncLocalConnectorInfoManagerTest extends
                             .build());
 
             Promise<ConnectorInfo, RuntimeException> keyPromise =
-                    manager.findConnectorInfoAsync(TEST_CONNECTOR_KEY);
+                    manager.findConnectorInfoAsync(getTestConnectorKey());
             Promise<ConnectorInfo, RuntimeException> keyRangePromise =
                     manager.findConnectorInfoAsync(ConnectorKeyRange.newBuilder().setBundleName(
-                            TEST_CONNECTOR_KEY.getBundleName()).setConnectorName(
-                            TEST_CONNECTOR_KEY.getConnectorName()).setBundleVersion("[1.0,2.0)")
+                            getTestConnectorKey().getBundleName()).setConnectorName(
+                            getTestConnectorKey().getConnectorName()).setBundleVersion("[1.0,2.0)")
                             .build());
 
             manager.addConnectorBundle(TstConnector.class.getProtectionDomain().getCodeSource()
@@ -98,7 +98,7 @@ public class AsyncLocalConnectorInfoManagerTest extends
             Assert.assertTrue(keyPromise.isDone());
             keyPromise.thenOnResult(new ResultHandler<ConnectorInfo>() {
                 public void handleResult(ConnectorInfo result) {
-                    Assert.assertEquals(result.getConnectorKey(), TEST_CONNECTOR_KEY);
+                    Assert.assertEquals(result.getConnectorKey(), getTestConnectorKey());
                 }
             }).thenOnException(new ExceptionHandler<RuntimeException>() {
                 public void handleException(RuntimeException error) {
@@ -109,7 +109,7 @@ public class AsyncLocalConnectorInfoManagerTest extends
 
             keyRangePromise.thenOnResult(new ResultHandler<ConnectorInfo>() {
                 public void handleResult(ConnectorInfo result) {
-                    Assert.assertEquals(result.getConnectorKey(), TEST_CONNECTOR_KEY);
+                    Assert.assertEquals(result.getConnectorKey(), getTestConnectorKey());
                 }
             }).thenOnException(new ExceptionHandler<RuntimeException>() {
                 public void handleException(RuntimeException error) {

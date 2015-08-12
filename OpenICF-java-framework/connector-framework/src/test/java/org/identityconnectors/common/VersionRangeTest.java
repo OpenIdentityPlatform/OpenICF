@@ -136,15 +136,11 @@ public class VersionRangeTest {
         Assert.assertTrue(rS1.isInRange(k1));
         Assert.assertTrue(r1.isInRange(kS1));
         Assert.assertTrue(r1.isInRange(k1));
-        
-        //
 
         Assert.assertFalse(rS1.isInRange(kS2));
         Assert.assertFalse(rS1.isInRange(k2));
         Assert.assertFalse(r1.isInRange(kS2));
         Assert.assertFalse(r1.isInRange(k2));
-
-        //
 
         Assert.assertTrue(rS2.isInRange(kS1));
         Assert.assertTrue(rS2.isInRange(k1));
@@ -155,6 +151,14 @@ public class VersionRangeTest {
         Assert.assertTrue(rS2.isInRange(k2));
         Assert.assertTrue(r2.isInRange(kS2));
         Assert.assertTrue(r2.isInRange(k2));
+
+        ConnectorKeyRange r45 =
+                ConnectorKeyRange.newBuilder().setBundleName("B").setConnectorName("C")
+                        .setBundleVersion("[1.4.0.0,1.5.0.0)").build();
+        Assert.assertTrue(r45.isInRange(new ConnectorKey("B","1.4.0.0","C")));
+
+        Assert.assertFalse(r45.isInRange(new ConnectorKey("B", "1.5.0.0", "C")));
+        
     }
 
 }

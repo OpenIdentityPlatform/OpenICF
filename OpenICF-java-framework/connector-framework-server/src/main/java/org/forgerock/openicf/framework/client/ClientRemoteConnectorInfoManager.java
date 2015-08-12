@@ -24,6 +24,7 @@
 
 package org.forgerock.openicf.framework.client;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
@@ -79,6 +80,7 @@ import org.glassfish.grizzly.websockets.ClosingFrame;
 import org.glassfish.grizzly.websockets.DataFrame;
 import org.glassfish.grizzly.websockets.ProtocolHandler;
 import org.glassfish.grizzly.websockets.SimpleWebSocket;
+import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
 import org.glassfish.grizzly.websockets.WebSocketHolder;
 import org.glassfish.grizzly.websockets.WebSocketListener;
@@ -89,8 +91,6 @@ import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
-
-import com.google.protobuf.MessageLite;
 
 public class ClientRemoteConnectorInfoManager extends
         ConnectionPrincipal<ClientRemoteConnectorInfoManager> implements RemoteConnectorInfoManager {
@@ -337,8 +337,8 @@ public class ClientRemoteConnectorInfoManager extends
                 lastConnectithenOnException.set(System.currentTimeMillis());
                 if (throwable instanceof ConnectException) {
                     // Can not connect to remote server -
-                    outerPromise.handleException(new ConnectionBrokenException(throwable.getMessage(),
-                            throwable));
+                    outerPromise.handleException(new ConnectionBrokenException(throwable
+                            .getMessage(), throwable));
                 } else if (throwable instanceof RuntimeException) {
                     outerPromise.handleException(((RuntimeException) throwable));
                 } else {
@@ -388,13 +388,16 @@ public class ClientRemoteConnectorInfoManager extends
                                                     result.close();
                                                 }
                                             }
-                                        }).thenOnException(new ExceptionHandler<RuntimeException>() {
-                                    public void handleException(RuntimeException error) {
-                                        lastConnectithenOnException.set(System.currentTimeMillis());
-                                        logger.ok(error, "Connection to server failed: {0}", error
-                                                .getMessage());
-                                    }
-                                });
+                                        }).thenOnException(
+                                        new ExceptionHandler<RuntimeException>() {
+                                            public void handleException(RuntimeException error) {
+                                                lastConnectithenOnException.set(System
+                                                        .currentTimeMillis());
+                                                logger.ok(error,
+                                                        "Connection to server failed: {0}", error
+                                                                .getMessage());
+                                            }
+                                        });
                 if (index == 0) {
                     lastConnectionPermit.set(promise);
                     synchronized (this) {
@@ -620,6 +623,48 @@ public class ClientRemoteConnectorInfoManager extends
             for (OperationMessageListener listener : listeners) {
                 listener.onPong(adapter, frame.getBytes());
             }
+        }
+
+        SimpleBinaryMessage activeMessage = null;
+
+        public void onFragment(boolean last, byte[] fragment) {
+            super.onFragment(last, fragment);
+            if (activeMessage == null) {
+                activeMessage = new SimpleBinaryMessage(this, fragment);
+            }
+
+            activeMessage.appendFrame(fragment);
+
+            if (last) {
+                activeMessage.messageComplete();
+                activeMessage = null;
+            }
+        }
+    }
+
+    private static class SimpleBinaryMessage {
+        private final WebSocket onEvent;
+        protected final ByteArrayOutputStream out;
+        protected boolean finished;
+
+        public SimpleBinaryMessage(WebSocket onEvent, byte[] fragment) {
+            this.onEvent = onEvent;
+            this.out =
+                    new ByteArrayOutputStream(null != fragment ? 2 * fragment.length : 16 * 1024);
+            finished = false;
+        }
+
+        public void appendFrame(byte[] fragment) {
+            if (fragment == null) {
+                return;
+            }
+            out.write(fragment, 0, fragment.length);
+        }
+
+        public void messageComplete() {
+            finished = true;
+            byte data[] = out.toByteArray();
+            onEvent.onMessage(data);
         }
     }
 

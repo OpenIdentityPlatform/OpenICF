@@ -26,6 +26,7 @@ package org.identityconnectors.framework.impl.api.local.operations;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.Observer;
 import org.identityconnectors.framework.api.operations.ConnectorEventSubscriptionApiOp;
@@ -34,6 +35,7 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Subscription;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncToken;
@@ -62,7 +64,13 @@ public class SubscriptionImpl extends ConnectorAPIOperationRunner {
     }
 
     public Subscription subscribe(final ObjectClass objectClass, final Filter eventFilter,
-            final Observer<ConnectorObject> handler, final OperationOptions operationOptions) {
+            final Observer<ConnectorObject> handler, OperationOptions operationOptions) {
+        Assertions.nullCheck(objectClass, "objectClass");
+        Assertions.nullCheck(handler, "handler");
+        // cast null as empty
+        if (operationOptions == null) {
+            operationOptions = new OperationOptionsBuilder().build();
+        }
         final ConnectorEventSubscriptionOp operation =
                 ((ConnectorEventSubscriptionOp) getConnector());
         final InternalObserver<ConnectorObject> observer =
@@ -90,7 +98,14 @@ public class SubscriptionImpl extends ConnectorAPIOperationRunner {
     }
 
     public Subscription subscribe(final ObjectClass objectClass, final SyncToken token,
-            final Observer<SyncDelta> handler, final OperationOptions operationOptions) {
+            final Observer<SyncDelta> handler,  OperationOptions operationOptions) {
+        Assertions.nullCheck(objectClass, "objectClass");
+        Assertions.nullCheck(handler, "handler");
+        // cast null as empty
+        if (operationOptions == null) {
+            operationOptions = new OperationOptionsBuilder().build();
+        }
+        
         final SyncEventSubscriptionOp operation = ((SyncEventSubscriptionOp) getConnector());
         final InternalObserver<SyncDelta> observer =
                 new InternalObserver<SyncDelta>(handler);

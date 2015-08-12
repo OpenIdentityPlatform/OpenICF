@@ -181,14 +181,26 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
                                   final OperationOptions operationOptions) {
         final ConnectorObjectBuilder builder =
                 new ConnectorObjectBuilder().setObjectClass(objectClass);
-
+        Object op = operationOptions.getOptions().get("eventCount");
+        Integer eventCount = 10;
+        if (op instanceof Integer){
+            eventCount = (Integer)op;
+        }
+        final int count  = eventCount;
+        
         final SelfAwareExecutionRunnable runnable = new SelfAwareExecutionRunnable() {
             protected boolean doAction(int runCount) {
+
+                if (TstAbstractConnector.this.config == null){
+                    handler.onError(new IllegalStateException("Connector has been disposed"));
+                    return false;
+                }
+                
                 builder.setUid(String.valueOf(runCount));
                 builder.setName(String.valueOf(runCount));
                 handler.onNext(builder.build());
 
-                if (runCount >= 10) {
+                if (runCount >= count) {
                     // Locally stop serving subscription
                     handler.onError(new ConnectorException(
                             "Subscription channel is closed"));
@@ -219,12 +231,25 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
                         new ConnectorObjectBuilder().setObjectClass(objectClass).setUid("0")
                                 .setName("SYNC_EVENT").build());
 
+        Object op = operationOptions.getOptions().get("eventCount");
+        Integer eventCount = 10;
+        if (op instanceof Integer){
+            eventCount = (Integer)op;
+        }
+        final int count  = eventCount;
+        
         final SelfAwareExecutionRunnable runnable = new SelfAwareExecutionRunnable() {
             protected boolean doAction(int runCount) {
+
+                if (TstAbstractConnector.this.config == null){
+                    handler.onError(new IllegalStateException("Connector has been disposed"));
+                    return false;
+                }
+                
                 builder.setToken(new SyncToken(runCount));
                 handler.onNext(builder.build());
 
-                if (runCount >= 10) {
+                if (runCount >= count) {
                     // Locally stop serving subscription
                     handler.onError(new ConnectorException(
                             "Subscription channel is closed"));

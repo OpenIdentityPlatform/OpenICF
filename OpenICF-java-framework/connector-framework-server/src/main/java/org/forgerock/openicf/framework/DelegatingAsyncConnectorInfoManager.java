@@ -54,8 +54,6 @@ import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.api.ConnectorKey;
 
-import com.google.protobuf.MessageLite;
-
 /**
  * @since 1.5
  */

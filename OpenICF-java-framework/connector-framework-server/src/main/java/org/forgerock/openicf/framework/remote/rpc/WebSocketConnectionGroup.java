@@ -269,7 +269,7 @@ public class WebSocketConnectionGroup
                     List<org.identityconnectors.framework.impl.api.remote.RemoteConnectorInfoImpl> connectorInfos =
                             MessagesUtil.deserializeLegacy(((ControlResponse) message)
                                     .getConnectorInfos());
-                    if (null != connectorInfos) {
+                    if (null != connectorInfos && !connectorInfos.isEmpty()) {
                         sourceConnection.getRemoteConnectionContext().getRemoteConnectionGroup().delegate
                                 .addAll(connectorInfos);
                     }

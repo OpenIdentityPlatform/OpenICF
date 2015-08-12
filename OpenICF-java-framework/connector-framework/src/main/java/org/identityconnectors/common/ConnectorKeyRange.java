@@ -61,15 +61,13 @@ public final class ConnectorKeyRange {
 
     public ConnectorKey getExactConnectorKey() {
         if (bundleVersionRange.isExact()) {
-            return new ConnectorKey(bundleName, exactVersion, //bundleVersionRange.getFloor().getVersion(),
-                    connectorName);
+            return new ConnectorKey(bundleName, exactVersion, connectorName);
         } else {
             throw new IllegalArgumentException("BundleVersion is not exact version");
         }
     }
 
-    private ConnectorKeyRange(String bundleName, String bundleVersion,
-            String connectorName) {
+    private ConnectorKeyRange(String bundleName, String bundleVersion, String connectorName) {
         this.bundleName = bundleName;
         this.exactVersion = bundleVersion;
         this.bundleVersionRange = VersionRange.parse(exactVersion);
@@ -121,8 +119,7 @@ public final class ConnectorKeyRange {
         }
 
         public ConnectorKeyRange build() {
-            return new ConnectorKeyRange(bundleName, bundleVersion,
-                    connectorName);
+            return new ConnectorKeyRange(bundleName, bundleVersion, connectorName);
         }
     }
 }

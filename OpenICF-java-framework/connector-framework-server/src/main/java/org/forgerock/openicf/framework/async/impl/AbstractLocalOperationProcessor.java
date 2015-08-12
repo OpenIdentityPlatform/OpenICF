@@ -34,7 +34,7 @@ import com.google.protobuf.MessageLite;
 public abstract class AbstractLocalOperationProcessor<V, M extends MessageLite> extends
         LocalOperationProcessor<V> {
 
-    private final M requestMessage;
+    protected final M requestMessage;
 
     protected AbstractLocalOperationProcessor(long requestId,
             final WebSocketConnectionHolder socket, final M message) {
@@ -48,10 +48,10 @@ public abstract class AbstractLocalOperationProcessor<V, M extends MessageLite> 
     public void execute(final ConnectorFacade connectorFacade) {
         try {
             handleResult(executeOperation(connectorFacade, requestMessage));
-        } catch (Error t) {
-            handleException(ConnectorException.wrap(t));
         } catch (RuntimeException error) {
             handleException(error);
+        } catch (Throwable t) {
+            handleException(new ConnectorException(t.getMessage(), t));
         }
     }
 }

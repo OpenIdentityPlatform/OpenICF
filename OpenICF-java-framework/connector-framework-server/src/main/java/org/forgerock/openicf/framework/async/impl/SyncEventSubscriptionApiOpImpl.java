@@ -39,8 +39,8 @@ import org.forgerock.openicf.framework.remote.MessagesUtil;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
-import org.forgerock.util.promise.ExceptionHandler;
 import org.forgerock.util.Function;
+import org.forgerock.util.promise.ExceptionHandler;
 import org.forgerock.util.promise.Promise;
 import org.forgerock.util.promise.ResultHandler;
 import org.identityconnectors.common.Assertions;
@@ -229,6 +229,16 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
                     OperationResponse.newBuilder().setSyncEventSubscriptionOpResponse(result));
         }
 
+        public void execute(final ConnectorFacade connectorFacade) {
+            try {
+                tryHandleResult(executeOperation(connectorFacade, requestMessage));
+            } catch (RuntimeException error) {
+                handleException(error);
+            } catch (Throwable t) {
+                handleException(new ConnectorException(t.getMessage(), t));
+            }
+        }
+
         protected SyncEventSubscriptionOpResponse executeOperation(
                 final ConnectorFacade connectorFacade,
                 final SyncEventSubscriptionOpRequest requestMessage) {
@@ -248,19 +258,15 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
             subscription = connectorFacade.subscribe(objectClass, token, new Observer<SyncDelta>() {
 
                 public void onCompleted() {
-                    tryHandleResult(SyncEventSubscriptionOpResponse.newBuilder().setCompleted(
+                    handleResult(SyncEventSubscriptionOpResponse.newBuilder().setCompleted(
                             Boolean.TRUE).build());
                 }
 
                 public void onError(Throwable error) {
-                    try {
-                        final byte[] responseMessage =
-                                MessagesUtil.createErrorResponse(getRequestId(), error).build()
-                                        .toByteArray();
-                        trySendBytes(responseMessage, true);
-                    } catch (Throwable t) {
-                        logger.ok(t,
-                                "Operation encountered an exception and failed to send the exception response");
+                    if (error instanceof RuntimeException) {
+                        handleException((RuntimeException) error);
+                    } else {
+                        handleException(new ConnectorException(error.getMessage(), error));
                     }
                 }
 

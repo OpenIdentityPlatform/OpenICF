@@ -55,6 +55,7 @@ public abstract class ConnectionPrincipal<T extends ConnectionPrincipal<T>>
         Principal {
 
     private static final Log logger = Log.getLog(ConnectionPrincipal.class);
+    public static final String DEFAULT_NAME = "anonymous";
 
     protected final AtomicBoolean isRunning = new AtomicBoolean(Boolean.TRUE);
     protected final ConcurrentMap<String, WebSocketConnectionGroup> connectionGroups =
@@ -70,7 +71,7 @@ public abstract class ConnectionPrincipal<T extends ConnectionPrincipal<T>>
     }
 
     public String getName() {
-        return "DEFAULT";
+        return DEFAULT_NAME;
     }
 
     public RemoteOperationContext handshake(final WebSocketConnectionHolder webSocketConnection,

@@ -35,6 +35,7 @@ import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
+import org.forgerock.openicf.framework.remote.ConnectionPrincipal;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.security.GuardedString;
@@ -252,7 +253,7 @@ public class RemoteWSFrameworkConnectionInfo {
             builder.setRemoteURI(URI.create("ws://" + info.getHost() + ":" + info.getPort()
                     + "/openicf"));
         }
-        builder.setPrincipal("anonymous");
+        builder.setPrincipal(ConnectionPrincipal.DEFAULT_NAME);
         builder.setPassword(info.getKey());
         return builder;
     }

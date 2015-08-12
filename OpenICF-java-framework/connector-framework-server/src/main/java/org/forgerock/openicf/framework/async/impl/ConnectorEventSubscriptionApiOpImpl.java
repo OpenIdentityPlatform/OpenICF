@@ -39,8 +39,8 @@ import org.forgerock.openicf.framework.remote.MessagesUtil;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
-import org.forgerock.util.promise.ExceptionHandler;
 import org.forgerock.util.Function;
+import org.forgerock.util.promise.ExceptionHandler;
 import org.forgerock.util.promise.Promise;
 import org.forgerock.util.promise.ResultHandler;
 import org.identityconnectors.common.Assertions;
@@ -232,6 +232,16 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
                     OperationResponse.newBuilder().setConnectorEventSubscriptionOpResponse(result));
         }
 
+        public void execute(final ConnectorFacade connectorFacade) {
+            try {
+                tryHandleResult(executeOperation(connectorFacade, requestMessage));
+            } catch (RuntimeException error) {
+                handleException(error);
+            } catch (Throwable t) {
+                handleException(new ConnectorException(t.getMessage(), t));
+            }
+        }
+
         protected ConnectorEventSubscriptionOpResponse executeOperation(
                 final ConnectorFacade connectorFacade,
                 final ConnectorEventSubscriptionOpRequest requestMessage) {
@@ -252,19 +262,15 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
                     connectorFacade.subscribe(objectClass, token, new Observer<ConnectorObject>() {
 
                         public void onCompleted() {
-                            tryHandleResult(ConnectorEventSubscriptionOpResponse.newBuilder()
+                            handleResult(ConnectorEventSubscriptionOpResponse.newBuilder()
                                     .setCompleted(Boolean.TRUE).build());
                         }
 
                         public void onError(Throwable error) {
-                            try {
-                                final byte[] responseMessage =
-                                        MessagesUtil.createErrorResponse(getRequestId(), error)
-                                                .build().toByteArray();
-                                trySendBytes(responseMessage, true);
-                            } catch (Throwable t) {
-                                logger.ok(t,
-                                        "Operation encountered an exception and failed to send the exception response");
+                            if (error instanceof RuntimeException) {
+                                handleException((RuntimeException) error);
+                            } else {
+                                handleException(new ConnectorException(error.getMessage(), error));
                             }
                         }
 

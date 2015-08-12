@@ -73,6 +73,7 @@ import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
+import org.identityconnectors.framework.impl.api.local.LocalConnectorFacadeImpl;
 import org.testng.Assert;
 import org.testng.ITestContext;
 import org.testng.Reporter;
@@ -188,40 +189,47 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
 
     protected abstract T getConnectorInfoManager() throws Exception;
 
+    
+    public ConnectorKey getTestConnectorKey(){
+        return TEST_CONNECTOR_KEY;
+    }
+
+    public ConnectorKey getTestStatefulConnectorKey(){
+        return TEST_STATEFUL_CONNECTOR_KEY;
+    }
+
+    public ConnectorKey getTestPoolableStatefulConnectorKey(){
+        return TEST_POOLABLE_STATEFUL_CONNECTOR_KEY;
+    }
+    
     @Test
     public void testRequiredConnectorInfo() throws Exception {
-        ReferenceCountedObject<ConnectorFramework>.Reference framework =
-                ConnectorFrameworkFactory.DEFAULT_FACTORY.acquire();
-        try {
 
             AsyncConnectorInfoManager manager = getConnectorInfoManager();
             Assert.assertNotNull(manager);
 
             ConnectorInfo c =
-                    manager.findConnectorInfoAsync(TEST_CONNECTOR_KEY).getOrThrowUninterruptibly(5,
+                    manager.findConnectorInfoAsync(getTestConnectorKey()).getOrThrowUninterruptibly(5,
                             TimeUnit.MINUTES);
             Assert.assertNotNull(c);
 
-            Assert.assertNotNull(getConnectorInfoManager().findConnectorInfoAsync(
-                    TEST_STATEFUL_CONNECTOR_KEY).getOrThrowUninterruptibly(30, TimeUnit.SECONDS));
+            Assert.assertNotNull(manager.findConnectorInfoAsync(
+                    getTestStatefulConnectorKey()).getOrThrowUninterruptibly(30, TimeUnit.SECONDS));
 
-            Assert.assertNotNull(getConnectorInfoManager().findConnectorInfoAsync(
-                    TEST_POOLABLE_STATEFUL_CONNECTOR_KEY).getOrThrowUninterruptibly(30,
+            Assert.assertNotNull(manager.findConnectorInfoAsync(
+                    getTestPoolableStatefulConnectorKey()).getOrThrowUninterruptibly(30,
                     TimeUnit.SECONDS));
 
             for (ConnectorInfo ci : manager.getConnectorInfos()) {
                 Reporter.log(String.valueOf(ci.getConnectorKey()), true);
             }
-        } finally {
-            framework.release();
-        }
     }
 
     @Test
     public void testValidate() throws Exception {
 
         Promise<ConnectorInfo, RuntimeException> keyPromise =
-                getConnectorInfoManager().findConnectorInfoAsync(TEST_STATEFUL_CONNECTOR_KEY);
+                getConnectorInfoManager().findConnectorInfoAsync(getTestStatefulConnectorKey());
 
         ConnectorInfo info = keyPromise.getOrThrowUninterruptibly(30, TimeUnit.SECONDS);
 
@@ -276,10 +284,10 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
     public void testConfigurationUpdate() throws Exception {
         ConnectorInfo[] infos =
                 new ConnectorInfo[] {
-                    getConnectorInfoManager().findConnectorInfoAsync(TEST_STATEFUL_CONNECTOR_KEY)
+                    getConnectorInfoManager().findConnectorInfoAsync(getTestStatefulConnectorKey())
                             .get(5, TimeUnit.MINUTES),
                     getConnectorInfoManager().findConnectorInfoAsync(
-                            TEST_POOLABLE_STATEFUL_CONNECTOR_KEY).get(5, TimeUnit.MINUTES) };
+                            getTestPoolableStatefulConnectorKey()).get(5, TimeUnit.MINUTES) };
         for (ConnectorInfo info : infos) {
             APIConfiguration api = info.createDefaultAPIConfiguration();
 
@@ -363,6 +371,13 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
         ConnectorObject co =
                 facade.getObject(ObjectClass.ACCOUNT, new Uid("1"), optionsBuilder.build());
         Assert.assertNull(co);
+    }
+
+    @Test
+    public void testNullScriptOperations() throws Exception {
+        final ConnectorFacade facade = getConnectorFacade(true, true);
+        OperationOptionsBuilder optionsBuilder = new OperationOptionsBuilder();
+        facade.test();
 
         ScriptContextBuilder contextBuilder =
                 new ScriptContextBuilder().setScriptLanguage("JavaScript").setScriptText(
@@ -448,7 +463,12 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
 
         facade.delete(ObjectClass.ACCOUNT, updatedUid, null);
         Assert.assertNull(facade.getObject(ObjectClass.ACCOUNT, updatedUid, null));
+    }
 
+    @Test
+    public void testScriptOperations() throws Exception {
+        ConnectorFacade facade = getConnectorFacade();
+        facade.test();
         ScriptContextBuilder contextBuilder =
                 new ScriptContextBuilder().setScriptLanguage("JavaScript").setScriptText(
                         "function foo() {return arg; }\nfoo();").addScriptArgument("arg", "test");
@@ -515,14 +535,22 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
             }
         });
 
-        latch.await(25, TimeUnit.MINUTES);
+        latch.await(5, TimeUnit.MINUTES);
         if (null != assertionError.get()) {
             throw assertionError.get();
         }
 
+        if (facade instanceof LocalConnectorFacadeImpl){
+            LocalConnectorFacadeImpl localConnectorFacade = (LocalConnectorFacadeImpl) facade;
+            Assert.assertTrue(localConnectorFacade.isUnusedFor(1, TimeUnit.NANOSECONDS));
+        }
+        
         final CountDownLatch syncLatch = new CountDownLatch(1);
         handler.getObjects().clear();
 
+        
+        final OperationOptionsBuilder optionsBuilder = new OperationOptionsBuilder();
+        optionsBuilder.setOption("eventCount", 1500);
         Observable<SyncDelta> syncDeltaObservable =
                 Observable.create(new Observable.OnSubscribe<SyncDelta>() {
                     public void call(final Subscriber<? super SyncDelta> subscriber) {
@@ -540,7 +568,7 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
                                             public void onNext(SyncDelta syncDelta) {
                                                 subscriber.onNext(syncDelta);
                                             }
-                                        }, null);
+                                        }, optionsBuilder.build());
 
                         subscriber.add(new rx.Subscription() {
                             public void unsubscribe() {
@@ -587,6 +615,10 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
             Thread.sleep(200); // Wait to complete all other threads
         }
         Assert.assertTrue(handler.getObjects().size() < 10 && handler.getObjects().size() > 2);
+        if (facade instanceof LocalConnectorFacadeImpl){
+            LocalConnectorFacadeImpl localConnectorFacade = (LocalConnectorFacadeImpl) facade;
+            Assert.assertTrue(localConnectorFacade.isUnusedFor(1, TimeUnit.NANOSECONDS));
+        }
     }
 
     protected ConnectorFacade getConnectorFacade() throws Exception {
@@ -595,7 +627,7 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
 
     protected ConnectorFacade getConnectorFacade(final boolean caseIgnore,
             final boolean returnNullTest) throws Exception {
-        return getConnectorInfoManager().findConnectorInfoAsync(TEST_STATEFUL_CONNECTOR_KEY).then(
+        return getConnectorInfoManager().findConnectorInfoAsync(getTestStatefulConnectorKey()).then(
                 new Function<ConnectorInfo, ConnectorFacade, RuntimeException>() {
                     public ConnectorFacade apply(ConnectorInfo info) throws RuntimeException {
                         APIConfiguration api = info.createDefaultAPIConfiguration();

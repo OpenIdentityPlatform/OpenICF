@@ -135,7 +135,7 @@ public class OpenICFServerAdapter implements OperationMessageListener {
     }
 
     public void onMessage(final WebSocketConnectionHolder socket, byte[] bytes) {
-        logger.info("{0} onMessage()", loggerName());
+        logger.info("{0} onMessage({1}:bytes)", loggerName(), bytes.length);
         try {
             RemoteMessage message = RemoteMessage.parseFrom(bytes);
 
@@ -212,10 +212,10 @@ public class OpenICFServerAdapter implements OperationMessageListener {
                     MessagesUtil.createErrorResponse(messageId,
                             new ConnectorException("Unknown Request message")).build());
         } else {
-            socket.getRemoteConnectionContext().getRemoteConnectionGroup().trySendMessage(
+            socket.sendBytes(
                     MessagesUtil.createErrorResponse(messageId,
                             new ConnectorException("Connection received request before handshake"))
-                            .build());
+                            .build().toByteArray());
         }
     }
 
@@ -226,10 +226,10 @@ public class OpenICFServerAdapter implements OperationMessageListener {
                     MessagesUtil.createErrorResponse(messageId,
                             new ConnectorException("Unknown Request message")).build());
         } else {
-            socket.getRemoteConnectionContext().getRemoteConnectionGroup().trySendMessage(
+            socket.sendBytes(
                     MessagesUtil.createErrorResponse(messageId,
-                            new ConnectorException("Connection received request before handshake"))
-                            .build());
+                            new ConnectorException("Connection received response before handshake"))
+                            .build().toByteArray());
         }
     }
 
@@ -446,7 +446,6 @@ public class OpenICFServerAdapter implements OperationMessageListener {
             final CancelOpRequest message) {
         socket.getRemoteConnectionContext().getRemoteConnectionGroup().receiveRequestCancel(
                 messageId);
-
     }
 
     protected Encryptor initialiseEncryptor() {
