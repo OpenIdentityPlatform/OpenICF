@@ -27,7 +27,6 @@ import static org.fest.assertions.Assertions.assertThat;
 import static org.identityconnectors.common.IOUtil.makeURL;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
@@ -46,6 +45,7 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.identityconnectors.common.CollectionUtil;
@@ -105,6 +105,7 @@ import org.testng.annotations.Test;
 
 import rx.Observable;
 import rx.Subscriber;
+import rx.functions.Action0;
 import rx.functions.Action1;
 
 public abstract class ConnectorInfoManagerTestBase {
@@ -210,7 +211,7 @@ public abstract class ConnectorInfoManagerTestBase {
                     || e.getMessage()
                             .contains(errorMessageBundle.getString("nosuitableimagefound"))
                     || e.getMessage().contains(
-                    errorMessageBundle.getString("notvalidwin32application"))
+                            errorMessageBundle.getString("notvalidwin32application"))
                     || e.getMessage().contains(errorMessageBundle.getString("nonativein")));
         } catch (RuntimeException e) {
             // Remote framework serializes UnsatisfiedLinkError as
@@ -219,7 +220,7 @@ public abstract class ConnectorInfoManagerTestBase {
                     || e.getMessage()
                             .contains(errorMessageBundle.getString("nosuitableimagefound"))
                     || e.getMessage().contains(
-                    errorMessageBundle.getString("notvalidwin32application"))
+                            errorMessageBundle.getString("notvalidwin32application"))
                     || e.getMessage().contains(errorMessageBundle.getString("nonativein")));
         }
     }
@@ -542,13 +543,14 @@ public abstract class ConnectorInfoManagerTestBase {
             assertEquals(lastToken.getValue(), latest.getValue());
         }
     }
-    
+
     @Test(dataProvider = "statefulConnectors")
     public void testSubscriptionOperation(final ConnectorFacade facade) throws Exception {
         if (facade instanceof LocalConnectorFacadeImpl) {
             final ToListResultsHandler handler = new ToListResultsHandler();
             final CountDownLatch latch = new CountDownLatch(1);
 
+            // Return 10 events and fail
             Observable<ConnectorObject> connectorObjectObservable =
                     Observable.create(new Observable.OnSubscribe<ConnectorObject>() {
                         public void call(final Subscriber<? super ConnectorObject> subscriber) {
@@ -597,6 +599,67 @@ public abstract class ConnectorInfoManagerTestBase {
             latch.await(25, TimeUnit.SECONDS);
             subscription[0].unsubscribe();
             Assert.assertEquals(handler.getObjects().size(), 10);
+            
+
+            final CountDownLatch eventLatch = new CountDownLatch(1);
+            handler.getObjects().clear();
+
+            // Return 10 events and complete
+            final AtomicBoolean failed = new AtomicBoolean(false);
+            connectorObjectObservable =
+                    Observable.create(new Observable.OnSubscribe<ConnectorObject>() {
+                        public void call(final Subscriber<? super ConnectorObject> subscriber) {
+
+                            final Subscription subscription =
+                                    facade.subscribe(ObjectClass.ACCOUNT, null,
+                                            new Observer<ConnectorObject>() {
+                                                public void onCompleted() {
+                                                    subscriber.onCompleted();
+                                                }
+
+                                                public void onError(Throwable e) {
+                                                    subscriber.onError(e);
+                                                }
+
+                                                public void onNext(ConnectorObject connectorObject) {
+                                                    subscriber.onNext(connectorObject);
+                                                }
+                                            }, OperationOptionsBuilder.create().setOption(
+                                                    "doComplete", true).build());
+
+                            subscriber.add(new rx.Subscription() {
+                                public void unsubscribe() {
+                                    subscription.close();
+                                }
+
+                                public boolean isUnsubscribed() {
+                                    return subscription.isUnsubscribed();
+                                }
+                            });
+                        }
+                    });
+            subscription[0] = connectorObjectObservable.subscribe(new Action1<ConnectorObject>() {
+                public void call(ConnectorObject connectorObject) {
+                    Reporter.log("Connector Event received:" + connectorObject.getUid(), true);
+                    handler.handle(connectorObject);
+                }
+            }, new Action1<Throwable>() {
+                public void call(Throwable throwable) {
+                    eventLatch.countDown();
+                    failed.set(true);
+                }
+            }, new Action0() {
+                public void call() {
+                    eventLatch.countDown();
+                }
+            });
+
+            eventLatch.await(25, TimeUnit.SECONDS);
+            subscription[0].unsubscribe();
+            Assert.assertFalse(failed.get());
+            Assert.assertEquals(handler.getObjects().size(), 10);
+
+            //
 
             final CountDownLatch syncLatch = new CountDownLatch(1);
             handler.getObjects().clear();
@@ -661,12 +724,13 @@ public abstract class ConnectorInfoManagerTestBase {
     public void testConfigurationUpdate() throws Exception {
         ConnectorInfoManager manager = getConnectorInfoManager();
         if (manager instanceof LocalConnectorInfoManagerImpl) {
-            ConnectorInfo[] infos = new ConnectorInfo[]{
-                    findConnectorInfo(manager, "1.0.0.0",
-                            "org.identityconnectors.testconnector.TstConnector"),
-                    findConnectorInfo(manager, "1.0.0.0",
-                            "org.identityconnectors.testconnector.TstStatefulConnector")};
-            for (ConnectorInfo info: infos) {
+            ConnectorInfo[] infos =
+                    new ConnectorInfo[] {
+                        findConnectorInfo(manager, "1.0.0.0",
+                                "org.identityconnectors.testconnector.TstConnector"),
+                        findConnectorInfo(manager, "1.0.0.0",
+                                "org.identityconnectors.testconnector.TstStatefulConnector") };
+            for (ConnectorInfo info : infos) {
                 APIConfiguration api = info.createDefaultAPIConfiguration();
 
                 final AtomicReference<List<ConfigurationProperty>> current =
@@ -689,13 +753,13 @@ public abstract class ConnectorInfoManagerTestBase {
                 assertNotNull(current.get());
                 assertEquals(current.get().size(), 1);
                 assertEquals(current.get().get(0).getValue(), "change");
-                ((LocalConnectorFacadeImpl)facade).dispose();
+                ((LocalConnectorFacadeImpl) facade).dispose();
             }
         } else {
-          throw new SkipException("Test is local only"); 
+            throw new SkipException("Test is local only");
         }
     }
-    
+
     // TODO: this needs to overridden for C# testing
     @Test
     public void testScripting() throws Exception {

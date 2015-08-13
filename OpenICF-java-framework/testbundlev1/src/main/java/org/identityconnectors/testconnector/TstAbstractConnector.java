@@ -187,6 +187,8 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
             eventCount = (Integer)op;
         }
         final int count  = eventCount;
+
+        final boolean doComplete = operationOptions.getOptions().containsKey("doComplete");
         
         final SelfAwareExecutionRunnable runnable = new SelfAwareExecutionRunnable() {
             protected boolean doAction(int runCount) {
@@ -202,8 +204,12 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
 
                 if (runCount >= count) {
                     // Locally stop serving subscription
-                    handler.onError(new ConnectorException(
-                            "Subscription channel is closed"));
+                    if (doComplete){
+                        handler.onCompleted();
+                    } else {
+                        handler.onError(new ConnectorException(
+                                "Subscription channel is closed"));
+                    }
                     // ScheduledFuture should be stopped from here.
                     return false;
                 }
@@ -238,6 +244,8 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         }
         final int count  = eventCount;
         
+        final boolean doComplete = operationOptions.getOptions().containsKey("doComplete");
+        
         final SelfAwareExecutionRunnable runnable = new SelfAwareExecutionRunnable() {
             protected boolean doAction(int runCount) {
 
@@ -251,8 +259,12 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
 
                 if (runCount >= count) {
                     // Locally stop serving subscription
-                    handler.onError(new ConnectorException(
-                            "Subscription channel is closed"));
+                    if (doComplete){
+                        handler.onCompleted();
+                    } else {
+                        handler.onError(new ConnectorException(
+                                "Subscription channel is closed"));
+                    }
                     // ScheduledFuture should be stopped from here.
                     return false;
                 }
