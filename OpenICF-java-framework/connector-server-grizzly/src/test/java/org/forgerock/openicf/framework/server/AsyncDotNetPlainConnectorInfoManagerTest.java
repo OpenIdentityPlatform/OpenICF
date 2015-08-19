@@ -25,13 +25,22 @@
 package org.forgerock.openicf.framework.server;
 
 import java.net.URI;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.forgerock.openicf.framework.AsyncConnectorInfoManagerTestBase;
 import org.forgerock.openicf.framework.ConnectorFrameworkFactory;
 import org.forgerock.openicf.framework.client.RemoteWSFrameworkConnectionInfo;
 import org.forgerock.openicf.framework.remote.AsyncRemoteConnectorInfoManager;
 import org.forgerock.openicf.framework.remote.ConnectionPrincipal;
+import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.framework.api.APIConfiguration;
+import org.identityconnectors.framework.api.ConfigurationProperties;
+import org.identityconnectors.framework.api.ConfigurationProperty;
+import org.identityconnectors.framework.api.ConfigurationPropertyChangeListener;
 import org.identityconnectors.framework.api.ConnectorFacade;
+import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.api.ConnectorKey;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.ScriptContextBuilder;
@@ -39,6 +48,9 @@ import org.testng.Assert;
 import org.testng.ITestContext;
 import org.testng.Reporter;
 import org.testng.annotations.Test;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 @Test(enabled = false)
 public class AsyncDotNetPlainConnectorInfoManagerTest extends
@@ -74,10 +86,13 @@ public class AsyncDotNetPlainConnectorInfoManagerTest extends
         CONNECTION_INFO =
                 RemoteWSFrameworkConnectionInfo.newBuilder().setRemoteURI(
                         //URI.create("ws://localhost:8759/openicf")).setPrincipal(
-                        URI.create("http://localhost.fiddler:8759/openicf")).setPrincipal(
+                        URI.create("http://192.168.40.239:8759/openicf")).setPrincipal(
                         ConnectionPrincipal.DEFAULT_NAME).setPassword(DEFAULT_GUARDED_PASSWORD)
-                        .setProxyHost("127.0.0.1").setProxyPort(8888)
+                        //.setProxyHost("127.0.0.1").setProxyPort(8888)
                         .build();
+
+        System.setProperty("javax.net.ssl.trustStore", "/pointTo/TrustStore.jks");
+        System.setProperty("javax.net.ssl.trustStorePassword", JSK_PASSWORD);
     }
 
     protected AsyncRemoteConnectorInfoManager getConnectorInfoManager() throws Exception {
@@ -124,5 +139,45 @@ public class AsyncDotNetPlainConnectorInfoManagerTest extends
         Assert.assertEquals(o, "test");
         o = facade.runScriptOnResource(contextBuilder.build(), null);
         Assert.assertEquals(o, "test");
+    }
+
+    @Test
+    public void testConfigurationUpdate() throws Exception {
+        ConnectorInfo[] infos =
+                new ConnectorInfo[] {
+                        getConnectorInfoManager().findConnectorInfoAsync(getTestStatefulConnectorKey())
+                                .get(5, TimeUnit.MINUTES),
+                        getConnectorInfoManager().findConnectorInfoAsync(
+                                getTestPoolableStatefulConnectorKey()).get(5, TimeUnit.MINUTES) };
+        for (ConnectorInfo info : infos) {
+            APIConfiguration api = info.createDefaultAPIConfiguration();
+
+            ConfigurationProperties props = api.getConfigurationProperties();
+            props.getProperty("randomString").setValue(StringUtil.randomString());
+            api.setProducerBufferSize(0);
+
+            final AtomicReference<List<ConfigurationProperty>> current =
+                    new AtomicReference<List<ConfigurationProperty>>();
+            api.setChangeListener(new ConfigurationPropertyChangeListener() {
+                public void configurationPropertyChange(List<ConfigurationProperty> changes) {
+                    current.set(changes);
+                }
+            });
+
+            ConnectorFacade facade = getConnectorFramework().newInstance(api);
+
+            ScriptContextBuilder builder = new ScriptContextBuilder();
+            builder.setScriptLanguage("Boo");
+
+            builder.setScriptText("connector.Update()");
+            facade.runScriptOnConnector(builder.build(), null);
+
+            for (int i = 0; (i < 5 && null == current.get()); i++) {
+                Thread.sleep(1000);
+            }
+            assertNotNull(current.get());
+            assertEquals(current.get().size(), 1);
+            assertEquals(current.get().get(0).getValue(), "change");
+        }
     }
 }
