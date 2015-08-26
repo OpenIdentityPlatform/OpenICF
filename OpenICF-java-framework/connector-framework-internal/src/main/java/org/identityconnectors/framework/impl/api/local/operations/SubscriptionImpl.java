@@ -24,14 +24,19 @@
 
 package org.identityconnectors.framework.impl.api.local.operations;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.Observer;
+import org.identityconnectors.framework.api.operations.BatchApiOp;
 import org.identityconnectors.framework.api.operations.ConnectorEventSubscriptionApiOp;
 import org.identityconnectors.framework.api.operations.SyncEventSubscriptionApiOp;
+import org.identityconnectors.framework.api.operations.batch.BatchTask;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.BatchResult;
+import org.identityconnectors.framework.common.objects.BatchToken;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
@@ -42,6 +47,7 @@ import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.impl.api.local.LocalConnectorFacadeImpl.ReferenceCounter;
 import org.identityconnectors.framework.spi.Connector;
+import org.identityconnectors.framework.spi.operations.BatchOp;
 import org.identityconnectors.framework.spi.operations.ConnectorEventSubscriptionOp;
 import org.identityconnectors.framework.spi.operations.SyncEventSubscriptionOp;
 
@@ -90,6 +96,10 @@ public class SubscriptionImpl extends ConnectorAPIOperationRunner {
                 public boolean isUnsubscribed() {
                     return subscription.isUnsubscribed();
                 }
+
+                public Object getReturnValue() {
+                    return subscription.getReturnValue();
+                }
             };
         } catch (Throwable t) {
             observer.onError(t);
@@ -123,6 +133,68 @@ public class SubscriptionImpl extends ConnectorAPIOperationRunner {
 
                 public boolean isUnsubscribed() {
                     return observer.isUnsubscribed() && subscription.isUnsubscribed();
+                }
+
+                public Object getReturnValue() {
+                    return subscription.getReturnValue();
+                }
+            };
+        } catch (Throwable t) {
+            observer.onError(t);
+            throw ConnectorException.wrap(t);
+        }
+    }
+
+    public Subscription executeBatch(final List<BatchTask> tasks, final Observer<BatchResult> observer,
+                                     final OperationOptions options) {
+        final BatchOp operation = ((BatchOp) getConnector());
+        final InternalObserver<BatchResult> internalObserver = new InternalObserver<BatchResult>(observer);
+        try {
+            referenceCounter.acquire();
+            final Subscription subscription = operation.executeBatch(tasks, internalObserver, options);
+
+            return new Subscription() {
+                public void close() {
+                    if (internalObserver.doRelease()) {
+                        subscription.close();
+                    }
+                }
+
+                public boolean isUnsubscribed() {
+                    return internalObserver.isUnsubscribed() && subscription.isUnsubscribed();
+                }
+
+                public Object getReturnValue() {
+                    return subscription.getReturnValue();
+                }
+            };
+        } catch (Throwable t) {
+            observer.onError(t);
+            throw ConnectorException.wrap(t);
+        }
+    }
+
+    public Subscription queryBatch(final BatchToken token, final Observer<BatchResult> observer,
+                                     final OperationOptions options) {
+        final BatchOp operation = ((BatchOp) getConnector());
+        final InternalObserver<BatchResult> internalObserver = new InternalObserver<BatchResult>(observer);
+        try {
+            referenceCounter.acquire();
+            final Subscription subscription = operation.queryBatch(token, internalObserver, options);
+
+            return new Subscription() {
+                public void close() {
+                    if (internalObserver.doRelease()) {
+                        subscription.close();
+                    }
+                }
+
+                public boolean isUnsubscribed() {
+                    return internalObserver.isUnsubscribed() && subscription.isUnsubscribed();
+                }
+
+                public Object getReturnValue() {
+                    return subscription == null ? null : subscription.getReturnValue();
                 }
             };
         } catch (Throwable t) {
@@ -202,6 +274,21 @@ public class SubscriptionImpl extends ConnectorAPIOperationRunner {
          */
         public SyncEventSubscriptionApiOpImpl(ConnectorOperationalContext context,
                 Connector connector, ReferenceCounter referenceCounter) {
+            super(context, connector, referenceCounter);
+        }
+    }
+
+    public static class BatchApiOpImpl extends SubscriptionImpl implements BatchApiOp {
+
+        /**
+         * Creates the API operation so it can called multiple times.
+         *
+         * @param context
+         * @param connector
+         * @param referenceCounter
+         */
+        public BatchApiOpImpl(ConnectorOperationalContext context,
+                                              Connector connector, ReferenceCounter referenceCounter) {
             super(context, connector, referenceCounter);
         }
     }

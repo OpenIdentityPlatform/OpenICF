@@ -28,6 +28,8 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,18 +39,23 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
+import org.identityconnectors.framework.api.Observer;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.GetApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
+import org.identityconnectors.framework.api.operations.batch.BatchTask;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
+import org.identityconnectors.framework.common.objects.BatchResult;
+import org.identityconnectors.framework.common.objects.BatchToken;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.ScriptContextBuilder;
@@ -140,6 +147,65 @@ public class ConnectorFacadeTests {
         facade = factory.newInstance(impl);
         facade.authenticate(ObjectClass.ACCOUNT, "fadf", new GuardedString("fadsf".toCharArray()),
                 null);
+    }
+
+    /**
+     * Batch is not be enabled by default.  Connectors that wish to support batch should implement the BatchOp
+     * interface.
+     */
+    @Test(expectedExceptions = UnsupportedOperationException.class)
+    public void executeBatchCallPattern() {
+        testCallPattern(new TestOperationPattern() {
+            public void makeCall(ConnectorFacade facade) {
+                facade.executeBatch(new ArrayList<BatchTask>(), new Observer<BatchResult>() {
+                    public void onCompleted() {
+
+                    }
+
+                    public void onError(Throwable e) {
+
+                    }
+
+                    public void onNext(BatchResult batchResult) {
+
+                    }
+                }, new OperationOptions(new HashMap<String, Object>() {{
+                    put(OperationOptions.OP_FAIL_ON_ERROR, Boolean.TRUE);
+                }}));
+            }
+
+            public void checkCalls(List<Call> calls) {
+                assertEquals(calls.remove(0).getMethodName(), "executeBatch");
+            }
+        });
+    }
+
+    @Test(expectedExceptions = UnsupportedOperationException.class)
+    public void continueBatchCallPattern() {
+        testCallPattern(new TestOperationPattern() {
+            public void makeCall(ConnectorFacade facade) {
+                BatchToken token = new BatchToken("token");
+                facade.queryBatch(token, new Observer<BatchResult>() {
+                    public void onCompleted() {
+
+                    }
+
+                    public void onError(Throwable e) {
+
+                    }
+
+                    public void onNext(BatchResult batchResult) {
+
+                    }
+                }, new OperationOptions(new HashMap<String, Object>() {{
+                    put(OperationOptions.OP_FAIL_ON_ERROR, Boolean.TRUE);
+                }}));
+            }
+
+            public void checkCalls(List<Call> calls) {
+                assertEquals(calls.remove(0).getMethodName(), "queryBatch");
+            }
+        });
     }
 
     @Test

@@ -84,6 +84,7 @@ public class RemoteOperationInvocationHandler implements InvocationHandler {
             connection.writeObject(connectionInfo.getKey());
             // send the request
             connection.writeObject(request);
+            connection.flush();
 
             // now process the response stream (if any)
             if (streamHandlerArg != null) {
@@ -169,5 +170,4 @@ public class RemoteOperationInvocationHandler implements InvocationHandler {
         arguments.addAll(filteredArguments);
         return rv;
     }
-
 }

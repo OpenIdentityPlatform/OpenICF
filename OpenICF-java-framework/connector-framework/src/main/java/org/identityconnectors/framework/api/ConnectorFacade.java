@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
+import org.identityconnectors.framework.api.operations.BatchApiOp;
 import org.identityconnectors.framework.api.operations.ConnectorEventSubscriptionApiOp;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
@@ -52,7 +53,7 @@ import org.identityconnectors.framework.api.operations.ValidateApiOp;
  * @author Will Droste
  * @since 1.0
  */
-public interface ConnectorFacade extends CreateApiOp, DeleteApiOp, SearchApiOp, UpdateApiOp,
+public interface ConnectorFacade extends BatchApiOp, CreateApiOp, DeleteApiOp, SearchApiOp, UpdateApiOp,
         SchemaApiOp, AuthenticationApiOp, ResolveUsernameApiOp, GetApiOp, ValidateApiOp, TestApiOp,
         ScriptOnConnectorApiOp, ScriptOnResourceApiOp, SyncApiOp, ConnectorEventSubscriptionApiOp,
         SyncEventSubscriptionApiOp {

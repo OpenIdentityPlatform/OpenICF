@@ -100,11 +100,11 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
                 connector.init(context.getConfiguration());
             }
             APIOperationRunner runner = getApiOperationRunner(context, connector);
-            ret = method.invoke(runner, args);
             // call out to the operation..
-            if (ret instanceof Subscription){
+            ret = method.invoke(runner, args);
+            if (ret instanceof Subscription) {
                 //Dispose later
-                ret = new DeferredSubscriptionDisposer((Subscription)ret,connector, poolEntry);
+                ret = new DeferredSubscriptionDisposer((Subscription)ret, connector, poolEntry);
                 connector = null;
             }
         } catch (InvocationTargetException e) {
@@ -177,6 +177,10 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
 
         public boolean isUnsubscribed() {
             return subscription.isUnsubscribed();
+        }
+
+        public Object getReturnValue() {
+            return subscription.getReturnValue();
         }
     }
 }

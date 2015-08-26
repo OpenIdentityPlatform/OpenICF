@@ -35,6 +35,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -46,6 +47,11 @@ import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.common.script.ScriptExecutorFactory;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.Observer;
+import org.identityconnectors.framework.api.operations.batch.BatchEmptyResult;
+import org.identityconnectors.framework.api.operations.batch.BatchTask;
+import org.identityconnectors.framework.api.operations.batch.CreateBatchTask;
+import org.identityconnectors.framework.api.operations.batch.DeleteBatchTask;
+import org.identityconnectors.framework.api.operations.batch.UpdateBatchTask;
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException;
@@ -55,6 +61,8 @@ import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.AttributesAccessor;
+import org.identityconnectors.framework.common.objects.BatchResult;
+import org.identityconnectors.framework.common.objects.BatchToken;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.Name;
@@ -83,6 +91,7 @@ import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.SearchResultsHandler;
 import org.identityconnectors.framework.spi.SyncTokenResultsHandler;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
+import org.identityconnectors.framework.spi.operations.BatchOp;
 import org.identityconnectors.framework.spi.operations.ConnectorEventSubscriptionOp;
 import org.identityconnectors.framework.spi.operations.CreateOp;
 import org.identityconnectors.framework.spi.operations.DeleteOp;
@@ -97,7 +106,7 @@ import org.identityconnectors.framework.spi.operations.UpdateOp;
 
 public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorEventSubscriptionOp,
         CreateOp, DeleteOp, ResolveUsernameOp, SchemaOp, ScriptOnResourceOp, SearchOp<Filter>,
-        SyncEventSubscriptionOp, SyncOp, TestOp, UpdateOp {
+        SyncEventSubscriptionOp, SyncOp, TestOp, UpdateOp, BatchOp {
 
     private static final class ResourceComparator implements Comparator<ConnectorObject> {
         private final List<SortKey> sortKeys;
@@ -227,6 +236,10 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
             public boolean isUnsubscribed() {
                 return !runnable.getRunning();
             }
+
+            public Object getReturnValue() {
+                return null;
+            }
         };
     }
 
@@ -281,6 +294,10 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
 
             public boolean isUnsubscribed() {
                 return !runnable.getRunning();
+            }
+
+            public Object getReturnValue() {
+                return null;
             }
         };
     }
@@ -559,6 +576,298 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
 
         public Boolean getRunning() {
             return running.get();
+        }
+    }
+
+    BatchUseCase3Processor processorUseCase3 = null;
+
+    public Subscription executeBatch(final List<BatchTask> tasks, final Observer<BatchResult> observer,
+                                   final OperationOptions options) {
+        if (config.isReturnNullTest()) {
+            return null;
+        }
+
+        if (options.getOptions().containsKey("TEST_USECASE2")) {
+            final BatchToken token = new BatchUseCase2Processor().executeBatch(tasks, options);
+            observer.onCompleted();
+            return new Subscription() {
+                public void close() {}
+
+                public boolean isUnsubscribed() {
+                    return true;
+                }
+
+                public Object getReturnValue() {
+                    return token;
+                }
+            };
+        } else if (options.getOptions().containsKey("TEST_USECASE3")) {
+            processorUseCase3 = new BatchUseCase3Processor(this, config);
+            final BatchToken token = processorUseCase3.executeBatch(tasks, options, observer);
+
+            return new Subscription() {
+                public void close() {}
+
+                public boolean isUnsubscribed() {
+                    return true;
+                }
+
+                public Object getReturnValue() {
+                    return token;
+                }
+            };
+        } else /* Use Case 1 */ {
+            boolean complete = false;
+            int failId = options.getOptions().containsKey("FAIL_TEST_ITERATION")
+                    ? (Integer) options.getOptions().get("FAIL_TEST_ITERATION") - 1
+                    : Integer.MAX_VALUE;
+            for (int i = 0; i < tasks.size() && !complete; i++) {
+                BatchTask task = tasks.get(i);
+                try {
+                    complete = (i == tasks.size() - 1);
+                    Object result;
+                    if (task instanceof DeleteBatchTask) {
+                        result = new BatchEmptyResult(task.getClass().toString() + " successful");
+                    } else {
+                        result = new Uid(String.valueOf(i));
+                    }
+                    observer.onNext(new BatchResult(result, null, String.valueOf(i), complete, i == failId));
+                    if (i == failId && options.getFailOnError()) {
+                        break;
+                    }
+                } catch (RuntimeException e) {
+                    observer.onNext(new BatchResult(e, null, String.valueOf(i), complete, true));
+                    observer.onError(e);
+                    if (options.getFailOnError()) {
+                        break;
+                    }
+                }
+            }
+            observer.onCompleted();
+            return new Subscription() {
+                public void close() {}
+
+                public boolean isUnsubscribed() {
+                    return true;
+                }
+
+                public Object getReturnValue() {
+                    return new BatchToken();
+                }
+            };
+        }
+    }
+
+    public Subscription queryBatch(final BatchToken batchToken, final Observer<BatchResult> observer,
+                                 final OperationOptions options) {
+        final AtomicBoolean opComplete = new AtomicBoolean(false);
+
+        if (config.isReturnNullTest()) {
+            return null;
+        }
+
+        Subscription ret = new Subscription() {
+            public void close() {}
+
+            public boolean isUnsubscribed() {
+                return true;
+            }
+
+            public Object getReturnValue() {
+                return opComplete.get() ? new BatchToken() : batchToken;
+            }
+        };
+
+        if (options.getOptions().containsKey("TEST_USECASE0")
+                || options.getOptions().containsKey("TEST_USECASE1")) {
+            opComplete.set(true);
+            observer.onCompleted();
+        } else if (options.getOptions().containsKey("TEST_USECASE3")) {
+            boolean allComplete = true;
+            for (String token : batchToken.getTokens()) {
+                allComplete &= BatchRemoteCache.isComplete(token);
+            }
+            opComplete.set(opComplete.get() | allComplete);
+        } else { // TEST_USECASE2
+            opComplete.set(batchToken.getTokens().size() == 0);
+            for (String token : batchToken.getTokens()) {
+                List<BatchRemoteCache.CachedBatchResult> results = BatchRemoteCache.getAndResetResults(token);
+                boolean tokenComplete = results.size() <= 0;
+                for (BatchRemoteCache.CachedBatchResult result : results) {
+                    observer.onNext(new BatchResult(result.result, batchToken, result.resultId,
+                            result.complete, result.error));
+                    if (result.error) {
+                        if (result.result instanceof RuntimeException) {
+                            observer.onError((RuntimeException) result.result);
+                        }
+                        if (options.getFailOnError()) {
+                            opComplete.set(true);
+                            observer.onCompleted();
+                            return ret;
+                        }
+                    }
+                    tokenComplete |= result.complete;
+                }
+                if (tokenComplete) {
+                    BatchRemoteCache.flushResults(token);
+                    batchToken.removeToken(token);
+                }
+                opComplete.set(opComplete.get() | tokenComplete);
+            }
+            if (opComplete.get()) {
+                observer.onCompleted();
+            }
+        }
+
+        return ret;
+    }
+
+    /**
+     * Simulates Use Case 2: Batch submitted to remote resource and token returned immediately. Results gathered
+     * via queryBatch() calls using the token.  Results are returned before returning the token with each call.
+     */
+    private class BatchUseCase2Processor extends Thread {
+        private OperationOptions options;
+        private String token;
+
+        public BatchToken executeBatch(List<BatchTask> tasks, OperationOptions options) {
+            this.token = UUID.randomUUID().toString();
+            this.options = new OperationOptions(options.getOptions());
+            BatchRemoteCache.addTasks(token, tasks);
+            start();
+            try { Thread.sleep(1000); } catch (Exception e) {}
+            BatchToken tok = new BatchToken(token);
+            tok.setQueryRequired(true);
+            return tok;
+        }
+
+        public void run() {
+            List<BatchTask> tasks = BatchRemoteCache.getTasks(token);
+            int failId = options.getOptions().containsKey("FAIL_TEST_ITERATION")
+                    ? (Integer) options.getOptions().get("FAIL_TEST_ITERATION") - 1
+                    : -1;
+
+            for (int i = 0; i < tasks.size(); i++) {
+                BatchTask task = tasks.get(i);
+                try {
+                    sleep(1);
+                    Object result;
+                    try {
+                        if (i == failId) {
+                            throw new ConnectorException(task.getClass().toString() + " failed");
+                        }
+                        if (task instanceof DeleteBatchTask) {
+                            config.geObjectCache(task.getObjectClass()).delete(((DeleteBatchTask) task).getUid());
+                            result = new BatchEmptyResult("Delete successful");
+                        } else if (task instanceof UpdateBatchTask) {
+                            result = config.geObjectCache(task.getObjectClass()).update(
+                                    ((UpdateBatchTask) task).getUid(),
+                                    ((UpdateBatchTask) task).getAttributes());
+                        } else if (task instanceof CreateBatchTask) {
+                            result = config.geObjectCache(task.getObjectClass()).create(
+                                    ((CreateBatchTask) task).getCreateAttributes());
+                        } else {
+                            throw new UnsupportedOperationException(String.format(
+                                    "Operation %s is not permitted", task.getClass().toString()));
+                        }
+                        BatchRemoteCache.addResult(token, new BatchRemoteCache.CachedBatchResult(
+                                i == tasks.size() - 1, false, String.valueOf(i), result));
+                    } catch (Exception e) {
+                        BatchRemoteCache.addResult(token, new BatchRemoteCache.CachedBatchResult(
+                                i == tasks.size() - 1, true, String.valueOf(i), new BatchEmptyResult(e.getMessage())));
+                        if (options.getFailOnError()) {
+                            break;
+                        }
+                    }
+                } catch (Exception e) {
+                    // interrupted
+                }
+            }
+            BatchRemoteCache.flushTasks(token);
+        }
+    }
+
+    /**
+     * Simulated Use Case 3: execute returns a batch token immediately and processes results in a separate thread.
+     * No need to call queryBatch() unless the caller is interrupted and needs to reestablish the connection.
+     */
+    private class BatchUseCase3Processor extends Thread {
+        private OperationOptions options;
+        private Observer<BatchResult> observer;
+        private BatchToken token;
+        private final TstStatefulConnectorConfig config;
+
+        public BatchUseCase3Processor(TstAbstractConnector connector, TstStatefulConnectorConfig config) {
+            this.token = new BatchToken(UUID.randomUUID().toString());
+            this.config = config;
+            this.config.getBatchConnector().put(token, connector);
+        }
+
+        public BatchToken executeBatch(List<BatchTask> tasks, OperationOptions options,
+                                       Observer<BatchResult> observer) {
+            this.options = new OperationOptions(options.getOptions());
+            this.observer = observer;
+            BatchRemoteCache.addTasks(token.getTokens().get(0), tasks);
+            this.start();
+            token.setAsynchronousResults(true);
+            return token;
+        }
+
+        public void run() {
+            try {
+                List<BatchTask> tasks = BatchRemoteCache.getTasks(token.getTokens().get(0));
+                int failId = options.getOptions().containsKey("FAIL_TEST_ITERATION")
+                        ? (Integer) options.getOptions().get("FAIL_TEST_ITERATION") - 1
+                        : -1;
+
+                for (int i = 0; i < tasks.size(); i++) {
+                    BatchTask task = tasks.get(i);
+                    try {
+                        sleep(1);
+                        Object result;
+                        boolean complete = (i == tasks.size() - 1);
+                        try {
+                            if (i == failId) {
+                                throw new ConnectorException(task.getClass().toString() + " failed");
+                            }
+                            if (task instanceof DeleteBatchTask) {
+                                config.geObjectCache(task.getObjectClass())
+                                        .delete(((DeleteBatchTask) task).getUid());
+                                result = new BatchEmptyResult("Delete successful");
+                            } else if (task instanceof UpdateBatchTask) {
+                                result = config.geObjectCache(task.getObjectClass()).update(
+                                        ((UpdateBatchTask) task).getUid(),
+                                        ((UpdateBatchTask) task).getAttributes());
+                            } else if (task instanceof CreateBatchTask) {
+                                result = config.geObjectCache(task.getObjectClass()).create(
+                                        ((CreateBatchTask) task).getCreateAttributes());
+                            } else {
+                                throw new UnsupportedOperationException(String.format(
+                                        "Operation %s is not permitted", task.getClass().toString()));
+                            }
+                            observer.onNext(new BatchResult(result, token, String.valueOf(i), complete, false));
+                        } catch (Exception e) {
+                            observer.onNext(new BatchResult(new BatchEmptyResult(e.getMessage()), token,
+                                    String.valueOf(i), complete, true));
+                            if (options.getFailOnError()) {
+                                BatchRemoteCache.setComplete(token.getTokens().get(0));
+                                observer.onCompleted();
+                                break;
+                            }
+                        }
+
+                        if (complete) {
+                            BatchRemoteCache.setComplete(token.getTokens().get(0));
+                            observer.onCompleted();
+                        }
+                    } catch (Exception e) {
+                        // interrupted
+                    }
+                }
+            } finally {
+                BatchRemoteCache.flushTasks(token.getTokens().get(0));
+                config.getBatchConnector().remove(token);
+            }
         }
     }
 }

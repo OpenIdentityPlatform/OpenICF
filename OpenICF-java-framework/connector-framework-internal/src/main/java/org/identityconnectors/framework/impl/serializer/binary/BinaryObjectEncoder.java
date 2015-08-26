@@ -104,13 +104,13 @@ public class BinaryObjectEncoder implements ObjectEncoder, BinaryObjectSerialize
                 writeByte(OBJECT_TYPE_NULL);
             } else {
                 Class<?> clazz = object.getClass();
-                writeClass(clazz);
                 ObjectSerializationHandler handler =
                         ObjectSerializerRegistry.getHandlerByObjectType(clazz);
                 if (handler == null) {
                     // we may have special handlers for certain types of arrays
                     // if handler is null, treat like any other array
                     if (clazz.isArray()) {
+                        writeClass(clazz);
                         int length = Array.getLength(object);
                         for (int i = 0; i < length; i++) {
                             Object val = Array.get(object, i);
@@ -119,9 +119,21 @@ public class BinaryObjectEncoder implements ObjectEncoder, BinaryObjectSerialize
                             endField();
                         }
                     } else {
-                        throw new ConnectorException("No serializer for class: " + clazz);
+                        if (!clazz.getSuperclass().equals(Object.class)) {
+                            clazz = clazz.getSuperclass();
+                            handler = ObjectSerializerRegistry.getHandlerByObjectType(clazz);
+                            if (handler == null) {
+                                throw new ConnectorException("No serializer for class: " + clazz);
+                            } else {
+                                writeClass(clazz);
+                                handler.serialize(object, encoder);
+                            }
+                        } else {
+                            throw new ConnectorException("No serializer for class: " + clazz);
+                        }
                     }
                 } else {
+                    writeClass(clazz);
                     handler.serialize(object, encoder);
                 }
             }
@@ -161,7 +173,12 @@ public class BinaryObjectEncoder implements ObjectEncoder, BinaryObjectSerialize
                 writeByte(OBJECT_TYPE_ARRAY);
                 writeClass(clazz.getComponentType());
             } else if (mapper == null) {
-                throw new ConnectorException("No serializer for class: " + clazz);
+                if (!clazz.getSuperclass().equals(Object.class)) {
+                    mapper = ObjectSerializerRegistry.getMapperByObjectType(clazz.getSuperclass());
+                }
+                if (mapper == null) {
+                    throw new ConnectorException("No serializer for class: " + clazz);
+                }
             } else {
                 String typeName = mapper.getHandledSerialType();
                 writeByte(OBJECT_TYPE_CLASS);

@@ -889,7 +889,6 @@ public class ObjectSerializationTests {
             Exception v2 = (Exception)cloneObject(v1);
             assertEquals("my msg3", v2.getMessage());
         }
-
     }
 
     @Test

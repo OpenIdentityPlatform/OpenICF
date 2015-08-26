@@ -26,6 +26,8 @@ package org.identityconnectors.testconnector;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -57,6 +59,7 @@ import org.identityconnectors.framework.common.exceptions.InvalidPasswordExcepti
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
+import org.identityconnectors.framework.common.objects.BatchToken;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.Name;
@@ -68,6 +71,7 @@ import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.Filter;
+import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.StatefulConfiguration;
 
 public class TstStatefulConnectorConfig extends TstConnectorConfig implements StatefulConfiguration {
@@ -208,6 +212,13 @@ public class TstStatefulConnectorConfig extends TstConnectorConfig implements St
 
     Uid getNewUid() {
         return getNextUid(String.valueOf(id.getAndIncrement()));
+    }
+
+    private final Map<BatchToken, TstAbstractConnector> batchConnector =
+            new Hashtable<BatchToken, TstAbstractConnector>();
+
+    Map<BatchToken, TstAbstractConnector> getBatchConnector() {
+        return batchConnector;
     }
 
     private final ConcurrentMap<ObjectClass, ObjectClassCacheEntry> objectCache =

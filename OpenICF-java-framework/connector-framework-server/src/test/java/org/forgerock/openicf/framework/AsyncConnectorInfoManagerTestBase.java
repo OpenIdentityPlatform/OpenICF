@@ -26,17 +26,25 @@ package org.forgerock.openicf.framework;
 
 import static org.fest.assertions.Assertions.assertThat;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.forgerock.openicf.framework.async.AsyncConnectorInfoManager;
@@ -57,12 +65,18 @@ import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.api.ConnectorKey;
 import org.identityconnectors.framework.api.Observer;
+import org.identityconnectors.framework.api.operations.batch.BatchBuilder;
+import org.identityconnectors.framework.api.operations.batch.BatchTask;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
+import org.identityconnectors.framework.common.objects.BatchResult;
+import org.identityconnectors.framework.common.objects.BatchToken;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.ScriptContextBuilder;
@@ -477,6 +491,162 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
         Assert.assertEquals(o, "test");
         o = facade.runScriptOnResource(contextBuilder.build(), null);
         Assert.assertEquals(o, "test");
+    }
+
+    @Test
+    public void testSerialBatch() throws Throwable {
+        ConnectorFacade facade = getConnectorFacade();
+
+        OperationOptions options = new OperationOptionsBuilder()
+                .setOption(OperationOptions.OP_FAIL_ON_ERROR, true)
+                .setOption("TEST_USECASE1", true)
+                .build();
+
+        runBatch(facade, options);
+    }
+
+    @Test
+    public void testSerialBatchWithError() throws Throwable {
+        ConnectorFacade facade = getConnectorFacade();
+
+        OperationOptions options = new OperationOptionsBuilder()
+                .setOption(OperationOptions.OP_FAIL_ON_ERROR, true)
+                .setOption("TEST_USECASE1", true)
+                .setOption("FAIL_TEST_ITERATION", 3)
+                .build();
+
+        runBatch(facade, options);
+    }
+
+    @Test
+    public void testSynchronousBatch() throws Throwable {
+        ConnectorFacade facade = getConnectorFacade();
+
+        OperationOptions options = new OperationOptionsBuilder()
+                .setOption(OperationOptions.OP_FAIL_ON_ERROR, true)
+                .setOption("TEST_USECASE2", true)
+                .build();
+
+        runBatch(facade, options);
+    }
+
+    @Test
+    public void testSynchronousBatchWithError() throws Throwable {
+        ConnectorFacade facade = getConnectorFacade();
+
+        OperationOptions options = new OperationOptionsBuilder()
+                .setOption(OperationOptions.OP_FAIL_ON_ERROR, true)
+                .setOption("TEST_USECASE2", true)
+                .setOption("FAIL_TEST_ITERATION", 3)
+                .build();
+
+        runBatch(facade, options);
+    }
+
+    @Test
+    public void testAsynchronousBatch() throws Throwable {
+        ConnectorFacade facade = getConnectorFacade();
+
+        OperationOptions options = new OperationOptionsBuilder()
+                .setOption(OperationOptions.OP_FAIL_ON_ERROR, true)
+                .setOption("TEST_USECASE3", true)
+                .build();
+
+        runBatch(facade, options);
+    }
+
+    @Test
+    public void testAsynchronousBatchWithError() throws Throwable {
+        ConnectorFacade facade = getConnectorFacade();
+
+        OperationOptions options = new OperationOptionsBuilder()
+                .setOption(OperationOptions.OP_FAIL_ON_ERROR, true)
+                .setOption("TEST_USECASE3", true)
+                .setOption("FAIL_TEST_ITERATION", 3)
+                .build();
+
+        runBatch(facade, options);
+    }
+
+    private void runBatch(ConnectorFacade facade, OperationOptions options) throws Throwable {
+        final List<BatchTask> batchTasks = new ArrayList<BatchTask>(newTestBatch(options));
+        batchTasks.addAll(newTestBatch(options));
+        batchTasks.addAll(newTestBatch(options));
+        batchTasks.addAll(newTestBatch(options));
+        final List<BatchResult> results = new ArrayList<BatchResult>();
+        final AtomicBoolean isComplete = new AtomicBoolean(false);
+        final AtomicBoolean hasError = new AtomicBoolean(false);
+        final AtomicBoolean hasException = new AtomicBoolean(false);
+
+        Observer<BatchResult> observer = new Observer<BatchResult>() {
+            @Override
+            public void onCompleted() {
+                isComplete.set(true);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                hasException.set(true);
+            }
+
+            @Override
+            public void onNext(BatchResult batchResult) {
+                results.add(batchResult);
+                if (batchResult.getError()) {
+                    hasError.set(true);
+                }
+            }
+        };
+
+        Subscription sub = facade.executeBatch(batchTasks, observer, options);
+
+        BatchToken batchToken = (BatchToken) sub.getReturnValue();
+        if (batchToken.isQueryRequired() && batchToken.getTokens().size() > 0) {
+            assertTrue(isComplete.get());
+            isComplete.set(false);
+            while (!isComplete.get()) {
+                try {
+                    sub = facade.queryBatch(batchToken, observer, options);
+                } catch (Exception e) {
+                    if (!hasError.get()) {
+                        throw e;
+                    }
+                }
+                batchToken = (BatchToken) sub.getReturnValue();
+            }
+        }
+
+        int expectedSize = options.getOptions().containsKey("FAIL_TEST_ITERATION")
+                ? (Integer) options.getOptions().get("FAIL_TEST_ITERATION")
+                : batchTasks.size();
+
+        if (batchToken.hasAsynchronousResults() || !isComplete.get()) {
+            long timeout = new Date().getTime() + 10000;
+            while (new Date().getTime() < timeout && !isComplete.get()) {
+                Thread.sleep(100);
+            }
+        }
+        sub.close();
+
+        assertEquals(results.size(), expectedSize);
+        assertTrue(isComplete.get());
+        if (options.getOptions().containsKey("FAIL_TEST_ITERATION")) {
+            assertTrue(hasError.get());
+        } else {
+            assertFalse(hasError.get());
+        }
+        assertTrue(sub.isUnsubscribed());
+        assertFalse(hasException.get());
+    }
+
+    private List<BatchTask> newTestBatch(OperationOptions options) {
+        final BatchBuilder batch = new BatchBuilder();
+        batch.addCreateOp(ObjectClass.ACCOUNT, new HashSet<Attribute>() {{
+            add(new Name(UUID.randomUUID().toString()));
+        }}, options);
+        batch.addUpdateAddOp(ObjectClass.ACCOUNT, new Uid("0"), new HashSet<Attribute>(), options);
+        batch.addDeleteOp(ObjectClass.ACCOUNT, new Uid("0"), options);
+        return batch.build();
     }
 
     @Test

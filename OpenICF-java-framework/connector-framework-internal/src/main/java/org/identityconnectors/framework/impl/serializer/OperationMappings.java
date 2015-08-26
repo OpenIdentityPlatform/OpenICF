@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
+import org.identityconnectors.framework.api.operations.BatchApiOp;
 import org.identityconnectors.framework.api.operations.ConnectorEventSubscriptionApiOp;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
@@ -49,6 +50,8 @@ class OperationMappings {
         new ArrayList<ObjectTypeMapper>();
 
     static {
+        MAPPINGS.add(new ObjectTypeMapperImpl(BatchApiOp.class,
+                "BatchApiOp"));
         MAPPINGS.add(new ObjectTypeMapperImpl(AuthenticationApiOp.class,
                 "AuthenticationApiOp"));
         MAPPINGS.add(new ObjectTypeMapperImpl(ResolveUsernameApiOp.class,
@@ -70,11 +73,11 @@ class OperationMappings {
         MAPPINGS.add(new ObjectTypeMapperImpl(TestApiOp.class,
                 "TestApiOp"));
         MAPPINGS.add(new ObjectTypeMapperImpl(ScriptOnResourceApiOp.class,
-        "ScriptOnResourceApiOp"));
+                "ScriptOnResourceApiOp"));
         MAPPINGS.add(new ObjectTypeMapperImpl(ScriptOnConnectorApiOp.class,
-        "ScriptOnConnectorApiOp"));
+                "ScriptOnConnectorApiOp"));
         MAPPINGS.add(new ObjectTypeMapperImpl(SyncApiOp.class,
-        "SyncApiOp"));
+                "SyncApiOp"));
         MAPPINGS.add(new ObjectTypeMapperImpl(ConnectorEventSubscriptionApiOp.class,
                 "ConnectorEventSubscriptionApiOp"));
         MAPPINGS.add(new ObjectTypeMapperImpl(SyncEventSubscriptionApiOp.class,

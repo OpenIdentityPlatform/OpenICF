@@ -37,6 +37,7 @@ import java.util.Set;
 
 import org.forgerock.openicf.common.protobuf.CommonObjectMessages;
 import org.forgerock.openicf.common.protobuf.ConnectorObjects;
+import org.forgerock.openicf.common.protobuf.OperationMessages;
 import org.forgerock.openicf.common.protobuf.RPCMessages;
 import org.identityconnectors.common.Pair;
 import org.identityconnectors.common.StringUtil;
@@ -44,6 +45,7 @@ import org.identityconnectors.common.security.Encryptor;
 import org.identityconnectors.common.security.GuardedByteArray;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.ConnectorKey;
+import org.identityconnectors.framework.api.operations.batch.BatchEmptyResult;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
@@ -355,6 +357,7 @@ public class MessagesUtil {
         addHandler(new LocaleHandler());
         addHandler(new SyncTokenHandler());
         addHandler(new SyncDeltaHandler());
+        addHandler(new BatchEmptyResultHandler());
     }
 
     @SuppressWarnings("unchecked")
@@ -602,4 +605,20 @@ public class MessagesUtil {
         }
     }
 
+    private final static class BatchEmptyResultHandler
+            implements
+            ObjectHandler<BatchEmptyResult, OperationMessages.BatchEmptyResponse, OperationMessages.BatchEmptyResponse.Builder> {
+
+        public BatchEmptyResult deserialize(OperationMessages.BatchEmptyResponse message) {
+            return new BatchEmptyResult(message.getResultMessage());
+        }
+
+        public OperationMessages.BatchEmptyResponse serialize(BatchEmptyResult source) {
+            return serializeBuilder(source).build();
+        }
+
+        public OperationMessages.BatchEmptyResponse.Builder serializeBuilder(BatchEmptyResult source) {
+            return OperationMessages.BatchEmptyResponse.newBuilder().setResultMessage(source.getMessage());
+        }
+    }
 }

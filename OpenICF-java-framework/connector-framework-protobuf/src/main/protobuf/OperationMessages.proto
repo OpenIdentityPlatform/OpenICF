@@ -7,6 +7,36 @@ import "CommonObjectMessages.proto";
 
 //import "FilterMessages.proto";
 
+//Interface BatchOp
+message BatchOpRequest {
+    bool query = 1;
+    repeated BatchOpTask tasks = 2;
+    repeated string batchToken = 3;
+    bytes options = 4;
+}
+
+message BatchOpTask {
+    string taskId = 1;
+    CreateOpRequest createRequest = 2;
+    DeleteOpRequest deleteRequest = 3;
+    UpdateOpRequest updateRequest = 4;
+}
+
+message BatchOpResult {
+    repeated string batchToken = 1;
+    string taskId = 2;
+    bool complete = 3;
+    bool error = 4;
+    bool queryRequired = 5;
+    bool asynchronousResults = 6;
+    Uid uid = 7;
+    BatchEmptyResponse emptyResult = 8;
+}
+
+message BatchEmptyResponse {
+    string resultMessage = 2;
+}
+
 //Interface AuthenticateOp
 message AuthenticateOpRequest {
     string objectClass = 1;
@@ -17,13 +47,6 @@ message AuthenticateOpRequest {
 
 message AuthenticateOpResponse {
     Uid uid = 1;
-}
-
-//Interface BatchOp
-message BatchOpRequest {
-}
-
-message BatchOpResponse {
 }
 
 //Interface CreateOp
@@ -212,42 +235,42 @@ message OperationRequest {
 
     //oneof request {
     AuthenticateOpRequest authenticateOpRequest = 4;
-    BatchOpRequest batchOpRequest = 5;
-    CreateOpRequest createOpRequest = 6;
-    ConnectorEventSubscriptionOpRequest connectorEventSubscriptionOpRequest = 7;
-    DeleteOpRequest deleteOpRequest = 8;
-    GetOpRequest getOpRequest = 9;
-    ResolveUsernameOpRequest resolveUsernameOpRequest = 10;
-    SchemaOpRequest schemaOpRequest = 11;
-    ScriptOnConnectorOpRequest scriptOnConnectorOpRequest = 12;
-    ScriptOnResourceOpRequest scriptOnResourceOpRequest = 13;
-    SearchOpRequest searchOpRequest = 14;
-    SyncOpRequest syncOpRequest = 15;
-    SyncEventSubscriptionOpRequest syncEventSubscriptionOpRequest = 16;
-    TestOpRequest testOpRequest = 17;
-    UpdateOpRequest updateOpRequest = 18;
-    ValidateOpRequest ValidateOpRequest = 19;
-    ConfigurationChangeEvent configurationChangeEvent = 20;
+    CreateOpRequest createOpRequest = 5;
+    ConnectorEventSubscriptionOpRequest connectorEventSubscriptionOpRequest = 6;
+    DeleteOpRequest deleteOpRequest = 7;
+    GetOpRequest getOpRequest = 8;
+    ResolveUsernameOpRequest resolveUsernameOpRequest = 9;
+    SchemaOpRequest schemaOpRequest = 10;
+    ScriptOnConnectorOpRequest scriptOnConnectorOpRequest = 11;
+    ScriptOnResourceOpRequest scriptOnResourceOpRequest = 12;
+    SearchOpRequest searchOpRequest = 13;
+    SyncOpRequest syncOpRequest = 14;
+    SyncEventSubscriptionOpRequest syncEventSubscriptionOpRequest = 15;
+    TestOpRequest testOpRequest = 16;
+    UpdateOpRequest updateOpRequest = 17;
+    ValidateOpRequest ValidateOpRequest = 18;
+    ConfigurationChangeEvent configurationChangeEvent = 19;
+    BatchOpRequest batchOpRequest = 20;
     //}
 }
 
 message OperationResponse {
     //oneof response {
     AuthenticateOpResponse authenticateOpResponse = 1;
-    BatchOpResponse batchOpResponse = 2;
-    CreateOpResponse createOpResponse = 3;
-    ConnectorEventSubscriptionOpResponse connectorEventSubscriptionOpResponse = 4;
-    DeleteOpResponse deleteOpResponse = 5;
-    GetOpResponse GetOpResponse = 6;
-    ResolveUsernameOpResponse resolveUsernameOpResponse = 7;
-    SchemaOpResponse schemaOpResponse = 8;
-    ScriptOnConnectorOpResponse scriptOnConnectorOpResponse = 9;
-    ScriptOnResourceOpResponse scriptOnResourceOpResponse = 10;
-    SearchOpResponse searchOpResponse = 11;
-    SyncOpResponse syncOpResponse = 12;
-    SyncEventSubscriptionOpResponse syncEventSubscriptionOpResponse = 13;
-    TestOpResponse testOpResponse = 14;
-    UpdateOpResponse updateOpResponse = 15;
-    ValidateOpResponse validateOpResponse = 16;
+    CreateOpResponse createOpResponse = 2;
+    ConnectorEventSubscriptionOpResponse connectorEventSubscriptionOpResponse = 3;
+    DeleteOpResponse deleteOpResponse = 4;
+    GetOpResponse GetOpResponse = 5;
+    ResolveUsernameOpResponse resolveUsernameOpResponse = 6;
+    SchemaOpResponse schemaOpResponse = 7;
+    ScriptOnConnectorOpResponse scriptOnConnectorOpResponse = 8;
+    ScriptOnResourceOpResponse scriptOnResourceOpResponse = 9;
+    SearchOpResponse searchOpResponse = 10;
+    SyncOpResponse syncOpResponse = 11;
+    SyncEventSubscriptionOpResponse syncEventSubscriptionOpResponse = 12;
+    TestOpResponse testOpResponse = 13;
+    UpdateOpResponse updateOpResponse = 14;
+    ValidateOpResponse validateOpResponse = 15;
+    BatchOpResult batchOpResult = 16;
     //}
 }

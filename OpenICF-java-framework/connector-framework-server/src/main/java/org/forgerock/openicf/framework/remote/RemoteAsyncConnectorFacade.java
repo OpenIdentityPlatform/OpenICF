@@ -45,6 +45,7 @@ import org.forgerock.openicf.framework.async.TestAsyncApiOp;
 import org.forgerock.openicf.framework.async.UpdateAsyncApiOp;
 import org.forgerock.openicf.framework.async.ValidateAsyncApiOp;
 import org.forgerock.openicf.framework.async.impl.AuthenticationAsyncApiOpImpl;
+import org.forgerock.openicf.framework.async.impl.BatchApiOpImpl;
 import org.forgerock.openicf.framework.async.impl.ConnectorEventSubscriptionApiOpImpl;
 import org.forgerock.openicf.framework.async.impl.CreateAsyncApiOpImpl;
 import org.forgerock.openicf.framework.async.impl.DeleteAsyncApiOpImpl;
@@ -72,6 +73,7 @@ import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.api.ConnectorKey;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
+import org.identityconnectors.framework.api.operations.BatchApiOp;
 import org.identityconnectors.framework.api.operations.ConnectorEventSubscriptionApiOp;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
@@ -112,6 +114,7 @@ public class RemoteAsyncConnectorFacade extends AbstractConnectorFacade implemen
     private final ConcurrentMap<String, ByteString> facadeKeys;
 
     private final AuthenticationAsyncApiOp authenticationApiOp;
+    private final BatchApiOp batchApiOp;
     private final CreateAsyncApiOp createApiOp;
     private final ConnectorEventSubscriptionApiOp connectorEventSubscriptionApiOp;
     private final DeleteAsyncApiOp deleteApiOp;
@@ -232,6 +235,12 @@ public class RemoteAsyncConnectorFacade extends AbstractConnectorFacade implemen
             } else {
                 authenticationApiOp = null;
             }
+            if (configuration.isSupportedOperation(BatchApiOp.class)) {
+                batchApiOp =
+                        new BatchApiOpImpl(remoteConnection, connectorKey, facadeKeyFunction);
+            } else {
+                batchApiOp = null;
+            }
             if (configuration.isSupportedOperation(CreateApiOp.class)) {
                 createApiOp =
                         new CreateAsyncApiOpImpl(remoteConnection, connectorKey, facadeKeyFunction);
@@ -341,6 +350,8 @@ public class RemoteAsyncConnectorFacade extends AbstractConnectorFacade implemen
     protected APIOperation getOperationImplementation(Class<? extends APIOperation> api) {
         if (AuthenticationApiOp.class.isAssignableFrom(api)) {
             return authenticationApiOp;
+        } else if (BatchApiOp.class.isAssignableFrom(api)) {
+            return batchApiOp;
         } else if (CreateApiOp.class.isAssignableFrom(api)) {
             return createApiOp;
         } else if (ConnectorEventSubscriptionApiOp.class.isAssignableFrom(api)) {

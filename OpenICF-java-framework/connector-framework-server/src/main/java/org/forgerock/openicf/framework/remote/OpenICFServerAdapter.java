@@ -47,6 +47,7 @@ import org.forgerock.openicf.common.protobuf.RPCMessages.RemoteMessage;
 import org.forgerock.openicf.framework.ConnectorFramework;
 import org.forgerock.openicf.framework.async.AsyncConnectorInfoManager;
 import org.forgerock.openicf.framework.async.impl.AuthenticationAsyncApiOpImpl;
+import org.forgerock.openicf.framework.async.impl.BatchApiOpImpl;
 import org.forgerock.openicf.framework.async.impl.ConnectorEventSubscriptionApiOpImpl;
 import org.forgerock.openicf.framework.async.impl.CreateAsyncApiOpImpl;
 import org.forgerock.openicf.framework.async.impl.DeleteAsyncApiOpImpl;
@@ -139,6 +140,7 @@ public class OpenICFServerAdapter implements OperationMessageListener {
         try {
             RemoteMessage message = RemoteMessage.parseFrom(bytes);
 
+logger.info("onMessage({0})", message.toString());
             if (message.hasRequest()) {
                 if (message.getRequest().hasHandshakeMessage()) {
                     if (isClient()) {
@@ -362,7 +364,10 @@ public class OpenICFServerAdapter implements OperationMessageListener {
 
                     ConnectorFacade connectorFacade = newInstance(socket, info, connectorFacadeKey);
 
-                    if (message.hasAuthenticateOpRequest()) {
+                    if (message.hasBatchOpRequest()) {
+                        BatchApiOpImpl.createProcessor(messageId, socket,
+                                message.getBatchOpRequest()).execute(connectorFacade);
+                    } else if (message.hasAuthenticateOpRequest()) {
                         AuthenticationAsyncApiOpImpl.createProcessor(messageId, socket,
                                 message.getAuthenticateOpRequest()).execute(connectorFacade);
                     } else if (message.hasCreateOpRequest()) {

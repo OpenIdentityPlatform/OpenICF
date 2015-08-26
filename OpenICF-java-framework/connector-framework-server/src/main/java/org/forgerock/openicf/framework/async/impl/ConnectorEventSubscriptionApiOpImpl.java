@@ -94,6 +94,14 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
             public boolean isUnsubscribed() {
                 return promise.isDone();
             }
+
+            public Object getReturnValue() {
+                try {
+                    return promise.get();
+                } catch (Exception e) {
+                    return null;
+                }
+            }
         };
     }
 

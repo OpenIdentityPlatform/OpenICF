@@ -55,4 +55,11 @@ public interface Subscription extends Closeable {
      *         unsubscribed, {@code false} otherwise
      */
     boolean isUnsubscribed();
+
+    /**
+     * Get the return value associated with establishing this subscription.
+     *
+     * @return return value
+     */
+    Object getReturnValue();
 }

@@ -23,17 +23,39 @@
 package org.identityconnectors.framework.impl.api;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.identityconnectors.common.Version;
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.framework.api.APIConfiguration;
+import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
+import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.framework.api.ConnectorInfoManager;
 import org.identityconnectors.framework.api.ConnectorInfoManagerFactory;
+import org.identityconnectors.framework.api.Observer;
 import org.identityconnectors.framework.common.FrameworkUtilTestHelpers;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.BatchResult;
+import org.identityconnectors.framework.common.objects.BatchToken;
+import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
+import org.identityconnectors.framework.common.objects.Subscription;
+import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.api.operations.batch.BatchBuilder;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
 
 public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase {
 
@@ -81,5 +103,293 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
     protected void shutdownConnnectorInfoManager() {
         ConnectorFacadeFactory.getInstance().dispose();
         ConnectorInfoManagerFactory.getInstance().clearLocalCache();
+    }
+
+    @Test
+    public void testBatchUseCase0and1() throws Exception {
+        ConnectorInfoManager manager = getConnectorInfoManager();
+        ConnectorInfo info =
+                findConnectorInfo(manager, "1.0.0.0",
+                        "org.identityconnectors.testconnector.TstConnector");
+
+        APIConfiguration api = info.createDefaultAPIConfiguration();
+        api.setProducerBufferSize(0);
+
+        ConnectorFacadeFactory facf = ConnectorFacadeFactory.getInstance();
+        ConnectorFacade facade = facf.newInstance(api);
+
+        OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        builder.setOption(OperationOptions.OP_FAIL_ON_ERROR, true);
+        builder.setOption("TEST_USECASE1", true);
+        final OperationOptions options = builder.build();
+
+        final BatchBuilder batch = new BatchBuilder();
+        batch.addCreateOp(ObjectClass.ACCOUNT, new HashSet<Attribute>(), options);
+        batch.addDeleteOp(ObjectClass.ACCOUNT, new Uid("foo"), options);
+        batch.addUpdateAddOp(ObjectClass.ACCOUNT, new Uid("foo"), new HashSet<Attribute>(), options);
+
+        final List<Object> results = new ArrayList<Object>();
+        final AtomicBoolean isComplete = new AtomicBoolean(false);
+        final AtomicBoolean hasError = new AtomicBoolean(false);
+
+        Observer<BatchResult> observer = new Observer<BatchResult>() {
+            public void onCompleted() {
+                isComplete.set(true);
+            }
+
+            public void onError(Throwable e) {
+                hasError.set(true);
+            }
+
+            public void onNext(BatchResult batchResult) {
+                results.add(batchResult);
+                if (batchResult.getError()) {
+                    hasError.set(true);
+                }
+            }
+        };
+
+        Subscription sub = facade.executeBatch(batch.build(), observer, options);
+        assertEquals(results.size(), batch.build().size());
+        assertTrue(isComplete.get());
+        assertFalse(hasError.get());
+        assertNull(sub.getReturnValue());
+    }
+
+    @Test
+    public void testBatchUseCase2() throws Exception {
+        ConnectorInfoManager manager = getConnectorInfoManager();
+        ConnectorInfo info =
+                findConnectorInfo(manager, "1.0.0.0",
+                        "org.identityconnectors.testconnector.TstConnector");
+
+        APIConfiguration api = info.createDefaultAPIConfiguration();
+        api.setProducerBufferSize(0);
+
+        ConnectorFacadeFactory facf = ConnectorFacadeFactory.getInstance();
+        ConnectorFacade facade = facf.newInstance(api);
+
+        OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        builder.setOption(OperationOptions.OP_FAIL_ON_ERROR, true);
+        builder.setOption("TEST_USECASE2", true);
+        final OperationOptions options = builder.build();
+
+        final BatchBuilder batch = new BatchBuilder();
+        batch.addCreateOp(ObjectClass.ACCOUNT, new HashSet<Attribute>(), options);
+        batch.addDeleteOp(ObjectClass.ACCOUNT, new Uid("foo"), options);
+        batch.addUpdateAddOp(ObjectClass.ACCOUNT, new Uid("foo"), new HashSet<Attribute>(), options);
+
+        final List<Object> results = new ArrayList<Object>();
+        final AtomicBoolean isComplete = new AtomicBoolean(false);
+        final AtomicBoolean hasError = new AtomicBoolean(false);
+
+        Observer<BatchResult> observer = new Observer<BatchResult>() {
+            public void onCompleted() {
+                isComplete.set(true);
+            }
+
+            public void onError(Throwable e) {
+                hasError.set(true);
+            }
+
+            public void onNext(BatchResult batchResult) {
+                results.add(batchResult);
+                if (batchResult.getError()) {
+                    hasError.set(true);
+                }
+            }
+        };
+
+        Subscription sub = facade.executeBatch(batch.build(), observer, options);
+        assertEquals(results.size(), 0);
+        assertFalse(isComplete.get());
+        assertFalse(hasError.get());
+        assertNotNull(sub.getReturnValue());
+
+        Thread.sleep(500);
+        sub = facade.queryBatch((BatchToken) sub.getReturnValue(), observer, options);
+
+        assertEquals(results.size(), batch.build().size());
+        assertTrue(isComplete.get());
+        assertFalse(hasError.get());
+        assertNull(sub.getReturnValue());
+    }
+
+    @Test
+    public void testBatchUseCase2Failure() throws Exception {
+        ConnectorInfoManager manager = getConnectorInfoManager();
+        ConnectorInfo info =
+                findConnectorInfo(manager, "1.0.0.0",
+                        "org.identityconnectors.testconnector.TstConnector");
+
+        APIConfiguration api = info.createDefaultAPIConfiguration();
+        api.setProducerBufferSize(0);
+
+        ConnectorFacadeFactory facf = ConnectorFacadeFactory.getInstance();
+        ConnectorFacade facade = facf.newInstance(api);
+
+        OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        builder.setOption(OperationOptions.OP_FAIL_ON_ERROR, true);
+        builder.setOption("TEST_USECASE2", true);
+        builder.setOption("FAIL_TEST_ITERATION", 1);
+        final OperationOptions options = builder.build();
+
+        final BatchBuilder batch = new BatchBuilder();
+        batch.addCreateOp(ObjectClass.ACCOUNT, new HashSet<Attribute>(), options);
+        batch.addDeleteOp(ObjectClass.ACCOUNT, new Uid("foo"), options);
+        batch.addUpdateAddOp(ObjectClass.ACCOUNT, new Uid("foo"), new HashSet<Attribute>(), options);
+
+        final List<Object> results = new ArrayList<Object>();
+        final AtomicBoolean isComplete = new AtomicBoolean(false);
+        final AtomicBoolean hasError = new AtomicBoolean(false);
+
+        Observer<BatchResult> observer = new Observer<BatchResult>() {
+            public void onCompleted() {
+                isComplete.set(true);
+            }
+
+            public void onError(Throwable e) {
+                hasError.set(true);
+            }
+
+            public void onNext(BatchResult batchResult) {
+                results.add(batchResult);
+                if (batchResult.getError()) {
+                    hasError.set(true);
+                }
+            }
+        };
+
+        Subscription sub = facade.executeBatch(batch.build(), observer, options);
+        assertEquals(results.size(), 0);
+        assertFalse(isComplete.get());
+        assertFalse(hasError.get());
+        assertNotNull(sub.getReturnValue());
+
+        Thread.sleep(500);
+        sub = facade.queryBatch((BatchToken) sub.getReturnValue(), observer, options);
+
+        assertEquals(results.size(), 2);
+        assertFalse(isComplete.get());
+        assertTrue(hasError.get());
+        assertNull(sub.getReturnValue());
+    }
+
+    @Test
+    public void testBatchUseCase3() throws Exception {
+        ConnectorInfoManager manager = getConnectorInfoManager();
+        ConnectorInfo info =
+                findConnectorInfo(manager, "1.0.0.0",
+                        "org.identityconnectors.testconnector.TstConnector");
+
+        APIConfiguration api = info.createDefaultAPIConfiguration();
+        api.setProducerBufferSize(0);
+
+        ConnectorFacadeFactory facf = ConnectorFacadeFactory.getInstance();
+        ConnectorFacade facade = facf.newInstance(api);
+
+        OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        builder.setOption(OperationOptions.OP_FAIL_ON_ERROR, true);
+        builder.setOption("TEST_USECASE3", true);
+        final OperationOptions options = builder.build();
+
+        final BatchBuilder batch = new BatchBuilder();
+        batch.addCreateOp(ObjectClass.ACCOUNT, new HashSet<Attribute>(), options);
+        batch.addDeleteOp(ObjectClass.ACCOUNT, new Uid("foo"), options);
+        batch.addUpdateAddOp(ObjectClass.ACCOUNT, new Uid("foo"), new HashSet<Attribute>(), options);
+
+        final List<Object> results = new ArrayList<Object>();
+        final AtomicBoolean isComplete = new AtomicBoolean(false);
+        final AtomicBoolean hasError = new AtomicBoolean(false);
+
+        Observer<BatchResult> observer = new Observer<BatchResult>() {
+            public void onCompleted() {
+                isComplete.set(true);
+            }
+
+            public void onError(Throwable e) {
+                hasError.set(true);
+            }
+
+            public void onNext(BatchResult batchResult) {
+                results.add(batchResult);
+                if (batchResult.getError()) {
+                    hasError.set(true);
+                }
+            }
+        };
+
+        Subscription sub = facade.executeBatch(batch.build(), observer, options);
+        assertEquals(results.size(), 0);
+        assertFalse(isComplete.get());
+        assertFalse(hasError.get());
+        assertNotNull(sub.getReturnValue());
+
+        Thread.sleep(500);
+
+        assertEquals(results.size(), batch.build().size());
+        assertTrue(isComplete.get());
+        assertFalse(hasError.get());
+
+        sub = facade.queryBatch((BatchToken) sub.getReturnValue(), observer, options);
+        assertNull(sub.getReturnValue());
+    }
+
+    @Test
+    public void testBatchUseCase3Failure() throws Exception {
+        ConnectorInfoManager manager = getConnectorInfoManager();
+        ConnectorInfo info =
+                findConnectorInfo(manager, "1.0.0.0",
+                        "org.identityconnectors.testconnector.TstConnector");
+
+        APIConfiguration api = info.createDefaultAPIConfiguration();
+        api.setProducerBufferSize(0);
+
+        ConnectorFacadeFactory facf = ConnectorFacadeFactory.getInstance();
+        ConnectorFacade facade = facf.newInstance(api);
+
+        OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        builder.setOption(OperationOptions.OP_FAIL_ON_ERROR, true);
+        builder.setOption("TEST_USECASE3", true);
+        builder.setOption("FAIL_TEST_ITERATION", 1);
+        final OperationOptions options = builder.build();
+
+        final BatchBuilder batch = new BatchBuilder();
+        batch.addCreateOp(ObjectClass.ACCOUNT, new HashSet<Attribute>(), options);
+        batch.addDeleteOp(ObjectClass.ACCOUNT, new Uid("foo"), options);
+        batch.addUpdateAddOp(ObjectClass.ACCOUNT, new Uid("foo"), new HashSet<Attribute>(), options);
+
+        final List<Object> results = new ArrayList<Object>();
+        final AtomicBoolean isComplete = new AtomicBoolean(false);
+        final AtomicBoolean hasError = new AtomicBoolean(false);
+
+        Observer<BatchResult> observer = new Observer<BatchResult>() {
+            public void onCompleted() {
+                isComplete.set(true);
+            }
+
+            public void onError(Throwable e) {
+                hasError.set(true);
+            }
+
+            public void onNext(BatchResult batchResult) {
+                results.add(batchResult);
+                if (batchResult.getError()) {
+                    hasError.set(true);
+                }
+            }
+        };
+
+        Subscription sub = facade.executeBatch(batch.build(), observer, options);
+        assertEquals(results.size(), 0);
+        assertFalse(isComplete.get());
+        assertFalse(hasError.get());
+        assertNotNull(sub.getReturnValue());
+
+        Thread.sleep(500);
+
+        assertEquals(results.size(), 2);
+        assertFalse(isComplete.get());
+        assertTrue(hasError.get());
     }
 }

@@ -31,6 +31,7 @@ import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.PrettyStringBuilder;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.operations.ScriptOnResourceApiOp;
+import org.identityconnectors.framework.api.operations.BatchApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
 import org.identityconnectors.framework.api.operations.SyncApiOp;
 import org.identityconnectors.framework.common.FrameworkUtil;
@@ -147,6 +148,24 @@ public final class OperationOptions {
      * @since 1.4
      */
     public static final String OP_SORT_KEYS = "SORT_KEYS";
+
+    /**
+     * An option to specify whether a {@link BatchApiOp} should abort processing
+     * on the first error encountered in the batch. Default behavior is to
+     * continue processing in spite of errors.
+     * @since 1.5
+     */
+    public static final String OP_FAIL_ON_ERROR = "FAIL_ON_ERROR";
+
+    /**
+     * An option to instruct a connector that batched operations must be executed in
+     * serial fashion where possible/applicable.  The default behavior should be to
+     * execute tasks in parallel for speed and efficiency. In either case the task id
+     * must be reflected in teh response for each task so they can be properly
+     * reordered.
+     * @since 1.5
+     */
+    public static final String OP_REQUIRE_SERIAL = "REQUIRE_SERIAL";
 
     private final Map<String, Object> operationOptions;
 
@@ -300,7 +319,7 @@ public final class OperationOptions {
      */
     public Integer getPageSize() {
         return (Integer) operationOptions.get(OP_PAGE_SIZE);
-    };
+    }
 
     /**
      * Returns the sort keys which should be used for ordering the
@@ -314,5 +333,23 @@ public final class OperationOptions {
     @SuppressWarnings("unchecked")
     public SortKey[] getSortKeys() {
         return (SortKey[]) operationOptions.get(OP_SORT_KEYS);
-    };
+    }
+
+    /**
+     * Returns the state of the failOnError option; defaults to {@code false}.
+     */
+    public boolean getFailOnError() {
+        return operationOptions.containsKey(OP_FAIL_ON_ERROR)
+                ? (Boolean) operationOptions.get(OP_FAIL_ON_ERROR)
+                : false;
+    }
+
+    /**
+     * Return the state of the allowParallel option; defaults to {@code false}.
+     */
+    public boolean getRequireSerial() {
+        return operationOptions.containsKey(OP_REQUIRE_SERIAL)
+                ? Boolean.valueOf((String) operationOptions.get(OP_REQUIRE_SERIAL))
+                : false;
+    }
 }

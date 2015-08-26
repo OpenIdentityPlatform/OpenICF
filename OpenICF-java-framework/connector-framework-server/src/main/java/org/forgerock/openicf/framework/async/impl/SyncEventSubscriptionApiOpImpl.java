@@ -93,6 +93,10 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
             public boolean isUnsubscribed() {
                 return promise.isDone();
             }
+
+            public Object getReturnValue() {
+                return null;
+            }
         };
     }
 

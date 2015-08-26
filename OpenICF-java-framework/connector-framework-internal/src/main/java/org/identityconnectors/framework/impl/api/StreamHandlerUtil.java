@@ -23,6 +23,7 @@
 package org.identityconnectors.framework.impl.api;
 
 import org.identityconnectors.common.Assertions;
+import org.identityconnectors.framework.common.objects.BatchResult;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncDelta;
@@ -97,13 +98,11 @@ public class StreamHandlerUtil {
                 .isAssignableFrom(clazz));
     }
 
-    public static ObjectStreamHandler adaptToObjectStreamHandler(Class<?> interfaceType,
-            Object target) {
+    public static ObjectStreamHandler adaptToObjectStreamHandler(Class<?> interfaceType, Object target) {
         return new ObjectStreamHandlerAdapter(interfaceType, target);
     }
 
-    public static Object adaptFromObjectStreamHandler(Class<?> interfaceType,
-            ObjectStreamHandler target) {
+    public static Object adaptFromObjectStreamHandler(Class<?> interfaceType, ObjectStreamHandler target) {
         if (interfaceType == ResultsHandler.class) {
             return new ResultsHandlerAdapter(target);
         } else if (interfaceType == SyncResultsHandler.class) {

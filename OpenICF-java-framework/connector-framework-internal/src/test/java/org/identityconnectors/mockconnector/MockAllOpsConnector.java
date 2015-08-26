@@ -23,6 +23,7 @@
  */
 package org.identityconnectors.mockconnector;
 
+import java.util.List;
 import java.util.Set;
 
 import org.identityconnectors.common.security.GuardedString;

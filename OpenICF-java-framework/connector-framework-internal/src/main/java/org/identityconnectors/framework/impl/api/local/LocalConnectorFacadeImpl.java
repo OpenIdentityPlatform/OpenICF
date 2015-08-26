@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.identityconnectors.framework.api.ConfigurationPropertyChangeListener;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
+import org.identityconnectors.framework.api.operations.BatchApiOp;
 import org.identityconnectors.framework.api.operations.ConnectorEventSubscriptionApiOp;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
@@ -56,6 +57,7 @@ import org.identityconnectors.framework.impl.api.AbstractConnectorFacade;
 import org.identityconnectors.framework.impl.api.LoggingProxy;
 import org.identityconnectors.framework.impl.api.local.operations.APIOperationRunner;
 import org.identityconnectors.framework.impl.api.local.operations.AuthenticationImpl;
+import org.identityconnectors.framework.impl.api.local.operations.BatchImpl;
 import org.identityconnectors.framework.impl.api.local.operations.ConnectorAPIOperationRunner;
 import org.identityconnectors.framework.impl.api.local.operations.ConnectorAPIOperationRunnerProxy;
 import org.identityconnectors.framework.impl.api.local.operations.ConnectorOperationalContext;
@@ -104,6 +106,7 @@ public class LocalConnectorFacadeImpl extends AbstractConnectorFacade {
     }
 
     static {
+        addImplementation(BatchApiOp.class, BatchImpl.class);
         addImplementation(CreateApiOp.class, CreateImpl.class);
         addImplementation(DeleteApiOp.class, DeleteImpl.class);
         addImplementation(SchemaApiOp.class, SchemaImpl.class);
@@ -208,7 +211,8 @@ public class LocalConnectorFacadeImpl extends AbstractConnectorFacade {
                     new ConnectorAPIOperationRunnerProxy(getOperationalContext(), constructor);
             proxy = new GetImpl((SearchApiOp) newAPIOperationProxy(SearchApiOp.class, handler));
         } else if (api == ConnectorEventSubscriptionApiOp.class
-                || api == SyncEventSubscriptionApiOp.class) {
+                || api == SyncEventSubscriptionApiOp.class
+                || api == BatchApiOp.class) {
             final ConnectorAPIOperationRunnerProxy handler =
                     new ConnectorAPIOperationRunnerProxy(getOperationalContext(), null) {
                         protected APIOperationRunner getApiOperationRunner(
@@ -217,9 +221,14 @@ public class LocalConnectorFacadeImpl extends AbstractConnectorFacade {
                             if (api == ConnectorEventSubscriptionApiOp.class) {
                                 return new SubscriptionImpl.ConnectorEventSubscriptionApiOpImp(
                                         operationalContext, connector, referenceCounter);
-                            } else {
+                            } else if (api == SyncEventSubscriptionApiOp.class) {
                                 return new SubscriptionImpl.SyncEventSubscriptionApiOpImpl(
                                         operationalContext, connector, referenceCounter);
+                            } else if (api == BatchApiOp.class) {
+                                return new SubscriptionImpl.BatchApiOpImpl(
+                                        operationalContext, connector, referenceCounter);
+                            } else {
+                                return null;
                             }
                         }
                     };

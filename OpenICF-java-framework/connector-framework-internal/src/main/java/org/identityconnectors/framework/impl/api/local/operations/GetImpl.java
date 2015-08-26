@@ -37,6 +37,7 @@ import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
+import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.operations.SearchOp;
 
 /**
@@ -49,6 +50,10 @@ public class GetImpl implements GetApiOp {
 
     public GetImpl(SearchApiOp search) {
         this.op = search;
+    }
+
+    public Connector getConnector() {
+        return ((SearchImpl)op).getConnector();
     }
 
     public ConnectorObject getObject(ObjectClass objectClass, Uid uid, OperationOptions options) {

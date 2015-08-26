@@ -26,6 +26,7 @@ package org.identityconnectors.framework.impl.api;
 import static org.fest.assertions.Assertions.assertThat;
 import static org.identityconnectors.common.IOUtil.makeURL;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -43,6 +44,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -66,6 +68,8 @@ import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
 import org.identityconnectors.framework.api.operations.SyncApiOp;
+import org.identityconnectors.framework.api.operations.batch.BatchBuilder;
+import org.identityconnectors.framework.api.operations.batch.BatchTask;
 import org.identityconnectors.framework.common.FrameworkUtilTestHelpers;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.OperationTimeoutException;
@@ -74,6 +78,7 @@ import org.identityconnectors.framework.common.exceptions.PreconditionRequiredEx
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
+import org.identityconnectors.framework.common.objects.BatchToken;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -1068,9 +1073,7 @@ public abstract class ConnectorInfoManagerTestBase {
 
     @Test(dataProvider = "statefulConnectors")
     public void testMVCCControl(AbstractConnectorFacade facade) {
-        Uid uid =
-                facade.create(ObjectClass.ACCOUNT, CollectionUtil.<Attribute> newReadOnlySet(),
-                        null);
+        Uid uid = facade.create(ObjectClass.ACCOUNT, CollectionUtil.<Attribute> newReadOnlySet(), null);
 
         if (facade instanceof LocalConnectorFacadeImpl) {
             try {
@@ -1110,6 +1113,253 @@ public abstract class ConnectorInfoManagerTestBase {
             facade.delete(ObjectClass.ACCOUNT, new Uid(uid.getUidValue(), uid.getUidValue()), null);
         }
     }
+
+/*
+    @Test(dataProvider = "statefulConnectors")
+    public void testBatchUseCase0and1(AbstractConnectorFacade facade) throws Exception {
+        ConnectorInfoManager manager = getConnectorInfoManager();
+        ConnectorInfo info = findConnectorInfo(manager, "1.0.0.0", "org.identityconnectors.testconnector.TstConnector");
+
+        APIConfiguration api = info.createDefaultAPIConfiguration();
+        api.setProducerBufferSize(0);
+
+        final OperationOptions options = new OperationOptionsBuilder()
+                .setOption(OperationOptions.OP_FAIL_ON_ERROR, true)
+                .setOption("TEST_USECASE1", true)
+                .build();
+
+        final List<BatchTask> batch = newTestBatch(options);
+
+        final Map<String,Object> results = new HashMap<String, Object>();
+        final AtomicBoolean isComplete = new AtomicBoolean(false);
+        final AtomicBoolean hasError = new AtomicBoolean(false);
+
+        BatchResultsHandler handler = new BatchResultsHandler() {
+            public boolean handleResult(Object resultObject, String token, String resultId, boolean complete) {
+                results.put(resultId, resultObject);
+                isComplete.set(complete);
+                return !complete && results.size() != batch.size();
+            }
+            public boolean handleError(RuntimeException resultObject, String token, String resultId, boolean complete) {
+                results.put(resultId, resultObject);
+                isComplete.set(complete);
+                hasError.set(true);
+                return options.getFailOnError();
+            }
+        };
+
+        BatchToken token = facade.executeBatch(batch, handler, options);
+        assertEquals(results.size(), batch.size());
+        assertTrue(isComplete.get());
+        assertFalse(hasError.get());
+        assertNull(token);
+    }
+
+    @Test(dataProvider = "statefulConnectors")
+    public void testBatchUseCase2(AbstractConnectorFacade facade) throws Exception {
+        ConnectorInfoManager manager = getConnectorInfoManager();
+        ConnectorInfo info = findConnectorInfo(manager, "1.0.0.0", "org.identityconnectors.testconnector.TstConnector");
+
+        APIConfiguration api = info.createDefaultAPIConfiguration();
+        api.setProducerBufferSize(0);
+
+        final OperationOptions options = new OperationOptionsBuilder()
+                .setOption(OperationOptions.OP_FAIL_ON_ERROR, true)
+                .setOption("TEST_USECASE2", true)
+                .build();
+
+        final List<BatchTask> batch = newTestBatch(options);
+
+        final Map<String,Object> results = new HashMap<String, Object>();
+        final AtomicBoolean isComplete = new AtomicBoolean(false);
+        final AtomicBoolean hasError = new AtomicBoolean(false);
+
+        BatchResultsHandler handler = new BatchResultsHandler() {
+            public boolean handleResult(Object resultObject, String token, String resultId, boolean complete) {
+                results.put(resultId, resultObject);
+                isComplete.set(complete);
+                return true;
+            }
+            public boolean handleError(RuntimeException resultObject, String token, String resultId, boolean complete) {
+                results.put(resultId, resultObject);
+                isComplete.set(complete);
+                hasError.set(true);
+                return true;
+            }
+        };
+
+        BatchToken token = facade.executeBatch(batch, handler, options);
+        assertEquals(results.size(), 0);
+        assertFalse(isComplete.get());
+        assertFalse(hasError.get());
+        assertNotNull(token);
+
+        Thread.sleep(500);
+        token = facade.queryBatch(token, handler, options);
+
+        assertEquals(results.size(), batch.size());
+        assertTrue(isComplete.get());
+        assertFalse(hasError.get());
+        assertNull(token);
+    }
+
+    @Test(dataProvider = "statefulConnectors")
+    public void testBatchUseCase2Failure(AbstractConnectorFacade facade) throws Exception {
+        ConnectorInfoManager manager = getConnectorInfoManager();
+        ConnectorInfo info = findConnectorInfo(manager, "1.0.0.0", "org.identityconnectors.testconnector.TstConnector");
+
+        APIConfiguration api = info.createDefaultAPIConfiguration();
+        api.setProducerBufferSize(0);
+
+        final OperationOptions options = new OperationOptionsBuilder()
+                .setOption(OperationOptions.OP_FAIL_ON_ERROR, true)
+                .setOption("TEST_USECASE2", true)
+                .setOption("FAIL_TEST_ITERATION", 1)
+                .build();
+
+        final List<BatchTask> batch = newTestBatch(options);
+
+        final Map<String,Object> results = new HashMap<String, Object>();
+        final AtomicBoolean isComplete = new AtomicBoolean(false);
+        final AtomicBoolean hasError = new AtomicBoolean(false);
+
+        BatchResultsHandler handler = new BatchResultsHandler() {
+            public boolean handleResult(Object resultObject, String token, String resultId, boolean complete) {
+                results.put(resultId, resultObject);
+                isComplete.set(complete);
+                return true;
+            }
+            public boolean handleError(RuntimeException resultObject, String token, String resultId, boolean complete) {
+                results.put(resultId, resultObject);
+                isComplete.set(complete);
+                hasError.set(true);
+                return true;
+            }
+        };
+
+        BatchToken token = facade.executeBatch(batch, handler, options);
+        assertEquals(results.size(), 0);
+        assertFalse(isComplete.get());
+        assertFalse(hasError.get());
+        assertNotNull(token);
+
+        Thread.sleep(500);
+        token = facade.queryBatch(token, handler, options);
+
+        assertEquals(results.size(), 2);
+        assertFalse(isComplete.get());
+        assertTrue(hasError.get());
+        assertNull(token);
+    }
+
+    // Disable for now.  No real need to support batch at all over the old protocol.
+    //@Test(dataProvider = "statefulConnectors")
+    public void testBatchUseCase3(AbstractConnectorFacade facade) throws Exception {
+        ConnectorInfoManager manager = getConnectorInfoManager();
+        ConnectorInfo info = findConnectorInfo(manager, "1.0.0.0", "org.identityconnectors.testconnector.TstConnector");
+
+        APIConfiguration api = info.createDefaultAPIConfiguration();
+        api.setProducerBufferSize(0);
+
+        final OperationOptions options = new OperationOptionsBuilder()
+                .setOption(OperationOptions.OP_FAIL_ON_ERROR, true)
+                .setOption("TEST_USECASE3", true)
+                .build();
+
+        final List<BatchTask> batch = newTestBatch(options);
+
+        final Map<String,Object> results = new HashMap<String, Object>();
+        final AtomicBoolean isComplete = new AtomicBoolean(false);
+        final AtomicBoolean hasError = new AtomicBoolean(false);
+
+        BatchResultsHandler handler = new BatchResultsHandler() {
+            public boolean handleResult(Object resultObject, String token, String resultId, boolean complete) {
+                results.put(resultId, resultObject);
+                isComplete.set(complete);
+                return true;
+            }
+            public boolean handleError(RuntimeException resultObject, String token, String resultId, boolean complete) {
+                results.put(resultId, resultObject);
+                isComplete.set(complete);
+                hasError.set(true);
+                return true;
+            }
+        };
+
+        BatchToken token = facade.executeBatch(batch, handler, options);
+        assertEquals(results.size(), 0);
+        assertFalse(isComplete.get());
+        assertFalse(hasError.get());
+        assertNotNull(token);
+
+        Thread.sleep(500);
+
+        assertEquals(results.size(), batch.size());
+        assertTrue(isComplete.get());
+        assertFalse(hasError.get());
+
+        token = facade.queryBatch(token, handler, options);
+        assertNull(token);
+    }
+
+    // Disable for now.  No real need to support batch at all over the old protocol.
+    //@Test(dataProvider = "statefulConnectors")
+    public void testBatchUseCase3Failure(AbstractConnectorFacade facade) throws Exception {
+        ConnectorInfoManager manager = getConnectorInfoManager();
+        ConnectorInfo info = findConnectorInfo(manager, "1.0.0.0", "org.identityconnectors.testconnector.TstConnector");
+
+        APIConfiguration api = info.createDefaultAPIConfiguration();
+        api.setProducerBufferSize(0);
+
+        final OperationOptions options = new OperationOptionsBuilder()
+                .setOption(OperationOptions.OP_FAIL_ON_ERROR, true)
+                .setOption("TEST_USECASE3", true)
+                .setOption("FAIL_TEST_ITERATION", 1)
+                .build();
+
+        final List<BatchTask> batch = newTestBatch(options);
+
+        final Map<String,Object> results = new HashMap<String, Object>();
+        final AtomicBoolean isComplete = new AtomicBoolean(false);
+        final AtomicBoolean hasError = new AtomicBoolean(false);
+
+        BatchResultsHandler handler = new BatchResultsHandler() {
+            public boolean handleResult(Object resultObject, String token, String resultId, boolean complete) {
+                results.put(resultId, resultObject);
+                isComplete.set(complete);
+                return true;
+            }
+            public boolean handleError(RuntimeException resultObject, String token, String resultId, boolean complete) {
+                results.put(resultId, resultObject);
+                isComplete.set(complete);
+                hasError.set(true);
+                return true;
+            }
+        };
+
+        BatchToken token = facade.executeBatch(batch, handler, options);
+        assertEquals(results.size(), 0);
+        assertFalse(isComplete.get());
+        assertFalse(hasError.get());
+        assertNotNull(token);
+
+        Thread.sleep(500);
+
+        assertEquals(results.size(), 2);
+        assertFalse(isComplete.get());
+        assertTrue(hasError.get());
+    }
+
+    private List<BatchTask> newTestBatch(OperationOptions options) {
+        final BatchBuilder batch = new BatchBuilder();
+        batch.addCreateOp(ObjectClass.ACCOUNT, new HashSet<Attribute>() {{
+            add(new Name(UUID.randomUUID().toString()));
+        }}, options);
+        batch.addUpdateAddOp(ObjectClass.ACCOUNT, new Uid("0"), new HashSet<Attribute>(), options);
+        batch.addDeleteOp(ObjectClass.ACCOUNT, new Uid("0"), options);
+        return batch.build();
+    }
+*/
 
     @DataProvider(name = "statefulConnectors")
     public Iterator<Object[]> createStateFulFacades() throws Exception {

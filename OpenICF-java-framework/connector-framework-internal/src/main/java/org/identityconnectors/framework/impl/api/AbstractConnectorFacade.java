@@ -26,6 +26,7 @@ package org.identityconnectors.framework.impl.api;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.text.MessageFormat;
+import java.util.List;
 import java.util.Set;
 
 import org.identityconnectors.common.Assertions;
@@ -36,6 +37,7 @@ import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.Observer;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
+import org.identityconnectors.framework.api.operations.BatchApiOp;
 import org.identityconnectors.framework.api.operations.ConnectorEventSubscriptionApiOp;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
@@ -50,7 +52,10 @@ import org.identityconnectors.framework.api.operations.SyncEventSubscriptionApiO
 import org.identityconnectors.framework.api.operations.TestApiOp;
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.api.operations.ValidateApiOp;
+import org.identityconnectors.framework.api.operations.batch.BatchTask;
 import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.BatchResult;
+import org.identityconnectors.framework.common.objects.BatchToken;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
@@ -154,7 +159,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * Gets the unique generated identifier of this ConnectorFacade.
      *
-     * It's not guarantied that the equivalent configuration will generate the
+     * It's not guaranteed that the equivalent configuration will generate the
      * same configuration key. Always use the generated value and maintain it in
      * the external application.
      *
@@ -174,6 +179,22 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     // =======================================================================
     // Operation API Methods
     // =======================================================================
+    /**
+     * {@inheritDoc}
+     */
+    public final Subscription executeBatch(List<BatchTask> tasks, Observer<BatchResult> observer, OperationOptions options) {
+        return ((BatchApiOp) getOperationCheckSupported(BatchApiOp.class))
+                .executeBatch(tasks, observer, options);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public final Subscription queryBatch(BatchToken token, Observer<BatchResult> observer, OperationOptions options) {
+        return ((BatchApiOp) getOperationCheckSupported(BatchApiOp.class))
+                .queryBatch(token, observer, options);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -225,7 +246,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
         return ((SyncEventSubscriptionApiOp) this.getOperationCheckSupported(SyncEventSubscriptionApiOp.class)).subscribe(
                 objectClass, token, handler, operationOptions);
     }
-    
+
     /**
      * {@inheritDoc}
      */

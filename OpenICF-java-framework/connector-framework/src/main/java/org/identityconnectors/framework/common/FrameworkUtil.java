@@ -48,6 +48,7 @@ import org.identityconnectors.common.security.GuardedByteArray;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
+import org.identityconnectors.framework.api.operations.BatchApiOp;
 import org.identityconnectors.framework.api.operations.ConnectorEventSubscriptionApiOp;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
@@ -71,6 +72,7 @@ import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
+import org.identityconnectors.framework.spi.operations.BatchOp;
 import org.identityconnectors.framework.spi.operations.ConnectorEventSubscriptionOp;
 import org.identityconnectors.framework.spi.operations.CreateOp;
 import org.identityconnectors.framework.spi.operations.DeleteOp;
@@ -122,6 +124,7 @@ public final class FrameworkUtil {
         SPI_TO_API.put(SyncOp.class, SyncApiOp.class);
         SPI_TO_API.put(ConnectorEventSubscriptionOp.class, ConnectorEventSubscriptionApiOp.class);
         SPI_TO_API.put(SyncEventSubscriptionOp.class, SyncEventSubscriptionApiOp.class);
+        SPI_TO_API.put(BatchOp.class, BatchApiOp.class);
     }
 
     /**

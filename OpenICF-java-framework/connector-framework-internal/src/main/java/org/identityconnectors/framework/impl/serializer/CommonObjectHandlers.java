@@ -33,6 +33,11 @@ import java.util.Set;
 import org.identityconnectors.common.script.Script;
 import org.identityconnectors.common.script.ScriptBuilder;
 import org.identityconnectors.framework.api.operations.APIOperation;
+import org.identityconnectors.framework.api.operations.batch.BatchEmptyResult;
+import org.identityconnectors.framework.api.operations.batch.CreateBatchTask;
+import org.identityconnectors.framework.api.operations.batch.DeleteBatchTask;
+import org.identityconnectors.framework.api.operations.batch.UpdateBatchTask;
+import org.identityconnectors.framework.api.operations.batch.UpdateType;
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
@@ -55,6 +60,8 @@ import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
+import org.identityconnectors.framework.common.objects.BatchResult;
+import org.identityconnectors.framework.common.objects.BatchToken;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -724,6 +731,116 @@ class CommonObjectHandlers {
                 final QualifiedUid val = (QualifiedUid) object;
                 encoder.writeObjectField("ObjectClass", val.getObjectClass(), true);
                 encoder.writeObjectField("Uid", val.getUid(), true);
+            }
+        });
+
+        HANDLERS.add(new AbstractObjectSerializationHandler(CreateBatchTask.class, "CreateBatchTask") {
+            public Object deserialize(final ObjectDecoder decoder) {
+                final ObjectClass objectClass = (ObjectClass) decoder.readObjectField("ObjectClass", ObjectClass.class,
+                        null);
+                @SuppressWarnings("unchecked")
+                final Set<Attribute> attributes = (Set) decoder.readObjectField("Attributes", Set.class, null);
+                final OperationOptions options = (OperationOptions) decoder.readObjectField("Options",
+                        OperationOptions.class, null);
+                return new CreateBatchTask(objectClass, attributes, options);
+            }
+
+            public void serialize(final Object object, final ObjectEncoder encoder) {
+                final CreateBatchTask val = (CreateBatchTask) object;
+                encoder.writeObjectField("ObjectClass", val.getObjectClass(), true);
+                encoder.writeObjectField("Attributes", val.getCreateAttributes(), true);
+                encoder.writeObjectField("Options", val.getOptions(), true);
+            }
+        });
+
+        HANDLERS.add(new AbstractObjectSerializationHandler(DeleteBatchTask.class, "DeleteBatchTask") {
+            public Object deserialize(final ObjectDecoder decoder) {
+                final ObjectClass objectClass = (ObjectClass) decoder.readObjectField("ObjectClass", ObjectClass.class,
+                        null);
+                final Uid uid = (Uid) decoder.readObjectField("Uid", Uid.class, null);
+                final OperationOptions options = (OperationOptions) decoder.readObjectField("Options",
+                        OperationOptions.class, null);
+                return new DeleteBatchTask(objectClass, uid, options);
+            }
+
+            public void serialize(final Object object, final ObjectEncoder encoder) {
+                final DeleteBatchTask val = (DeleteBatchTask) object;
+                encoder.writeObjectField("ObjectClass", val.getObjectClass(), true);
+                encoder.writeObjectField("Uid", val.getUid(), true);
+                encoder.writeObjectField("Options", val.getOptions(), true);
+            }
+        });
+
+        HANDLERS.add(new AbstractObjectSerializationHandler(UpdateBatchTask.class, "UpdateBatchTask") {
+            public Object deserialize(final ObjectDecoder decoder) {
+                final ObjectClass objectClass = (ObjectClass) decoder.readObjectField("ObjectClass", ObjectClass.class,
+                        null);
+                final Uid uid = (Uid) decoder.readObjectField("Uid", Uid.class, null);
+                @SuppressWarnings("unchecked")
+                final Set<Attribute> attributes = (Set) decoder.readObjectField("Attributes", Set.class, null);
+                final OperationOptions options = (OperationOptions) decoder.readObjectField("Options",
+                        OperationOptions.class, null);
+                final UpdateType type = UpdateType.valueOf(decoder.readStringField("Type", null));
+                return new UpdateBatchTask(objectClass, uid, attributes, options, type);
+            }
+
+            public void serialize(final Object object, final ObjectEncoder encoder) {
+                final UpdateBatchTask val = (UpdateBatchTask) object;
+                encoder.writeObjectField("ObjectClass", val.getObjectClass(), true);
+                encoder.writeObjectField("Uid", val.getUid(), true);
+                encoder.writeObjectField("Attributes", val.getAttributes(), true);
+                encoder.writeObjectField("Options", val.getOptions(), true);
+                encoder.writeStringField("Type", val.getUpdateType().toString());
+            }
+        });
+
+        HANDLERS.add(new AbstractObjectSerializationHandler(BatchEmptyResult.class, "BatchEmptyResult") {
+            public void serialize(Object object, ObjectEncoder encoder) {
+                encoder.writeStringField("Message", ((BatchEmptyResult) object).getMessage());
+            }
+
+            public Object deserialize(ObjectDecoder decoder) {
+                return new BatchEmptyResult(decoder.readStringField("Message", null));
+            }
+        });
+
+        HANDLERS.add(new AbstractObjectSerializationHandler(BatchToken.class, "BatchToken") {
+            public void serialize(Object object, ObjectEncoder encoder) {
+                encoder.writeObjectField("token", ((BatchToken)object).getTokens(), true);
+                encoder.writeBooleanField("queryRequired", ((BatchToken)object).isQueryRequired());
+            }
+
+            public Object deserialize(ObjectDecoder decoder) {
+                BatchToken tokens = new BatchToken();
+                @SuppressWarnings("unchecked")
+                List<String> batchToken = (List) decoder.readObjectField("token", List.class, null);
+                for (String token : batchToken) {
+                    tokens.addToken(token);
+                }
+                tokens.setQueryRequired(decoder.readBooleanField("queryRequired", false));
+                return tokens;
+            }
+        });
+
+        HANDLERS.add(new AbstractObjectSerializationHandler(BatchResult.class, "BatchResult") {
+            public void serialize(Object object, ObjectEncoder encoder) {
+                BatchResult result = (BatchResult) object;
+                encoder.writeClassField("ResultClass", result.getResult().getClass());
+                encoder.writeObjectField("Result", result.getResult(), true);
+                encoder.writeObjectField("Token", result.getToken(), true);
+                encoder.writeStringField("ResultId", result.getResultId());
+                encoder.writeBooleanField("Complete", result.getComplete());
+                encoder.writeBooleanField("Error", result.getError());
+            }
+
+            public Object deserialize(ObjectDecoder decoder) {
+                Class<?> resultClass = decoder.readClassField("ResultClass", null);
+                return new BatchResult(
+                        decoder.readObjectField("Result", resultClass, null),
+                        (BatchToken) decoder.readObjectField("Token", BatchToken.class, null),
+                        decoder.readStringField("ResultId", null),
+                        decoder.readBooleanField("Complete", false),
+                        decoder.readBooleanField("Error", false));
             }
         });
     }
