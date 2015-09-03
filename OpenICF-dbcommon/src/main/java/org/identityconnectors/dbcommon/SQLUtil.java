@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2015 ForgeRock AS
  */
 package org.identityconnectors.dbcommon;
 
@@ -44,6 +45,7 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.naming.NamingException;
 import javax.sql.DataSource;
@@ -51,7 +53,6 @@ import javax.sql.DataSource;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.IOUtil;
-import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
@@ -184,37 +185,75 @@ public final class SQLUtil {
      */
     public static Connection getDriverMangerConnection(final String driver, final String url,
             final String login, final GuardedString password) {
+        return getDriverMangerConnection(driver, url, login, password, null);
+    }
+
+    /**
+     * Gets a {@link java.sql.Connection} using the basic driver manager.
+     *
+     * @param driver
+     *            jdbc driver name
+     * @param url
+     *            jdbc connection url
+     * @param login
+     *            jdbc login name
+     * @param password
+     *            jdbc password
+     * @param properties
+     *            a list of arbitrary string tag/value pairs as connection
+     *            arguments
+     * @return a valid connection
+     */
+    public static Connection getDriverMangerConnection(final String driver, final String url,
+            final String login, final GuardedString password, final Properties properties) {
+
+        final Properties info = null != properties ? properties : new Properties();
+
+        // check if there is authentication involved.
+        if (login != null) {
+            info.put("user", login);
+        }
+        if (password != null) {
+            password.access(new GuardedString.Accessor() {
+                public void access(char[] clearChars) {
+                    info.put("password", new String(clearChars));
+                }
+            });
+
+        }
+
+        return getDriverMangerConnection(driver, url, info);
+    }
+
+    /**
+     * Gets a {@link java.sql.Connection} using the basic driver manager.
+     *
+     * @param driver
+     *            jdbc driver name
+     * @param url
+     *            jdbc connection url
+     * @param properties
+     *            a list of arbitrary string tag/value pairs as connection
+     *            arguments
+     * @return a valid connection
+     */
+    public static Connection getDriverMangerConnection(final String driver, final String url,
+            final Properties properties) {
         // create the connection base on the configuration..
-        final Connection[] ret = new Connection[1];
+        Connection[] ret = new Connection[1];
         try {
             // load the driver class..
             Class.forName(driver);
             // get the database URL..
 
-            // check if there is authentication involved.
-            if (StringUtil.isNotBlank(login)) {
-                password.access(new GuardedString.Accessor() {
-                    public void access(char[] clearChars) {
-                        try {
-                            ret[0] =
-                                    DriverManager.getConnection(url, login, new String(clearChars));
-                        } catch (SQLException e) {
-                            // checked exception are not allowed in the access
-                            // method
-                            // Lets use the exception softening pattern
-                            throw new RuntimeException(e);
-                        }
-                    }
-                });
-            } else {
-                ret[0] = DriverManager.getConnection(url);
-            }
+            Connection c = DriverManager.getConnection(url, properties);
+
             // turn off auto-commit
-            ret[0].setAutoCommit(false);
+            c.setAutoCommit(false);
+            return c;
         } catch (Exception e) {
             throw ConnectorException.wrap(e);
         }
-        return ret[0];
     }
 
     /**
