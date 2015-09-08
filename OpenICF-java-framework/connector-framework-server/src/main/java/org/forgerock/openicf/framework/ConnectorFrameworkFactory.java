@@ -44,21 +44,9 @@ import org.identityconnectors.common.logging.Log;
  */
 public class ConnectorFrameworkFactory extends ReferenceCountedObject<ConnectorFramework> {
 
-    public static final ConnectorFrameworkFactory DEFAULT_FACTORY = new ConnectorFrameworkFactory();
 
     private final static Log logger = Log.getLog(ConnectorFrameworkFactory.class);
-
-    static {
-        String properties = System.getProperty("openicf.connectorframeworkfactory.properties.file");
-        if (StringUtil.isNotBlank(properties)) {
-            try {
-                DEFAULT_FACTORY.initialize(IOUtil.loadPropertiesFile(properties));
-            } catch (IOException e) {
-                logger.warn("Default Factory can not be configured");
-            }
-        }
-    }
-
+    
     private static final String ORG_FORGEROCK_OPENICF_FRAMEWORK_CLIENT_CONNECTION_MANAGER =
             "org.forgerock.openicf.framework.client.ConnectionManager";
     protected static final String ERROR_MESSAGE = "ConnectorFramework has been acquired";

@@ -126,13 +126,13 @@ public class LoadBalancingConnectorInfoManagerTest {
         connectorServer.setConnectorBundleURLs(Arrays.asList(TstConnector.class
                 .getProtectionDomain().getCodeSource().getLocation()));
 
+        connectorServer.init();
         connectorServer.addListener("grizzly-test", NetworkListener.DEFAULT_NETWORK_HOST,
                 PLAIN_PORT);
         connectorServer.addListener("grizzly-secure-test", NetworkListener.DEFAULT_NETWORK_HOST,
                 SECURE_PORT, createSSLContext(false));
 
         connectorServer.setKeyHash(KEY_HASH);
-        connectorServer.init();
         connectorServer.start();
         Reporter.log("Grizzly LB Server Started", true);
         connectorFramework = localConnectorFrameworkFactory.acquire();

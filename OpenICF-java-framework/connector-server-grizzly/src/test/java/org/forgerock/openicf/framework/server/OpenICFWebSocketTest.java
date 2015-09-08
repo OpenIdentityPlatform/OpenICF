@@ -83,13 +83,13 @@ public class OpenICFWebSocketTest {
         connectorServer.setConnectorBundleURLs(Arrays.asList(TstConnector.class
                 .getProtectionDomain().getCodeSource().getLocation()));
 
+        connectorServer.init();
         connectorServer.addListener("grizzly", NetworkListener.DEFAULT_NETWORK_HOST, PLAIN_PORT);
         connectorServer.addListener("grizzly-secure", NetworkListener.DEFAULT_NETWORK_HOST,
                 SECURE_PORT, createSSLContext(true));
         Reporter.log(String.format("Grizzly HTTP:%d, HTTPS:%d", PLAIN_PORT, SECURE_PORT), true);
 
         connectorServer.setKeyHash(KEY_HASH);
-        connectorServer.init();
         connectorServer.start();
 
         Reporter.log("Grizzly Server Started", true);
@@ -172,7 +172,7 @@ public class OpenICFWebSocketTest {
     public void testHandshake() throws Exception {
 
         ReferenceCountedObject<ConnectorFramework>.Reference framework =
-                ConnectorFrameworkFactory.DEFAULT_FACTORY.acquire();
+                new ConnectorFrameworkFactory().acquire();
         try {
 
             RemoteConnectionInfoManagerFactory connectionManager =
@@ -196,7 +196,7 @@ public class OpenICFWebSocketTest {
     @Test
     public void testRemoteConnectorInfoManager() throws Exception {
         ReferenceCountedObject<ConnectorFramework>.Reference framework =
-                ConnectorFrameworkFactory.DEFAULT_FACTORY.acquire();
+                new ConnectorFrameworkFactory().acquire();
         try {
 
             AsyncRemoteConnectorInfoManager manager =
@@ -225,7 +225,7 @@ public class OpenICFWebSocketTest {
             expectedExceptionsMessageRegExp = ".*Response code was not 101: 403 Failed To connect")
     public void testConnectionException() throws Exception {
         ReferenceCountedObject<ConnectorFramework>.Reference framework =
-                ConnectorFrameworkFactory.DEFAULT_FACTORY.acquire();
+                new ConnectorFrameworkFactory().acquire();
         try {
             RemoteConnectionInfoManagerFactory manager =
                     framework.get().getRemoteConnectionInfoManagerFactory();

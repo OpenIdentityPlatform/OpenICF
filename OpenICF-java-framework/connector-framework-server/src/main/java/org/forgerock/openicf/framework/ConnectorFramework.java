@@ -52,6 +52,7 @@ import org.forgerock.openicf.framework.remote.OpenICFServerAdapter;
 import org.forgerock.openicf.framework.remote.RemoteAsyncConnectorFacade;
 import org.forgerock.openicf.framework.remote.RemoteConnectorInfoImpl;
 import org.forgerock.util.Function;
+import org.forgerock.util.Utils;
 import org.forgerock.util.promise.Promise;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.Pair;
@@ -66,6 +67,7 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.serializer.SerializerUtil;
 import org.identityconnectors.framework.impl.api.APIConfigurationImpl;
 import org.identityconnectors.framework.impl.api.AbstractConnectorInfo;
+import org.identityconnectors.framework.impl.api.local.ConnectorPoolManager;
 import org.identityconnectors.framework.impl.api.local.LocalConnectorFacadeImpl;
 import org.identityconnectors.framework.impl.api.local.LocalConnectorInfoImpl;
 import org.identityconnectors.framework.impl.api.remote.RemoteConnectorFacadeImpl;
@@ -119,6 +121,21 @@ public class ConnectorFramework implements Closeable {
                 manager.close();
             }
             localConnectorInfoManagerCache.clear();
+
+            if (null != scheduledManagedFacadeCacheFuture) {
+                scheduledManagedFacadeCacheFuture.cancel(true);
+                scheduledManagedFacadeCacheFuture = null;
+            }
+            scheduler.shutdown();
+
+            for (ConnectorFacade facade : MANAGED_FACADE_CACHE.values()) {
+                if (facade instanceof LocalConnectorFacadeImpl) {
+                    ((LocalConnectorFacadeImpl) facade).dispose();
+                }
+            }
+            MANAGED_FACADE_CACHE.clear();
+
+            ConnectorPoolManager.dispose();
 
             org.forgerock.openicf.framework.CloseListener<ConnectorFramework> closeListener;
             while ((closeListener = closeListeners.poll()) != null) {
@@ -213,7 +230,7 @@ public class ConnectorFramework implements Closeable {
     public ConnectorFacade newManagedInstance(ConnectorInfo connectorInfo, String config) {
         return newManagedInstance(connectorInfo, config, null);
     }
-    
+
     public ConnectorFacade newManagedInstance(ConnectorInfo connectorInfo, String config,
             final ConfigurationPropertyChangeListener changeListener) {
         ConnectorFacade facade = MANAGED_FACADE_CACHE.get(config);
@@ -322,7 +339,8 @@ public class ConnectorFramework implements Closeable {
             new ConcurrentHashMap<Pair<String, Integer>, AsyncRemoteLegacyConnectorInfoManager>(4,
                     0.75f, 16);
 
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, Utils.newThreadFactory(null,
+            "OpenICF ConnectorFramework Scheduler %d", false));
 
     public AsyncRemoteLegacyConnectorInfoManager getRemoteManager(
             final RemoteFrameworkConnectionInfo info) {

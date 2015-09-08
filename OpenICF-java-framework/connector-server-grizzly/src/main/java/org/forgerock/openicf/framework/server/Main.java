@@ -215,8 +215,9 @@ public final class Main {
             connectorServer.setBundleParentClassLoader(bundleParentClassLoader);
         }
         connectorServer.setConnectorBundleURLs(buildBundleURLs(new File(bundleDirStr)));
-
         connectorServer.setKeyHash(keyHash);
+
+        connectorServer.init();
         if (useSSLStr != null) {
             boolean useSSL = Boolean.parseBoolean(useSSLStr);
             connectorServer.addListener(null, ifAddress, port, useSSL ? new SSLContextConfigurator(
@@ -224,8 +225,6 @@ public final class Main {
         } else {
             connectorServer.addListener(null, ifAddress, port);
         }
-
-        connectorServer.init();
     }
 
     public static void stop(String[] args) throws Exception {

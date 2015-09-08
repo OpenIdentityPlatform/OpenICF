@@ -159,6 +159,7 @@
                 <configuration>
                     <excludes>
                         <exclude>**/AsyncDotNetPlainConnectorInfoManagerTest.java</exclude>
+                        <exclude>**/AsyncJavaPlainConnectorInfoManagerTest.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>

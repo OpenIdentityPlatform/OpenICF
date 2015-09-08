@@ -229,22 +229,20 @@ public class ClientRemoteConnectorInfoManager extends
     }
 
     protected void doClose() {
-        if (isRunning.compareAndSet(Boolean.TRUE, Boolean.FALSE)) {
-            keepConnectedFuture.cancel(false);
-            for (WebSocketConnectionGroup e : connectionGroups.values()) {
-                // We should gracefully shut down the Group
-                e.principalIsShuttingDown(this);
-                if (!e.isOperational()) {
-                    globalConnectionGroups.remove(e.getRemoteSessionId());
-                }
+        keepConnectedFuture.cancel(false);
+        for (WebSocketConnectionGroup e : connectionGroups.values()) {
+            // We should gracefully shut down the Group
+            e.principalIsShuttingDown(this);
+            if (!e.isOperational()) {
+                globalConnectionGroups.remove(e.getRemoteSessionId());
             }
-            for (WebSocketConnectionHolder ws : privateConnections) {
-                ws.close();
-            }
-            privateConnections.clear();
-
-            connectionGroups.clear();
         }
+        for (WebSocketConnectionHolder ws : privateConnections) {
+            ws.close();
+        }
+        privateConnections.clear();
+
+        connectionGroups.clear();
     }
 
     public boolean isSelfManaged() {

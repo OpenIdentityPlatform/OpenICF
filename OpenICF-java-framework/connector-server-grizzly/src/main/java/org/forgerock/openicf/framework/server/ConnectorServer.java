@@ -111,7 +111,7 @@ public class ConnectorServer {
     // @formatter:on
 
     private final AtomicInteger status = new AtomicInteger(0);
-    private HttpServer server = new HttpServer();
+    private HttpServer server = null;
 
     private OpenICFWebSocketApplication connectorApplication = null;
 
@@ -274,6 +274,7 @@ public class ConnectorServer {
                     }
                 }
 
+                server = new HttpServer();
                 final ServerConfiguration config = server.getServerConfiguration();
                 config.setName("OpenICF Connector Server");
                 config.setHttpServerName("OpenICF Connector Server");
@@ -320,6 +321,7 @@ public class ConnectorServer {
                     // IGNORE this Grizzly Bug
                     // org.glassfish.grizzly.http.server.util.Mapper.removeWrapper(Mapper.java:682)
                 }
+                connectorApplication.close();
                 connectorApplication = null;
             }
         }
@@ -328,9 +330,10 @@ public class ConnectorServer {
     public void destroy() throws Exception {
         synchronized (status) {
             if (status.compareAndSet(1, 0)) {
-                server = new HttpServer();
-
+                server = null;
+                
                 connectorFramework.release();
+                connectorFramework = null;
             } else if (status.get() == 2) {
                 throw new IllegalStateException("ConnectorServer must be stopped before");
             }

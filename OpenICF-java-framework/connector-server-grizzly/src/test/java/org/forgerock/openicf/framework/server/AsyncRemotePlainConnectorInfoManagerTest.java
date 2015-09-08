@@ -70,13 +70,13 @@ public class AsyncRemotePlainConnectorInfoManagerTest extends
         context.setAttribute("plainPort", plainPort);
         context.setAttribute("securePort", securePort);
 
+        connectorServer.init();
         connectorServer
                 .addListener("grizzly-test", NetworkListener.DEFAULT_NETWORK_HOST, plainPort);
         connectorServer.addListener("grizzly-secure-test", NetworkListener.DEFAULT_NETWORK_HOST,
                 securePort, createSSLContext(false));
 
         connectorServer.setKeyHash(KEY_HASH);
-        connectorServer.init();
         connectorServer.start();
         Reporter.log("Grizzly Server Started", true);
         Reporter.log(context.getName() + ": Ready to test", true);

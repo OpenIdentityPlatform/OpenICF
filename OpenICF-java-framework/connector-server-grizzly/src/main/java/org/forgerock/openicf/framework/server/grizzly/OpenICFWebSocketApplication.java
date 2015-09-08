@@ -24,6 +24,7 @@
 
 package org.forgerock.openicf.framework.server.grizzly;
 
+import java.io.Closeable;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.List;
@@ -59,7 +60,7 @@ import org.glassfish.grizzly.websockets.frametypes.PingFrameType;
 import org.glassfish.grizzly.websockets.frametypes.PongFrameType;
 import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 
-public class OpenICFWebSocketApplication extends WebSocketApplication {
+public class OpenICFWebSocketApplication extends WebSocketApplication implements Closeable {
 
     private static final Logger logger = Grizzly.logger(OpenICFWebSocketApplication.class);
 
@@ -104,13 +105,24 @@ public class OpenICFWebSocketApplication extends WebSocketApplication {
                 "[Server]ConnectionManager is not set. OpenICFWebSocketFilter is required in FilterChain.");
     }
 
-    public  ConnectionPrincipal<?> authenticate(Principal principal) {
+    public ConnectionPrincipal<?> authenticate(Principal principal) {
         if (principal instanceof SharedSecretPrincipal
                 && ((SharedSecretPrincipal) principal).verify(keyHash)) {
             return singleTenant;
         } else {
             return null;
         }
+    }
+
+    public void close() {
+        for (WebSocketConnectionGroup e : globalConnectionGroups.values()) {
+            // We should gracefully shut down the Group
+            e.principalIsShuttingDown(singleTenant);
+            if (!e.isOperational()) {
+                globalConnectionGroups.remove(e.getRemoteSessionId());
+            }
+        }
+        singleTenant.close();
     }
 
     public static class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> {

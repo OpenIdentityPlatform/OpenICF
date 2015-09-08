@@ -140,7 +140,7 @@ if [ "$1" = "jpda" ] ; then
     JPDA_ADDRESS="5005"
   fi
   if [ -z "$JPDA_SUSPEND" ]; then
-    JPDA_SUSPEND="y"
+    JPDA_SUSPEND="n"
   fi
   if [ -z "$JPDA_OPTS" ]; then
     JPDA_OPTS="-agentlib:jdwp=transport=$JPDA_TRANSPORT,address=$JPDA_ADDRESS,server=y,suspend=$JPDA_SUSPEND"

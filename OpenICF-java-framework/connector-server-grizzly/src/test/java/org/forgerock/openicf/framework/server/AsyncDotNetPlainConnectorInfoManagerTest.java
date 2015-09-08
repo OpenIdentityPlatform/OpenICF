@@ -52,7 +52,7 @@ import org.testng.annotations.Test;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-@Test(enabled = false)
+@Test
 public class AsyncDotNetPlainConnectorInfoManagerTest extends
         AsyncConnectorInfoManagerTestBase<AsyncRemoteConnectorInfoManager> {
 

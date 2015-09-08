@@ -238,13 +238,17 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
             final BatchToken token = new BatchUseCase2Processor().executeBatch(tasks, options);
 
             return new Subscription() {
-                public void close() {}
+                public void close() {
+                    assert _myConnection != null;
+                }
 
                 public boolean isUnsubscribed() {
+                    assert _myConnection != null;
                     return true;
                 }
 
                 public Object getReturnValue() {
+                    assert _myConnection != null;
                     return token;
                 }
             };
@@ -253,13 +257,17 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
             final BatchToken token = processorUseCase3.executeBatch(tasks, options, observer);
 
             return new Subscription() {
-                public void close() {}
+                public void close() {
+                    assert _myConnection != null;
+                }
 
                 public boolean isUnsubscribed() {
+                    assert _myConnection != null;
                     return true;
                 }
 
                 public Object getReturnValue() {
+                    assert _myConnection != null;
                     return token;
                 }
             };
@@ -286,13 +294,17 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
             }
             observer.onCompleted();
             return new Subscription() {
-                public void close() {}
+                public void close() {
+                    assert _myConnection != null;
+                }
 
                 public boolean isUnsubscribed() {
+                    assert _myConnection != null;
                     return true;
                 }
 
                 public Object getReturnValue() {
+                    assert _myConnection != null;
                     return null;
                 }
             };

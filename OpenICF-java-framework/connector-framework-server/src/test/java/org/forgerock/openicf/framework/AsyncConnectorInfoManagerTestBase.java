@@ -493,7 +493,7 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
         Assert.assertEquals(o, "test");
     }
 
-    @Test
+    @Test(enabled = false)
     public void testSerialBatch() throws Throwable {
         ConnectorFacade facade = getConnectorFacade();
 
@@ -505,7 +505,7 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
         runBatch(facade, options);
     }
 
-    @Test
+    @Test(enabled = false)
     public void testSerialBatchWithError() throws Throwable {
         ConnectorFacade facade = getConnectorFacade();
 
@@ -518,7 +518,7 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
         runBatch(facade, options);
     }
 
-    @Test
+    @Test(enabled = false)
     public void testSynchronousBatch() throws Throwable {
         ConnectorFacade facade = getConnectorFacade();
 
@@ -530,7 +530,7 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
         runBatch(facade, options);
     }
 
-    @Test
+    @Test(enabled = false)
     public void testSynchronousBatchWithError() throws Throwable {
         ConnectorFacade facade = getConnectorFacade();
 
@@ -543,7 +543,7 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
         runBatch(facade, options);
     }
 
-    @Test
+    @Test(enabled = false)
     public void testAsynchronousBatch() throws Throwable {
         ConnectorFacade facade = getConnectorFacade();
 
@@ -555,7 +555,7 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
         runBatch(facade, options);
     }
 
-    @Test
+    @Test(enabled = false)
     public void testAsynchronousBatchWithError() throws Throwable {
         ConnectorFacade facade = getConnectorFacade();
 
