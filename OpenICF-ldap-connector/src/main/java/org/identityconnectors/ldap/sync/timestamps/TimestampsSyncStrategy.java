@@ -108,7 +108,7 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
         controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
         controls.setDerefLinkFlag(false);
         
-        if (options.getAttributesToGet().length != 0){
+        if (null != options.getAttributesToGet() && options.getAttributesToGet().length != 0){
             attrsToGet = options.getAttributesToGet();
         }
         if (ADLdapUtil.isServerMSADFamily(server)) {
