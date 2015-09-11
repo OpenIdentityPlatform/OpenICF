@@ -103,16 +103,21 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
 
         final String now = getNowTime();
         LdapSearchStrategy strategy;
+        String[] attrsToGet = new String[]{"*"};
         SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
         controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
         controls.setDerefLinkFlag(false);
+        
+        if (options.getAttributesToGet().length != 0){
+            attrsToGet = options.getAttributesToGet();
+        }
         if (ADLdapUtil.isServerMSADFamily(server)) {
             controls.setReturningAttributes(getAttributesToGet(new String[]{createTimestamp, modifyTimestamp,
                 ADUserAccountControl.MSDS_USR_ACCT_CTRL_ATTR,
-                conn.getConfiguration().getUidAttribute()}, options.getAttributesToGet()));
+                conn.getConfiguration().getUidAttribute()}, attrsToGet));
         } else {
             controls.setReturningAttributes(getAttributesToGet(new String[]{createTimestamp, modifyTimestamp,
-                conn.getConfiguration().getUidAttribute()}, options.getAttributesToGet()));
+                conn.getConfiguration().getUidAttribute()}, attrsToGet));
         }
 
         if (conn.getConfiguration().isUseBlocks() && conn.supportsControl(PagedResultsControl.OID)) {
