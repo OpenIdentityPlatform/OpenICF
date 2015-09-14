@@ -704,12 +704,6 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
         for (Attribute attribute : attributes) {
             if (attribute.is(Name.NAME)) {
                 arguments.setVariable(ID, AttributeUtil.getSingleValue(attribute))
-            } else if ((attribute.is(OperationalAttributes.PASSWORD_NAME) ||
-                    attribute.is(OperationalAttributes.CURRENT_PASSWORD_NAME)) && method.equals(OperationType.UPDATE)) {
-                attributesMap.put(attribute.getName(),
-                        getGuardedStringValue(AttributeUtil.getGuardedStringValue(attribute)));
-            } else if (OperationalAttributes.isOperationalAttribute(attribute) && method.equals(OperationType.UPDATE)) {
-                attributesMap.put(attribute.getName(), attribute.getValue());
             } else {
                 attributesMap.put(attribute.getName(), attribute.getValue());
             }
