@@ -477,7 +477,7 @@ public class MessagesUtil {
             ObjectHandler<ConnectorObject, CommonObjectMessages.ConnectorObject, CommonObjectMessages.ConnectorObject.Builder> {
 
         public ConnectorObject deserialize(CommonObjectMessages.ConnectorObject message) {
-            Set<? extends Attribute> attributes = deserializeLegacy(message.getAttriutes());
+            Set<? extends Attribute> attributes = deserializeLegacy(message.getAttributes());
             return new ConnectorObject(new ObjectClass(message.getObjectClass()), attributes);
         }
 
@@ -487,7 +487,7 @@ public class MessagesUtil {
 
         public CommonObjectMessages.ConnectorObject.Builder serializeBuilder(ConnectorObject source) {
             return CommonObjectMessages.ConnectorObject.newBuilder().setObjectClass(
-                    source.getObjectClass().getObjectClassValue()).setAttriutes(
+                    source.getObjectClass().getObjectClassValue()).setAttributes(
                     serializeLegacy(source.getAttributes()));
         }
     }

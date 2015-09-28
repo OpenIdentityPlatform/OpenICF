@@ -72,7 +72,7 @@ message ConnectorObject {
         AttributeCollectionValue value = 2;
     }*/
     string objectClass = 1;
-    bytes attriutes = 2;
+    bytes attributes = 2;
     //repeated MapFieldEntry map_field = 2;
 }
 

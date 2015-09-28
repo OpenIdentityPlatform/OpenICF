@@ -200,10 +200,10 @@ public class ConnectorServer {
 
             final String serverHost =
                     StringUtil.isNotBlank(host) ? host : NetworkListener.DEFAULT_NETWORK_HOST;
-
+            final int serverPort = getServerPort(port);
+            
             if (null != contextConfigurator) {
                 // HTTPS
-                final int serverPort = getServerPort(port, true);
                 final String listenerName =
                         StringUtil.isNotBlank(name) ? name : "OpenICF-Secure:" + port;
                 final NetworkListener listenerSecure =
@@ -215,7 +215,6 @@ public class ConnectorServer {
                 server.addListener(listenerSecure);
             } else {
                 // HTTP
-                final int serverPort = getServerPort(port, false);
                 final String listenerName =
                         StringUtil.isNotBlank(name) ? name : "OpenICF-Plain:" + port;
                 final NetworkListener listener =
@@ -230,9 +229,11 @@ public class ConnectorServer {
         }
     }
 
-    private int getServerPort(int serverPort, boolean isSecure) {
-        return 0 < serverPort && serverPort <= 65535 ? serverPort : (isSecure ? 8443
-                : NetworkListener.DEFAULT_NETWORK_PORT);
+    private int getServerPort(int serverPort) {
+        if (0 < serverPort && serverPort <= 65535) {
+            return serverPort;
+        }
+        throw new IllegalArgumentException("Port value out of range: " + serverPort);
     }
 
     /**

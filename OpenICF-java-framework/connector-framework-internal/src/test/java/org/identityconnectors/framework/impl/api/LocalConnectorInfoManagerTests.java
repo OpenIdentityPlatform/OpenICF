@@ -392,4 +392,59 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
         assertFalse(isComplete.get());
         assertTrue(hasError.get());
     }
+    
+    @Test
+    public void testBatchUseCase0and1Handler() throws Exception {
+        ConnectorInfoManager manager = getConnectorInfoManager();
+        ConnectorInfo info =
+                findConnectorInfo(manager, "1.0.0.0",
+                        "org.identityconnectors.testconnector.TstConnector");
+
+        APIConfiguration api = info.createDefaultAPIConfiguration();
+        api.setProducerBufferSize(0);
+
+        ConnectorFacadeFactory facf = ConnectorFacadeFactory.getInstance();
+        ConnectorFacade facade = facf.newInstance(api);
+
+        OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        builder.setOption(OperationOptions.OP_FAIL_ON_ERROR, true);
+        builder.setOption("TEST_USECASE1", true);
+        final OperationOptions options = builder.build();
+
+        final BatchBuilder batch = new BatchBuilder();
+        batch.addCreateOp(ObjectClass.ACCOUNT, new HashSet<Attribute>(), options);
+        batch.addCreateOp(ObjectClass.ACCOUNT, new HashSet<Attribute>(), options);
+        batch.addCreateOp(ObjectClass.ACCOUNT, new HashSet<Attribute>(), options);
+
+        final List<Object> results = new ArrayList<Object>();
+        final AtomicBoolean isComplete = new AtomicBoolean(false);
+        final AtomicBoolean hasError = new AtomicBoolean(false);
+
+        Observer<BatchResult> observer = new Observer<BatchResult>() {
+            public void onCompleted() {
+                isComplete.set(true);
+                assert !hasError.get();
+            }
+
+            public void onError(Throwable e) {
+                hasError.set(true);
+                assert !isComplete.get();
+            }
+
+            public void onNext(BatchResult batchResult) {
+                results.add(batchResult);
+                if (batchResult.getError()) {
+                    hasError.set(true);
+                }
+                assert !batchResult.getResultId().equals("1");
+            }
+        };
+
+        Subscription sub = facade.executeBatch(batch.build(), observer, options);
+        assertEquals(results.size(), 2);
+        //Batch process is complete but handler failed to receive all
+        assertTrue(hasError.get() ^ isComplete.get());
+        assertNull(sub.getReturnValue());
+        assertTrue(sub.isUnsubscribed());
+    }
 }
