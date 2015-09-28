@@ -26,10 +26,8 @@ package org.forgerock.openicf.framework.async.impl;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -288,13 +286,17 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
     private static class InternalRequest
             extends AbstractRemoteOperationRequestFactory.AbstractRemoteOperationRequest<BatchToken, BatchOpResult> {
         private final Observer<BatchResult> observer;
-        private final AtomicInteger responseIdSent = new AtomicInteger(-1);
-        private final AtomicBoolean commandChannelComplete = new AtomicBoolean(false);
-        private final AtomicInteger resultChannelComplete = new AtomicInteger(0);
-        private BatchToken returnToken = new BatchToken();
+
+        // Flow control flags
+        private final AtomicBoolean resultChannelComplete = new AtomicBoolean(false);
+        private final AtomicBoolean completeEventComplete = new AtomicBoolean(false);
+        private BatchToken returnToken = null;
+        private final AtomicLong completionTimeout = new AtomicLong(new Date().getTime() + 5000);
+        private final CompletionListener completionListener = new CompletionListener();
+
+        // For sorting result responses
         private final TreeMap<Integer, BatchOpResult> responseQueue = new TreeMap<Integer, BatchOpResult>();
-        private final AtomicLong completionTimeout = new AtomicLong(0);
-        private final AtomicBoolean resultHandled = new AtomicBoolean(false);
+        private final AtomicInteger responseIdSent = new AtomicInteger(-1);
 
         public InternalRequest(
                 final RemoteOperationContext context,
@@ -340,50 +342,59 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
                         responseQueue.remove(key);
                     }
                 }
-            } else if (message.getBatchTokenCount() > 0) {
-                if (!commandChannelComplete.get()) {
-                    returnToken = new BatchToken();
-                    for (int i = 0; i < message.getBatchTokenCount(); i++) {
-                        returnToken.addToken(message.getBatchToken(i));
-                    }
-                    returnToken.setQueryRequired(message.getQueryRequired());
-                    returnToken.setAsynchronousResults(message.getAsynchronousResults());
-                    commandChannelComplete.set(true);
-                    if (!message.getAsynchronousResults()) {
-                        // the token marks the end of this request; results will be returned with a queryBatch
-                        resultChannelComplete.incrementAndGet();
-                    }
-                    logger.ok("Batch execution complete with token.");
+            } else if (message.getTaskId().length() == 0 && !message.getComplete()) {
+                // BatchToken message (token list may be empty)
+                logger.ok("Batch token received.");
+                returnToken = new BatchToken();
+                for (int i = 0; i < message.getBatchTokenCount(); i++) {
+                    returnToken.addToken(message.getBatchToken(i));
                 }
+                returnToken.setQueryRequired(message.getQueryRequired());
+                returnToken.setAsynchronousResults(message.getAsynchronousResults());
+                returnToken.setReturnsResults(message.getReturnsResults());
+
+                if (!message.getReturnsResults()) {
+                    // No results returned with this token
+                    resultChannelComplete.set(true);
+                }
+                completionListener.start();
             } else {
-                if (message.getComplete() && resultChannelComplete.get() < 2) {
-                    resultChannelComplete.incrementAndGet();
-                    new CompletionListener().start();
-                    logger.ok("Batch results complete due to final token or error.");
-                } else {
-                    commandChannelComplete.set(true);
-                    logger.ok("Batch execution complete with no token.");
-                }
+                // "Complete" message
+                logger.ok("Batch operation complete.");
+                completeEventComplete.set(true);
+                completionListener.start();
             }
         }
 
         private class CompletionListener extends Thread {
+            private boolean running = false;
+
+            public void start() {
+                if (running) {
+                    return;
+                }
+                running = true;
+                super.start();
+            }
+
             public void run() {
                 logger.ok("CompletionListener waiting for final result to complete.");
-                while (resultChannelComplete.get() < 2 && new Date().getTime() < completionTimeout.get()) {
+                while ((!resultChannelComplete.get() || returnToken == null || !completeEventComplete.get())
+                        && new Date().getTime() < completionTimeout.get()) {
                     try {
                         sleep(100);
                     } catch (Exception e) {
-                        observer.onCompleted();
                         break;
                     }
                 }
-                observer.onCompleted();
-                if (!resultHandled.get()) {
-                    resultHandled.set(true);
+
+                if (returnToken != null) {
                     getResultHandler().handleResult(returnToken);
                     logger.ok("Token returned.");
+                } else {
+                    logger.ok("Batch CompletionListener timed out. Unable to return batch token.");
                 }
+                observer.onCompleted();
                 logger.ok("CompletionListener finished.");
             }
         }
@@ -404,6 +415,7 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
                     }
                     newToken.setQueryRequired(message.getQueryRequired());
                     newToken.setAsynchronousResults(message.getAsynchronousResults());
+                    newToken.setReturnsResults(message.getReturnsResults());
                 }
 
                 observer.onNext(new BatchResult(result, newToken, message.getTaskId(),
@@ -411,8 +423,8 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
                 logger.ok("Handled message: " + message.getTaskId());
 
                 if (message.getComplete()) {
-                    resultChannelComplete.incrementAndGet();
-                    logger.ok("Batch results complete.");
+                    resultChannelComplete.set(true);
+                    logger.ok("Last batch result processed.");
                 }
             } catch (Throwable t) {
                 if (!getPromise().isDone()) {
@@ -584,6 +596,7 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
                 }
                 result.setQueryRequired(returnedToken.isQueryRequired());
                 result.setAsynchronousResults(returnedToken.hasAsynchronousResults());
+                result.setReturnsResults(returnedToken.returnsResults());
                 if (returnedToken.isQueryRequired()) {
                     resultChannelComplete.incrementAndGet();
                 }

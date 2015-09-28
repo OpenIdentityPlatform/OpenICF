@@ -45,6 +45,7 @@ public class BatchToken {
     private final List<String> tokens = new ArrayList<String>();
     private boolean queryRequired = false;
     private boolean asynchronousResults = false;
+    private boolean returnsResults = true;
 
     public BatchToken() {}
 
@@ -82,5 +83,13 @@ public class BatchToken {
 
     public void setAsynchronousResults(boolean asynchronousResults) {
         this.asynchronousResults = asynchronousResults;
+    }
+
+    public boolean returnsResults() {
+        return returnsResults;
+    }
+
+    public void setReturnsResults(boolean returnsResults) {
+        this.returnsResults = returnsResults;
     }
 }

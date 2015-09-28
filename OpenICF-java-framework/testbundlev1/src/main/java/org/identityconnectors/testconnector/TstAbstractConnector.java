@@ -579,6 +579,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         }
     }
 
+    BatchUseCase2Processor processorUseCase2 = null;
     BatchUseCase3Processor processorUseCase3 = null;
 
     public Subscription executeBatch(final List<BatchTask> tasks, final Observer<BatchResult> observer,
@@ -588,7 +589,8 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         }
 
         if (options.getOptions().containsKey("TEST_USECASE2")) {
-            final BatchToken token = new BatchUseCase2Processor().executeBatch(tasks, options);
+            processorUseCase2 = new BatchUseCase2Processor();
+            final BatchToken token = processorUseCase2.executeBatch(tasks, options);
             observer.onCompleted();
             return new Subscription() {
                 public void close() {}
@@ -682,20 +684,20 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
                 || options.getOptions().containsKey("TEST_USECASE1")) {
             opComplete.set(true);
             observer.onCompleted();
+            return ret;
         } else if (options.getOptions().containsKey("TEST_USECASE3")) {
-            boolean allComplete = true;
-            for (String token : batchToken.getTokens()) {
-                allComplete &= BatchRemoteCache.isComplete(token);
-            }
-            opComplete.set(opComplete.get() | allComplete);
+            return ret;
         } else { // TEST_USECASE2
-            opComplete.set(batchToken.getTokens().size() == 0);
+            opComplete.set(true);
+            boolean hasResults = false;
             for (String token : batchToken.getTokens()) {
                 List<BatchRemoteCache.CachedBatchResult> results = BatchRemoteCache.getAndResetResults(token);
-                boolean tokenComplete = results.size() <= 0;
+                boolean lastResult = true;
                 for (BatchRemoteCache.CachedBatchResult result : results) {
+                    hasResults = true;
+                    lastResult = result.complete || (result.error && options.getFailOnError());
                     observer.onNext(new BatchResult(result.result, batchToken, result.resultId,
-                            result.complete, result.error));
+                            lastResult, result.error));
                     if (result.error) {
                         if (result.result instanceof RuntimeException) {
                             observer.onError((RuntimeException) result.result);
@@ -706,20 +708,23 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
                             return ret;
                         }
                     }
-                    tokenComplete |= result.complete;
+                    opComplete.set(opComplete.get() && lastResult);
                 }
-                if (tokenComplete) {
+                if (lastResult) {
                     BatchRemoteCache.flushResults(token);
                     batchToken.removeToken(token);
+                } else {
+                    batchToken.setQueryRequired(true);
                 }
-                opComplete.set(opComplete.get() | tokenComplete);
             }
-            if (opComplete.get()) {
-                observer.onCompleted();
+            if (batchToken.getTokens().size() == 0) {
+                batchToken.setAsynchronousResults(false);
+                batchToken.setQueryRequired(false);
+                batchToken.setReturnsResults(hasResults);
             }
+            observer.onCompleted();
+            return ret;
         }
-
-        return ret;
     }
 
     /**
@@ -735,9 +740,14 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
             this.options = new OperationOptions(options.getOptions());
             BatchRemoteCache.addTasks(token, tasks);
             start();
-            try { Thread.sleep(1000); } catch (Exception e) {}
+            try {
+                // Simulate a query return trip to a remote resource to ensure the batch task processing has been
+                // initiated before we return a token
+                sleep(1000);
+            } catch (Exception e) {}
             BatchToken tok = new BatchToken(token);
             tok.setQueryRequired(true);
+            tok.setReturnsResults(false);
             return tok;
         }
 
@@ -783,6 +793,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
                     // interrupted
                 }
             }
+
             BatchRemoteCache.flushTasks(token);
         }
     }

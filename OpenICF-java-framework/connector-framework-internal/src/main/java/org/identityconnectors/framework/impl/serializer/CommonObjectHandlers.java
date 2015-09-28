@@ -808,6 +808,8 @@ class CommonObjectHandlers {
             public void serialize(Object object, ObjectEncoder encoder) {
                 encoder.writeObjectField("token", ((BatchToken)object).getTokens(), true);
                 encoder.writeBooleanField("queryRequired", ((BatchToken)object).isQueryRequired());
+                encoder.writeBooleanField("asynchronousResults", ((BatchToken)object).hasAsynchronousResults());
+                encoder.writeBooleanField("returnsResults", ((BatchToken)object).returnsResults());
             }
 
             public Object deserialize(ObjectDecoder decoder) {
@@ -818,6 +820,8 @@ class CommonObjectHandlers {
                     tokens.addToken(token);
                 }
                 tokens.setQueryRequired(decoder.readBooleanField("queryRequired", false));
+                tokens.setAsynchronousResults(decoder.readBooleanField("asynchronousResults", false));
+                tokens.setReturnsResults(decoder.readBooleanField("returnsResults", true));
                 return tokens;
             }
         });

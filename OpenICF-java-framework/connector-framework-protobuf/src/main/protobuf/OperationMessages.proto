@@ -7,6 +7,18 @@ import "CommonObjectMessages.proto";
 
 //import "FilterMessages.proto";
 
+//Interface AuthenticateOp
+message AuthenticateOpRequest {
+    string objectClass = 1;
+    string username = 2;
+    bytes password = 3;
+    bytes options = 4;
+}
+
+message AuthenticateOpResponse {
+    Uid uid = 1;
+}
+
 //Interface BatchOp
 message BatchOpRequest {
     bool query = 1;
@@ -29,24 +41,13 @@ message BatchOpResult {
     bool error = 4;
     bool queryRequired = 5;
     bool asynchronousResults = 6;
-    Uid uid = 7;
-    BatchEmptyResponse emptyResult = 8;
+    bool returnsResults = 7;
+    Uid uid = 8;
+    BatchEmptyResponse emptyResult = 9;
 }
 
 message BatchEmptyResponse {
     string resultMessage = 2;
-}
-
-//Interface AuthenticateOp
-message AuthenticateOpRequest {
-    string objectClass = 1;
-    string username = 2;
-    bytes password = 3;
-    bytes options = 4;
-}
-
-message AuthenticateOpResponse {
-    Uid uid = 1;
 }
 
 //Interface CreateOp

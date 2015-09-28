@@ -140,7 +140,7 @@ public class OpenICFServerAdapter implements OperationMessageListener {
         try {
             RemoteMessage message = RemoteMessage.parseFrom(bytes);
 
-logger.info("onMessage({0})", message.toString());
+            logger.info("onMessage({0})", message.toString());
             if (message.hasRequest()) {
                 if (message.getRequest().hasHandshakeMessage()) {
                     if (isClient()) {

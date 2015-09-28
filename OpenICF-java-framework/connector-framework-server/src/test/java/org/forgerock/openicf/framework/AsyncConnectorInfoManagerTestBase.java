@@ -493,7 +493,7 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
         Assert.assertEquals(o, "test");
     }
 
-    @Test(enabled = false)
+    @Test
     public void testSerialBatch() throws Throwable {
         ConnectorFacade facade = getConnectorFacade();
 
@@ -505,7 +505,7 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
         runBatch(facade, options);
     }
 
-    @Test(enabled = false)
+    @Test
     public void testSerialBatchWithError() throws Throwable {
         ConnectorFacade facade = getConnectorFacade();
 
@@ -518,7 +518,7 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
         runBatch(facade, options);
     }
 
-    @Test(enabled = false)
+    @Test
     public void testSynchronousBatch() throws Throwable {
         ConnectorFacade facade = getConnectorFacade();
 
@@ -530,7 +530,7 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
         runBatch(facade, options);
     }
 
-    @Test(enabled = false)
+    @Test
     public void testSynchronousBatchWithError() throws Throwable {
         ConnectorFacade facade = getConnectorFacade();
 
@@ -543,7 +543,7 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
         runBatch(facade, options);
     }
 
-    @Test(enabled = false)
+    @Test
     public void testAsynchronousBatch() throws Throwable {
         ConnectorFacade facade = getConnectorFacade();
 
@@ -555,7 +555,7 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
         runBatch(facade, options);
     }
 
-    @Test(enabled = false)
+    @Test
     public void testAsynchronousBatchWithError() throws Throwable {
         ConnectorFacade facade = getConnectorFacade();
 
@@ -601,10 +601,20 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
         Subscription sub = facade.executeBatch(batchTasks, observer, options);
 
         BatchToken batchToken = (BatchToken) sub.getReturnValue();
+
         if (batchToken.isQueryRequired() && batchToken.getTokens().size() > 0) {
+            // Wait for completion flag
+            long timeout = new Date().getTime() + 3000;
+            while (!isComplete.get() && new Date().getTime() < timeout) {
+                Thread.sleep(200);
+            }
             assertTrue(isComplete.get());
+
+            // Reset completion flag and query for results
             isComplete.set(false);
-            while (!isComplete.get()) {
+            timeout = new Date().getTime() + 3000;
+            boolean done = !batchToken.isQueryRequired();
+            while (!done) {
                 try {
                     sub = facade.queryBatch(batchToken, observer, options);
                 } catch (Exception e) {
@@ -613,6 +623,13 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
                     }
                 }
                 batchToken = (BatchToken) sub.getReturnValue();
+
+                done = (isComplete.get() && results.size() == batchTasks.size()) ||
+                        (options.getFailOnError() && hasError.get()) ||
+                        new Date().getTime() >= timeout;
+                if (!done) {
+                    Thread.sleep(200);
+                }
             }
         }
 
@@ -620,16 +637,23 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
                 ? (Integer) options.getOptions().get("FAIL_TEST_ITERATION")
                 : batchTasks.size();
 
-        if (batchToken.hasAsynchronousResults() || !isComplete.get()) {
-            long timeout = new Date().getTime() + 10000;
-            while (new Date().getTime() < timeout && !isComplete.get()) {
-                Thread.sleep(100);
+        if (batchToken.hasAsynchronousResults() && !isComplete.get()) {
+            long timeout = new Date().getTime() + 3000;
+            while (!isComplete.get() && new Date().getTime() < timeout) {
+                Thread.sleep(200);
             }
         }
         sub.close();
 
         assertEquals(results.size(), expectedSize);
+
+        // Wait for completion flag
+        long timeout = new Date().getTime() + 3000;
+        while (!isComplete.get() && new Date().getTime() < timeout) {
+            Thread.sleep(200);
+        }
         assertTrue(isComplete.get());
+
         if (options.getOptions().containsKey("FAIL_TEST_ITERATION")) {
             assertTrue(hasError.get());
         } else {
