@@ -33,7 +33,7 @@
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>connectors-parent</artifactId>
     <packaging>pom</packaging>
-    <name>OpenICF Connector Bundle Parent</name>
+    <name>OpenICF Connectors</name>
     <description>
         This pom module is the parent for all connector bundles. It defines the dependencies on framework, building the
         connector bundle and common reporting for connectors.
@@ -204,7 +204,7 @@
                         <dependency>
                             <groupId>org.forgerock.maven.plugins</groupId>
                             <artifactId>openicf-maven-plugin</artifactId>
-                            <version>${openic.maven.plugin.version}</version>
+                            <version>${openicf.maven.plugin.version}</version>
                         </dependency>
                     </dependencies>
                 </plugin>
@@ -337,7 +337,7 @@
                 <plugin>
                     <groupId>org.forgerock.maven.plugins</groupId>
                     <artifactId>openicf-maven-plugin</artifactId>
-                    <version>${openic.maven.plugin.version}</version>
+                    <version>${openicf.maven.plugin.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -347,7 +347,7 @@
             <plugin>
                 <groupId>org.forgerock.maven.plugins</groupId>
                 <artifactId>openicf-maven-plugin</artifactId>
-                <version>${openic.maven.plugin.version}</version>
+                <version>${openicf.maven.plugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -388,6 +388,8 @@
                         <configuration>
                             <projectName>OpenICF</projectName>
                             <googleAnalyticsId>${googleAnalyticsAccountId}</googleAnalyticsId>
+                            <projectVersion>${docTargetVersion}</projectVersion>
+                            <releaseVersion>${docTargetVersion}</releaseVersion>
                             <docbkxSourceDirectory>${project.build.directory}/openicf-docbkx</docbkxSourceDirectory>
                             <projectVersion>${docTargetVersion}</projectVersion>
                         </configuration>

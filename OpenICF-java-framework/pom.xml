@@ -150,7 +150,7 @@
         <licenseResourceBundle>org.forgerock.openicf:openicf-license:1.3.0</licenseResourceBundle>
         <siteDistributionURL>scp://community.internal.forgerock.com/var/www/vhosts/openicf.forgerock.org/httpdocs</siteDistributionURL>
 
-        <openic.maven.plugin.version>1.2.1</openic.maven.plugin.version>
+        <openicf.maven.plugin.version>1.3.0-SNAPSHOT</openicf.maven.plugin.version>
         <slf4j.version>1.7.12</slf4j.version>
         <logback.version>1.1.3</logback.version>
         <groovy.version>2.2.2</groovy.version>
@@ -371,7 +371,7 @@
                         <inherited>false</inherited>
                         <configuration>
                             <resourceBundles>
-                                <resourceBundle>org.forgerock.maven.plugins:openicf-maven-plugin:${openic.maven.plugin.version}</resourceBundle>
+                                <resourceBundle>org.forgerock.maven.plugins:openicf-maven-plugin:${openicf.maven.plugin.version}</resourceBundle>
                             </resourceBundles>
                             <outputDirectory>${project.build.directory}/docbkx-generated</outputDirectory>
                         </configuration>
