@@ -20,10 +20,26 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2013 Radovan Semancik, Evolveum
+ * Portions Copyrighted 2015 ForgeRock AS
  */
 package org.identityconnectors.databasetable;
 
-import static org.identityconnectors.databasetable.DatabaseTableConstants.*;
+import static org.identityconnectors.databasetable.DatabaseTableConstants.MSG_ACCOUNT_OBJECT_CLASS_REQUIRED;
+import static org.identityconnectors.databasetable.DatabaseTableConstants.MSG_AUTHENTICATE_OP_NOT_SUPPORTED;
+import static org.identityconnectors.databasetable.DatabaseTableConstants.MSG_AUTH_FAILED;
+import static org.identityconnectors.databasetable.DatabaseTableConstants.MSG_CAN_NOT_CREATE;
+import static org.identityconnectors.databasetable.DatabaseTableConstants.MSG_CAN_NOT_DELETE;
+import static org.identityconnectors.databasetable.DatabaseTableConstants.MSG_CAN_NOT_READ;
+import static org.identityconnectors.databasetable.DatabaseTableConstants.MSG_CAN_NOT_UPDATE;
+import static org.identityconnectors.databasetable.DatabaseTableConstants.MSG_CHANGELOG_COLUMN_BLANK;
+import static org.identityconnectors.databasetable.DatabaseTableConstants.MSG_INVALID_ATTRIBUTE_SET;
+import static org.identityconnectors.databasetable.DatabaseTableConstants.MSG_INVALID_SYNC_TOKEN_VALUE;
+import static org.identityconnectors.databasetable.DatabaseTableConstants.MSG_MORE_USERS_DELETED;
+import static org.identityconnectors.databasetable.DatabaseTableConstants.MSG_NAME_BLANK;
+import static org.identityconnectors.databasetable.DatabaseTableConstants.MSG_PASSWORD_BLANK;
+import static org.identityconnectors.databasetable.DatabaseTableConstants.MSG_RESULT_HANDLER_NULL;
+import static org.identityconnectors.databasetable.DatabaseTableConstants.MSG_UID_BLANK;
+import static org.identityconnectors.databasetable.DatabaseTableConstants.MSG_USER_BLANK;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -45,12 +61,12 @@ import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.dbcommon.DatabaseQueryBuilder;
+import org.identityconnectors.dbcommon.DatabaseQueryBuilder.OrderBy;
 import org.identityconnectors.dbcommon.FilterWhereBuilder;
 import org.identityconnectors.dbcommon.InsertIntoBuilder;
 import org.identityconnectors.dbcommon.SQLParam;
 import org.identityconnectors.dbcommon.SQLUtil;
 import org.identityconnectors.dbcommon.UpdateSetBuilder;
-import org.identityconnectors.dbcommon.DatabaseQueryBuilder.OrderBy;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
@@ -65,7 +81,6 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
 import org.identityconnectors.framework.common.objects.OperationOptions;
-import org.identityconnectors.framework.common.objects.OperationalAttributeInfos;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Schema;
@@ -1078,7 +1093,9 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
                 log.ok("key column in name attribute in the schema");
             } else if (name.equalsIgnoreCase(config.getPasswordColumn())) {
                 // Password attribute
-                attrInfo.add(OperationalAttributeInfos.PASSWORD);                
+                attrInfo.add(new AttributeInfoBuilder(OperationalAttributes.PASSWORD_NAME,
+                        GuardedString.class).setReturnedByDefault(false).setReadable(
+                        !config.getSuppressPassword()).build());
                 log.ok("password column in password attribute in the schema");
             } else if (name.equalsIgnoreCase(config.getChangeLogColumn())) {
                 // skip changelog column from the schema. It is not part of the contract
@@ -1139,7 +1156,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             } else if (columnName.equalsIgnoreCase(config.getPasswordColumn())) {
             	if (config.getSuppressPassword()) {
 	                // No Password in the result object
-	                log.ok("Password is supressed in the result object");
+	                log.ok("Password is suppressed in the result object");
             	} else {
             		GuardedString passwordValue = null;
             		if(param != null && param.getValue() != null) {
@@ -1173,7 +1190,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         bld.setUid(new Uid(uidValue));
         // only deals w/ accounts..
         bld.setObjectClass(ObjectClass.ACCOUNT);
-        log.ok("ConnectorObject is builded");                
+        log.ok("ConnectorObject is built");                
         return bld;
     }    
     
@@ -1219,7 +1236,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         Set<String> attributesToGet = getDefaultAttributesToGet();
         if (options != null && options.getAttributesToGet() != null) {
             attributesToGet = CollectionUtil.newSet(options.getAttributesToGet());
-            attributesToGet.add(Uid.NAME); // Ensure the Uid colum is there
+            attributesToGet.add(Uid.NAME); // Ensure the Uid column is there
         } 
         // Replace attributes to quoted columnNames
         Set<String> columnNamesToGet = new HashSet<String>();

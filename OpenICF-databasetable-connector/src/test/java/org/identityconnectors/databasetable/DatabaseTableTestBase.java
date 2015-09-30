@@ -19,9 +19,11 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2015 ForgeRock AS
  */
 package org.identityconnectors.databasetable;
 
+import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 import org.testng.Assert;
@@ -657,16 +659,17 @@ public abstract class DatabaseTableTestBase {
         log.ok("testSearchByNameAttributesToGet");
         // create connector
         final DatabaseTableConfiguration cfg = getConfiguration();
+        cfg.setSuppressPassword(false);
         con = getConnector(cfg);
         final Set<Attribute> expected = getCreateAttributeSet(cfg);
 
         // create the object
         final Uid uid = con.create(ObjectClass.ACCOUNT, expected, null);
-        AssertJUnit.assertNotNull(uid);
+        Assert.assertNotNull(uid);
 
         // attempt to get the record back..
         OperationOptionsBuilder opOption = new OperationOptionsBuilder();
-        opOption.setAttributesToGet(FIRSTNAME, LASTNAME, MANAGER);
+        opOption.setAttributesToGet(FIRSTNAME, LASTNAME, MANAGER, OperationalAttributes.PASSWORD_NAME);
         List<ConnectorObject> results = TestHelpers.searchToList(con, ObjectClass.ACCOUNT, FilterBuilder.equalTo(uid),
                 opOption.build());
         AssertJUnit.assertTrue("expect 1 connector object", results.size() == 1);
@@ -681,6 +684,7 @@ public abstract class DatabaseTableTestBase {
         AssertJUnit.assertNull(AttributeUtil.find(AGE, actual));
         AssertJUnit.assertNull(AttributeUtil.find(DEPARTMENT, actual));
         AssertJUnit.assertNull(AttributeUtil.find(EMAIL, actual));
+        AssertJUnit.assertNotNull(AttributeUtil.find(OperationalAttributes.PASSWORD_NAME, actual));
         AssertJUnit.assertNotNull(AttributeUtil.find(FIRSTNAME, actual));
         AssertJUnit.assertNotNull(AttributeUtil.find(LASTNAME, actual));
         AssertJUnit.assertNotNull(AttributeUtil.find(MANAGER, actual));

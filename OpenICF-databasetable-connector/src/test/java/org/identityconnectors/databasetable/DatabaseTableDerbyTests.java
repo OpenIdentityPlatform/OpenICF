@@ -19,12 +19,16 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2015 ForgeRock AS
  */
 package org.identityconnectors.databasetable;
 
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertTrue;
+
+import org.identityconnectors.framework.common.objects.OperationalAttributes;
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 import org.testng.annotations.BeforeClass;
@@ -156,14 +160,14 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
         DatabaseTableConfiguration config = new DatabaseTableConfiguration();
         config.setJdbcDriver(DRIVER);
         config.setUser("");
-        config.setPassword(new GuardedString("".toCharArray()));
+         config.setPassword(new GuardedString("".toCharArray()));
         config.setTable(DB_TABLE);
-        config.setKeyColumn(ACCOUNTID);
-        config.setPasswordColumn(PASSWORD);
-        config.setDatabase(getDBDirectory().toString());
-        config.setJdbcUrlTemplate(URL_CONN);
-        config.setChangeLogColumn(CHANGELOG);
-        config.setConnectorMessages(TestHelpers.createDummyMessages());
+         config.setKeyColumn(ACCOUNTID);
+         config.setPasswordColumn(PASSWORD);
+         config.setDatabase(getDBDirectory().toString());
+         config.setJdbcUrlTemplate(URL_CONN);
+         config.setChangeLogColumn(CHANGELOG);
+         config.setConnectorMessages(TestHelpers.createDummyMessages());
         return config;
     }
 
@@ -230,7 +234,7 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
         config.setJdbcUrlTemplate(URL_CONN);
         assertEquals(URL_CONN, config.getJdbcUrlTemplate());
         config.setDatabase(getDBDirectory().toString());
-        assertEquals(getDBDirectory().toString(), config.getDatabase());        
+        assertEquals(getDBDirectory().toString(), config.getDatabase());
         config.setUser(ACCOUNTID);
         assertEquals(ACCOUNTID, config.getUser());
         config.setPassword(new GuardedString("".toCharArray()));
@@ -321,7 +325,14 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
         con = getConnector(cfg);
         // check if this works..
         Schema schema = con.schema();
-        checkSchema(schema);
+        checkSchema(schema, cfg);
+
+        //Negative test
+        cfg.setSuppressPassword(!cfg.getSuppressPassword());
+        con = getConnector(cfg);
+        // check if this works..
+        schema = con.schema();
+        checkSchema(schema, cfg);
     }
     
     
@@ -333,14 +344,14 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
      *            the schema to be checked
      * @throws Exception 
      */
-    void checkSchema(Schema schema) throws Exception {
+    void checkSchema(Schema schema, DatabaseTableConfiguration cfg) throws Exception {
         // Schema should not be null
         assertNotNull(schema);
         Set<ObjectClassInfo> objectInfos = schema.getObjectClassInfo();
         assertNotNull(objectInfos);
         assertEquals(1, objectInfos.size());
         // get the fields from the test account
-        final Set<Attribute> attributeSet = getCreateAttributeSet(getConfiguration());
+        final Set<Attribute> attributeSet = getCreateAttributeSet(cfg);
         final Map<String,Attribute> expected = AttributeUtil.toMap(attributeSet);
         final Set<String> keys = CollectionUtil.newCaseInsensitiveSet();
         keys.addAll(expected.keySet());
@@ -358,6 +369,9 @@ public class DatabaseTableDerbyTests extends DatabaseTableTestBase {
                 if(fieldName.equalsIgnoreCase(CHANGELOG)){
                     keys.remove(fieldName);
                     continue;
+                }
+                if(fieldName.equalsIgnoreCase(OperationalAttributes.PASSWORD_NAME)){
+                    Assert.assertEquals(cfg.getSuppressPassword(), !attInfo.isReadable());
                 }
                 assertTrue("Field:" + fieldName + " doesn't exist", keys.contains(fieldName));
                 keys.remove(fieldName);
