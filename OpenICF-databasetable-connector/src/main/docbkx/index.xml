@@ -20,7 +20,7 @@
   !
   ! CCPL HEADER END
   !
-  !      Copyright 2011-2014 ForgeRock AS
+  !      Copyright 2011-2015 ForgeRock AS
   !
 -->
 <book xml:id='connector-guide-org.forgerock.openicf.connectors-databasetable-connector-${project.version}'
@@ -58,9 +58,9 @@
     <xinclude:include href="preface.xml" />
     <xinclude:include href="chap-install-databasetable-connector.xml" />
     <xinclude:include href="chap-config-databasetable-connector.xml" />
+
     <xinclude:include href='../shared/appendix-interfaces.xml' />
     <xinclude:include href='../shared/appendix-options.xml' />
-    <xinclude:include href='../shared/appendix-pooling.xml' />
 
     <index />
 </book>

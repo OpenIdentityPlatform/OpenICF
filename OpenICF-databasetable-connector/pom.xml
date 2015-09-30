@@ -2,7 +2,7 @@
 <!--
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
- Copyright (c) 2011-2012 ForgeRock AS. All rights reserved.
+ Copyright (c) 2011-2015 ForgeRock AS. All rights reserved.
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -27,7 +27,7 @@
     <parent>
         <groupId>org.forgerock.openicf.connectors</groupId>
         <artifactId>connectors-parent</artifactId>
-        <version>1.1.2.0</version>
+        <version>1.5.0.0-SNAPSHOT</version>
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>databasetable-connector</artifactId>
@@ -37,9 +37,9 @@
     <description>Database table connector use a single database table to store the Account attributes.</description>
     <url>https://openicf.forgerock.org/connectors/databasetable-connector</url>
     <scm>
-        <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/connectors/java/databasetable</connection>
-        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/connectors/java/databasetable</developerConnection>
-        <url>http://sources.forgerock.org/browse/openicf/trunk/connectors/java/databasetable</url>
+        <connection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/databasetable-connector.git</connection>
+        <developerConnection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/databasetable-connector.git</developerConnection>
+        <url>http://stash.forgerock.org/projects/OPENICF/repos/databasetable-connector/browse</url>
     </scm>
     <issueManagement>
         <system>jira</system>
@@ -47,14 +47,13 @@
     </issueManagement>
     <ciManagement>
         <system>jenkins</system>
-        <url>http://builds.forgerock.org/job/OpenICF - DatabaseTable Connector</url>
+        <url>https://ci.forgerock.org/view/OpenICF/job/OpenICF - databasetable-connector - postcommit/</url>
     </ciManagement>
     <properties>
         <openicf.osgi.embed>dbcommon</openicf.osgi.embed>
         <connectorPackage>org.identityconnectors.databasetable</connectorPackage>
         <connectorClass>DatabaseTableConnector</connectorClass>
-        <jira.componentIds>10174</jira.componentIds>
-        <jira.versionPrefix>${project.artifactId}</jira.versionPrefix>
+        <framework.version>1.1.2.0</framework.version>
     </properties>
     <repositories>
         <repository>
@@ -76,10 +75,37 @@
     </repositories>
     <dependencies>
         <dependency>
+            <groupId>org.forgerock.openicf.framework</groupId>
+            <artifactId>connector-framework</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.forgerock.openicf.connectors.misc</groupId>
             <artifactId>dbcommon</artifactId>
             <version>1.1.0.0</version>
             <scope>provided</scope>
+        </dependency>
+
+        <!-- Test Dependencies -->
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.forgerock.openicf.framework</groupId>
+            <artifactId>connector-framework-internal</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.forgerock.openicf.framework</groupId>
+            <artifactId>connector-test-common</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.forgerock.openicf.framework</groupId>
+            <artifactId>connector-framework-contract</artifactId>
+            <version>${framework.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.derby</groupId>
@@ -89,64 +115,6 @@
         </dependency>
     </dependencies>
     <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.forgerock.commons</groupId>
-                    <artifactId>forgerock-doc-maven-plugin</artifactId>
-                    <version>2.1.3</version>
-                    <configuration>
-                        <projectName>OpenICF</projectName>
-                        <googleAnalyticsId>${googleAnalyticsAccountId}</googleAnalyticsId>
-                        <useGeneratedSources>true</useGeneratedSources>
-                        <docbkxSourceDirectory>${project.build.directory}/openicf-docbkx</docbkxSourceDirectory>
-                        <projectVersion>${docTargetVersion}</projectVersion>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>copy-common</id>
-                            <phase>pre-site</phase>
-                            <goals>
-                                <goal>boilerplate</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                            <id>filter-sources</id>
-                            <phase>pre-site</phase>
-                            <goals>
-                                <goal>filter</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                            <id>prepare-sources</id>
-                            <phase>pre-site</phase>
-                            <goals>
-                                <goal>prepare</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                            <id>build-doc</id>
-                            <phase>pre-site</phase>
-                            <goals>
-                                <goal>build</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                            <id>layout-doc</id>
-                            <phase>site</phase>
-                            <goals>
-                                <goal>layout</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
-                    <groupId>org.forgerock.maven.plugins</groupId>
-                    <artifactId>openicf-maven-plugin</artifactId>
-                    <version>1.2.0-SNAPSHOT</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -160,13 +128,6 @@
                     <excludes>
                         <exclude>**/DatabaseTableOracleTests*</exclude>
                     </excludes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.forgerock.commons</groupId>
-                <artifactId>forgerock-doc-maven-plugin</artifactId>
-                <configuration>
-                    <useGeneratedSources>true</useGeneratedSources>
                 </configuration>
             </plugin>
             <plugin>
