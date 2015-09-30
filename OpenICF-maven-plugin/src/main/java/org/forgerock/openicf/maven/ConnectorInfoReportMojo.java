@@ -340,7 +340,7 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
                 ZipEntry entry = null;
                 while ((entry = zip.getNextEntry()) != null) {
                     String name = entry.getName();
-                    if (entry.getName().startsWith("docbkx")) {
+                    if (name.startsWith("shared")) {
 
                         File destination = new File(outputDirectory, name.substring(7));
                         if (entry.isDirectory()) {

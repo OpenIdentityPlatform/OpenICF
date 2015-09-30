@@ -2,7 +2,7 @@
 <!--
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
- Copyright (c) 2012-1014 ForgeRock AS. All rights reserved.
+ Copyright (c) 2012-1015 ForgeRock AS. All rights reserved.
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -28,7 +28,7 @@
     <parent>
         <groupId>org.forgerock</groupId>
         <artifactId>forgerock-parent</artifactId>
-        <version>1.2.1</version>
+        <version>2.0.3</version>
     </parent>
     <groupId>org.forgerock.maven.plugins</groupId>
     <artifactId>openicf-maven-plugin</artifactId>
@@ -41,11 +41,11 @@
     <inceptionYear>2012</inceptionYear>
     <url>http://openicf.forgerock.org</url>
     <scm>
-        <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/openicf-maven-plugin</connection>
+        <connection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/openicf-maven-plugin.git</connection>
         <developerConnection>
-            scm:svn:https://svn.forgerock.org/openicf/trunk/openicf-maven-plugin
+            scm:git:ssh://git@stash.forgerock.org:7999/openicf/openicf-maven-plugin.git
         </developerConnection>
-        <url>http://sources.forgerock.org/browse/openicf/trunk/openicf-maven-plugin</url>
+        <url>http://stash.forgerock.org/projects/OPENICF/repos/openicf-maven-plugin/browse</url>
     </scm>
     <distributionManagement>
         <site>
@@ -82,7 +82,7 @@
         <mavenPluginPluginVersion>3.2</mavenPluginPluginVersion>
         <doxiaVersion>1.4</doxiaVersion>
         <frameworkVersion>1.4.0.0</frameworkVersion>
-        <siteDistributionURL>scp://openicf.forgerock.org/var/www/vhosts/openicf.forgerock.org/httpdocs</siteDistributionURL>
+        <siteDistributionURL>scp://community.internal.forgerock.com/var/www/vhosts/openicf.forgerock.org/httpdocs</siteDistributionURL>
     </properties>
     <dependencies>
         <!--

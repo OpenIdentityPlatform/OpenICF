@@ -24,9 +24,9 @@
 
 #macro ( trueorfalse $condition )
     #if($condition)
-    <img src="$relativePath/shared/images/yes-icon.png" alt="True">
+    <img src="$relativePath/images/yes-icon.png" alt="True">
     #else
-    <img src="$relativePath/shared/images/no-icon.png" alt="False">
+    <img src="$relativePath/images/no-icon.png" alt="False">
     #end
 #end
 ##
@@ -129,7 +129,7 @@
         <th width="10%">Type</th>
         <th width="10%">Default Value</th>
         <th width="10%">
-            <img src="shared/images/encrypted.png">
+            <img src="images/encrypted.png">
             <sup>[<a name="confidential" href="#ftn.confidential" class="footnote">a</a>]</sup>
         </th>
         <th>Required<sup>[<a name="required" href="#ftn.required" class="footnote">b</a>]</sup>
@@ -154,7 +154,7 @@
             </td>
             <td>
                 #if ($configurationProperty.confidential)
-                    <img src="$relativePath/shared/images/encrypted.png"
+                    <img src="$relativePath/images/encrypted.png"
                          alt="Confidential Property!">
                 #end
             </td>
