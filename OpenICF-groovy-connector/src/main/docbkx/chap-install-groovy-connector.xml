@@ -56,12 +56,7 @@
     <listitem>
      <para>
       The Scripted SQL Connector uses Groovy scripts to interact with a JDBC
-      database. Functionally, the Scripted SQL Connector implementation is
-      similar to the standalone Scripted SQL Connector, described in the
-      <link xlink:show="new"
-      xlink:href="CURRENT.DOCID#scriptedsql-connector-ref"
-      xlink:role="http://docbook.org/xlink/role/olink">corresponding chapter</link>
-      in this reference.
+      database.
      </para>
     </listitem>
    </varlistentry>
@@ -363,12 +358,12 @@
    Pooling Configuration Appendix</citetitle></link>.
   </para>
  </section>
-<!--
-<section xml:id="connector-pooling-forgerock-openicf-connectors-scriptedcrest-ScriptedCRESTConnector-${project.version}">
- <title>Configuring Scripted CREST Connector Pooling</title>
- <para>
-  TO BE WRITTEN MANUALLY
- </para>
-</section> -->
+ <section
+         xml:id="connector-pooling-org-forgerock-openicf-connectors-scriptedcrest-ScriptedCRESTConnector-${project.version}">
+  <title>Configuring Scripted CREST Connector Pooling</title>
+  <para>
+   TO BE WRITTEN MANUALLY
+  </para>
+ </section>
 
 </chapter>
