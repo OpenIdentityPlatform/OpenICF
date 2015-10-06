@@ -39,25 +39,20 @@
     <dt>Release Notes</dt>
     <dd>
      <a href="./doc/bootstrap/release-notes/index.html">HTML</a>,
-     <a href="./doc/OpenICF-Release-Notes">PDF</a>
+     <a href="./doc/OpenICF-${project.version}-Release-Notes.pdf">PDF</a>
     </dd>
 
-    <dt>Configuration Reference</dt>
-    <dd><a href="./doc/config-reference/index.html">HTML</a>,
-    <a href="./doc/OpenICF-Config-Reference.pdf">PDF</a>
-    </dd>
-
-    <!-- Add bootstrap format when Config Ref builds with 3.0 doc plugin
+    <!-- Add bootstrap format when Config Ref builds with 3.0 doc plugin -->
     <dt>Configuration Reference</dt>
     <dd>
      <a href="./doc/bootstrap/config-reference/index.html">HTML</a>,
-     <a href="./doc/OpenICF-Config-Reference.pdf">PDF</a>
-    </dd> -->
+     <a href="./doc/OpenICF-${project.version}-Config-Reference.pdf">PDF</a>
+    </dd>
 
     <dt>Developer's Guide</dt>
     <dd>
      <a href="./doc/bootstrap/dev-guide/index.html">HTML</a>,
-     <a href="./doc/OpenICF-Dev-Guide-Guide.pdf">PDF</a>
+     <a href="./doc/OpenICF-${project.version}-Dev-Guide.pdf">PDF</a>
     </dd>
 
 

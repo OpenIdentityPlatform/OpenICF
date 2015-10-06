@@ -119,3 +119,5 @@ local.properties
 .texlipse
 
 # Created by .ignore support plugin (hsz.mobi)
+
+target.db

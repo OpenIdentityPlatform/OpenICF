@@ -165,7 +165,10 @@
         <frDocPluginVersion>3.1.0-SNAPSHOT</frDocPluginVersion>
         <docTargetVersion>${project.version}</docTargetVersion>
         <openidmVersion>4.0.0-SNAPSHOT</openidmVersion>
-        <groovyVersion>1.4.1.0</groovyVersion>
+        <csvfileConnectorVersion>1.1.1.0-SNAPSHOT</csvfileConnectorVersion>
+        <databasetableConnectorVersion>1.1.1.0-SNAPSHOT</databasetableConnectorVersion>
+        <groovyConnectorVersion>1.4.2.0-SNAPSHOT</groovyConnectorVersion>
+        <ldapConnectorVersion>1.4.2.0-SNAPSHOT</ldapConnectorVersion>
         <googleAnalyticsAccountId>UA-23412190-10</googleAnalyticsAccountId>
         <!--
             Release date is specified only when building the documentation
@@ -373,7 +376,7 @@
                             <resourceBundles>
                                 <resourceBundle>org.forgerock.maven.plugins:openicf-maven-plugin:${openicf.maven.plugin.version}</resourceBundle>
                             </resourceBundles>
-                            <outputDirectory>${project.build.directory}/docbkx-generated</outputDirectory>
+                            <outputDirectory>${project.build.directory}/docbkx-sources</outputDirectory>
                         </configuration>
                     </execution>
                     <execution>
@@ -386,22 +389,19 @@
                         <configuration>
                             <resourceBundles>
                                 <resourceBundle>
-                                    org.forgerock.openicf.connectors:groovy-connector:1.4.1.0:jar:docbkx
+                                    org.forgerock.openicf.connectors:groovy-connector:1.4.2.0-SNAPSHOT:jar:docbkx
                                 </resourceBundle>
                                 <resourceBundle>
-                                    org.forgerock.openicf.connectors:xml-connector:1.1.0.2:jar:docbkx
+                                    org.forgerock.openicf.connectors:ldap-connector:1.4.2.0-SNAPSHOT:jar:docbkx
                                 </resourceBundle>
                                 <resourceBundle>
-                                    org.forgerock.openicf.connectors:ldap-connector:1.4.0.0:jar:docbkx
+                                    org.forgerock.openicf.connectors:databasetable-connector:1.1.1.0-SNAPSHOT:jar:docbkx
                                 </resourceBundle>
                                 <resourceBundle>
-                                    org.forgerock.openicf.connectors:databasetable-connector:1.1.0.1:jar:docbkx
-                                </resourceBundle>
-                                <resourceBundle>
-                                    org.forgerock.openicf.connectors:csvfile-connector:1.1.0.2:jar:docbkx
+                                    org.forgerock.openicf.connectors:csvfile-connector:1.1.1.0-SNAPSHOT:jar:docbkx
                                 </resourceBundle>
                             </resourceBundles>
-                            <outputDirectory>${project.build.directory}/docbkx-generated/config-reference</outputDirectory>
+                            <outputDirectory>${project.build.directory}/docbkx-sources/config-reference</outputDirectory>
                         </configuration>
                     </execution>
 

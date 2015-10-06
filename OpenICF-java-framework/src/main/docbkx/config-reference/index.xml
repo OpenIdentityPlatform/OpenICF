@@ -37,15 +37,15 @@
    <para>
     Compiled reference documentation that describes all the configurable
     properties for the connectors that are <emphasis>supported and tested with
-    OpenIDM 3.0.0</emphasis>. Note that additional connectors, and the
+    OpenIDM 4.0.0</emphasis>. Note that additional connectors, and the
     corresponding configuration reference material, are available on the <link
     xlink:show="new"
-    xlink:href="http://openicf.forgerock.org/connectors/index.html">OpenICF
+    xlink:href="https://forgerock.org/resource-category/connectors/">OpenICF
     Connectors</link> site.
    </para>
   </abstract>
   <copyright>
-   <year>2012-2014</year>
+   <year>2012-2015</year>
    <holder>ForgeRock AS</holder>
   </copyright>
 
@@ -96,36 +96,30 @@
     -->
  <part xml:id="csv-connector-ref">
   <title>File CSV Connector Reference</title>
-  <xinclude:include href="csvfile-connector-1.1.0.2/chap-install-csvfile-connector.xml" />
-  <xinclude:include href="csvfile-connector-1.1.0.2/chap-config-csvfile-connector.xml" />
+  <xinclude:include href="csvfile-connector-${csvfileConnectorVersion}/chap-install-csvfile-connector.xml" />
+  <xinclude:include href="csvfile-connector-${csvfileConnectorVersion}/chap-config-csvfile-connector.xml" />
  </part>
 
  <part xml:id="db-table-connector-ref">
   <title>Database Table Connector Reference</title>
-  <xinclude:include href="databasetable-connector-1.1.0.1/chap-install-databasetable-connector.xml" />
-  <xinclude:include href="databasetable-connector-1.1.0.1/chap-config-databasetable-connector.xml" />
+  <xinclude:include href="databasetable-connector-${databasetableConnectorVersion}/chap-install-databasetable-connector.xml" />
+  <xinclude:include href="databasetable-connector-${databasetableConnectorVersion}/chap-config-databasetable-connector.xml" />
  </part>
 
  <part xml:id="groovy-connector-ref">
   <title>Groovy Connector Reference</title>
-  <xinclude:include href="groovy-connector-1.4.1.0/chap-install-groovy-connector.xml" />
-  <xinclude:include href="groovy-connector-1.4.1.0/chap-config-scripted-connector.xml" />
-  <xinclude:include href="groovy-connector-1.4.1.0/chap-config-scriptedpoolable-connector.xml" />
-  <xinclude:include href="groovy-connector-1.4.1.0/chap-config-scriptedrest-connector.xml" />
-  <xinclude:include href="groovy-connector-1.4.1.0/chap-config-scriptedsql-connector.xml" />
+  <xinclude:include href="groovy-connector-${groovyConnectorVersion}/chap-install-groovy-connector.xml" />
+  <xinclude:include href="groovy-connector-${groovyConnectorVersion}/chap-config-scripted-connector.xml" />
+  <xinclude:include href="groovy-connector-${groovyConnectorVersion}/chap-config-scriptedpoolable-connector.xml" />
+  <xinclude:include href="groovy-connector-${groovyConnectorVersion}/chap-config-scriptedrest-connector.xml" />
+  <xinclude:include href="groovy-connector-${groovyConnectorVersion}/chap-config-scriptedcrest-connector.xml" />
+  <xinclude:include href="groovy-connector-${groovyConnectorVersion}/chap-config-scriptedsql-connector.xml" />
  </part>
 
  <part xml:id="ldap-connector-ref">
   <title>LDAP Connector Reference</title>
-  <xinclude:include href="ldap-connector-1.4.0.0/chap-install-ldap-connector.xml" />
-  <xinclude:include href="ldap-connector-1.4.0.0/chap-config-ldap-connector.xml" />
- </part>
-
-
- <part xml:id="xml-connector-ref">
-  <title>XML Connector Reference</title>
-  <xinclude:include href="xml-connector-1.1.0.2/chap-install-xml-connector.xml" />
-  <xinclude:include href="xml-connector-1.1.0.2/chap-config-xml-connector.xml" />
+  <xinclude:include href="ldap-connector-${ldapConnectorVersion}/chap-install-ldap-connector.xml" />
+  <xinclude:include href="ldap-connector-${ldapConnectorVersion}/chap-config-ldap-connector.xml" />
  </part>
 
  <xinclude:include href='../shared/appendix-interfaces.xml' />
