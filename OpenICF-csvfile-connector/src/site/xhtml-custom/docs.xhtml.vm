@@ -37,9 +37,8 @@
     <p>This core documentation is <strong>in progress</strong> as part of
         the OpenICF project.</p>
 
-    <p>For completed, released documentation, see <a
-            href="http://docs.forgerock.org/en/openicf/"
-            >docs.forgerock.org</a>.</p>
+    <p>For Release documentation see the
+        <a href="https://backstage.forgerock.com/#!/docs/openicf">ForgeRock BackStage</a> website.</p>
     <dl>
         <dt>Installation Guide</dt>
         <dd>
@@ -50,15 +49,8 @@
             #end
             #set ($documentName = $StringUtils.join($cache.iterator(), "-"))
 
-            <!-- TODO Fix the document name see: org.forgerock.doc.maven.DocUtils#renameDoc-->
-            <a href="./doc/OpenICF-${documentName}.epub">EPUB</a>,
-            <a href="./doc/${project.artifactId}-${project.version}/index.html">HTML (single page)</a>,
-            <a href="./doc/${project.artifactId}-${project.version}/index/index.html">HTML (1 page/chapter)</a>,
-            <!-- TODO Fix the document name see: org.forgerock.doc.maven.DocUtils#renameDoc-->
-            <a href="./doc/OpenICF-${documentName}.pdf">PDF</a>,
-            <!-- TODO Fix the document name see: org.forgerock.doc.maven.DocUtils#renameDoc-->
-            <a href="./doc/OpenICF-${documentName}.rtf">RTF</a>,
-            <a href="./doc/webhelp/${project.artifactId}-${project.version}/index.html">Webhelp</a>
+            <a href="./doc/bootstrap/${project.artifactId}-${project.version}/index.html">HTML</a>,
+            <a href="./doc/OpenICF-${documentName}.pdf">PDF</a>
         </dd>
     </dl>
 </section>
