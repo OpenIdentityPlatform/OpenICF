@@ -112,9 +112,7 @@
                                         <simplelist>
                                             #foreach($operation in $property.operations)
                                                 <member>
-                                                    <link xlink:show="new"
-                                                          xlink:href="CURRENT.DOCID#interface-$operation.key}"
-                                                          xlink:role="http://docbook.org/xlink/role/olink">$operation.value</link>
+                                                    <xref linkend="interface-${operation.key}" xrefstyle="select:title"/>
                                                 </member>
                                             #end
                                         </simplelist>

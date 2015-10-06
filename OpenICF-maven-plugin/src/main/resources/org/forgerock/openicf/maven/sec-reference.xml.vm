@@ -46,11 +46,7 @@
   </programlisting>
   <para>
    You can use OpenIDM to generate this configuration automatically when you
-   configure the connector. For more information, see <link
-   xlink:show="new"
-   xlink:href="http://openidm.forgerock.org/doc/integrators-guide/index.html#openicf-provisioner-conf"
-   xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Configuring Connectors</citetitle></link>
-   in the <citetitle>OpenIDM Integrator's Guide</citetitle>. Alternatively, you
+   configure the connector. Alternatively, you
    can copy this section and paste it directly into your connector configuration
    file
    (<filename>provisioner.openicf-<replaceable>connector-name</replaceable>.json</filename>).
