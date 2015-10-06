@@ -20,7 +20,7 @@
   !
   ! CCPL HEADER END
   !
-  !      Copyright 2011-2014 ForgeRock AS
+  !      Copyright 2011-2015 ForgeRock AS
   !
 -->
 <book xml:id='connector-guide-org.forgerock.openicf.connectors-ldap-connector-${project.version}'

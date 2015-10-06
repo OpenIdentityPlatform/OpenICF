@@ -2,7 +2,7 @@
 <!--
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
- Copyright (c) 2011-2014 ForgeRock AS. All rights reserved.
+ Copyright (c) 2011-2015 ForgeRock AS. All rights reserved.
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -28,7 +28,7 @@
     <parent>
         <groupId>org.forgerock.openicf.connectors</groupId>
         <artifactId>connectors-parent</artifactId>
-        <version>1.4.1.0</version>
+        <version>1.5.0.0-SNAPSHOT</version>
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>ldap-connector</artifactId>
@@ -38,9 +38,9 @@
     <description>Connector for Sun DSEE and OpenDJ and Generic LDAP</description>
     <url>http://openicf.forgerock.org/connectors/ldap-connector</url>
     <scm>
-        <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/connectors/java/ldap</connection>
-        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/connectors/java/ldap</developerConnection>
-        <url>http://sources.forgerock.org/browse/openicf/trunk/connectors/java/ldap</url>
+        <connection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/ldap-connector.git</connection>
+        <developerConnection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/ldap-connector.git</developerConnection>
+        <url>http://stash.forgerock.org/projects/OPENICF/repos/ldap-connector/browse</url>
     </scm>
     <issueManagement>
         <system>jira</system>
@@ -48,15 +48,12 @@
     </issueManagement>
     <ciManagement>
         <system>jenkins</system>
-        <url>http://builds.forgerock.org/job/OpenICF - Ldap Connector</url>
+        <url>https://ci.forgerock.org/view/OpenICF/job/OpenICF - ldap-connector - postcommit/</url>
     </ciManagement>
     <properties>
         <connectorPackage>org.identityconnectors.ldap</connectorPackage>
         <connectorClass>LdapConnector</connectorClass>
-        <!-- If we release this project, we need to include the Forgerock binary license -->
-        <include.binary.license>
-            ${project.build.directory}/maven-shared-archive-resources/legal-notices
-        </include.binary.license>
+        <framework.version>1.4.1.0</framework.version>
     </properties>
     <repositories>
         <repository>
@@ -75,13 +72,18 @@
                 <enabled>false</enabled>
             </releases>
         </repository>
-        <repository>
-            <id>JavaNet</id>
-            <name>JavaNet Repository</name>
-            <url>http://download.java.net/maven/2</url>
-        </repository>
     </repositories>
     <dependencies>
+        <dependency>
+            <groupId>org.forgerock.openicf.framework</groupId>
+            <artifactId>connector-framework</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.forgerock.opendj</groupId>
+            <artifactId>opendj-ldap-sdk</artifactId>
+            <version>2.6.9</version>
+            <type>jar</type>
+        </dependency>
         <!-- Test Dependencies -->
         <dependency>
             <groupId>org.testng</groupId>
@@ -109,12 +111,6 @@
             <artifactId>mockito-all</artifactId>
             <version>1.9.0</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.forgerock.opendj</groupId>
-            <artifactId>opendj-ldap-sdk</artifactId>
-            <version>2.6.9</version>
-            <type>jar</type>
         </dependency>
     </dependencies>
 
@@ -167,7 +163,6 @@
             <plugin>
                 <groupId>org.forgerock.maven.plugins</groupId>
                 <artifactId>openicf-maven-plugin</artifactId>
-                <version>1.2.0</version>
                 <executions>
                     <execution>
                         <goals>
