@@ -389,16 +389,16 @@
                         <configuration>
                             <resourceBundles>
                                 <resourceBundle>
-                                    org.forgerock.openicf.connectors:groovy-connector:1.4.2.0-SNAPSHOT:jar:docbkx
+                                    org.forgerock.openicf.connectors:groovy-connector:${groovyConnectorVersion}:jar:docbkx
                                 </resourceBundle>
                                 <resourceBundle>
-                                    org.forgerock.openicf.connectors:ldap-connector:1.4.2.0-SNAPSHOT:jar:docbkx
+                                    org.forgerock.openicf.connectors:ldap-connector:${ldapConnectorVersion}:jar:docbkx
                                 </resourceBundle>
                                 <resourceBundle>
-                                    org.forgerock.openicf.connectors:databasetable-connector:1.1.1.0-SNAPSHOT:jar:docbkx
+                                    org.forgerock.openicf.connectors:databasetable-connector:${databasetableConnectorVersion}:jar:docbkx
                                 </resourceBundle>
                                 <resourceBundle>
-                                    org.forgerock.openicf.connectors:csvfile-connector:1.1.1.0-SNAPSHOT:jar:docbkx
+                                    org.forgerock.openicf.connectors:csvfile-connector:${csvfileConnectorVersion}:jar:docbkx
                                 </resourceBundle>
                             </resourceBundles>
                             <outputDirectory>${project.build.directory}/docbkx-sources/config-reference</outputDirectory>
