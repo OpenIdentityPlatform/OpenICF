@@ -162,9 +162,9 @@
         <javadocStylesheet>org/forgerock/javadoc/javadoc.css</javadocStylesheet>
 
         <!-- Core documentation properties -->
-        <frDocPluginVersion>3.0.0</frDocPluginVersion>
+        <frDocPluginVersion>3.1.0-SNAPSHOT</frDocPluginVersion>
         <docTargetVersion>${project.version}</docTargetVersion>
-        <openidmVersion>3.2.0-SNAPSHOT</openidmVersion>
+        <openidmVersion>4.0.0-SNAPSHOT</openidmVersion>
         <groovyVersion>1.4.1.0</groovyVersion>
         <googleAnalyticsAccountId>UA-23412190-10</googleAnalyticsAccountId>
         <!--

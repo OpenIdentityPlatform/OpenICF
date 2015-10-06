@@ -119,6 +119,10 @@
         <openicf.osgi.export.service/>
         <openicf.osgi.import.service/>
         <openicf.osgi.embed/>
+        <!-- If we release this project, we need to include the ForgeRock binary license -->
+        <include.binary.license>
+            ${project.build.directory}/maven-shared-archive-resources/legal-notices
+        </include.binary.license>
 
     </properties>
 
