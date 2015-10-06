@@ -69,6 +69,13 @@
   </para>
  </section>
 
+ <section xml:id="interface-GetApiOp">
+  <title>Get</title>
+  <para>
+   Get an object by its uid.
+  </para>
+ </section>
+
  <section xml:id="interface-PoolableConnector">
   <title>PoolableConnector</title>
   <para>
