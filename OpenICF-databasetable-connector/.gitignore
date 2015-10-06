@@ -109,3 +109,4 @@ nb-configuration.xml
 .nb-gradle/
 
 *.log
+target.db

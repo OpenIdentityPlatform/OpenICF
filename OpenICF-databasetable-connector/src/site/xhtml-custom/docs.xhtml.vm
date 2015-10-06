@@ -37,8 +37,8 @@
     <p>This core documentation is <strong>in progress</strong> as part of
         the OpenICF project.</p>
 
-    <p>For completed, released documentation, see 
-        <a href="http://docs.forgerock.org/en/openicf/">docs.forgerock.org</a>.</p>
+    <p>For Release documentation see the
+        <a href="https://backstage.forgerock.com/#!/docs/openicf">ForgeRock BackStage</a> website.</p>
     <dl>
         <dt>Installation Guide</dt>
         <dd>
@@ -50,7 +50,6 @@
             #set ($documentName = $StringUtils.join($cache.iterator(), "-"))
 
             <a href="./doc/bootstrap/${project.artifactId}-${project.version}/index.html">HTML</a>,
-            <!-- TODO Fix the document name see: org.forgerock.doc.maven.DocUtils#renameDoc-->
             <a href="./doc/OpenICF-${documentName}.pdf">PDF</a>
         </dd>
     </dl>
