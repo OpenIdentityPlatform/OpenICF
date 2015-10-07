@@ -42,7 +42,7 @@
     <dl>
         <dt>Installation Guide</dt>
         <dd>
-            #set ($documentName = "${project.artifactId}-${project.version}")
+            #set ($documentName = "${project.artifactId}")
             #set ($cache = [])
             #foreach( $item in ${StringUtils.split(${documentName}, "-")} )
                 #if ($cache.add( $StringUtils.capitalizeFirstLetter($StringUtils.lowerCase($item)) )) #end
@@ -50,7 +50,7 @@
             #set ($documentName = $StringUtils.join($cache.iterator(), "-"))
 
             <a href="./doc/bootstrap/${project.artifactId}-${project.version}/index.html">HTML</a>,
-            <a href="./doc/OpenICF-${documentName}.pdf">PDF</a>
+            <a href="./doc/OpenICF-${project.version}-${documentName}-${project.version}.pdf">PDF</a>
         </dd>
     </dl>
 </section>
