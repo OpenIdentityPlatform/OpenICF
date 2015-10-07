@@ -68,7 +68,7 @@
 
         <!-- OSGi Properties -->
         <openicf.osgi.exclude.dependencies>false</openicf.osgi.exclude.dependencies>
-        <framework.version>${project.version}</framework.version>
+        <framework.version>${framework.compatibilityVersion}.${framework.releaseVersion}</framework.version>
 
         <openicf.osgi.import.framework.version>
             version="[$(version;==;${framework.version}),$(version;+;${framework.version}))"
@@ -147,6 +147,13 @@
                 <version>${framework.version}</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>org.forgerock.openicf.framework</groupId>
+                <artifactId>connector-framework</artifactId>
+                <version>${framework.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -181,7 +188,7 @@
                     <configuration>
                         <links>
                             <link>http://download.oracle.com/javase/6/docs/api/</link>
-                            <link>http://groovy.codehaus.org/api/</link>
+                            <link>http://docs.groovy-lang.org/latest/html/api/</link>
                             <link>http://openicf.forgerock.org/apidocs/</link>
                         </links>
                     </configuration>

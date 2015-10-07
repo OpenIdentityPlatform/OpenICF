@@ -146,7 +146,8 @@
         <!-- maven-compiler-plugin -->
         <maven.compiler.target>1.5</maven.compiler.target>
         <maven.compiler.source>1.5</maven.compiler.source>
-        <framework.compatibilityVersion>1.4</framework.compatibilityVersion>
+        <framework.compatibilityVersion>1.5</framework.compatibilityVersion>
+        <framework.releaseVersion>0.0</framework.releaseVersion>
         <licenseResourceBundle>org.forgerock.openicf:openicf-license:1.3.0</licenseResourceBundle>
         <siteDistributionURL>scp://community.internal.forgerock.com/var/www/vhosts/openicf.forgerock.org/httpdocs</siteDistributionURL>
 
@@ -157,10 +158,6 @@
         <grizzly.version>2.3.22</grizzly.version>
         <protobuf-java.version>3.0.0-alpha-3.1</protobuf-java.version>
         
-        <!-- forgerock-build-tools stylesheet org/forgerock/javadoc/javadoc.css
-             does not work with JDK7 -->
-        <javadocStylesheet>org/forgerock/javadoc/javadoc.css</javadocStylesheet>
-
         <!-- Core documentation properties -->
         <frDocPluginVersion>3.1.0-SNAPSHOT</frDocPluginVersion>
         <docTargetVersion>${project.version}</docTargetVersion>
@@ -203,14 +200,68 @@
         <module>bundles-parent</module>
         <module>icfl-over-slf4j</module>
         <module>openicf-zip</module>
-        <module>connector-framework-protobuf</module>
-        <module>connector-framework-rpc</module>
-        <module>connector-framework-server</module>
-        <module>connector-server-jetty</module>
-        <module>connector-server-grizzly</module>
     </modules>
 
     <profiles>
+        <profile>
+            <id>1.5.profile</id>
+            <properties>
+                <!-- forgerock-build-tools stylesheet org/forgerock/javadoc/javadoc.css
+                does not work with JDK7 -->
+                <javadocStylesheet>org/forgerock/javadoc/javadoc.css</javadocStylesheet>
+            </properties>
+            <activation>
+                <jdk>1.5</jdk>
+            </activation>
+        </profile>
+        <profile>
+            <id>1.6.profile</id>
+            <properties>
+                <!-- forgerock-build-tools stylesheet org/forgerock/javadoc/javadoc.css
+                does not work with JDK7 -->
+                <javadocStylesheet>org/forgerock/javadoc/javadoc.css</javadocStylesheet>
+            </properties>
+            <modules>
+                <module>connector-framework-protobuf</module>
+                <module>connector-framework-rpc</module>
+                <module>connector-framework-server</module>
+                <module>connector-server-grizzly</module>
+            </modules>
+            <activation>
+                <jdk>1.6</jdk>
+            </activation>
+        </profile>
+        <profile>
+            <id>1.7.profile</id>
+            <modules>
+                <module>connector-framework-protobuf</module>
+                <module>connector-framework-rpc</module>
+                <module>connector-framework-server</module>
+                <module>connector-server-jetty</module>
+                <module>connector-server-grizzly</module>
+            </modules>
+            <activation>
+                <jdk>1.7</jdk>
+            </activation>
+        </profile>
+        <profile>
+            <id>1.8.profile</id>
+            <properties>
+                <!-- forgerock-build-tools stylesheet org/forgerock/javadoc/javadoc.css
+                does not work with JDK7 -->
+                <javadocStylesheet>org/forgerock/javadoc/javadoc.css</javadocStylesheet>
+            </properties>
+            <modules>
+                <module>connector-framework-protobuf</module>
+                <module>connector-framework-rpc</module>
+                <module>connector-framework-server</module>
+                <module>connector-server-jetty</module>
+                <module>connector-server-grizzly</module>
+            </modules>
+            <activation>
+                <jdk>1.8</jdk>
+            </activation>
+        </profile>
         <profile>
             <id>forgerock-release</id>
             <build>
