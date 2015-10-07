@@ -35,7 +35,7 @@
     <packaging>bundle</packaging>
     <name>Database Table Connector</name>
     <description>Database table connector use a single database table to store the Account attributes.</description>
-    <url>https://openicf.forgerock.org/connectors/databasetable-connector</url>
+    <url>http://openicf.forgerock.org/connectors/databasetable-connector/</url>
     <scm>
         <connection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/databasetable-connector.git</connection>
         <developerConnection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/databasetable-connector.git</developerConnection>
@@ -53,7 +53,8 @@
         <openicf.osgi.embed>dbcommon</openicf.osgi.embed>
         <connectorPackage>org.identityconnectors.databasetable</connectorPackage>
         <connectorClass>DatabaseTableConnector</connectorClass>
-        <framework.version>1.1.2.0</framework.version>
+        <framework.compatibilityVersion>1.1</framework.compatibilityVersion>
+        <framework.releaseVersion>2.0</framework.releaseVersion>
     </properties>
     <repositories>
         <repository>
