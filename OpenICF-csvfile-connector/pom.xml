@@ -35,7 +35,7 @@
     <packaging>bundle</packaging>
     <name>CSV File Connector</name>
     <description>Connector for CSV File</description>
-    <url>https://openicf.forgerock.org/connectors/csvfile-connector</url>
+    <url>http://openicf.forgerock.org/connectors/csvfile-connector/</url>
     <scm>
         <connection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/csvfile-connector.git</connection>
         <developerConnection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/csvfile-connector.git</developerConnection>
@@ -52,7 +52,8 @@
     <properties>
         <connectorPackage>org.forgerock.openicf.csvfile</connectorPackage>
         <connectorClass>CSVFileConnector</connectorClass>
-        <framework.version>1.1.2.0</framework.version>
+        <framework.compatibilityVersion>1.1</framework.compatibilityVersion>
+        <framework.releaseVersion>2.0</framework.releaseVersion>
     </properties>
     <repositories>
         <repository>
