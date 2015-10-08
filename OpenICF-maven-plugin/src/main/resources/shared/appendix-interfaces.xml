@@ -20,7 +20,7 @@
   !
   ! CCPL HEADER END
   !
-  !      Copyright 2013-2014 ForgeRock AS
+  !      Copyright 2013-2015 ForgeRock AS
   !
 -->
 <appendix xml:id='appendix-interfaces'
@@ -52,6 +52,23 @@
    name and password. If the connector does not implement the AuthenticateOp
    interface it can not be used in OpenIDM to provide pass-through
    authentication.
+  </para>
+ </section>
+
+ <section xml:id="interface-BatchApiOp">
+  <title>Batch</title>
+  <para>
+   Execute a series of operations in a single request. If a resource does not support batch operations, the
+   connector will not implement the batch operation interface. The OpenICF framework will still support batched 
+   requests but the operations will be executed iteratively through the connector.
+  </para>
+ </section>
+
+ <section xml:id="interface-ConnectorEventSubscriptionApiOp">
+  <title>Connector Event</title>
+  <para>
+   Subscribe for notification of any specified event on the target resource. This operation can be used in the context
+   of IoT device reports, to receive notification of events such as low battery signals, inactive devices, and so on.
   </para>
  </section>
 
@@ -126,6 +143,13 @@
   <title>Sync</title>
   <para>
    Poll for synchronization events, which are native changes to target objects.
+  </para>
+ </section>
+
+ <section xml:id="interface-SyncEventSubscriptionApiOp">
+  <title>Sync Event</title>
+  <para>
+   Subscribe for notification of synchronization events, which are native changes to target objects.
   </para>
  </section>
 

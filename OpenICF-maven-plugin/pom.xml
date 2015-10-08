@@ -81,7 +81,9 @@
         <mavenPluginVersion>3.2</mavenPluginVersion>
         <mavenPluginPluginVersion>3.2</mavenPluginPluginVersion>
         <doxiaVersion>1.4</doxiaVersion>
-        <frameworkVersion>1.4.0.0</frameworkVersion>
+        <framework.compatibilityVersion>1.5</framework.compatibilityVersion>
+        <framework.releaseVersion>0.0-SNAPSHOT</framework.releaseVersion>
+        <frameworkVersion>${framework.compatibilityVersion}.${framework.releaseVersion}</frameworkVersion>
         <siteDistributionURL>scp://community.internal.forgerock.com/var/www/vhosts/openicf.forgerock.org/httpdocs</siteDistributionURL>
     </properties>
     <dependencies>

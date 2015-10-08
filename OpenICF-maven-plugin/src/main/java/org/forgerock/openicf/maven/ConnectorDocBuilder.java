@@ -63,6 +63,8 @@ import org.identityconnectors.framework.api.ConnectorInfoManager;
 import org.identityconnectors.framework.api.ConnectorInfoManagerFactory;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.AuthenticationApiOp;
+import org.identityconnectors.framework.api.operations.BatchApiOp;
+import org.identityconnectors.framework.api.operations.ConnectorEventSubscriptionApiOp;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
 import org.identityconnectors.framework.api.operations.GetApiOp;
@@ -72,6 +74,7 @@ import org.identityconnectors.framework.api.operations.ScriptOnConnectorApiOp;
 import org.identityconnectors.framework.api.operations.ScriptOnResourceApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
 import org.identityconnectors.framework.api.operations.SyncApiOp;
+import org.identityconnectors.framework.api.operations.SyncEventSubscriptionApiOp;
 import org.identityconnectors.framework.api.operations.TestApiOp;
 import org.identityconnectors.framework.api.operations.UpdateApiOp;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -96,15 +99,16 @@ public class ConnectorDocBuilder {
     }
 
     protected static final List<Class<? extends APIOperation>> OBJECTCLASS_OPERATIONS =
-            CollectionUtil.newList(AuthenticationApiOp.class, CreateApiOp.class, DeleteApiOp.class,
+            CollectionUtil.newList(AuthenticationApiOp.class,
+                    ConnectorEventSubscriptionApiOp.class, CreateApiOp.class, DeleteApiOp.class,
                     ResolveUsernameApiOp.class, SearchApiOp.class, SyncApiOp.class,
-                    UpdateApiOp.class);
+                    SyncEventSubscriptionApiOp.class, UpdateApiOp.class);
 
     protected static final List<Class<? extends APIOperation>> OPERATIONS = CollectionUtil.newList(
-            AuthenticationApiOp.class, CreateApiOp.class, DeleteApiOp.class,
-            ResolveUsernameApiOp.class, SchemaApiOp.class, ScriptOnConnectorApiOp.class,
-            ScriptOnResourceApiOp.class, SearchApiOp.class, SyncApiOp.class, TestApiOp.class,
-            UpdateApiOp.class);
+            AuthenticationApiOp.class, BatchApiOp.class, ConnectorEventSubscriptionApiOp.class,
+            CreateApiOp.class, DeleteApiOp.class, ResolveUsernameApiOp.class, SchemaApiOp.class,
+            ScriptOnConnectorApiOp.class, ScriptOnResourceApiOp.class, SearchApiOp.class,
+            SyncApiOp.class, SyncEventSubscriptionApiOp.class, TestApiOp.class, UpdateApiOp.class);
 
     protected static final Map<Class<? extends APIOperation>, Pair<String, String>> OP_DICTIONARY;
 
@@ -113,7 +117,10 @@ public class ConnectorDocBuilder {
                 new HashMap<Class<? extends APIOperation>, Pair<String, String>>();
         dictionary.put(AuthenticationApiOp.class, Pair.of(
                 AuthenticationApiOp.class.getSimpleName(), "Authenticate"));
+        dictionary.put(BatchApiOp.class, Pair.of(BatchApiOp.class.getSimpleName(), "Batch"));
         dictionary.put(CreateApiOp.class, Pair.of(CreateApiOp.class.getSimpleName(), "Create"));
+        dictionary.put(ConnectorEventSubscriptionApiOp.class, Pair.of(
+                ConnectorEventSubscriptionApiOp.class.getSimpleName(), "Connector Event"));
         dictionary.put(DeleteApiOp.class, Pair.of(DeleteApiOp.class.getSimpleName(), "Delete"));
         dictionary.put(ResolveUsernameApiOp.class, Pair.of(ResolveUsernameApiOp.class
                 .getSimpleName(), "Resolve Username"));
@@ -125,6 +132,8 @@ public class ConnectorDocBuilder {
         dictionary.put(SearchApiOp.class, Pair.of(SearchApiOp.class.getSimpleName(), "Search"));
         dictionary.put(GetApiOp.class, Pair.of(GetApiOp.class.getSimpleName(), "Read"));
         dictionary.put(SyncApiOp.class, Pair.of(SyncApiOp.class.getSimpleName(), "Sync"));
+        dictionary.put(SyncEventSubscriptionApiOp.class, Pair.of(SyncEventSubscriptionApiOp.class
+                .getSimpleName(), "Sync Event"));
         dictionary.put(TestApiOp.class, Pair.of(TestApiOp.class.getSimpleName(), "Test"));
         dictionary.put(UpdateApiOp.class, Pair.of(UpdateApiOp.class.getSimpleName(), "Update"));
         OP_DICTIONARY = CollectionUtil.newReadOnlyMap(dictionary);

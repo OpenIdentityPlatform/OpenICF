@@ -20,7 +20,7 @@
   !
   ! CCPL HEADER END
   !
-  !      Copyright 2013-2014 ForgeRock AS
+  !      Copyright 2013-2015 ForgeRock AS
   !
 -->
 <appendix xml:id='appendix-options'
@@ -121,6 +121,24 @@
         <para>
             An option to use with Search that specifies the sort keys which should be used for ordering the ConnectorObject returned by search
             request.
+        </para>
+    </section>
+
+    <section xml:id="operation-option-fail-on-error">
+        <title>Fail on Error</title>
+        <para>
+            This option is used with the Batch operation, to specify whether the batch process should be aborted when the first error is encountered.
+            The default behavior is to continue processing regardless of errors.
+        </para>
+    </section>
+
+    <section xml:id="operation-option-require-serial">
+        <title>Require Serial</title>
+        <para>
+            This option instructs the connector to execute batched requests in a serial manner if possible. 
+            The default behavior of the Batch operation is to execute requests in parallel, 
+            for speed and efficiency. In either case the task ID must be reflected in the response for each task,
+            so that tasks can be correctly reordered.
         </para>
     </section>
 

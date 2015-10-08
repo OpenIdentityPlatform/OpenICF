@@ -52,6 +52,16 @@
                     <a class="externalLink"
                        href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/api/operations/AuthenticationApiOp.html">Authenticate</a>
                 </li>
+            #elseif ("BatchApiOp" == $action)
+                <li>
+                    <a class="externalLink"
+                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/api/operations/BatchApiOp.html">Batch</a>
+                </li>
+            #elseif ("ConnectorEventSubscriptionApiOp" == $action)
+                <li>
+                    <a class="externalLink"
+                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/api/operations/ConnectorEventSubscriptionApiOp.html">Connector Event</a>
+                </li>
             #elseif ("CreateApiOp" == $action)
                 <li>
                     <a class="externalLink"
@@ -99,6 +109,11 @@
                 <li>
                     <a class="externalLink"
                        href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/api/operations/SyncApiOp.html">Sync</a>
+                </li>
+            #elseif ("SyncEventSubscriptionApiOp" == $action)
+                <li>
+                    <a class="externalLink"
+                       href="http://openicf.forgerock.org/connector-framework/apidocs/org/identityconnectors/framework/api/operations/SyncEventSubscriptionApiOp.html">Sync Event</a>
                 </li>
             #elseif ("TestApiOp" == $action)
                 <li>
@@ -279,6 +294,10 @@
                                         <p>An option to use with Search that specifies the requested page results page size.</p>
                                     #elseif($option.name.equals("SORT_KEYS"))
                                         <p>An option to use with Search that specifies the sort keys which should be used for ordering the ConnectorObject returned by search request.</p>
+                                    #elseif($option.name.equals("FAIL_ON_ERROR"))
+                                        <p>This option is used with the Batch operation, to specify whether the batch process should be aborted when the first error is encountered.</p>
+                                    #elseif($option.name.equals("REQUIRE_SERIAL"))
+                                        <p>This option instructs the connector to execute batched requests in a serial manner if possible.</p>
                                     #end
                                 </td>
                             </tr>

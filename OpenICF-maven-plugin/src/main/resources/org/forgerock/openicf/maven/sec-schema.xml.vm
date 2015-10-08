@@ -20,7 +20,7 @@
   !
   ! CCPL HEADER END
   !
-  !      Copyright 2013-2014 ForgeRock AS
+  !      Copyright 2013-2015 ForgeRock AS
   !
 -->
 <section xml:id='sec-schema-${uniqueConnectorName}'
@@ -175,6 +175,18 @@
                                             #elseif($option.name.equals("SORT_KEYS"))
                                                 <link xlink:show="new"
                                                       xlink:href="CURRENT.DOCID#operation-option-sort-keys"
+                                                      xlink:role="http://docbook.org/xlink/role/olink">More information
+                                                    see here.
+                                                </link>
+                                            #elseif($option.name.equals("FAIL_ON_ERROR"))
+                                                <link xlink:show="new"
+                                                      xlink:href="CURRENT.DOCID#operation-option-fail-on-error"
+                                                      xlink:role="http://docbook.org/xlink/role/olink">More information
+                                                    see here.
+                                                </link>
+                                            #elseif($option.name.equals("REQUIRE_SERIAL"))
+                                                <link xlink:show="new"
+                                                      xlink:href="CURRENT.DOCID#operation-option-require-serial"
                                                       xlink:role="http://docbook.org/xlink/role/olink">More information
                                                     see here.
                                                 </link>

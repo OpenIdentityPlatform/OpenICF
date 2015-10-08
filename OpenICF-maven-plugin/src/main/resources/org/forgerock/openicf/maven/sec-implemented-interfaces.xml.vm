@@ -58,6 +58,34 @@
                   </para>
                  </listitem>
                 </varlistentry>
+            #elseif ("BatchApiOp" == $action)
+                <varlistentry>
+                    <term>
+                        <link xlink:show="new"
+                              xlink:href="CURRENT.DOCID#interface-BatchApiOp"
+                              xlink:role="http://docbook.org/xlink/role/olink">Batch
+                        </link>
+                    </term>
+                    <listitem>
+                        <para>
+                            Execute a series of operations in a single request.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            #elseif ("ConnectorEventSubscriptionApiOp" == $action)
+                <varlistentry>
+                    <term>
+                        <link xlink:show="new"
+                              xlink:href="CURRENT.DOCID#interface-ConnectorEventSubscriptionApiOp"
+                              xlink:role="http://docbook.org/xlink/role/olink">Connector Event
+                        </link>
+                    </term>
+                    <listitem>
+                        <para>
+                            Subscribe for notification of any specified event on the target resource.
+                        </para>
+                    </listitem>
+                </varlistentry>
             #elseif ("CreateApiOp" == $action)
                 <varlistentry>
                  <term>
@@ -199,6 +227,21 @@
                    is, native changes to objects on the target resource.
                   </para>
                  </listitem>
+                </varlistentry>
+            #elseif ("SyncEventSubscriptionApiOp" == $action)
+                <varlistentry>
+                    <term>
+                        <link xlink:show="new"
+                              xlink:href="CURRENT.DOCID#interface-SyncEventSubscriptionApiOp"
+                              xlink:role="http://docbook.org/xlink/role/olink">Sync Event
+                        </link>
+                    </term>
+                    <listitem>
+                        <para>
+                            Subscribe for notification of synchronization events,
+                            which are native changes to target objects.
+                        </para>
+                    </listitem>
                 </varlistentry>
             #elseif ("TestApiOp" == $action)
                 <varlistentry>
