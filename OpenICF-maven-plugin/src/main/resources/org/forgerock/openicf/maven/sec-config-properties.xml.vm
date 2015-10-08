@@ -42,8 +42,8 @@
         <section xml:id="$ConnectorUtils.safeNCName(${configurationGroup.key})-properties-${uniqueConnectorName}">
             <title>$configurationGroup.key Properties</title>
 
-            <informaltable>
-                <tgroup cols="6">
+            <informaltable pgwide="1">
+                <tgroup cols="5">
                     <?dbhtml cellspacing="0" ?>
                     <?dbhtml cellpadding="2" ?>
                     <colspec colname="a" colnum="1" colwidth="2*"/>
