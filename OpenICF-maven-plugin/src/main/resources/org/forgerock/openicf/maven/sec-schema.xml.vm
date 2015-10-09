@@ -249,6 +249,7 @@
                                     fileref="../shared/images/#if($attribute.isRequired())yes#{else}no#end-icon.png"
                                     format="PNG"/>
                         </imageobject>
+                        <textobject role="fo"><para>#if($property.required)Yes#{else}No#end</para></textobject>
                     </mediaobject>
                 </entry>
                 <entry>
@@ -258,6 +259,7 @@
                                     fileref="../shared/images/#if($attribute.isMultiValued())yes#{else}no#end-icon.png"
                                     format="PNG"/>
                         </imageobject>
+                        <textobject role="fo"><para>#if($property.required)Yes#{else}No#end</para></textobject>
                     </mediaobject>
                 </entry>
                 <entry>
@@ -267,6 +269,7 @@
                                     fileref="../shared/images/#if($attribute.isCreateable())yes#{else}no#end-icon.png"
                                     format="PNG"/>
                         </imageobject>
+                        <textobject role="fo"><para>#if($property.required)Yes#{else}No#end</para></textobject>
                     </mediaobject>
                 </entry>
                 <entry>
@@ -276,6 +279,7 @@
                                     fileref="../shared/images/#if($attribute.isUpdateable())yes#{else}no#end-icon.png"
                                     format="PNG"/>
                         </imageobject>
+                        <textobject role="fo"><para>#if($property.required)Yes#{else}No#end</para></textobject>
                     </mediaobject>
                 </entry>
                 <entry>
@@ -285,6 +289,7 @@
                                     fileref="../shared/images/#if($attribute.isReadable())yes#{else}no#end-icon.png"
                                     format="PNG"/>
                         </imageobject>
+                        <textobject role="fo"><para>#if($property.required)Yes#{else}No#end</para></textobject>
                     </mediaobject>
                 </entry>
                 <entry>
@@ -294,6 +299,7 @@
                                     fileref="../shared/images/#if($attribute.isReturnedByDefault())yes#{else}no#end-icon.png"
                                     format="PNG"/>
                         </imageobject>
+                        <textobject role="fo"><para>#if($property.required)Yes#{else}No#end</para></textobject>
                     </mediaobject>
                 </entry>
             </row>

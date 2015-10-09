@@ -57,11 +57,7 @@
                             <entry>Type</entry>
                             <entry>Default</entry>
                             <entry>
-                                <mediaobject>
-                                    <imageobject>
-                                        <imagedata fileref="../shared/images/encrypted.png" format="PNG"/>
-                                    </imageobject>
-                                </mediaobject>
+                             Encrypted
                                 <footnote>
                                     <para>
                                         Indicates whether the property value is considered confidential, and
@@ -99,6 +95,7 @@
                                             <imageobject>
                                                 <imagedata fileref="../shared/images/encrypted.png" format="PNG"/>
                                             </imageobject>
+                                             <textobject role="fo"><para>Yes</para></textobject>
                                         </mediaobject>
                                     #end
                                 </entry>
@@ -123,6 +120,7 @@
                                                         fileref="../shared/images/#if($property.required)yes#{else}no#end-icon.png"
                                                         format="PNG"/>
                                             </imageobject>
+                                            <textobject role="fo"><para>#if($property.required)Yes#{else}No#end</para></textobject>
                                         </mediaobject>
                                     #end
                                 </entry>
