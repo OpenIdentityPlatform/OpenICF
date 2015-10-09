@@ -20,7 +20,7 @@
   !
   ! CCPL HEADER END
   !
-  !      Copyright 2013-2014 ForgeRock AS
+  !      Copyright 2013-2015 ForgeRock AS
   !
 -->
 <section xml:id='sec-config-properties-${uniqueConnectorName}'
@@ -59,7 +59,7 @@
                             <entry>
                                 <mediaobject>
                                     <imageobject>
-                                        <imagedata fileref="shared/images/encrypted.png" format="PNG"/>
+                                        <imagedata fileref="../shared/images/encrypted.png" format="PNG"/>
                                     </imageobject>
                                 </mediaobject>
                                 <footnote>
@@ -97,7 +97,7 @@
                                     #if (${property.confidential})
                                         <mediaobject>
                                             <imageobject>
-                                                <imagedata fileref="shared/images/encrypted.png" format="PNG"/>
+                                                <imagedata fileref="../shared/images/encrypted.png" format="PNG"/>
                                             </imageobject>
                                         </mediaobject>
                                     #end
@@ -106,7 +106,7 @@
                                     #if($property.operations.size() > 0)
                                         <!--imageobject>
                                             <imagedata
-                                                    fileref="shared/images/#if($property.required)yes#{else}no#end-icon.png"
+                                                    fileref="../shared/images/#if($property.required)yes#{else}no#end-icon.png"
                                                     format="PNG"/>
                                         </imageobject-->
                                         <simplelist>
@@ -120,7 +120,7 @@
                                         <mediaobject>
                                             <imageobject>
                                                 <imagedata
-                                                        fileref="shared/images/#if($property.required)yes#{else}no#end-icon.png"
+                                                        fileref="../shared/images/#if($property.required)yes#{else}no#end-icon.png"
                                                         format="PNG"/>
                                             </imageobject>
                                         </mediaobject>
