@@ -234,7 +234,7 @@
                     <mediaobject>
                         <imageobject>
                             <imagedata
-                                    fileref="shared/images/#if($attribute.isRequired())yes#{else}no#end-icon.png"
+                                    fileref="../shared/images/#if($attribute.isRequired())yes#{else}no#end-icon.png"
                                     format="PNG"/>
                         </imageobject>
                     </mediaobject>
@@ -243,7 +243,7 @@
                     <mediaobject>
                         <imageobject>
                             <imagedata
-                                    fileref="shared/images/#if($attribute.isMultiValued())yes#{else}no#end-icon.png"
+                                    fileref="../shared/images/#if($attribute.isMultiValued())yes#{else}no#end-icon.png"
                                     format="PNG"/>
                         </imageobject>
                     </mediaobject>
@@ -252,7 +252,7 @@
                     <mediaobject>
                         <imageobject>
                             <imagedata
-                                    fileref="shared/images/#if($attribute.isCreateable())yes#{else}no#end-icon.png"
+                                    fileref="../shared/images/#if($attribute.isCreateable())yes#{else}no#end-icon.png"
                                     format="PNG"/>
                         </imageobject>
                     </mediaobject>
@@ -261,7 +261,7 @@
                     <mediaobject>
                         <imageobject>
                             <imagedata
-                                    fileref="shared/images/#if($attribute.isUpdateable())yes#{else}no#end-icon.png"
+                                    fileref="../shared/images/#if($attribute.isUpdateable())yes#{else}no#end-icon.png"
                                     format="PNG"/>
                         </imageobject>
                     </mediaobject>
@@ -270,7 +270,7 @@
                     <mediaobject>
                         <imageobject>
                             <imagedata
-                                    fileref="shared/images/#if($attribute.isReadable())yes#{else}no#end-icon.png"
+                                    fileref="../shared/images/#if($attribute.isReadable())yes#{else}no#end-icon.png"
                                     format="PNG"/>
                         </imageobject>
                     </mediaobject>
@@ -279,7 +279,7 @@
                     <mediaobject>
                         <imageobject>
                             <imagedata
-                                    fileref="shared/images/#if($attribute.isReturnedByDefault())yes#{else}no#end-icon.png"
+                                    fileref="../shared/images/#if($attribute.isReturnedByDefault())yes#{else}no#end-icon.png"
                                     format="PNG"/>
                         </imageobject>
                     </mediaobject>
