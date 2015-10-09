@@ -675,9 +675,9 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      */
     public void validate() {
         logger.info("Load and compile configured scripts");
-        if (getClasspath() == null || getClasspath().length < 1) {
-            throw new ConfigurationException("Missing required 'classpath' configuration property");
-        }        
+        if (getScriptRoots() == null || getScriptRoots().length < 1) {
+            throw new ConfigurationException("Missing required 'scriptRoots' configuration property");
+        }     
         validateScript(getAuthenticateScriptFileName());
         validateScript(getCreateScriptFileName());
         validateScript(getDeleteScriptFileName());
@@ -866,18 +866,11 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
                 }
             }
         } else {
-            logger.ok("Fallback to use the classpath for scripts.");
+            throw new ConfigurationException("Missing required 'scriptRoots' configuration property");
         }
         
         if (safeRoots.isEmpty()) {
-            for (URL root : loader.getURLs()) {
-                if (forbiddenLocation.equals(root)) {
-                    logger.info(
-                            "The connector source location is removed from the roots. This url is not allowed: {0}",
-                            forbiddenLocation);
-                }
-                safeRoots.add(root);
-            }
+            throw new ConfigurationException("The 'scriptRoots' does not contain valid root");
         }
         return safeRoots.toArray(new URL[safeRoots.size()]);
     }

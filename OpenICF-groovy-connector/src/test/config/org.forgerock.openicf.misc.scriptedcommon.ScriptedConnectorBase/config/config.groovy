@@ -77,13 +77,13 @@ environments {
     }
     GROOVY {
         configuration {
-            classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/groovy/").file, "UTF-8")]
+            scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/groovy/").file, "UTF-8")]
             scriptExtensions = ['groovy', 'java'] as String[]
         }
     }
     TEST {
         configuration {
-            classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/test/").file, "UTF-8")]
+            scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/test/").file, "UTF-8")]
             authenticateScriptFileName = null
             createScriptFileName = null
             deleteScriptFileName = null
@@ -105,7 +105,7 @@ environments {
     }
     CREST {
         configuration {
-            classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/crest/").file, "UTF-8")]
+            scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/crest/").file, "UTF-8")]
             serviceAddress = new URI("http://localhost:${httpPort}/crest/")
             username = "admin"
             password = new GuardedString("Passw0rd".toCharArray())
@@ -113,7 +113,7 @@ environments {
     }
     CREST_SAMPLE {
         configuration {
-            classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/crest_sample/").file, "UTF-8"),
+            scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/crest_sample/").file, "UTF-8"),
                          URLDecoder.decode(ScriptedConnectorBase.class.getResource("/crest/").file, "UTF-8")]
             serviceAddress = new URI("http://localhost:8090/")
             defaultAuthMethod = "BASIC_PREEMPTIVE"
@@ -125,7 +125,7 @@ environments {
     }
     REST {
         configuration {
-            classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/rest/").file, "UTF-8")]
+            scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/rest/").file, "UTF-8")]
             serviceAddress = new URI("http://localhost:${httpPort}/rest/")
             username = "admin"
             password = new GuardedString("Passw0rd".toCharArray())
@@ -134,7 +134,7 @@ environments {
     }
     REST_SAMPLE {
         configuration {
-            classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/rest_sample/").file, "UTF-8")]
+            scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/rest_sample/").file, "UTF-8")]
             serviceAddress = new URI("http://localhost:8090")
             defaultAuthMethod = "BASIC_PREEMPTIVE"
             username = "__configureme__"
@@ -144,7 +144,7 @@ environments {
     }
     SQL {
         configuration {
-            classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/sql/").file, "UTF-8")]
+            scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/sql/").file, "UTF-8")]
             driverClassName = "org.h2.Driver"
             validationQuery = "select 1"
             url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"
@@ -154,7 +154,7 @@ environments {
     }
     SQL_SAMPLE {
         configuration {
-            classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/sql_sample/").file, "UTF-8")]
+            scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/sql_sample/").file, "UTF-8")]
             driverClassName = "com.mysql.jdbc.Driver"
             validationQuery = "select 1"
             url = "jdbc:mysql://localhost:3306/HRDB"
@@ -164,7 +164,7 @@ environments {
     }
     ARM {
         configuration {
-            classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/arm/").file, "UTF-8")]
+            scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/arm/").file, "UTF-8")]
             customizerScriptFileName = "CustomizerScript.groovy"
             authenticateScriptFileName = null
             createScriptFileName = null
