@@ -24,6 +24,8 @@
 
 package org.forgerock.openicf.framework.async.impl;
 
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -45,7 +47,6 @@ import org.forgerock.util.promise.Promise;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.ConnectorFacade;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
@@ -136,6 +137,7 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
         private final AtomicLong sequence = new AtomicLong(0);
         private long expectedResult = -1;
         private SearchResult result = null;
+        private final ConcurrentMap<Long, ConnectorObject> buffer = new ConcurrentSkipListMap<Long, ConnectorObject>();
 
         public InternalRequest(
                 RemoteOperationContext context,
@@ -160,34 +162,46 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
                 SearchOpResponse message) {
             if (message.hasConnectorObject()) {
                 try {
-                    final ConnectorObject co =
-                            MessagesUtil.deserializeMessage(message.getConnectorObject(),
-                                    ConnectorObject.class);
-
-                    if (!handler.handle(co) && !getPromise().isDone()) {
-                        getExceptionHandler()
-                                .handleException(
-                                        new ConnectorException(
-                                                "ResultsHandler stopped processing results"));
-                        tryCancelRemote(getConnectionContext(), getRequestId());
-                    }
+                    buffer.put(message.getSequence(), MessagesUtil.deserializeMessage(message
+                            .getConnectorObject(), ConnectorObject.class));
                 } finally {
                     sequence.incrementAndGet();
                 }
             } else {
-                if (message.hasResult()) {
-                    result =
-                            MessagesUtil
-                                    .deserializeMessage(message.getResult(), SearchResult.class);
-                }
-                expectedResult = message.getSequence();
-                if (expectedResult == 0 || sequence.get() == expectedResult) {
-                    getResultHandler().handleResult(result);
-                } else {
-                    logger.ok("Response processed before all result has arrived");
+                try {
+                    boolean doContinue = true;
+                    long startTime = System.currentTimeMillis();
+                    expectedResult = message.getSequence();
+                    long next = 1;
+                    do {
+                        for (Long key: buffer.keySet()) {
+                            if (key != next){
+                                continue;
+                            }
+                            next++;
+                            if (!handler.handle(buffer.remove(key))) {
+                                doContinue = false;
+                                break;
+                            }
+                        }
+                        if (System.currentTimeMillis() - startTime > 60000L){
+                            doContinue = false;
+                        }
+                    } while (doContinue && (sequence.get() != expectedResult || !buffer.isEmpty()));
+                    buffer.clear();
+                } finally {
+                    if (message.hasResult()) {
+                        result =
+                                MessagesUtil.deserializeMessage(message.getResult(),
+                                        SearchResult.class);
+                    }
+                    
+                    if (expectedResult == 0 || sequence.get() == expectedResult) {
+                        getResultHandler().handleResult(result);
+                    }
                 }
             }
-            if (expectedResult > 0 && sequence.get() == expectedResult) {
+            if (expectedResult > 0 && sequence.get() != expectedResult) {
                 getResultHandler().handleResult(result);
             }
         }

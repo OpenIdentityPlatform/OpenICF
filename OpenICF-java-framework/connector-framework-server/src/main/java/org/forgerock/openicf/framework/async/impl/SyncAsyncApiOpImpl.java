@@ -24,6 +24,8 @@
 
 package org.forgerock.openicf.framework.async.impl;
 
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -43,7 +45,6 @@ import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorKey;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.SyncDelta;
@@ -146,6 +147,7 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncAsyn
         private final AtomicLong sequence = new AtomicLong(0);
         private long expectedResult = -1;
         private SyncToken result = null;
+        private final ConcurrentMap<Long, SyncDelta> buffer = new ConcurrentSkipListMap<Long, SyncDelta>();
 
         public InternalRequest(
                 final RemoteOperationContext context,
@@ -183,33 +185,47 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncAsyn
                         .getSequence(), sequence.get());
                 if (message.getSync().hasSyncDelta()) {
                     try {
-                        final SyncDelta delta =
-                                MessagesUtil.deserializeMessage(message.getSync().getSyncDelta(),
-                                        SyncDelta.class);
-
-                        if (!handler.handle(delta) && !getPromise().isDone()) {
-                            getExceptionHandler().handleException(
-                                    new ConnectorException(
-                                            "SyncResultsHandler stopped processing results"));
-                            tryCancelRemote(getConnectionContext(), getRequestId());
-                        }
+                        buffer.put(message.getSync().getSequence(), MessagesUtil
+                                .deserializeMessage(message.getSync().getSyncDelta(),
+                                        SyncDelta.class));
                     } finally {
                         sequence.incrementAndGet();
                     }
                 } else {
-                    if (message.getSync().hasSyncToken()) {
-                        result =
-                                MessagesUtil.deserializeMessage(message.getSync().getSyncToken(),
-                                        SyncToken.class);
-                    }
-                    expectedResult = message.getSync().getSequence();
-                    if (expectedResult == 0 || sequence.get() == expectedResult) {
-                        getResultHandler().handleResult(result);
-                    } else {
-                        logger.info("Response processed before all result has arrived");
+                    try {
+                        boolean doContinue = true;
+                        long startTime = System.currentTimeMillis();
+                        expectedResult = message.getSync().getSequence();
+                        long next = 1;
+                        do {
+                            for (Long key: buffer.keySet()) {
+                                if (key != next){
+                                    continue;
+                                }
+                                next++;
+                                if (!handler.handle(buffer.remove(key))) {
+                                    doContinue = false;
+                                    break;
+                                }
+                            }
+                            if (System.currentTimeMillis() - startTime > 60000L){
+                                doContinue = false;
+                            }
+                        } while (doContinue && (sequence.get() != expectedResult || !buffer.isEmpty()));
+                        buffer.clear();
+                    } finally {
+                        if (message.getSync().hasSyncToken()) {
+                            result =
+                                    MessagesUtil.deserializeMessage(message.getSync().getSyncToken(),
+                                            SyncToken.class);
+                        }
+
+                        if (expectedResult == 0 || sequence.get() == expectedResult) {
+                            getResultHandler().handleResult(result);
+                        }
                     }
                 }
-                if (expectedResult > 0 && sequence.get() == expectedResult) {
+                if (expectedResult > 0 && sequence.get() != expectedResult) {
                     getResultHandler().handleResult(result);
                 }
             } else {
