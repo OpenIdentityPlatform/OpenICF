@@ -31,6 +31,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.security.CodeSource;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -456,7 +457,7 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
                 scanner.addDefaultExcludes();
                 scanner.scan();
 
-                List<String> includedFiles = Arrays.asList(scanner.getIncludedFiles());
+                List<String> includedFiles = new ArrayList<String>(Arrays.asList(scanner.getIncludedFiles()));
 
                 if (resourcesDirectory.exists()) {
                     scanner = new DirectoryScanner();
