@@ -419,7 +419,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     /**
      * @return the classpath
      */
-    @ConfigurationProperty(groupMessageKey = "groovy.engine", required = true)
+    @ConfigurationProperty(groupMessageKey = "groovy.engine")
     public String[] getClasspath() {
         if (null != config.getClasspath()) {
             return config.getClasspath().toArray(new String[config.getClasspath().size()]);
