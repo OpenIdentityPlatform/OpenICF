@@ -57,15 +57,19 @@
       </entry>
       <entry>
        #if($objectclass.operations)
-       <simplelist>
-        <!--This list is built with one member entry for each supported operation
-        built from connectorInterfaces-->
-        #foreach($operation in $objectclass.operations)
-        <member>
-            <para><link linkend="sec-implemented-interfaces-${uniqueConnectorName}">${operation.value}</link></para>
-        </member>
-        #end
-       </simplelist>
+           #if($objectclass.operations.isEmpty())
+               <para>None of the <link linkend="sec-implemented-interfaces-${uniqueConnectorName}">connector operations</link> are supported.</para>
+           #else
+               <simplelist>
+                   <!--This list is built with one member entry for each supported operation
+                   built from connectorInterfaces-->
+                   #foreach($operation in $objectclass.operations)
+                       <member>
+                           <para><link linkend="sec-implemented-interfaces-${uniqueConnectorName}">${operation.value}</link></para>
+                       </member>
+                   #end
+               </simplelist>
+           #end
        #else
         <para>All <link linkend="sec-implemented-interfaces-${uniqueConnectorName}">connector operations</link> are supported.</para>
        #end
