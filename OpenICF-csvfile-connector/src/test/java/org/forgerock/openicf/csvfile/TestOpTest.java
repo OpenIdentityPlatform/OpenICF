@@ -1,6 +1,7 @@
 /*
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010 ForgeRock Inc. All Rights Reserved
+ * Copyright 2010-2015 ForgeRock
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -27,16 +28,12 @@
  */
 package org.forgerock.openicf.csvfile;
 
+import org.forgerock.openicf.csvfile.util.TestUtils;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.testng.annotations.AfterMethod;
-import java.io.File;
-import java.net.URL;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.testng.annotations.Test;
 
-/**
- *
- * @author Viliam Repan (lazyman)
- */
 public class TestOpTest {
 
     private CSVFileConnector connector;
@@ -50,23 +47,21 @@ public class TestOpTest {
     @Test
     public void testGoodConfiguration() throws Exception {
         CSVFileConfiguration config = new CSVFileConfiguration();
-        URL testFile = UtilsTest.class.getResource("/files/authenticate.csv");
-        config.setFilePath(new File(testFile.toURI()));
-        config.setUniqueAttribute("uid");
-        config.setPasswordAttribute("password");
+        config.setCsvFile(TestUtils.getTestFile("authenticate.csv"));
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("password");
 
         connector = new CSVFileConnector();
         connector.init(config);
         connector.test();
     }
 
-    @Test(expectedExceptions = ConfigurationException.class)
+    @Test(expectedExceptions = ConnectorException.class)
     public void badHeader() throws Exception {
         CSVFileConfiguration config = new CSVFileConfiguration();
-        URL testFile = UtilsTest.class.getResource("/files/test-bad.csv");
-        config.setFilePath(new File(testFile.toURI()));
-        config.setUniqueAttribute("uid");
-        config.setPasswordAttribute("password");
+        config.setCsvFile(TestUtils.getTestFile("test-bad.csv"));
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("password");
 
         connector = new CSVFileConnector();
         connector.init(config);

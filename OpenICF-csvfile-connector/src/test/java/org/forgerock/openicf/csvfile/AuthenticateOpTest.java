@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2010 ForgeRock Inc. All Rights Reserved
+ * Copyright 2010-2015 ForgeRock
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -41,10 +41,6 @@ import org.identityconnectors.framework.common.exceptions.InvalidPasswordExcepti
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 
-/**
- *
- * @author Viliam Repan (lazyman)
- */
 public class AuthenticateOpTest {
 
     private CSVFileConnector connector;
@@ -52,10 +48,10 @@ public class AuthenticateOpTest {
     @BeforeMethod
     public void before() throws Exception {
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setEncoding("utf-8");
-        config.setFilePath(TestUtils.getTestFile("authenticate.csv"));
-        config.setUniqueAttribute("uid");
-        config.setPasswordAttribute("password");
+        config.setCsvFile(TestUtils.getTestFile("authenticate.csv"));
+        config.setHeaderUid("uid");
+        config.setHeaderName("uid");
+        config.setHeaderPassword("password");
 
         connector = new CSVFileConnector();
         connector.init(config);
@@ -70,9 +66,9 @@ public class AuthenticateOpTest {
     @Test(expectedExceptions = ConfigurationException.class)
     public void passwordColumNameNotDefined() throws Exception {
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setEncoding("utf-8");
-        config.setFilePath(TestUtils.getTestFile("authenticate.csv"));
-        config.setUniqueAttribute("uid");
+        config.setCsvFile(TestUtils.getTestFile("authenticate.csv"));
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("doesnotexist");
 
         CSVFileConnector flat = new CSVFileConnector();
         flat.init(config);
@@ -80,7 +76,7 @@ public class AuthenticateOpTest {
                 new GuardedString("password".toCharArray()), null);
     }
 
-    @Test(expectedExceptions = ConnectorException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void badObjectClass() {
         GuardedString guarded = new GuardedString(Base64.encode("good".getBytes()).toCharArray());
         connector.authenticate(ObjectClass.GROUP, "vilo", guarded, null);

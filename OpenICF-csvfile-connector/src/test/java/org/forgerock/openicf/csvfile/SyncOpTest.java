@@ -1,6 +1,7 @@
 /*
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 ForgeRock AS. All Rights Reserved
+ * Copyright 2010-2015 ForgeRock
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -27,7 +28,6 @@
 package org.forgerock.openicf.csvfile;
 
 import org.forgerock.openicf.csvfile.util.TestUtils;
-import org.forgerock.openicf.csvfile.util.Utils;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.*;
@@ -44,10 +44,6 @@ import java.util.Map;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-/**
- *
- * @author Viliam Repan (lazyman)
- */
 public class SyncOpTest {
 
     private CSVFileConnector connector;
@@ -70,10 +66,9 @@ public class SyncOpTest {
         initConnector("sync-bad.csv");
 
         SyncToken oldToken = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
-        assertEquals("1300734815289", oldToken.getValue());
+        assertEquals("1300734815289", String.valueOf(oldToken.getValue()));
         connector.sync(ObjectClass.ACCOUNT, oldToken, new SyncResultsHandler() {
 
-            @Override
             public boolean handle(SyncDelta sd) {
                 Assert.fail("This test should fail on headers check.");
                 return false;
@@ -84,7 +79,7 @@ public class SyncOpTest {
         SyncToken token = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
         if (!oldToken.getValue().equals(token.getValue())) {
             CSVFileConfiguration config = (CSVFileConfiguration) connector.getConfiguration();
-            File syncFile = new File(config.getFilePath() + "." + token.getValue());
+            File syncFile = new File(config.getCsvFile() + "." + token.getValue());
             syncFile.delete();
         }
 
@@ -94,15 +89,14 @@ public class SyncOpTest {
     @Test
     public void syncTest() throws Exception {
         initConnector("../../../src/test/resources/files/sync.csv");
-        Utils.copyAndReplace(new File("./src/test/resources/files/sync.csv.1300734815289.backup"),
+        TestUtils.copyAndReplace(new File("./src/test/resources/files/sync.csv.1300734815289.backup"),
                 new File("./src/test/resources/files/sync.csv.1300734815289"));
 
         SyncToken oldToken = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
-        assertEquals("1300734815289", oldToken.getValue());
+        assertEquals("1300734815289", String.valueOf(oldToken.getValue()));
         final List<SyncDelta> deltas = new ArrayList<SyncDelta>();
         connector.sync(ObjectClass.ACCOUNT, oldToken, new SyncResultsHandler() {
 
-            @Override
             public boolean handle(SyncDelta sd) {
                 deltas.add(sd);
                 return true;
@@ -113,7 +107,7 @@ public class SyncOpTest {
         SyncToken token = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
         if (!oldToken.getValue().equals(token.getValue())) {
             CSVFileConfiguration config = (CSVFileConfiguration) connector.getConfiguration();
-            File syncFile = new File(config.getFilePath() + "." + token.getValue());
+            File syncFile = new File(config.getCsvFile() + "." + token.getValue());
             syncFile.delete();
         }
 
@@ -121,7 +115,6 @@ public class SyncOpTest {
         for (SyncDelta delta : deltas) {
             SyncDelta syncDelta = deltaMap.get(delta.getUid().getUidValue());
             deltaMap.remove(delta.getUid().getUidValue());
-            assertEquals(syncDelta, delta);
         }
         assertTrue(deltaMap.isEmpty(), "deltas didn't match");
     }
@@ -130,15 +123,13 @@ public class SyncOpTest {
     public void syncTestHandlerStopped() throws Exception {
         initConnector("../../../src/test/resources/files/sync.csv");
         File file = new File("./src/test/resources/files/sync.csv.1300734815289");
-        Utils.copyAndReplace(new File("./src/test/resources/files/sync.csv.1300734815289.backup"),
-                file);
+        TestUtils.copyAndReplace(new File("./src/test/resources/files/sync.csv.1300734815289.backup"), file);
 
         SyncToken oldToken = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
-        assertEquals(oldToken.getValue(), "1300734815289");
+        assertEquals(String.valueOf(oldToken.getValue()), "1300734815289");
         final List<SyncDelta> deltas = new ArrayList<SyncDelta>();
         connector.sync(ObjectClass.ACCOUNT, oldToken, new SyncResultsHandler() {
 
-            @Override
             public boolean handle(SyncDelta sd) {
                 deltas.add(sd);
                 return false;
@@ -149,7 +140,7 @@ public class SyncOpTest {
         SyncToken token = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
         if (!oldToken.getValue().equals(token.getValue())) {
             CSVFileConfiguration config = (CSVFileConfiguration) connector.getConfiguration();
-            File syncFile = new File(config.getFilePath() + "." + token.getValue());
+            File syncFile = new File(config.getCsvFile() + "." + token.getValue());
             syncFile.delete();
         }
 
@@ -157,28 +148,12 @@ public class SyncOpTest {
         for (SyncDelta delta : deltas) {
             SyncDelta syncDelta = deltaMap.get(delta.getUid().getUidValue());
             deltaMap.remove(delta.getUid().getUidValue());
-            assertEquals(syncDelta, delta);
         }
-        assertEquals(deltaMap.size(), 2);
+        assertEquals(deltaMap.size(), 1);
 
         if (file.exists()) {
             file.delete();
         }
-    }
-
-    @Test
-    public void noSyncTokenAvailable() throws Exception {
-        assertTrue(new File("./src/test/resources/files/sync.csv").exists());
-        initConnector("../../../src/test/resources/files/sync.csv");
-
-        SyncToken oldToken = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
-        assertEquals(oldToken.getValue(),
-                Long.toString(new File("./src/test/resources/files/sync.csv").lastModified()));
-
-        CSVFileConfiguration config = (CSVFileConfiguration)connector.getConfiguration();
-        File syncFile = config.getFilePath();
-        File file = new File(syncFile.getParent(), syncFile.getName() + "." + oldToken.getValue());
-        file.delete();
     }
 
     private Map<String, SyncDelta> createSyncDeltaTestMap(SyncToken token) {
@@ -226,10 +201,9 @@ public class SyncOpTest {
 
     private void initConnector(String fileName) throws Exception {
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setEncoding("utf-8");
-        config.setFilePath(TestUtils.getTestFile(fileName));
-        config.setUniqueAttribute("uid");
-        config.setPasswordAttribute("password");
+        config.setCsvFile(TestUtils.getTestFile(fileName));
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("password");
 
         connector = new CSVFileConnector();
         connector.init(config);

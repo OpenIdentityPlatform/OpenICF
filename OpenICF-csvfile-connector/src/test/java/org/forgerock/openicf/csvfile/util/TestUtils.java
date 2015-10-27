@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2010 ForgeRock Inc. All Rights Reserved
+ * Copyright 2010-2015 ForgeRock
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -30,12 +30,10 @@ package org.forgerock.openicf.csvfile.util;
 import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.channels.FileChannel;
+
 import org.testng.Assert;
 
-/**
- *
- * @author Viliam Repan (lazyman)
- */
 public class TestUtils {
 
     public static File getTestFile(String name) throws IOException, URISyntaxException {
@@ -51,8 +49,9 @@ public class TestUtils {
 
         String retVal = null;
         try {
-            String line1 = null;
-            String line2 = null;
+            // discard the header lines
+            String line1 = reader1.readLine();
+            String line2 = reader2.readLine();
             while (true) {
                 line1 = reader1.readLine();
                 line2 = reader2.readLine();
@@ -84,5 +83,26 @@ public class TestUtils {
         FileInputStream fis = new FileInputStream(file);
         InputStreamReader in = new InputStreamReader(fis, "utf-8");
         return new BufferedReader(in);
+    }
+
+    public static void copyAndReplace(File from, File to) throws IOException {
+        if (to.exists()) {
+            to.delete();
+        }
+        to.createNewFile();
+
+        FileChannel inChannel = new FileInputStream(from).getChannel();
+        FileChannel outChannel = new FileOutputStream(to).getChannel();
+        try {
+            inChannel.transferTo(0, inChannel.size(), outChannel);
+        }
+        finally {
+            if (inChannel != null) {
+                inChannel.close();
+            }
+            if (outChannel != null) {
+                outChannel.close();
+            }
+        }
     }
 }

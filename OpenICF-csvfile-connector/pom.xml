@@ -31,7 +31,7 @@
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>csvfile-connector</artifactId>
-    <version>1.1.1.0-SNAPSHOT</version>
+    <version>1.5.1.0</version>
     <packaging>bundle</packaging>
     <name>CSV File Connector</name>
     <description>Connector for CSV File</description>
@@ -77,17 +77,23 @@
         <dependency>
             <groupId>org.forgerock.openicf.framework</groupId>
             <artifactId>connector-framework</artifactId>
+            <version>1.5.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.forgerock.openicf.framework</groupId>
+            <artifactId>connector-framework-internal</artifactId>
+            <version>1.5.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.supercsv</groupId>
+            <artifactId>super-csv</artifactId>
+            <version>2.4.0-SNAPSHOT</version>
         </dependency>
 
         <!-- Test Dependencies -->
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
-            <artifactId>connector-framework-internal</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

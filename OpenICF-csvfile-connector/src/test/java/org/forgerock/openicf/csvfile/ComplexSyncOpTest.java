@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2010 ForgeRock Inc. All Rights Reserved
+ * Copyright 2010-2015 ForgeRock
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -34,26 +34,26 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- *
- * @author Viliam Repan (lazyman)
- */
 public class ComplexSyncOpTest {
 
     private CSVFileConnector connector;
 
     @BeforeMethod
     public void before() throws Exception {
+        File file = new File("./src/test/resources/files/sync.csv.1300734815289");
+        TestUtils.copyAndReplace(new File("./src/test/resources/files/sync.csv.1300734815289.backup"), file);
+
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setEncoding("utf-8");
-        config.setFilePath(TestUtils.getTestFile("sync.csv"));
-        config.setUniqueAttribute("uid");
-        config.setPasswordAttribute("password");
+        config.setCsvFile(new File("./src/test/resources/files/sync.csv"));
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("password");
+        config.setHeaderName("firstName");
 
         connector = new CSVFileConnector();
         connector.init(config);
@@ -68,14 +68,12 @@ public class ComplexSyncOpTest {
     /**
      * only for to test sync tmp files handling, test not usable now
      */
-    @Test(groups = "broken")
+    @Test
     public void syncTest() {
         final List<SyncDelta> deltas = new ArrayList<SyncDelta>();
         SyncToken token = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
         for (int i = 0; i < 10; i++) {
             connector.sync(ObjectClass.ACCOUNT, token, new SyncResultsHandler() {
-
-                @Override
                 public boolean handle(SyncDelta sd) {
                     deltas.add(sd);
                     return true;
@@ -84,13 +82,6 @@ public class ComplexSyncOpTest {
             if (!deltas.isEmpty()) {
                 token = deltas.get(0).getToken();
             }
-
-//            Map<String, SyncDelta> deltaMap = createSyncDeltaTestMap(token);
-//            for (SyncDelta delta : deltas) {
-//                SyncDelta syncDelta = deltaMap.get(delta.getUid().getUidValue());
-//                deltaMap.remove(delta.getUid().getUidValue());
-////                assertEquals(syncDelta, delta);
-//            }
             deltas.clear();
         }
     }

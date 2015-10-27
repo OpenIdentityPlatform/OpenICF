@@ -1,6 +1,7 @@
 /*
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010 ForgeRock Inc. All Rights Reserved
+ * Copyright 2010-2015 ForgeRock
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -34,16 +35,11 @@ import org.forgerock.openicf.csvfile.util.TestUtils;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.forgerock.openicf.csvfile.util.Utils;
 import java.io.File;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.testng.annotations.Test;
 import static org.testng.Assert.*;
 
-/**
- *
- * @author Viliam Repan (lazyman)
- */
 public class DeleteOpTest {
 
     private CSVFileConnector connector;
@@ -52,14 +48,14 @@ public class DeleteOpTest {
     public void before() throws Exception {
         File file = TestUtils.getTestFile("delete.csv");
         File backup = TestUtils.getTestFile("delete-backup.csv");
-        Utils.copyAndReplace(backup, file);
+        TestUtils.copyAndReplace(backup, file);
 
         CSVFileConfiguration config = new CSVFileConfiguration();
 //        URL testFile = UtilsTest.class.getResource("/files/update-attribute.csv");
 //        config.setFilePath(new File(testFile.toURI()));
-        config.setFilePath(TestUtils.getTestFile("delete.csv"));
-        config.setUniqueAttribute("uid");
-        config.setPasswordAttribute("password");
+        config.setCsvFile(TestUtils.getTestFile("delete.csv"));
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("password");
 
         connector = new CSVFileConnector();
         connector.init(config);
@@ -82,7 +78,7 @@ public class DeleteOpTest {
         connector.delete(null, new Uid("vilo"), null);
     }
 
-    @Test(expectedExceptions = ConnectorException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void badObjectClass() {
         connector.delete(ObjectClass.GROUP, new Uid("vilo"), null);
     }
@@ -101,7 +97,7 @@ public class DeleteOpTest {
     public void correctDelete() throws Exception {
         connector.delete(ObjectClass.ACCOUNT, new Uid("vilo"), null);
         CSVFileConfiguration config = (CSVFileConfiguration) connector.getConfiguration();
-        String result = TestUtils.compareFiles(config.getFilePath(),
+        String result = TestUtils.compareFiles(config.getCsvFile(),
                 TestUtils.getTestFile("delete-result.csv"));
         assertNull(result, "File updated incorrectly: " + result);
     }

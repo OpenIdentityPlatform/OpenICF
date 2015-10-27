@@ -1,6 +1,7 @@
 /*
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010 ForgeRock Inc. All Rights Reserved
+ * Copyright 2010-2015 ForgeRock
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -27,20 +28,16 @@
  */
 package org.forgerock.openicf.csvfile;
 
-import org.forgerock.openicf.csvfile.util.TestUtils;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import static org.testng.Assert.*;
+
+import org.forgerock.openicf.csvfile.util.TestUtils;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.testng.annotations.Test;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 
-/**
- *
- * @author Viliam Repan (lazyman)
- */
 public class ResolveUsernameOpTest {
 
     private CSVFileConnector connector;
@@ -48,10 +45,9 @@ public class ResolveUsernameOpTest {
     @BeforeMethod
     public void before() throws Exception {
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setEncoding("utf-8");
-        config.setFilePath(TestUtils.getTestFile("resolve.csv"));
-        config.setUniqueAttribute("uid");
-        config.setPasswordAttribute("password");
+        config.setCsvFile(TestUtils.getTestFile("resolve.csv"));
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("password");
 
         connector = new CSVFileConnector();
         connector.init(config);
@@ -63,7 +59,7 @@ public class ResolveUsernameOpTest {
         connector = null;
     }
 
-    @Test(expectedExceptions = ConnectorException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void badObjectClass() {
         connector.resolveUsername(ObjectClass.GROUP, "vilo", null);
     }

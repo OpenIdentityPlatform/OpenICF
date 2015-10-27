@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2010 ForgeRock Inc. All Rights Reserved
+ * Copyright 2010-2015 ForgeRock
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -27,14 +27,12 @@
  */
 package org.forgerock.openicf.csvfile;
 
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
 import static org.testng.Assert.*;
 
 import org.forgerock.openicf.csvfile.util.TestUtils;
-import org.forgerock.openicf.csvfile.util.Utils;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 import java.util.HashSet;
@@ -54,9 +52,6 @@ import org.identityconnectors.framework.common.exceptions.AlreadyExistsException
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.testng.annotations.Test;
 
-/**
- * @author Viliam Repan (lazyman)
- */
 public class CreateOpTest {
 
     private CSVFileConnector connector;
@@ -65,11 +60,11 @@ public class CreateOpTest {
     public void before() throws Exception {
         File file = TestUtils.getTestFile("create.csv");
         File backup = TestUtils.getTestFile("create-backup.csv");
-        Utils.copyAndReplace(backup, file);
+        TestUtils.copyAndReplace(backup, file);
 
         file = TestUtils.getTestFile("create-empty.csv");
         backup = TestUtils.getTestFile("create-backup-empty.csv");
-        Utils.copyAndReplace(backup, file);
+        TestUtils.copyAndReplace(backup, file);
     }
 
     @AfterMethod
@@ -78,32 +73,24 @@ public class CreateOpTest {
         connector = null;
     }
 
-    @AfterClass
-    public static void afterClass() throws Exception {
-//        File file = TestUtils.getTestFile("create.csv");
-//        file.delete();
-//        file = TestUtils.getTestFile("create-empty.csv");
-//        file.delete();
-    }
-
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void nullObjectClass() throws Exception {
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setFilePath(TestUtils.getTestFile("create.csv"));
-        config.setUniqueAttribute("uid");
-        config.setPasswordAttribute("password");
+        config.setCsvFile(TestUtils.getTestFile("create.csv"));
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("password");
 
         connector = new CSVFileConnector();
         connector.init(config);
         connector.create(null, createAttributeSet(), null);
     }
 
-    @Test(expectedExceptions = ConnectorException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void badObjectClass() throws Exception {
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setFilePath(TestUtils.getTestFile("create.csv"));
-        config.setUniqueAttribute("uid");
-        config.setPasswordAttribute("password");
+        config.setCsvFile(TestUtils.getTestFile("create.csv"));
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("password");
 
         connector = new CSVFileConnector();
         connector.init(config);
@@ -113,37 +100,21 @@ public class CreateOpTest {
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void nullAttributes() throws Exception {
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setFilePath(TestUtils.getTestFile("create.csv"));
-        config.setUniqueAttribute("uid");
-        config.setPasswordAttribute("password");
+        config.setCsvFile(TestUtils.getTestFile("create.csv"));
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("password");
 
         connector = new CSVFileConnector();
         connector.init(config);
         connector.create(ObjectClass.ACCOUNT, null, null);
     }
 
-    @Test(expectedExceptions = UnknownUidException.class)
-    public void badWithoutUniqueAttribute() throws Exception {
-        CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setFilePath(TestUtils.getTestFile("create.csv"));
-        config.setUniqueAttribute("uid");
-        config.setPasswordAttribute("password");
-
-        connector = new CSVFileConnector();
-        connector.init(config);
-        Set<Attribute> attributes = new HashSet<Attribute>();
-        attributes.add(createAttribute("firstName", "viliam"));
-        attributes.add(createAttribute("lastName", "repan", "repan2"));
-        attributes.add(AttributeBuilder.buildPassword(new GuardedString(Base64.encode("asdf".getBytes()).toCharArray())));
-        connector.create(ObjectClass.ACCOUNT, attributes, null);
-    }
-
     @Test(expectedExceptions = AlreadyExistsException.class)
     public void uidAlreadyExists() throws Exception {
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setFilePath(TestUtils.getTestFile("create.csv"));
-        config.setUniqueAttribute("uid");
-        config.setPasswordAttribute("password");
+        config.setCsvFile(TestUtils.getTestFile("create.csv"));
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("password");
 
         connector = new CSVFileConnector();
         connector.init(config);
@@ -152,7 +123,7 @@ public class CreateOpTest {
         assertNotNull(uid);
         assertEquals("vilo", uid.getUidValue());
 
-        String result = TestUtils.compareFiles(config.getFilePath(),
+        String result = TestUtils.compareFiles(config.getCsvFile(),
                 TestUtils.getTestFile("create-result-with-pwd.csv"));
         assertNull("File updated incorrectly: " + result, result);
     }
@@ -160,10 +131,10 @@ public class CreateOpTest {
     @Test
     public void createWithoutUid() throws Exception {
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setFilePath(TestUtils.getTestFile("create-empty.csv"));
-        config.setUniqueAttribute("uid");
-        config.setPasswordAttribute("password");
-        config.setNameAttribute("lastName");
+        config.setCsvFile(TestUtils.getTestFile("create-empty.csv"));
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("password");
+        config.setHeaderName("lastName");
 
         connector = new CSVFileConnector();
         connector.init(config);
@@ -181,7 +152,7 @@ public class CreateOpTest {
 
     private Set<Attribute> createAttributeSet() {
         Set<Attribute> attributes = new HashSet<Attribute>();
-        attributes.add(new Name("vilo"));
+        attributes.add(new Uid("vilo"));
         attributes.add(createAttribute("firstName", "viliam"));
         attributes.add(createAttribute("lastName", "repan", "repan2"));
         attributes.add(AttributeBuilder.buildPassword(new GuardedString(Base64.encode("asdf".getBytes()).toCharArray())));

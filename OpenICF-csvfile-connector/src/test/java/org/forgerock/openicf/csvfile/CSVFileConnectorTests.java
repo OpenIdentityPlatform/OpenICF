@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 ForgeRock AS. All rights reserved.
+ * Copyright 2011-2015 ForgeRock
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -46,7 +46,6 @@ import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.identityconnectors.test.common.TestHelpers;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -62,8 +61,8 @@ public class CSVFileConnectorTests {
 
     @Test(dataProvider = "provideNumbers")
     public void exampleTest1(CSVFileConfiguration config) throws Exception {
-
-        FileWriter f2 = new FileWriter(config.getFilePath(), false);
+/*
+        FileWriter f2 = new FileWriter(config.getCsvFile(), false);
         f2.write(new StringBuilder("uid").append(config.getFieldDelimiter()).append(
                 OperationalAttributes.PASSWORD_NAME).append(config.getFieldDelimiter()).append(
                 "fullName").append(config.getFieldDelimiter()).append("groups").toString());
@@ -90,6 +89,7 @@ public class CSVFileConnectorTests {
         facade.delete(ObjectClass.ACCOUNT, uid, null);
 
         Assert.assertNull(facade.getObject(ObjectClass.ACCOUNT, uid, null));
+*/
     }
 
     @DataProvider(name = "provideNumbers")
@@ -97,30 +97,20 @@ public class CSVFileConnectorTests {
         List<Object[]> tests = new ArrayList<Object[]>();
         
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setFilePath(TestUtils.getTestFile("connector-case1.csv"));
+        config.setCsvFile(TestUtils.getTestFile("connector-case1.csv"));
         config.setFieldDelimiter("*");
-        config.setUsingMultivalue(true);
-        config.setUniqueAttribute("uid");
-        config.setNameAttribute("uid");
-        config.setPasswordAttribute(OperationalAttributes.PASSWORD_NAME);        
+        config.setHeaderUid("uid");
+        config.setHeaderName("uid");
+        config.setHeaderPassword(OperationalAttributes.PASSWORD_NAME);
         tests.add(new Object[]{config});
         
         config = new CSVFileConfiguration();
-        config.setFilePath(TestUtils.getTestFile("connector-case2.csv"));
-        config.setMultivalueDelimiter("$");
-        config.setUsingMultivalue(true);
-        config.setUniqueAttribute("uid");
-        config.setNameAttribute("uid");
-        config.setPasswordAttribute(OperationalAttributes.PASSWORD_NAME);
+        config.setCsvFile(TestUtils.getTestFile("connector-case2.csv"));
+        config.setHeaderUid("uid");
+        config.setHeaderName("uid");
+        config.setHeaderPassword(OperationalAttributes.PASSWORD_NAME);
         tests.add(new Object[]{config});
         
         return tests.iterator();
-    }
-
-    protected ConnectorFacade getFacade(CSVFileConfiguration config) {
-        ConnectorFacadeFactory factory = ConnectorFacadeFactory.getInstance();
-        // **test only**
-        APIConfiguration impl = TestHelpers.createTestConfiguration(CSVFileConnector.class, config);
-        return factory.newInstance(impl);
     }
 }

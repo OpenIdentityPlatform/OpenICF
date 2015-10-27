@@ -1,63 +1,52 @@
 /*
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+ * The contents of this file are subject to the terms of the Common Development and
+ * Distribution License (the License). You may not use this file except in compliance
+ * with the License.
  *
- * Copyright (c) 2011-2015 ForgeRock AS. All rights reserved.
+ * You can obtain a copy of the License at legal/CDDLv1.0.txt. See the License for
+ * the specific language governing permission and limitations under the License.
  *
- * The contents of this file are subject to the terms
- * of the Common Development and Distribution License
- * (the License). You may not use this file except in
- * compliance with the License.
+ * When distributing Covered Software, include this CDDL Header Notice in each file
+ * and include the License file at legal/CDDLv1.0.txt. If applicable, add the following
+ * below the CDDL Header, with the fields enclosed by brackets [] replaced by your
+ * own identifying information: "Portions copyright [year] [name of copyright owner]".
  *
- * You can obtain a copy of the License at
- * http://forgerock.org/license/CDDLv1.0.html
- * See the License for the specific language governing
- * permission and limitations under the License.
- *
- * When distributing Covered Code, include this CDDL
- * Header Notice in each file and include the License file
- * at http://forgerock.org/license/CDDLv1.0.html
- * If applicable, add the following below the CDDL Header,
- * with the fields enclosed by brackets [] replaced by
- * your own identifying information:
- * "Portions Copyrighted [year] [name of copyright owner]"
- *
- * Portions Copyrighted 2011 Viliam Repan (lazyman)
- * Portions Copyrighted 2011 Radovan Semancik
- *
+ * Portions Copyright 2011 Viliam Repan
+ * Portions Copyright 2011 Radovan Semancik
+ * Portions Copyright 2015 ForgeRock AS
  */
 package org.forgerock.openicf.csvfile;
 
-import static org.forgerock.openicf.csvfile.util.Utils.*;
-
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.nio.channels.FileLock;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.UUID;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.forgerock.openicf.csvfile.sync.Change;
-import org.forgerock.openicf.csvfile.sync.InMemoryDiff;
-import org.forgerock.openicf.csvfile.util.CSVSchemaException;
-import org.forgerock.openicf.csvfile.util.CsvItem;
-import org.forgerock.openicf.csvfile.util.TokenFileNameFilter;
-import org.forgerock.openicf.csvfile.util.Utils;
-import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.api.Observer;
+import org.identityconnectors.framework.api.operations.batch.BatchEmptyResult;
+import org.identityconnectors.framework.api.operations.batch.BatchTask;
+import org.identityconnectors.framework.api.operations.batch.BatchTaskExecutor;
+import org.identityconnectors.framework.api.operations.batch.CreateBatchTask;
+import org.identityconnectors.framework.api.operations.batch.DeleteBatchTask;
+import org.identityconnectors.framework.api.operations.batch.UpdateBatchTask;
+import org.identityconnectors.framework.api.operations.batch.UpdateType;
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -68,10 +57,13 @@ import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
+import org.identityconnectors.framework.common.objects.BatchResult;
+import org.identityconnectors.framework.common.objects.BatchToken;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationalAttributeInfos;
@@ -79,18 +71,20 @@ import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.SchemaBuilder;
+import org.identityconnectors.framework.common.objects.Subscription;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
 import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.identityconnectors.framework.common.objects.filter.AbstractFilterTranslator;
+import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.ConnectorClass;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
+import org.identityconnectors.framework.spi.operations.BatchOp;
 import org.identityconnectors.framework.spi.operations.CreateOp;
 import org.identityconnectors.framework.spi.operations.DeleteOp;
 import org.identityconnectors.framework.spi.operations.ResolveUsernameOp;
@@ -99,73 +93,80 @@ import org.identityconnectors.framework.spi.operations.SearchOp;
 import org.identityconnectors.framework.spi.operations.SyncOp;
 import org.identityconnectors.framework.spi.operations.TestOp;
 import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
+import org.supercsv.cellprocessor.CellProcessorAdaptor;
+import org.supercsv.cellprocessor.Optional;
+import org.supercsv.cellprocessor.Trim;
+import org.supercsv.cellprocessor.constraint.NotNull;
+import org.supercsv.cellprocessor.ift.BoolCellProcessor;
+import org.supercsv.cellprocessor.ift.CellProcessor;
+import org.supercsv.cellprocessor.ift.DateCellProcessor;
+import org.supercsv.cellprocessor.ift.DoubleCellProcessor;
+import org.supercsv.cellprocessor.ift.LongCellProcessor;
+import org.supercsv.cellprocessor.ift.StringCellProcessor;
+import org.supercsv.io.CsvMapReader;
+import org.supercsv.io.CsvMapWriter;
+import org.supercsv.io.ICsvMapReader;
+import org.supercsv.io.ICsvMapWriter;
+import org.supercsv.prefs.CsvPreference;
+import org.supercsv.quote.AlwaysQuoteMode;
+import org.supercsv.util.CsvContext;
 
 /**
  * Main implementation of the CSVFile Connector
- *
- * @author Viliam Repan (lazyman)
  */
-@ConnectorClass(displayNameKey = "UI_CONNECTOR_NAME",
-configurationClass = CSVFileConfiguration.class)
-public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsernameOp, CreateOp, DeleteOp, SchemaOp,
-        SearchOp<String>, SyncOp, TestOp, UpdateAttributeValuesOp {
+@ConnectorClass(displayNameKey = "connector_name.display",
+        configurationClass = CSVFileConfiguration.class)
+public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, CreateOp, DeleteOp, ResolveUsernameOp,
+        SchemaOp, SearchOp<Filter>, SyncOp, TestOp, UpdateAttributeValuesOp {
 
-    /**
-     * Setup logging for the {@link CSVFileConnector}.
-     */
     private static final Log log = Log.getLog(CSVFileConnector.class);
-    public static final String TMP_EXTENSION = ".tmp";
 
-    private static enum Operation {
-
-        DELETE, UPDATE, ADD_ATTR_VALUE, REMOVE_ATTR_VALUE;
-    }
-    private static final Object lock = new Object();
-    private static final DateFormat FORMAT = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
-    private Pattern linePattern;
     /**
-     * Place holder for the {@link org.identityconnectors.framework.spi.Configuration} passed into the init() method
-     * {@link CSVFileConnector#init(org.identityconnectors.framework.spi.Configuration)}.
+     * Object on which to synchronize CSV file access.
      */
-    private CSVFileConfiguration configuration;
+    private static final String fileLock = "fileLock";
+
+    /**
+     * Place holder for the {@link Configuration} passed into the init() method
+     * {@link CSVFileConnector#init(org.identityconnectors.framework.spi.Configuration)}
+     * .
+     */
+    private CSVFileConfiguration config;
+
+    /**
+     * Contains the header fields as read from the CSV file.
+     */
+    private String[] header = new String[] {};
+
+    /**
+     * Encapsulates the quote, delimiter and newline preferences.
+     */
+    private CsvPreference csvPreference = CsvPreference.STANDARD_PREFERENCE;
 
     /**
      * Gets the Configuration context for this connector.
+     *
+     * @return The current {@link Configuration}
      */
     public Configuration getConfiguration() {
-        return this.configuration;
+        return this.config;
     }
 
     /**
-     * Callback method to receive the {@link org.identityconnectors.framework.spi.Configuration}.
+     * Callback method to receive the {@link Configuration}.
      *
+     * @param config
+     *            the new {@link Configuration}
      * @see org.identityconnectors.framework.spi.Connector#init(org.identityconnectors.framework.spi.Configuration)
      */
-    public void init(Configuration initialConfiguration1) {
-        notNullArgument(initialConfiguration1, "configuration");
-
-        this.configuration = (CSVFileConfiguration) initialConfiguration1;
-
-        String fieldDelimiter = Pattern.quote(configuration.getFieldDelimiter());
-        String valueQualifier = Pattern.quote(configuration.getValueQualifier());
-
-        // regexp with ," chars is (?:^|,)(\"(?:[^\"]+|\"\")*\"|[^,]*)
-        StringBuilder builder = new StringBuilder();
-        builder.append("(?:^|");
-        builder.append(fieldDelimiter);
-        builder.append(")(");
-        builder.append(valueQualifier);
-        builder.append("(?:[^");
-        builder.append(valueQualifier);
-        builder.append("]+|");
-        builder.append(valueQualifier);
-        builder.append(valueQualifier);
-        builder.append(")*[");
-        builder.append(valueQualifier);
-        builder.append("|$]|[^");
-        builder.append(fieldDelimiter);
-        builder.append("]*)");
-        linePattern = Pattern.compile(builder.toString());
+    public void init(final Configuration config) {
+        this.config = (CSVFileConfiguration) config;
+        csvPreference = new CsvPreference.Builder(
+                ((CSVFileConfiguration) config).getQuoteCharacter().charAt(0),
+                ((CSVFileConfiguration) config).getFieldDelimiter().charAt(0),
+                ((CSVFileConfiguration) config).getNewlineString())
+                .useQuoteMode(new AlwaysQuoteMode())
+                .build();
     }
 
     /**
@@ -174,23 +175,29 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
      * @see org.identityconnectors.framework.spi.Connector#dispose()
      */
     public void dispose() {
+        config = null;
     }
 
-    /**
-     * ****************
+    /******************
      * SPI Operations
      *
      * Implement the following operations using the contract and description
      * found in the Javadoc for these methods.
-     *****************
-     */
+     ******************/
+
     /**
      * {@inheritDoc}
      */
-    public Uid authenticate(final ObjectClass objectClass, final String userName, final GuardedString password, final OperationOptions options) {
-        log.ok("authenticate::begin");
-        Uid uid = realAuthenticate(objectClass, userName, password, true);
-        log.ok("authenticate::end");
+    public Uid authenticate(final ObjectClass objectClass, final String userName, final GuardedString password,
+            final OperationOptions options) {
+        isAccount(objectClass);
+        if (password == null) {
+            throw new InvalidPasswordException("Password cannot be null.");
+        }
+        Uid uid = findAccount(null, userName, password, options);
+        if (uid == null) {
+            throw new InvalidCredentialException(String.format("Account %s does not exist.", userName));
+        }
         return uid;
     }
 
@@ -198,537 +205,513 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
      * {@inheritDoc}
      */
     public Uid resolveUsername(final ObjectClass objectClass, final String userName, final OperationOptions options) {
-        log.ok("resolveUsername::begin");
-        Uid uid = realAuthenticate(objectClass, userName, null, false);
-        log.ok("resolveUsername::end");
+        isAccount(objectClass);
+        Uid uid = findAccount(null, userName, null, options);
+        if (uid == null) {
+            throw new InvalidCredentialException(String.format("Account %s does not exist.", userName));
+        }
         return uid;
     }
 
     /**
      * {@inheritDoc}
      */
-    public Uid create(final ObjectClass objectClass, final Set<Attribute> createAttributes, final OperationOptions options) {
-        log.ok("create::begin");
+    public Uid create(final ObjectClass objectClass, final Set<Attribute> createAttributes,
+            final OperationOptions options) {
         isAccount(objectClass);
-        notNull(createAttributes, "Attribute set must not be null.");
-
-        Attribute uidAttr = getAttribute(configuration.getUniqueAttribute(), createAttributes);
-        if (uidAttr == null || uidAttr.getValue().isEmpty() || uidAttr.getValue().get(0) == null) {
-            throw new UnknownUidException("Unique attribute not defined or is empty.");
-        }
-        Uid uid = new Uid(uidAttr.getValue().get(0).toString());
-
-        BufferedReader reader = null;
-        BufferedWriter writer = null;
-        synchronized (lock) {
-            try {
-                reader = createReader(configuration);
-                List<String> header = readHeader(reader, linePattern, configuration);
-
-                CsvItem account = findAccount(reader, header, uid.getUidValue());
-                closeReader(reader, null);
-
-                if (account != null) {
-                    throw new AlreadyExistsException("Account already exists '" + uid.getUidValue() + "'.");
-                }
-
-                StringBuilder record = createRecord(header, createAttributes);
-                if (record.length() == 0) {
-                    throw new ConnectorException("Can't insert empty record.");
-                }
-
-                FileInputStream fis = new FileInputStream(configuration.getFilePath());
-                fis.skip(configuration.getFilePath().length() - 1);
-
-                byte[] chars = new byte[1];
-                fis.read(chars);
-                fis.close();
-
-                writer = createWriter(true);
-                if (chars[0] != 10) { // 10 is the decimal value for \n
-                    writer.write('\n');
-                }
-                writer.append(record);
-                writer.append('\n');
-            } catch (Exception ex) {
-                handleGenericException(ex, "Couldn't create account");
-            } finally {
-                lock.notify();
-                closeWriter(writer, null);
-            }
-        }
-
-        log.ok("create::end");
-        return uid;
+        return doCreate(createAttributes, options);
     }
 
     /**
      * {@inheritDoc}
      */
     public void delete(final ObjectClass objectClass, final Uid uid, final OperationOptions options) {
-        log.ok("delete::begin");
-        doUpdate(Operation.DELETE, objectClass, uid, null, options);
-        log.ok("delete::end");
+        isAccount(objectClass);
+        doDelete(uid, options);
     }
 
     /**
      * {@inheritDoc}
      */
     public Schema schema() {
-        log.ok("schema::begin");
-
-        List<String> headers = null;
-        BufferedReader reader = null;
-        synchronized (lock) {
-            try {
-                reader = createReader(configuration);
-                headers = readHeader(reader, linePattern, configuration);
-                testHeader(headers);
-            } catch (Exception ex) {
-                handleGenericException(ex, "Couldn't create schema");
-            } finally {
-                lock.notify();
-                closeReader(reader, null);
-            }
-        }
-
-        if (headers == null || headers.isEmpty()) {
-            throw new CSVSchemaException("Schema can't be generated, header is null (probably not defined in file - first line in csv).");
+        if (header.length == 0) {
+            readHeader();
         }
 
         ObjectClassInfoBuilder objClassBuilder = new ObjectClassInfoBuilder();
-        objClassBuilder.addAllAttributeInfo(createAttributeInfo(headers));
+        objClassBuilder.addAllAttributeInfo(createAttributeInfo(Arrays.asList(header)));
 
         SchemaBuilder builder = new SchemaBuilder(CSVFileConnector.class);
         builder.defineObjectClass(objClassBuilder.build());
 
-        log.ok("schema::end");
-        return builder.build();
+        Schema schema = builder.build();
+        List<String> infoNames = new ArrayList<String>();
+        List<String> headerNames = Arrays.asList(header);
+        for (AttributeInfo info : ((ObjectClassInfo)schema.getObjectClassInfo().toArray()[0]).getAttributeInfo()) {
+            infoNames.add(info.getName());
+            String name = info.getName().equals(Name.NAME)
+                    ? config.getHeaderName()
+                    : info.getName().equals(Uid.NAME)
+                        ? config.getHeaderUid()
+                        : info.getName().equals("__PASSWORD__")
+                            ? config.getHeaderPassword()
+                            : info.getName();
+            if (!headerNames.contains(name)) {
+                throw new ConfigurationException("CSV file does not contain required " + name + " column");
+            }
+        }
+
+        return schema;
     }
 
     /**
      * {@inheritDoc}
      */
-    public FilterTranslator<String> createFilterTranslator(ObjectClass objectClass, OperationOptions options) {
-        log.ok("createFilterTranslator::begin");
+    public FilterTranslator<Filter> createFilterTranslator(ObjectClass objectClass, OperationOptions options) {
         isAccount(objectClass);
-
-        log.ok("createFilterTranslator::end");
-        return new AbstractFilterTranslator<String>() {
-        };
+        return CSVFilterTranslator.INSTANCE;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void executeQuery(ObjectClass objectClass, String query, ResultsHandler handler, OperationOptions options) {
-        log.ok("executeQuery::begin");
+    public void executeQuery(ObjectClass objectClass, Filter query, ResultsHandler handler, OperationOptions options) {
         isAccount(objectClass);
-        notNull(handler, "Results handled object can't be null.");
+        if (handler == null) {
+            throw new IllegalArgumentException("ResultsHandler cannot be null");
+        }
 
-        BufferedReader reader = null;
-        synchronized (lock) {
+        synchronized (fileLock) {
+            ICsvMapReader reader = null;
             try {
-                reader = createReader(configuration);
-                List<String> header = readHeader(reader, linePattern, configuration);
+                reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
+                readHeader();
 
-                String line;
-                CsvItem item;
-                int lineNumber = 1;
-                while ((line = reader.readLine()) != null) {
-                    lineNumber++;
-                    if (isEmptyOrComment(line)) {
-                        continue;
-                    }
-                    item = Utils.createCsvItem(header, line, lineNumber, linePattern, configuration);
+                final CellProcessor[] processors = getProcessors();
 
-                    ConnectorObject object = createConnectorObject(header, item);
-                    if (!handler.handle(object)) {
-                        break;
+                Map<String, Object> entry;
+                reader.read(header, processors); // consume the header
+                while ((entry = reader.read(header, processors)) != null) {
+                    ConnectorObject object = newConnectorObject(entry);
+                    if (query == null || query.accept(object)) {
+                        if (!handler.handle(newConnectorObject(entry))) {
+                            break;
+                        }
                     }
                 }
-            } catch (Exception ex) {
-                handleGenericException(ex, "Can't execute query");
+            } catch (FileNotFoundException e) {
+                log.error(e, "File %s does not exist!", config.getCsvFile().toString());
+                throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
+            } catch (IOException e) {
+                log.error(e, "Error reading from %s!", config.getCsvFile().toString());
+                throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
             } finally {
-                lock.notify();
-                closeReader(reader, null);
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (Exception e) {
+                        log.error(e, "Error closing file reader");
+                    }
+                }
             }
         }
-
-        log.ok("executeQuery::end");
-    }
-
-    /**
-     * method use when there is not old sync files - no sync token available. New sync file with token (time) is
-     * created. It means we're synchronizing from now on.
-     *
-     * @return new token value
-     */
-    private String createNewSyncFile() {
-        long timestamp = configuration.getFilePath().lastModified();
-        File syncFile = new File(configuration.getFilePath().getParentFile(),
-                configuration.getFilePath().getName() + "." + timestamp);
-        synchronized (lock) {
-            try {
-                copyAndReplace(configuration.getFilePath(), syncFile);
-            } catch (Exception ex) {
-                handleGenericException(ex, "Couldn't create file copy for sync");
-            } finally {
-                lock.notify();
-            }
-        }
-
-        return Long.toString(timestamp);
     }
 
     /**
      * {@inheritDoc}
      */
-    public void sync(ObjectClass objectClass, SyncToken token, SyncResultsHandler handler, final OperationOptions options) {
-        log.ok("sync::begin");
+    public void sync(ObjectClass objectClass, SyncToken token, SyncResultsHandler handler, OperationOptions options) {
         isAccount(objectClass);
-        notNull(handler, "Sync results handler must not be null.");
-
-        long tokenLongValue = getTokenValue(token);
-        log.info("Token {0}", tokenLongValue);
-
-        if (tokenLongValue == -1) {
-            //token doesn't exist, we only create new sync file - we're synchronizing from now on
-            createNewSyncFile();
-            log.info("Token value was not defined {0}, only creating new sync file, synchronizing from now on.", token);
-            log.ok("sync::end");
-            return;
+        if (handler == null) {
+            throw new IllegalArgumentException("ResultsHandler cannot be null");
         }
 
-        boolean hasFileChanged = false;
-        if (configuration.getFilePath().lastModified() > tokenLongValue) {
-            hasFileChanged = true;
-            log.info("Csv file has changed on {0} which is after time {1}, based on token value {2}",
-                    FORMAT.format(new Date(configuration.getFilePath().lastModified())),
-                    FORMAT.format(new Date(tokenLongValue)), tokenLongValue);
-        }
+        synchronized (fileLock) {
+            readHeader();
 
-        if (!hasFileChanged) {
-            log.info("File has not changed after {0} (token value {1}), diff will be skipped.",
-                    FORMAT.format(new Date(tokenLongValue)), tokenLongValue);
-            log.ok("sync::end");
-            return;
-        }
-
-        syncReal(tokenLongValue, handler);
-        log.ok("sync::end");
-    }
-
-    private void syncReal(long tokenLongValue, SyncResultsHandler handler) {
-        long timestamp = configuration.getFilePath().lastModified();
-        log.ok("Next last sync token value will be {0} ({1}).", timestamp, FORMAT.format(new Date(timestamp)));
-        File syncFile = new File(configuration.getFilePath().getParentFile(),
-                configuration.getFilePath().getName() + "." + timestamp + TMP_EXTENSION);
-        synchronized (lock) {
-            try {
-                copyAndReplace(configuration.getFilePath(), syncFile);
-            } catch (Exception ex) {
-                handleGenericException(ex, "Could not create file copy for sync");
-            } finally {
-                lock.notify();
-            }
-        }
-
-        File tokenSyncFile = new File(configuration.getFilePath().getParent(), configuration.getFilePath().getName()
-                + "." + tokenLongValue);
-        log.info("Diff actual file {0} with last file based on token {1}.", syncFile.getName(), tokenSyncFile.getName());
-        InMemoryDiff memoryDiff = new InMemoryDiff(tokenSyncFile, syncFile, linePattern, configuration);
-        try {
-            List<Change> changes = memoryDiff.diff();
-            log.info("Found {0} differences.", changes.size());
-            if (changes.size() == 0) {
-                //this was only phantom change, nothing was really changed, delete sync file (new token not necessary)
-                log.info("Deleting file {0}.", syncFile.getName());
-                syncFile.delete();
-                return;
-            }
-
-            SyncToken newToken = new SyncToken(Long.toString(timestamp));
-            for (Change change : changes) {
-                SyncDelta delta = createSyncDelta(change, newToken);
-                if (!handler.handle(delta)) {
-                    break;
+            File syncOrigin = null;
+            if (token == null || token.getValue() == null) {
+                long timestamp = config.getCsvFile().lastModified();
+                syncOrigin = new File(config.getCsvFile().getParentFile(),
+                        config.getCsvFile().getName() + "." + timestamp);
+                try {
+                    Files.copy(config.getCsvFile().toPath(), syncOrigin.toPath());
+                } catch (IOException e) {
+                    throw new ConnectorException("Unable to copy CSV file for sync operation", e);
+                }
+                token = new SyncToken(timestamp);
+            } else {
+                syncOrigin = new File(config.getCsvFile().getParentFile(),
+                        config.getCsvFile().getName() + "." + token.getValue());
+                if (!syncOrigin.exists()) {
+                    throw new ConnectorException("Invalid sync token: " + token.getValue());
                 }
             }
 
-            File newFile = new File(configuration.getFilePath().getParent(), configuration.getFilePath().getName() + "." + timestamp);
-            log.info("Renaming file {0} to {1}.", syncFile.getName(), newFile.getName());
-            syncFile.renameTo(newFile);
+            // Sync deletes
+            ICsvMapReader reader = null;
+            try {
+                reader = new CsvMapReader(new FileReader(syncOrigin), csvPreference);
+                String[] originHeader = readHeader(reader);
+                compareHeaders(originHeader);
 
-            cleanupOldTokenFiles();
-        } catch (Exception ex) {
-            handleGenericException(ex, "Couldn't finish sync operation");
-        }
-    }
+                final CellProcessor[] processors = getProcessors(originHeader);
 
-    private void handleGenericException(Exception ex, String message) {
-        if (ex instanceof ConnectorException) {
-            throw (ConnectorException) ex;
-        }
-
-        if (ex instanceof IOException) {
-            throw new ConnectorIOException(message + ", IO exception occurred, reason: " + ex.getMessage(), ex);
-        }
-
-        throw new ConnectorException(message + ", reason: " + ex.getMessage(), ex);
-    }
-
-    private void cleanupOldTokenFiles() {
-        String[] tokenFiles = listTokenFiles();
-        Arrays.sort(tokenFiles);
-
-        int preserve = configuration.getPreserveLastTokens();
-        if (preserve <= 1) {
-            log.info("Not removing old token files. Preserve last tokens: {0}.", preserve);
-            return;
-        }
-
-        File parentFolder = configuration.getFilePath().getParentFile();
-        for (int i = 0; i + preserve < tokenFiles.length; i++) {
-            File tokenSyncFile = new File(parentFolder, tokenFiles[i]);
-            if (!tokenSyncFile.exists()) {
-                continue;
+                Map<String, Object> entry;
+                while ((entry = reader.read(originHeader, processors)) != null) {
+                    ConnectorObject originObject = newConnectorObject(entry);
+                    ConnectorObject currentObject = findObjectInFile(null, originObject.getUid());
+                    if (currentObject == null) {
+                        SyncDelta delta = generateSyncDelta(originObject, null, token);
+                        if (delta != null) {
+                            if (!handler.handle(delta)) {
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (reader != null) {
+                    reader.close();
+                }
+            } catch (FileNotFoundException e) {
+                log.error(e, "File %s does not exist!", syncOrigin.toString());
+                throw new ConnectorIOException("File " + syncOrigin.toString() + " does not exist", e);
+            } catch (IOException e) {
+                log.error(e, "Error reading from %s!", syncOrigin.toString());
+                throw new ConnectorIOException("Error reading from file " + syncOrigin.toString(), e);
+            } finally {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (Exception e) {
+                        log.error(e, "Error closing file reader");
+                    }
+                }
             }
 
-            log.info("Deleting file {0}.", tokenSyncFile.getName());
-            tokenSyncFile.delete();
-        }
-    }
+            // Sync creates/updates
+            reader = null;
+            try {
+                reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
 
-    private String[] listTokenFiles() {
-        if (!configuration.getFilePath().exists()) {
-            throw new ConnectorIOException("Csv file '" + configuration.getFilePath() + "' not found.");
-        }
-        File parentFolder = configuration.getFilePath().getParentFile();
-        if (!parentFolder.exists() || !parentFolder.isDirectory()) {
-            throw new ConnectorIOException("Parent folder for '" + configuration.getFilePath()
-                    + "' doesn't exist, or is not a directory.");
-        }
+                final CellProcessor[] processors = getProcessors();
 
-        String csvFileName = configuration.getFilePath().getName();
-        return parentFolder.list(new TokenFileNameFilter(csvFileName));
+                Map<String, Object> entry;
+                reader.read(header, processors); //consume header
+                while ((entry = reader.read(header, processors)) != null) {
+                    ConnectorObject currentObject = newConnectorObject(entry);
+                    ConnectorObject originObject = findObjectInFile(syncOrigin, currentObject.getUid());
+                    SyncDelta delta = generateSyncDelta(originObject, currentObject, token);
+                    if (delta != null) {
+                        if (!handler.handle(delta)) {
+                            break;
+                        }
+                    }
+                }
+            } catch (FileNotFoundException e) {
+                log.error(e, "File %s does not exist!", config.getCsvFile().toString());
+                throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
+            } catch (IOException e) {
+                log.error(e, "Error reading from %s!", config.getCsvFile().toString());
+                throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
+            } finally {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (Exception e) {
+                        log.error(e, "Error closing file reader");
+                    }
+                }
+            }
+        }
+        scrubSyncFiles();
     }
 
     /**
      * {@inheritDoc}
      */
     public SyncToken getLatestSyncToken(ObjectClass objectClass) {
-        log.ok("getLatestSyncToken::begin");
         isAccount(objectClass);
 
-        String csvFileName = configuration.getFilePath().getName();
-        String[] oldCsvFiles = listTokenFiles();
-        String token;
-        if (oldCsvFiles.length != 0) {
-            Arrays.sort(oldCsvFiles);
-            String latestCsvFile = oldCsvFiles[oldCsvFiles.length - 1];
-            token = latestCsvFile.replaceFirst(csvFileName + ".", "");
-        } else {
-            log.info("Old csv files were not found, creating token, synchronizing from \"now\".");
-            token = createNewSyncFile();
+        File dataDir = config.getCsvFile().getParentFile();
+        Map<Long, String> files = new TreeMap<Long, String>();
+        Pattern pattern = Pattern.compile("(\\.[0-9]{13})$");
+        for (String filename : dataDir.list()) {
+            Matcher matcher = pattern.matcher(filename);
+            if (matcher.find()) {
+                Long timestamp = Long.valueOf(matcher.group().substring(1));
+                files.put(timestamp, filename);
+            }
         }
-
-        log.ok("getLatestSyncToken::end, returning token {0}.", token);
-        return new SyncToken(token);
+        if (files.size() > 0) {
+            List<Long> keys = new LinkedList<Long>(files.keySet());
+            return new SyncToken(keys.get(keys.size() - 1));
+        }
+        return null;
     }
 
     /**
      * {@inheritDoc}
      */
     public void test() {
-        log.ok("test::begin");
-        log.info("Validating configuration.");
-        configuration.validate();
+        config.validate();
+        readHeader();
+        validateHeader();
+    }
 
-        BufferedReader reader = null;
-        synchronized (lock) {
+    /**
+     * {@inheritDoc}
+     */
+    public Uid update(ObjectClass objectClass, Uid uid, Set<Attribute> attributes, OperationOptions options) {
+        isAccount(objectClass);
+        return doUpdate(UpdateType.UPDATE, uid, attributes, options);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Uid addAttributeValues(ObjectClass objectClass, Uid uid, Set<Attribute> attributes,
+            OperationOptions options) {
+        isAccount(objectClass);
+        return doUpdate(UpdateType.ADDVALUES, uid, attributes, options);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Uid removeAttributeValues(ObjectClass objectClass, Uid uid, Set<Attribute> attributes,
+            OperationOptions options) {
+        isAccount(objectClass);
+        return doUpdate(UpdateType.REMOVEVALUES, uid, attributes, options);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Subscription executeBatch(List<BatchTask> batchTasks, Observer<BatchResult> observer,
+            OperationOptions operationOptions) {
+        if (observer == null) {
+            throw new ConnectorException("BatchResult Observer cannot be null");
+        }
+        BatchTaskExecutorImpl executor = new BatchTaskExecutorImpl();
+        int taskId = 0;
+        for (int i = 0; i < batchTasks.size(); i++) {
+            BatchTask task = batchTasks.get(i);
             try {
-                log.ok("Opening input stream to file {0}.", configuration.getFilePath());
-                reader = createReader(configuration);
+                observer.onNext(new BatchResult(task.execute(executor), null, String.valueOf(taskId++),
+                        i == batchTasks.size() - 1, false));
+            } catch (Exception e) {
+                observer.onError(e);
+            }
+        }
+        observer.onCompleted();
+        return new Subscription() {
+            public void close() {}
 
-                List<String> headers = readHeader(reader, linePattern, configuration);
-                testHeader(headers);
-            } catch (Exception ex) {
-                log.error("Test configuration was unsuccessful, reason: {0}.", ex.getMessage());
-                handleGenericException(ex, "Test configuration was unsuccessful");
+            public boolean isUnsubscribed() {
+                return true;
+            }
+
+            public Object getReturnValue() {
+                return null;
+            }
+        };
+    }
+
+    private class BatchTaskExecutorImpl implements BatchTaskExecutor {
+        public Uid execute(CreateBatchTask task) {
+            return doCreate(task.getCreateAttributes(), task.getOptions());
+        }
+
+        public BatchEmptyResult execute(DeleteBatchTask task) {
+            doDelete(task.getUid(), task.getOptions());
+            return null;
+        }
+
+        public Uid execute(UpdateBatchTask task) {
+            return doUpdate(task.getUpdateType(), task.getUid(), task.getAttributes(), task.getOptions());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Subscription queryBatch(BatchToken batchToken, Observer<BatchResult> observer,
+            OperationOptions operationOptions) {
+        return null;
+    }
+
+
+
+    private void isAccount(ObjectClass objectClass) {
+        if (objectClass == null || !objectClass.equals(ObjectClass.ACCOUNT)) {
+            throw new IllegalArgumentException(String.format("Operation requires ObjectClass %s, received %s",
+                    ObjectClass.ACCOUNT_NAME, objectClass));
+        }
+    }
+
+    private Uid findAccount(final Uid uid, final String userName, final GuardedString password,
+            final OperationOptions options) {
+        if (config.getHeaderName() == null
+                || config.getHeaderPassword() == null
+                || config.getHeaderUid() == null) {
+            return null;
+        }
+
+        synchronized (fileLock) {
+            ICsvMapReader reader = null;
+            try {
+                reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
+
+                readHeader();
+                if (password != null && !Arrays.asList(header).contains(config.getHeaderPassword())) {
+                    throw new ConfigurationException("Password column must be defined and exist in the CSV.");
+                }
+
+                final CellProcessor[] processors = getProcessors();
+
+                Map<String, Object> entry;
+                while ((entry = reader.read(header, processors)) != null) {
+                    if (uid != null && uid.getUidValue().equals(entry.get(config.getHeaderUid()))) {
+                        return uid;
+                    } else if (userName != null && userName.equals(entry.get(config.getHeaderName()))) {
+                        Uid foundUid = new Uid((String) entry.get(config.getHeaderUid()));
+                        if (password == null) {
+                            return foundUid;
+                        }
+                        final Map<String, Object> finalEntry = entry;
+                        password.access(new GuardedString.Accessor() {
+                            public void access(char[] chars) {
+                                if (!new String(chars).equals(finalEntry.get(config.getHeaderPassword()))) {
+                                    throw new InvalidPasswordException("Invalid username and/or password.");
+                                }
+                            }
+                        });
+                        return foundUid;
+                    }
+                }
+            } catch (FileNotFoundException e) {
+                log.error(e, "File %s does not exist!", config.getCsvFile().toString());
+                throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
+            } catch (IOException e) {
+                log.error(e, "Error reading from %s!", config.getCsvFile().toString());
+                throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
             } finally {
-                log.ok("Closing file input stream.");
-                lock.notify();
-                closeReader(reader, null);
-            }
-        }
-
-        log.info("Test configuration was successful.");
-        log.ok("test::end");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Uid update(ObjectClass objectClass,
-                      Uid uid,
-                      Set<Attribute> replaceAttributes,
-                      OperationOptions options) {
-        log.ok("update::begin");
-        uid = doUpdate(Operation.UPDATE, objectClass, uid, replaceAttributes, options);
-        log.ok("update::end");
-        return uid;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Uid addAttributeValues(ObjectClass objectClass,
-                                  Uid uid,
-                                  Set<Attribute> valuesToAdd,
-                                  OperationOptions options) {
-        log.ok("addAttributeValues::begin");
-        uid = doUpdate(Operation.ADD_ATTR_VALUE, objectClass, uid, valuesToAdd, options);
-        log.ok("addAttributeValues::end");
-        return uid;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Uid removeAttributeValues(ObjectClass objectClass,
-                                     Uid uid,
-                                     Set<Attribute> valuesToRemove,
-                                     OperationOptions options) {
-        log.ok("removeAttributeValues::begin");
-        uid = doUpdate(Operation.REMOVE_ATTR_VALUE, objectClass, uid, valuesToRemove, options);
-        log.ok("removeAttributeValues::end");
-        return uid;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    //  Private Implementation
-    //
-    ///////////////////////////////////////////////////////////////////////////
-    private BufferedWriter createWriter(boolean append) throws IOException {
-        return createWriter(configuration.getFilePath(), append);
-    }
-
-    private BufferedWriter createWriter(File path, boolean append) throws IOException {
-        log.ok("Creating writer.");
-        FileOutputStream fos = new FileOutputStream(path, append);
-        OutputStreamWriter out = new OutputStreamWriter(fos, configuration.getEncoding());
-        return new BufferedWriter(out);
-    }
-
-    private void closeWriter(Writer writer, FileLock lock) {
-        try {
-            if (writer != null) {
-                writer.flush();
-                writer.close();
-            }
-            unlock(lock);
-        } catch (IOException ex) {
-            throw new ConnectorException("Couldn't close writer, reason: " + ex.getMessage(), ex);
-        }
-    }
-
-    private void createTempFile() {
-        File file = new File(configuration.getFilePath() + ".tmp");
-        try {
-            if (file.exists()) {
-                if (!file.delete()) {
-                    throw new ConnectorIOException("Couldn't delete old tmp file '" + file.getAbsolutePath() + "'.");
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (Exception e) {
+                        log.error(e, "Error closing file reader");
+                    }
                 }
-            }
-            file.createNewFile();
-        } catch (IOException ex) {
-            throw new ConnectorIOException("Couldn't create tmp file '" + file.getAbsolutePath()
-                    + "', reason: " + ex.getMessage(), ex);
-        }
-    }
-
-    private CsvItem findAccount(BufferedReader reader, List<String> header, String username) throws IOException {
-        int lineNumber = 1;
-        String line;
-        while ((line = reader.readLine()) != null) {
-            lineNumber++;
-            if (isEmptyOrComment(line)) {
-                continue;
-            }
-
-            CsvItem item = Utils.createCsvItem(header, line, lineNumber, linePattern, configuration);
-
-            int fieldIndex = header.indexOf(configuration.getUniqueAttribute());
-            String value = item.getAttribute(fieldIndex);
-            if (!StringUtil.isEmpty(value) && value.equals(username)) {
-                return item;
             }
         }
         return null;
     }
 
-    private StringBuilder createRecord(List<String> header, Set<Attribute> attributes) {
-        final StringBuilder builder = new StringBuilder();
-
-        for (String name : header) {
-            if (header.indexOf(name) != 0) {
-                builder.append(configuration.getFieldDelimiter());
-            }
-
-            Attribute attribute = getAttribute(name, attributes);
-            if (configuration.getUniqueAttribute().equals(name)) {
-                if (attribute == null || attribute.getValue().isEmpty()) {
-                    throw new CSVSchemaException("Unique attribute for record is not defined.");
-                }
-            }
-            if (attribute == null) {
-                continue;
-            }
-
-            String value = appendValues(name, attribute.getValue());
-            if (StringUtil.isNotEmpty(value)) {
-                appendQualifiedValue(builder, value);
+    private void readHeader() {
+        if (header.length > 0) {
+            return;
+        }
+        ICsvMapReader reader = getReader(config.getCsvFile());
+        if (reader != null) {
+            header = readHeader(reader);
+            try {
+                reader.close();
+            } catch (Exception e) {
+                log.error(e, "Error closing file reader");
             }
         }
-
-        return builder;
     }
 
-    private Attribute getAttribute(String name, Set<Attribute> attributes) {
-        if (name.equals(configuration.getPasswordAttribute())) {
-            name = OperationalAttributes.PASSWORD_NAME;
-        }
-        if (name.equals(configuration.getNameAttribute())) {
-            name = Name.NAME;
-        }
+    private String[] readHeader(ICsvMapReader reader) {
+        String[] hdr;
 
-        for (Attribute attribute : attributes) {
-            if (attribute.getName().equals(name)) {
-                return attribute;
+        synchronized (fileLock) {
+            try {
+                hdr = reader.getHeader(true);
+            } catch (IOException e) {
+                log.error(e, "Error reading from %s!", config.getCsvFile().toString());
+                throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
             }
         }
 
-        return null;
+        for (int i = 0; hdr != null && i < hdr.length; i++) {
+            hdr[i] = hdr[i].trim();
+        }
+
+        return hdr;
+    }
+
+    private ICsvMapReader getReader(File file) {
+        ICsvMapReader reader = null;
+        try {
+            reader = new CsvMapReader(new FileReader(file), csvPreference);
+        } catch (FileNotFoundException e) {
+            log.error(e, "File %s does not exist!", file.toString());
+            throw new ConnectorIOException("File " + file.toString() + " does not exist", e);
+        }
+        return reader;
+    }
+
+    private Uid getNextUid() {
+        synchronized (fileLock) {
+            ICsvMapReader reader = null;
+            try {
+                reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
+
+                readHeader();
+                final CellProcessor[] processors = getProcessors();
+
+                Map<String, Object> entry;
+                int maxUid = 0;
+                while ((entry = reader.read(header, processors)) != null) {
+                    String sUid = (String) entry.get(config.getHeaderUid());
+                    try {
+                        if (Integer.valueOf(sUid) > maxUid) {
+                            maxUid = Integer.valueOf(sUid);
+                        }
+                    } catch (NumberFormatException e) {
+                        return new Uid(UUID.randomUUID().toString());
+                    }
+                }
+                return new Uid(String.valueOf(++maxUid));
+            } catch (FileNotFoundException e) {
+                log.error(e, "File %s does not exist!", config.getCsvFile().toString());
+                throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
+            } catch (IOException e) {
+                log.error(e, "Error reading from %s!", config.getCsvFile().toString());
+                throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
+            } finally {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (Exception e) {
+                        log.error(e, "Error closing file reader");
+                    }
+                }
+            }
+        }
     }
 
     private List<AttributeInfo> createAttributeInfo(List<String> names) {
         List<AttributeInfo> infos = new ArrayList<AttributeInfo>();
         for (String name : names) {
-            if (name.equals(configuration.getUniqueAttribute())) {
+            if (name.equals(config.getHeaderUid())) {
+                infos.add(new AttributeInfoBuilder(Uid.NAME).build());
                 continue;
             }
-            if (name.equals(configuration.getNameAttribute())) {
+            if (name.equals(config.getHeaderName())) {
+                infos.add(Name.INFO);
                 continue;
             }
-            if (name.equals(configuration.getPasswordAttribute())) {
+            if (name.equals(config.getHeaderPassword())) {
                 infos.add(OperationalAttributeInfos.PASSWORD);
                 continue;
             }
 
             AttributeInfoBuilder builder = new AttributeInfoBuilder(name);
-            if (name.equals(configuration.getPasswordAttribute())) {
+            if (name.equals(config.getHeaderPassword())) {
                 builder.setType(GuardedString.class);
             } else {
                 builder.setType(String.class);
@@ -739,445 +722,401 @@ public class CSVFileConnector implements Connector, AuthenticateOp, ResolveUsern
         return infos;
     }
 
-    private ConnectorObject createConnectorObject(List<String> header, CsvItem item) {
+    private ConnectorObject newConnectorObject(Map<String,Object> entry) {
         ConnectorObjectBuilder builder = new ConnectorObjectBuilder();
-        for (int i = 0; i < header.size(); i++) {
-            if (StringUtil.isEmpty(item.getAttribute(i))) {
-                continue;
-            }
-            String name = header.get(i);
-            if (name.equals(configuration.getUniqueAttribute())) {
-                builder.setUid(item.getAttribute(i));
-                builder.addAttribute(name, createAttributeValues(item.getAttribute(i)));
-
-                if (!configuration.isUniqueAndNameAttributeEqual()) {
-                    continue;
+        for (String col : header) {
+            if (entry.containsKey(col) && entry.get(col) != null) {
+                if (col.equals(config.getHeaderUid())) {
+                    builder.setUid((String) entry.get(col));
+                    builder.addAttribute(col, entry.get(col));
+                    if (!entry.containsKey(config.getHeaderName())) {
+                        builder.setName((String) entry.get(col));
+                        builder.addAttribute(col, entry.get(col));
+                    }
+                } else if (col.equals(config.getHeaderName())) {
+                    builder.setName((String) entry.get(col));
+                } else if (col.equals(config.getHeaderPassword())) {
+                    builder.addAttribute(OperationalAttributes.PASSWORD_NAME,
+                            new GuardedString(((String) entry.get(col)).toCharArray()));
+                } else {
+                    builder.addAttribute(col, entry.get(col));
                 }
             }
-            if (name.equals(configuration.getNameAttribute())) {
-                builder.setName(new Name(item.getAttribute(i)));
-                continue;
-            }
-            if (name.equals(configuration.getPasswordAttribute())) {
-                builder.addAttribute(OperationalAttributes.PASSWORD_NAME, new GuardedString(item.getAttribute(i).toCharArray()));
-                continue;
-            }
-            builder.addAttribute(name, createAttributeValues(item.getAttribute(i)));
         }
-
         return builder.build();
     }
 
-    private List<String> createAttributeValues(String attributeValue) {
-        List<String> values = new ArrayList<String>();
-        if (!configuration.isUsingMultivalue()) {
-            values.add(attributeValue);
-            return values;
-        }
-
-        String[] array = attributeValue.split(Pattern.quote(configuration.getMultivalueDelimiter()));
-        for (String val : array) {
-            if (val != null) {
-                values.add(val);
-            }
-        }
-
-        return values;
-    }
-
-    private Uid realAuthenticate(ObjectClass objectClass, String username, GuardedString pwd, boolean testPassword) {
-        log.ok("realAuthenticate::begin");
-        isAccount(objectClass);
-
-        if (username == null) {
-            throw new InvalidCredentialException("Username can't be null.");
-        }
-
-        if (testPassword && StringUtil.isEmpty(configuration.getPasswordAttribute())) {
-            throw new ConfigurationException("Password attribute not defined in configuration.");
-        }
-
-        if (testPassword && pwd == null) {
-            throw new InvalidPasswordException("Password can't be null.");
-        }
-
-        BufferedReader reader = null;
-        synchronized (lock) {
+    private ConnectorObject findObjectInFile(File file, Uid uid) {
+        synchronized (fileLock) {
+            ICsvMapReader reader = null;
             try {
-                reader = createReader(configuration);
-                List<String> header = readHeader(reader, linePattern, configuration);
+                reader = new CsvMapReader(new FileReader(file == null ? config.getCsvFile() : file),
+                        csvPreference);
+                readHeader();
 
-                CsvItem account = findAccount(reader, header, username);
-                if (account == null) {
-                    String message;
-                    if (testPassword) {
-                        message = "Invalid username and/or password.";
-                    } else {
-                        message = "Invalid username.";
+                final CellProcessor[] processors = getProcessors();
+
+                Map<String, Object> entry;
+                while ((entry = reader.read(header, processors)) != null) {
+                    ConnectorObject object = newConnectorObject(entry);
+                    if (object.getUid().getUidValue().equals(uid.getUidValue())) {
+                        return object;
                     }
-                    throw new InvalidCredentialException(message);
                 }
-
-                int index;
-                if (testPassword) {
-                    index = header.indexOf(configuration.getPasswordAttribute());
-                    final String password = account.getAttribute(index);
-                    if (StringUtil.isEmpty(password)) {
-                        throw new InvalidPasswordException("Invalid username and/or password.");
-                    }
-
-                    pwd.access(new GuardedString.Accessor() {
-
-                        public void access(char[] chars) {
-                            if (!new String(chars).equals(password)) {
-                                throw new InvalidPasswordException("Invalid username and/or password.");
-                            }
-                        }
-                    });
-                }
-                index = header.indexOf(configuration.getUniqueAttribute());
-                String uidAttribute = account.getAttribute(index);
-                if (StringUtil.isEmpty(uidAttribute)) {
-                    throw new UnknownUidException("Unique atribute doesn't have value for account '" + username + "'.");
-                }
-                return new Uid(uidAttribute);
-            } catch (Exception ex) {
-                handleGenericException(ex, "Can't authenticate '" + username + "'");
-                //it won't go here
-                return null;
+            } catch (FileNotFoundException e) {
+                log.error(e, "File %s does not exist!", config.getCsvFile().toString());
+                throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
+            } catch (IOException e) {
+                log.error(e, "Error reading from %s!", config.getCsvFile().toString());
+                throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
             } finally {
-                lock.notify();
-                closeReader(reader, null);
-
-                log.ok("realAuthenticate::end");
-            }
-        }
-    }
-
-    private Uid doUpdate(Operation operation, ObjectClass objectClass, Uid uid, Set<Attribute> attributes, OperationOptions oo) {
-        log.ok("doUpdate::begin");
-        isAccount(objectClass);
-        notNull(uid, "Uid must not be null.");
-        if (attributes == null && Operation.DELETE != operation) {
-            throw new IllegalArgumentException("Attribute set can't be null.");
-        }
-
-        BufferedReader reader = null;
-        BufferedWriter writer = null;
-        synchronized (lock) {
-            createTempFile();
-            try {
-                reader = createReader(configuration);
-                File tmpFile = new File(configuration.getFilePath().getCanonicalPath() + TMP_EXTENSION);
-                writer = createWriter(tmpFile, true);
-                List<String> header = readHeader(reader, writer, linePattern, configuration);
-
-                ConnectorObject changed = readAndUpdateFile(reader, writer, header, operation, uid, attributes);
-                if (changed == null) {
-                    throw new UnknownUidException("Uid '" + uid.getUidValue() + "' not found in file.");
-                }
-                uid = changed.getUid();
-
-                closeReader(reader, null);
-                closeWriter(writer, null);
-                reader = null;
-                writer = null;
-
-                if (configuration.getFilePath().delete()) {
-                    tmpFile.renameTo(configuration.getFilePath());
-                } else {
-                    throw new ConnectorException("Couldn't delete old file '" + configuration.getFilePath().getAbsolutePath()
-                            + "' and replace it by new file '" + tmpFile.getAbsolutePath() + "'.");
-                }
-            } catch (Exception ex) {
-                handleGenericException(ex, "Couldn't do " + operation + " on account '" + uid.getUidValue() + "'");
-            } finally {
-                lock.notify();
-                closeReader(reader, null);
-                closeWriter(writer, null);
-
-                try {
-                    File tmpFile = new File(configuration.getFilePath() + TMP_EXTENSION);
-                    if (tmpFile.exists()) {
-                        tmpFile.delete();
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (Exception e) {
+                        log.error(e, "Error closing file reader");
                     }
-                } catch (Exception ex) {
-                    //only try to cleanup tmp file, it will be replaced later, if exists
                 }
             }
         }
-
-        log.ok("doUpdate::end");
-        return uid;
+        return null;
     }
 
-    private ConnectorObject readAndUpdateFile(BufferedReader reader, BufferedWriter writer, List<String> header,
-                                              Operation operation, Uid uid, Set<Attribute> attributes) throws IOException {
-        ConnectorObject changed = null;
+    private SyncDelta generateSyncDelta(ConnectorObject origin, ConnectorObject current, SyncToken token) {
+        SyncDeltaBuilder builder = new SyncDeltaBuilder();
+        builder.setUid(origin == null ? current.getUid() : origin.getUid());
+        builder.setToken(token);
 
-        String line;
-        int lineNumber = 1;
-        CsvItem item;
-        while ((line = reader.readLine()) != null) {
-            lineNumber++;
-            if (isEmptyOrComment(line)) {
-                writer.write(line);
-                writer.write('\n');
-                continue;
-            }
-
-            item = Utils.createCsvItem(header, line, lineNumber, linePattern, configuration);
-            int fieldIndex = header.indexOf(configuration.getUniqueAttribute());
-            String value = item.getAttribute(fieldIndex);
-            if (!StringUtil.isEmpty(value) && value.equals(uid.getUidValue())) {
-                switch (operation) {
-                    case UPDATE:
-                    case ADD_ATTR_VALUE:
-                    case REMOVE_ATTR_VALUE:
-                        line = updateLine(operation, header, item, attributes);
-
-                        changed = createConnectorObject(header, Utils.createCsvItem(header, line, lineNumber,
-                                linePattern, configuration));
-                        break;
-                    case DELETE:
-                        changed = createConnectorObject(header, item);
-                        continue;
-                }
-            }
-
-            writer.write(line);
-            writer.write('\n');
-        }
-
-        return changed;
-    }
-
-    private String appendValues(String attributeName, List<Object> values) {
-        if (configuration.getUniqueAttribute().equals(attributeName)) {
-            if (values.size() > 1) {
-                throw new CSVSchemaException("Can't store unique attribute '" + attributeName
-                        + "' with multiple values (" + values.size() + ").");
-            } else if (values == null || values.isEmpty()) {
-                throw new CSVSchemaException("Can't store unique attribute '" + attributeName + "' without values.");
-            }
-        }
-
-        final StringBuilder builder = new StringBuilder();
-        if (values == null || values.isEmpty()) {
+        if (current == null) {
+            builder.setDeltaType(SyncDeltaType.DELETE);
+            builder.setObject(origin);
+        } else if (origin == null) {
+            builder.setDeltaType(SyncDeltaType.CREATE);
+            builder.setObject(current);
+        } else if (objectsDiffer(origin, current)) {
+            builder.setDeltaType(SyncDeltaType.UPDATE);
+            builder.setObject(current);
+        } else {
             return null;
         }
 
-        for (int i = 0; i < values.size(); i++) {
-            Object object = values.get(i);
-            if (object == null) {
-                return null;
-            }
-
-            if (i != 0) {
-                builder.append(configuration.getMultivalueDelimiter());
-            }
-            if (object instanceof GuardedString) {
-                GuardedString pwd = (GuardedString) object;
-                pwd.access(new GuardedString.Accessor() {
-
-                    public void access(char[] chars) {
-                        builder.append(chars);
-                    }
-                });
-            } else {
-                builder.append(object);
-            }
-        }
-
-        return builder.toString();
-    }
-
-    private String appendMergedValues(String attributeName, final List<String> oldValues,
-                                      List<Object> newValues, Operation operation) {
-        List<Object> values = new ArrayList<Object>();
-        if (!configuration.isUsingMultivalue()) {
-            switch (operation) {
-                case ADD_ATTR_VALUE:
-                    return appendValues(attributeName, newValues);
-                case REMOVE_ATTR_VALUE:
-                    values = removeOldValues(oldValues, newValues);
-                    break;
-            }
-        } else {
-            if (operation == Operation.REMOVE_ATTR_VALUE && (newValues == null || newValues.isEmpty())) {
-                return null;
-            }
-
-            if (operation == Operation.REMOVE_ATTR_VALUE) {
-                values = removeOldValues(oldValues, newValues);
-            } else {
-                values.addAll(oldValues);
-                values.addAll(newValues);
-            }
-        }
-        String value = appendValues(attributeName, values);
-        if (StringUtil.isNotEmpty(value)) {
-            return value;
-        }
-
-        return "";
-    }
-
-    private List<Object> removeOldValues(List<String> oldValues, List<Object> newValues) {
-        final List<Object> values = new ArrayList<Object>();
-        values.addAll(oldValues);
-        for (Object object : newValues) {
-            if (object instanceof String) {
-                values.remove((String) object);
-            } else if (object instanceof GuardedString) {
-                GuardedString guarded = (GuardedString) object;
-                guarded.access(new GuardedString.Accessor() {
-
-                    public void access(char[] chars) {
-                        values.remove(new String(chars));
-                    }
-                });
-            }
-        }
-        return values;
-    }
-
-    private String updateLine(Operation operation, List<String> headers, CsvItem item, Set<Attribute> attributes) {
-        StringBuilder builder = new StringBuilder();
-
-        String value = null;
-        for (String header : headers) {
-            int index = headers.indexOf(header);
-            if (index != 0) {
-                builder.append(configuration.getFieldDelimiter());
-            }
-            Attribute attribute = getAttribute(header, attributes);
-            if (attribute != null) {
-                switch (operation) {
-                    case UPDATE:
-                        value = appendValues(header, attribute.getValue());
-                        break;
-                    case ADD_ATTR_VALUE:
-                    case REMOVE_ATTR_VALUE:
-                        List<String> oldValues = new ArrayList<String>();
-                        String oldValuesStr = item.getAttribute(index);
-                        if (StringUtil.isNotEmpty(oldValuesStr)) {
-                            if (configuration.isUsingMultivalue()) {
-                                String[] array = oldValuesStr.split(String.valueOf(
-                                        configuration.getMultivalueDelimiter()));
-                                oldValues.addAll(Arrays.asList(array));
-                            } else {
-                                oldValues.add(oldValuesStr);
-                            }
-                        }
-                        value = appendMergedValues(header, oldValues, attribute.getValue(), operation);
-                        break;
-                }
-            } else {
-                value = item.getAttribute(index);
-            }
-
-            if (StringUtil.isNotEmpty(value)) {
-                appendQualifiedValue(builder, value);
-            }
-        }
-
-        return builder.toString();
-    }
-
-    private void appendQualifiedValue(StringBuilder builder, String value) {
-        boolean useQualifier = configuration.getAlwaysQualify() || mustUseQualifier(value);
-        if (useQualifier) {
-            builder.append(configuration.getValueQualifier());
-        }
-        builder.append(value);
-        if (useQualifier) {
-            builder.append(configuration.getValueQualifier());
-        }
-    }
-
-    private boolean mustUseQualifier(String value) {
-        return value.contains(Pattern.quote(configuration.getFieldDelimiter()));
-    }
-
-    private void testHeader(List<String> headers) {
-        boolean uniqueFound = false;
-        boolean passwordFound = false;
-
-        Map<String, Integer> headerCount = new HashMap<String, Integer>();
-        for (String header : headers) {
-            if (!headerCount.containsKey(header)) {
-                headerCount.put(header, 0);
-            }
-
-            headerCount.put(header, headerCount.get(header) + 1);
-        }
-
-        for (String header : headers) {
-            int count = headerCount.containsKey(header) ? headerCount.get(header) : 0;
-            if (count != 1) {
-                throw new ConfigurationException("Column header '" + header
-                        + "' occurs more than once (" + count + ").");
-            }
-            if (header.equals(configuration.getUniqueAttribute())) {
-                uniqueFound = true;
-                continue;
-            }
-            if (StringUtil.isNotEmpty(configuration.getPasswordAttribute())
-                    && header.equals(configuration.getPasswordAttribute())) {
-                passwordFound = true;
-            }
-            if (uniqueFound && passwordFound) {
-                break;
-            }
-        }
-
-        if (!uniqueFound) {
-            throw new ConfigurationException("Header in csv file doesn't contain "
-                    + "unique attribute name as defined in configuration.");
-        }
-        if (StringUtil.isNotEmpty(configuration.getPasswordAttribute()) && !passwordFound) {
-            throw new ConfigurationException("Header in csv file doesn't contain "
-                    + "password attribute name as defined in configuration.");
-        }
-    }
-
-    private long getTokenValue(SyncToken token) {
-        if (token == null || token.getValue() == null) {
-            return -1;
-        }
-        String object = token.getValue().toString();
-        if (!object.matches("[0-9]{13}")) {
-            return -1;
-        }
-
-        return Long.parseLong(object);
-    }
-
-    private SyncDelta createSyncDelta(Change change, SyncToken token) {
-        SyncDeltaBuilder builder = new SyncDeltaBuilder();
-        builder.setUid(new Uid(change.getUid()));
-        builder.setToken(token);
-
-        if (Change.Type.DELETE.equals(change.getType())) {
-            builder.setDeltaType(SyncDeltaType.DELETE);
-        } else {
-            builder.setDeltaType(SyncDeltaType.CREATE_OR_UPDATE);
-
-            CsvItem item = new CsvItem(change.getAttributes());
-            ConnectorObject object = createConnectorObject(change.getHeader(), item);
-            builder.setObject(object);
-        }
-
         return builder.build();
     }
 
-    /**
-     * This method is only for tests!
-     *
-     * @return pattern used for matcher and line parsing
-     */
-    Pattern getLinePattern() {
-        return linePattern;
+    private boolean objectsDiffer(ConnectorObject left, ConnectorObject right) {
+        for (Attribute attrL : left.getAttributes()) {
+            Attribute attrR = right.getAttributeByName(attrL.getName());
+            if (attrR == null || !attrR.equals(attrL)) {
+                return true;
+            }
+        }
+        for (Attribute attrR : right.getAttributes()) {
+            Attribute attrL = left.getAttributeByName(attrR.getName());
+            if (attrL == null || !attrL.equals(attrR)) {
+                return true;
+            }
+        }
+        return left.getUid().getUidValue().equals(right.getUid().getUidValue())
+                && left.getObjectClass().equals(right.getObjectClass())
+                && left.getName().getNameValue().equals(right.getName().getNameValue());
+    }
+
+    private void scrubSyncFiles() {
+        File dataDir = config.getCsvFile().getParentFile();
+        Map<Long, String> files = new TreeMap<Long, String>();
+        Pattern pattern = Pattern.compile("(\\.[0-9]{13})$");
+        for (String filename : dataDir.list()) {
+            Matcher matcher = pattern.matcher(filename);
+            if (matcher.find()) {
+                Long timestamp = Long.valueOf(matcher.group().substring(1));
+                files.put(timestamp, filename);
+            }
+        }
+        while (files.size() > config.getSyncFileRetentionCount()) {
+            Long key = (Long) files.keySet().toArray()[0];
+            files.remove(key);
+        }
+    }
+
+    private void compareHeaders(String[] header2) {
+        List<String> hdr1 = Arrays.asList(header);
+        List<String> hdr2 = Arrays.asList(header2);
+
+        for (String col : hdr1) {
+            if (!hdr2.contains(col)) {
+                throw new ConnectorException("Headers do not match");
+            }
+        }
+        for (String col : hdr2) {
+            if (!hdr1.contains(col)) {
+                throw new ConnectorException("Headers do not match");
+            }
+        }
+    }
+
+    private Uid doCreate(Set<Attribute> attributes, OperationOptions options) {
+        if (attributes == null || attributes.size() == 0) {
+            throw new IllegalArgumentException("Attributes may not be null or empty.");
+        }
+        Uid uid = null;
+        String username = null;
+        Map<String,Object> attrMap = new HashMap<String, Object>();
+        for (Attribute attr : attributes) {
+            if (attr.getName().equals(Uid.NAME) || attr.getName().equals(config.getHeaderUid())) {
+                uid = new Uid((String) attr.getValue().get(0));
+            } else if (attr.getName().equals(Name.NAME) || attr.getName().equals(config.getHeaderName())) {
+                username = (String) attr.getValue().get(0);
+            }
+            attrMap.put(attr.getName(), attr.getValue().get(0));
+        }
+
+        if (uid == null) {
+            uid = new Uid(UUID.randomUUID().toString());
+        } else if (findAccount(uid, username, null, options) != null) {
+            throw new AlreadyExistsException(String.format("Account %s:%s already exists.",
+                    uid.getUidValue(), username == null ? "-" : username));
+        }
+
+        synchronized (fileLock) {
+            readHeader();
+
+            // Order the attributes for insertion
+            Map<String, Object> colMap = new LinkedHashMap<String, Object>();
+            for (String col : header) {
+                if (col.equals(config.getHeaderUid())) {
+                    colMap.put(col, uid.getUidValue());
+                } else {
+                    colMap.put(col, attrMap.containsKey(col) ? attrMap.get(col) : null);
+                }
+            }
+
+            ICsvMapWriter mapWriter = null;
+            try {
+                mapWriter = new CsvMapWriter(new FileWriter(config.getCsvFile(), true), csvPreference);
+                final CellProcessor[] processors = getProcessors();
+                mapWriter.write(colMap, header, processors);
+            } catch (IOException e) {
+                throw new ConnectorException("Failed to create object", e);
+            } finally {
+                if (mapWriter != null) {
+                    try {
+                        mapWriter.close();
+                    } catch (IOException e) {
+                        log.error(e, "Failed to close CSV file after create");
+                    }
+                }
+            }
+        }
+
+        return uid;
+    }
+
+    private void doDelete(Uid uid, OperationOptions options) {
+        if (uid == null) {
+            throw new IllegalArgumentException("Uid cannot be null");
+        }
+
+        synchronized (fileLock) {
+            ICsvMapReader reader = null;
+            ICsvMapWriter writer = null;
+            File tmp = null;
+            try {
+                reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
+                tmp = File.createTempFile("csvfile", "tmp");
+                writer = new CsvMapWriter(new FileWriter(tmp), csvPreference);
+
+                readHeader();
+                //writer.writeHeader(header);
+
+                final CellProcessor[] processors = getProcessors();
+
+                Map<String, Object> entry;
+                boolean found = false;
+                while ((entry = reader.read(header, processors)) != null) {
+                    String sUid = (String) entry.get(config.getHeaderUid());
+                    if (!uid.getUidValue().equals(sUid)) {
+                        writer.write(entry, header, processors);
+                    } else {
+                        found = true;
+                    }
+                }
+                if (!found) {
+                    tmp.delete();
+                    throw new UnknownUidException("Object for uid " + uid.toString() + " does not exist");
+                }
+            } catch (FileNotFoundException e) {
+                log.error(e, "File %s does not exist!", config.getCsvFile().toString());
+                throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
+            } catch (IOException e) {
+                log.error(e, "Error reading from %s!", config.getCsvFile().toString());
+                throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
+            } finally {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (Exception e) {
+                        log.error(e, "Error closing file reader");
+                    }
+                }
+                if (writer != null) {
+                    try {
+                        writer.close();
+                    } catch (Exception e) {
+                        log.error(e, "Error closing file writer");
+                    }
+                }
+            }
+
+            if (tmp != null) {
+                tmp.renameTo(config.getCsvFile().getAbsoluteFile());
+            }
+        }
+    }
+
+    private Uid doUpdate(UpdateType type, Uid uid, Set<Attribute> attributes, OperationOptions options) {
+        Uid updated = null;
+        if (uid == null) {
+            throw new IllegalArgumentException("Uid may not be null");
+        }
+        if (attributes == null) {
+            throw new IllegalArgumentException("Attribute set may not be null");
+        }
+
+        synchronized (fileLock) {
+            ICsvMapReader reader = null;
+            ICsvMapWriter writer = null;
+            File tmp = null;
+            try {
+                reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
+                tmp = File.createTempFile("csvfile", "tmp");
+                writer = new CsvMapWriter(new FileWriter(tmp), csvPreference);
+
+                readHeader();
+                writer.writeHeader(header);
+
+                final CellProcessor[] processors = getProcessors();
+
+                Map<String, Object> entry;
+                reader.read(header, processors); // consume header
+                while ((entry = reader.read(header, processors)) != null) {
+                    String sUid = (String) entry.get(config.getHeaderUid());
+                    if (uid.getUidValue().equals(sUid)) {
+//                        if (type.equals(UpdateType.UPDATE)) {
+//                            entry.clear();
+//                        }
+                        for (Attribute attr : attributes) {
+                            if (type.equals(UpdateType.REMOVEVALUES)) {
+                                entry.remove(getHeaderNameForAttrName(attr.getName()));
+                            } else {
+                                entry.put(getHeaderNameForAttrName(attr.getName()), getAttributeValue(attr));
+                            }
+                        }
+                        updated = new Uid((String) entry.get(config.getHeaderUid()));
+                    }
+                    writer.write(entry, header, processors);
+                }
+                if (updated == null) {
+                    throw new UnknownUidException("Uid " + uid.getUidValue() + " does not exist");
+                }
+            } catch (FileNotFoundException e) {
+                log.error(e, "File %s does not exist!", config.getCsvFile().toString());
+                throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
+            } catch (IOException e) {
+                log.error(e, "Error reading from %s!", config.getCsvFile().toString());
+                throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
+            } finally {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (Exception e) {
+                        log.error(e, "Error closing file reader");
+                    }
+                }
+                if (writer != null) {
+                    try {
+                        writer.close();
+                    } catch (Exception e) {
+                        log.error(e, "Error closing file writer");
+                    }
+                }
+            }
+
+            if (tmp != null) {
+                tmp.renameTo(config.getCsvFile().getAbsoluteFile());
+            }
+        }
+
+        return updated;
+    }
+
+    private String getAttributeValue(Attribute attr) {
+        return attr != null && attr.getValue() != null && attr.getValue().size() > 0
+                ? (String) attr.getValue().get(0)
+                : null;
+    }
+
+    private String getHeaderNameForAttrName(String attr) {
+        if (attr.equals(Name.NAME)) {
+            return config.getHeaderName();
+        } else if (attr.equals(Uid.NAME)) {
+            return config.getHeaderUid();
+        } else if (attr.equals("__PASSWORD__")) {
+            return config.getHeaderPassword();
+        }
+        return attr;
+    }
+
+    private void validateHeader() {
+        if (new HashSet(Arrays.asList(header)).size() != header.length) {
+            throw new ConnectorException("Header contains duplicate columns");
+        }
+    }
+
+    private CellProcessor[] getProcessors() {
+        return getProcessors(header);
+    }
+
+    private CellProcessor[] getProcessors(String[] header) {
+        final CellProcessor[] processors = new CellProcessor[header.length];
+        for (int i = 0; i < header.length; i++) {
+            processors[i] = new OptionalTrim();
+        }
+        return processors;
+    }
+
+    private class OptionalTrim extends CellProcessorAdaptor implements BoolCellProcessor, DateCellProcessor, DoubleCellProcessor,
+            LongCellProcessor, StringCellProcessor {
+
+        /**
+         * Constructs a new <tt>OptionalTrim</tt> processor, which trims a String to ensure it has no surrounding
+         * whitespace.
+         */
+        public OptionalTrim() {
+            super();
+        }
+
+        /**
+         * Constructs a new <tt>OptionalTrim</tt> processor, which trims a String to ensure it has no surrounding
+         * whitespace then calls the next processor in the chain.
+         *
+         * @param next
+         *            the next processor in the chain
+         * @throws NullPointerException
+         *             if next is null
+         */
+        public OptionalTrim(final StringCellProcessor next) {
+            super(next);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public Object execute(final Object value, final CsvContext context) {
+            Object result = value;
+            if (value != null) {
+                result = value.toString().trim();
+            }
+            return next.execute(result, context);
+        }
     }
 }

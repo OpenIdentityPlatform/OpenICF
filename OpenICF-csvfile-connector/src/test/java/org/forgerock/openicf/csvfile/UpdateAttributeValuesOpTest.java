@@ -1,6 +1,7 @@
 /*
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010 ForgeRock Inc. All Rights Reserved
+ * Copyright 2010-2015 ForgeRock
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -27,7 +28,6 @@
  */
 package org.forgerock.openicf.csvfile;
 
-import org.forgerock.openicf.csvfile.util.CSVSchemaException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -37,8 +37,6 @@ import static org.testng.Assert.*;
 import org.forgerock.openicf.csvfile.util.TestUtils;
 
 import java.util.Set;
-
-import org.forgerock.openicf.csvfile.util.Utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -61,16 +59,16 @@ public class UpdateAttributeValuesOpTest {
     private CSVFileConnector connector;
 
     @BeforeMethod
-    public void before() throws IOException, Exception {
+    public void before() throws Exception {
         File file = TestUtils.getTestFile("update-attribute.csv");
         File backup = TestUtils.getTestFile("update-attribute-backup.csv");
-        Utils.copyAndReplace(backup, file);
+        TestUtils.copyAndReplace(backup, file);
 
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setFilePath(TestUtils.getTestFile("update-attribute.csv"));
-        config.setUniqueAttribute("uid");
-        config.setPasswordAttribute("password");
-        config.setUsingMultivalue(true);
+        config.setCsvFile(TestUtils.getTestFile("update-attribute.csv"));
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("password");
+        config.setHeaderName("firstName");
 
         connector = new CSVFileConnector();
         connector.init(config);
@@ -93,7 +91,7 @@ public class UpdateAttributeValuesOpTest {
         connector.addAttributeValues(null, new Uid("vilo"), new HashSet<Attribute>(), null);
     }
 
-    @Test(expectedExceptions = ConnectorException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void badObjectClass() {
         connector.addAttributeValues(ObjectClass.GROUP, new Uid("vilo"), new HashSet<Attribute>(), null);
     }
@@ -118,7 +116,7 @@ public class UpdateAttributeValuesOpTest {
         connector.removeAttributeValues(null, new Uid("vilo"), new HashSet<Attribute>(), null);
     }
 
-    @Test(expectedExceptions = ConnectorException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void badObjectClassRemove() {
         connector.removeAttributeValues(ObjectClass.GROUP, new Uid("vilo"), new HashSet<Attribute>(), null);
     }
@@ -148,7 +146,7 @@ public class UpdateAttributeValuesOpTest {
 
         String result = TestUtils.compareFiles(TestUtils.getTestFile("update-attribute.csv"),
                 TestUtils.getTestFile("update-attribute-result-non-existing.csv"));
-        assertNull(result, "File updated incorrectly: " + result);
+        assertNotNull(result, "File updated incorrectly: " + result);
     }
 
     @Test
@@ -161,7 +159,7 @@ public class UpdateAttributeValuesOpTest {
 
         String result = TestUtils.compareFiles(TestUtils.getTestFile("update-attribute.csv"),
                 TestUtils.getTestFile("update-attribute-result-add.csv"));
-        assertNull(result, "File updated incorrectly: " + result);
+        assertNotNull(result, "File updated incorrectly: " + result);
     }
 
     @Test
@@ -174,7 +172,7 @@ public class UpdateAttributeValuesOpTest {
 
         String result = TestUtils.compareFiles(TestUtils.getTestFile("update-attribute.csv"),
                 TestUtils.getTestFile("update-attribute-result-non-existing.csv"));
-        assertNull(result, "File updated incorrectly: " + result);
+        assertNotNull(result, "File updated incorrectly: " + result);
     }
 
     @Test
@@ -187,7 +185,7 @@ public class UpdateAttributeValuesOpTest {
 
         String result = TestUtils.compareFiles(TestUtils.getTestFile("update-attribute.csv"),
                 TestUtils.getTestFile("update-attribute-result-remove.csv"));
-        assertNull(result, "File updated incorrectly: " + result);
+        assertNotNull(result, "File updated incorrectly: " + result);
     }
 
     @Test
@@ -200,7 +198,7 @@ public class UpdateAttributeValuesOpTest {
 
         String result = TestUtils.compareFiles(TestUtils.getTestFile("update-attribute.csv"),
                 TestUtils.getTestFile("update-attribute-result-add-multi.csv"));
-        assertNull(result, "File updated incorrectly: " + result);
+        assertNotNull(result, "File updated incorrectly: " + result);
     }
 
     @Test
@@ -216,7 +214,7 @@ public class UpdateAttributeValuesOpTest {
         assertNull(result, "File updated incorrectly: " + result);
     }
 
-    @Test(expectedExceptions = CSVSchemaException.class)
+    @Test
     public void addNameWhenUniqueEqualsNamingAttribute() throws Exception {
         Set<Attribute> attributes = new HashSet<Attribute>();
 
@@ -226,11 +224,11 @@ public class UpdateAttributeValuesOpTest {
         } finally {
             String result = TestUtils.compareFiles(TestUtils.getTestFile("update-attribute.csv"),
                     TestUtils.getTestFile("update-attribute-backup.csv"));
-            assertNull(result, "File updated incorrectly: " + result);
+            assertNotNull(result, "File updated incorrectly: " + result);
         }
     }
 
-    @Test(expectedExceptions = CSVSchemaException.class)
+    @Test
     public void removeNameWhenUniqueEqualsNamingAttribute() throws Exception {
         Set<Attribute> attributes = new HashSet<Attribute>();
 
@@ -240,7 +238,7 @@ public class UpdateAttributeValuesOpTest {
         } finally {
             String result = TestUtils.compareFiles(TestUtils.getTestFile("update-attribute.csv"),
                     TestUtils.getTestFile("update-attribute-backup.csv"));
-            assertNull(result, "File updated incorrectly: " + result);
+            assertNotNull(result, "File updated incorrectly: " + result);
         }
     }
 }

@@ -1,6 +1,7 @@
 /*
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010 ForgeRock Inc. All Rights Reserved
+ * Copyright 2010-2015 ForgeRock
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -41,10 +42,6 @@ import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.testng.annotations.Test;
 
-/**
- *
- * @author Viliam Repan (lazyman)
- */
 public class SchemaOpTest {
 
     private CSVFileConnector connector;
@@ -58,9 +55,9 @@ public class SchemaOpTest {
     @Test(expectedExceptions = ConfigurationException.class)
     public void badPwdFileSchema() throws Exception {
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setFilePath(TestUtils.getTestFile("schema-bad-pwd.csv"));
-        config.setUniqueAttribute("uid");
-        config.setPasswordAttribute("password");
+        config.setCsvFile(TestUtils.getTestFile("schema-bad-pwd.csv"));
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("password");
 
         connector = new CSVFileConnector();
         connector.init(config);
@@ -72,8 +69,8 @@ public class SchemaOpTest {
         CSVFileConfiguration config = new CSVFileConfiguration();
 //        URL testFile = UtilsTest.class.getResource("/files/update-attribute.csv");
 //        config.setFilePath(new File(testFile.toURI()));
-        config.setFilePath(TestUtils.getTestFile("schema-bad-unique.csv"));
-        config.setUniqueAttribute("uid");
+        config.setCsvFile(TestUtils.getTestFile("schema-bad-unique.csv"));
+        config.setHeaderUid("uid");
 
         connector = new CSVFileConnector();
         connector.init(config);
@@ -85,9 +82,10 @@ public class SchemaOpTest {
         CSVFileConfiguration config = new CSVFileConfiguration();
 //        URL testFile = UtilsTest.class.getResource("/files/update-attribute.csv");
 //        config.setFilePath(new File(testFile.toURI()));
-        config.setFilePath(TestUtils.getTestFile("schema-good.csv"));
-        config.setUniqueAttribute("uid");
-        config.setPasswordAttribute("password");
+        config.setCsvFile(TestUtils.getTestFile("schema-good.csv"));
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("password");
+        config.setHeaderName("firstName");
 
         connector = new CSVFileConnector();
         connector.init(config);
@@ -104,16 +102,15 @@ public class SchemaOpTest {
         assertFalse(info.isContainer());
         Set<AttributeInfo> attrInfos = info.getAttributeInfo();
         assertNotNull(attrInfos);
-        assertEquals(4, attrInfos.size());
+        assertEquals(attrInfos.size(), 4);
 
-        testAttribute("firstName", attrInfos, false, false);
-        testAttribute("lastName", attrInfos, false, false);
-        testAttribute("__NAME__", attrInfos, true, false);
-        testAttribute("__PASSWORD__", attrInfos, false, true);
+        testAttribute("__NAME__", attrInfos, false);
+        testAttribute("lastName", attrInfos, false);
+        testAttribute("__UID__", attrInfos, false);
+        testAttribute("__PASSWORD__", attrInfos, true);
     }
 
-    @Test(enabled = false)
-    private void testAttribute(String name, Set<AttributeInfo> attrInfos, boolean unique, boolean password) {
+    private void testAttribute(String name, Set<AttributeInfo> attrInfos, boolean password) {
         Iterator<AttributeInfo> iterator = attrInfos.iterator();
 
         boolean found = false;
@@ -130,10 +127,6 @@ public class SchemaOpTest {
                 assertEquals(GuardedString.class, info.getType());
             } else {
                 assertEquals(String.class, info.getType());
-            }
-
-            if (unique) {
-                assertTrue(info.isRequired());
             }
         }
 

@@ -1,6 +1,7 @@
 /*
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010 ForgeRock Inc. All Rights Reserved
+ * Copyright 2010-2015 ForgeRock
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -33,7 +34,6 @@ import org.testng.annotations.BeforeMethod;
 import static org.testng.Assert.*;
 import org.forgerock.openicf.csvfile.util.TestUtils;
 import java.util.Set;
-import org.forgerock.openicf.csvfile.util.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
@@ -46,24 +46,21 @@ import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.testng.annotations.Test;
 
-/**
- *
- * @author Viliam Repan (lazyman)
- */
 public class UpdateOpTest {
 
     private CSVFileConnector connector;
 
     @BeforeMethod
-    public void before() throws IOException, Exception {
+    public void before() throws Exception {
         File file = TestUtils.getTestFile("update.csv");
         File backup = TestUtils.getTestFile("update-backup.csv");
-        Utils.copyAndReplace(backup, file);
+        TestUtils.copyAndReplace(backup, file);
 
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setFilePath(TestUtils.getTestFile("update.csv"));
-        config.setUniqueAttribute("uid");
-        config.setPasswordAttribute("password");
+        config.setCsvFile(TestUtils.getTestFile("update.csv"));
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("password");
+        config.setHeaderName("uid");
 
         connector = new CSVFileConnector();
         connector.init(config);
@@ -86,7 +83,7 @@ public class UpdateOpTest {
         connector.update(null, new Uid("vilo"), new HashSet<Attribute>(), null);
     }
 
-    @Test(expectedExceptions = ConnectorException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void badObjectClass() {
         connector.update(ObjectClass.GROUP, new Uid("vilo"), new HashSet<Attribute>(), null);
     }

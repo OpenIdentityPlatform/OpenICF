@@ -1,6 +1,7 @@
 /*
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010 ForgeRock Inc. All Rights Reserved
+ * Copyright 2010-2015 ForgeRock
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -36,10 +37,6 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.testng.annotations.Test;
 
-/**
- *
- * @author Viliam Repan (lazyman)
- */
 public class SyncOpLatestTokenTest {
 
     private CSVFileConnector connector;
@@ -47,9 +44,8 @@ public class SyncOpLatestTokenTest {
     @BeforeMethod
 	public void before() throws Exception {
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setEncoding("utf-8");
-        config.setFilePath(TestUtils.getTestFile("sync-token.csv"));
-        config.setUniqueAttribute("uid");
+        config.setCsvFile(TestUtils.getTestFile("sync-token.csv"));
+        config.setHeaderUid("uid");
 
         connector = new CSVFileConnector();
         connector.init(config);
@@ -66,7 +62,7 @@ public class SyncOpLatestTokenTest {
         connector.getLatestSyncToken(null);
     }
 
-    @Test(expectedExceptions = ConnectorException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void badObjectClass() {
         connector.getLatestSyncToken(ObjectClass.GROUP);
     }
@@ -75,6 +71,6 @@ public class SyncOpLatestTokenTest {
     public void correctObjectClass() {
         SyncToken token = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
         assertNotNull(token);
-        assertEquals("1300734815289", token.getValue());
+        assertEquals("1300734815289", String.valueOf(token.getValue()));
     }
 }

@@ -1,6 +1,7 @@
 /*
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010 ForgeRock Inc. All Rights Reserved
+ * Copyright 2010-2015 ForgeRock
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -27,7 +28,6 @@
  */
 package org.forgerock.openicf.csvfile;
 
-import org.forgerock.openicf.csvfile.util.CSVSchemaException;
 import org.forgerock.openicf.csvfile.util.TestUtils;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -36,6 +36,7 @@ import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
+import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -47,10 +48,6 @@ import java.util.List;
 
 import static org.testng.Assert.*;
 
-/**
- *
- * @author Viliam Repan (lazyman)
- */
 public class SearchOpTest {
 
     private CSVFileConnector connector;
@@ -58,10 +55,9 @@ public class SearchOpTest {
     @BeforeMethod
     public void before() throws Exception {
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setEncoding("utf-8");
-        config.setFilePath(TestUtils.getTestFile("search.csv"));
-        config.setUniqueAttribute("uid");
-        config.setPasswordAttribute("password");
+        config.setCsvFile(TestUtils.getTestFile("search.csv"));
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("password");
 
         connector = new CSVFileConnector();
         connector.init(config);        
@@ -75,20 +71,18 @@ public class SearchOpTest {
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void nullObjectClass() {
-        connector.executeQuery(null, "", new ResultsHandler() {
+        connector.executeQuery(null, null, new ResultsHandler() {
 
-            @Override
             public boolean handle(ConnectorObject co) {
                 throw new UnsupportedOperationException("Not implemented.");
             }
         }, null);
     }
 
-    @Test(expectedExceptions = ConnectorException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void badObjectClass() {
-        connector.executeQuery(ObjectClass.GROUP, "", new ResultsHandler() {
+        connector.executeQuery(ObjectClass.GROUP, null, new ResultsHandler() {
 
-            @Override
             public boolean handle(ConnectorObject co) {
                 throw new UnsupportedOperationException("Not implemented.");
             }
@@ -100,14 +94,14 @@ public class SearchOpTest {
         connector.createFilterTranslator(null, null);
     }
 
-    @Test(expectedExceptions = ConnectorException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void badObjectClassFilter() {
         connector.createFilterTranslator(ObjectClass.GROUP, null);
     }
 
     @Test
     public void createFilterTranslator() {
-        FilterTranslator<String> filter = connector.createFilterTranslator(ObjectClass.ACCOUNT, null);
+        FilterTranslator<Filter> filter = connector.createFilterTranslator(ObjectClass.ACCOUNT, null);
         assertNotNull(filter);
     }
 
@@ -121,7 +115,6 @@ public class SearchOpTest {
         final List<ConnectorObject> results = new ArrayList<ConnectorObject>();
         ResultsHandler handler = new ResultsHandler() {
 
-            @Override
             public boolean handle(ConnectorObject co) {
                 results.add(co);
                 return false;
@@ -129,7 +122,7 @@ public class SearchOpTest {
         };
         connector.executeQuery(ObjectClass.ACCOUNT, null, handler, null);
 
-        assertEquals(1, results.size());
+        assertEquals(results.size(), 1);
         testEntryOne(results.get(0));
     }
 
@@ -138,7 +131,6 @@ public class SearchOpTest {
         final List<ConnectorObject> results = new ArrayList<ConnectorObject>();
         ResultsHandler handler = new ResultsHandler() {
 
-            @Override
             public boolean handle(ConnectorObject co) {
                 results.add(co);
                 return true;
@@ -193,20 +185,18 @@ public class SearchOpTest {
         }
     }
 
-    @Test(expectedExceptions = CSVSchemaException.class)
+    @Test(expectedExceptions = Exception.class)
     private void testMissingColumn() throws Exception {
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setEncoding("utf-8");
-        config.setFilePath(TestUtils.getTestFile("missing-column.csv"));
-        config.setUniqueAttribute("uid");
-        config.setPasswordAttribute("password");
+        config.setCsvFile(TestUtils.getTestFile("missing-column.csv"));
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("password");
 
         CSVFileConnector connector = new CSVFileConnector();
         connector.init(config);
 
         ResultsHandler handler = new ResultsHandler() {
 
-            @Override
             public boolean handle(ConnectorObject co) {
                 return true;
             }
@@ -217,17 +207,15 @@ public class SearchOpTest {
     @Test(expectedExceptions = ConnectorIOException.class)
     private void nonExistingFile() throws Exception {
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setEncoding("utf-8");
-        config.setFilePath(new File("C:\\non-existing-file.csv"));
-        config.setUniqueAttribute("uid");
-        config.setPasswordAttribute("password");
+        config.setCsvFile(new File("C:\\non-existing-file.csv"));
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("password");
 
         CSVFileConnector connector = new CSVFileConnector();
         connector.init(config);
 
         ResultsHandler handler = new ResultsHandler() {
 
-            @Override
             public boolean handle(ConnectorObject co) {
                 return true;
             }

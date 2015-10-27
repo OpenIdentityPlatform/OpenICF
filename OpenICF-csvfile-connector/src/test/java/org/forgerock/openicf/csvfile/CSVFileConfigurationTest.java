@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2010 ForgeRock Inc. All Rights Reserved
+ * Copyright 2010-2015 ForgeRock
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -31,40 +31,23 @@ import org.forgerock.openicf.csvfile.util.TestUtils;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.testng.annotations.Test;
 
-/**
- *
- * @author Viliam Repan (lazyman)
- */
 public class CSVFileConfigurationTest {
 
     @Test
     public void validateGoodConfiguration() throws Exception {
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setEncoding("utf-8");
-        config.setFilePath(TestUtils.getTestFile("config.csv"));
-        config.setPasswordAttribute("password");
-        config.setUniqueAttribute("uid");
-
-        config.validate();
-    }
-
-    @Test(expectedExceptions = NullPointerException.class)
-    public void validateFilePath() {
-        CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setEncoding("utf-8");
-        config.setPasswordAttribute("password");
-        config.setUniqueAttribute("uid");
+        config.setCsvFile(TestUtils.getTestFile("config.csv"));
+        config.setHeaderPassword("password");
+        config.setHeaderUid("uid");
 
         config.validate();
     }
 
     @Test(expectedExceptions = ConfigurationException.class)
-    public void validateEncoding() throws Exception {
+    public void validateFilePath() {
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setEncoding("bad-encoding");
-        config.setFilePath(TestUtils.getTestFile("config.csv"));
-        config.setPasswordAttribute("password");
-        config.setUniqueAttribute("uid");
+        config.setHeaderPassword("password");
+        config.setHeaderUid("uid");
 
         config.validate();
     }
@@ -72,9 +55,9 @@ public class CSVFileConfigurationTest {
     @Test(expectedExceptions = ConfigurationException.class)
     public void validateUniqueAttribute() throws Exception {
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setEncoding("utf-8");
-        config.setFilePath(TestUtils.getTestFile("config.csv"));
-        config.setPasswordAttribute("password");
+        config.setCsvFile(TestUtils.getTestFile("config.csv"));
+        config.setHeaderUid("foo");
+        config.setHeaderName("foo");
 
         config.validate();
     }

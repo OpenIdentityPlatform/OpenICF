@@ -1,6 +1,7 @@
 /*
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 ForgeRock AS. All Rights Reserved
+ * Copyright 2010-2015 ForgeRock
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -27,7 +28,6 @@
 package org.forgerock.openicf.csvfile;
 
 import org.forgerock.openicf.csvfile.util.TestUtils;
-import org.forgerock.openicf.csvfile.util.Utils;
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
@@ -40,10 +40,6 @@ import org.testng.annotations.Test;
 
 import static org.testng.Assert.*;
 
-/**
- *
- * @author Viliam Repan (lazyman)
- */
 public class DeleteOpCustomTest {
 
     private String TEST_FOLDER = "../deleteOp/";
@@ -52,11 +48,11 @@ public class DeleteOpCustomTest {
     public void correctDeleteAfterCreate() throws Exception {
         File beforeDeleteFile = TestUtils.getTestFile(TEST_FOLDER + "before-delete.csv");
         File backup = TestUtils.getTestFile(TEST_FOLDER + "before-delete-backup.csv");
-        Utils.copyAndReplace(backup, beforeDeleteFile);
+        TestUtils.copyAndReplace(backup, beforeDeleteFile);
 
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setFilePath(TestUtils.getTestFile(TEST_FOLDER + "before-delete.csv"));
-        config.setUniqueAttribute("id");
+        config.setCsvFile(TestUtils.getTestFile(TEST_FOLDER + "before-delete.csv"));
+        config.setHeaderUid("id");
 
         CSVFileConnector connector = new CSVFileConnector();
         connector.init(config);
@@ -64,13 +60,15 @@ public class DeleteOpCustomTest {
         Set<Attribute> attributes = new HashSet<Attribute>();
         String uidValue = "nvix05";
         attributes.add(new Name(uidValue));
+        attributes.add(new Uid(uidValue));
         attributes.add(AttributeBuilder.build("firstname", "Nivan"));
         attributes.add(AttributeBuilder.build("lastname", "Nnoris05"));
         Uid uid = connector.create(ObjectClass.ACCOUNT, attributes, null);
         assertNotNull(uid);
         assertEquals(uidValue, uid.getUidValue());
 
-        String result = TestUtils.compareFiles(config.getFilePath(), TestUtils.getTestFile(TEST_FOLDER + "expected-after-create.csv"));
+        String result = TestUtils.compareFiles(config.getCsvFile(),
+                TestUtils.getTestFile(TEST_FOLDER + "expected-after-create.csv"));
         assertNull(result, "File updated incorrectly (create): " + result);
 
         connector.delete(ObjectClass.ACCOUNT, uid, null);
@@ -78,7 +76,7 @@ public class DeleteOpCustomTest {
         connector.dispose();
         connector = null;
 
-        result = TestUtils.compareFiles(config.getFilePath(), backup);
+        result = TestUtils.compareFiles(config.getCsvFile(), backup);
         assertNull(result, "File updated incorrectly (delete): " + result);
 
         beforeDeleteFile.delete();
@@ -88,17 +86,18 @@ public class DeleteOpCustomTest {
     public void correctDeleteAfterDoubleCreate() throws Exception {
         File configFile = TestUtils.getTestFile(TEST_FOLDER + "delete-after-double-create.csv");
         File backup = TestUtils.getTestFile(TEST_FOLDER + "delete-after-double-create-backup.csv");
-        Utils.copyAndReplace(backup, configFile);
+        TestUtils.copyAndReplace(backup, configFile);
 
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setFilePath(TestUtils.getTestFile(TEST_FOLDER + "delete-after-double-create.csv"));
-        config.setUniqueAttribute("id");
+        config.setCsvFile(TestUtils.getTestFile(TEST_FOLDER + "delete-after-double-create.csv"));
+        config.setHeaderUid("id");
 
         CSVFileConnector connector = new CSVFileConnector();
         connector.init(config);
 
         Set<Attribute> attributes = new HashSet<Attribute>();
         String uidValue = "nvix05";
+        attributes.add(new Uid(uidValue));
         attributes.add(new Name(uidValue));
         attributes.add(AttributeBuilder.build("firstname", "Nivan"));
         attributes.add(AttributeBuilder.build("lastname", "Nnoris05"));
@@ -108,6 +107,7 @@ public class DeleteOpCustomTest {
 
         attributes = new HashSet<Attribute>();
         uidValue = "nvix06";
+        attributes.add(new Uid(uidValue));
         attributes.add(new Name(uidValue));
         attributes.add(AttributeBuilder.build("firstname", "Nivan06"));
         attributes.add(AttributeBuilder.build("lastname", "Nnoris06"));
@@ -115,7 +115,8 @@ public class DeleteOpCustomTest {
         assertNotNull(uidSecond);
         assertEquals(uidValue, uidSecond.getUidValue());
 
-        String result = TestUtils.compareFiles(config.getFilePath(), TestUtils.getTestFile(TEST_FOLDER + "expected-double-create.csv"));
+        String result = TestUtils.compareFiles(config.getCsvFile(),
+                TestUtils.getTestFile(TEST_FOLDER + "expected-double-create.csv"));
         assertNull(result, "File updated incorrectly (create): " + result);
 
         connector.delete(ObjectClass.ACCOUNT, uidFirst, null);
@@ -123,7 +124,8 @@ public class DeleteOpCustomTest {
         connector.dispose();
         connector = null;
 
-        result = TestUtils.compareFiles(config.getFilePath(), TestUtils.getTestFile(TEST_FOLDER + "expected-double-create-delete.csv"));
+        result = TestUtils.compareFiles(config.getCsvFile(),
+                TestUtils.getTestFile(TEST_FOLDER + "expected-double-create-delete.csv"));
         assertNull(result, "File updated incorrectly (delete): " + result);
 
         configFile.delete();
@@ -133,17 +135,18 @@ public class DeleteOpCustomTest {
     public void correctDeleteSecondAfterDoubleCreate() throws Exception {
         File configFile = TestUtils.getTestFile(TEST_FOLDER + "delete-after-double-create.csv");
         File backup = TestUtils.getTestFile(TEST_FOLDER + "delete-after-double-create-backup.csv");
-        Utils.copyAndReplace(backup, configFile);
+        TestUtils.copyAndReplace(backup, configFile);
 
         CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setFilePath(TestUtils.getTestFile(TEST_FOLDER + "delete-after-double-create.csv"));
-        config.setUniqueAttribute("id");
+        config.setCsvFile(TestUtils.getTestFile(TEST_FOLDER + "delete-after-double-create.csv"));
+        config.setHeaderUid("id");
 
         CSVFileConnector connector = new CSVFileConnector();
         connector.init(config);
 
         Set<Attribute> attributes = new HashSet<Attribute>();
         String uidValue = "nvix05";
+        attributes.add(new Uid(uidValue));
         attributes.add(new Name(uidValue));
         attributes.add(AttributeBuilder.build("firstname", "Nivan"));
         attributes.add(AttributeBuilder.build("lastname", "Nnoris05"));
@@ -153,6 +156,7 @@ public class DeleteOpCustomTest {
 
         attributes = new HashSet<Attribute>();
         uidValue = "nvix06";
+        attributes.add(new Uid(uidValue));
         attributes.add(new Name(uidValue));
         attributes.add(AttributeBuilder.build("firstname", "Nivan06"));
         attributes.add(AttributeBuilder.build("lastname", "Nnoris06"));
@@ -160,7 +164,8 @@ public class DeleteOpCustomTest {
         assertNotNull(uidSecond);
         assertEquals(uidValue, uidSecond.getUidValue());
 
-        String result = TestUtils.compareFiles(config.getFilePath(), TestUtils.getTestFile(TEST_FOLDER + "expected-double-create.csv"));
+        String result = TestUtils.compareFiles(config.getCsvFile(),
+                TestUtils.getTestFile(TEST_FOLDER + "expected-double-create.csv"));
         assertNull(result, "File updated incorrectly (create): " + result);
 
         connector.delete(ObjectClass.ACCOUNT, uidSecond, null);
@@ -168,7 +173,8 @@ public class DeleteOpCustomTest {
         connector.dispose();
         connector = null;
 
-        result = TestUtils.compareFiles(config.getFilePath(), TestUtils.getTestFile(TEST_FOLDER + "expected-double-create-delete-second.csv"));
+        result = TestUtils.compareFiles(config.getCsvFile(),
+                TestUtils.getTestFile(TEST_FOLDER + "expected-double-create-delete-second.csv"));
         assertNull(result, "File updated incorrectly (delete): " + result);
 
         configFile.delete();
