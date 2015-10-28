@@ -247,7 +247,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         Schema schema = builder.build();
         List<String> infoNames = new ArrayList<String>();
         List<String> headerNames = Arrays.asList(header);
-        for (AttributeInfo info : ((ObjectClassInfo)schema.getObjectClassInfo().toArray()[0]).getAttributeInfo()) {
+        for (AttributeInfo info : ((ObjectClassInfo) schema.getObjectClassInfo().toArray()[0]).getAttributeInfo()) {
             infoNames.add(info.getName());
             String name = info.getName().equals(Name.NAME)
                     ? config.getHeaderName()
