@@ -53,7 +53,7 @@
         <connectorPackage>org.forgerock.openicf.csvfile</connectorPackage>
         <connectorClass>CSVFileConnector</connectorClass>
         <framework.compatibilityVersion>1.5</framework.compatibilityVersion>
-        <framework.releaseVersion>2.0</framework.releaseVersion>
+        <framework.releaseVersion>0.0-SNAPSHOT</framework.releaseVersion>
     </properties>
     <repositories>
         <repository>
