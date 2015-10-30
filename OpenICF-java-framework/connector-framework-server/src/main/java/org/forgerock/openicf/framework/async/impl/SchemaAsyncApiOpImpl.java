@@ -49,12 +49,12 @@ public class SchemaAsyncApiOpImpl extends AbstractAPIOperation implements Schema
     public SchemaAsyncApiOpImpl(
             RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             ConnectorKey connectorKey,
-            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
-        super(remoteConnection, connectorKey, facadeKeyFunction);
+            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction, long timeout) {
+        super(remoteConnection, connectorKey, facadeKeyFunction,timeout);
     }
 
     public Schema schema() {
-        return schemaAsync().getOrThrowUninterruptibly();
+        return asyncTimeout(schemaAsync());
     }
 
     public Promise<Schema, RuntimeException> schemaAsync() {

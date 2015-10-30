@@ -188,7 +188,7 @@ public class APIConfigurationImpl implements APIConfiguration {
      */
     public int getTimeout(Class<? extends APIOperation> operation) {
         Integer ret = this.timeoutMap.get(operation);
-        if (ret == null) {
+        if (ret == null || ret < APIOperation.NO_TIMEOUT) {
             // use the default..
             ret = APIOperation.NO_TIMEOUT;
         }

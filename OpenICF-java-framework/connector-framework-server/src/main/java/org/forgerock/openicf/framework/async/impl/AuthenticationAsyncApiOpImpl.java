@@ -55,14 +55,13 @@ public class AuthenticationAsyncApiOpImpl extends AbstractAPIOperation implement
     public AuthenticationAsyncApiOpImpl(
             RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             ConnectorKey connectorKey,
-            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
-        super(remoteConnection, connectorKey, facadeKeyFunction);
+            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction,int timeout) {
+        super(remoteConnection, connectorKey, facadeKeyFunction, timeout);
     }
 
     public Uid authenticate(final ObjectClass objectClass, final String username,
             final GuardedString password, final OperationOptions options) {
-        return authenticateAsync(objectClass, username, password, options)
-                .getOrThrowUninterruptibly();
+        return asyncTimeout(authenticateAsync(objectClass, username, password, options));
     }
 
     public Promise<Uid, RuntimeException> authenticateAsync(final ObjectClass objectClass,

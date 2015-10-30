@@ -63,13 +63,13 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
     public SearchAsyncApiOpImpl(
             RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             org.identityconnectors.framework.api.ConnectorKey connectorKey,
-            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
-        super(remoteConnection, connectorKey, facadeKeyFunction);
+            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction, long timeout) {
+        super(remoteConnection, connectorKey, facadeKeyFunction, timeout);
     }
-
+    
     public SearchResult search(final ObjectClass objectClass, final Filter filter,
             final ResultsHandler handler, final OperationOptions options) {
-        return searchAsync(objectClass, filter, handler, options).getOrThrowUninterruptibly();
+        return asyncTimeout(searchAsync(objectClass, filter, handler, options));
     }
 
     public Promise<SearchResult, RuntimeException> searchAsync(final ObjectClass objectClass,

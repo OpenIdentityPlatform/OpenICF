@@ -24,6 +24,9 @@
 
 package org.forgerock.openicf.framework.async.impl;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import org.forgerock.openicf.common.rpc.RequestDistributor;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
@@ -33,7 +36,9 @@ import org.forgerock.util.promise.Promise;
 import org.forgerock.util.promise.Promises;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.framework.api.ConnectorKey;
+import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
+import org.identityconnectors.framework.common.exceptions.OperationTimeoutException;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageLite;
@@ -50,14 +55,16 @@ public abstract class AbstractAPIOperation {
     private final RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection;
     private final ConnectorKey connectorKey;
     private final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction;
+    private long timeout;
 
     public AbstractAPIOperation(
             final RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             final ConnectorKey connectorKey,
-            final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
+            final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction, long timeout) {
         this.remoteConnection = Assertions.nullChecked(remoteConnection, "remoteConnection");
         this.connectorKey = Assertions.nullChecked(connectorKey, "connectorKey");
         this.facadeKeyFunction = Assertions.nullChecked(facadeKeyFunction, "facadeKeyFunction");
+        this.timeout = Math.max(timeout, APIOperation.NO_TIMEOUT);
     }
 
     public ConnectorKey getConnectorKey() {
@@ -79,5 +86,17 @@ public abstract class AbstractAPIOperation {
             return request.getPromise();
         }
         return Promises.<V, RuntimeException> newExceptionPromise(FAILED_EXCEPTION);
+    }
+
+    protected <T> T asyncTimeout(Promise<T, RuntimeException> promise) {
+        if (APIOperation.NO_TIMEOUT == timeout) {
+            return promise.getOrThrowUninterruptibly();
+        } else {
+            try {
+                return promise.getOrThrowUninterruptibly(timeout, TimeUnit.MILLISECONDS);
+            } catch (TimeoutException ex) {
+                throw new OperationTimeoutException(ex);
+            }
+        }
     }
 }

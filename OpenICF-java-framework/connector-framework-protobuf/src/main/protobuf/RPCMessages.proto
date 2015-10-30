@@ -40,6 +40,8 @@ message ControlRequest {
         REQUESTS = 2;
     }
     repeated InfoLevel infoLevel = 1;
+    repeated int64 localRequestId = 2;
+    repeated int64 remoteRequestId = 3;
 }
 
 message ControlResponse {

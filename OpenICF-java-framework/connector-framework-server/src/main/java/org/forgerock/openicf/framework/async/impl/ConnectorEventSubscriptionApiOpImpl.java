@@ -66,8 +66,8 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
     public ConnectorEventSubscriptionApiOpImpl(
             final RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             final ConnectorKey connectorKey,
-            final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
-        super(remoteConnection, connectorKey, facadeKeyFunction);
+            final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction, long timeout) {
+        super(remoteConnection, connectorKey, facadeKeyFunction,timeout);
     }
 
     public Subscription subscribe(final ObjectClass objectClass, final Filter eventFilter,

@@ -27,10 +27,12 @@ package org.forgerock.openicf.framework.remote.rpc;
 import java.security.Principal;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 import org.forgerock.openicf.common.protobuf.RPCMessages;
 import org.forgerock.openicf.common.protobuf.RPCMessages.ControlRequest;
@@ -46,8 +48,8 @@ import org.forgerock.openicf.framework.async.AsyncConnectorInfoManager;
 import org.forgerock.openicf.framework.remote.ManagedAsyncConnectorInfoManager;
 import org.forgerock.openicf.framework.remote.MessagesUtil;
 import org.forgerock.openicf.framework.remote.RemoteConnectorInfoImpl;
-import org.forgerock.util.Pair;
 import org.forgerock.util.Function;
+import org.forgerock.util.Pair;
 import org.forgerock.util.promise.Promise;
 import org.identityconnectors.common.ConnectorKeyRange;
 import org.identityconnectors.common.security.Encryptor;
@@ -64,6 +66,8 @@ public class WebSocketConnectionGroup
         RemoteConnectionGroup<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>
         implements AsyncConnectorInfoManager {
 
+    private long lastActivity = System.currentTimeMillis();
+    
     private Encryptor encryptor = null;
 
     private RemoteOperationContext operationContext = null;
@@ -117,23 +121,27 @@ public class WebSocketConnectionGroup
     public void principalIsShuttingDown(final Principal connectionPrincipal) {
         final String name = connectionPrincipal.getName();
         if (principals.remove(name)) {
-            if (principals.isEmpty()) {
-                // Gracefully close all request and shut down this group.
-                for (LocalRequest<?, ?, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> local : localRequests
-                        .values()) {
-                    local.cancel();
-                }
-                for (RemoteRequest<?, ?, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remote : remoteRequests
-                        .values()) {
-                    remote.getPromise().cancel(true);
-                }
-                delegate.close();
-            }
+            shutdown();
             for (Pair<String, WebSocketConnectionHolder> e : webSockets) {
                 if (name.equalsIgnoreCase(e.getFirst())) {
                     webSockets.remove(e);
                 }
             }
+        }
+    }
+
+    protected void shutdown() {
+        if (principals.isEmpty()) {
+            // Gracefully close all request and shut down this group.
+            for (LocalRequest<?, ?, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> local : localRequests
+                    .values()) {
+                local.cancel();
+            }
+            for (RemoteRequest<?, ?, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remote : remoteRequests
+                    .values()) {
+                remote.getPromise().cancel(true);
+            }
+            delegate.close();
         }
     }
 
@@ -211,6 +219,51 @@ public class WebSocketConnectionGroup
         }
     }
     
+    public boolean checkIsActive() {
+        boolean operational = isOperational();
+        if (System.currentTimeMillis() - lastActivity > TimeUnit.HOURS.toMillis(1) && !operational) {
+            // 1 hour inactivity -> Shutdown
+            shutdown();
+            webSockets.clear();
+        } else {
+
+            for (LocalRequest<?, ?, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> local : localRequests
+                    .values()) {
+                local.check();
+            }
+            for (RemoteRequest<?, ?, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remote : remoteRequests
+                    .values()) {
+                remote.check();
+            }
+
+            if (operational) {
+                ControlMessageRequestFactory requestFactory = new ControlMessageRequestFactory();
+                trySubmitRequest(requestFactory);
+            }
+        }
+        return operational || !remoteRequests.isEmpty() || !localRequests.isEmpty();
+    }
+    
+    public void processControlRequest(ControlRequest message){
+        lastActivity = System.currentTimeMillis();
+        for (Map.Entry<Long, RemoteRequest<?, ?, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>> entry : remoteRequests.entrySet()){
+            if (!message.getLocalRequestIdList().contains(entry.getKey())){
+                //Remote request is exists locally but remotely nothing match. 
+                // 1. ControlRequest was sent before LocalRequest was created so it normal.
+                // 2. Request on remote side is completed so we must Complete the RemoteRequest(Fail) unless the local request is still processing.
+                entry.getValue().inconsistent();
+            }
+        }
+        for (Map.Entry<Long, LocalRequest<?, ?, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>> entry: localRequests.entrySet()){
+            if (!message.getRemoteRequestIdList().contains(entry.getKey())){
+                //Local request exists locally but remotely nothing match. 
+                // 1. ControlRequest was sent before RemoteRequest was created so it normal.
+                // 2. Request on remote side is Cancelled/Terminated so it can safely Cancel here. 
+                entry.getValue().inconsistent();
+            }
+        }
+    }
+    
     // -- Static Classes
 
     private class RemoteConnectorInfoManager extends
@@ -257,6 +310,8 @@ public class WebSocketConnectionGroup
             for (InfoLevel infoLevel : infoLevels) {
                 builder.addInfoLevel(infoLevel);
             }
+            builder.addAllLocalRequestId(remoteContext.getRemoteConnectionGroup().localRequests.keySet());
+            builder.addAllRemoteRequestId(remoteContext.getRemoteConnectionGroup().remoteRequests.keySet());
             return RPCMessages.RPCRequest.newBuilder().setControlRequest(builder);
         }
 

@@ -54,13 +54,13 @@ public class GetAsyncApiOpImpl extends AbstractAPIOperation implements GetAsyncA
     public GetAsyncApiOpImpl(
             RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             ConnectorKey connectorKey,
-            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
-        super(remoteConnection, connectorKey, facadeKeyFunction);
+            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction, long timeout) {
+        super(remoteConnection, connectorKey, facadeKeyFunction,timeout);
     }
 
     public ConnectorObject getObject(final ObjectClass objectClass, final Uid uid,
             final OperationOptions options) {
-        return getObjectAsync(objectClass, uid, options).getOrThrowUninterruptibly();
+        return asyncTimeout(getObjectAsync(objectClass, uid, options));
     }
 
     public Promise<ConnectorObject, RuntimeException> getObjectAsync(final ObjectClass objectClass,

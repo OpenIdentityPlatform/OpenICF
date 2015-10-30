@@ -41,6 +41,14 @@ public class TestLocalRequest<H extends RemoteConnectionHolder<TestConnectionGro
         super(requestId, socket);
     }
 
+    public boolean check() {
+        return false;
+    }
+
+    public void inconsistent() {
+
+    }
+
     public boolean tryHandleResult(String result) {
         TestMessage remoteMessage = new TestMessage();
         remoteMessage.response = result;

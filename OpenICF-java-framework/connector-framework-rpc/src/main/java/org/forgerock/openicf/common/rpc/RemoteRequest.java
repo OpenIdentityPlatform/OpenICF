@@ -27,8 +27,8 @@ package org.forgerock.openicf.common.rpc;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.forgerock.util.promise.ExceptionHandler;
 import org.forgerock.util.Function;
+import org.forgerock.util.promise.ExceptionHandler;
 import org.forgerock.util.promise.Promise;
 import org.forgerock.util.promise.PromiseImpl;
 import org.forgerock.util.promise.ResultHandler;
@@ -41,7 +41,8 @@ import org.forgerock.util.promise.ResultHandler;
  * call on caller and receiver side.
  *
  */
-public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConnectionGroup<G, H, P>, H extends RemoteConnectionHolder<G, H, P>, P extends RemoteConnectionContext<G, H, P>> {
+public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConnectionGroup<G, H, P>, H extends RemoteConnectionHolder<G, H, P>, P extends RemoteConnectionContext<G, H, P>>
+        implements SyncCycleHandler {
 
     private final P context;
     private final long requestId;

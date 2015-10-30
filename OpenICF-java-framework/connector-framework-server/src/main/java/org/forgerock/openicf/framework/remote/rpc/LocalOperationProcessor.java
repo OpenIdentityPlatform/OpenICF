@@ -34,13 +34,12 @@ import org.forgerock.util.Function;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 
-import com.google.protobuf.MessageLite;
-
 public abstract class LocalOperationProcessor<V>
         extends
         LocalRequest<V, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> {
 
     private static final Log logger = Log.getLog(LocalOperationProcessor.class);
+    private int inconsistencyCounter = 0;
 
     protected boolean stickToConnection = false;
     protected WebSocketConnectionHolder reverseConnection = null;
@@ -52,6 +51,21 @@ public abstract class LocalOperationProcessor<V>
     protected abstract RPCResponse.Builder createOperationResponse(
             RemoteOperationContext remoteContext, V result);
 
+    public boolean check() {
+        boolean valid = inconsistencyCounter < 3;
+        if (!valid) {
+            logger.ok(
+                    "LocalRequest:{0} -> inconsistent with remote server, trying to cancel local process.",
+                    getRequestId());
+            cancel();
+        }
+        return valid;
+    }
+
+    public void inconsistent() {
+        inconsistencyCounter++;
+    }
+    
     protected boolean tryHandleResult(V result) {
         try {
             final byte[] responseMessage =

@@ -138,6 +138,7 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
                 for (WebSocketConnectionGroup group : connectionGroups.values()) {
                     logger.ok("Check ConnectionGroup:{0} - operational={1}", group
                             .getRemoteSessionId(), group.isOperational());
+                    group.checkIsActive();
                 }
             }
         }
@@ -149,8 +150,7 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
         this.scheduledExecutorService = DEFAULT_SCHEDULER.acquire();
         init();
         groupCheckFuture =
-                scheduledExecutorService.get().scheduleAtFixedRate(groupChecker, 30, 60,
-                        TimeUnit.SECONDS);
+                scheduledExecutorService.get().scheduleAtFixedRate(groupChecker, 1, 4, TimeUnit.MINUTES);
     }
 
     protected void init() throws Exception {

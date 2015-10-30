@@ -38,7 +38,6 @@ import org.forgerock.util.Function;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
-import org.identityconnectors.framework.impl.api.remote.RemoteWrappedException;
 
 import com.google.protobuf.MessageLite;
 
@@ -47,6 +46,7 @@ public abstract class RemoteOperationRequest<V>
         RemoteRequest<V, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> {
 
     private final static Log logger = Log.getLog(RemoteOperationRequest.class);
+    private int inconsistencyCounter = 0;
 
     public RemoteOperationRequest(
             RemoteOperationContext context,
@@ -61,12 +61,28 @@ public abstract class RemoteOperationRequest<V>
     protected abstract RPCRequest.Builder createOperationRequest(
             RemoteOperationContext remoteContext);
 
-    public void handleIncomingMessage(WebSocketConnectionHolder sourceConnection,
-            Object message) {
+    public boolean check() {
+        boolean valid = inconsistencyCounter < 3;
+        if (!valid) {
+            logger.ok(
+                    "RemoteRequest:{0} -> inconsistent with remote server, set failed local process.",
+                    getRequestId());
+            getExceptionHandler().handleException(
+                    new ConnectorException(
+                            "Operation finished on remote server with unknown result"));
+        }
+        return valid;
+    }
+
+    public void inconsistent() {
+        inconsistencyCounter++;
+    }
+
+    public void handleIncomingMessage(WebSocketConnectionHolder sourceConnection, Object message) {
         if (message instanceof RPCMessages.ExceptionMessage) {
             handleExceptionMessage((RPCMessages.ExceptionMessage) message);
         } else if (message instanceof MessageLite) {
-            if (!handleResponseMessage(sourceConnection, (MessageLite)message)) {
+            if (!handleResponseMessage(sourceConnection, (MessageLite) message)) {
                 logger.ok("Request {0} has unknown response message type:{1}", getRequestId(),
                         getClass().getSimpleName());
                 getExceptionHandler().handleException(
@@ -118,7 +134,8 @@ public abstract class RemoteOperationRequest<V>
 
     protected void handleExceptionMessage(ExceptionMessage exceptionMessage) {
         try {
-            getExceptionHandler().handleException(MessagesUtil.fromExceptionMessage(exceptionMessage));
+            getExceptionHandler().handleException(
+                    MessagesUtil.fromExceptionMessage(exceptionMessage));
         } catch (Exception e) {
             logger.info(e, "Exception received but failed to handle it: {0}", getRequestId());
         }

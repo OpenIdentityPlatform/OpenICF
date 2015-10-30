@@ -60,17 +60,17 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncAsyn
     public SyncAsyncApiOpImpl(
             RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             ConnectorKey connectorKey,
-            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
-        super(remoteConnection, connectorKey, facadeKeyFunction);
+            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction, long timeout) {
+        super(remoteConnection, connectorKey, facadeKeyFunction, timeout);
     }
 
     public SyncToken getLatestSyncToken(final ObjectClass objectClass) {
-        return getLatestSyncTokenAsync(objectClass).getOrThrowUninterruptibly();
+        return asyncTimeout(getLatestSyncTokenAsync(objectClass));
     }
 
     public SyncToken sync(final ObjectClass objectClass, final SyncToken token,
             final SyncResultsHandler handler, final OperationOptions options) {
-        return syncAsync(objectClass, token, handler, options).getOrThrowUninterruptibly();
+        return asyncTimeout(syncAsync(objectClass, token, handler, options));
     }
 
     public Promise<SyncToken, RuntimeException> getLatestSyncTokenAsync(

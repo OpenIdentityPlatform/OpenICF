@@ -35,7 +35,7 @@ import org.forgerock.util.promise.ResultHandler;
  *
  */
 public abstract class LocalRequest<V, E extends Exception, G extends RemoteConnectionGroup<G, H, P>, H extends RemoteConnectionHolder<G, H, P>, P extends RemoteConnectionContext<G, H, P>>
-        implements ResultHandler<V>, ExceptionHandler<E> {
+        implements ResultHandler<V>, ExceptionHandler<E>, SyncCycleHandler {
 
     private final long requestId;
 

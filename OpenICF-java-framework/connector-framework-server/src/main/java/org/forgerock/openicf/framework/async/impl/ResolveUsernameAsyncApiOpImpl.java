@@ -54,13 +54,13 @@ public class ResolveUsernameAsyncApiOpImpl extends AbstractAPIOperation implemen
     public ResolveUsernameAsyncApiOpImpl(
             RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             ConnectorKey connectorKey,
-            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
-        super(remoteConnection, connectorKey, facadeKeyFunction);
+            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction, long timeout) {
+        super(remoteConnection, connectorKey, facadeKeyFunction,timeout);
     }
 
     public Uid resolveUsername(final ObjectClass objectClass, final String username,
             final OperationOptions options) {
-        return resolveUsernameAsync(objectClass, username, options).getOrThrowUninterruptibly();
+        return asyncTimeout(resolveUsernameAsync(objectClass, username, options));
     }
 
     public Promise<Uid, RuntimeException> resolveUsernameAsync(final ObjectClass objectClass,

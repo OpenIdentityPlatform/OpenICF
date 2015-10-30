@@ -296,6 +296,8 @@ public class OpenICFServerAdapter implements OperationMessageListener {
             ByteString response = MessagesUtil.serializeLegacy(connectorInfos);
             builder.setConnectorInfos(response);
         }
+        socket.getRemoteConnectionContext().getRemoteConnectionGroup().processControlRequest(
+                message);
 
         RemoteMessage.Builder responseBuilder =
                 MessagesUtil.createResponse(messageId, RPCResponse.newBuilder().setControlResponse(

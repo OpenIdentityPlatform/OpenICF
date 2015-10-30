@@ -85,8 +85,8 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
     public BatchApiOpImpl(
             final RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             final ConnectorKey connectorKey,
-            final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
-        super(remoteConnection, connectorKey, facadeKeyFunction);
+            final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction, long timeout) {
+        super(remoteConnection, connectorKey, facadeKeyFunction,timeout);
     }
 
     @Override

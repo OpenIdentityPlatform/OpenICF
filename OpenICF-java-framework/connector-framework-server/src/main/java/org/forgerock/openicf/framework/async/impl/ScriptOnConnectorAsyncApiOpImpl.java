@@ -53,12 +53,12 @@ public class ScriptOnConnectorAsyncApiOpImpl extends AbstractAPIOperation implem
     public ScriptOnConnectorAsyncApiOpImpl(
             RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             ConnectorKey connectorKey,
-            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
-        super(remoteConnection, connectorKey, facadeKeyFunction);
+            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction, long timeout) {
+        super(remoteConnection, connectorKey, facadeKeyFunction,timeout);
     }
 
     public Object runScriptOnConnector(final ScriptContext request, final OperationOptions options) {
-        return runScriptOnConnectorAsync(request, options).getOrThrowUninterruptibly();
+        return asyncTimeout(runScriptOnConnectorAsync(request, options));
     }
 
     public Promise<Object, RuntimeException> runScriptOnConnectorAsync(final ScriptContext request,

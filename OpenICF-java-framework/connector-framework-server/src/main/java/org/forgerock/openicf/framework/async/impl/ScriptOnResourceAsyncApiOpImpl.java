@@ -53,12 +53,12 @@ public class ScriptOnResourceAsyncApiOpImpl extends AbstractAPIOperation impleme
     public ScriptOnResourceAsyncApiOpImpl(
             RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             ConnectorKey connectorKey,
-            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
-        super(remoteConnection, connectorKey, facadeKeyFunction);
+            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction, long timeout) {
+        super(remoteConnection, connectorKey, facadeKeyFunction,timeout);
     }
 
     public Object runScriptOnResource(final ScriptContext request, final OperationOptions options) {
-        return runScriptOnResourceAsync(request, options).getOrThrowUninterruptibly();
+        return asyncTimeout(runScriptOnResourceAsync(request, options));
     }
 
     public Promise<Object, RuntimeException> runScriptOnResourceAsync(final ScriptContext request,

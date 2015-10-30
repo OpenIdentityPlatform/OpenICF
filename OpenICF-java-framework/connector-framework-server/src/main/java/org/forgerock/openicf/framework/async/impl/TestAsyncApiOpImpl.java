@@ -50,12 +50,12 @@ public class TestAsyncApiOpImpl extends AbstractAPIOperation implements TestAsyn
     public TestAsyncApiOpImpl(
             RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             ConnectorKey connectorKey,
-            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
-        super(remoteConnection, connectorKey, facadeKeyFunction);
+            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction, long timeout) {
+        super(remoteConnection, connectorKey, facadeKeyFunction, timeout);
     }
 
     public void test() {
-        testAsync().getOrThrowUninterruptibly();
+        asyncTimeout(testAsync());
     }
 
     public Promise<Void, RuntimeException> testAsync() {

@@ -32,7 +32,11 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import org.forgerock.openicf.common.protobuf.RPCMessages.HandshakeMessage;
@@ -45,6 +49,7 @@ import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
 import org.forgerock.openicf.framework.remote.security.SharedSecretPrincipal;
+import org.forgerock.util.Utils;
 import org.forgerock.util.promise.Promises;
 import org.glassfish.grizzly.Grizzly;
 import org.glassfish.grizzly.http.HttpRequestPacket;
@@ -70,6 +75,20 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
     protected final ConnectionPrincipal<?> singleTenant;
 
     protected final String keyHash;
+
+    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, Utils
+            .newThreadFactory(null, "OpenICF WebSocket Servlet Scheduler %d", false));
+
+    protected ScheduledFuture<?> healthChecker = executorService.scheduleWithFixedDelay(
+            new Runnable() {
+                public void run() {
+                    for (WebSocketConnectionGroup e : globalConnectionGroups.values()) {
+                        if (!e.checkIsActive()) {
+                            globalConnectionGroups.remove(e.getRemoteSessionId());
+                        }
+                    }
+                }
+            }, 1, 4, TimeUnit.MINUTES);
 
     public OpenICFWebSocketApplication(final ConnectorFramework framework, final String keyHash) {
         singleTenant =
@@ -115,6 +134,8 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
     }
 
     public void close() {
+        healthChecker.cancel(false);
+        executorService.shutdown();
         for (WebSocketConnectionGroup e : globalConnectionGroups.values()) {
             // We should gracefully shut down the Group
             e.principalIsShuttingDown(singleTenant);

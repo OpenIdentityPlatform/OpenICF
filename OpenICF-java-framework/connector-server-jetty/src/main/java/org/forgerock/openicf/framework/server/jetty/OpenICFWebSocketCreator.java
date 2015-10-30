@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.security.Principal;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -54,11 +56,22 @@ public class OpenICFWebSocketCreator implements WebSocketCreator {
             new ConcurrentHashMap<String, WebSocketConnectionGroup>();
 
     private final SinglePrincipal singleTenant;
-
-    public OpenICFWebSocketCreator(final ConnectorFramework connectorFramework) {
+    
+    public OpenICFWebSocketCreator(final ConnectorFramework connectorFramework,
+            final ScheduledExecutorService executorService) {
         singleTenant =
                 new SinglePrincipal(new OpenICFServerAdapter(connectorFramework, connectorFramework
                         .getLocalManager(), false), globalConnectionGroups);
+        //Will be cancelled when executorService is shut down
+        executorService.scheduleWithFixedDelay(new Runnable() {
+            public void run() {
+                for (WebSocketConnectionGroup e : globalConnectionGroups.values()) {
+                    if (!e.checkIsActive()) {
+                        globalConnectionGroups.remove(e.getRemoteSessionId());
+                    }
+                }
+            }
+        }, 1, 4, TimeUnit.MINUTES);
     }
 
     @Override

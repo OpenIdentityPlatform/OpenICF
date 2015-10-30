@@ -59,13 +59,13 @@ public class CreateAsyncApiOpImpl extends AbstractAPIOperation implements Create
     public CreateAsyncApiOpImpl(
             final RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             final ConnectorKey connectorKey,
-            final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
-        super(remoteConnection, connectorKey, facadeKeyFunction);
+            final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction, long timeout) {
+        super(remoteConnection, connectorKey, facadeKeyFunction, timeout);
     }
 
     public Uid create(final ObjectClass objectClass, final Set<Attribute> createAttributes,
             final OperationOptions options) {
-        return createAsync(objectClass, createAttributes, options).getOrThrowUninterruptibly();
+        return asyncTimeout(createAsync(objectClass, createAttributes, options));
     }
 
     public Promise<Uid, RuntimeException> createAsync(final ObjectClass objectClass,

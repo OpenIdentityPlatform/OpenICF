@@ -25,6 +25,9 @@
 package org.forgerock.openicf.framework.server.jetty;
 
 import java.lang.reflect.Method;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import javax.servlet.ServletConfig;
 
@@ -36,6 +39,7 @@ import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 import org.forgerock.openicf.framework.ConnectorFramework;
 import org.forgerock.openicf.framework.ConnectorFrameworkFactory;
 import org.forgerock.openicf.framework.remote.ReferenceCountedObject;
+import org.forgerock.util.Utils;
 
 public class OpenICFWebSocketServletBase extends WebSocketServlet {
 
@@ -50,17 +54,27 @@ public class OpenICFWebSocketServletBase extends WebSocketServlet {
 
     private ReferenceCountedObject<ConnectorFramework>.Reference connectorFramework;
 
+    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, Utils
+            .newThreadFactory(null, "OpenICF WebSocket Servlet Scheduler %d", false));
+
     public OpenICFWebSocketServletBase() {
         connectorFramework = null;
     }
 
     public OpenICFWebSocketServletBase(final ConnectorFrameworkFactory connectorFramework) {
         this.connectorFramework = connectorFramework.acquire();
+        if (executorService instanceof ScheduledThreadPoolExecutor) {
+            ((ScheduledThreadPoolExecutor) executorService)
+                    .setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
+            ((ScheduledThreadPoolExecutor) executorService)
+                    .setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+        }
     }
 
     @Override
     public void destroy() {
         super.destroy();
+        executorService.shutdown();
         if (connectorFramework != null) {
             try {
                 connectorFramework.release();
@@ -97,7 +111,7 @@ public class OpenICFWebSocketServletBase extends WebSocketServlet {
      * @return
      */
     protected OpenICFWebSocketCreator getWebsocketCreator() {
-        return new OpenICFWebSocketCreator(connectorFramework.get());
+        return new OpenICFWebSocketCreator(connectorFramework.get(), executorService);
     }
 
     /**

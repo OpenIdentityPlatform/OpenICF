@@ -51,12 +51,12 @@ public class ValidateAsyncApiOpImpl extends AbstractAPIOperation implements Vali
     public ValidateAsyncApiOpImpl(
             RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             ConnectorKey connectorKey,
-            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
-        super(remoteConnection, connectorKey, facadeKeyFunction);
+            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction, long timeout) {
+        super(remoteConnection, connectorKey, facadeKeyFunction,timeout);
     }
 
     public void validate() {
-        validateAsync().getOrThrowUninterruptibly();
+        asyncTimeout(validateAsync());
     }
 
     public Promise<Void, RuntimeException> validateAsync() {

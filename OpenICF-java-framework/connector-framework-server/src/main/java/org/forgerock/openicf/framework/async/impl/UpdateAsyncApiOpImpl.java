@@ -57,26 +57,23 @@ public class UpdateAsyncApiOpImpl extends AbstractAPIOperation implements Update
     public UpdateAsyncApiOpImpl(
             RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             ConnectorKey connectorKey,
-            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
-        super(remoteConnection, connectorKey, facadeKeyFunction);
+            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction, long timeout) {
+        super(remoteConnection, connectorKey, facadeKeyFunction, timeout);
     }
 
     public Uid update(final ObjectClass objectClass, final Uid uid,
             final Set<Attribute> replaceAttributes, final OperationOptions options) {
-        return updateAsync(objectClass, uid, replaceAttributes, options)
-                .getOrThrowUninterruptibly();
+        return asyncTimeout(updateAsync(objectClass, uid, replaceAttributes, options));
     }
 
     public Uid addAttributeValues(final ObjectClass objectClass, final Uid uid,
             final Set<Attribute> valuesToAdd, final OperationOptions options) {
-        return addAttributeValuesAsync(objectClass, uid, valuesToAdd, options)
-                .getOrThrowUninterruptibly();
+        return asyncTimeout(addAttributeValuesAsync(objectClass, uid, valuesToAdd, options));
     }
 
     public Uid removeAttributeValues(final ObjectClass objectClass, final Uid uid,
             final Set<Attribute> valuesToRemove, final OperationOptions options) {
-        return removeAttributeValuesAsync(objectClass, uid, valuesToRemove, options)
-                .getOrThrowUninterruptibly();
+        return asyncTimeout(removeAttributeValuesAsync(objectClass, uid, valuesToRemove, options));
     }
 
     public Promise<Uid, RuntimeException> updateAsync(final ObjectClass objectClass, final Uid uid,

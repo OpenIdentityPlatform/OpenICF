@@ -46,6 +46,14 @@ public abstract class TestRemoteRequest<H extends RemoteConnectionHolder<TestCon
         super(context, requestId, completionCallback);
     }
 
+    public boolean check() {
+        return false;
+    }
+
+    public void inconsistent() {
+
+    }
+
     public void handleIncomingMessage(H sourceConnection, Object incomeMessage) {
         if (incomeMessage instanceof TestMessage) {
             TestMessage message = (TestMessage) incomeMessage;

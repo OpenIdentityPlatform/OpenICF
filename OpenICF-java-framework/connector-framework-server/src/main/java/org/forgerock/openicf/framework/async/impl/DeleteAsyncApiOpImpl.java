@@ -53,12 +53,12 @@ public class DeleteAsyncApiOpImpl extends AbstractAPIOperation implements Delete
     public DeleteAsyncApiOpImpl(
             RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             ConnectorKey connectorKey,
-            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction) {
-        super(remoteConnection, connectorKey, facadeKeyFunction);
+            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction, long timeout) {
+        super(remoteConnection, connectorKey, facadeKeyFunction,timeout);
     }
 
     public void delete(final ObjectClass objectClass, final Uid uid, final OperationOptions options) {
-        deleteAsync(objectClass, uid, options).getOrThrowUninterruptibly();
+        asyncTimeout(deleteAsync(objectClass, uid, options));
     }
 
     public Promise<Void, RuntimeException> deleteAsync(final ObjectClass objectClass,
