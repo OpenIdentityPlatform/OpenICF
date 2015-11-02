@@ -24,8 +24,6 @@
 
 package org.forgerock.openicf.framework.async.impl;
 
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -37,7 +35,6 @@ import org.forgerock.openicf.common.protobuf.OperationMessages.SearchOpResponse;
 import org.forgerock.openicf.common.protobuf.RPCMessages;
 import org.forgerock.openicf.common.rpc.RemoteRequestFactory;
 import org.forgerock.openicf.common.rpc.RequestDistributor;
-import org.forgerock.openicf.framework.async.SearchAsyncApiOp;
 import org.forgerock.openicf.framework.remote.MessagesUtil;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
@@ -47,6 +44,8 @@ import org.forgerock.util.promise.Promise;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.ConnectorFacade;
+import org.identityconnectors.framework.api.operations.SearchApiOp;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
@@ -56,25 +55,20 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 
 import com.google.protobuf.ByteString;
 
-public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements SearchAsyncApiOp {
+public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements SearchApiOp {
 
     private static final Log logger = Log.getLog(SearchAsyncApiOpImpl.class);
 
     public SearchAsyncApiOpImpl(
             RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             org.identityconnectors.framework.api.ConnectorKey connectorKey,
-            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction, long timeout) {
+            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction,
+            long timeout) {
         super(remoteConnection, connectorKey, facadeKeyFunction, timeout);
     }
-    
+
     public SearchResult search(final ObjectClass objectClass, final Filter filter,
             final ResultsHandler handler, final OperationOptions options) {
-        return asyncTimeout(searchAsync(objectClass, filter, handler, options));
-    }
-
-    public Promise<SearchResult, RuntimeException> searchAsync(final ObjectClass objectClass,
-            final Filter filter, final ResultsHandler handler, final OperationOptions options) {
-
         Assertions.nullCheck(objectClass, "objectClass");
         if (ObjectClass.ALL.equals(objectClass)) {
             throw new UnsupportedOperationException(
@@ -91,22 +85,32 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
             requestBuilder.setOptions(MessagesUtil.serializeLegacy(options));
         }
 
-        return submitRequest(new InternalRequestFactory(getConnectorKey(), getFacadeKeyFunction(),
-                OperationRequest.newBuilder().setSearchOpRequest(requestBuilder), handler));
+        InternalRequest request =
+                getRemoteConnection().trySubmitRequest(
+                        new InternalRequestFactory(getConnectorKey(), getFacadeKeyFunction(),
+                                OperationRequest.newBuilder().setSearchOpRequest(requestBuilder),
+                                handler, getTimeout()));
+        if (null != request) {
+            return asyncTimeout(request.process());
+        }
+        throw FAILED_EXCEPTION;
     }
 
     private static class InternalRequestFactory extends
             AbstractRemoteOperationRequestFactory<SearchResult, InternalRequest> {
         private final OperationRequest.Builder operationRequest;
         private final ResultsHandler handler;
+        private final long timeout;
 
         public InternalRequestFactory(
                 final org.identityconnectors.framework.api.ConnectorKey connectorKey,
                 final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction,
-                final OperationRequest.Builder operationRequest, final ResultsHandler handler) {
+                final OperationRequest.Builder operationRequest, final ResultsHandler handler,
+                long timeout) {
             super(connectorKey, facadeKeyFunction);
             this.operationRequest = operationRequest;
             this.handler = handler;
+            this.timeout = timeout;
         }
 
         public InternalRequest createRemoteRequest(
@@ -117,7 +121,8 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
             // This is the context aware request
             RPCMessages.RPCRequest.Builder builder = createRPCRequest(context);
             if (null != builder) {
-                return new InternalRequest(context, requestId, completionCallback, builder, handler);
+                return new InternalRequest(context, requestId, completionCallback, builder,
+                        handler, timeout);
             } else {
                 return null;
             }
@@ -133,19 +138,84 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
             extends
             AbstractRemoteOperationRequestFactory.AbstractRemoteOperationRequest<SearchResult, SearchOpResponse> {
 
-        private final ResultsHandler handler;
-        private final AtomicLong sequence = new AtomicLong(0);
-        private long expectedResult = -1;
-        private SearchResult result = null;
-        private final ConcurrentMap<Long, ConnectorObject> buffer = new ConcurrentSkipListMap<Long, ConnectorObject>();
+        private final ResultBuffer<ConnectorObject, SearchResult> resultBuffer;
+        private int remaining = -1;
 
         public InternalRequest(
                 RemoteOperationContext context,
                 long requestId,
                 RemoteRequestFactory.CompletionCallback<SearchResult, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
-                RPCMessages.RPCRequest.Builder requestBuilder, ResultsHandler handler) {
+                RPCMessages.RPCRequest.Builder requestBuilder, final ResultsHandler handler,
+                long timeout) {
             super(context, requestId, completionCallback, requestBuilder);
-            this.handler = handler;
+            resultBuffer = new ResultBuffer<ConnectorObject, SearchResult>(timeout) {
+                protected boolean handle(Object result) {
+                    if (result instanceof ConnectorObject) {
+                        try {
+                            if (handler.handle((ConnectorObject) result)) {
+                                return true;
+                            } else {
+                                getPromise().cancel(true);
+                            }
+                        } catch (RuntimeException t) {
+                            getPromise().cancel(true);
+                            getExceptionHandler().handleException(t);
+                        } catch (Throwable t) {
+                            getPromise().cancel(true);
+                            getExceptionHandler().handleException(
+                                    new ConnectorException(t.getMessage(), t));
+                        }
+                    } else if (result instanceof RuntimeException) {
+                        getExceptionHandler().handleException((RuntimeException) result);
+                    } else if (result instanceof SearchResult) {
+                        getResultHandler().handleResult((SearchResult) result);
+                    } else if (null != result) {
+                        // Exception
+                        getExceptionHandler().handleException(
+                                new ConnectorException("Unknown object type"));
+                    } else {
+                        getResultHandler().handleResult(null);
+                    }
+                    return false;
+                }
+            };
+        }
+
+        public Promise<SearchResult, RuntimeException> process() {
+            // Use the application thread to process results synchronously
+            try {
+                resultBuffer.process();
+            } catch (RuntimeException e) {
+                getExceptionHandler().handleException(e);
+            }
+            return getPromise();
+        }
+
+        public boolean check() {
+            boolean stopped = resultBuffer.isStopped();
+            if (stopped) {
+                logger.ok("RemoteRequest:{0} -> Application thread is not reading responses.",
+                        getRequestId());
+                getExceptionHandler().handleException(
+                        new ConnectorException("Operation finished on local with unknown reason"));
+                return false;
+            } else {
+                return super.check();
+            }
+        }
+
+        public void inconsistent() {
+            if (!resultBuffer.hasLast() || !resultBuffer.hasAll()) {
+                inconsistencyCounter++;
+            } else {
+                logger.ok("Application is slow to process results");
+                int size = resultBuffer.getRemaining();
+                if (remaining == size) {
+                    // Application is slow or not processing results
+                    inconsistencyCounter++;
+                }
+                remaining = size;
+            }
         }
 
         protected SearchOpResponse getOperationResponseMessages(
@@ -161,48 +231,15 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
         protected void handleOperationResponseMessages(WebSocketConnectionHolder sourceConnection,
                 SearchOpResponse message) {
             if (message.hasConnectorObject()) {
-                try {
-                    buffer.put(message.getSequence(), MessagesUtil.deserializeMessage(message
-                            .getConnectorObject(), ConnectorObject.class));
-                } finally {
-                    sequence.incrementAndGet();
-                }
+                resultBuffer.receiveNext(message.getSequence(), MessagesUtil.deserializeMessage(
+                        message.getConnectorObject(), ConnectorObject.class));
+            } else if (message.hasResult()) {
+                resultBuffer.receiveLast(message.getSequence(), MessagesUtil.deserializeMessage(
+                        message.getResult(), SearchResult.class));
+                inconsistencyCounter = 0;
             } else {
-                try {
-                    boolean doContinue = true;
-                    long startTime = System.currentTimeMillis();
-                    expectedResult = message.getSequence();
-                    long next = 1;
-                    do {
-                        for (Long key: buffer.keySet()) {
-                            if (key != next){
-                                continue;
-                            }
-                            next++;
-                            if (!handler.handle(buffer.remove(key))) {
-                                doContinue = false;
-                                break;
-                            }
-                        }
-                        if (System.currentTimeMillis() - startTime > 60000L){
-                            doContinue = false;
-                        }
-                    } while (doContinue && (sequence.get() != expectedResult || !buffer.isEmpty()));
-                    buffer.clear();
-                } finally {
-                    if (message.hasResult()) {
-                        result =
-                                MessagesUtil.deserializeMessage(message.getResult(),
-                                        SearchResult.class);
-                    }
-                    
-                    if (expectedResult == 0 || sequence.get() == expectedResult) {
-                        getResultHandler().handleResult(result);
-                    }
-                }
-            }
-            if (expectedResult > 0 && sequence.get() != expectedResult) {
-                getResultHandler().handleResult(result);
+                resultBuffer.receiveLast(message.getSequence(), null);
+                inconsistencyCounter = 0;
             }
         }
     }

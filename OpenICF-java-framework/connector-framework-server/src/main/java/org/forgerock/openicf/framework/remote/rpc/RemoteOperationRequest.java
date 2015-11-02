@@ -46,7 +46,7 @@ public abstract class RemoteOperationRequest<V>
         RemoteRequest<V, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> {
 
     private final static Log logger = Log.getLog(RemoteOperationRequest.class);
-    private int inconsistencyCounter = 0;
+    protected int inconsistencyCounter = 0;
 
     public RemoteOperationRequest(
             RemoteOperationContext context,

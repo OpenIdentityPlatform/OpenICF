@@ -41,8 +41,7 @@ import org.forgerock.util.promise.ResultHandler;
  * call on caller and receiver side.
  *
  */
-public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConnectionGroup<G, H, P>, H extends RemoteConnectionHolder<G, H, P>, P extends RemoteConnectionContext<G, H, P>>
-        implements SyncCycleHandler {
+public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConnectionGroup<G, H, P>, H extends RemoteConnectionHolder<G, H, P>, P extends RemoteConnectionContext<G, H, P>> {
 
     private final P context;
     private final long requestId;
@@ -59,6 +58,19 @@ public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConn
         this.completionCallback = completionCallback;
     }
 
+    /**
+     * Check if this object was {@ref inconsistent}-ed and don't dispose.
+     *
+     * @return 'true' when object is still active or 'false' when this can be
+     *         disposed.
+     */
+    public abstract boolean check();
+
+    /**
+     * Signs that the object state is inconsistent.
+     */
+    public abstract void inconsistent();
+    
     public abstract void handleIncomingMessage(final H sourceConnection, final Object message);
 
     protected abstract MessageElement createMessageElement(P remoteContext, long requestId);

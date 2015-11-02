@@ -25,6 +25,8 @@
 package org.forgerock.openicf.framework.async;
 
 import org.identityconnectors.framework.api.ConnectorFacade;
+import org.identityconnectors.framework.api.operations.SearchApiOp;
+import org.identityconnectors.framework.api.operations.SyncApiOp;
 
 /**
  * A AsyncConnectorFacade.
@@ -33,7 +35,7 @@ import org.identityconnectors.framework.api.ConnectorFacade;
  */
 public interface AsyncConnectorFacade extends ConnectorFacade, AuthenticationAsyncApiOp,
         CreateAsyncApiOp, DeleteAsyncApiOp, GetAsyncApiOp, ResolveUsernameAsyncApiOp,
-        SchemaAsyncApiOp, ScriptOnConnectorAsyncApiOp, ScriptOnResourceAsyncApiOp,
-        SearchAsyncApiOp, SyncAsyncApiOp, TestAsyncApiOp, UpdateAsyncApiOp, ValidateAsyncApiOp {
+        SchemaAsyncApiOp, ScriptOnConnectorAsyncApiOp, ScriptOnResourceAsyncApiOp, SearchApiOp,
+        SyncApiOp, TestAsyncApiOp, UpdateAsyncApiOp, ValidateAsyncApiOp {
 
 }

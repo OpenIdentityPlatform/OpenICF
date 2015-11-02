@@ -35,7 +35,7 @@ import org.forgerock.util.promise.ResultHandler;
  *
  */
 public abstract class LocalRequest<V, E extends Exception, G extends RemoteConnectionGroup<G, H, P>, H extends RemoteConnectionHolder<G, H, P>, P extends RemoteConnectionContext<G, H, P>>
-        implements ResultHandler<V>, ExceptionHandler<E>, SyncCycleHandler {
+        implements ResultHandler<V>, ExceptionHandler<E> {
 
     private final long requestId;
 
@@ -47,6 +47,19 @@ public abstract class LocalRequest<V, E extends Exception, G extends RemoteConne
         remoteConnectionContext.getRemoteConnectionGroup().receiveRequest(this);
     }
 
+    /**
+     * Check if this object was {@ref inconsistent}-ed and don't dispose.
+     *
+     * @return 'true' when object is still active or 'false' when this can be
+     *         disposed.
+     */
+    public abstract boolean check();
+
+    /**
+     * Signs that the object state is inconsistent.
+     */
+    public abstract void inconsistent();
+    
     protected abstract boolean tryHandleResult(V result);
 
     protected abstract boolean tryHandleError(E error);

@@ -24,8 +24,6 @@
 
 package org.forgerock.openicf.framework.async.impl;
 
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -34,7 +32,6 @@ import org.forgerock.openicf.common.protobuf.OperationMessages;
 import org.forgerock.openicf.common.protobuf.RPCMessages;
 import org.forgerock.openicf.common.rpc.RemoteRequestFactory;
 import org.forgerock.openicf.common.rpc.RequestDistributor;
-import org.forgerock.openicf.framework.async.SyncAsyncApiOp;
 import org.forgerock.openicf.framework.remote.MessagesUtil;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
@@ -45,6 +42,8 @@ import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorKey;
+import org.identityconnectors.framework.api.operations.SyncApiOp;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.SyncDelta;
@@ -53,14 +52,15 @@ import org.identityconnectors.framework.common.objects.SyncToken;
 
 import com.google.protobuf.ByteString;
 
-public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncAsyncApiOp {
+public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncApiOp {
 
     private static final Log logger = Log.getLog(SyncAsyncApiOpImpl.class);
 
     public SyncAsyncApiOpImpl(
             RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             ConnectorKey connectorKey,
-            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction, long timeout) {
+            Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction,
+            long timeout) {
         super(remoteConnection, connectorKey, facadeKeyFunction, timeout);
     }
 
@@ -70,21 +70,6 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncAsyn
 
     public SyncToken sync(final ObjectClass objectClass, final SyncToken token,
             final SyncResultsHandler handler, final OperationOptions options) {
-        return asyncTimeout(syncAsync(objectClass, token, handler, options));
-    }
-
-    public Promise<SyncToken, RuntimeException> getLatestSyncTokenAsync(
-            final ObjectClass objectClass) {
-        Assertions.nullCheck(objectClass, "objectClass");
-        return submitRequest(new InternalRequestFactory(getConnectorKey(), getFacadeKeyFunction(),
-                OperationMessages.OperationRequest.newBuilder().setSyncOpRequest(
-                        OperationMessages.SyncOpRequest.newBuilder().setLatestSyncToken(
-                                OperationMessages.SyncOpRequest.LatestSyncToken.newBuilder()
-                                        .setObjectClass(objectClass.getObjectClassValue()))), null));
-    }
-
-    public Promise<SyncToken, RuntimeException> syncAsync(final ObjectClass objectClass,
-            final SyncToken token, final SyncResultsHandler handler, final OperationOptions options) {
         Assertions.nullCheck(objectClass, "objectClass");
         Assertions.nullCheck(handler, "handler");
         OperationMessages.SyncOpRequest.Sync.Builder requestBuilder =
@@ -99,25 +84,45 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncAsyn
             requestBuilder.setOptions(MessagesUtil.serializeLegacy(options));
         }
 
+        InternalRequest request =
+                getRemoteConnection().trySubmitRequest(
+                        new InternalRequestFactory(getConnectorKey(), getFacadeKeyFunction(),
+                                OperationMessages.OperationRequest.newBuilder().setSyncOpRequest(
+                                        OperationMessages.SyncOpRequest.newBuilder().setSync(
+                                                requestBuilder)), handler, getTimeout()));
+
+        if (null != request) {
+            return asyncTimeout(request.process());
+        }
+        throw FAILED_EXCEPTION;
+    }
+
+    public Promise<SyncToken, RuntimeException> getLatestSyncTokenAsync(
+            final ObjectClass objectClass) {
+        Assertions.nullCheck(objectClass, "objectClass");
         return submitRequest(new InternalRequestFactory(getConnectorKey(), getFacadeKeyFunction(),
                 OperationMessages.OperationRequest.newBuilder().setSyncOpRequest(
-                        OperationMessages.SyncOpRequest.newBuilder().setSync(requestBuilder)),
-                handler));
+                        OperationMessages.SyncOpRequest.newBuilder().setLatestSyncToken(
+                                OperationMessages.SyncOpRequest.LatestSyncToken.newBuilder()
+                                        .setObjectClass(objectClass.getObjectClassValue()))), null,
+                getTimeout()));
     }
 
     private static class InternalRequestFactory extends
             AbstractRemoteOperationRequestFactory<SyncToken, InternalRequest> {
         private final OperationMessages.OperationRequest.Builder operationRequest;
         final SyncResultsHandler handler;
+        private final long timeout;
 
         public InternalRequestFactory(
                 final ConnectorKey connectorKey,
                 final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction,
                 final OperationMessages.OperationRequest.Builder operationRequest,
-                final SyncResultsHandler handler) {
+                final SyncResultsHandler handler, long timeout) {
             super(connectorKey, facadeKeyFunction);
             this.operationRequest = operationRequest;
             this.handler = handler;
+            this.timeout = timeout;
         }
 
         public InternalRequest createRemoteRequest(
@@ -127,7 +132,8 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncAsyn
 
             RPCMessages.RPCRequest.Builder builder = createRPCRequest(context);
             if (null != builder) {
-                return new InternalRequest(context, requestId, completionCallback, builder, handler);
+                return new InternalRequest(context, requestId, completionCallback, builder,
+                        handler, timeout);
             } else {
                 return null;
             }
@@ -143,21 +149,85 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncAsyn
             extends
             AbstractRemoteOperationRequestFactory.AbstractRemoteOperationRequest<SyncToken, OperationMessages.SyncOpResponse> {
 
-        final SyncResultsHandler handler;
-        private final AtomicLong sequence = new AtomicLong(0);
-        private long expectedResult = -1;
-        private SyncToken result = null;
-        private final ConcurrentMap<Long, SyncDelta> buffer = new ConcurrentSkipListMap<Long, SyncDelta>();
+        private final ResultBuffer<SyncDelta, SyncToken> resultBuffer;
+        private int remaining = -1;
 
         public InternalRequest(
                 final RemoteOperationContext context,
                 final long requestId,
                 final RemoteRequestFactory.CompletionCallback<SyncToken, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> completionCallback,
                 final RPCMessages.RPCRequest.Builder requestBuilder,
-                final SyncResultsHandler handler) {
+                final SyncResultsHandler handler, long timeout) {
             super(context, requestId, completionCallback, requestBuilder);
-            this.handler = handler;
+            resultBuffer = new ResultBuffer<SyncDelta, SyncToken>(timeout) {
+                protected boolean handle(Object result) {
+                    if (result instanceof SyncDelta) {
+                        try {
+                            if (handler.handle((SyncDelta) result)) {
+                                return true;
+                            } else {
+                                getPromise().cancel(true);
+                            }
+                        } catch (RuntimeException t) {
+                            getPromise().cancel(true);
+                            getExceptionHandler().handleException(t);
+                        } catch (Throwable t) {
+                            getPromise().cancel(true);
+                            getExceptionHandler().handleException(
+                                    new ConnectorException(t.getMessage(), t));
+                        }
+                    } else if (result instanceof RuntimeException) {
+                        getExceptionHandler().handleException((RuntimeException) result);
+                    } else if (result instanceof SyncToken) {
+                        getResultHandler().handleResult((SyncToken) result);
+                    } else if (null != result) {
+                        // Exception
+                        getExceptionHandler().handleException(
+                                new ConnectorException("Unknown object type"));
+                    } else {
+                        getResultHandler().handleResult(null);
+                    }
+                    return false;
+                }
+            };
 
+        }
+
+        public Promise<SyncToken, RuntimeException> process() {
+            // Use the application thread to process results synchronously
+            try {
+                resultBuffer.process();
+            } catch (RuntimeException e) {
+                getExceptionHandler().handleException(e);
+            }
+            return getPromise();
+        }
+
+        public boolean check() {
+            boolean stopped = resultBuffer.isStopped();
+            if (stopped) {
+                logger.ok("RemoteRequest:{0} -> Application thread is not reading responses.",
+                        getRequestId());
+                getExceptionHandler().handleException(
+                        new ConnectorException("Operation finished on local with unknown reason"));
+                return false;
+            } else {
+                return super.check();
+            }
+        }
+
+        public void inconsistent() {
+            if (!resultBuffer.hasLast() || !resultBuffer.hasAll()) {
+                inconsistencyCounter++;
+            } else {
+                logger.ok("Application is slow to process results");
+                int size = resultBuffer.getRemaining();
+                if (remaining == size) {
+                    // Application is slow or not processing results
+                    inconsistencyCounter++;
+                }
+                remaining = size;
+            }
         }
 
         protected OperationMessages.SyncOpResponse getOperationResponseMessages(
@@ -181,52 +251,16 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncAsyn
                     getResultHandler().handleResult(null);
                 }
             } else if (message.hasSync()) {
-                logger.ok("SyncOp Response received in sequence:{0} of {1}", message.getSync()
-                        .getSequence(), sequence.get());
                 if (message.getSync().hasSyncDelta()) {
-                    try {
-                        buffer.put(message.getSync().getSequence(), MessagesUtil
-                                .deserializeMessage(message.getSync().getSyncDelta(),
-                                        SyncDelta.class));
-                    } finally {
-                        sequence.incrementAndGet();
-                    }
+                    resultBuffer.receiveNext(message.getSync().getSequence(), MessagesUtil
+                            .deserializeMessage(message.getSync().getSyncDelta(), SyncDelta.class));
+                } else if (message.getSync().hasSyncToken()) {
+                    resultBuffer.receiveLast(message.getSync().getSequence(), MessagesUtil
+                            .deserializeMessage(message.getSync().getSyncToken(), SyncToken.class));
+                    inconsistencyCounter = 0;
                 } else {
-                    try {
-                        boolean doContinue = true;
-                        long startTime = System.currentTimeMillis();
-                        expectedResult = message.getSync().getSequence();
-                        long next = 1;
-                        do {
-                            for (Long key: buffer.keySet()) {
-                                if (key != next){
-                                    continue;
-                                }
-                                next++;
-                                if (!handler.handle(buffer.remove(key))) {
-                                    doContinue = false;
-                                    break;
-                                }
-                            }
-                            if (System.currentTimeMillis() - startTime > 60000L){
-                                doContinue = false;
-                            }
-                        } while (doContinue && (sequence.get() != expectedResult || !buffer.isEmpty()));
-                        buffer.clear();
-                    } finally {
-                        if (message.getSync().hasSyncToken()) {
-                            result =
-                                    MessagesUtil.deserializeMessage(message.getSync().getSyncToken(),
-                                            SyncToken.class);
-                        }
-
-                        if (expectedResult == 0 || sequence.get() == expectedResult) {
-                            getResultHandler().handleResult(result);
-                        }
-                    }
-                }
-                if (expectedResult > 0 && sequence.get() != expectedResult) {
-                    getResultHandler().handleResult(result);
+                    resultBuffer.receiveLast(message.getSync().getSequence(), null);
+                    inconsistencyCounter = 0;
                 }
             } else {
                 logger.info("Invalid SyncOpResponse Response:{0}", getRequestId());

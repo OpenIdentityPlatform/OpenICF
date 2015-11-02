@@ -39,8 +39,6 @@ import org.forgerock.openicf.framework.async.ResolveUsernameAsyncApiOp;
 import org.forgerock.openicf.framework.async.SchemaAsyncApiOp;
 import org.forgerock.openicf.framework.async.ScriptOnConnectorAsyncApiOp;
 import org.forgerock.openicf.framework.async.ScriptOnResourceAsyncApiOp;
-import org.forgerock.openicf.framework.async.SearchAsyncApiOp;
-import org.forgerock.openicf.framework.async.SyncAsyncApiOp;
 import org.forgerock.openicf.framework.async.TestAsyncApiOp;
 import org.forgerock.openicf.framework.async.UpdateAsyncApiOp;
 import org.forgerock.openicf.framework.async.ValidateAsyncApiOp;
@@ -92,14 +90,9 @@ import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
-import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.ScriptContext;
-import org.identityconnectors.framework.common.objects.SearchResult;
-import org.identityconnectors.framework.common.objects.SyncResultsHandler;
-import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.serializer.SerializerUtil;
 import org.identityconnectors.framework.impl.api.APIConfigurationImpl;
 import org.identityconnectors.framework.impl.api.AbstractConnectorFacade;
@@ -123,8 +116,8 @@ public class RemoteAsyncConnectorFacade extends AbstractConnectorFacade implemen
     private final SchemaAsyncApiOp schemaApiOp;
     private final ScriptOnConnectorAsyncApiOp scriptOnConnectorApiOp;
     private final ScriptOnResourceAsyncApiOp scriptOnResourceApiOp;
-    private final SearchAsyncApiOp searchApiOp;
-    private final SyncAsyncApiOp syncApiOp;
+    private final SearchApiOp searchApiOp;
+    private final SyncApiOp syncApiOp;
     private final SyncEventSubscriptionApiOp syncEventSubscriptionApiOp;
     private final TestAsyncApiOp testApiOp;
     private final UpdateAsyncApiOp updateApiOp;
@@ -310,7 +303,7 @@ public class RemoteAsyncConnectorFacade extends AbstractConnectorFacade implemen
             if (configuration.isSupportedOperation(SyncApiOp.class)) {
                 syncApiOp =
                         new SyncAsyncApiOpImpl(remoteConnection, connectorKey, facadeKeyFunction,
-                                getAPIConfiguration().getTimeout(SyncAsyncApiOp.class));
+                                getAPIConfiguration().getTimeout(SyncApiOp.class));
             } else {
                 syncApiOp = null;
             }
@@ -446,23 +439,6 @@ public class RemoteAsyncConnectorFacade extends AbstractConnectorFacade implemen
             OperationOptions options) {
         return getAsyncOperationCheckSupported(ScriptOnResourceAsyncApiOp.class)
                 .runScriptOnResourceAsync(request, options);
-    }
-
-    public Promise<SearchResult, RuntimeException> searchAsync(ObjectClass objectClass,
-            Filter filter, ResultsHandler handler, OperationOptions options) {
-        return getAsyncOperationCheckSupported(SearchAsyncApiOp.class).searchAsync(objectClass,
-                filter, handler, options);
-    }
-
-    public Promise<SyncToken, RuntimeException> syncAsync(ObjectClass objectClass, SyncToken token,
-            SyncResultsHandler handler, OperationOptions options) {
-        return getAsyncOperationCheckSupported(SyncAsyncApiOp.class).syncAsync(objectClass, token,
-                handler, options);
-    }
-
-    public Promise<SyncToken, RuntimeException> getLatestSyncTokenAsync(ObjectClass objectClass) {
-        return getAsyncOperationCheckSupported(SyncAsyncApiOp.class).getLatestSyncTokenAsync(
-                objectClass);
     }
 
     public Promise<Void, RuntimeException> testAsync() {

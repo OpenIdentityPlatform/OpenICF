@@ -24,8 +24,12 @@
 
 package org.forgerock.openicf.framework.async.impl;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.forgerock.openicf.common.rpc.RequestDistributor;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
@@ -38,6 +42,7 @@ import org.identityconnectors.common.Assertions;
 import org.identityconnectors.framework.api.ConnectorKey;
 import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.OperationTimeoutException;
 
 import com.google.protobuf.ByteString;
@@ -60,7 +65,8 @@ public abstract class AbstractAPIOperation {
     public AbstractAPIOperation(
             final RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> remoteConnection,
             final ConnectorKey connectorKey,
-            final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction, long timeout) {
+            final Function<RemoteOperationContext, ByteString, RuntimeException> facadeKeyFunction,
+            long timeout) {
         this.remoteConnection = Assertions.nullChecked(remoteConnection, "remoteConnection");
         this.connectorKey = Assertions.nullChecked(connectorKey, "connectorKey");
         this.facadeKeyFunction = Assertions.nullChecked(facadeKeyFunction, "facadeKeyFunction");
@@ -69,6 +75,10 @@ public abstract class AbstractAPIOperation {
 
     public ConnectorKey getConnectorKey() {
         return connectorKey;
+    }
+
+    protected long getTimeout() {
+        return timeout;
     }
 
     protected RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> getRemoteConnection() {
@@ -96,6 +106,142 @@ public abstract class AbstractAPIOperation {
                 return promise.getOrThrowUninterruptibly(timeout, TimeUnit.MILLISECONDS);
             } catch (TimeoutException ex) {
                 throw new OperationTimeoutException(ex);
+            }
+        }
+    }
+
+    protected static abstract class ResultBuffer<T, R> {
+
+        private static final Object NULL_OBJECT = new Object();
+        private final long timeoutMillis;
+        private final AtomicBoolean stopped = new AtomicBoolean(false);
+        private final LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<Object>();
+
+        private final ConcurrentHashMap<Long, Object> buffer =
+                new ConcurrentHashMap<Long, Object>();
+
+        private final AtomicLong nextPermit = new AtomicLong(1);
+
+        private long lastSequenceNumber = -1;
+
+        public ResultBuffer(long timeoutMillis) {
+
+            if (timeoutMillis == APIOperation.NO_TIMEOUT) {
+                this.timeoutMillis = Long.MAX_VALUE;
+            } else if (timeoutMillis == 0) {
+                this.timeoutMillis = 60 * 1000;
+            } else {
+                this.timeoutMillis = timeoutMillis;
+            }
+        }
+
+        public boolean isStopped() {
+            return stopped.get();
+        }
+
+        public boolean hasLast() {
+            return lastSequenceNumber > 0;
+        }
+
+        public boolean hasAll() {
+            return hasLast() && nextPermit.get() > lastSequenceNumber;
+        }
+
+        public int getRemaining() {
+            return queue.size();
+        }
+
+        public void clear() {
+            stopped.set(Boolean.TRUE);
+            buffer.clear();
+            queue.clear();
+        }
+
+        public void receiveNext(long sequence, T result) {
+            if (null != result) {
+                if (nextPermit.get() == sequence) {
+                    enqueue(result);
+                } else {
+                    buffer.put(sequence, result);
+                }
+            }
+            // Feed the queue
+            Object o = null;
+            while ((o = buffer.remove(nextPermit.get())) != null) {
+                enqueue(o);
+            }
+        }
+
+        public void receiveLast(long resultCount, R result) {
+            if (0 == resultCount && null != result) {
+                // Empty result set
+                enqueue(result);
+                lastSequenceNumber = 0;
+            } else {
+                long idx = resultCount + 1;
+                if (null != result) {
+                    buffer.put(idx, result);
+                }
+                lastSequenceNumber = idx;
+            }
+
+            if (lastSequenceNumber == nextPermit.get()) {
+                // Operation finished
+                enqueue(result != null ? result : NULL_OBJECT);
+            } else {
+                receiveNext(nextPermit.get(), null);
+            }
+        }
+
+        protected void enqueue(Object result) {
+            try {
+                // Block if queue is full
+                queue.put(result);
+                // Let the next go through
+                nextPermit.incrementAndGet();
+            } catch (InterruptedException e) {
+                // What to do?
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        protected abstract boolean handle(Object result);
+
+        public void process() {
+            while (!stopped.get()) {
+
+                Object obj;
+                try {
+                    obj = queue.poll(timeoutMillis, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    clear();
+                    Thread.currentThread().interrupt();
+                    throw ConnectorException.wrap(e);
+                }
+
+                if (obj == null) {
+                    // we timed out
+                    receiveNext(-1L, null);
+                    if (queue.isEmpty()) {
+                        clear();
+                        throw new OperationTimeoutException();
+                    }
+                } else {
+                    try {
+                        boolean keepGoing = handle(NULL_OBJECT.equals(obj) ? null : obj);
+                        if (!keepGoing) {
+                            // stop and wait
+                            clear();
+                        }
+                    } catch (RuntimeException e) {
+                        // handler threw an exception
+                        clear();
+                        throw e;
+                    } catch (Throwable t) {
+                        clear();
+                        throw new ConnectorException(t.getMessage(), t);
+                    }
+                }
             }
         }
     }
