@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 ForgeRock AS. All Rights Reserved
+ * Copyright (c) 2012-2015 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -23,8 +23,8 @@
  */
 
 assert new File( basedir, 'target/openicf-docbkx' ).exists();
-assert new File( basedir, 'target/docbkx/pdf/OpenICF-1.5.0.0-SNAPSHOT-Docbook-Connector-1.5.0.0-SNAPSHOT.pdf' ).exists();
-content = new File( basedir, 'target/docbkx/bootstrap/docbook-connector-1.5.0.0-SNAPSHOT/index.html' ).text;
+assert new File( basedir, 'target/docbkx/pdf/OpenICF-1.5.0.0-Docbook-Connector-1.5.0.0.pdf' ).exists();
+content = new File( basedir, 'target/docbkx/bootstrap/docbook-connector-1.5.0.0/index.html' ).text;
 
 assert content.contains( '"connectorName" : "org.forgerock.openicf.connectors.docbook.DocBookConnector"' );
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 ForgeRock AS. All Rights Reserved
+ * Copyright (c) 2012-2015 ForgeRock AS. All Rights Reserved
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -363,6 +363,9 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
                 FileUtils.mkdir(rootDirectory.getAbsolutePath());
 
                 MavenResourcesExecution mre = new MavenResourcesExecution();
+                if (mre.getFileFilters() == null){
+                    mre.setFileFilters(new ArrayList<String>(0));
+                }
                 mre.setMavenProject(getMavenProject());
                 mre.setEscapeWindowsPaths(true);
                 mre.setMavenSession(session);
