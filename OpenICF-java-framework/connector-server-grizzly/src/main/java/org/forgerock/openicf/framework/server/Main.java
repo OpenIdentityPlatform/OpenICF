@@ -286,7 +286,8 @@ public final class Main {
 
     private static List<URL> getJarFiles(File dir) throws MalformedURLException {
         if (!dir.isDirectory()) {
-            throw new ConnectorException(dir.getPath() + " does not exist");
+            throw new ConnectorException("The 'connectorserver.bundleDir' at: '"
+                    + dir.getAbsolutePath() + "' does not exist");
         }
         List<URL> rv = new ArrayList<URL>();
         for (File bundle : dir.listFiles()) {

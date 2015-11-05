@@ -158,7 +158,7 @@
             Build-Jdk,Tool
         </openicf.osgi.remove.headers>
 
-        <openicf.maven.plugin.version>1.3.0-SNAPSHOT</openicf.maven.plugin.version>
+        <openicf.maven.plugin.version>1.5.0-RC1</openicf.maven.plugin.version>
         <slf4j.version>1.7.12</slf4j.version>
         <logback.version>1.1.3</logback.version>
         <groovy.version>2.2.2</groovy.version>
@@ -166,13 +166,8 @@
         <protobuf-java.version>3.0.0-alpha-3.1</protobuf-java.version>
 
         <!-- Core documentation properties -->
-        <frDocPluginVersion>3.1.0-SNAPSHOT</frDocPluginVersion>
+        <frDocPluginVersion>3.1.0</frDocPluginVersion>
         <docTargetVersion>${project.version}</docTargetVersion>
-        <openidmVersion>4.0.0-SNAPSHOT</openidmVersion>
-        <csvfileConnectorVersion>1.1.1.0-SNAPSHOT</csvfileConnectorVersion>
-        <databasetableConnectorVersion>1.1.1.0-SNAPSHOT</databasetableConnectorVersion>
-        <groovyConnectorVersion>1.4.2.0-SNAPSHOT</groovyConnectorVersion>
-        <ldapConnectorVersion>1.4.2.0-SNAPSHOT</ldapConnectorVersion>
         <googleAnalyticsAccountId>UA-23412190-10</googleAnalyticsAccountId>
         <!--
             Release date is specified only when building the documentation
@@ -191,7 +186,7 @@
         <!-- Doc Branding -->
         <brandingGroupId>org.forgerock.commons</brandingGroupId>
         <brandingArtifactId>forgerock-doc-default-branding</brandingArtifactId>
-        <brandingVersion>3.1.0-SNAPSHOT</brandingVersion>
+        <brandingVersion>3.1.0</brandingVersion>
 
     </properties>
 
@@ -344,7 +339,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.18.1</version>
+                    <version>2.19</version>
                     <configuration>
                         <includes>
                             <include>**/Test*.java</include>
@@ -451,89 +446,6 @@
                             </resourceBundles>
                         </configuration>
                     </execution>
-
-                    <!--Build connector config reference-->
-                    <execution>
-                        <id>shared-files</id>
-                        <phase>pre-site</phase>
-                        <goals>
-                            <goal>process</goal>
-                        </goals>
-                        <inherited>false</inherited>
-                        <configuration>
-                            <resourceBundles>
-                                <resourceBundle>
-                                    org.forgerock.maven.plugins:openicf-maven-plugin:${openicf.maven.plugin.version}
-                                </resourceBundle>
-                            </resourceBundles>
-                            <outputDirectory>${project.build.directory}/docbkx-sources</outputDirectory>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>config-reference</id>
-                        <phase>pre-site</phase>
-                        <goals>
-                            <goal>process</goal>
-                        </goals>
-                        <inherited>false</inherited>
-                        <configuration>
-                            <resourceBundles>
-                                <resourceBundle>
-                                    org.forgerock.openicf.connectors:groovy-connector:${groovyConnectorVersion}:jar:docbkx
-                                </resourceBundle>
-                                <resourceBundle>
-                                    org.forgerock.openicf.connectors:ldap-connector:${ldapConnectorVersion}:jar:docbkx
-                                </resourceBundle>
-                                <resourceBundle>
-                                    org.forgerock.openicf.connectors:databasetable-connector:${databasetableConnectorVersion}:jar:docbkx
-                                </resourceBundle>
-                                <resourceBundle>
-                                    org.forgerock.openicf.connectors:csvfile-connector:${csvfileConnectorVersion}:jar:docbkx
-                                </resourceBundle>
-                            </resourceBundles>
-                            <outputDirectory>${project.build.directory}/docbkx-sources/config-reference
-                            </outputDirectory>
-                        </configuration>
-                    </execution>
-
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.forgerock.commons</groupId>
-                <artifactId>forgerock-doc-maven-plugin</artifactId>
-                <version>${frDocPluginVersion}</version>
-                <inherited>false</inherited>
-                <configuration>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>pre-process-doc</id>
-                        <phase>pre-site</phase>
-                        <goals>
-                            <goal>process</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>build-doc</id>
-                        <phase>pre-site</phase>
-                        <goals>
-                            <goal>build</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>layout-site</id>
-                        <phase>site</phase>
-                        <goals>
-                            <goal>site</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>layout-release</id>
-                        <phase>site</phase>
-                        <goals>
-                            <goal>release</goal>
-                        </goals>
-                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -550,16 +462,6 @@
                 </executions>
                 <configuration>
                     <outputEncoding>${project.build.sourceEncoding}</outputEncoding>
-                    <!--reportPlugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-checkstyle-plugin</artifactId>
-                        </plugin>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-javadoc-plugin</artifactId>
-                        </plugin>
-                    </reportPlugins-->
                 </configuration>
             </plugin>
             <plugin>
@@ -644,7 +546,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-report-plugin</artifactId>
-                <version>2.18.1</version>
+                <version>2.19</version>
                 <reportSets>
                     <reportSet>
                         <id>${project.artifactId}-test-report-only</id>
