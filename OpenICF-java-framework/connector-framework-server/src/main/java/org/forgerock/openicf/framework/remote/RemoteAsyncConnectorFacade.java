@@ -24,6 +24,7 @@
 
 package org.forgerock.openicf.framework.remote;
 
+import java.lang.reflect.Proxy;
 import java.text.MessageFormat;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -96,6 +97,7 @@ import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.serializer.SerializerUtil;
 import org.identityconnectors.framework.impl.api.APIConfigurationImpl;
 import org.identityconnectors.framework.impl.api.AbstractConnectorFacade;
+import org.identityconnectors.framework.impl.api.LoggingProxy;
 
 import com.google.protobuf.ByteString;
 
@@ -223,118 +225,141 @@ public class RemoteAsyncConnectorFacade extends AbstractConnectorFacade implemen
             // initialise operations
             if (configuration.isSupportedOperation(AuthenticationApiOp.class)) {
                 authenticationApiOp =
-                        new AuthenticationAsyncApiOpImpl(remoteConnection, connectorKey,
-                                facadeKeyFunction, getAPIConfiguration().getTimeout(
-                                        AuthenticationApiOp.class));
+                        createLogging(AuthenticationApiOp.class, new AuthenticationAsyncApiOpImpl(
+                                remoteConnection, connectorKey, facadeKeyFunction,
+                                getAPIConfiguration().getTimeout(AuthenticationApiOp.class)));
             } else {
                 authenticationApiOp = null;
             }
             if (configuration.isSupportedOperation(BatchApiOp.class)) {
                 batchApiOp =
-                        new BatchApiOpImpl(remoteConnection, connectorKey, facadeKeyFunction,
-                                getAPIConfiguration().getTimeout(BatchApiOp.class));
+                        createLogging(BatchApiOp.class, new BatchApiOpImpl(remoteConnection,
+                                connectorKey, facadeKeyFunction, getAPIConfiguration().getTimeout(
+                                        BatchApiOp.class)));
             } else {
                 batchApiOp = null;
             }
             if (configuration.isSupportedOperation(CreateApiOp.class)) {
                 createApiOp =
-                        new CreateAsyncApiOpImpl(remoteConnection, connectorKey, facadeKeyFunction,
-                                getAPIConfiguration().getTimeout(CreateApiOp.class));
+                        createLogging(CreateApiOp.class, new CreateAsyncApiOpImpl(remoteConnection,
+                                connectorKey, facadeKeyFunction, getAPIConfiguration().getTimeout(
+                                        CreateApiOp.class)));
             } else {
                 createApiOp = null;
             }
             if (configuration.isSupportedOperation(ConnectorEventSubscriptionApiOp.class)) {
                 connectorEventSubscriptionApiOp =
-                        new ConnectorEventSubscriptionApiOpImpl(remoteConnection, connectorKey,
-                                facadeKeyFunction, getAPIConfiguration().getTimeout(
-                                        ConnectorEventSubscriptionApiOp.class));
+                        createLogging(ConnectorEventSubscriptionApiOp.class,
+                                new ConnectorEventSubscriptionApiOpImpl(remoteConnection,
+                                        connectorKey, facadeKeyFunction, getAPIConfiguration()
+                                                .getTimeout(ConnectorEventSubscriptionApiOp.class)));
             } else {
                 connectorEventSubscriptionApiOp = null;
             }
             if (configuration.isSupportedOperation(DeleteApiOp.class)) {
                 deleteApiOp =
-                        new DeleteAsyncApiOpImpl(remoteConnection, connectorKey, facadeKeyFunction,
-                                getAPIConfiguration().getTimeout(DeleteApiOp.class));
+                        createLogging(DeleteApiOp.class, new DeleteAsyncApiOpImpl(remoteConnection,
+                                connectorKey, facadeKeyFunction, getAPIConfiguration().getTimeout(
+                                        DeleteApiOp.class)));
             } else {
                 deleteApiOp = null;
             }
             if (configuration.isSupportedOperation(ResolveUsernameApiOp.class)) {
                 resolveUsernameApiOp =
-                        new ResolveUsernameAsyncApiOpImpl(remoteConnection, connectorKey,
-                                facadeKeyFunction, getAPIConfiguration().getTimeout(
-                                        ResolveUsernameApiOp.class));
+                        createLogging(ResolveUsernameApiOp.class,
+                                new ResolveUsernameAsyncApiOpImpl(remoteConnection, connectorKey,
+                                        facadeKeyFunction, getAPIConfiguration().getTimeout(
+                                                ResolveUsernameApiOp.class)));
             } else {
                 resolveUsernameApiOp = null;
             }
             if (configuration.isSupportedOperation(SchemaApiOp.class)) {
                 schemaApiOp =
-                        new SchemaAsyncApiOpImpl(remoteConnection, connectorKey, facadeKeyFunction,
-                                getAPIConfiguration().getTimeout(SchemaApiOp.class));
+                        createLogging(SchemaApiOp.class, new SchemaAsyncApiOpImpl(remoteConnection,
+                                connectorKey, facadeKeyFunction, getAPIConfiguration().getTimeout(
+                                        SchemaApiOp.class)));
             } else {
                 schemaApiOp = null;
             }
             if (configuration.isSupportedOperation(ScriptOnConnectorApiOp.class)) {
                 scriptOnConnectorApiOp =
-                        new ScriptOnConnectorAsyncApiOpImpl(remoteConnection, connectorKey,
-                                facadeKeyFunction, getAPIConfiguration().getTimeout(
-                                        ScriptOnConnectorApiOp.class));
+                        createLogging(ScriptOnConnectorApiOp.class,
+                                new ScriptOnConnectorAsyncApiOpImpl(remoteConnection, connectorKey,
+                                        facadeKeyFunction, getAPIConfiguration().getTimeout(
+                                                ScriptOnConnectorApiOp.class)));
             } else {
                 scriptOnConnectorApiOp = null;
             }
             if (configuration.isSupportedOperation(ScriptOnResourceApiOp.class)) {
                 scriptOnResourceApiOp =
-                        new ScriptOnResourceAsyncApiOpImpl(remoteConnection, connectorKey,
-                                facadeKeyFunction, getAPIConfiguration().getTimeout(
-                                        ScriptOnResourceApiOp.class));
+                        createLogging(ScriptOnResourceApiOp.class,
+                                new ScriptOnResourceAsyncApiOpImpl(remoteConnection, connectorKey,
+                                        facadeKeyFunction, getAPIConfiguration().getTimeout(
+                                                ScriptOnResourceApiOp.class)));
             } else {
                 scriptOnResourceApiOp = null;
             }
             if (configuration.isSupportedOperation(SearchApiOp.class)) {
                 searchApiOp =
-                        new SearchAsyncApiOpImpl(remoteConnection, connectorKey, facadeKeyFunction,
-                                getAPIConfiguration().getTimeout(SearchApiOp.class));
+                        createLogging(SearchApiOp.class, new SearchAsyncApiOpImpl(remoteConnection,
+                                connectorKey, facadeKeyFunction, getAPIConfiguration().getTimeout(
+                                        SearchApiOp.class)));
                 getApiOp =
-                        new GetAsyncApiOpImpl(remoteConnection, connectorKey, facadeKeyFunction,
-                                getAPIConfiguration().getTimeout(GetApiOp.class));
+                        createLogging(GetApiOp.class, new GetAsyncApiOpImpl(remoteConnection,
+                                connectorKey, facadeKeyFunction, getAPIConfiguration().getTimeout(
+                                        GetApiOp.class)));
             } else {
                 searchApiOp = null;
                 getApiOp = null;
             }
             if (configuration.isSupportedOperation(SyncApiOp.class)) {
                 syncApiOp =
-                        new SyncAsyncApiOpImpl(remoteConnection, connectorKey, facadeKeyFunction,
-                                getAPIConfiguration().getTimeout(SyncApiOp.class));
+                        createLogging(SyncApiOp.class, new SyncAsyncApiOpImpl(remoteConnection,
+                                connectorKey, facadeKeyFunction, getAPIConfiguration().getTimeout(
+                                        SyncApiOp.class)));
             } else {
                 syncApiOp = null;
             }
             if (configuration.isSupportedOperation(SyncEventSubscriptionApiOp.class)) {
                 syncEventSubscriptionApiOp =
-                        new SyncEventSubscriptionApiOpImpl(remoteConnection, connectorKey,
-                                facadeKeyFunction, getAPIConfiguration().getTimeout(
-                                        SyncEventSubscriptionApiOp.class));
+                        createLogging(SyncEventSubscriptionApiOp.class,
+                                new SyncEventSubscriptionApiOpImpl(remoteConnection, connectorKey,
+                                        facadeKeyFunction, getAPIConfiguration().getTimeout(
+                                                SyncEventSubscriptionApiOp.class)));
             } else {
                 syncEventSubscriptionApiOp = null;
             }
             if (configuration.isSupportedOperation(TestApiOp.class)) {
                 testApiOp =
-                        new TestAsyncApiOpImpl(remoteConnection, connectorKey, facadeKeyFunction,
-                                getAPIConfiguration().getTimeout(TestAsyncApiOp.class));
+                        createLogging(TestApiOp.class, new TestAsyncApiOpImpl(remoteConnection,
+                                connectorKey, facadeKeyFunction, getAPIConfiguration().getTimeout(
+                                        TestAsyncApiOp.class)));
             } else {
                 testApiOp = null;
             }
             if (configuration.isSupportedOperation(UpdateApiOp.class)) {
                 updateApiOp =
-                        new UpdateAsyncApiOpImpl(remoteConnection, connectorKey, facadeKeyFunction,
-                                getAPIConfiguration().getTimeout(UpdateApiOp.class));
+                        createLogging(UpdateApiOp.class, new UpdateAsyncApiOpImpl(remoteConnection,
+                                connectorKey, facadeKeyFunction, getAPIConfiguration().getTimeout(
+                                        UpdateApiOp.class)));
             } else {
                 updateApiOp = null;
             }
             validateApiOp =
-                    new ValidateAsyncApiOpImpl(remoteConnection, connectorKey, facadeKeyFunction,
-                            getAPIConfiguration().getTimeout(ValidateApiOp.class));
+                    createLogging(ValidateApiOp.class, new ValidateAsyncApiOpImpl(remoteConnection,
+                            connectorKey, facadeKeyFunction, getAPIConfiguration().getTimeout(
+                                    ValidateApiOp.class)));
         } else {
             throw new IllegalArgumentException("Unsupported ConnectorInfo type");
         }
+    }
+
+    public <T extends APIOperation> T createLogging(Class<? extends APIOperation> api, T target) {
+        if (LoggingProxy.isLoggable()) {
+            return (T) Proxy.newProxyInstance(api.getClassLoader(), target.getClass()
+                    .getInterfaces(), new LoggingProxy(api, target));
+        }
+        return target;
     }
 
     public RemoteAsyncConnectorFacade(
