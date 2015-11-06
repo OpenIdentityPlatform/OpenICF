@@ -22,8 +22,7 @@
  your own identifying information:
  "Portions Copyrighted [year] [name of copyright owner]"
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.forgerock.openicf.framework</groupId>
@@ -68,18 +67,18 @@
 
         <!-- OSGi Properties -->
         <openicf.osgi.exclude.dependencies>false</openicf.osgi.exclude.dependencies>
-        <framework.version>${framework.compatibilityVersion}.${framework.releaseVersion}</framework.version>
+        <project.framework.version>${framework.compatibilityVersion}.${framework.releaseVersion}</project.framework.version>
 
         <openicf.osgi.import.framework.version>
-            version="[$(version;==;${framework.version}),$(version;+;${framework.version}))"
+            version="[$(version;==;${project.framework.version}),$(version;+;${project.framework.version}))"
         </openicf.osgi.import.framework.version>
         <openicf.osgi.import.strict.version>
-            version="[$(version;===;${framework.version}),$(version;=+;${framework.version}))"
+            version="[$(version;===;${project.framework.version}),$(version;=+;${project.framework.version}))"
         </openicf.osgi.import.strict.version>
 
-        <openicf.osgi.import.before.defaults/>
-        <openicf.osgi.import.defaults/>
-        <openicf.osgi.import.additional/>
+        <openicf.osgi.import.before.defaults />
+        <openicf.osgi.import.defaults />
+        <openicf.osgi.import.additional />
 
         <openicf.osgi.import.pkg>
             org.identityconnectors.*;${openicf.osgi.import.framework.version},
@@ -90,7 +89,7 @@
         </openicf.osgi.import.pkg>
         <openicf.osgi.import>${openicf.osgi.import.pkg}</openicf.osgi.import>
 
-        <openicf.osgi.private/>
+        <openicf.osgi.private />
         <!--openicf.osgi.private>${connectorPackage}*.impl</openicf.osgi.private-->
 
         <openicf.osgi.export.pkg>!*.impl*;!*.internal*;${connectorPackage}*</openicf.osgi.export.pkg>
@@ -105,8 +104,8 @@
 
 
         <openicf.osgi.symbolic.name>${project.groupId}.${project.artifactId}</openicf.osgi.symbolic.name>
-        <openicf.osgi.activator/>
-        <openicf.osgi.dynamic.import/>
+        <openicf.osgi.activator />
+        <openicf.osgi.dynamic.import />
         <openicf.osgi.include.resource>{maven-resources}</openicf.osgi.include.resource>
         <openicf.osgi.import.default.version>
             [$(version;==;$(@)),$(version;=+;$(@)))
@@ -116,9 +115,9 @@
             Build-Jdk,Tool
         </openicf.osgi.remove.headers>
         <openicf.osgi.failok>false</openicf.osgi.failok>
-        <openicf.osgi.export.service/>
-        <openicf.osgi.import.service/>
-        <openicf.osgi.embed/>
+        <openicf.osgi.export.service />
+        <openicf.osgi.import.service />
+        <openicf.osgi.embed />
         <!-- If we release this project, we need to include the ForgeRock binary license -->
         <include.binary.license>
             ${project.build.directory}/maven-shared-archive-resources/legal-notices
@@ -131,26 +130,26 @@
             <dependency>
                 <groupId>org.forgerock.openicf.framework</groupId>
                 <artifactId>connector-framework</artifactId>
-                <version>${framework.version}</version>
+                <version>${project.framework.version}</version>
             </dependency>
 
             <!-- Test Dependencies -->
             <dependency>
                 <groupId>org.forgerock.openicf.framework</groupId>
                 <artifactId>connector-framework-internal</artifactId>
-                <version>${framework.version}</version>
+                <version>${project.framework.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.forgerock.openicf.framework</groupId>
                 <artifactId>connector-test-common</artifactId>
-                <version>${framework.version}</version>
+                <version>${project.framework.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.forgerock.openicf.framework</groupId>
                 <artifactId>connector-framework</artifactId>
-                <version>${framework.version}</version>
+                <version>${project.framework.version}</version>
                 <type>test-jar</type>
                 <scope>test</scope>
             </dependency>

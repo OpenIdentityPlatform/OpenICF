@@ -22,8 +22,7 @@
  your own identifying information:
  "Portions Copyrighted [year] [name of copyright owner]"
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.forgerock</groupId>
@@ -175,9 +174,9 @@
                 -D"releaseDate=Software release date: January 1, 1970"
             Otherwise release date should remain empty.
         -->
-        <releaseDate/>
+        <releaseDate />
         <softwareReleaseDate>${releaseDate}</softwareReleaseDate>
-        <pubDate/>
+        <pubDate />
         <publicationDate>${pubDate}</publicationDate>
         <!--
         <publishedDocBase>http://docs.forgerock.org/en/</publishedDocBase>
