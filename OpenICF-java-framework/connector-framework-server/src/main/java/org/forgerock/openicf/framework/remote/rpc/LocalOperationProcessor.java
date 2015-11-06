@@ -24,8 +24,6 @@
 
 package org.forgerock.openicf.framework.remote.rpc;
 
-import java.util.concurrent.ExecutionException;
-
 import org.forgerock.openicf.common.protobuf.RPCMessages.RPCResponse;
 import org.forgerock.openicf.common.protobuf.RPCMessages.RemoteMessage;
 import org.forgerock.openicf.common.rpc.LocalRequest;
@@ -40,9 +38,6 @@ public abstract class LocalOperationProcessor<V>
 
     private static final Log logger = Log.getLog(LocalOperationProcessor.class);
     private int inconsistencyCounter = 0;
-
-    protected boolean stickToConnection = false;
-    protected WebSocketConnectionHolder reverseConnection = null;
 
     protected LocalOperationProcessor(long requestId, final WebSocketConnectionHolder socket) {
         super(requestId, socket);
@@ -65,7 +60,7 @@ public abstract class LocalOperationProcessor<V>
     public void inconsistent() {
         inconsistencyCounter++;
     }
-    
+
     protected boolean tryHandleResult(V result) {
         try {
             final byte[] responseMessage =
@@ -87,7 +82,7 @@ public abstract class LocalOperationProcessor<V>
         final byte[] responseMessage =
                 MessagesUtil.createErrorResponse(getRequestId(), error).build().toByteArray();
         try {
-            return null != trySendBytes(responseMessage, true);
+            return null != trySendBytes(responseMessage);
         } catch (ConnectorIOException e) {
             logger.ok(e, "Operation complete unsuccessfully and failed to send error");
         } catch (Throwable t) {
@@ -97,35 +92,7 @@ public abstract class LocalOperationProcessor<V>
     }
 
     protected WebSocketConnectionHolder trySendBytes(final byte[] responseMessage) {
-        return trySendBytes(responseMessage, false);  
-    };
-    
-    protected WebSocketConnectionHolder trySendBytes(final byte[] responseMessage, boolean useAnyConnection) {
-        if (stickToConnection && !useAnyConnection) {
-            if (null != reverseConnection) {
-                try {
-                    reverseConnection.sendBytes(responseMessage).get();
-                } catch (ExecutionException e) {
-                    throw new ConnectorIOException(e.getMessage(), e.getCause());
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            } else {
-                synchronized (this) {
-                    if (null == reverseConnection) {
-                        reverseConnection = trySendMessageNow(responseMessage);
-                        if (null == reverseConnection) {
-                            throw new ConnectorIOException("Transport layer is not operational");
-                        }
-                    } else {
-                        trySendBytes(responseMessage);
-                    }
-                }
-            }
-        } else {
-            return trySendMessageNow(responseMessage);
-        }
-        return reverseConnection;
+        return trySendMessageNow(responseMessage);
     }
 
     private WebSocketConnectionHolder trySendMessageNow(final byte[] responseMessage) {

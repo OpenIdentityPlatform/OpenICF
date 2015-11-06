@@ -327,7 +327,7 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncApiO
                         connectorFacade.sync(objectClass, token, new SyncResultsHandler() {
                             public boolean handle(SyncDelta delta) {
 
-                                if (null != delta) {
+                                if (doContinue.get() && null != delta) {
                                     OperationMessages.SyncOpResponse.Builder result =
                                             OperationMessages.SyncOpResponse
                                                     .newBuilder()
@@ -346,6 +346,7 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncApiO
                                         logger.ok("SyncResult sent in sequence:{0}", sequence.get());
                                     } else {
                                         logger.info("Failed to send response {0}", sequence.get());
+                                        doContinue.set(Boolean.FALSE);
                                     }
                                 }
                                 return doContinue.get();

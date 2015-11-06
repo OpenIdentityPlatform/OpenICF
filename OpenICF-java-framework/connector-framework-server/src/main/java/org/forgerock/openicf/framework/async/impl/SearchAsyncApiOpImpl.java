@@ -287,7 +287,7 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
                     connectorFacade.search(objectClass, filter, new ResultsHandler() {
                         public boolean handle(ConnectorObject connectorObject) {
 
-                            if (null != connectorObject) {
+                            if (doContinue.get() && null != connectorObject) {
                                 SearchOpResponse.Builder result =
                                         SearchOpResponse
                                                 .newBuilder()
@@ -302,6 +302,7 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
                                     logger.ok("SearchResult sent in sequence:{0}", sequence.get());
                                 } else {
                                     logger.info("Failed to send response {0}", sequence.get());
+                                    doContinue.set(Boolean.FALSE);
                                 }
                             }
                             return doContinue.get();

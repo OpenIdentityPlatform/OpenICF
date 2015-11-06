@@ -496,7 +496,7 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
                     try {
                         final byte[] responseMessage =
                                 MessagesUtil.createErrorResponse(getRequestId(), error).build().toByteArray();
-                        trySendBytes(responseMessage, true);
+                        trySendBytes(responseMessage);
                     } catch (Throwable t) {
                         logger.ok(t, "Operation encountered an exception and failed to send the exception response");
                     }

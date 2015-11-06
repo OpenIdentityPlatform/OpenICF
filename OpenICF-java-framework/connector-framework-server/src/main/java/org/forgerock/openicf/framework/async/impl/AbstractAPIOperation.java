@@ -179,9 +179,7 @@ public abstract class AbstractAPIOperation {
                 lastSequenceNumber = 0;
             } else {
                 long idx = resultCount + 1;
-                if (null != result) {
-                    buffer.put(idx, result);
-                }
+                buffer.put(idx, result != null ? result : NULL_OBJECT);
                 lastSequenceNumber = idx;
             }
 

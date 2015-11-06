@@ -86,6 +86,9 @@
     <!-- To enable TraceProxy uncomment this - ->
     <logger name="org.identityconnectors.framework.impl.api.LoggingProxy" level="DEBUG" additivity="false">
         <appender-ref ref="TRACE-FILE"/>
+    </logger>
+    <logger name="org.identityconnectors.framework.api.operations" level="DEBUG" additivity="false">
+        <appender-ref ref="TRACE-FILE"/>
     </logger-->
     <logger name="org.forgerock.openicf.common" level="INFO" additivity="false">
         <appender-ref ref="STDOUT"/>

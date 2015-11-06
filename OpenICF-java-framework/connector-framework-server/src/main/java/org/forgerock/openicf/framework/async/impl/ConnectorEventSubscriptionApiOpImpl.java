@@ -231,7 +231,6 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
         protected InternalLocalOperationProcessor(long requestId, WebSocketConnectionHolder socket,
                 ConnectorEventSubscriptionOpRequest message) {
             super(requestId, socket, message);
-            stickToConnection = false;
         }
 
         protected RPCMessages.RPCResponse.Builder createOperationResponse(

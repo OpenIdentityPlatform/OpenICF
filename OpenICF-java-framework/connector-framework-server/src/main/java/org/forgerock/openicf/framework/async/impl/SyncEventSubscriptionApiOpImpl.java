@@ -223,7 +223,6 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
         protected InternalLocalOperationProcessor(long requestId, WebSocketConnectionHolder socket,
                 SyncEventSubscriptionOpRequest message) {
             super(requestId, socket, message);
-            stickToConnection = false;
         }
 
         protected RPCMessages.RPCResponse.Builder createOperationResponse(

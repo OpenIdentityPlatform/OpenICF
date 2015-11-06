@@ -136,11 +136,11 @@ public class OpenICFServerAdapter implements OperationMessageListener {
     }
 
     public void onMessage(final WebSocketConnectionHolder socket, byte[] bytes) {
-        logger.info("{0} onMessage({1}:bytes)", loggerName(), bytes.length);
+        logger.ok("{0} onMessage({1}:bytes)", loggerName(), bytes.length);
         try {
             RemoteMessage message = RemoteMessage.parseFrom(bytes);
 
-            logger.info("onMessage({0})", message.toString());
+            logger.ok("onMessage({0})", message.toString());
             if (message.hasRequest()) {
                 if (message.getRequest().hasHandshakeMessage()) {
                     if (isClient()) {
