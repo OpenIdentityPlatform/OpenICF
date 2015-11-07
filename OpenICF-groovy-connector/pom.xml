@@ -31,7 +31,7 @@
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>groovy-connector</artifactId>
-    <version>1.4.2.0-RC1</version>
+    <version>1.4.2.0-RC2-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>Groovy Connector Toolkit</name>
     <description>This is a generic bundle that contains base classes and interfaces needed to write a scripted
@@ -42,7 +42,7 @@
         <connection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/groovy-connector.git</connection>
         <developerConnection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/groovy-connector.git</developerConnection>
         <url>http://stash.forgerock.org/projects/OPENICF/repos/groovy-connector/browse</url>
-      <tag>1.4.2.0-RC1</tag>
+      <tag>HEAD</tag>
   </scm>
     <issueManagement>
         <system>jira</system>
