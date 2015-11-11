@@ -132,16 +132,16 @@ class FilterHandlers {
         HANDLERS.add(new AbstractObjectSerializationHandler(ExtendedMatchFilter.class, "ExtendedMatchFilter") {
 
             public Object deserialize(final ObjectDecoder decoder) {
+                final String operator = decoder.readStringField("operator", null);
                 final Attribute attribute =
                         (Attribute) decoder.readObjectField("attribute", null, null);
-                final String operator = decoder.readStringField("operator", null);
                 return new ExtendedMatchFilter(operator, attribute);
             }
 
             public void serialize(final Object object, final ObjectEncoder encoder) {
                 final ExtendedMatchFilter val = (ExtendedMatchFilter) object;
-                encoder.writeObjectField("attribute", val.getAttribute(), false);
                 encoder.writeStringField("operator", val.getOperator());
+                encoder.writeObjectField("attribute", val.getAttribute(), false);
             }
         });
         

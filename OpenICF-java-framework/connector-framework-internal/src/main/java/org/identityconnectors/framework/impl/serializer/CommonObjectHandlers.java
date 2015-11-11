@@ -634,18 +634,22 @@ class CommonObjectHandlers {
         new AbstractObjectSerializationHandler(SearchResult.class, "SearchResult") {
 
             public Object deserialize(final ObjectDecoder decoder) {
-                return new SearchResult(decoder.readStringField("pagedResultsCookie", null),
+                String pagedResultsCookie = decoder.readStringField("pagedResultsCookie", null);
+                int totalPagedResults = decoder.readIntField("totalPagedResults", -1);
+                int remainingPagedResults = decoder.readIntField("remainingPagedResults", -1);
+                CountPolicy policy =
                         (CountPolicy) decoder.readObjectField("CountPolicy", CountPolicy.class,
-                                null), decoder.readIntField("totalPagedResults", -1), decoder
-                                .readIntField("remainingPagedResults", -1));
+                                null);
+                return new SearchResult(pagedResultsCookie, policy, totalPagedResults,
+                        remainingPagedResults);
             }
 
             public void serialize(final Object object, final ObjectEncoder encoder) {
                 final SearchResult val = (SearchResult) object;
                 encoder.writeStringField("pagedResultsCookie", val.getPagedResultsCookie());
-                encoder.writeObjectField("CountPolicy", val.getTotalPagedResultsPolicy(), true);
                 encoder.writeIntField("totalPagedResults", val.getTotalPagedResults());
                 encoder.writeIntField("remainingPagedResults", val.getRemainingPagedResults());
+                encoder.writeObjectField("CountPolicy", val.getTotalPagedResultsPolicy(), true);
             }
         });
 
