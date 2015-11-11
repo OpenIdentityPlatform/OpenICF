@@ -987,6 +987,8 @@ public abstract class ConnectorInfoManagerTestBase {
             iteration++;
             assertNotNull(searchResult);
             assertEquals(searchResult.getRemainingPagedResults(), 100 - (iteration * 10));
+            assertEquals(searchResult.getTotalPagedResultsPolicy(), SearchResult.CountPolicy.EXACT);
+            assertEquals(searchResult.getTotalPagedResults(), 100);
 
         } while (searchResult.getPagedResultsCookie() != null);
 

@@ -55,9 +55,9 @@
   ">
 
 <!ENTITY % filterTypes
-  "AndFilter | ContainsFilter | EndsWithFilter | EqualsFilter |
+  "AndFilter | ContainsFilter | EndsWithFilter | EqualsFilter | ExtendedMatchFilter |
   GreaterThanFilter | GreaterThanOrEqualFilter | LessThanFilter |
-  LessThanOrEqualFilter | NotFilter | OrFilter | StartsWithFilter |
+  LessThanOrEqualFilter | NotFilter | OrFilter | PresenceFilter | StartsWithFilter |
   ContainsAllValuesFilter
   ">
 
@@ -78,7 +78,7 @@ ObjectPoolConfiguration | ResultsHandlerConfiguration | ConfigurationProperty | 
 APIConfiguration | ConnectorMessages | ConnectorKey | ConnectorInfo |
 UpdateApiOpType | AttributeInfo | ConnectorObject | ObjectClass |
 ObjectClassInfo | Schema | Script | ScriptContext | OperationOptions |
-OperationOptionInfo | SyncDeltaType | SyncToken | SyncDelta | QualifiedUid
+OperationOptionInfo | SearchResult | SyncDeltaType | SyncToken | SyncDelta | QualifiedUid
 ">
 
 
@@ -392,6 +392,16 @@ OperationOptionInfo | SyncDeltaType | SyncToken | SyncDelta | QualifiedUid
 
 <!ELEMENT QualifiedUid (ObjectClass,Uid)>
 
+<!ELEMENT CountPolicy EMPTY>
+<!ATTLIST CountPolicy
+   value ( NONE | ESTIMATE | EXACT ) #REQUIRED
+>
+<!ELEMENT SearchResult (CountPolicy?)>
+<!ATTLIST SearchResult
+   pagedResultsCookie CDATA #REQUIRED
+   remainingPagedResults CDATA #REQUIRED
+   totalPagedResults CDATA #REQUIRED
+>
 
 <!--=======================================================-->
 <!--=                                                     =-->
@@ -405,12 +415,20 @@ OperationOptionInfo | SyncDeltaType | SyncToken | SyncDelta | QualifiedUid
 <!ELEMENT ContainsFilter (attribute)>
 <!ELEMENT EndsWithFilter (attribute)>
 <!ELEMENT EqualsFilter (attribute)>
+<!ELEMENT ExtendedMatchFilter (attribute)>
+<!ATTLIST ExtendedMatchFilter
+   operator CDATA #IMPLIED
+>
 <!ELEMENT GreaterThanFilter (attribute)>
 <!ELEMENT GreaterThanOrEqualFilter (attribute)>
 <!ELEMENT LessThanFilter (attribute)>
 <!ELEMENT LessThanOrEqualFilter (attribute)>
 <!ELEMENT NotFilter (%filterTypes;)>
 <!ELEMENT OrFilter ((%filterTypes;),(%filterTypes;))>
+<!ELEMENT PresenceFilter (#PCDATA)>
+<!ATTLIST PresenceFilter
+   name CDATA #IMPLIED
+>
 <!ELEMENT StartsWithFilter (attribute)>
 <!ELEMENT ContainsAllValuesFilter (attribute)>
 

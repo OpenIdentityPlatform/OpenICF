@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.objects.SearchResult.CountPolicy;
 import org.identityconnectors.framework.common.serializer.ObjectSerializerFactory;
 import org.identityconnectors.framework.common.serializer.SerializerUtil;
 
@@ -45,10 +46,10 @@ public final class OperationOptionsBuilder {
      * @return new and empty builder
      * @since 1.5
      */
-    public static OperationOptionsBuilder create(){
+    public static OperationOptionsBuilder create() {
         return new OperationOptionsBuilder();
     }
-    
+
     /**
      * Create a builder with an empty set of options.
      */
@@ -179,6 +180,26 @@ public final class OperationOptionsBuilder {
     public OperationOptionsBuilder setPagedResultsCookie(String pagedResultsCookie) {
         Assertions.nullCheck(pagedResultsCookie, "pagedResultsCookie");
         options.put(OperationOptions.OP_PAGED_RESULTS_COOKIE, pagedResultsCookie);
+        return this;
+    }
+
+    /**
+     * Sets the policy for calculating the total number of paged results. If no
+     * count policy is supplied or paged results are not requested a default of
+     * {@link CountPolicy#NONE} will be used. This will result in no count being
+     * performed and no overhead incurred.
+     *
+     * @param policy
+     *            The policy used to calculate total paged results
+     * @return This query request.
+     * @see SearchResult#getTotalPagedResultsPolicy()
+     * @see SearchResult#getTotalPagedResults()
+     * @return A this reference to allow chaining
+     * @since 1.5
+     */
+    public OperationOptionsBuilder setTotalPagedResultsPolicy(CountPolicy policy) {
+        Assertions.nullCheck(policy, "totalPagedResultsPolicy");
+        options.put(OperationOptions.OP_TOTAL_PAGED_RESULTS_POLICY, policy);
         return this;
     }
 

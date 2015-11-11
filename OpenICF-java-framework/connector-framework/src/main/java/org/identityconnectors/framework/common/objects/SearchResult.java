@@ -24,6 +24,8 @@
 
 package org.identityconnectors.framework.common.objects;
 
+import java.util.Objects;
+
 /**
  * The final result of a query request returned after all connector objects
  * matching the request have been returned. In addition to indicating that no
@@ -35,7 +37,40 @@ package org.identityconnectors.framework.common.objects;
  */
 public final class SearchResult {
 
+    /**
+     * An enum of count policy types.
+     *
+     * @see OperationOptionsBuilder#setTotalPagedResultsPolicy(CountPolicy)
+     * @see SearchResult#getTotalPagedResultsPolicy()
+     */
+    public enum CountPolicy {
+        /**
+         * There should be no count returned. No overhead should be incurred.
+         */
+        NONE,
+
+        /**
+         * Estimated count may be used. If no estimation is available it is up
+         * to the implementor whether to return an {@link #EXACT} count or
+         * {@link #NONE}. It should be known to the client which was used as in
+         * {@link SearchResult#getTotalPagedResultsPolicy()}
+         */
+        ESTIMATE,
+
+        /**
+         * Exact count is required.
+         */
+        EXACT
+    }
+
+    /**
+     * The value provided when no count is known or can reasonably be supplied.
+     */
+    public static final int NO_COUNT = -1;
+
     private final String pagedResultsCookie;
+    private final CountPolicy totalPagedResultsPolicy;
+    private final int totalPagedResults;
     private final int remainingPagedResults;
 
     /**
@@ -43,7 +78,7 @@ public final class SearchResult {
      * no estimate of the total number of remaining results.
      */
     public SearchResult() {
-        this(null, -1);
+        this(null, CountPolicy.NONE, NO_COUNT, NO_COUNT);
     }
 
     /**
@@ -61,7 +96,43 @@ public final class SearchResult {
      *            total number of remaining results is unknown.
      */
     public SearchResult(final String pagedResultsCookie, final int remainingPagedResults) {
+        this(pagedResultsCookie, CountPolicy.NONE, NO_COUNT, remainingPagedResults);
+    }
+
+    /**
+     * Creates a new query response with the provided paged results cookie and a
+     * count of the total number of resources according to
+     * {@link #totalPagedResultsPolicy}.
+     *
+     * @param pagedResultsCookie
+     *            The opaque cookie which should be used with the next paged
+     *            results query request, or {@code null} if paged results were
+     *            not requested, or if there are not more pages to be returned.
+     * @param totalPagedResultsPolicy
+     *            The policy that was used to calculate
+     *            {@link #totalPagedResults}. If none is specified ({@code null}
+     *            ), then {@link CountPolicy#NONE} is assumed.
+     * @param totalPagedResults
+     *            The total number of paged results requested in adherence to
+     *            the {@link OperationOptions#getTotalPagedResultsPolicy()} in
+     *            the request, or {@link #NO_COUNT} if paged results were not
+     *            requested, the count policy is {@code NONE}, or if the total
+     *            number of results is unknown.
+     * @param remainingPagedResults
+     *            An estimate of the total number of remaining results to be
+     *            returned in subsequent paged results query requests, or
+     *            {@code -1} if paged results were not requested, or if the
+     *            total number of remaining results is unknown.
+     * @since 1.5
+     */
+    public SearchResult(String pagedResultsCookie, CountPolicy totalPagedResultsPolicy,
+            int totalPagedResults, int remainingPagedResults) {
         this.pagedResultsCookie = pagedResultsCookie;
+        if (totalPagedResultsPolicy == null) {
+            totalPagedResultsPolicy = CountPolicy.NONE;
+        }
+        this.totalPagedResultsPolicy = totalPagedResultsPolicy;
+        this.totalPagedResults = totalPagedResults;
         this.remainingPagedResults = remainingPagedResults;
     }
 
@@ -78,6 +149,34 @@ public final class SearchResult {
     }
 
     /**
+     * Returns the policy that was used to calculate the
+     * {@literal totalPagedResults}.
+     *
+     * @return The count policy.
+     * @see #getTotalPagedResults()
+     * @since 1.5
+     */
+    public CountPolicy getTotalPagedResultsPolicy() {
+        return totalPagedResultsPolicy;
+    }
+
+    /**
+     * Returns the total number of paged results in adherence with the
+     * {@link OperationOptions#getTotalPagedResultsPolicy()} in the request or
+     * {@link #NO_COUNT} if paged results were not requested, the count policy
+     * is {@code NONE}, or the total number of paged results is unknown.
+     *
+     * @return A count of the total number of paged results to be returned in
+     *         subsequent paged results query requests, or {@link #NO_COUNT} if
+     *         paged results were not requested, or if the total number of paged
+     *         results is unknown.
+     * @since 1.5
+     */
+    public int getTotalPagedResults() {
+        return totalPagedResults;
+    }
+
+    /**
      * Returns an estimate of the total number of remaining results to be
      * returned in subsequent paged results search requests.
      *
@@ -90,22 +189,27 @@ public final class SearchResult {
         return remainingPagedResults;
     }
 
+    @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (!(o instanceof SearchResult))
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
-
-        SearchResult result = (SearchResult) o;
-
-        return remainingPagedResults == result.remainingPagedResults
-                && !(pagedResultsCookie != null ? !pagedResultsCookie
-                        .equals(result.pagedResultsCookie) : result.pagedResultsCookie != null);
+        }
+        SearchResult that = (SearchResult) o;
+        return totalPagedResults == that.totalPagedResults
+                && Objects.equals(pagedResultsCookie, this.pagedResultsCookie)
+                && totalPagedResultsPolicy == that.totalPagedResultsPolicy
+                && remainingPagedResults == that.remainingPagedResults;
 
     }
 
+    @Override
     public int hashCode() {
-        int result = pagedResultsCookie != null ? pagedResultsCookie.hashCode() : 0;
+        int result = Objects.hashCode(pagedResultsCookie);
+        result = 31 * result + totalPagedResultsPolicy.hashCode();
+        result = 31 * result + totalPagedResults;
         result = 31 * result + remainingPagedResults;
         return result;
     }

@@ -36,8 +36,15 @@ message ScriptContext {
 }
 
 message SearchResult {
+    enum CountPolicy {
+        NONE = 0;
+        ESTIMATE = 1;
+        EXACT = 2;
+    }
     string pagedResultsCookie = 1;
-    int32 remainingPagedResults = 2;
+    CountPolicy totalPagedResultsPolicy = 2;
+    int32 totalPagedResults = 3;
+    int32 remainingPagedResults = 4;
 }
 
 message SortKey {

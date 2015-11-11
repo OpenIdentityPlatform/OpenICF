@@ -183,6 +183,21 @@ public final class FilterBuilder {
         return new EqualsFilter(attr);
     }
 
+
+    /**
+     * Creates a new {@code extended match} filter using the provided operator
+     * and attribute assertion.
+     *
+     * @param operator
+     *            The operator.
+     * @param attribute
+     *            The assertion value.
+     * @since 1.5
+     */
+    public static Filter extendedMatch(final String operator, final Attribute attribute){
+        return new ExtendedMatchFilter(operator, attribute);
+    }
+    
     /**
      * Select only an input <code>ConnectorObject</code> with a value for the
      * specified <code>Attribute</code> that is
@@ -483,6 +498,7 @@ public final class FilterBuilder {
      *            The name of field within the {@link org.identityconnectors.framework.common.objects.ConnectorObject} which must be
      *            present.
      * @return The newly created {@code presence} filter.
+     * @since 1.5
      */
     public static Filter present(final String attributeName){
         return new PresenceFilter(attributeName);

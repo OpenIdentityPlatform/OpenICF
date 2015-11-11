@@ -72,6 +72,7 @@ import org.identityconnectors.framework.common.objects.QualifiedUid;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.ScriptContext;
 import org.identityconnectors.framework.common.objects.SearchResult;
+import org.identityconnectors.framework.common.objects.SearchResult.CountPolicy;
 import org.identityconnectors.framework.common.objects.SortKey;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
@@ -626,18 +627,24 @@ class CommonObjectHandlers {
             }
         });
 
+        HANDLERS.add(new EnumSerializationHandler(CountPolicy.class, "CountPolicy"));
+
         HANDLERS.add(
 
         new AbstractObjectSerializationHandler(SearchResult.class, "SearchResult") {
 
             public Object deserialize(final ObjectDecoder decoder) {
                 return new SearchResult(decoder.readStringField("pagedResultsCookie", null),
-                        decoder.readIntField("remainingPagedResults", -1));
+                        (CountPolicy) decoder.readObjectField("CountPolicy", CountPolicy.class,
+                                null), decoder.readIntField("totalPagedResults", -1), decoder
+                                .readIntField("remainingPagedResults", -1));
             }
 
             public void serialize(final Object object, final ObjectEncoder encoder) {
                 final SearchResult val = (SearchResult) object;
                 encoder.writeStringField("pagedResultsCookie", val.getPagedResultsCookie());
+                encoder.writeObjectField("CountPolicy", val.getTotalPagedResultsPolicy(), true);
+                encoder.writeIntField("totalPagedResults", val.getTotalPagedResults());
                 encoder.writeIntField("remainingPagedResults", val.getRemainingPagedResults());
             }
         });

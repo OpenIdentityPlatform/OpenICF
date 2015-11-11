@@ -19,19 +19,17 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
- * Portions Copyrighted 2010-2014 ForgeRock AS.
+ * Portions Copyrighted 2010-2015 ForgeRock AS.
  */
 
 package org.identityconnectors.framework.impl.serializer;
 
-
-import org.testng.Assert;
-import org.testng.annotations.Test;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.math.BigDecimal;
@@ -73,6 +71,7 @@ import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
+import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
@@ -88,23 +87,25 @@ import org.identityconnectors.framework.common.objects.QualifiedUid;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.ScriptContext;
 import org.identityconnectors.framework.common.objects.ScriptContextBuilder;
+import org.identityconnectors.framework.common.objects.SearchResult;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
 import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 import org.identityconnectors.framework.common.objects.filter.AndFilter;
 import org.identityconnectors.framework.common.objects.filter.ContainsAllValuesFilter;
 import org.identityconnectors.framework.common.objects.filter.ContainsFilter;
 import org.identityconnectors.framework.common.objects.filter.EndsWithFilter;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
+import org.identityconnectors.framework.common.objects.filter.ExtendedMatchFilter;
 import org.identityconnectors.framework.common.objects.filter.GreaterThanFilter;
 import org.identityconnectors.framework.common.objects.filter.GreaterThanOrEqualFilter;
 import org.identityconnectors.framework.common.objects.filter.LessThanFilter;
 import org.identityconnectors.framework.common.objects.filter.LessThanOrEqualFilter;
 import org.identityconnectors.framework.common.objects.filter.NotFilter;
 import org.identityconnectors.framework.common.objects.filter.OrFilter;
+import org.identityconnectors.framework.common.objects.filter.PresenceFilter;
 import org.identityconnectors.framework.common.objects.filter.StartsWithFilter;
 import org.identityconnectors.framework.common.serializer.SerializerUtil;
 import org.identityconnectors.framework.impl.api.APIConfigurationImpl;
@@ -121,7 +122,8 @@ import org.identityconnectors.framework.impl.api.remote.messages.OperationReques
 import org.identityconnectors.framework.impl.api.remote.messages.OperationResponseEnd;
 import org.identityconnectors.framework.impl.api.remote.messages.OperationResponsePart;
 import org.identityconnectors.framework.impl.api.remote.messages.OperationResponsePause;
-
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 public class ObjectSerializationTests {
 
@@ -510,7 +512,7 @@ public class ObjectSerializationTests {
         v1.setProducerBufferSize(200);
         v1.setSupportedOperations(FrameworkUtil.allAPIOperations());
         Map<Class<? extends APIOperation>,Integer> map =
-            CollectionUtil.<Class<? extends APIOperation>,Integer>newMap(CreateApiOp.class,new Integer(6));
+            CollectionUtil.<Class<? extends APIOperation>,Integer>newMap(CreateApiOp.class, new Integer(6));
         v1.setTimeoutMap(map);
 
         APIConfigurationImpl v2 = (APIConfigurationImpl)
@@ -787,6 +789,21 @@ public class ObjectSerializationTests {
     }
 
     @Test
+    public void testPresenceFilter() {
+        PresenceFilter v1 = new PresenceFilter("foo");
+        PresenceFilter v2 = (PresenceFilter)cloneObject(v1);
+        assertEquals(v1.getName(), v2.getName());
+    }
+
+    @Test
+    public void testExtendedMatchFilter() {
+        ExtendedMatchFilter v1 = new ExtendedMatchFilter("bar", AttributeBuilder.build("foo", "a", "b"));
+        ExtendedMatchFilter v2 = (ExtendedMatchFilter)cloneObject(v1);
+        assertEquals(v1.getAttribute(), v2.getAttribute());
+        assertEquals(v1.getOperator(), v2.getOperator());
+    }
+
+    @Test
     public void testExceptions() {
         {
             AlreadyExistsException v1 = new AlreadyExistsException("ex");
@@ -1007,6 +1024,17 @@ public class ObjectSerializationTests {
         assertEquals("bar2",v2.getOptions().get("foo2"));
     }
 
+    @Test
+    public void testSearchResult() {
+        SearchResult v1 = new SearchResult("FE00", SearchResult.CountPolicy.ESTIMATE, 100, 10);
+        SearchResult v2 = (SearchResult)cloneObject(v1);
+        assertEquals(v1.getPagedResultsCookie(),v2.getPagedResultsCookie());
+        assertEquals(v1.getTotalPagedResultsPolicy(),v2.getTotalPagedResultsPolicy());
+        assertEquals(v1.getTotalPagedResults(),v2.getTotalPagedResults());
+        assertEquals(v1.getRemainingPagedResults(),v2.getRemainingPagedResults());
+        assertEquals(v1,v2);
+    }
+    
     @Test
     public void testScript() {
         ScriptBuilder builder = new ScriptBuilder();

@@ -33,6 +33,7 @@ import org.identityconnectors.framework.common.objects.filter.ContainsAllValuesF
 import org.identityconnectors.framework.common.objects.filter.ContainsFilter;
 import org.identityconnectors.framework.common.objects.filter.EndsWithFilter;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
+import org.identityconnectors.framework.common.objects.filter.ExtendedMatchFilter;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.GreaterThanFilter;
 import org.identityconnectors.framework.common.objects.filter.GreaterThanOrEqualFilter;
@@ -40,6 +41,7 @@ import org.identityconnectors.framework.common.objects.filter.LessThanFilter;
 import org.identityconnectors.framework.common.objects.filter.LessThanOrEqualFilter;
 import org.identityconnectors.framework.common.objects.filter.NotFilter;
 import org.identityconnectors.framework.common.objects.filter.OrFilter;
+import org.identityconnectors.framework.common.objects.filter.PresenceFilter;
 import org.identityconnectors.framework.common.objects.filter.StartsWithFilter;
 
 /**
@@ -127,6 +129,22 @@ class FilterHandlers {
             }
         });
 
+        HANDLERS.add(new AbstractObjectSerializationHandler(ExtendedMatchFilter.class, "ExtendedMatchFilter") {
+
+            public Object deserialize(final ObjectDecoder decoder) {
+                final Attribute attribute =
+                        (Attribute) decoder.readObjectField("attribute", null, null);
+                final String operator = decoder.readStringField("operator", null);
+                return new ExtendedMatchFilter(operator, attribute);
+            }
+
+            public void serialize(final Object object, final ObjectEncoder encoder) {
+                final ExtendedMatchFilter val = (ExtendedMatchFilter) object;
+                encoder.writeObjectField("attribute", val.getAttribute(), false);
+                encoder.writeStringField("operator", val.getOperator());
+            }
+        });
+        
         HANDLERS.add(new AttributeFilterHandler<GreaterThanFilter>(GreaterThanFilter.class,
                 "GreaterThanFilter") {
 
@@ -181,6 +199,19 @@ class FilterHandlers {
             @Override
             protected OrFilter createFilter(final Filter left, final Filter right) {
                 return new OrFilter(left, right);
+            }
+        });
+
+        HANDLERS.add(new AbstractObjectSerializationHandler(PresenceFilter.class, "PresenceFilter") {
+
+            public Object deserialize(final ObjectDecoder decoder) {
+                final String name = decoder.readStringField("name", null);
+                return new PresenceFilter(name);
+            }
+
+            public void serialize(final Object object, final ObjectEncoder encoder) {
+                final PresenceFilter val = (PresenceFilter) object;
+                encoder.writeStringField("name", val.getName());
             }
         });
 

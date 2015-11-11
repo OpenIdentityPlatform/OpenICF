@@ -465,7 +465,8 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
 
             if (handler instanceof SearchResultsHandler) {
                 ((SearchResultsHandler) handler).handleResult(new SearchResult(
-                        currentPagedResultsCookie, resultSet.size() - index));
+                        currentPagedResultsCookie, SearchResult.CountPolicy.EXACT,
+                        resultSet.size(), resultSet.size() - index));
             }
         } else {
             // Normal Search

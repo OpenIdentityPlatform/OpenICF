@@ -453,8 +453,25 @@ public class MessagesUtil {
             ObjectHandler<SearchResult, CommonObjectMessages.SearchResult, CommonObjectMessages.SearchResult.Builder> {
 
         public SearchResult deserialize(CommonObjectMessages.SearchResult message) {
-            return new SearchResult(StringUtil.isNotBlank(message.getPagedResultsCookie()) ? message
-                    .getPagedResultsCookie() : null, message.getRemainingPagedResults());
+
+            SearchResult.CountPolicy policy = SearchResult.CountPolicy.NONE;
+            if (null != message.getTotalPagedResultsPolicy()) {
+                switch (message.getTotalPagedResultsPolicy()) {
+                case EXACT:
+                    policy = SearchResult.CountPolicy.EXACT;
+                    break;
+                case ESTIMATE:
+                    policy = SearchResult.CountPolicy.ESTIMATE;
+                    break;
+                default:
+                    policy = SearchResult.CountPolicy.NONE;
+                }
+            }
+
+            return new SearchResult(
+                    StringUtil.isNotBlank(message.getPagedResultsCookie()) ? message
+                            .getPagedResultsCookie() : null, policy,
+                    message.getTotalPagedResults(), message.getRemainingPagedResults());
         }
 
         public CommonObjectMessages.SearchResult serialize(SearchResult source) {
@@ -464,10 +481,23 @@ public class MessagesUtil {
         public CommonObjectMessages.SearchResult.Builder serializeBuilder(SearchResult source) {
             CommonObjectMessages.SearchResult.Builder builder =
                     CommonObjectMessages.SearchResult.newBuilder().setRemainingPagedResults(
-                            source.getRemainingPagedResults());
+                            source.getRemainingPagedResults()).setTotalPagedResults(
+                            source.getTotalPagedResults());
+            switch (source.getTotalPagedResultsPolicy()) {
+            case EXACT:
+                builder.setTotalPagedResultsPolicy(CommonObjectMessages.SearchResult.CountPolicy.EXACT);
+                break;
+            case ESTIMATE:
+                builder.setTotalPagedResultsPolicy(CommonObjectMessages.SearchResult.CountPolicy.ESTIMATE);
+                break;
+            default:
+                builder.setTotalPagedResultsPolicy(CommonObjectMessages.SearchResult.CountPolicy.NONE);
+            }
+
             if (null != source.getPagedResultsCookie()) {
                 builder.setPagedResultsCookie(source.getPagedResultsCookie());
             }
+
             return builder;
         }
     }

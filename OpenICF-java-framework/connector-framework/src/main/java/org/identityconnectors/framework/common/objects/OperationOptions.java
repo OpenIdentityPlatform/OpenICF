@@ -30,11 +30,12 @@ import java.util.Map;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.PrettyStringBuilder;
 import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.framework.api.operations.ScriptOnResourceApiOp;
 import org.identityconnectors.framework.api.operations.BatchApiOp;
+import org.identityconnectors.framework.api.operations.ScriptOnResourceApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
 import org.identityconnectors.framework.api.operations.SyncApiOp;
 import org.identityconnectors.framework.common.FrameworkUtil;
+import org.identityconnectors.framework.common.objects.SearchResult.CountPolicy;
 import org.identityconnectors.framework.common.serializer.ObjectSerializerFactory;
 import org.identityconnectors.framework.common.serializer.SerializerUtil;
 
@@ -126,7 +127,14 @@ public final class OperationOptions {
      * @since 1.4
      */
     public static final String OP_PAGED_RESULTS_COOKIE = "PAGED_RESULTS_COOKIE";
-
+    
+    /**
+     * An option to use with {@link SearchApiOp} that specifies the policy used for calculating
+     * the total number of paged results.
+     * @since 1.5
+     */
+    public static final String OP_TOTAL_PAGED_RESULTS_POLICY = "TOTAL_PAGED_RESULTS_POLICY";
+    
     /**
      * An option to use with {@link SearchApiOp} that specifies the index within
      * the result set of the first result which should be returned.
@@ -285,8 +293,23 @@ public final class OperationOptions {
      */
     public String getPagedResultsCookie() {
         return (String) operationOptions.get(OP_PAGED_RESULTS_COOKIE);
-    };
-
+    }
+    
+    /**
+     * Returns the {@link CountPolicy} used to calculate
+     * {@link SearchResult#getTotalPagedResults()}.
+     *
+     * @return The count policy.
+     * @see SearchResult#getTotalPagedResults()
+     * @since 1.5
+     */
+    public CountPolicy getTotalPagedResultsPolicy() {
+        if (operationOptions.containsKey(OP_TOTAL_PAGED_RESULTS_POLICY)) {
+            return (CountPolicy) operationOptions.get(OP_TOTAL_PAGED_RESULTS_POLICY);
+        }
+        return CountPolicy.NONE;
+    }
+    
     /**
      * Returns the index within the result set of the first result which should
      * be returned. Paged results will be enabled if and only if the page size
