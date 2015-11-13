@@ -29,7 +29,7 @@ import java.util.Map;
 import org.apache.http.annotation.NotThreadSafe;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
-import org.forgerock.json.fluent.JsonValue;
+import org.forgerock.json.JsonValue;
 
 import groovy.json.JsonOutput;
 

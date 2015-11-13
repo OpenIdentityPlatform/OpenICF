@@ -24,7 +24,7 @@
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
-import org.forgerock.json.fluent.JsonPointer
+import org.forgerock.json.JsonPointer
 import org.forgerock.openicf.misc.crest.VisitorParameter
 import org.identityconnectors.common.CollectionUtil
 import org.identityconnectors.common.Pair

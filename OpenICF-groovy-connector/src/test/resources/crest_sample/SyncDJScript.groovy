@@ -24,17 +24,16 @@
 
 import org.forgerock.json.resource.Connection
 import org.forgerock.json.resource.NotFoundException
-import org.forgerock.json.resource.QueryFilter
 import org.forgerock.json.resource.QueryRequest
-import org.forgerock.json.resource.QueryResult
-import org.forgerock.json.resource.QueryResultHandler
+import org.forgerock.json.resource.QueryResponse
 import org.forgerock.json.resource.ReadRequest
 import org.forgerock.json.resource.Requests
-import org.forgerock.json.resource.Resource
-import org.forgerock.json.resource.RootContext
+import org.forgerock.json.resource.ResourceResponse
 import org.forgerock.json.resource.SortKey
 import org.forgerock.openicf.connectors.scriptedcrest.ScriptedCRESTConfiguration
+import org.forgerock.openicf.misc.crest.AbstractRemoteConnection
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
+import org.forgerock.services.context.RootContext
 import org.identityconnectors.common.StringUtil
 import org.identityconnectors.common.logging.Log
 import org.identityconnectors.framework.common.exceptions.ConnectorException
@@ -80,7 +79,7 @@ switch (operation) {
                         log.error(error, error.message)
                         exception = error
                     },
-                    handleResource: { Resource resource ->
+                    handleResource: { ResourceResponse resource ->
                         lastToken = resource.id
 
                         def content = resource.content.getObject();                        
@@ -158,8 +157,8 @@ switch (operation) {
                             }
                         })
                     },
-                    handleResult  : { QueryResult result -> }
-            ] as QueryResultHandler)
+                    handleResult  : { QueryResponse result -> }
+            ] as AbstractRemoteConnection.QueryResultResponseHandler)
 
             if (exception != null) {
                 throw new ConnectorException(exception.message, exception);
@@ -188,12 +187,12 @@ switch (operation) {
                     log.error(error, error.message)
                     exception = error
                 },
-                handleResource: { Resource resource ->
+                handleResource: { ResourceResponse resource ->
                     lastToken = resource.id
                     return true;
                 },
-                handleResult  : { QueryResult result -> }
-        ] as QueryResultHandler)
+                handleResult  : { QueryResponse result -> }
+        ] as AbstractRemoteConnection.QueryResultResponseHandler)
 
         if (exception != null) {
             throw new ConnectorException(exception.message, exception);

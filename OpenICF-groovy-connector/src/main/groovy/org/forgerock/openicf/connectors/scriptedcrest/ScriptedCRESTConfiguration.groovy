@@ -35,8 +35,8 @@ import org.apache.http.nio.client.HttpAsyncClient
 import org.apache.http.nio.client.methods.HttpAsyncMethods
 import org.apache.http.nio.protocol.HttpAsyncResponseConsumer
 import org.codehaus.groovy.runtime.InvokerHelper
-import org.forgerock.json.resource.Context
-import org.forgerock.json.resource.ResourceName
+import org.forgerock.services.context.Context
+import org.forgerock.json.resource.ResourcePath
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration
 import org.identityconnectors.common.Assertions
 import org.identityconnectors.common.security.GuardedString
@@ -120,7 +120,7 @@ class ScriptedCRESTConfiguration extends ScriptedConfiguration {
     void setServiceAddress(URI serviceAddress) {
         this.serviceAddress = serviceAddress
         host = null;
-        resourceName = null;
+        resourcePath = null;
     }
 
     URI getProxyAddress() {
@@ -153,11 +153,11 @@ class ScriptedCRESTConfiguration extends ScriptedConfiguration {
 
     private HttpHost proxy = null;
 
-    private ResourceName resourceName = null;
+    private ResourcePath resourcePath = null;
 
 
-    ResourceName getResourceName() {
-        resourceName = ResourceName.valueOf(serviceAddress?.path);
+    ResourcePath getResourcePath() {
+        resourcePath = ResourcePath.valueOf(serviceAddress?.path);
     }
 
     private HttpHost getHttpHost() {
@@ -209,8 +209,8 @@ class ScriptedCRESTConfiguration extends ScriptedConfiguration {
                 if (null == httpClient) {
                     Closure clone = init.rehydrate(this, this, this);
                     clone.setResolveStrategy(Closure.DELEGATE_FIRST);
-                    HttpAsyncClientBuilder builder = HttpAsyncClients.custom()
-                    clone(builder)
+                    HttpAsyncClientBuilder builder = HttpAsyncClients.custom();
+                    clone(builder);
                     httpClient = builder.build();
                     httpClient.start();
                 }

@@ -24,16 +24,17 @@
 
 package org.forgerock.openicf.misc.crest;
 
+import static org.forgerock.json.resource.Responses.newActionResponse;
+import static org.forgerock.json.resource.Responses.newQueryResponse;
+import static org.forgerock.json.resource.Responses.newResourceResponse;
+
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
 import org.apache.http.ContentTooLongException;
@@ -63,30 +64,31 @@ import org.apache.http.nio.util.SimpleInputBuffer;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.Asserts;
 import org.apache.http.util.EntityUtils;
-import org.forgerock.json.fluent.JsonPointer;
-import org.forgerock.json.fluent.JsonValue;
-import org.forgerock.json.fluent.JsonValueException;
+import org.forgerock.json.JsonPointer;
+import org.forgerock.json.JsonValue;
+import org.forgerock.json.JsonValueException;
 import org.forgerock.json.resource.ActionRequest;
+import org.forgerock.json.resource.ActionResponse;
 import org.forgerock.json.resource.Connection;
-import org.forgerock.json.resource.Context;
+import org.forgerock.json.resource.QueryResourceHandler;
+import org.forgerock.json.resource.QueryResponse;
+import org.forgerock.json.resource.ResourcePath;
+import org.forgerock.json.resource.ResourceResponse;
+import org.forgerock.services.context.Context;
 import org.forgerock.json.resource.CreateRequest;
 import org.forgerock.json.resource.DeleteRequest;
-import org.forgerock.json.resource.FutureResult;
 import org.forgerock.json.resource.InternalServerErrorException;
 import org.forgerock.json.resource.PatchOperation;
 import org.forgerock.json.resource.PatchRequest;
 import org.forgerock.json.resource.QueryRequest;
-import org.forgerock.json.resource.QueryResult;
-import org.forgerock.json.resource.QueryResultHandler;
 import org.forgerock.json.resource.ReadRequest;
 import org.forgerock.json.resource.Request;
-import org.forgerock.json.resource.Resource;
 import org.forgerock.json.resource.ResourceException;
-import org.forgerock.json.resource.ResourceName;
-import org.forgerock.json.resource.ResultHandler;
 import org.forgerock.json.resource.ServiceUnavailableException;
 import org.forgerock.json.resource.SortKey;
 import org.forgerock.json.resource.UpdateRequest;
+import org.forgerock.util.promise.Promise;
+import org.forgerock.util.promise.PromiseImpl;
 
 /**
  * A NAME does ...
@@ -109,12 +111,12 @@ public abstract class AbstractRemoteConnection implements Connection {
     static final Pattern CONTENT_TYPE_REGEX = Pattern.compile(
             "^application/json([ ]*;[ ]*charset=utf-8)?$", Pattern.CASE_INSENSITIVE);
 
-    private final ResourceName resourceName;
+    private final ResourcePath resourcePath;
 
     private final HttpHost httpHost;
 
-    protected AbstractRemoteConnection(ResourceName resourceName, HttpHost httpHost) {
-        this.resourceName = resourceName;
+    protected AbstractRemoteConnection(ResourcePath resourcePath, HttpHost httpHost) {
+        this.resourcePath = resourcePath;
         this.httpHost = httpHost;
     }
 
@@ -138,11 +140,11 @@ public abstract class AbstractRemoteConnection implements Connection {
     protected abstract JsonValue parseJsonBody(final HttpEntity entity, final boolean allowEmpty)
             throws ResourceException;
 
-    protected abstract QueryResult parseQueryResponse(final HttpResponse response,
-            final QueryResultHandler handler) throws ResourceException;
+    protected abstract QueryResponse parseQueryResponse(final HttpResponse response,
+            final QueryResourceHandler handler) throws ResourceException;
 
-    public ResourceName getResourceName() {
-        return resourceName;
+    public ResourcePath getResourcePath() {
+        return resourcePath;
     }
 
     public HttpHost getHttpHost() {
@@ -160,193 +162,208 @@ public abstract class AbstractRemoteConnection implements Connection {
     }
 
     @Override
-    public JsonValue action(final Context context, final ActionRequest request)
+    public ActionResponse action(final Context context, final ActionRequest request)
             throws ResourceException {
-        final FutureResult<JsonValue> future = actionAsync(context, request, null);
+        final Promise<ActionResponse, ResourceException> promise = actionAsync(context, request);
         try {
-            return future.get();
+            return promise.getOrThrow();
         } catch (final InterruptedException e) {
             throw interrupted(e);
+        } catch (Exception e) {
+            throw adapt(e);
         } finally {
             // Cancel the request if it hasn't completed.
-            future.cancel(false);
+            promise.cancel(false);
         }
     }
 
     @Override
-    public FutureResult<JsonValue> actionAsync(final Context context, final ActionRequest request,
-            final ResultHandler<? super JsonValue> handler) {
+    public Promise<ActionResponse, ResourceException> actionAsync(final Context context, final ActionRequest request) {
         try {
+            final PromiseImpl<ActionResponse, ResourceException> promise = PromiseImpl.create();
+            execute(context, convert(request), new JsonValueResponseHandler(),
+                    new FutureCallback<JsonValue>() {
+                        @Override
+                        public void completed(JsonValue jsonValue) {
+                            promise.handleResult(newActionResponse(jsonValue));
+                        }
 
-            final Future<JsonValue> result =
-                    execute(context, convert(request), new JsonValueResponseHandler(),
-                            new InternalFutureCallback<JsonValue>(
-                                    (ResultHandler<JsonValue>) handler));
+                        @Override
+                        public void failed(Exception e) {
+                            promise.handleException(adapt(e));
+                        }
 
-            return new InternalFutureResult<JsonValue>(result);
+                        @Override
+                        public void cancelled() {
+                            promise.handleException(new ServiceUnavailableException("Client thread interrupted"));
+                        }
+                    });
+            return promise;
         } catch (final Throwable t) {
-            final ResourceException exception = adapt(t);
-            if (null != handler) {
-                handler.handleError(exception);
-            }
-            return new FailedFutureResult<JsonValue>(exception);
+            return adapt(t).asPromise();
         }
     }
 
     @Override
-    public QueryResult query(final Context context, final QueryRequest request,
-            final QueryResultHandler handler) throws ResourceException {
-        final FutureResult<QueryResult> future = queryAsync(context, request, handler);
+    public QueryResponse query(final Context context, final QueryRequest request, final QueryResourceHandler handler)
+            throws ResourceException {
+        final Promise<QueryResponse, ResourceException> promise = queryAsync(context, request, handler);
         try {
-            return future.get();
+            return promise.getOrThrow();
         } catch (final InterruptedException e) {
             throw interrupted(e);
+        } catch (Exception e) {
+            throw adapt(e);
         } finally {
             // Cancel the request if it hasn't completed.
-            future.cancel(false);
+            promise.cancel(false);
         }
     }
 
     @Override
-    public QueryResult query(final Context context, final QueryRequest request,
-            final Collection<? super Resource> results) throws ResourceException {
-        final QueryResultHandler handler = new QueryResultHandler() {
-
+    public QueryResponse query(final Context context, final QueryRequest request,
+            final Collection<? super ResourceResponse> results) throws ResourceException {
+        final QueryResourceHandler handler = new QueryResourceHandler() {
             @Override
-            public void handleError(final ResourceException error) {
-                // Ignore - handled by future.
-            }
-
-            @Override
-            public boolean handleResource(final Resource resource) {
+            public boolean handleResource(final ResourceResponse resource) {
                 results.add(resource);
                 return true;
-            }
-
-            @Override
-            public void handleResult(final QueryResult result) {
-                // Ignore - handled by future.
             }
         };
         return query(context, request, handler);
     }
 
     @Override
-    public FutureResult<QueryResult> queryAsync(Context context, QueryRequest request,
-            final QueryResultHandler handler) {
+    public Promise<QueryResponse, ResourceException> queryAsync(Context context, QueryRequest request,
+            final QueryResourceHandler handler) {
         try {
+            final PromiseImpl<QueryResponse, ResourceException> promise = PromiseImpl.create();
+            execute(context, convert(request), new QueryResultResponseHandler(handler),
+                    new FutureCallback<QueryResponse>() {
+                        @Override
+                        public void completed(QueryResponse response) {
+                            promise.handleResult(response);
+                        }
 
-            final Future<QueryResult> result =
-                    execute(context, convert(request), new QueryResultResponseHandler(handler),
-                            new InternalFutureCallback<QueryResult>(handler));
+                        @Override
+                        public void failed(Exception e) {
+                            promise.handleException(adapt(e));
+                        }
 
-            return new InternalFutureResult<QueryResult>(result);
+                        @Override
+                        public void cancelled() {
+                            promise.handleException(new ServiceUnavailableException("Client thread interrupted"));
+                        }
+                    });
+            return promise;
         } catch (final Throwable t) {
-            final ResourceException exception = adapt(t);
-            if (null != handler) {
-                handler.handleError(exception);
-            }
-            return new FailedFutureResult<QueryResult>(exception);
+            //noinspection ThrowableResultOfMethodCallIgnored
+            return adapt(t).asPromise();
         }
     }
 
     @Override
-    public Resource create(final Context context, final CreateRequest request)
+    public ResourceResponse create(final Context context, final CreateRequest request)
             throws ResourceException {
-        final FutureResult<Resource> future = createAsync(context, request, null);
+        final Promise<ResourceResponse, ResourceException> promise = createAsync(context, request);
         try {
-            return future.get();
+            return promise.getOrThrow();
         } catch (final InterruptedException e) {
             throw interrupted(e);
+        } catch (Exception e) {
+            throw adapt(e);
         } finally {
             // Cancel the request if it hasn't completed.
-            future.cancel(false);
+            promise.cancel(false);
         }
     }
 
     @Override
-    public FutureResult<Resource> createAsync(Context context, CreateRequest request,
-            ResultHandler<? super Resource> handler) {
-        return handleRequestAsync(context, request, handler);
+    public Promise<ResourceResponse, ResourceException> createAsync(Context context, CreateRequest request) {
+        return handleRequestAsync(context, request);
     }
 
     @Override
-    public Resource delete(final Context context, final DeleteRequest request)
+    public ResourceResponse delete(final Context context, final DeleteRequest request)
             throws ResourceException {
-        final FutureResult<Resource> future = deleteAsync(context, request, null);
+        final Promise<ResourceResponse, ResourceException> promise = deleteAsync(context, request);
         try {
-            return future.get();
+            return promise.getOrThrow();
         } catch (final InterruptedException e) {
             throw interrupted(e);
+        } catch (Exception e) {
+            throw adapt(e);
         } finally {
             // Cancel the request if it hasn't completed.
-            future.cancel(false);
+            promise.cancel(false);
         }
     }
 
     @Override
-    public FutureResult<Resource> deleteAsync(Context context, DeleteRequest request,
-            ResultHandler<? super Resource> handler) {
-        return handleRequestAsync(context, request, handler);
+    public Promise<ResourceResponse, ResourceException> deleteAsync(Context context, DeleteRequest request) {
+        return handleRequestAsync(context, request);
     }
 
     @Override
-    public Resource patch(final Context context, final PatchRequest request)
+    public ResourceResponse patch(final Context context, final PatchRequest request)
             throws ResourceException {
-        final FutureResult<Resource> future = patchAsync(context, request, null);
+        final Promise<ResourceResponse, ResourceException> promise = patchAsync(context, request);
         try {
-            return future.get();
+            return promise.getOrThrow();
         } catch (final InterruptedException e) {
             throw interrupted(e);
+        } catch (Exception e) {
+            throw adapt(e);
         } finally {
             // Cancel the request if it hasn't completed.
-            future.cancel(false);
+            promise.cancel(false);
         }
     }
 
     @Override
-    public FutureResult<Resource> patchAsync(Context context, PatchRequest request,
-            ResultHandler<? super Resource> handler) {
-        return handleRequestAsync(context, request, handler);
+    public Promise<ResourceResponse, ResourceException> patchAsync(Context context, PatchRequest request) {
+        return handleRequestAsync(context, request);
     }
 
     @Override
-    public Resource read(final Context context, final ReadRequest request) throws ResourceException {
-        final FutureResult<Resource> future = readAsync(context, request, null);
+    public ResourceResponse read(final Context context, final ReadRequest request) throws ResourceException {
+        final Promise<ResourceResponse, ResourceException> promise = readAsync(context, request);
         try {
-            return future.get();
+            return promise.getOrThrow();
         } catch (final InterruptedException e) {
             throw interrupted(e);
+        } catch (Exception e) {
+            throw adapt(e);
         } finally {
             // Cancel the request if it hasn't completed.
-            future.cancel(false);
+            promise.cancel(false);
         }
     }
 
     @Override
-    public FutureResult<Resource> readAsync(Context context, ReadRequest request,
-            ResultHandler<? super Resource> handler) {
-        return handleRequestAsync(context, request, handler);
+    public Promise<ResourceResponse, ResourceException> readAsync(Context context, ReadRequest request) {
+        return handleRequestAsync(context, request);
     }
 
     @Override
-    public Resource update(final Context context, final UpdateRequest request)
+    public ResourceResponse update(final Context context, final UpdateRequest request)
             throws ResourceException {
-        final FutureResult<Resource> future = updateAsync(context, request, null);
+        final Promise<ResourceResponse, ResourceException> promise = updateAsync(context, request);
         try {
-            return future.get();
+            return promise.getOrThrow();
         } catch (final InterruptedException e) {
             throw interrupted(e);
+        } catch (Exception e) {
+            throw adapt(e);
         } finally {
             // Cancel the request if it hasn't completed.
-            future.cancel(false);
+            promise.cancel(false);
         }
     }
 
     @Override
-    public FutureResult<Resource> updateAsync(Context context, UpdateRequest request,
-            ResultHandler<? super Resource> handler) {
-        return handleRequestAsync(context, request, handler);
+    public Promise<ResourceResponse, ResourceException> updateAsync(Context context, UpdateRequest request) {
+        return handleRequestAsync(context, request);
     }
 
     private HttpUriRequest convert(Request request) throws ResourceException {
@@ -482,17 +499,17 @@ public abstract class AbstractRemoteConnection implements Connection {
     }
 
     private URIBuilder getUriBuilder(Request request) {
-        ResourceName resourceName = getResourceName().concat(request.getResourceNameObject());
+        ResourcePath resourcePath = getResourcePath().concat(request.getResourcePathObject());
 
         if (request instanceof CreateRequest
                 && null != ((CreateRequest) request).getNewResourceId()) {
-            resourceName = resourceName.concat(((CreateRequest) request).getNewResourceId());
+            resourcePath = resourcePath.concat(((CreateRequest) request).getNewResourceId());
         }
 
         URIBuilder builder =
                 new URIBuilder().setScheme(getHttpHost().getSchemeName()).setHost(
                         getHttpHost().getHostName()).setPort(getHttpHost().getPort()).setPath(
-                        "/" + resourceName.toString());
+                        "/" + resourcePath.toString());
 
         for (JsonPointer field : request.getFields()) {
             builder.addParameter(PARAM_FIELDS, field.toString());
@@ -500,21 +517,31 @@ public abstract class AbstractRemoteConnection implements Connection {
         return builder;
     }
 
-    private FutureResult<Resource> handleRequestAsync(final Context context, final Request request,
-            final ResultHandler<? super Resource> handler) {
+    private Promise<ResourceResponse, ResourceException> handleRequestAsync(final Context context,
+            final Request request) {
         try {
+            final PromiseImpl<ResourceResponse, ResourceException> promise = PromiseImpl.create();
+            execute(context, convert(request), new ResourceResponseHandler(),
+                    new FutureCallback<ResourceResponse>() {
+                        @Override
+                        public void completed(ResourceResponse response) {
+                            promise.handleResult(response);
+                        }
 
-            final Future<Resource> result =
-                    execute(context, convert(request), new ResourceResponseHandler(),
-                            new InternalFutureCallback<Resource>((ResultHandler<Resource>) handler));
+                        @Override
+                        public void failed(Exception e) {
+                            promise.handleException(adapt(e));
+                        }
 
-            return new InternalFutureResult<Resource>(result);
+                        @Override
+                        public void cancelled() {
+                            promise.handleException(new ServiceUnavailableException("Client thread interrupted"));
+                        }
+                    });
+            return promise;
         } catch (final Throwable t) {
-            final ResourceException exception = adapt(t);
-            if (null != handler) {
-                handler.handleError(exception);
-            }
-            return new FailedFutureResult<Resource>(exception);
+            //noinspection ThrowableResultOfMethodCallIgnored
+            return adapt(t).asPromise();
         }
     }
 
@@ -603,11 +630,11 @@ public abstract class AbstractRemoteConnection implements Connection {
      * , HttpClient may handle redirects (3xx responses) internally.
      */
     @Immutable
-    public class QueryResultResponseHandler extends AbstractJsonValueResponseHandler<QueryResult> {
+    public class QueryResultResponseHandler extends AbstractJsonValueResponseHandler<QueryResponse> {
 
-        private final QueryResultHandler handler;
+        private final QueryResourceHandler handler;
 
-        public QueryResultResponseHandler(final QueryResultHandler handler) {
+        public QueryResultResponseHandler(final QueryResourceHandler handler) {
             this.handler = handler;
         }
 
@@ -617,7 +644,7 @@ public abstract class AbstractRemoteConnection implements Connection {
          * If the response was unsuccessful (>= 300 status code), throws an
          * {@link org.apache.http.client.HttpResponseException}.
          */
-        public QueryResult buildResult(HttpContext context) throws Exception {
+        public QueryResponse buildResult(HttpContext context) throws Exception {
 
             return parseQueryResponse(response, handler);
 
@@ -636,7 +663,7 @@ public abstract class AbstractRemoteConnection implements Connection {
      * , HttpClient may handle redirects (3xx responses) internally.
      */
     @Immutable
-    public class ResourceResponseHandler extends AbstractJsonValueResponseHandler<Resource> {
+    public class ResourceResponseHandler extends AbstractJsonValueResponseHandler<ResourceResponse> {
 
         /**
          * Returns the response body as a String if the response was successful
@@ -644,7 +671,7 @@ public abstract class AbstractRemoteConnection implements Connection {
          * If the response was unsuccessful (>= 300 status code), throws an
          * {@link org.apache.http.client.HttpResponseException}.
          */
-        public Resource buildResult(HttpContext context) throws Exception {
+        public ResourceResponse buildResult(HttpContext context) throws Exception {
 
             return getAsResource(parseResponse(response));
 
@@ -676,158 +703,16 @@ public abstract class AbstractRemoteConnection implements Connection {
         }
     }
 
-    static private class InternalFutureCallback<R> implements FutureCallback<R> {
-
-        private final ResultHandler<R> handler;
-
-        protected InternalFutureCallback(final ResultHandler<R> handler) {
-            this.handler = handler;
-        }
-
-        protected ResultHandler<R> getResultHandler() {
-            return handler;
-        }
-
-        protected R adapt(R source) throws ResourceException {
-            return source;
-        }
-
-        @Override
-        public void completed(final R s) {
-            final ResultHandler<R> handler = getResultHandler();
-            if (null != handler) {
-                try {
-                    handler.handleResult(adapt(s));
-                } catch (final ResourceException e) {
-                    handler.handleError(e);
-                }
-            }
-        }
-
-        @Override
-        public void failed(final Exception e) {
-            final ResultHandler<R> handler = getResultHandler();
-            if (null != handler) {
-                if (e instanceof HttpResponseResourceException) {
-                    handler.handleError(((HttpResponseResourceException) e).getCause());
-                } else {
-                    handler.handleError(new InternalServerErrorException(e));
-                }
-            }
-        }
-
-        @Override
-        public void cancelled() {
-            final ResultHandler<R> handler = getResultHandler();
-            if (null != handler) {
-                handler.handleError(new ServiceUnavailableException("Client thread interrupted"));
-            }
-        }
-    }
-
-    /**
-     * @param < T >
-     */
-    private static class InternalFutureResult<T> implements FutureResult<T> {
-
-        private final Future<T> futureTask;
-
-        protected InternalFutureResult(final Future<T> futureTask) {
-            this.futureTask = futureTask;
-        }
-
-        protected Future<T> getResult() {
-            return futureTask;
-        }
-
-        @Override
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            return getResult().cancel(mayInterruptIfRunning);
-        }
-
-        @Override
-        public T get() throws ResourceException, InterruptedException {
-            try {
-                return getResult().get();
-            } catch (ExecutionException e) {
-                final Throwable cause = e.getCause();
-                if (cause instanceof ResourceException) {
-                    throw (ResourceException) cause;
-                }
-                throw new InternalServerErrorException(e);
-            }
-        }
-
-        @Override
-        public T get(long timeout, TimeUnit unit) throws ResourceException, TimeoutException,
-                InterruptedException {
-            try {
-                return getResult().get(timeout, unit);
-            } catch (ExecutionException e) {
-                final Throwable cause = e.getCause();
-                if (cause instanceof ResourceException) {
-                    throw (ResourceException) cause;
-                }
-                throw new InternalServerErrorException(e);
-            }
-        }
-
-        @Override
-        public boolean isCancelled() {
-            return getResult().isCancelled();
-        }
-
-        @Override
-        public boolean isDone() {
-            return getResult().isDone();
-        }
-    }
-
-    static class FailedFutureResult<V> implements FutureResult<V> {
-        private ResourceException exception;
-
-        FailedFutureResult(final ResourceException result) {
-            this.exception = result;
-        }
-
-        @Override
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            return false; // Cannot cancel.
-        }
-
-        @Override
-        public V get() throws ResourceException, InterruptedException {
-            throw exception;
-        }
-
-        @Override
-        public V get(long timeout, TimeUnit unit) throws ResourceException, TimeoutException,
-                InterruptedException {
-            throw exception;
-        }
-
-        @Override
-        public boolean isCancelled() {
-            return false;
-        }
-
-        @Override
-        public boolean isDone() {
-            return true;
-        }
-
-    }
-
     //
     // Protected static methods
     //
 
-    protected static Resource getAsResource(final JsonValue value) throws ResourceException {
+    protected static ResourceResponse getAsResource(final JsonValue value) throws ResourceException {
         try {
-            return new Resource(value.get(Resource.FIELD_CONTENT_ID).asString(), value
-                    .get(Resource.FIELD_CONTENT_REVISION).asString(), value);
+            return newResourceResponse(value.get(ResourceResponse.FIELD_CONTENT_ID).asString(), value
+                    .get(ResourceResponse.FIELD_CONTENT_REVISION).asString(), value);
         } catch (JsonValueException e) {
-            // What shell we do if the response does not contains the _id
+            // What shall we do if the response does not contain the _id
             throw new InternalServerErrorException(e);
         }
     }
@@ -839,7 +724,7 @@ public abstract class AbstractRemoteConnection implements Connection {
             if (code.isNumber()) {
                 String message = resourceException.get(ResourceException.FIELD_MESSAGE).asString();
 
-                exception = ResourceException.getException(code.asInteger(), message);
+                exception = ResourceException.newResourceException(code.asInteger(), message);
 
                 String reason = resourceException.get(ResourceException.FIELD_REASON).asString();
                 if (null != reason) {
@@ -878,7 +763,7 @@ public abstract class AbstractRemoteConnection implements Connection {
             }
             if (null == exception) {
                 exception =
-                        ResourceException.getException(statusLine.getStatusCode(), statusLine
+                        ResourceException.newResourceException(statusLine.getStatusCode(), statusLine
                                 .getReasonPhrase());
             }
         }

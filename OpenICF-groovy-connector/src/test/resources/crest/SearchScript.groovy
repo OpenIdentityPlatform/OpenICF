@@ -25,18 +25,17 @@
 
 import groovy.json.JsonOutput
 import org.forgerock.json.resource.Connection
-import org.forgerock.json.resource.QueryFilter
 import org.forgerock.json.resource.QueryRequest
-import org.forgerock.json.resource.QueryResult
-import org.forgerock.json.resource.QueryResultHandler
+import org.forgerock.json.resource.QueryResponse
 import org.forgerock.json.resource.Requests
-import org.forgerock.json.resource.Resource
-import org.forgerock.json.resource.RootContext
+import org.forgerock.json.resource.ResourceResponse
 import org.forgerock.json.resource.SortKey
 import org.forgerock.openicf.connectors.scriptedcrest.ScriptedCRESTConfiguration
+import org.forgerock.openicf.misc.crest.AbstractRemoteConnection
 import org.forgerock.openicf.misc.crest.CRESTFilterVisitor
 import org.forgerock.openicf.misc.crest.VisitorParameter
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
+import org.forgerock.services.context.RootContext
 import org.identityconnectors.common.logging.Log
 import org.identityconnectors.framework.common.objects.Attribute
 import org.identityconnectors.framework.common.objects.AttributeUtil
@@ -161,7 +160,7 @@ if (objectClassInfo != null) {
             handleError   : { org.forgerock.json.resource.ResourceException error ->
                 log.error(error, error.message)
             },
-            handleResource: { Resource resource ->
+            handleResource: { ResourceResponse resource ->
                 handler {
                     uid resource.id, resource.revision
                     setObjectClass objectClass
@@ -192,8 +191,8 @@ if (objectClassInfo != null) {
                     }
                 }
             },
-            handleResult  : { QueryResult result -> }
-    ] as QueryResultHandler)
+            handleResult  : { QueryResponse result -> }
+    ] as AbstractRemoteConnection.QueryResultResponseHandler)
 
     return new SearchResult(result.pagedResultsCookie, result.remainingPagedResults);
 

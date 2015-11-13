@@ -27,7 +27,7 @@ package org.forgerock.openicf.misc.crest;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.forgerock.json.resource.QueryFilter;
+import org.forgerock.util.query.QueryFilter;
 import org.identityconnectors.framework.common.objects.filter.AndFilter;
 import org.identityconnectors.framework.common.objects.filter.ContainsAllValuesFilter;
 import org.identityconnectors.framework.common.objects.filter.ContainsFilter;
@@ -50,13 +50,13 @@ import org.identityconnectors.framework.common.objects.filter.StartsWithFilter;
  *
  * @author Laszlo Hordos
  */
-public class CRESTFilterVisitor implements FilterVisitor<QueryFilter, VisitorParameter> {
+public class CRESTFilterVisitor implements FilterVisitor<QueryFilter<String>, VisitorParameter> {
 
     public static final CRESTFilterVisitor VISITOR = new CRESTFilterVisitor();
 
     public QueryFilter visitAndFilter(VisitorParameter parameter, AndFilter subFilters) {
-        final Collection<QueryFilter> filters =
-                new ArrayList<QueryFilter>(subFilters.getFilters().size());
+        final Collection<QueryFilter<String>> filters =
+                new ArrayList<QueryFilter<String>>(subFilters.getFilters().size());
         for (Filter filter : subFilters.getFilters()) {
             filters.add(filter.accept(this, parameter));
         }
@@ -64,8 +64,8 @@ public class CRESTFilterVisitor implements FilterVisitor<QueryFilter, VisitorPar
     }
 
     public QueryFilter visitOrFilter(VisitorParameter parameter, OrFilter subFilters) {
-        final Collection<QueryFilter> filters =
-                new ArrayList<QueryFilter>(subFilters.getFilters().size());
+        final Collection<QueryFilter<String>> filters =
+                new ArrayList<QueryFilter<String>>(subFilters.getFilters().size());
         for (Filter filter : subFilters.getFilters()) {
             filters.add(filter.accept(this, parameter));
         }

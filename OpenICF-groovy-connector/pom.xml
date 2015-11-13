@@ -31,7 +31,7 @@
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>groovy-connector</artifactId>
-    <version>1.4.2.0-RC2-SNAPSHOT</version>
+    <version>1.4.2.0-RC2SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>Groovy Connector Toolkit</name>
     <description>This is a generic bundle that contains base classes and interfaces needed to write a scripted
@@ -68,7 +68,7 @@
             org.apache.http*;version="[4.3.0, 4.4.0)";resolution:=optional
         </openicf.osgi.import.defaults>
         <openicf.osgi.embed />
-        <forgerock.rest.version>2.4.0</forgerock.rest.version>
+        <forgerock.rest.version>3.0.0</forgerock.rest.version>
     </properties>
     <repositories>
         <repository>
@@ -191,12 +191,14 @@
             <version>2.4.0-rc1</version>
             <scope>test</scope>
         </dependency>
+        <!--
         <dependency>
             <groupId>org.forgerock.commons</groupId>
             <artifactId>json-resource-servlet</artifactId>
             <version>${forgerock.rest.version}</version>
             <scope>test</scope>
         </dependency>
+        -->
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlet</artifactId>

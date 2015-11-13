@@ -23,7 +23,7 @@
  */
 
 
-import org.forgerock.json.fluent.JsonValue
+import org.forgerock.json.JsonValue
 import org.identityconnectors.common.Base64
 import org.identityconnectors.common.security.GuardedByteArray
 import org.identityconnectors.common.security.GuardedString

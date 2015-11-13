@@ -231,7 +231,7 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
             }
         }
         arguments.setVariable(ATTRIBUTES, attributes);
-        return returnUid(OperationType.CREATE, objectClass,evaluateScript(scriptName, createBinding(arguments,
+        return returnUid(OperationType.CREATE, objectClass, evaluateScript(scriptName, createBinding(arguments,
                 OperationType.CREATE, objectClass, null, createAttributes, options), getScriptEvaluator()));
     }
 

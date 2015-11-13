@@ -196,7 +196,7 @@ public class ScriptedCRESTConnectorTest extends RESTTestBase {
         Assert.assertTrue(handler.getObjects().isEmpty());
         Assert.assertEquals(
                 result.getPagedResultsCookie(),
-                "((((/attributeString sw \"reti\" and /attributeString co \"pipi\") and /attributeString ew \"ter\") and /attributeStringMultivalue ca \"[\"value1\",\"value2\"]\") and ((((/attributeInteger le 42 or /attributeFloat lt 3.4028235E38) or /attributeDouble ge 4.9E-324) or /attributeLong gt -9223372036854775808) and ! (/attributeByte eq 33)))");
+                "((((attributeString sw \"reti\" and attributeString co \"pipi\") and attributeString ew \"ter\") and attributeStringMultivalue ca \"[\"value1\",\"value2\"]\") and ((((attributeInteger le 42 or attributeFloat lt 3.4028235E38) or attributeDouble ge 4.9E-324) or attributeLong gt -9223372036854775808) and ! (attributeByte eq 33)))");
     }
 
     @Test(enabled = false)

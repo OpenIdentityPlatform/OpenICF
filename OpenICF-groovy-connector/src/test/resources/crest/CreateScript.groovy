@@ -23,14 +23,14 @@
  */
 
 
-import org.forgerock.json.fluent.JsonValue
+import org.forgerock.json.JsonValue
 import org.forgerock.json.resource.Connection
 import org.forgerock.json.resource.CreateRequest
 import org.forgerock.json.resource.Requests
-import org.forgerock.json.resource.Resource
-import org.forgerock.json.resource.RootContext
+import org.forgerock.json.resource.ResourceResponse
 import org.forgerock.openicf.connectors.scriptedcrest.ScriptedCRESTConfiguration
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
+import org.forgerock.services.context.RootContext
 import org.identityconnectors.common.logging.Log
 import org.identityconnectors.framework.common.objects.Attribute
 import org.identityconnectors.framework.common.objects.AttributeUtil
@@ -58,7 +58,7 @@ if (objectClassInfo != null) {
 
     CreateRequest request = Requests.newCreateRequest(objectClassInfo.resourceContainer, new JsonValue(user))
     request.addField("_id", "_rev")
-    Resource resource = connection.create(new RootContext(), request)
+    ResourceResponse resource = connection.create(new RootContext(), request)
     return new Uid(resource.getId(), resource.getRevision())
 
 

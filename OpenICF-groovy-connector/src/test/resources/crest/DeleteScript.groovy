@@ -25,9 +25,9 @@
 import org.forgerock.json.resource.Connection
 import org.forgerock.json.resource.DeleteRequest
 import org.forgerock.json.resource.Requests
-import org.forgerock.json.resource.RootContext
 import org.forgerock.openicf.connectors.scriptedcrest.ScriptedCRESTConfiguration
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
+import org.forgerock.services.context.RootContext
 import org.identityconnectors.common.logging.Log
 import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationOptions

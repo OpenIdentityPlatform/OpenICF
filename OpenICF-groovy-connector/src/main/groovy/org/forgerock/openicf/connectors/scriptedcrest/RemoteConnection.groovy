@@ -24,6 +24,10 @@
 
 package org.forgerock.openicf.connectors.scriptedcrest
 
+import org.forgerock.json.resource.CountPolicy
+
+import static org.forgerock.json.resource.Responses.newQueryResponse;
+
 import groovy.json.JsonException
 import org.apache.http.HttpEntity
 import org.apache.http.HttpResponse
@@ -31,16 +35,16 @@ import org.apache.http.StatusLine
 import org.apache.http.client.methods.HttpUriRequest
 import org.apache.http.concurrent.FutureCallback
 import org.apache.http.nio.protocol.HttpAsyncResponseConsumer
-import org.forgerock.json.fluent.JsonValue
+import org.forgerock.json.JsonValue
 import org.forgerock.json.resource.BadRequestException
-import org.forgerock.json.resource.Context
 import org.forgerock.json.resource.InternalServerErrorException
-import org.forgerock.json.resource.QueryResult
-import org.forgerock.json.resource.QueryResultHandler
+import org.forgerock.json.resource.QueryResourceHandler
+import org.forgerock.json.resource.QueryResponse
 import org.forgerock.json.resource.ResourceException
 import org.forgerock.openicf.misc.crest.AbstractRemoteConnection
-import org.forgerock.openicf.misc.crest.AbstractRemoteConnection.HttpResponseResourceException
-//Add import org.forgerock.openicf.misc.crest.AbstractRemoteConnection.HttpResponseResourceException
+import org.forgerock.services.context.Context
+
+//import org.forgerock.openicf.misc.crest.AbstractRemoteConnection.HttpResponseResourceException
 
 import java.util.concurrent.Future
 
@@ -53,7 +57,7 @@ class RemoteConnection extends AbstractRemoteConnection {
     private final ScriptedCRESTConfiguration configuration;
 
     RemoteConnection(final ScriptedCRESTConfiguration configuration) {
-        super(configuration.getResourceName(), configuration.getHttpHost())
+        super(configuration.getResourcePath(), configuration.getHttpHost())
         this.configuration = configuration
     }
 
@@ -62,7 +66,8 @@ class RemoteConnection extends AbstractRemoteConnection {
         return configuration.isClosed();
     }
 
-    def <T> Future<T> execute(Context context, HttpUriRequest request, HttpAsyncResponseConsumer<T> responseConsumer, FutureCallback<T> callback) {
+    public <T> Future<T> execute(Context context, HttpUriRequest request, HttpAsyncResponseConsumer<T> responseConsumer,
+            FutureCallback<T> callback) {
         return configuration.execute(context, request, responseConsumer, callback)
     }
 
@@ -108,8 +113,8 @@ class RemoteConnection extends AbstractRemoteConnection {
         }
     }
 
-    protected QueryResult parseQueryResponse(final HttpResponse response,
-                                             final QueryResultHandler handler) throws ResourceException {
+    protected QueryResponse parseQueryResponse(final HttpResponse response,
+                                             final QueryResourceHandler handler) throws ResourceException {
         final StatusLine statusLine = response.getStatusLine();
         final HttpEntity entity = response.getEntity();
 
@@ -137,14 +142,15 @@ class RemoteConnection extends AbstractRemoteConnection {
                 }
             })
 
-            if (content."${QueryResult.FIELD_ERROR}" != null) {
-                exception =
-                        getAsResourceException(new JsonValue(content."${QueryResult.FIELD_ERROR}"));
-                throw new HttpResponseResourceException(exception);
+            if (content."${QueryResponse.FIELD_ERROR}" != null) {
+                exception = getAsResourceException(new JsonValue(content."${QueryResponse.FIELD_ERROR}"));
+                // Groovyc cannot find the class without this qualification
+                //noinspection UnnecessaryQualifiedReference
+                throw new AbstractRemoteConnection.HttpResponseResourceException(exception);
             }
 
-            String pagedResultsCookie = content."${QueryResult.FIELD_PAGED_RESULTS_COOKIE}";
-            int remainingPagedResults = content."${QueryResult.FIELD_REMAINING_PAGED_RESULTS}";
+            String pagedResultsCookie = content."${QueryResponse.FIELD_PAGED_RESULTS_COOKIE}";
+            int remainingPagedResults = content."${QueryResponse.FIELD_REMAINING_PAGED_RESULTS}";
 
 
             if (hasTrailingGarbage) {
@@ -152,7 +158,7 @@ class RemoteConnection extends AbstractRemoteConnection {
                 // "The request could not be processed because there is "
                 // + "trailing data after the JSON content");
             }
-            return new QueryResult(pagedResultsCookie, remainingPagedResults);
+            return newQueryResponse(pagedResultsCookie, CountPolicy.EXACT, remainingPagedResults);
 
         } catch (final JsonException e) {
             // throw new BadRequestException(

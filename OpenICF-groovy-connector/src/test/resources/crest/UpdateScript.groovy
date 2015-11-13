@@ -27,11 +27,11 @@ import org.forgerock.json.resource.NotFoundException
 import org.forgerock.json.resource.PatchRequest
 import org.forgerock.json.resource.ReadRequest
 import org.forgerock.json.resource.Requests
-import org.forgerock.json.resource.Resource
-import org.forgerock.json.resource.RootContext
+import org.forgerock.json.resource.ResourceResponse
 import org.forgerock.json.resource.UpdateRequest
 import org.forgerock.openicf.connectors.scriptedcrest.ScriptedCRESTConfiguration
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
+import org.forgerock.services.context.RootContext
 import org.identityconnectors.common.logging.Log
 import org.identityconnectors.framework.common.exceptions.ConnectorException
 import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException
@@ -63,7 +63,7 @@ switch (operation) {
                 ReadRequest request = Requests.newReadRequest(objectClassInfo.resourceContainer, uid.uidValue)
                 request.addField("/")
                 try {
-                    Resource resource = connection.read(new RootContext(), request)
+                    ResourceResponse resource = connection.read(new RootContext(), request)
 
                     updateAttributes.each {
                         def info = objectClassInfo.attributes[it.name]
@@ -99,7 +99,7 @@ switch (operation) {
                         }
                     }
 
-                    UpdateRequest updateRequest = Requests.newUpdateRequest(request.resourceName, resource.content)
+                    UpdateRequest updateRequest = Requests.newUpdateRequest(request.getResourcePath, resource.content)
                     updateRequest.setRevision(resource.revision)
                     updateRequest.addField("_id", "_rev")
                     def r = connection.update(new RootContext(), updateRequest)
@@ -112,7 +112,7 @@ switch (operation) {
                 request.addField("_id", "_rev")
 
 
-                Resource resource = connection.patch(new RootContext(), request)
+                ResourceResponse resource = connection.patch(new RootContext(), request)
                 return new Uid(resource.getId(), resource.getRevision())
             }
         } else {

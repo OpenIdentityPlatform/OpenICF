@@ -25,7 +25,8 @@ import java.util.Map;
 import org.apache.http.HttpEntity;
 import org.codehaus.groovy.runtime.DefaultGroovyMethodsSupport;
 import org.codehaus.groovy.runtime.IOGroovyMethods;
-import org.forgerock.json.resource.QueryResult;
+import org.forgerock.json.resource.QueryResponse;
+import org.forgerock.json.resource.ResourceResponse;
 
 import groovy.json.JsonException;
 import groovy.json.JsonLexer;
@@ -226,7 +227,7 @@ public class StreamingJsonSlurper {
             if (currentToken.getType() == OPEN_CURLY) {
                 content.put(mapKey, parseObject(lexer, null));
             } else if (currentToken.getType() == OPEN_BRACKET) {
-                if (mapKey.equals(QueryResult.FIELD_RESULT)) {
+                if (mapKey.equals(QueryResponse.FIELD_RESULT)) {
                     content.put(mapKey, parseArray(lexer, handler));
                 } else {
                     content.put(mapKey, parseArray(lexer, null));
