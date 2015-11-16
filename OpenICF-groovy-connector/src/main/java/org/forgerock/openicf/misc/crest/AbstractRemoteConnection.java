@@ -521,27 +521,36 @@ public abstract class AbstractRemoteConnection implements Connection {
             final Request request) {
         try {
             final PromiseImpl<ResourceResponse, ResourceException> promise = PromiseImpl.create();
-            execute(context, convert(request), new ResourceResponseHandler(),
-                    new FutureCallback<ResourceResponse>() {
-                        @Override
-                        public void completed(ResourceResponse response) {
-                            promise.handleResult(response);
-                        }
-
-                        @Override
-                        public void failed(Exception e) {
-                            promise.handleException(adapt(e));
-                        }
-
-                        @Override
-                        public void cancelled() {
-                            promise.handleException(new ServiceUnavailableException("Client thread interrupted"));
-                        }
-                    });
+            final InternalFutureCallback<ResourceResponse> callback =
+                    new InternalFutureCallback<ResourceResponse>(promise);
+            execute(context, convert(request), new ResourceResponseHandler(), callback);
             return promise;
         } catch (final Throwable t) {
             //noinspection ThrowableResultOfMethodCallIgnored
             return adapt(t).asPromise();
+        }
+    }
+
+    class InternalFutureCallback<T> implements FutureCallback<T> {
+        final PromiseImpl<T, ResourceException> promise;
+
+        public InternalFutureCallback(PromiseImpl<T, ResourceException> promise) {
+            this.promise = promise;
+        }
+
+        @Override
+        public void completed(T response) {
+            promise.handleResult(response);
+        }
+
+        @Override
+        public void failed(Exception e) {
+            promise.handleException(adapt(e));
+        }
+
+        @Override
+        public void cancelled() {
+            promise.handleException(new ServiceUnavailableException("Client thread interrupted"));
         }
     }
 
