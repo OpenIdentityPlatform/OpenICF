@@ -157,7 +157,7 @@ if (objectClassInfo != null) {
     }
 
     def result = connection.query(new RootContext(), request, [
-            handleError   : { org.forgerock.json.resource.ResourceException error ->
+            handleError   : { ResourceException error ->
                 log.error(error, error.message)
             },
             handleResource: { ResourceResponse resource ->

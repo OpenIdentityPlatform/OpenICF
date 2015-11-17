@@ -153,8 +153,18 @@
             <groupId>org.forgerock.commons</groupId>
             <artifactId>json-resource</artifactId>
             <version>${forgerock.rest.version}</version>
-            <scope>provided</scope>
-            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.forgerock.commons</groupId>
+            <artifactId>json-resource-http</artifactId>
+            <version>${forgerock.rest.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.forgerock.http</groupId>
+            <artifactId>chf-http-servlet</artifactId>
+            <version>1.0.0</version>
+            <scope>test</scope>
         </dependency>
 
         <!-- Test Dependencies -->

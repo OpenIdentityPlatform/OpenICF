@@ -26,6 +26,7 @@ package org.forgerock.openicf.connectors;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Enumeration;
 
 import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
@@ -38,9 +39,11 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.security.Credential;
-//import org.forgerock.json.resource.servlet.HttpServlet;
-import javax.servlet.http.HttpServlet;
+
+import org.forgerock.http.HttpApplication;
+import org.forgerock.http.servlet.HttpFrameworkServlet;
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase;
+import org.forgerock.services.context.RootContext;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorFacade;
@@ -55,6 +58,9 @@ import org.identityconnectors.test.common.TestHelpers;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 
 /**
  * @author Laszlo Hordos
@@ -107,8 +113,7 @@ public abstract class RESTTestBase {
     public void startServer() throws Exception {
         String httpPort = System.getProperty("jetty.http.port", "28080");
         System.out.append("Test port: ").println(httpPort);
-        // Create a basic jetty server object that will listen on port 8080.
-        // you can programmatically obtain it for use in test cases.
+
         server = new Server(Integer.parseInt(httpPort));
         for (org.eclipse.jetty.server.Connector c : server.getConnectors()) {
             c.setHost("127.0.0.1");
@@ -119,30 +124,10 @@ public abstract class RESTTestBase {
                 new ServletContextHandler(server, "/", ServletContextHandler.SESSIONS
                         | ServletContextHandler.SECURITY);
 
-        // ADD SERVLET
-        // /rest/users/*
-        ServletHolder holder = handler.addServlet(HttpServlet.class, "/rest/users/*");
-        holder.setInitParameter("connection-factory-class",
-                "org.forgerock.json.resource.servlet.MemoryBackendConnectionFactoryProvider");
-        holder.setInitParameter("uri-template", "");
-
-        // /rest/groups/*
-        holder = handler.addServlet(HttpServlet.class, "/rest/groups/*");
-        holder.setInitParameter("connection-factory-class",
-                "org.forgerock.json.resource.servlet.MemoryBackendConnectionFactoryProvider");
-        holder.setInitParameter("uri-template", "");
-
-        // /crest/users/*
-        holder = handler.addServlet(HttpServlet.class, "/crest/users/*");
-        holder.setInitParameter("connection-factory-class",
-                "org.forgerock.json.resource.servlet.MemoryBackendConnectionFactoryProvider");
-        holder.setInitParameter("uri-template", "");
-
-        // /crest/groups/*
-        holder = handler.addServlet(HttpServlet.class, "/crest/groups/*");
-        holder.setInitParameter("connection-factory-class",
-                "org.forgerock.json.resource.servlet.MemoryBackendConnectionFactoryProvider");
-        holder.setInitParameter("uri-template", "");
+        // Attach the CREST router
+        HttpApplication app = new TestHttpApplication();
+        HttpFrameworkServlet servlet = new HttpFrameworkServlet(app);
+        handler.addServlet(new ServletHolder(servlet), "/*");
 
         // SECURITY HANDLER
         SecurityHandler sh = getSecurityHandler();
@@ -150,6 +135,7 @@ public abstract class RESTTestBase {
 
         server.setHandler(sh);
         server.start();
+
         logger.info("Jetty Server Started");
     }
 

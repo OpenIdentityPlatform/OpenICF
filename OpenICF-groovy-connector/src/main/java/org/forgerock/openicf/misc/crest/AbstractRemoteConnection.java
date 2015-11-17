@@ -562,8 +562,7 @@ public abstract class AbstractRemoteConnection implements Connection {
     // Internal Class definitions
 
     @Immutable
-    static abstract public class AbstractJsonValueResponseHandler<T> extends
-            AbstractAsyncResponseConsumer<T> {
+    static abstract public class AbstractJsonValueResponseHandler<T> extends AbstractAsyncResponseConsumer<T> {
 
         protected volatile HttpResponse response;
         private volatile SimpleInputBuffer buf;
@@ -753,7 +752,7 @@ public abstract class AbstractRemoteConnection implements Connection {
         ResourceException exception = null;
         if (statusLine.getStatusCode() >= 300) {
 
-            String contentType = entity.getContentType().getValue();
+            String contentType = entity.getContentType() == null ? null : entity.getContentType().getValue();
             if (contentType != null && CONTENT_TYPE_REGEX.matcher(contentType).matches()) {
                 try {
                     JsonValue resourceException = parseJsonBody(entity, true);
