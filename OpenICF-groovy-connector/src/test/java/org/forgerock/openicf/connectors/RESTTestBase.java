@@ -26,6 +26,7 @@ package org.forgerock.openicf.connectors;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Enumeration;
 
 import org.eclipse.jetty.security.ConstraintMapping;
@@ -36,6 +37,7 @@ import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.UserIdentity;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.security.Credential;
@@ -61,6 +63,10 @@ import org.testng.annotations.BeforeSuite;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Laszlo Hordos
@@ -109,6 +115,20 @@ public abstract class RESTTestBase {
         return sh;
     }
 
+    @SuppressWarnings("serial")
+    public static class HelloServlet extends HttpServlet
+    {
+        @Override
+        protected void doGet( HttpServletRequest request,
+                HttpServletResponse response ) throws ServletException,
+                IOException
+        {
+            response.setContentType("text/html");
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.getWriter().println("<h1>Hello from HelloServlet</h1>");
+        }
+    }
+
     @BeforeSuite
     public void startServer() throws Exception {
         String httpPort = System.getProperty("jetty.http.port", "28080");
@@ -124,6 +144,8 @@ public abstract class RESTTestBase {
                 new ServletContextHandler(server, "/", ServletContextHandler.SESSIONS
                         | ServletContextHandler.SECURITY);
 
+        handler.addServlet(HelloServlet.class.getName(), "/foobar/*");
+
         // Attach the CREST router
         HttpApplication app = new TestHttpApplication();
         HttpFrameworkServlet servlet = new HttpFrameworkServlet(app);
@@ -136,7 +158,7 @@ public abstract class RESTTestBase {
         server.setHandler(sh);
         server.start();
 
-        logger.info("Jetty Server Started");
+        logger.info("Jetty Server Started: " + server.getState() + ", " + server.isRunning());
     }
 
     @AfterSuite
