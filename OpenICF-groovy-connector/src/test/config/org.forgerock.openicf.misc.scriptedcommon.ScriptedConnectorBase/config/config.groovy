@@ -106,7 +106,7 @@ environments {
     CREST {
         configuration {
             scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/crest/").file, "UTF-8")]
-            serviceAddress = new URI("http://localhost:${httpPort}/crest/")
+            serviceAddress = new URI("http://localhost:${httpPort}/test/crest/")
             username = "admin"
             password = new GuardedString("Passw0rd".toCharArray())
         }
@@ -126,7 +126,7 @@ environments {
     REST {
         configuration {
             scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/rest/").file, "UTF-8")]
-            serviceAddress = new URI("http://localhost:${httpPort}/rest/")
+            serviceAddress = new URI("http://localhost:${httpPort}/test/rest/")
             username = "admin"
             password = new GuardedString("Passw0rd".toCharArray())
             customizerScriptFileName = "CustomizerScript.groovy"

@@ -50,7 +50,6 @@ def objectClass = objectClass as ObjectClass
 def options = options as OperationOptions
 def schema = schema as Schema
 
-
 Map<String, Object> objectClassInfo = configuration.propertyBag[objectClass.objectClassValue];
 if (objectClassInfo != null) {
 

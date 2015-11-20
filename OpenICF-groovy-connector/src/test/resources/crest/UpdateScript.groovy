@@ -53,7 +53,6 @@ def options = options as OperationOptions
 def uid = uid as Uid
 def schema = schema as Schema
 
-
 switch (operation) {
     case OperationType.UPDATE:
         Map<String, Object> objectClassInfo = configuration.propertyBag[objectClass.objectClassValue];
@@ -99,7 +98,7 @@ switch (operation) {
                         }
                     }
 
-                    UpdateRequest updateRequest = Requests.newUpdateRequest(request.getResourcePath, resource.content)
+                    UpdateRequest updateRequest = Requests.newUpdateRequest(objectClassInfo.resourceContainer, uid.uidValue, resource.content)
                     updateRequest.setRevision(resource.revision)
                     updateRequest.addField("_id", "_rev")
                     def r = connection.update(new RootContext(), updateRequest)

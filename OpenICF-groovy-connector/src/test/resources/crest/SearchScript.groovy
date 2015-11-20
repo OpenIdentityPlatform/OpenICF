@@ -26,6 +26,7 @@
 import groovy.json.JsonOutput
 import org.forgerock.json.resource.Connection
 import org.forgerock.json.resource.QueryRequest
+import org.forgerock.json.resource.QueryResourceHandler
 import org.forgerock.json.resource.QueryResponse
 import org.forgerock.json.resource.Requests
 import org.forgerock.json.resource.ResourceResponse
@@ -192,7 +193,7 @@ if (objectClassInfo != null) {
                 }
             },
             handleResult  : { QueryResponse result -> }
-    ] as AbstractRemoteConnection.QueryResultResponseHandler)
+    ] as QueryResourceHandler)
 
     return new SearchResult(result.pagedResultsCookie, result.remainingPagedResults);
 

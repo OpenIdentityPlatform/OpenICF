@@ -177,6 +177,7 @@ class SchemaSlurper {
                           }
                       }]]
         }
+        schema;
     }
 
     String getResourceContainer(ObjectClass objectClass) {
