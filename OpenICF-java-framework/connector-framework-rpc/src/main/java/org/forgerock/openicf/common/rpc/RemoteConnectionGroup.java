@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -123,6 +124,13 @@ public abstract class RemoteConnectionGroup<G extends RemoteConnectionGroup<G, H
                     } catch (Throwable e) {
                         if (e instanceof InterruptedException) {
                             return null;
+                        }
+                        if (e instanceof TimeoutException){
+                            try {
+                                connectionInfo.close();
+                            } catch (Throwable t){
+                                //Should not happen
+                            } 
                         }
                         if (null == failed) {
                             failed = new ArrayList<H>(webSockets.size());

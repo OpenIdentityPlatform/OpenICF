@@ -100,7 +100,7 @@ public abstract class LocalOperationProcessor<V>
                 new Function<WebSocketConnectionHolder, WebSocketConnectionHolder, Exception>() {
                     public WebSocketConnectionHolder apply(WebSocketConnectionHolder value)
                             throws Exception {
-                        value.sendBytes(responseMessage).get();
+                        value.sendBytes(responseMessage);
                         return value;
                     }
                 });
