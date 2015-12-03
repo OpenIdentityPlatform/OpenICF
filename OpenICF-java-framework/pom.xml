@@ -31,7 +31,7 @@
     </parent>
     <groupId>org.forgerock.openicf.framework</groupId>
     <artifactId>framework</artifactId>
-    <version>1.5.0.0-RC2-SNAPSHOT</version>
+    <version>1.5.0.0</version>
     <packaging>pom</packaging>
     <name>OpenICF</name>
     <description>
@@ -64,7 +64,8 @@
         <connection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/java-framework.git</connection>
         <developerConnection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/java-framework.git</developerConnection>
         <url>http://stash.forgerock.org/projects/OPENICF/repos/java-framework/browse</url>
-    </scm>
+      <tag>framework-1.5.0.0</tag>
+  </scm>
     <distributionManagement>
         <site>
             <id>forgerock.org</id>

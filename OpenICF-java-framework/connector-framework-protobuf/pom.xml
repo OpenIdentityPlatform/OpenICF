@@ -26,7 +26,7 @@
     <parent>
         <artifactId>framework</artifactId>
         <groupId>org.forgerock.openicf.framework</groupId>
-        <version>1.5.0.0-RC2-SNAPSHOT</version>
+        <version>1.5.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
