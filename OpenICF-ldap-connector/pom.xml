@@ -32,7 +32,7 @@
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>ldap-connector</artifactId>
-    <version>1.4.1.0-RC4</version>
+    <version>1.4.1.0</version>
     <packaging>bundle</packaging>
     <name>Generic JNDI based LDAP Connector</name>
     <description>Connector for Sun DSEE and OpenDJ and Generic LDAP</description>
