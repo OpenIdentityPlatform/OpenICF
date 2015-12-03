@@ -32,6 +32,9 @@ import org.forgerock.util.Function;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 
+
+import java.util.concurrent.TimeUnit;
+
 public abstract class LocalOperationProcessor<V>
         extends
         LocalRequest<V, RuntimeException, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> {
@@ -100,7 +103,7 @@ public abstract class LocalOperationProcessor<V>
                 new Function<WebSocketConnectionHolder, WebSocketConnectionHolder, Exception>() {
                     public WebSocketConnectionHolder apply(WebSocketConnectionHolder value)
                             throws Exception {
-                        value.sendBytes(responseMessage);
+                        value.sendBytes(responseMessage).get(100, TimeUnit.MILLISECONDS);
                         return value;
                     }
                 });
