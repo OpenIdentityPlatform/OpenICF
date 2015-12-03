@@ -31,7 +31,7 @@
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>csvfile-connector</artifactId>
-    <version>1.5.1.0-SNAPSHOT</version>
+    <version>1.5.0.0</version>
     <packaging>bundle</packaging>
     <name>CSV File Connector</name>
     <description>Connector for CSV File</description>
