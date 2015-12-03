@@ -31,7 +31,7 @@
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>groovy-connector</artifactId>
-    <version>1.4.2.0</version>
+    <version>1.4.2.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>Groovy Connector Toolkit</name>
     <description>This is a generic bundle that contains base classes and interfaces needed to write a scripted
