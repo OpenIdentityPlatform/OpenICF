@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -425,7 +426,9 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 }
             }
 
-            ((SyncTokenResultsHandler) handler).handleResult(token);
+            if (handler instanceof SyncTokenResultsHandler) {
+                ((SyncTokenResultsHandler) handler).handleResult(token);
+            }
         }
         scrubSyncFiles();
     }
@@ -450,7 +453,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             List<Long> keys = new LinkedList<Long>(files.keySet());
             return new SyncToken(keys.get(keys.size() - 1));
         }
-        return null;
+        return new SyncToken(new Date().getTime());
     }
 
     /**
