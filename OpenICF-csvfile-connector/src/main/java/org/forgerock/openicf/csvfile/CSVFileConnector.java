@@ -83,6 +83,7 @@ import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.ConnectorClass;
+import org.identityconnectors.framework.spi.SyncTokenResultsHandler;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
 import org.identityconnectors.framework.spi.operations.BatchOp;
 import org.identityconnectors.framework.spi.operations.CreateOp;
@@ -423,6 +424,8 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                     }
                 }
             }
+
+            ((SyncTokenResultsHandler) handler).handleResult(token);
         }
         scrubSyncFiles();
     }

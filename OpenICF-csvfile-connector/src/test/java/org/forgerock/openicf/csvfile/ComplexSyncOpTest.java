@@ -30,6 +30,7 @@ package org.forgerock.openicf.csvfile;
 import org.forgerock.openicf.csvfile.util.TestUtils;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.*;
+import org.identityconnectors.framework.spi.SyncTokenResultsHandler;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -39,6 +40,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ComplexSyncOpTest {
 
@@ -65,18 +67,20 @@ public class ComplexSyncOpTest {
         connector = null;
     }
 
-    /**
-     * only for to test sync tmp files handling, test not usable now
-     */
     @Test
     public void syncTest() {
         final List<SyncDelta> deltas = new ArrayList<SyncDelta>();
+        final AtomicReference<SyncToken> newToken = new AtomicReference<SyncToken>();
         SyncToken token = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
         for (int i = 0; i < 10; i++) {
-            connector.sync(ObjectClass.ACCOUNT, token, new SyncResultsHandler() {
+            connector.sync(ObjectClass.ACCOUNT, token, new SyncTokenResultsHandler() {
                 public boolean handle(SyncDelta sd) {
                     deltas.add(sd);
                     return true;
+                }
+
+                public void handleResult(SyncToken syncToken) {
+                    newToken.set(syncToken);
                 }
             }, null);
             if (!deltas.isEmpty()) {

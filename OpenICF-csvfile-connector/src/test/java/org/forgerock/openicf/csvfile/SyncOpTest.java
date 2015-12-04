@@ -31,6 +31,7 @@ import org.forgerock.openicf.csvfile.util.TestUtils;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.*;
+import org.identityconnectors.framework.spi.SyncTokenResultsHandler;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
@@ -40,6 +41,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -95,17 +97,23 @@ public class SyncOpTest {
         SyncToken oldToken = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
         assertEquals("1300734815289", String.valueOf(oldToken.getValue()));
         final List<SyncDelta> deltas = new ArrayList<SyncDelta>();
-        connector.sync(ObjectClass.ACCOUNT, oldToken, new SyncResultsHandler() {
+        final AtomicReference<SyncToken> newToken = new AtomicReference<SyncToken>();
+        connector.sync(ObjectClass.ACCOUNT, oldToken, new SyncTokenResultsHandler() {
 
             public boolean handle(SyncDelta sd) {
                 deltas.add(sd);
                 return true;
+            }
+
+            public void handleResult(SyncToken syncToken) {
+                newToken.set(syncToken);
             }
         }, null);
 
         //test cleanup
         SyncToken token = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
         if (!oldToken.getValue().equals(token.getValue())) {
+            assertEquals(token.getValue(), newToken.get().getValue());
             CSVFileConfiguration config = (CSVFileConfiguration) connector.getConfiguration();
             File syncFile = new File(config.getCsvFile() + "." + token.getValue());
             syncFile.delete();
@@ -128,17 +136,23 @@ public class SyncOpTest {
         SyncToken oldToken = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
         assertEquals(String.valueOf(oldToken.getValue()), "1300734815289");
         final List<SyncDelta> deltas = new ArrayList<SyncDelta>();
-        connector.sync(ObjectClass.ACCOUNT, oldToken, new SyncResultsHandler() {
+        final AtomicReference<SyncToken> newToken = new AtomicReference<SyncToken>();
+        connector.sync(ObjectClass.ACCOUNT, oldToken, new SyncTokenResultsHandler() {
 
             public boolean handle(SyncDelta sd) {
                 deltas.add(sd);
                 return false;
+            }
+
+            public void handleResult(SyncToken syncToken) {
+                    newToken.set(syncToken);
             }
         }, null);
 
         //test cleanup
         SyncToken token = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
         if (!oldToken.getValue().equals(token.getValue())) {
+            assertEquals(token.getValue(), newToken.get().getValue());
             CSVFileConfiguration config = (CSVFileConfiguration) connector.getConfiguration();
             File syncFile = new File(config.getCsvFile() + "." + token.getValue());
             syncFile.delete();
