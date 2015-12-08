@@ -332,7 +332,11 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             readHeader();
 
             File syncOrigin = null;
-            if (token == null || token.getValue() == null) {
+            if (token != null && token.getValue() != null) {
+                syncOrigin = new File(config.getCsvFile().getParentFile(),
+                        config.getCsvFile().getName() + "." + token.getValue());
+            }
+            if (syncOrigin == null || !syncOrigin.exists()) {
                 long timestamp = config.getCsvFile().lastModified();
                 syncOrigin = new File(config.getCsvFile().getParentFile(),
                         config.getCsvFile().getName() + "." + timestamp);
@@ -342,12 +346,6 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                     throw new ConnectorException("Unable to copy CSV file for sync operation", e);
                 }
                 token = new SyncToken(timestamp);
-            } else {
-                syncOrigin = new File(config.getCsvFile().getParentFile(),
-                        config.getCsvFile().getName() + "." + token.getValue());
-                if (!syncOrigin.exists()) {
-                    throw new ConnectorException("Invalid sync token: " + token.getValue());
-                }
             }
 
             // Sync deletes
