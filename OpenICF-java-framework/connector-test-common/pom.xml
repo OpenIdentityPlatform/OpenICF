@@ -27,7 +27,7 @@
     <parent>
         <groupId>org.forgerock.openicf.framework</groupId>
         <artifactId>framework</artifactId>
-        <version>1.5.0.0</version>
+        <version>1.5.0.0-SNAPSHOT</version>
     </parent>
     <artifactId>connector-test-common</artifactId>
     <name>OpenICF Common Test Library</name>
