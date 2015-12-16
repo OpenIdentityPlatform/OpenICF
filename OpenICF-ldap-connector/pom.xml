@@ -31,7 +31,7 @@
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>ldap-connector</artifactId>
-    <version>1.4.1.0</version>
+    <version>1.4.2.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>Generic JNDI based LDAP Connector</name>
     <description>Connector for Sun DSEE and OpenDJ and Generic LDAP</description>
@@ -40,7 +40,7 @@
         <connection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/ldap-connector.git</connection>
         <developerConnection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/ldap-connector.git</developerConnection>
         <url>http://stash.forgerock.org/projects/OPENICF/repos/ldap-connector/browse</url>
-      <tag>1.4.1.0</tag>
+      <tag>HEAD</tag>
   </scm>
     <issueManagement>
         <system>jira</system>
