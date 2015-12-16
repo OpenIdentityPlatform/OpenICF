@@ -134,7 +134,7 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
         final int[] processedChangeNumber = { -1 };
         
         if (token != null && log.isWarning()) {
-            if (currentChangeNumber[0] > getChangeLogAttributes().getLastChangeNumber()) {
+            if ((Integer) token.getValue() > getChangeLogAttributes().getLastChangeNumber()) {
                 //[OPENICF-402] The current SyncToken should never be greater than the lastChangeNumber in the changelog
                 // We log the issue and let the process go
                 log.warn("The current SyncToken value ({0}) is greater than the lastChangeNumber value ({1})", currentChangeNumber[0], getChangeLogAttributes().getLastChangeNumber());
