@@ -11,9 +11,9 @@
  * below the CDDL Header, with the fields enclosed by brackets [] replaced by your
  * own identifying information: "Portions copyright [year] [name of copyright owner]".
  *
+ * Copyright 2015-2016 ForgeRock AS
  * Portions Copyright 2011 Viliam Repan
  * Portions Copyright 2011 Radovan Semancik
- * Portions Copyright 2015 ForgeRock AS
  */
 package org.forgerock.openicf.csvfile;
 
@@ -96,9 +96,6 @@ import org.identityconnectors.framework.spi.operations.SyncOp;
 import org.identityconnectors.framework.spi.operations.TestOp;
 import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
 import org.supercsv.cellprocessor.CellProcessorAdaptor;
-import org.supercsv.cellprocessor.Optional;
-import org.supercsv.cellprocessor.Trim;
-import org.supercsv.cellprocessor.constraint.NotNull;
 import org.supercsv.cellprocessor.ift.BoolCellProcessor;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.cellprocessor.ift.DateCellProcessor;
