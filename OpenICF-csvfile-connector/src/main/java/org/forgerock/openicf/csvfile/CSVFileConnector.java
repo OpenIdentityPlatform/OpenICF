@@ -293,11 +293,22 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
 
                 Map<String, Object> entry;
                 reader.read(header, processors); // consume the header
+
+                int pageSize = options == null || options.getPageSize() == null ? 0 : options.getPageSize();
+                int rowOffset = options == null || options.getPagedResultsOffset() == null
+                        ? 0 : options.getPagedResultsOffset() * pageSize;
+                int resultsHandled = pageSize;
+
                 while ((entry = reader.read(header, processors)) != null) {
                     ConnectorObject object = newConnectorObject(entry);
                     if (query == null || query.accept(object)) {
-                        if (!handler.handle(newConnectorObject(entry))) {
-                            break;
+                        if (rowOffset-- <= 0) {
+                            if (!handler.handle(newConnectorObject(entry))) {
+                                break;
+                            }
+                            if (pageSize > 0 && --resultsHandled <= 0) {
+                                break;
+                            }
                         }
                     }
                 }
