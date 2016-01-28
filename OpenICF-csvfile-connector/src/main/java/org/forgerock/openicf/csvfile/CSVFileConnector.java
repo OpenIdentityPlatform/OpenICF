@@ -897,6 +897,8 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             for (String col : header) {
                 if (col.equals(config.getHeaderUid())) {
                     colMap.put(col, uid.getUidValue());
+                } else if (col.equals(config.getHeaderName())) {
+                    colMap.put(col, username);
                 } else {
                     colMap.put(col, attrMap.containsKey(col) ? attrMap.get(col) : null);
                 }
