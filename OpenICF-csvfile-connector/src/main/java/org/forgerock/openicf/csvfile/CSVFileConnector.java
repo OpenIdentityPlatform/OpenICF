@@ -649,6 +649,11 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         }
 
         for (int i = 0; hdr != null && i < hdr.length; i++) {
+            if (null == hdr[i]) {
+                // It might be null if "" is used as a header or if an extra delimiter is in the header.
+                throw new ConfigurationException(
+                        "Invalid empty header.  Verify the format in the file " + config.getCsvFile().toString());
+            }
             hdr[i] = hdr[i].trim();
         }
 
