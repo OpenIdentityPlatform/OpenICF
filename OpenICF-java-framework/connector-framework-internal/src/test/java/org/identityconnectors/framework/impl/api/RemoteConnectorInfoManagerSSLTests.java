@@ -59,7 +59,7 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
             File bundlesDir = getTestBundlesDir();
             File file = new File(bundlesDir,name);
             byte [] bytes = IOUtil.readFileBytes(file);
-            KeyStore store = KeyStore.getInstance("PKCS12");
+            KeyStore store = KeyStore.getInstance("JKS");
             store.load(new ByteArrayInputStream(bytes), "changeit".toCharArray());
             return store;
         }
@@ -202,9 +202,9 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
         final int PORT = 8761;
 
         TrustManager clientTrustManager =
-            new MyTrustManager("server.pfx");
+            new MyTrustManager("KeyStore.jks");
         KeyManager serverKeyManager =
-            new MyKeyManager("server.pfx");
+            new MyKeyManager("KeyStore.jks");
 
         synchronized (RemoteConnectorInfoManagerSSLTests.class) {
             if (null == _server) {
