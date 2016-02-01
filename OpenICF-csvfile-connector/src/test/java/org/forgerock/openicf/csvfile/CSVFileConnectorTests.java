@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright 2011-2015 ForgeRock
+ * Copyright 2011-2016 ForgeRock
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -24,30 +24,17 @@
  */
 package org.forgerock.openicf.csvfile;
 
-import static org.testng.Assert.assertEquals;
-
 import java.io.FileWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 
 import org.forgerock.openicf.csvfile.util.TestUtils;
-import org.identityconnectors.common.logging.Log;
-import org.identityconnectors.framework.api.APIConfiguration;
-import org.identityconnectors.framework.api.ConnectorFacade;
-import org.identityconnectors.framework.api.ConnectorFacadeFactory;
-import org.identityconnectors.framework.common.objects.Attribute;
-import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
-import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
-import org.identityconnectors.framework.common.objects.Uid;
-import org.testng.Assert;
-import org.testng.annotations.DataProvider;
+import org.identityconnectors.framework.common.objects.ResultsHandler;
+import org.identityconnectors.framework.impl.api.local.operations.FilteredResultsHandler;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 /**
@@ -56,61 +43,60 @@ import org.testng.annotations.Test;
  */
 public class CSVFileConnectorTests {
 
-    // set up logging
-    private static final Log log = Log.getLog(CSVFileConnectorTests.class);
+    private CSVFileConfiguration config;
 
-    @Test(dataProvider = "provideNumbers")
-    public void exampleTest1(CSVFileConfiguration config) throws Exception {
-/*
-        FileWriter f2 = new FileWriter(config.getCsvFile(), false);
-        f2.write(new StringBuilder("uid").append(config.getFieldDelimiter()).append(
-                OperationalAttributes.PASSWORD_NAME).append(config.getFieldDelimiter()).append(
-                "fullName").append(config.getFieldDelimiter()).append("groups").toString());
-        f2.close();
-
-        final ConnectorFacade facade = getFacade(config);
-
-        Set<Attribute> createAttributes = new HashSet<Attribute>();
-        createAttributes.add(new Name("foo01"));
-        createAttributes.add(AttributeBuilder.build("fullName", "Foo Bar"));
-        createAttributes.add(AttributeBuilder.buildPassword("Password".toCharArray()));
-        createAttributes.add(AttributeBuilder.build("groups", "sample1", "sample2"));
-
-        Uid uid = facade.create(ObjectClass.ACCOUNT, createAttributes, null);
-        Assert.assertNotNull(uid);
-
-        ConnectorObject co = facade.getObject(ObjectClass.ACCOUNT, uid, null);
-
-        assertEquals(co.getUid().getUidValue(), "foo01");
-        assertEquals(co.getName().getNameValue(), "foo01");
-        assertEquals(co.getAttributeByName("groups").getValue(), Arrays.asList(new String[] {
-            "sample1", "sample2" }));
-
-        facade.delete(ObjectClass.ACCOUNT, uid, null);
-
-        Assert.assertNull(facade.getObject(ObjectClass.ACCOUNT, uid, null));
-*/
-    }
-
-    @DataProvider(name = "provideNumbers")
-    public Iterator<Object[]> provideData() throws Exception {
-        List<Object[]> tests = new ArrayList<Object[]>();
-        
-        CSVFileConfiguration config = new CSVFileConfiguration();
-        config.setCsvFile(TestUtils.getTestFile("connector-case1.csv"));
+    /**
+     * Setup the tests with a csv file to work with, and a CSVFileConfiguration.
+     *
+     * @throws Exception
+     */
+    @BeforeMethod
+    public void setup() throws Exception {
+        config = new CSVFileConfiguration();
+        config.setCsvFile(TestUtils.getTestFile("connector-csv-test.csv"));
         config.setFieldDelimiter("*");
         config.setHeaderUid("uid");
         config.setHeaderName("uid");
         config.setHeaderPassword(OperationalAttributes.PASSWORD_NAME);
-        tests.add(new Object[]{config});
-        
-        config = new CSVFileConfiguration();
-        config.setCsvFile(TestUtils.getTestFile("connector-case2.csv"));
-        config.setHeaderUid("uid");
-        config.setHeaderName("uid");
-        config.setHeaderPassword(OperationalAttributes.PASSWORD_NAME);
-        tests.add(new Object[]{config});
-        
-        return tests.iterator();
+    }
+
+    /**
+     * Delete any files created during the test.
+     *
+     * @throws Exception
+     */
+    @AfterMethod
+    public void tearDown() throws Exception {
+        if (null != config.getCsvFile()) {
+            config.getCsvFile().delete();
+        }
+    }
+
+    /**
+     * Tests that an extra delimiter at the end of the header line will be captured as a ConfigurationException.
+     *
+     * @throws Exception
+     */
+    @Test(expectedExceptions = ConfigurationException.class)
+    public void testEmptyHeader() throws Exception {
+        FileWriter f2 = new FileWriter(config.getCsvFile(), false);
+        f2.write(new StringBuilder("uid")
+                .append(config.getFieldDelimiter())
+                .append(OperationalAttributes.PASSWORD_NAME)
+                .append(config.getFieldDelimiter())
+                .append("fullName")
+                .append(config.getFieldDelimiter()).toString());
+        // The extra delimiter at the end is an empty header and should cause the ConfigurationException.
+        f2.close();
+
+        CSVFileConnector connector = new CSVFileConnector();
+        connector.init(config);
+        // Running a query on the file with the invalid header config should cause the ConfigurationException
+        connector.executeQuery(ObjectClass.ACCOUNT, new FilteredResultsHandler.PassThroughFilter(),
+                new ResultsHandler() {
+                    public boolean handle(ConnectorObject connectorObject) {
+                        return true;
+                    }
+                }, null);
     }
 }
