@@ -19,6 +19,7 @@ import org.forgerock.openicf.connectors.ssh.SSHConfiguration
 import org.forgerock.openicf.connectors.ssh.SSHConnection
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import org.identityconnectors.common.logging.Log
+import org.identityconnectors.framework.common.exceptions.ConnectorException
 import org.identityconnectors.framework.common.objects.Name
 import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationOptions
@@ -30,6 +31,7 @@ def operation = operation as OperationType
 def configuration = configuration as SSHConfiguration
 def connection = connection as SSHConnection
 def filter = filter as Filter
+def query = query as Map
 def log = log as Log
 def objectClass = objectClass as ObjectClass
 def options = options as OperationOptions
@@ -37,38 +39,35 @@ def attributesToGet = options.getAttributesToGet() as String[]
 
 // SSH Connector specific bindings
 
-//setTimeout <value> : defines global timeout on expect/send actions
+//setTimeout <value> : defines global timeout (ms) on expect/send actions
+//setTimeoutSec <value> : defines global timeout (sec) on expect/send actions
 //send <command> : sends a String or GString of commands
 //sendln <command> : sends a String or GString of commands + \r
+//sudo <command>: mock the sudo command, using sudo cmd, sudo prompt and user password defined in the configuration
 //sendControlC: sends a Ctrl-C interrupt sequence
 //sendControlD: sends a Ctrl-D sequence
+//promptReady <prompt> <retry>: force the connection to be in prompt ready mode. Returns true if success, false if failed
 //expect <pattern>: expect a match pattern from the Read buffer
 //expect <pattern>, <Closure>: expect a match pattern from the Read buffer and associate a simple Closure to be performed on pattern match.
 //expect <List of matches>: expect a list of different match pattern
-//global: defines a global match pattern and a Closure within a call to expect
-//regexp: defines a Perl5 style regular expression and a Closure within a call to expect
+//match: defines a global match pattern and a Closure within a call to expect<List>
+//regexp: defines a Perl5 style regular expression and a Closure within a call to expect<List>
 //timeout: defines a local timeout and a Closure within a call to expect
-
-def prompt = configuration.getPrompt()
+// The following constants: TIMEOUT_FOREVER, TIMEOUT_NEVER, TIMEOUT_EXPIRED, EOF_FOUND
 
 log.info("Entering {0} script", operation);
-// We assume the operation is SEARCH
 assert operation == OperationType.SEARCH, 'Operation must be a SEARCH'
+
+def prompt = configuration.getPrompt()
 
 // We do not want __UID__ and __NAME__ being part of the attributes to get
 if (attributesToGet != null) {
     attributesToGet = attributesToGet - [Uid.NAME] - [Name.NAME] as String[]
 }
 
-setTimeout 5
-
-def ready = false
 // The prompt is the first thing we should expect from the connection
-expect prompt, { ready = true }
-while (!ready) {
-    log.info("Trying to get the prompt...")
-    sendControlC()
-    expect prompt, { ready = true }
+if (!promptReady(2)) {
+    throw new ConnectorException("Can't get the session prompt")
 }
 log.info("Prompt ready...")
 
@@ -84,8 +83,8 @@ switch (objectClass.getObjectClassValue()) {
         expect prompt, {
             if (it.getMatchedWhere() > 0) {
                 def list = it.getBuffer().substring(0, it.getMatchedWhere()).split("\r\n")
-                list.each() { logon ->
-                    def attrs = logon.split(":")
+                list.each() { entry ->
+                    def attrs = entry.split(":")
                     handler {
                         uid attrs[0]
                         id attrs[0]
@@ -120,8 +119,8 @@ switch (objectClass.getObjectClassValue()) {
         expect prompt, {
             if (it.getMatchedWhere() > 0) {
                 def list = it.getBuffer().substring(0, it.getMatchedWhere()).split("\r\n")
-                list.each() { logon ->
-                    def attrs = logon.split(":")
+                list.each() { entry ->
+                    def attrs = entry.split(":")
                     handler {
                         uid attrs[0]
                         id attrs[0]
@@ -138,5 +137,5 @@ switch (objectClass.getObjectClassValue()) {
         break
 }
 
-// Put the connection in prompt ready mode for next usage
+// Make sure we leave the connection in prompt ready mode.
 sendln ""

@@ -19,11 +19,10 @@ import org.forgerock.openicf.connectors.ssh.SSHConfiguration
 import org.forgerock.openicf.connectors.ssh.SSHConnection
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import org.identityconnectors.common.logging.Log
+import org.identityconnectors.framework.common.exceptions.ConnectorException
 import org.identityconnectors.framework.common.exceptions.UnknownUidException
 import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationOptions
-
-import static org.identityconnectors.common.security.SecurityUtil.decrypt
 
 def operation = operation as OperationType
 def configuration = configuration as SSHConfiguration
@@ -35,62 +34,89 @@ def uid = uid.getUidValue() as String
 
 // SSH Connector specific bindings
 
-//setTimeout <value> : defines global timeout on expect/send actions
+//setTimeout <value> : defines global timeout (ms) on expect/send actions
+//setTimeoutSec <value> : defines global timeout (sec) on expect/send actions
 //send <command> : sends a String or GString of commands
 //sendln <command> : sends a String or GString of commands + \r
+//sudo <command>: mock the sudo command, using sudo cmd, sudo prompt and user password defined in the configuration
 //sendControlC: sends a Ctrl-C interrupt sequence
 //sendControlD: sends a Ctrl-D sequence
+//promptReady <prompt> <retry>: force the connection to be in prompt ready mode. Returns true if success, false if failed
 //expect <pattern>: expect a match pattern from the Read buffer
 //expect <pattern>, <Closure>: expect a match pattern from the Read buffer and associate a simple Closure to be performed on pattern match.
 //expect <List of matches>: expect a list of different match pattern
-//global: defines a global match pattern and a Closure within a call to expect
-//regexp: defines a Perl5 style regular expression and a Closure within a call to expect
+//match: defines a global match pattern and a Closure within a call to expect<List>
+//regexp: defines a Perl5 style regular expression and a Closure within a call to expect<List>
 //timeout: defines a local timeout and a Closure within a call to expect
-
-def NOT_EXIST = "does not exist"
-def prompt = configuration.getPrompt()
+// The following constants: TIMEOUT_FOREVER, TIMEOUT_NEVER, TIMEOUT_EXPIRED, EOF_FOUND
 
 log.info("Entering {0} script", operation);
-// We assume the operation is DELETE
 assert operation == OperationType.DELETE, 'Operation must be a DELETE'
 
-// Since we're going to use sudo, need to prepare the sudo prompt
-def sudopwdprompt = "password for $configuration.user: "
-def sudo = "sudo -k "
-def userdel = "/usr/sbin/userdel "
-def groupdel = "/usr/sbin/groupdel "
+def prompt = configuration.getPrompt()
 def command = ""
+def message = ""
+def exception
+def success = false
 
-setTimeout 2
-
-def ready = false
 // The prompt is the first thing we should expect from the connection
-expect prompt, { ready = true }
-while (!ready) {
-    log.info("Trying to get the prompt...")
-    sendControlC()
-    expect prompt, { ready = true }
+if (!promptReady(2)) {
+    throw new ConnectorException("Can't get the session prompt")
 }
 log.info("Prompt ready...")
 
+// Prepare the command to execute
 switch (objectClass.getObjectClassValue()) {
     case ObjectClass.ACCOUNT_NAME:
-        command = sudo + userdel + uid
+        command = "/usr/sbin/userdel " + uid
         break
     case ObjectClass.GROUP_NAME:
-        command = sudo + groupdel + uid
+        command = "/usr/sbin/groupdel " + uid
         break
 }
 
-sendln command
-expect sudopwdprompt
-sendln decrypt(configuration.password)
-expect prompt, {
-    def message = it.getBuffer().substring(0, it.getMatchedWhere()).trim()
-    if (message.endsWith(NOT_EXIST)) {
-        throw new UnknownUidException("$uid does not exist")
-    }
+sudo command
+expect prompt, { sendln "echo \$?" }// Check returned code
+
+switch (objectClass.getObjectClassValue()) {
+    case ObjectClass.ACCOUNT_NAME:
+        expect(
+                [
+                        match("0") {
+                            success = true
+                        },
+                        match("6") {
+                            message = ErrorCodes.userdel."6"
+                            exception = new UnknownUidException(message)
+                        },
+                        regexp("8|10|12|1|2") {
+                            message = ErrorCodes.userdel[it.getMatch()]
+                            exception = new ConnectorException(message)
+                        }
+                ]
+        )
+        break
+    case ObjectClass.GROUP_NAME:
+        expect(
+                [
+                        match("0") {
+                            success = true
+                        },
+                        match("6") {
+                            message = ErrorCodes.groupdel."6"
+                            exception = new UnknownUidException(message)
+                        },
+                        regexp("2|8|10") {
+                            message = ErrorCodes.groupdel[it.getMatch()]
+                            exception = new ConnectorException(message)
+                        }
+                ]
+        )
+        break
 }
 
-// Put the connection in prompt ready mode for next usage
-sendln ""
+if (!success) {
+    log.info("Delete of $uid failed: $message")
+    throw exception
+}
+log.info("Delete of $uid successful")

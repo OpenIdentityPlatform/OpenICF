@@ -92,6 +92,16 @@ public class SSHConfiguration extends ScriptedConfiguration {
     private String prompt = "root@localhost:# "
 
     /**
+     * The sudo command
+     */
+    private String sudoCommand = "/usr/bin/sudo -k"
+
+    /**
+     * The sudo password prompt
+     */
+    private String sudoPwdPrompt = "assword for "
+
+    /**
      * Input command echo on/off
      */
     private boolean echoOff = true
@@ -102,9 +112,15 @@ public class SSHConfiguration extends ScriptedConfiguration {
     private String terminalType = "vt102"
 
     /**
-     * Connection timeout in seconds
+     * Connection timeout in milliseconds
      */
-    private int connectionTimeout = 5
+    private int connectionTimeout = 5000
+
+    /**
+     * Global timeout in milliseconds
+     * This timeout is used by expect/send
+     */
+    private long globalTimeout = 5000
 
     /**
      * Authentication type
@@ -207,7 +223,29 @@ public class SSHConfiguration extends ScriptedConfiguration {
         this.prompt = prompt;
     }
 
-    @ConfigurationProperty(order = 8, displayMessageKey = "echoOff.display",
+    @ConfigurationProperty(order = 8, displayMessageKey = "sudoCommand.display",
+            groupMessageKey = "basic.group", helpMessageKey = "sudoCommand.help",
+            required = true, confidential = false)
+    public String getSudoCommand() {
+        return sudoCommand;
+    }
+
+    public void setSudoCommand(String sudoCommand) {
+        this.sudoCommand = sudoCommand;
+    }
+
+    @ConfigurationProperty(order = 9, displayMessageKey = "sudoPwdPrompt.display",
+            groupMessageKey = "basic.group", helpMessageKey = "sudoPwdPrompt.help",
+            required = true, confidential = false)
+    public String getsudoPwdPrompt() {
+        return sudoPwdPrompt;
+    }
+
+    public void setSudoPwdPrompt(String sudoPwdPrompt) {
+        this.sudoPwdPrompt = sudoPwdPrompt;
+    }
+
+    @ConfigurationProperty(order = 10, displayMessageKey = "echoOff.display",
             groupMessageKey = "basic.group", helpMessageKey = "echoOff.help",
             required = true, confidential = false)
     public boolean isEchoOff() {
@@ -218,7 +256,7 @@ public class SSHConfiguration extends ScriptedConfiguration {
         this.echoOff = echoOff;
     }
 
-    @ConfigurationProperty(order = 9, displayMessageKey = "terminalType.display",
+    @ConfigurationProperty(order = 11, displayMessageKey = "terminalType.display",
             groupMessageKey = "basic.group", helpMessageKey = "terminalType.help",
             required = true, confidential = false)
     public String getTerminalType() {
@@ -229,7 +267,7 @@ public class SSHConfiguration extends ScriptedConfiguration {
         this.terminalType = ttype;
     }
 
-    @ConfigurationProperty(order = 10, displayMessageKey = "connectionTimeout.display",
+    @ConfigurationProperty(order = 12, displayMessageKey = "connectionTimeout.display",
             groupMessageKey = "basic.group", helpMessageKey = "connectionTimeout.help",
             required = true, confidential = false)
     public int getConnectionTimeout() {
@@ -238,6 +276,17 @@ public class SSHConfiguration extends ScriptedConfiguration {
 
     public void setConnectionTimeout(int timeout) {
         this.connectionTimeout = timeout;
+    }
+
+    @ConfigurationProperty(order = 13, displayMessageKey = "globalTimeout.display",
+            groupMessageKey = "basic.group", helpMessageKey = "globalTimeout.help",
+            required = true, confidential = false)
+    public long getGlobalTimeout() {
+        return globalTimeout;
+    }
+
+    public void setGlobalTimeout(long timeout) {
+        this.globalTimeout = timeout;
     }
 
     /**
@@ -355,7 +404,9 @@ public class SSHConfiguration extends ScriptedConfiguration {
 
             expect4j = new Expect4j(channel.getInputStream(), channel.getOutputStream());
 
-            channel.connect(connectionTimeout * 1000);
+            channel.connect(connectionTimeout);
+            //logger.info("Setting Expect4j timeout to {0}", globalTimeout)
+            //expect4j.setDefaultTimeout(globalTimeout)
 
             if (echoOff) {
                 logger.info("Turning Off command echo")

@@ -17,6 +17,7 @@
 
 package org.forgerock.openicf.connectors.ssh;
 
+import expect4j.Expect4j;
 import groovy.lang.Binding;
 import groovy.lang.Closure;
 
@@ -61,7 +62,7 @@ public class SSHConnector extends ScriptedConnectorBase<SSHConfiguration> implem
         this.configuration = (SSHConfiguration)config;
         configuration.initGroovyEngine();
         this.connection = new SSHConnection(configuration);
-        this.wrapper = new E4JWrapper(connection.getExpect());
+        this.wrapper = new E4JWrapper(connection.getExpect(), configuration);
         // TODO: Pass appropriate args
         this.configuration.callOnCreateConnection();
     }
@@ -93,7 +94,7 @@ public class SSHConnector extends ScriptedConnectorBase<SSHConfiguration> implem
     /**
      *
      * @param scriptName
-     * @param arguments. The Groovy bindings.
+     * @param arguments The Groovy bindings.
      * @param scriptEvaluator
      * @return The result of the script
      * @throws Exception
@@ -104,16 +105,24 @@ public class SSHConnector extends ScriptedConnectorBase<SSHConfiguration> implem
         try {
             arguments.setVariable(CONNECTION, connection);
             arguments.setVariable(LOGGER, logger);
+            arguments.setVariable("sudo", wrapper.getSudo());
             arguments.setVariable("send", wrapper.getSender());
             arguments.setVariable("sendln", wrapper.getSenderln());
             arguments.setVariable("sendControlC", wrapper.getSendControlC());
             arguments.setVariable("sendControlD", wrapper.getSendControlD());
             arguments.setVariable("expect", wrapper.getExpectGlobal());
             arguments.setVariable("setTimeout", wrapper.getGlobalTimeout());
-            arguments.setVariable("global", wrapper.getGlobal());
-            arguments.setVariable("regexp", wrapper.getRegexp());
+            arguments.setVariable("setTimeoutSec", wrapper.getGlobalTimeoutSec());
+            arguments.setVariable("match", wrapper.getGlobalMatch());
+            arguments.setVariable("regexp", wrapper.getRegexpMatch());
             arguments.setVariable("timeout", wrapper.getTimeout());
             arguments.setVariable("eof", wrapper.getEof());
+            arguments.setVariable("promptReady", wrapper.getPromptReady());
+            arguments.setVariable("TIMEOUT_FOREVER", Expect4j.TIMEOUT_FOREVER);
+            arguments.setVariable("TIMEOUT_NEVER", Expect4j.TIMEOUT_NEVER);
+            arguments.setVariable("TIMEOUT_EXPIRED", Expect4j.RET_TIMEOUT);
+            arguments.setVariable("EOF_FOUND", Expect4j.RET_EOF);
+
             return scriptEvaluator.call(scriptName, arguments);
         } finally {
             logger.ok("Done");

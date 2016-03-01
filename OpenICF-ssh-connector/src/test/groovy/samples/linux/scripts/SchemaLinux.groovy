@@ -45,6 +45,7 @@ builder.schema({
             "group" String.class
             "shell" String.class
             "uid" String.class
+            "expiryDate" String.class
         }
         disable SyncOp.class
     }

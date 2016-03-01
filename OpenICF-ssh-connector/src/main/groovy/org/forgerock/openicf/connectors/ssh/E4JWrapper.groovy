@@ -20,12 +20,8 @@ package org.forgerock.openicf.connectors.ssh
 import expect4j.Closure
 import expect4j.Expect4j
 import expect4j.ExpectState
-import expect4j.matches.Match
-import expect4j.matches.GlobMatch
-import expect4j.matches.RegExpMatch
-import expect4j.matches.TimeoutMatch
-import expect4j.matches.EofMatch
-
+import expect4j.matches.*
+import static org.identityconnectors.common.security.SecurityUtil.decrypt
 
 /**
  * E4JWrapper basically wraps calls to underlying expect4j into Groovy Closures.
@@ -34,6 +30,7 @@ import expect4j.matches.EofMatch
 class E4JWrapper {
 
     final expect4j
+    SSHConfiguration configuration
 
     static final char ctrlC = 0x03;
     static final char ctrlD = 0x04;
@@ -42,10 +39,21 @@ class E4JWrapper {
         this.expect4j = expect4j
     }
 
+    def E4JWrapper(Expect4j expect4j, SSHConfiguration configuration) {
+        this.expect4j = expect4j
+        this.configuration = configuration
+        expect4j.setDefaultTimeout(configuration.globalTimeout)
+    }
+
     /**
-     * Closure to redefine the Expect4J global default timeout
+     * Closure to redefine the Expect4J global default timeout in ms
      */
-    def globalTimeout = { expect4j.setDefaultTimeout((long) it * 1000) }
+    def globalTimeout = { expect4j.setDefaultTimeout((long) it) }
+
+    /**
+     * Closure to redefine the Expect4J global default timeout in seconds
+     */
+    def globalTimeoutSec = { expect4j.setDefaultTimeout((long) it * 1000) }
 
     /**
      * Closure to send Ctrl+C key combination
@@ -68,13 +76,50 @@ class E4JWrapper {
     def senderln = { expect4j.send(it + "\r") }
 
     /**
+     * Try to force the prompt ready mode with Ctrl+c
+     * If maxTry=0 then do not force with Ctrl+C
+     */
+    def promptReady = { int maxTry ->
+        def prompt = configuration.getPrompt()
+        def ready = false
+        def retry = 1
+        expectGlobal(prompt, { ready = true })
+        if (maxTry > 0) {
+            while (!ready) {
+                expect4j.send(new String(ctrlC))
+                expectGlobal(prompt, { ready = true })
+                retry++
+                if (retry > maxTry) {
+                    break
+                }
+            }
+        }
+        ready
+    }
+
+    /**
+     * Call a command with sudo authentication
+     */
+    def sudo = { String command ->
+        def ready = false
+
+        if (command != null){
+            expect4j.send(configuration.sudoCommand + " " + command + "\r")
+            expectGlobal(configuration.sudoPwdPrompt, {
+                expect4j.send(decrypt(configuration.password) + "\r")
+                ready = true
+            })
+        }
+        ready
+    }
+
+    /**
      * Simple Wrapper to build a GlobalMatch pattern pair
      */
-    def global = { String pattern, groovy.lang.Closure closure ->
-        if (closure == null){
+    def globalMatch = { String pattern, groovy.lang.Closure closure ->
+        if (closure == null) {
             new GlobMatch(pattern, null)
-        }
-        else {
+        } else {
             new GlobMatch(pattern, new Closure() {
                 @Override
                 public void run(ExpectState state) throws Exception {
@@ -87,11 +132,10 @@ class E4JWrapper {
     /**
      * Simple Wrapper to build a RegExpMatch pattern pair
      */
-    def regexp = { String pattern, groovy.lang.Closure closure ->
-        if (closure == null){
+    def regexpMatch = { String pattern, groovy.lang.Closure closure ->
+        if (closure == null) {
             new RegExpMatch(pattern, null)
-        }
-        else {
+        } else {
             new RegExpMatch(pattern, new Closure() {
                 @Override
                 public void run(ExpectState state) throws Exception {
@@ -104,11 +148,10 @@ class E4JWrapper {
     /**
      * Simple Wrapper to build a TimeoutMatch pattern pair
      */
-    def timeout = { int milli, groovy.lang.Closure closure ->
-        if (closure == null){
-            new RegExpMatch(pattern, null)
-        }
-        else {
+    def timeout = { long milli, groovy.lang.Closure closure ->
+        if (closure == null) {
+            new TimeoutMatch(pattern, null)
+        } else {
             new TimeoutMatch(milli as Long, new Closure() {
                 @Override
                 public void run(ExpectState state) throws Exception {
@@ -141,20 +184,16 @@ class E4JWrapper {
         def match = new ArrayList<Match>()
 
         if (arg.length == 1) {
-            if(arg[0] instanceof String || arg[0] instanceof GString) {
+            if (arg[0] instanceof String || arg[0] instanceof GString) {
                 match.add(new GlobMatch(arg[0], null))
-            }
-            else if(arg[0] instanceof Match) {
+            } else if (arg[0] instanceof Match) {
                 match.add(arg[0])
-            }
-            else if(arg[0] instanceof List) {
+            } else if (arg[0] instanceof List) {
                 match.addAll(arg[0])
-            }
-            else {
+            } else {
                 throw new IllegalArgumentException("expect was called with a bad argument[0] type: " + arg[0].class.name)
             }
-        }
-        else if (arg.length == 2
+        } else if (arg.length == 2
                 && (arg[0] instanceof String || arg[0] instanceof GString)
                 && arg[1] instanceof groovy.lang.Closure) {
             final groovy.lang.Closure cl = (groovy.lang.Closure) arg[1]
@@ -164,8 +203,7 @@ class E4JWrapper {
                     cl(state)
                 }
             }))
-        }
-        else {
+        } else {
             throw new IllegalArgumentException("expect was called with a bad argument type: " + arg[0].class.name)
         }
 

@@ -41,9 +41,11 @@ import org.testng.Assert;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 
 /**
@@ -80,30 +82,54 @@ public class SSHConnectorTests {
         }
     }
 
+    ///////////////////// DATA PROVIDERS
+    @DataProvider(name = "bulkUsers")
+    public Object[][] bulkUsers() {
+        Object[][] users = new Object[10][2];
+        for(int i=0;i<10;i++) {
+            Set<Attribute> createAttributes = new HashSet<Attribute>();
+            createAttributes.add(new Name("bulk"+i));
+            createAttributes.add(AttributeBuilder.buildPassword("Password".toCharArray()));
+            createAttributes.add(AttributeBuilder.build("description", "This is bulk" + i));
+            createAttributes.add(AttributeBuilder.build("home", "/home/bulk"+i));
+            createAttributes.add(AttributeBuilder.build("group", "users"));
+            createAttributes.add(AttributeBuilder.build("shell", "/bin/bash"));
+            users[i][0] = "bulk"+i;
+            users[i][1] = createAttributes;
+
+        }
+        return  users;
+    }
+
+
     /////////////////////  TEST
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     public void testTest() {
-        logger.info("Running basic Test");
+        logger.info("Running academic Test");
         final ConnectorFacade facade = getFacade("test");
         facade.test();
     }
 
-    @Test(enabled = true)
+    @Test(enabled = true, threadPoolSize = 10, invocationCount = 20,  timeOut = 50000)
     public void testTestLinux() {
         logger.info("Running Test Test Linux");
+        int id = (int) Thread.currentThread().getId();
+        Random r = new Random();
+        int num = r.nextInt(100);
+        logger.info("Random is: {0}-{1}",id,num);
         final ConnectorFacade facade = getFacade("linux");
         facade.test();
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     public void testTestKerberos() {
         logger.info("Running Test Test Kerberos");
         final ConnectorFacade facade = getFacade("kerberos");
         facade.test();
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     public void testTestMac() {
         logger.info("Running Test Test Mac");
         final ConnectorFacade facade = getFacade("mac");
@@ -119,13 +145,25 @@ public class SSHConnectorTests {
 
     //////////////  DELETE
 
-    @Test(enabled = true, dependsOnGroups = {"createlinux"}, groups = {"deletelinux"})
+    @Test(enabled = true, dependsOnGroups = {}, groups = {"deletelinux"})
     public void deleteLinuxUserTest() {
         logger.info("Running Delete Linux User Test");
         final ConnectorFacade facade = getFacade("linux");
         final OperationOptionsBuilder builder = new OperationOptionsBuilder();
         try {
             facade.delete(ObjectClass.ACCOUNT, new Uid("user1"), builder.build());
+        } catch (Exception e) {
+            logger.info(e.getMessage());
+        }
+    }
+
+    @Test(enabled = true, dependsOnGroups = {}, groups = {"deletelinux"}, dataProvider = "bulkUsers")
+    public void deleteLinuxBulkUserTest(String name, Set<Attribute> createAttributes) {
+        logger.info("Running Delete Linux Bulk User Test");
+        final ConnectorFacade facade = getFacade("linux");
+        final OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        try {
+            facade.delete(ObjectClass.ACCOUNT, new Uid(name), builder.build());
         } catch (Exception e) {
             logger.info(e.getMessage());
         }
@@ -160,6 +198,34 @@ public class SSHConnectorTests {
     }
 
     /////////////////  CREATE
+
+    @Test(enabled = true, groups = {"createlinux"}, dependsOnGroups = {}, dataProvider = "bulkUsers")
+    public void createLinuxBulkUserTest(String name, Set<Attribute> createAttributes) {
+        logger.info("Running Create Linux Bulk User Test");
+        final ConnectorFacade facade = getFacade("linux");
+        final OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        Uid uid = facade.create(ObjectClass.ACCOUNT, createAttributes, builder.build());
+        Assert.assertEquals(uid.getUidValue(), name);
+    }
+
+    @Test(enabled = true, groups = {"createlinux"}, threadPoolSize = 5, invocationCount = 20,  timeOut = 50000)
+    public void createLinuxParallelUserTest() {
+        logger.info("Running Create Linux User Parallel Test");
+        final ConnectorFacade facade = getFacade("linux");
+        final OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        Set<Attribute> createAttributes = new HashSet<Attribute>();
+        int id = (int) Thread.currentThread().getId();
+        int num = new Random().nextInt(100);
+        String name = "user"+Integer.toString(id)+Integer.toString(num);
+        createAttributes.add(new Name(name));
+        createAttributes.add(AttributeBuilder.buildPassword("Password".toCharArray()));
+        createAttributes.add(AttributeBuilder.build("description", "This is user "+name));
+        createAttributes.add(AttributeBuilder.build("home", "/home/"+name));
+        createAttributes.add(AttributeBuilder.build("group", "users"));
+        createAttributes.add(AttributeBuilder.build("shell", "/bin/bash"));
+        Uid uid = facade.create(ObjectClass.ACCOUNT, createAttributes, builder.build());
+        Assert.assertEquals(uid.getUidValue(), name);
+    }
 
     @Test(enabled = true, groups = {"createlinux"}, dependsOnGroups = {})
     public void createLinuxUserTest() {
@@ -251,7 +317,7 @@ public class SSHConnectorTests {
         Assert.assertNull(facade.getObject(ObjectClass.GROUP, new Uid("unknown"), builder.build()));
     }
 
-    @Test(enabled = true, groups = {"getkerberos"}, dependsOnGroups = {})
+    @Test(enabled = false, groups = {"getkerberos"}, dependsOnGroups = {})
     public void getKerberosPrincipalTest() {
         logger.info("Running Get Kerberos Principal Test");
         final ConnectorFacade facade = getFacade("kerberos");
@@ -297,7 +363,7 @@ public class SSHConnectorTests {
         Assert.assertTrue(size > 0);
     }
 
-    @Test(enabled = true, groups = {"searchKerberos"})
+    @Test(enabled = false, groups = {"searchKerberos"})
     public void QueryAllKerberosPrincipalsTest() {
         logger.info("Running Query All Kerberos Principals Test");
         final ConnectorFacade facade = getFacade("kerberos");
@@ -308,7 +374,7 @@ public class SSHConnectorTests {
         Assert.assertTrue(size > 0);
     }
 
-    @Test(enabled = true, groups = {"searchKerberos"})
+    @Test(enabled = false, groups = {"searchKerberos"})
     public void QueryStartsWithKerberosPrincipalsTest() {
         logger.info("Running Query StartsWith Kerberos Principals Test");
         final ConnectorFacade facade = getFacade("kerberos");
@@ -321,7 +387,7 @@ public class SSHConnectorTests {
         Assert.assertTrue(size > 0);
     }
 
-    @Test(enabled = true, groups = {"searchKerberos"})
+    @Test(enabled = false, groups = {"searchKerberos"})
     public void QueryEndsWithKerberosPrincipalsTest() {
         logger.info("Running Query EndsWith Kerberos Principals Test");
         final ConnectorFacade facade = getFacade("kerberos");
@@ -334,7 +400,7 @@ public class SSHConnectorTests {
         Assert.assertTrue(size > 0);
     }
 
-    @Test(enabled = true, groups = {"searchKerberos"})
+    @Test(enabled = false, groups = {"searchKerberos"})
     public void QueryContainsKerberosPrincipalsTest() {
         logger.info("Running Query Contains Kerberos Principals Test");
         final ConnectorFacade facade = getFacade("kerberos");
@@ -349,16 +415,38 @@ public class SSHConnectorTests {
 
     ////////////////////  UPDATE
 
-    @Test(enabled = false, groups = {"updatelinux"}, dependsOnGroups = {"createlinux"})
+    @Test(enabled = true, groups = {"updatelinux"}, dependsOnGroups = {}, expectedExceptions = {UnknownUidException.class})
+    public void updateLinuxUnknownUserTest() {
+        logger.info("Running Update Linux Unknown User Test");
+        final ConnectorFacade facade = getFacade("linux");
+        final OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        Set<Attribute> updateAttributes = new HashSet<Attribute>();
+        updateAttributes.add(AttributeBuilder.build("description", "This is unknown"));
+        Uid uid = facade.update(ObjectClass.ACCOUNT, new Uid("unknown"), updateAttributes, builder.build());
+    }
+
+    @Test(enabled = true, groups = {"updatelinux"}, dependsOnGroups = {})
     public void updateLinuxUserTest() {
         logger.info("Running Update Linux User Test");
         final ConnectorFacade facade = getFacade("linux");
         final OperationOptionsBuilder builder = new OperationOptionsBuilder();
-        Set<Attribute> updateAttributes = new HashSet<>();
-        updateAttributes.add(new Name("Foo"));
+        Set<Attribute> updateAttributes = new HashSet<Attribute>();
+        updateAttributes.add(AttributeBuilder.build("description", "This is updated user1"));
 
-        Uid uid = facade.update(ObjectClass.ACCOUNT, new Uid("Foo"), updateAttributes, builder.build());
-        Assert.assertEquals(uid.getUidValue(), "foo");
+        Uid uid = facade.update(ObjectClass.ACCOUNT, new Uid("user1"), updateAttributes, builder.build());
+        Assert.assertEquals(uid.getUidValue(), "user1");
+    }
+
+    @Test(enabled = true, groups = {"updatelinux"}, dependsOnGroups = {})
+    public void updateLinuxPasswordUserTest() {
+        logger.info("Running Update Linux Password User Test");
+        final ConnectorFacade facade = getFacade("linux");
+        final OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        Set<Attribute> updateAttributes = new HashSet<Attribute>();
+        updateAttributes.add(AttributeBuilder.buildPassword("Password2".toCharArray()));
+
+        Uid uid = facade.update(ObjectClass.ACCOUNT, new Uid("user1"), updateAttributes, builder.build());
+        Assert.assertEquals(uid.getUidValue(), "user1");
     }
 
 
