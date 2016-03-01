@@ -99,7 +99,7 @@ public class SSHConfiguration extends ScriptedConfiguration {
     /**
      * The sudo password prompt
      */
-    private String sudoPwdPrompt = "assword for "
+    private String sudoPwdPrompt = "password for "
 
     /**
      * Input command echo on/off
@@ -405,8 +405,6 @@ public class SSHConfiguration extends ScriptedConfiguration {
             expect4j = new Expect4j(channel.getInputStream(), channel.getOutputStream());
 
             channel.connect(connectionTimeout);
-            //logger.info("Setting Expect4j timeout to {0}", globalTimeout)
-            //expect4j.setDefaultTimeout(globalTimeout)
 
             if (echoOff) {
                 logger.info("Turning Off command echo")
