@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,6 +36,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -120,10 +125,26 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
 
     private static final Log log = Log.getLog(CSVFileConnector.class);
 
+    private static final Pattern syncFilenamePattern = Pattern.compile("(\\.[0-9]{13})$");
+
     /**
-     * Object on which to synchronize CSV file access.
+     * CSV file-name to {@link ReentrantReadWriteLock} lookup map. All read/write accesses must be protected by
+     * these file-specific locks.
      */
-    private static final String fileLock = "fileLock";
+    private static final ConcurrentHashMap<String, ReentrantReadWriteLock> fileNameToLockMap =
+            new ConcurrentHashMap<String, ReentrantReadWriteLock>();
+
+    /**
+     * CSV file-name to CSV-header lookup map.
+     */
+    private static final ConcurrentHashMap<String, String[]> fileNameToHeaderMap =
+            new ConcurrentHashMap<String, String[]>();
+
+    /**
+     * CSV file-name to CSV-header {@link Set}, which is used for fast "contains header" checks.
+     */
+    private static final ConcurrentHashMap<String, Set<String>> fileNameToHeaderSetMap =
+            new ConcurrentHashMap<String, Set<String>>();
 
     /**
      * Place holder for the {@link Configuration} passed into the init() method
@@ -133,9 +154,9 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     private CSVFileConfiguration config;
 
     /**
-     * Contains the header fields as read from the CSV file.
+     * CSV file's path, used for lookup purposes.
      */
-    private String[] header = new String[] {};
+    private String csvFilePath;
 
     /**
      * Encapsulates the quote, delimiter and newline preferences.
@@ -166,6 +187,30 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 ((CSVFileConfiguration) config).getNewlineString())
                 .useQuoteMode(new AlwaysQuoteMode())
                 .build();
+
+        // initialize per-file locks and caches, but only if not already initialized
+        final File csvFile = ((CSVFileConfiguration) config).getCsvFile();
+        csvFilePath = csvFile.getAbsolutePath();
+        if (fileNameToLockMap.get(csvFilePath) == null) {
+            // we don't care if multiple threads call init() at same time, because only 1 will win at end of this block
+            final ICsvMapReader reader = getReader(csvFile);
+            final String [] header;
+            try {
+                header = readHeader(reader);
+                fileNameToHeaderMap.put(csvFilePath, header);
+            } finally {
+                try {
+                    reader.close();
+                } catch (Exception e) {
+                    log.error(e, "Error closing file reader");
+                }
+            }
+            fileNameToHeaderSetMap.put(csvFilePath,
+                    Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(header))));
+
+            // this line must be last within this if-block, to preserve concurrency semantics
+            fileNameToLockMap.putIfAbsent(csvFilePath, new ReentrantReadWriteLock());
+        }
     }
 
     /**
@@ -236,21 +281,16 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
      * {@inheritDoc}
      */
     public Schema schema() {
-        if (header.length == 0) {
-            readHeader();
-        }
-
+        final String[] header = getHeader();
         ObjectClassInfoBuilder objClassBuilder = new ObjectClassInfoBuilder();
-        objClassBuilder.addAllAttributeInfo(createAttributeInfo(Arrays.asList(header)));
+        objClassBuilder.addAllAttributeInfo(createAttributeInfo(header));
 
         SchemaBuilder builder = new SchemaBuilder(CSVFileConnector.class);
         builder.defineObjectClass(objClassBuilder.build());
 
         Schema schema = builder.build();
-        List<String> infoNames = new ArrayList<String>();
-        List<String> headerNames = Arrays.asList(header);
+        Set<String> headerNames = fileNameToHeaderSetMap.get(csvFilePath);
         for (AttributeInfo info : ((ObjectClassInfo) schema.getObjectClassInfo().toArray()[0]).getAttributeInfo()) {
-            infoNames.add(info.getName());
             String name = info.getName().equals(Name.NAME)
                     ? config.getHeaderUid()
                     : info.getName().equals(Uid.NAME)
@@ -283,50 +323,52 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             throw new IllegalArgumentException("ResultsHandler cannot be null");
         }
 
-        synchronized (fileLock) {
-            ICsvMapReader reader = null;
-            try {
-                reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
-                readHeader();
+        final String[] header = getHeader();
+        ICsvMapReader reader = null;
 
-                final CellProcessor[] processors = getProcessors();
+        final ReadLock lock = fileNameToLockMap.get(csvFilePath).readLock();
+        lock.lock();
+        try {
+            reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
 
-                Map<String, Object> entry;
-                reader.read(header, processors); // consume the header
+            final CellProcessor[] processors = getProcessors(header);
 
-                int pageSize = options == null || options.getPageSize() == null ? 0 : options.getPageSize();
-                int rowOffset = options == null || options.getPagedResultsOffset() == null
-                        ? 0 : options.getPagedResultsOffset() * pageSize;
-                int resultsHandled = pageSize;
+            Map<String, Object> entry;
+            reader.read(header, processors); // consume the header
 
-                while ((entry = reader.read(header, processors)) != null) {
-                    ConnectorObject object = newConnectorObject(entry);
-                    if (query == null || query.accept(object)) {
-                        if (rowOffset-- <= 0) {
-                            if (!handler.handle(newConnectorObject(entry))) {
-                                break;
-                            }
-                            if (pageSize > 0 && --resultsHandled <= 0) {
-                                break;
-                            }
+            int pageSize = options == null || options.getPageSize() == null ? 0 : options.getPageSize();
+            int rowOffset = options == null || options.getPagedResultsOffset() == null
+                    ? 0 : options.getPagedResultsOffset() * pageSize;
+            int resultsHandled = pageSize;
+
+            while ((entry = reader.read(header, processors)) != null) {
+                ConnectorObject object = newConnectorObject(entry);
+                if (query == null || query.accept(object)) {
+                    if (rowOffset-- <= 0) {
+                        if (!handler.handle(newConnectorObject(entry))) {
+                            break;
+                        }
+                        if (pageSize > 0 && --resultsHandled <= 0) {
+                            break;
                         }
                     }
                 }
-            } catch (FileNotFoundException e) {
-                log.error(e, "File %s does not exist!", config.getCsvFile().toString());
-                throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
-            } catch (IOException e) {
-                log.error(e, "Error reading from %s!", config.getCsvFile().toString());
-                throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
-            } finally {
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (Exception e) {
-                        log.error(e, "Error closing file reader");
-                    }
+            }
+        } catch (FileNotFoundException e) {
+            log.error(e, "File %s does not exist!", config.getCsvFile().toString());
+            throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
+        } catch (IOException e) {
+            log.error(e, "Error reading from %s!", config.getCsvFile().toString());
+            throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (Exception e) {
+                    log.error(e, "Error closing file reader");
                 }
             }
+            lock.unlock();
         }
     }
 
@@ -339,10 +381,13 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             throw new IllegalArgumentException("ResultsHandler cannot be null");
         }
 
-        synchronized (fileLock) {
-            readHeader();
+        final String[] header = getHeader();
+        File syncOrigin = null;
 
-            File syncOrigin = null;
+        // start with a write-lock
+        final ReentrantReadWriteLock rwLock = fileNameToLockMap.get(csvFilePath);
+        rwLock.writeLock().lock();
+        try {
             if (token != null && token.getValue() != null) {
                 syncOrigin = new File(config.getCsvFile().getParentFile(),
                         config.getCsvFile().getName() + "." + token.getValue());
@@ -358,7 +403,16 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 }
                 token = new SyncToken(timestamp);
             }
+            scrubSyncFiles();
 
+            // downgrade to a read-lock
+            rwLock.readLock().lock();
+        } finally {
+            rwLock.writeLock().unlock();
+        }
+
+        // we now have a read-lock unless the above block threw an Exception
+        try {
             // Sync deletes
             ICsvMapReader reader = null;
             try {
@@ -381,9 +435,6 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                         }
                     }
                 }
-                if (reader != null) {
-                    reader.close();
-                }
             } catch (FileNotFoundException e) {
                 log.error(e, "File %s does not exist!", syncOrigin.toString());
                 throw new ConnectorIOException("File " + syncOrigin.toString() + " does not exist", e);
@@ -405,7 +456,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             try {
                 reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
 
-                final CellProcessor[] processors = getProcessors();
+                final CellProcessor[] processors = getProcessors(header);
 
                 Map<String, Object> entry;
                 reader.read(header, processors); //consume header
@@ -438,8 +489,9 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             if (handler instanceof SyncTokenResultsHandler) {
                 ((SyncTokenResultsHandler) handler).handleResult(token);
             }
+        } finally {
+            rwLock.readLock().unlock();
         }
-        scrubSyncFiles();
     }
 
     /**
@@ -450,19 +502,25 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
 
         File dataDir = config.getCsvFile().getParentFile();
         Map<Long, String> files = new TreeMap<Long, String>();
-        Pattern pattern = Pattern.compile("(\\.[0-9]{13})$");
-        for (String filename : dataDir.list()) {
-            Matcher matcher = pattern.matcher(filename);
-            if (matcher.find()) {
-                Long timestamp = Long.valueOf(matcher.group().substring(1));
-                files.put(timestamp, filename);
+
+        final ReadLock lock = fileNameToLockMap.get(csvFilePath).readLock();
+        lock.lock();
+        try {
+            for (String filename : dataDir.list()) {
+                Matcher matcher = syncFilenamePattern.matcher(filename);
+                if (matcher.find()) {
+                    Long timestamp = Long.valueOf(matcher.group().substring(1));
+                    files.put(timestamp, filename);
+                }
             }
+            if (files.size() > 0) {
+                List<Long> keys = new LinkedList<Long>(files.keySet());
+                return new SyncToken(keys.get(keys.size() - 1));
+            }
+            return new SyncToken(new Date().getTime());
+        } finally {
+            lock.unlock();
         }
-        if (files.size() > 0) {
-            List<Long> keys = new LinkedList<Long>(files.keySet());
-            return new SyncToken(keys.get(keys.size() - 1));
-        }
-        return new SyncToken(new Date().getTime());
     }
 
     /**
@@ -470,8 +528,11 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
      */
     public void test() {
         config.validate();
-        readHeader();
-        validateHeader();
+
+        // validate header
+        if (fileNameToHeaderSetMap.get(csvFilePath).size() != getHeader().length) {
+            throw new ConnectorException("Header contains duplicate columns");
+        }
     }
 
     /**
@@ -572,80 +633,70 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             return null;
         }
 
-        synchronized (fileLock) {
-            ICsvMapReader reader = null;
-            try {
-                reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
+        final String[] header = getHeader();
+        final Set<String> headerSet = fileNameToHeaderSetMap.get(csvFilePath);
+        ICsvMapReader reader = null;
 
-                readHeader();
-                if (password != null && !Arrays.asList(header).contains(config.getHeaderPassword())) {
-                    throw new ConfigurationException("Password column must be defined and exist in the CSV.");
-                }
+        final ReadLock lock = fileNameToLockMap.get(csvFilePath).readLock();
+        lock.lock();
+        try {
+            reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
 
-                final CellProcessor[] processors = getProcessors();
+            if (password != null && !headerSet.contains(config.getHeaderPassword())) {
+                throw new ConfigurationException("Password column must be defined and exist in the CSV.");
+            }
 
-                Map<String, Object> entry;
-                while ((entry = reader.read(header, processors)) != null) {
-                    if (uid != null && uid.getUidValue().equals(entry.get(config.getHeaderUid()))) {
-                        Uid foundUid = new Uid((String) entry.get(config.getHeaderUid()));
-                        if (password == null) {
-                            return foundUid;
-                        }
-                        final Map<String, Object> finalEntry = entry;
-                        password.access(new GuardedString.Accessor() {
-                            public void access(char[] chars) {
-                                if (!new String(chars).equals(finalEntry.get(config.getHeaderPassword()))) {
-                                    throw new InvalidPasswordException("Invalid username and/or password.");
-                                }
-                            }
-                        });
+            final CellProcessor[] processors = getProcessors(header);
+
+            Map<String, Object> entry;
+            while ((entry = reader.read(header, processors)) != null) {
+                if (uid != null && uid.getUidValue().equals(entry.get(config.getHeaderUid()))) {
+                    Uid foundUid = new Uid((String) entry.get(config.getHeaderUid()));
+                    if (password == null) {
                         return foundUid;
                     }
-                }
-            } catch (FileNotFoundException e) {
-                log.error(e, "File %s does not exist!", config.getCsvFile().toString());
-                throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
-            } catch (IOException e) {
-                log.error(e, "Error reading from %s!", config.getCsvFile().toString());
-                throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
-            } finally {
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (Exception e) {
-                        log.error(e, "Error closing file reader");
-                    }
+                    final Map<String, Object> finalEntry = entry;
+                    password.access(new GuardedString.Accessor() {
+                        public void access(char[] chars) {
+                            if (!new String(chars).equals(finalEntry.get(config.getHeaderPassword()))) {
+                                throw new InvalidPasswordException("Invalid username and/or password.");
+                            }
+                        }
+                    });
+                    return foundUid;
                 }
             }
+        } catch (FileNotFoundException e) {
+            log.error(e, "File %s does not exist!", config.getCsvFile().toString());
+            throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
+        } catch (IOException e) {
+            log.error(e, "Error reading from %s!", config.getCsvFile().toString());
+            throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (Exception e) {
+                    log.error(e, "Error closing file reader");
+                }
+            }
+            lock.unlock();
         }
         return null;
     }
 
-    private void readHeader() {
-        if (header.length > 0) {
-            return;
-        }
-        ICsvMapReader reader = getReader(config.getCsvFile());
-        if (reader != null) {
-            header = readHeader(reader);
-            try {
-                reader.close();
-            } catch (Exception e) {
-                log.error(e, "Error closing file reader");
-            }
-        }
+    private String[] getHeader() {
+        return fileNameToHeaderMap.get(csvFilePath);
     }
 
     private String[] readHeader(ICsvMapReader reader) {
         String[] hdr;
 
-        synchronized (fileLock) {
-            try {
-                hdr = reader.getHeader(true);
-            } catch (IOException e) {
-                log.error(e, "Error reading from %s!", config.getCsvFile().toString());
-                throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
-            }
+        try {
+            hdr = reader.getHeader(true);
+        } catch (IOException e) {
+            log.error(e, "Error reading from %s!", config.getCsvFile().toString());
+            throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
         }
 
         for (int i = 0; hdr != null && i < hdr.length; i++) {
@@ -661,57 +712,15 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     }
 
     private ICsvMapReader getReader(File file) {
-        ICsvMapReader reader = null;
         try {
-            reader = new CsvMapReader(new FileReader(file), csvPreference);
+            return new CsvMapReader(new FileReader(file), csvPreference);
         } catch (FileNotFoundException e) {
             log.error(e, "File %s does not exist!", file.toString());
             throw new ConnectorIOException("File " + file.toString() + " does not exist", e);
         }
-        return reader;
     }
 
-    private Uid getNextUid() {
-        synchronized (fileLock) {
-            ICsvMapReader reader = null;
-            try {
-                reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
-
-                readHeader();
-                final CellProcessor[] processors = getProcessors();
-
-                Map<String, Object> entry;
-                int maxUid = 0;
-                while ((entry = reader.read(header, processors)) != null) {
-                    String sUid = (String) entry.get(config.getHeaderUid());
-                    try {
-                        if (Integer.valueOf(sUid) > maxUid) {
-                            maxUid = Integer.valueOf(sUid);
-                        }
-                    } catch (NumberFormatException e) {
-                        return new Uid(UUID.randomUUID().toString());
-                    }
-                }
-                return new Uid(String.valueOf(++maxUid));
-            } catch (FileNotFoundException e) {
-                log.error(e, "File %s does not exist!", config.getCsvFile().toString());
-                throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
-            } catch (IOException e) {
-                log.error(e, "Error reading from %s!", config.getCsvFile().toString());
-                throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
-            } finally {
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (Exception e) {
-                        log.error(e, "Error closing file reader");
-                    }
-                }
-            }
-        }
-    }
-
-    private List<AttributeInfo> createAttributeInfo(List<String> names) {
+    private List<AttributeInfo> createAttributeInfo(String[] names) {
         List<AttributeInfo> infos = new ArrayList<AttributeInfo>();
         for (String name : names) {
             if (name.equals(config.getHeaderUid())) {
@@ -737,7 +746,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
 
     private ConnectorObject newConnectorObject(Map<String,Object> entry) {
         ConnectorObjectBuilder builder = new ConnectorObjectBuilder();
-        for (String col : header) {
+        for (String col : getHeader()) {
             if (entry.containsKey(col) && entry.get(col) != null) {
                 if (col.equals(config.getHeaderUid())) {
                     builder.setUid((String) entry.get(col));
@@ -755,36 +764,44 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     }
 
     private ConnectorObject findObjectInFile(File file, Uid uid) {
-        synchronized (fileLock) {
-            ICsvMapReader reader = null;
-            try {
-                reader = new CsvMapReader(new FileReader(file == null ? config.getCsvFile() : file),
-                        csvPreference);
-                readHeader();
+        ICsvMapReader reader = null;
 
-                final CellProcessor[] processors = getProcessors();
+        final ReentrantReadWriteLock rwLock =
+                fileNameToLockMap.get(file == null ? csvFilePath : file.getAbsolutePath());
+        if (rwLock != null) {
+            // CSVFileConnector manages locks for the given file
+            rwLock.readLock().lock();
+        }
+        try {
+            reader = new CsvMapReader(new FileReader(file == null ? config.getCsvFile() : file),
+                    csvPreference);
+            final String[] header = rwLock != null ? getHeader() : readHeader(reader);
 
-                Map<String, Object> entry;
-                while ((entry = reader.read(header, processors)) != null) {
-                    ConnectorObject object = newConnectorObject(entry);
-                    if (object.getUid().getUidValue().equals(uid.getUidValue())) {
-                        return object;
-                    }
+            final CellProcessor[] processors = getProcessors(header);
+
+            Map<String, Object> entry;
+            while ((entry = reader.read(header, processors)) != null) {
+                ConnectorObject object = newConnectorObject(entry);
+                if (object.getUid().getUidValue().equals(uid.getUidValue())) {
+                    return object;
                 }
-            } catch (FileNotFoundException e) {
-                log.error(e, "File %s does not exist!", config.getCsvFile().toString());
-                throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
-            } catch (IOException e) {
-                log.error(e, "Error reading from %s!", config.getCsvFile().toString());
-                throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
-            } finally {
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (Exception e) {
-                        log.error(e, "Error closing file reader");
-                    }
+            }
+        } catch (FileNotFoundException e) {
+            log.error(e, "File %s does not exist!", config.getCsvFile().toString());
+            throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
+        } catch (IOException e) {
+            log.error(e, "Error reading from %s!", config.getCsvFile().toString());
+            throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (Exception e) {
+                    log.error(e, "Error closing file reader");
                 }
+            }
+            if (rwLock != null) {
+                rwLock.readLock().unlock();
             }
         }
         return null;
@@ -832,9 +849,9 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     private void scrubSyncFiles() {
         File dataDir = config.getCsvFile().getParentFile();
         Map<Long, String> files = new TreeMap<Long, String>();
-        Pattern pattern = Pattern.compile("(\\.[0-9]{13})$");
+
         for (String filename : dataDir.list()) {
-            Matcher matcher = pattern.matcher(filename);
+            Matcher matcher = syncFilenamePattern.matcher(filename);
             if (matcher.find()) {
                 Long timestamp = Long.valueOf(matcher.group().substring(1));
                 files.put(timestamp, filename);
@@ -847,7 +864,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     }
 
     private void compareHeaders(String[] header2) {
-        List<String> hdr1 = Arrays.asList(header);
+        List<String> hdr1 = Arrays.asList(getHeader());
         List<String> hdr2 = Arrays.asList(header2);
 
         for (String col : hdr1) {
@@ -882,35 +899,37 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             throw new AlreadyExistsException(String.format("Account %s already exists.", uid.getUidValue()));
         }
 
-        synchronized (fileLock) {
-            readHeader();
+        final String[] header = getHeader();
 
-            // Order the attributes for insertion
-            Map<String, Object> colMap = new LinkedHashMap<String, Object>();
-            for (String col : header) {
-                if (col.equals(config.getHeaderUid())) {
-                    colMap.put(col, uid.getUidValue());
-                } else {
-                    colMap.put(col, attrMap.containsKey(col) ? attrMap.get(col) : null);
+        // Order the attributes for insertion
+        Map<String, Object> colMap = new LinkedHashMap<String, Object>();
+        for (String col : header) {
+            if (col.equals(config.getHeaderUid())) {
+                colMap.put(col, uid.getUidValue());
+            } else {
+                colMap.put(col, attrMap.containsKey(col) ? attrMap.get(col) : null);
+            }
+        }
+
+        ICsvMapWriter mapWriter = null;
+
+        final WriteLock lock = fileNameToLockMap.get(csvFilePath).writeLock();
+        lock.lock();
+        try {
+            mapWriter = new CsvMapWriter(new FileWriter(config.getCsvFile(), true), csvPreference);
+            final CellProcessor[] processors = getProcessors(header);
+            mapWriter.write(colMap, header, processors);
+        } catch (IOException e) {
+            throw new ConnectorException("Failed to create object", e);
+        } finally {
+            if (mapWriter != null) {
+                try {
+                    mapWriter.close();
+                } catch (IOException e) {
+                    log.error(e, "Failed to close CSV file after create");
                 }
             }
-
-            ICsvMapWriter mapWriter = null;
-            try {
-                mapWriter = new CsvMapWriter(new FileWriter(config.getCsvFile(), true), csvPreference);
-                final CellProcessor[] processors = getProcessors();
-                mapWriter.write(colMap, header, processors);
-            } catch (IOException e) {
-                throw new ConnectorException("Failed to create object", e);
-            } finally {
-                if (mapWriter != null) {
-                    try {
-                        mapWriter.close();
-                    } catch (IOException e) {
-                        log.error(e, "Failed to close CSV file after create");
-                    }
-                }
-            }
+            lock.unlock();
         }
 
         return uid;
@@ -921,60 +940,63 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             throw new IllegalArgumentException("Uid cannot be null");
         }
 
-        synchronized (fileLock) {
-            ICsvMapReader reader = null;
-            ICsvMapWriter writer = null;
-            File tmp = null;
-            try {
-                reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
-                tmp = File.createTempFile("csvfile", "tmp");
-                writer = new CsvMapWriter(new FileWriter(tmp), csvPreference);
+        final String[] header = getHeader();
+        ICsvMapReader reader = null;
+        ICsvMapWriter writer = null;
+        File tmp = null;
 
-                readHeader();
-                //writer.writeHeader(header);
+        final WriteLock lock = fileNameToLockMap.get(csvFilePath).writeLock();
+        lock.lock();
+        try {
+            reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
+            tmp = File.createTempFile("csvfile", "tmp");
+            writer = new CsvMapWriter(new FileWriter(tmp), csvPreference);
 
-                final CellProcessor[] processors = getProcessors();
+            final CellProcessor[] processors = getProcessors(header);
 
-                Map<String, Object> entry;
-                boolean found = false;
-                while ((entry = reader.read(header, processors)) != null) {
-                    String sUid = (String) entry.get(config.getHeaderUid());
-                    if (!uid.getUidValue().equals(sUid)) {
-                        writer.write(entry, header, processors);
-                    } else {
-                        found = true;
-                    }
-                }
-                if (!found) {
-                    tmp.delete();
-                    throw new UnknownUidException("Object for uid " + uid.toString() + " does not exist");
-                }
-            } catch (FileNotFoundException e) {
-                log.error(e, "File %s does not exist!", config.getCsvFile().toString());
-                throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
-            } catch (IOException e) {
-                log.error(e, "Error reading from %s!", config.getCsvFile().toString());
-                throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
-            } finally {
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (Exception e) {
-                        log.error(e, "Error closing file reader");
-                    }
-                }
-                if (writer != null) {
-                    try {
-                        writer.close();
-                    } catch (Exception e) {
-                        log.error(e, "Error closing file writer");
-                    }
+            Map<String, Object> entry;
+            boolean found = false;
+            while ((entry = reader.read(header, processors)) != null) {
+                String sUid = (String) entry.get(config.getHeaderUid());
+                if (!uid.getUidValue().equals(sUid)) {
+                    writer.write(entry, header, processors);
+                } else {
+                    found = true;
                 }
             }
-
-            if (tmp != null) {
-                tmp.renameTo(config.getCsvFile().getAbsoluteFile());
+            if (!found) {
+                tmp.delete();
+                throw new UnknownUidException("Object for uid " + uid.toString() + " does not exist");
             }
+        } catch (FileNotFoundException e) {
+            log.error(e, "File %s does not exist!", config.getCsvFile().toString());
+            throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
+        } catch (IOException e) {
+            log.error(e, "Error reading from %s!", config.getCsvFile().toString());
+            throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (Exception e) {
+                    log.error(e, "Error closing file reader");
+                }
+            }
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (Exception e) {
+                    log.error(e, "Error closing file writer");
+                }
+            }
+            if (tmp != null && tmp.exists()) {
+                try {
+                    tmp.renameTo(config.getCsvFile().getAbsoluteFile());
+                } catch (Exception e) {
+                    log.error(e, "Error renaming file");
+                }
+            }
+            lock.unlock();
         }
     }
 
@@ -987,68 +1009,70 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             throw new IllegalArgumentException("Attribute set may not be null");
         }
 
-        synchronized (fileLock) {
-            ICsvMapReader reader = null;
-            ICsvMapWriter writer = null;
-            File tmp = null;
-            try {
-                reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
-                tmp = File.createTempFile("csvfile", "tmp");
-                writer = new CsvMapWriter(new FileWriter(tmp), csvPreference);
+        final String[] header = getHeader();
+        ICsvMapReader reader = null;
+        ICsvMapWriter writer = null;
+        File tmp = null;
 
-                readHeader();
-                writer.writeHeader(header);
+        final WriteLock lock = fileNameToLockMap.get(csvFilePath).writeLock();
+        lock.lock();
+        try {
+            reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
+            tmp = File.createTempFile("csvfile", "tmp");
+            writer = new CsvMapWriter(new FileWriter(tmp), csvPreference);
 
-                final CellProcessor[] processors = getProcessors();
+            writer.writeHeader(header);
 
-                Map<String, Object> entry;
-                reader.read(header, processors); // consume header
-                while ((entry = reader.read(header, processors)) != null) {
-                    String sUid = (String) entry.get(config.getHeaderUid());
-                    if (uid.getUidValue().equals(sUid)) {
-//                        if (type.equals(UpdateType.UPDATE)) {
-//                            entry.clear();
-//                        }
-                        for (Attribute attr : attributes) {
-                            if (type.equals(UpdateType.REMOVEVALUES)) {
-                                entry.remove(getHeaderNameForAttrName(attr.getName()));
-                            } else {
-                                entry.put(getHeaderNameForAttrName(attr.getName()), getAttributeValue(attr));
-                            }
+            final CellProcessor[] processors = getProcessors(header);
+
+            Map<String, Object> entry;
+            reader.read(header, processors); // consume header
+            while ((entry = reader.read(header, processors)) != null) {
+                String sUid = (String) entry.get(config.getHeaderUid());
+                if (uid.getUidValue().equals(sUid)) {
+                    for (Attribute attr : attributes) {
+                        if (type.equals(UpdateType.REMOVEVALUES)) {
+                            entry.remove(getHeaderNameForAttrName(attr.getName()));
+                        } else {
+                            entry.put(getHeaderNameForAttrName(attr.getName()), getAttributeValue(attr));
                         }
-                        updated = new Uid((String) entry.get(config.getHeaderUid()));
                     }
-                    writer.write(entry, header, processors);
+                    updated = new Uid((String) entry.get(config.getHeaderUid()));
                 }
-                if (updated == null) {
-                    throw new UnknownUidException("Uid " + uid.getUidValue() + " does not exist");
-                }
-            } catch (FileNotFoundException e) {
-                log.error(e, "File %s does not exist!", config.getCsvFile().toString());
-                throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
-            } catch (IOException e) {
-                log.error(e, "Error reading from %s!", config.getCsvFile().toString());
-                throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
-            } finally {
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (Exception e) {
-                        log.error(e, "Error closing file reader");
-                    }
-                }
-                if (writer != null) {
-                    try {
-                        writer.close();
-                    } catch (Exception e) {
-                        log.error(e, "Error closing file writer");
-                    }
+                writer.write(entry, header, processors);
+            }
+            if (updated == null) {
+                throw new UnknownUidException("Uid " + uid.getUidValue() + " does not exist");
+            }
+        } catch (FileNotFoundException e) {
+            log.error(e, "File %s does not exist!", config.getCsvFile().toString());
+            throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
+        } catch (IOException e) {
+            log.error(e, "Error reading from %s!", config.getCsvFile().toString());
+            throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (Exception e) {
+                    log.error(e, "Error closing file reader");
                 }
             }
-
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (Exception e) {
+                    log.error(e, "Error closing file writer");
+                }
+            }
             if (tmp != null) {
-                tmp.renameTo(config.getCsvFile().getAbsoluteFile());
+                try {
+                    tmp.renameTo(config.getCsvFile().getAbsoluteFile());
+                } catch (Exception e) {
+                    log.error(e, "Error renaming file");
+                }
             }
+            lock.unlock();
         }
 
         return updated;
@@ -1067,16 +1091,6 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             return config.getHeaderPassword();
         }
         return attr;
-    }
-
-    private void validateHeader() {
-        if (new HashSet(Arrays.asList(header)).size() != header.length) {
-            throw new ConnectorException("Header contains duplicate columns");
-        }
-    }
-
-    private CellProcessor[] getProcessors() {
-        return getProcessors(header);
     }
 
     private CellProcessor[] getProcessors(String[] header) {
