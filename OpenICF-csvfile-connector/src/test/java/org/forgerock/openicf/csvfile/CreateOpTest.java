@@ -1,29 +1,18 @@
 /*
+ * The contents of this file are subject to the terms of the Common Development and
+ * Distribution License (the License). You may not use this file except in compliance
+ * with the License.
  *
- * Copyright 2010-2015 ForgeRock
+ * You can obtain a copy of the License at legal/CDDLv1.0.txt. See the License for
+ * the specific language governing permission and limitations under the License.
  *
- * The contents of this file are subject to the terms
- * of the Common Development and Distribution License
- * (the License). You may not use this file except in
- * compliance with the License.
+ * When distributing Covered Software, include this CDDL Header Notice in each file
+ * and include the License file at legal/CDDLv1.0.txt. If applicable, add the following
+ * below the CDDL Header, with the fields enclosed by brackets [] replaced by your
+ * own identifying information: "Portions copyright [year] [name of copyright owner]".
  *
- * You can obtain a copy of the License at
- * http://www.opensource.org/licenses/cddl1.php or
- * OpenIDM/legal/CDDLv1.0.txt
- * See the License for the specific language governing
- * permission and limitations under the License.
- *
- * When distributing Covered Code, include this CDDL
- * Header Notice in each file and include the License file
- * at OpenIDM/legal/CDDLv1.0.txt.
- * If applicable, add the following below the CDDL Header,
- * with the fields enclosed by brackets [] replaced by
- * your own identifying information:
- * "Portions Copyrighted 2010 [name of copyright owner]"
- *
+ * Copyright 2010-2016 ForgeRock AS.
  * Portions Copyrighted 2011 Viliam Repan (lazyman)
- *
- * $Id$
  */
 package org.forgerock.openicf.csvfile;
 
@@ -33,7 +22,6 @@ import org.testng.annotations.BeforeMethod;
 import static org.testng.Assert.*;
 
 import org.forgerock.openicf.csvfile.util.TestUtils;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -41,7 +29,6 @@ import java.util.Set;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
-import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 
@@ -49,7 +36,6 @@ import java.io.File;
 import org.identityconnectors.common.Base64;
 
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
-import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.testng.annotations.Test;
 
 public class CreateOpTest {
@@ -134,14 +120,12 @@ public class CreateOpTest {
         config.setCsvFile(TestUtils.getTestFile("create-empty.csv"));
         config.setHeaderUid("uid");
         config.setHeaderPassword("password");
-        config.setHeaderName("lastName");
 
         connector = new CSVFileConnector();
         connector.init(config);
 
         final String uidValue = "uid=vilo,dc=example,dc=com";
         Set<Attribute> attributes = new HashSet<Attribute>();
-        attributes.add(new Name("vilo repan"));
         attributes.add(createAttribute("firstName", "vilo"));
         attributes.add(createAttribute("uid", uidValue));
         attributes.add(AttributeBuilder.buildPassword(new GuardedString(Base64.encode("asdf".getBytes()).toCharArray())));

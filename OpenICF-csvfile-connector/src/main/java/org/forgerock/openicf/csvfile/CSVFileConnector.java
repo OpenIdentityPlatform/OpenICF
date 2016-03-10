@@ -193,11 +193,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         if (password == null) {
             throw new InvalidPasswordException("Password cannot be null.");
         }
-        Uid uid = findAccount(null, userName, password, options);
-        if (uid == null) {
-            throw new InvalidCredentialException(String.format("Account %s does not exist.", userName));
-        }
-        return uid;
+        return testCredentials(userName, password, options);
     }
 
     /**
@@ -205,9 +201,16 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
      */
     public Uid resolveUsername(final ObjectClass objectClass, final String userName, final OperationOptions options) {
         isAccount(objectClass);
-        Uid uid = findAccount(null, userName, null, options);
+        return testCredentials(userName, null, options);
+    }
+
+    private Uid testCredentials(String name, GuardedString password, OperationOptions options) {
+        if (name == null) {
+            throw new InvalidCredentialException("Name cannot be null.");
+        }
+        Uid uid = findAccount(new Uid(name), password, options);
         if (uid == null) {
-            throw new InvalidCredentialException(String.format("Account %s does not exist.", userName));
+            throw new InvalidCredentialException(String.format("Account %s does not exist.", name));
         }
         return uid;
     }
@@ -249,7 +252,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         for (AttributeInfo info : ((ObjectClassInfo) schema.getObjectClassInfo().toArray()[0]).getAttributeInfo()) {
             infoNames.add(info.getName());
             String name = info.getName().equals(Name.NAME)
-                    ? config.getHeaderName()
+                    ? config.getHeaderUid()
                     : info.getName().equals(Uid.NAME)
                         ? config.getHeaderUid()
                         : info.getName().equals("__PASSWORD__")
@@ -562,11 +565,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         }
     }
 
-    private Uid findAccount(final Uid uid, final String userName, final GuardedString password,
+    private Uid findAccount(final Uid uid, final GuardedString password,
             final OperationOptions options) {
-        if (config.getHeaderName() == null
-                || config.getHeaderPassword() == null
-                || config.getHeaderUid() == null) {
+        if ((password != null && config.getHeaderPassword() == null)
+                || (uid == null && config.getHeaderUid() == null)) {
             return null;
         }
 
@@ -585,8 +587,6 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 Map<String, Object> entry;
                 while ((entry = reader.read(header, processors)) != null) {
                     if (uid != null && uid.getUidValue().equals(entry.get(config.getHeaderUid()))) {
-                        return uid;
-                    } else if (userName != null && userName.equals(entry.get(config.getHeaderName()))) {
                         Uid foundUid = new Uid((String) entry.get(config.getHeaderUid()));
                         if (password == null) {
                             return foundUid;
@@ -718,10 +718,6 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 infos.add(new AttributeInfoBuilder(Uid.NAME).build());
                 continue;
             }
-            if (name.equals(config.getHeaderName())) {
-                infos.add(Name.INFO);
-                continue;
-            }
             if (name.equals(config.getHeaderPassword())) {
                 infos.add(OperationalAttributeInfos.PASSWORD);
                 continue;
@@ -745,13 +741,8 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             if (entry.containsKey(col) && entry.get(col) != null) {
                 if (col.equals(config.getHeaderUid())) {
                     builder.setUid((String) entry.get(col));
-                    builder.addAttribute(col, entry.get(col));
-                    if (!entry.containsKey(config.getHeaderName())) {
-                        builder.setName((String) entry.get(col));
-                        builder.addAttribute(col, entry.get(col));
-                    }
-                } else if (col.equals(config.getHeaderName())) {
                     builder.setName((String) entry.get(col));
+                    builder.addAttribute(col, entry.get(col));
                 } else if (col.equals(config.getHeaderPassword())) {
                     builder.addAttribute(OperationalAttributes.PASSWORD_NAME,
                             new GuardedString(((String) entry.get(col)).toCharArray()));
@@ -876,22 +867,19 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             throw new IllegalArgumentException("Attributes may not be null or empty.");
         }
         Uid uid = null;
-        String username = null;
         Map<String,Object> attrMap = new HashMap<String, Object>();
         for (Attribute attr : attributes) {
-            if (attr.getName().equals(Uid.NAME) || attr.getName().equals(config.getHeaderUid())) {
+            if (attr.getName().equals(Uid.NAME) || attr.getName().equals(Name.NAME) ||
+                    attr.getName().equals(config.getHeaderUid())) {
                 uid = new Uid((String) attr.getValue().get(0));
-            } else if (attr.getName().equals(Name.NAME) || attr.getName().equals(config.getHeaderName())) {
-                username = (String) attr.getValue().get(0);
             }
             attrMap.put(attr.getName(), attr.getValue().get(0));
         }
 
         if (uid == null) {
             uid = new Uid(UUID.randomUUID().toString());
-        } else if (findAccount(uid, username, null, options) != null) {
-            throw new AlreadyExistsException(String.format("Account %s:%s already exists.",
-                    uid.getUidValue(), username == null ? "-" : username));
+        } else if (findAccount(uid, null, options) != null) {
+            throw new AlreadyExistsException(String.format("Account %s already exists.", uid.getUidValue()));
         }
 
         synchronized (fileLock) {
@@ -902,8 +890,6 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             for (String col : header) {
                 if (col.equals(config.getHeaderUid())) {
                     colMap.put(col, uid.getUidValue());
-                } else if (col.equals(config.getHeaderName())) {
-                    colMap.put(col, username);
                 } else {
                     colMap.put(col, attrMap.containsKey(col) ? attrMap.get(col) : null);
                 }
@@ -1075,9 +1061,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     }
 
     private String getHeaderNameForAttrName(String attr) {
-        if (attr.equals(Name.NAME)) {
-            return config.getHeaderName();
-        } else if (attr.equals(Uid.NAME)) {
+        if (attr.equals(Uid.NAME) || attr.equals(Name.NAME)) {
             return config.getHeaderUid();
         } else if (attr.equals("__PASSWORD__")) {
             return config.getHeaderPassword();

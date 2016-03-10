@@ -1,30 +1,18 @@
 /*
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+ * The contents of this file are subject to the terms of the Common Development and
+ * Distribution License (the License). You may not use this file except in compliance
+ * with the License.
  *
- * Copyright 2010-2015 ForgeRock
+ * You can obtain a copy of the License at legal/CDDLv1.0.txt. See the License for
+ * the specific language governing permission and limitations under the License.
  *
- * The contents of this file are subject to the terms
- * of the Common Development and Distribution License
- * (the License). You may not use this file except in
- * compliance with the License.
+ * When distributing Covered Software, include this CDDL Header Notice in each file
+ * and include the License file at legal/CDDLv1.0.txt. If applicable, add the following
+ * below the CDDL Header, with the fields enclosed by brackets [] replaced by your
+ * own identifying information: "Portions copyright [year] [name of copyright owner]".
  *
- * You can obtain a copy of the License at
- * http://www.opensource.org/licenses/cddl1.php or
- * OpenIDM/legal/CDDLv1.0.txt
- * See the License for the specific language governing
- * permission and limitations under the License.
- *
- * When distributing Covered Code, include this CDDL
- * Header Notice in each file and include the License file
- * at OpenIDM/legal/CDDLv1.0.txt.
- * If applicable, add the following below the CDDL Header,
- * with the fields enclosed by brackets [] replaced by
- * your own identifying information:
- * "Portions Copyrighted 2010 [name of copyright owner]"
- *
+ * Copyright 2010-2016 ForgeRock AS.
  * Portions Copyrighted 2011 Viliam Repan (lazyman)
- *
- * $Id$
  */
 package org.forgerock.openicf.csvfile;
 
@@ -39,10 +27,8 @@ import org.forgerock.openicf.csvfile.util.TestUtils;
 import java.util.Set;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashSet;
 
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
@@ -68,7 +54,6 @@ public class UpdateAttributeValuesOpTest {
         config.setCsvFile(TestUtils.getTestFile("update-attribute.csv"));
         config.setHeaderUid("uid");
         config.setHeaderPassword("password");
-        config.setHeaderName("firstName");
 
         connector = new CSVFileConnector();
         connector.init(config);
@@ -221,20 +206,6 @@ public class UpdateAttributeValuesOpTest {
         attributes.add(new Name("troll"));
         try {
             connector.addAttributeValues(ObjectClass.ACCOUNT, new Uid("vilo"), attributes, null);
-        } finally {
-            String result = TestUtils.compareFiles(TestUtils.getTestFile("update-attribute.csv"),
-                    TestUtils.getTestFile("update-attribute-backup.csv"));
-            assertNotNull(result, "File updated incorrectly: " + result);
-        }
-    }
-
-    @Test
-    public void removeNameWhenUniqueEqualsNamingAttribute() throws Exception {
-        Set<Attribute> attributes = new HashSet<Attribute>();
-
-        attributes.add(new Name("vilo"));
-        try {
-            connector.removeAttributeValues(ObjectClass.ACCOUNT, new Uid("vilo"), attributes, null);
         } finally {
             String result = TestUtils.compareFiles(TestUtils.getTestFile("update-attribute.csv"),
                     TestUtils.getTestFile("update-attribute-backup.csv"));

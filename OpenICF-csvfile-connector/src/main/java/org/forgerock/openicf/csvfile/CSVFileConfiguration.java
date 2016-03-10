@@ -11,7 +11,7 @@
  * below the CDDL Header, with the fields enclosed by brackets [] replaced by your
  * own identifying information: "Portions copyright [year] [name of copyright owner]".
  *
- * Copyright 2015 ForgeRock AS.
+ * Copyright 2015-2016 ForgeRock AS.
  */
 package org.forgerock.openicf.csvfile;
 
@@ -40,11 +40,6 @@ public class CSVFileConfiguration extends AbstractConfiguration {
      * The CSV header that maps to the uid for each row.
      */
     private String headerUid = "uid";
-
-    /**
-     * The CSV header that maps to the username for each row.
-     */
-    private String headerName = "username";
 
     /**
      * The CSV header that maps to the password for each row.
@@ -92,16 +87,6 @@ public class CSVFileConfiguration extends AbstractConfiguration {
 
     public void setHeaderUid(String headerUid) {
         this.headerUid = headerUid;
-    }
-
-    @ConfigurationProperty(displayMessageKey = "csv_header_username.display",
-            helpMessageKey = "csv_header_username.help")
-    public String getHeaderName() {
-        return headerName;
-    }
-
-    public void setHeaderName(String headerName) {
-        this.headerName = headerName;
     }
 
     @ConfigurationProperty(displayMessageKey = "csv_header_password.display",
@@ -159,10 +144,6 @@ public class CSVFileConfiguration extends AbstractConfiguration {
      */
     public void validate() {
         log.ok("begin");
-
-        if (headerUid.equals(headerName)) {
-            throw new ConfigurationException("Uid and username header fields cannot be the same");
-        }
 
         if (csvFile == null || StringUtil.isEmpty(csvFile.toString())) {
             throw new ConfigurationException("CSV file path is not defined");
