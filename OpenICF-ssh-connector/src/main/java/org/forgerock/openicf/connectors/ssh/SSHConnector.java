@@ -115,8 +115,8 @@ public class SSHConnector extends ScriptedConnectorBase<SSHConfiguration> implem
             arguments.setVariable("setTimeoutSec", wrapper.getGlobalTimeoutSec());
             arguments.setVariable("match", wrapper.getGlobalMatch());
             arguments.setVariable("regexp", wrapper.getRegexpMatch());
-            arguments.setVariable("timeout", wrapper.getTimeout());
-            arguments.setVariable("eof", wrapper.getEof());
+            arguments.setVariable("timeout", wrapper.getTimeoutMatch());
+            arguments.setVariable("eof", wrapper.getEofMatch());
             arguments.setVariable("promptReady", wrapper.getPromptReady());
             arguments.setVariable("TIMEOUT_FOREVER", Expect4j.TIMEOUT_FOREVER);
             arguments.setVariable("TIMEOUT_NEVER", Expect4j.TIMEOUT_NEVER);

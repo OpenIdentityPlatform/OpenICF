@@ -14,6 +14,7 @@
  * Copyright 2016 ForgeRock AS.
  */
 
+package samples.linux.scripts
 
 import org.forgerock.openicf.connectors.ssh.SSHConfiguration
 import org.forgerock.openicf.connectors.ssh.SSHConnection
@@ -78,7 +79,7 @@ switch (objectClass.getObjectClassValue()) {
             sendln "/usr/bin/cut -d: -f1,3,4,5,6,7 /etc/passwd"
         } else if (filter instanceof EqualsFilter && ((EqualsFilter) filter).getAttribute().is(Uid.NAME)) {
             def username = ((EqualsFilter) filter).getAttribute().getValue().get(0)
-            sendln "/usr/bin/cut -d: -f1,3,4,5,6,7 /etc/passwd | /bin/grep \"^$username\""
+            sendln "/usr/bin/cut -d: -f1,3,4,5,6,7 /etc/passwd | /bin/grep \"^$username:\""
         }
         expect prompt, {
             if (it.getMatchedWhere() > 0) {
@@ -91,8 +92,8 @@ switch (objectClass.getObjectClassValue()) {
                         if ("uid" in attributesToGet) {
                             attribute "uid", attrs[1]
                         }
-                        if ("gid" in attributesToGet) {
-                            attribute "gid", attrs[2]
+                        if ("group" in attributesToGet) {
+                            attribute "group", attrs[2]
                         }
                         if ("description" in attributesToGet) {
                             attribute "description", attrs[3]
@@ -114,7 +115,7 @@ switch (objectClass.getObjectClassValue()) {
             sendln "/usr/bin/cut -d: -f1,3,4 /etc/group"
         } else if (filter instanceof EqualsFilter && ((EqualsFilter) filter).getAttribute().is(Uid.NAME)) {
             def groupname = ((EqualsFilter) filter).getAttribute().getValue().get(0)
-            sendln "/usr/bin/cut -d: -f1,3,4 /etc/group | /bin/grep \"^$groupname\""
+            sendln "/usr/bin/cut -d: -f1,3,4 /etc/group | /bin/grep \"^$groupname:\""
         }
         expect prompt, {
             if (it.getMatchedWhere() > 0) {
@@ -127,7 +128,7 @@ switch (objectClass.getObjectClassValue()) {
                         if ("gid" in attributesToGet) {
                             attribute "gid", attrs[1]
                         }
-                        if ("members" in attributesToGet) {
+                        if ("members" in attributesToGet && attrs.size()> 2) {
                             attribute "members", attrs[2].split(",")
                         }
                     }

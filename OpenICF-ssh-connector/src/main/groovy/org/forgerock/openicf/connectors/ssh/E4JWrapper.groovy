@@ -21,6 +21,7 @@ import expect4j.Closure
 import expect4j.Expect4j
 import expect4j.ExpectState
 import expect4j.matches.*
+
 import static org.identityconnectors.common.security.SecurityUtil.decrypt
 
 /**
@@ -81,9 +82,21 @@ class E4JWrapper {
      */
     def promptReady = { int maxTry ->
         def prompt = configuration.getPrompt()
+        def promptlen = prompt.length()
         def ready = false
         def retry = 1
-        expectGlobal(prompt, { ready = true })
+        expectGlobal(
+                [
+                        // We match the last prompt.length() characters
+                        regexpMatch("(.{$promptlen})\$") { ExpectState state ->
+                            if (prompt == state.match) {
+                                ready = true
+                            }
+                        },
+                        // Try not to lose too much time...
+                        timeoutMatch(5) {}
+                ]
+        )
         if (maxTry > 0) {
             while (!ready) {
                 expect4j.send(new String(ctrlC))
@@ -103,7 +116,7 @@ class E4JWrapper {
     def sudo = { String command ->
         def ready = false
 
-        if (command != null){
+        if (command != null) {
             expect4j.send(configuration.sudoCommand + " " + command + "\r")
             expectGlobal(configuration.sudoPwdPrompt, {
                 expect4j.send(decrypt(configuration.password) + "\r")
@@ -148,9 +161,9 @@ class E4JWrapper {
     /**
      * Simple Wrapper to build a TimeoutMatch pattern pair
      */
-    def timeout = { long milli, groovy.lang.Closure closure ->
+    def timeoutMatch = { long milli, groovy.lang.Closure closure ->
         if (closure == null) {
-            new TimeoutMatch(pattern, null)
+            new TimeoutMatch(milli, null)
         } else {
             new TimeoutMatch(milli as Long, new Closure() {
                 @Override
@@ -164,7 +177,7 @@ class E4JWrapper {
     /**
      * Simple Wrapper to build an EofMatch pattern pair
      */
-    def eof = { groovy.lang.Closure closure ->
+    def eofMatch = { groovy.lang.Closure closure ->
         new EofMatch(new Closure() {
             @Override
             public void run(ExpectState state) throws Exception {

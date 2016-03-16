@@ -14,6 +14,8 @@
  * Copyright 2016 ForgeRock AS.
  */
 
+package samples.linux.scripts
+
 class ErrorCodes {
 
     static String E_USAGE = "invalid command syntax"

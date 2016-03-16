@@ -14,6 +14,7 @@
  * Copyright 2016 ForgeRock AS.
  */
 
+package samples.linux.scripts
 
 import org.forgerock.openicf.connectors.ssh.SSHConfiguration
 import org.forgerock.openicf.connectors.ssh.SSHConnection

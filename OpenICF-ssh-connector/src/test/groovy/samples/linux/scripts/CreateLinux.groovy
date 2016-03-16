@@ -14,6 +14,7 @@
  * Copyright 2016 ForgeRock AS.
  */
 
+package samples.linux.scripts
 
 import org.forgerock.openicf.connectors.ssh.SSHConfiguration
 import org.forgerock.openicf.connectors.ssh.SSHConnection
@@ -171,7 +172,7 @@ if (objectClass.getObjectClassValue() == ObjectClass.ACCOUNT_NAME) {
         )
     }
 }
-sendln ""
+//sendln ""
 
 if (!success) {
     log.info("Create of $id succeeded but unable to set password: $message")
