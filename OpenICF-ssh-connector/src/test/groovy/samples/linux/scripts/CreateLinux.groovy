@@ -172,7 +172,6 @@ if (objectClass.getObjectClassValue() == ObjectClass.ACCOUNT_NAME) {
         )
     }
 }
-//sendln ""
 
 if (!success) {
     log.info("Create of $id succeeded but unable to set password: $message")
