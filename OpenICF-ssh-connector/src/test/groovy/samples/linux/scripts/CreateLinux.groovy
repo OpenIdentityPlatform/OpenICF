@@ -16,6 +16,7 @@
 
 package samples.linux.scripts
 
+import org.forgerock.openicf.connectors.ssh.CommandLineBuilder
 import org.forgerock.openicf.connectors.ssh.SSHConfiguration
 import org.forgerock.openicf.connectors.ssh.SSHConnection
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
@@ -38,7 +39,7 @@ def id = id as String
 def log = log as Log
 def objectClass = objectClass as ObjectClass
 def options = options as OperationOptions
-def createAttributes = new AttributesAccessor(attributes as Set<Attribute>)
+def attrs = new AttributesAccessor(attributes as Set<Attribute>)
 
 // SSH Connector specific bindings
 
@@ -76,13 +77,15 @@ log.info("Prompt ready...")
 switch (objectClass.getObjectClassValue()) {
     case ObjectClass.ACCOUNT_NAME:
         // /usr/sbin/useradd -c 'description' -d 'home' -g 'group' -s 'shell' -u 'uid' <login>
-        def args = createAttributes.findString("description") ? "-c '" + createAttributes.findString("description") + "' " : ""
-        args += createAttributes.findString("expireDate") ? "-e '" + createAttributes.findString("expireDate") + "' " : ""
-        args += createAttributes.findString("home") ? "-d " + createAttributes.findString("home") + " " : ""
-        args += createAttributes.findString("group") ? "-g " + createAttributes.findString("group") + " " : ""
-        args += createAttributes.findString("shell") ? "-s " + createAttributes.findString("shell") + " " : ""
-        args += createAttributes.findString("uid") ? "-u " + createAttributes.findString("uid") + " " : ""
-        command = "/usr/sbin/useradd " + args + id
+        command = new CommandLineBuilder("/usr/sbin/useradd")
+                .c(attrs.findString("description"))
+                .e(attrs.findString("expireDate"))
+                .d(attrs.findString("home"))
+                .g(attrs.findString("group"))
+                .s(attrs.findString("shell"))
+                .u(attrs.findString("uid"))
+                .append(id)
+                .build()
         break
     case ObjectClass.GROUP_NAME:
         // /usr/sbin/groupadd <groupname>

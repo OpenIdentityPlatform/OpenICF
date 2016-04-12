@@ -128,7 +128,7 @@ switch (objectClass.getObjectClassValue()) {
                         if ("gid" in attributesToGet) {
                             attribute "gid", attrs[1]
                         }
-                        if ("members" in attributesToGet && attrs.size()> 2) {
+                        if ("members" in attributesToGet && attrs.size() > 2) {
                             attribute "members", attrs[2].split(",")
                         }
                     }

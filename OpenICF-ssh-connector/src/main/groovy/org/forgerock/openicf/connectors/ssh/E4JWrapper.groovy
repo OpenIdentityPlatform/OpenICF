@@ -43,7 +43,7 @@ class E4JWrapper {
     def E4JWrapper(Expect4j expect4j, SSHConfiguration configuration) {
         this.expect4j = expect4j
         this.configuration = configuration
-        expect4j.setDefaultTimeout(configuration.globalTimeout)
+        expect4j.setDefaultTimeout(configuration.expectTimeout)
     }
 
     /**
@@ -94,7 +94,7 @@ class E4JWrapper {
                             }
                         },
                         // Try not to lose too much time...
-                        timeoutMatch(5) {}
+                        timeoutMatch(20) {}
                 ]
         )
         if (maxTry > 0) {
@@ -117,8 +117,8 @@ class E4JWrapper {
         def ready = false
 
         if (command != null) {
-            expect4j.send(configuration.sudoCommand + " " + command + "\r")
-            expectGlobal(configuration.sudoPwdPrompt, {
+            expect4j.send(configuration.sudoCommand + " -k -p pass:: " + command + "\r")
+            expectGlobal("pass::", {
                 expect4j.send(decrypt(configuration.password) + "\r")
                 ready = true
             })

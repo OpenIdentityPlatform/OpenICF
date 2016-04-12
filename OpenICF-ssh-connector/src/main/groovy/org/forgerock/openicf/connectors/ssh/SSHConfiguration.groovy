@@ -94,12 +94,7 @@ public class SSHConfiguration extends ScriptedConfiguration {
     /**
      * The sudo command
      */
-    private String sudoCommand = "/usr/bin/sudo -k"
-
-    /**
-     * The sudo password prompt
-     */
-    private String sudoPwdPrompt = "password for "
+    private String sudoCommand = "/usr/bin/sudo"
 
     /**
      * Input command echo on/off
@@ -112,15 +107,25 @@ public class SSHConfiguration extends ScriptedConfiguration {
     private String terminalType = "vt102"
 
     /**
+     * Define if locale should be change or not
+     */
+    private boolean setLocale = false
+
+    /**
+     * locale
+     */
+    private String locale = "en_US.utf8"
+
+    /**
      * Connection timeout in milliseconds
      */
     private int connectionTimeout = 5000
 
     /**
-     * Global timeout in milliseconds
-     * This timeout is used by expect/send
+     * Expect global timeout in milliseconds
+     * This timeout is used by expect() calls in scripts
      */
-    private long globalTimeout = 5000
+    private long expectTimeout = 5000
 
     /**
      * Authentication type
@@ -234,18 +239,7 @@ public class SSHConfiguration extends ScriptedConfiguration {
         this.sudoCommand = sudoCommand;
     }
 
-    @ConfigurationProperty(order = 9, displayMessageKey = "sudoPwdPrompt.display",
-            groupMessageKey = "basic.group", helpMessageKey = "sudoPwdPrompt.help",
-            required = true, confidential = false)
-    public String getsudoPwdPrompt() {
-        return sudoPwdPrompt;
-    }
-
-    public void setSudoPwdPrompt(String sudoPwdPrompt) {
-        this.sudoPwdPrompt = sudoPwdPrompt;
-    }
-
-    @ConfigurationProperty(order = 10, displayMessageKey = "echoOff.display",
+    @ConfigurationProperty(order = 9, displayMessageKey = "echoOff.display",
             groupMessageKey = "basic.group", helpMessageKey = "echoOff.help",
             required = true, confidential = false)
     public boolean isEchoOff() {
@@ -256,7 +250,7 @@ public class SSHConfiguration extends ScriptedConfiguration {
         this.echoOff = echoOff;
     }
 
-    @ConfigurationProperty(order = 11, displayMessageKey = "terminalType.display",
+    @ConfigurationProperty(order = 10, displayMessageKey = "terminalType.display",
             groupMessageKey = "basic.group", helpMessageKey = "terminalType.help",
             required = true, confidential = false)
     public String getTerminalType() {
@@ -267,7 +261,29 @@ public class SSHConfiguration extends ScriptedConfiguration {
         this.terminalType = ttype;
     }
 
-    @ConfigurationProperty(order = 12, displayMessageKey = "connectionTimeout.display",
+    @ConfigurationProperty(order = 11, displayMessageKey = "locale.display",
+            groupMessageKey = "basic.group", helpMessageKey = "locale.help",
+            required = true, confidential = false)
+    public String getLocale() {
+        return locale;
+    }
+
+    public void setLocale(String locale) {
+        this.locale = locale;
+    }
+
+    @ConfigurationProperty(order = 12, displayMessageKey = "setLocale.display",
+            groupMessageKey = "basic.group", helpMessageKey = "setLocale.help",
+            required = true, confidential = false)
+    public boolean isSetLocale() {
+        return setLocale;
+    }
+
+    public void setSetLocale(boolean setLocale) {
+        this.setLocale = setLocale;
+    }
+
+    @ConfigurationProperty(order = 13, displayMessageKey = "connectionTimeout.display",
             groupMessageKey = "basic.group", helpMessageKey = "connectionTimeout.help",
             required = true, confidential = false)
     public int getConnectionTimeout() {
@@ -278,15 +294,15 @@ public class SSHConfiguration extends ScriptedConfiguration {
         this.connectionTimeout = timeout;
     }
 
-    @ConfigurationProperty(order = 13, displayMessageKey = "globalTimeout.display",
-            groupMessageKey = "basic.group", helpMessageKey = "globalTimeout.help",
+    @ConfigurationProperty(order = 14, displayMessageKey = "expectTimeout.display",
+            groupMessageKey = "basic.group", helpMessageKey = "expectTimeout.help",
             required = true, confidential = false)
-    public long getGlobalTimeout() {
-        return globalTimeout;
+    public long getExpectTimeout() {
+        return expectTimeout;
     }
 
-    public void setGlobalTimeout(long timeout) {
-        this.globalTimeout = timeout;
+    public void setExpectTimeout(long timeout) {
+        this.expectTimeout = timeout;
     }
 
     /**
@@ -410,6 +426,17 @@ public class SSHConfiguration extends ScriptedConfiguration {
                 logger.info("Turning Off command echo")
                 expect4j.expect(prompt)
                 expect4j.send("stty -echo\r")
+            }
+
+            if (setLocale) {
+                logger.info("Changing the locale to {0}", getLocale())
+                expect4j.expect(prompt)
+                // What if not bash?
+                expect4j.send("export LC_ALL=" + getLocale() + "\r")
+                expect4j.expect(prompt)
+                expect4j.send("export LANG=" + getLocale() + "\r")
+                expect4j.expect(prompt)
+                expect4j.send("export LANGUAGE=" + getLocale() + "\r")
             }
             // Call Custom script
             callOnCreateConnection(session, channel, expect4j)

@@ -42,9 +42,9 @@
         </menu>
 
         <menu name="SSH Core Docs">
-            <item name="All Formats" href="docs.html" />
+            <item name="All Formats" href="docs.html"/>
             <!--item name="Release Notes" href="./doc/release-notes/index.html" /-->
-            <item name="Installation Guide" href="./doc/bootstrap/${project.artifactId}-${project.version}/index.html" />
+            <item name="Installation Guide" href="./doc/bootstrap/${project.artifactId}-${project.version}/index.html"/>
         </menu>
 
         <menu ref="reports"/>

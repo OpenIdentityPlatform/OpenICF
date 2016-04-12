@@ -20,46 +20,42 @@ package org.forgerock.openicf.connectors.ssh;
 import expect4j.Expect4j;
 import groovy.lang.Binding;
 import groovy.lang.Closure;
-
+import org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase;
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
+import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.ConnectorClass;
 import org.identityconnectors.framework.spi.PoolableConnector;
-import org.identityconnectors.framework.spi.Configuration;
-
-import org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase;
-import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 
 /**
  * Main implementation of the SSH Connector.
- *
  */
 @ConnectorClass(displayNameKey = "SSH.connector.display",
         configurationClass = SSHConfiguration.class,
         messageCatalogPaths = {"org/forgerock/openicf/connectors/groovy/Messages",
-            "org/forgerock/openicf/connectors/ssh/Messages" })
-public class SSHConnector extends ScriptedConnectorBase<SSHConfiguration> implements PoolableConnector{
+                "org/forgerock/openicf/connectors/ssh/Messages"})
+public class SSHConnector extends ScriptedConnectorBase<SSHConfiguration> implements PoolableConnector {
 
     /**
      * Setup logging for the {@link SSHConnector}.
      */
     private static final Log logger = Log.getLog(SSHConnector.class);
-    
+
     private SSHConfiguration configuration;
-    
+
     private SSHConnection connection;
 
     private E4JWrapper wrapper;
-    
+
     /**
      * Callback method to receive the {@link Configuration}.
      *
-     * @param config
-     *            the new {@link Configuration}
+     * @param config the new {@link Configuration}
      */
     @Override
     public void init(final Configuration config) {
         super.init(config);
-        this.configuration = (SSHConfiguration)config;
+        this.configuration = (SSHConfiguration) config;
         configuration.initGroovyEngine();
         this.connection = new SSHConnection(configuration);
         this.wrapper = new E4JWrapper(connection.getExpect(), configuration);
@@ -72,14 +68,14 @@ public class SSHConnector extends ScriptedConnectorBase<SSHConfiguration> implem
         //Check if the Connection is still active
         try {
             connection.getSession().sendKeepAliveMsg();
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new ConnectionBrokenException("Failed to send Keep-Alive message");
         }
     }
 
     /**
      * Disposes of {@link SSHConnector}'s resources.
-     *
+     * <p>
      * {@see org.identityconnectors.framework.spi.Connector#dispose()}
      */
     @Override
@@ -92,9 +88,8 @@ public class SSHConnector extends ScriptedConnectorBase<SSHConfiguration> implem
 
 
     /**
-     *
      * @param scriptName
-     * @param arguments The Groovy bindings.
+     * @param arguments       The Groovy bindings.
      * @param scriptEvaluator
      * @return The result of the script
      * @throws Exception

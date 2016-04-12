@@ -22,7 +22,6 @@ class ErrorCodes {
     static String E_BAD_ARG = "invalid argument to option"
     static String E_PW_UPDATE = "can't update password file"
 
-
     // Error codes returned with useradd
     static def useradd = [
             "1" : E_PW_UPDATE,
@@ -91,11 +90,11 @@ class ErrorCodes {
 
     // Error codes returned with passwd
     static def passwd = [
-            "1" : "permission denied",
-            "2" : E_USAGE,
-            "3" : "unexpected failure, nothing done",
-            "4"	: "unexpected failure, passwd file missing",
-            "5" : "passwd file busy, try again later",
-            "6" : E_BAD_ARG
+            "1": "permission denied",
+            "2": E_USAGE,
+            "3": "unexpected failure, nothing done",
+            "4": "unexpected failure, passwd file missing",
+            "5": "passwd file busy, try again later",
+            "6": E_BAD_ARG
     ]
 }
