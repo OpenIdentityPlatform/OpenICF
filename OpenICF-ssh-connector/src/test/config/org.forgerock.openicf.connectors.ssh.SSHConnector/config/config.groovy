@@ -42,4 +42,27 @@ environments {
             echoOff = true
         }
     }
+    kerberos {
+        configuration {
+            //classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/shared").file, "UTF-8")]
+            //scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/scripts").file, "UTF-8")]
+            scriptRoots = ["/dvlpt/git/ssh-connector/src/test/groovy/samples/kerberos/scripts"]
+            createScriptFileName = "CreateKerberos.groovy"
+            deleteScriptFileName = "DeleteKerberos.groovy"
+            schemaScriptFileName = "SchemaKerberos.groovy"
+            scriptOnResourceScriptFileName = "ScriptOnResourceKerberos.groovy"
+            searchScriptFileName = "SearchKerberos.groovy"
+            testScriptFileName = "TestKerberos.groovy"
+            updateScriptFileName = "UpdateKerberos.groovy"
+            debug = true
+            host = "localhost"
+            user = "__configureme__"
+            password = new GuardedString("__configureme__".toCharArray())
+            prompt = "root@localhost:~\$ "
+            echoOff = true
+            sudoCommand = "/usr/bin/sudo"
+            customConfiguration = "kadmin { cmd = '/usr/sbin/kadmin.local'; user = 'openidm/admin'; default_realm = 'EXAMPLE.COM' }"
+            customSensitiveConfiguration = new GuardedString(("kadmin { password = '__configureme__'}").toCharArray())
+        }
+    }
 }
