@@ -17,6 +17,7 @@
  */
 package org.forgerock.openicf.csvfile;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -77,6 +78,7 @@ import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.SchemaBuilder;
+import org.identityconnectors.framework.common.objects.SearchResult;
 import org.identityconnectors.framework.common.objects.Subscription;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
@@ -89,6 +91,7 @@ import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.ConnectorClass;
+import org.identityconnectors.framework.spi.SearchResultsHandler;
 import org.identityconnectors.framework.spi.SyncTokenResultsHandler;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
 import org.identityconnectors.framework.spi.operations.BatchOp;
@@ -164,6 +167,11 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     private CsvPreference csvPreference = CsvPreference.STANDARD_PREFERENCE;
 
     /**
+     * Records the number of rows in the CSV file.
+     */
+    private static final Map<String, Integer> totalRowCount = new ConcurrentHashMap<String, Integer>();
+
+    /**
      * Gets the Configuration context for this connector.
      *
      * @return The current {@link Configuration}
@@ -207,6 +215,8 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             }
             fileNameToHeaderSetMap.put(csvFilePath,
                     Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(header))));
+
+            totalRowCount.put(csvFilePath, -1);
 
             // this line must be last within this if-block, to preserve concurrency semantics
             fileNameToLockMap.putIfAbsent(csvFilePath, new ReentrantReadWriteLock());
@@ -329,6 +339,26 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         final ReadLock lock = fileNameToLockMap.get(csvFilePath).readLock();
         lock.lock();
         try {
+            if (handler instanceof SearchResultsHandler && totalRowCount.get(csvFilePath) == -1) {
+                BufferedReader rowReader = null;
+                try {
+                    rowReader = new BufferedReader(new FileReader(csvFilePath));
+                    while (rowReader.readLine() != null) {
+                        totalRowCount.put(csvFilePath, totalRowCount.get(csvFilePath) + 1);
+                    }
+                } catch (Exception e) {
+                    // just leave count at -1
+                } finally {
+                    if (rowReader != null) {
+                        try {
+                            rowReader.close();
+                        } catch (IOException e) {
+                            log.error(e, "Failed to close file {0}", csvFilePath);
+                        }
+                    }
+                }
+            }
+
             reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
 
             final CellProcessor[] processors = getProcessors(header);
@@ -337,8 +367,15 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             reader.read(header, processors); // consume the header
 
             int pageSize = options == null || options.getPageSize() == null ? 0 : options.getPageSize();
-            int rowOffset = options == null || options.getPagedResultsOffset() == null
-                    ? 0 : options.getPagedResultsOffset() * pageSize;
+            int rowOffset = 0;
+            if (options != null) {
+                if (options.getPagedResultsOffset() != null) {
+                    rowOffset = options.getPagedResultsOffset() * pageSize;
+                } else if (options.getPagedResultsCookie() != null) {
+                    rowOffset = Integer.valueOf(options.getPagedResultsCookie()) * pageSize;
+                }
+            }
+            int nextPageOffset = pageSize > 0 ? rowOffset / pageSize + 1 : 0;
             int resultsHandled = pageSize;
 
             while ((entry = reader.read(header, processors)) != null) {
@@ -354,11 +391,20 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                     }
                 }
             }
+
+            if (handler instanceof SearchResultsHandler && totalRowCount.get(csvFilePath) > -1) {
+                SearchResult searchResult = new SearchResult(
+                        String.valueOf(nextPageOffset),
+                        SearchResult.CountPolicy.EXACT,
+                        totalRowCount.get(csvFilePath),
+                        totalRowCount.get(csvFilePath) - (nextPageOffset * pageSize));
+                ((SearchResultsHandler) handler).handleResult(searchResult);
+            }
         } catch (FileNotFoundException e) {
-            log.error(e, "File %s does not exist!", config.getCsvFile().toString());
+            log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
             throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
         } catch (IOException e) {
-            log.error(e, "Error reading from %s!", config.getCsvFile().toString());
+            log.error(e, "Error reading from {0}!", config.getCsvFile().toString());
             throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
         } finally {
             if (reader != null) {
@@ -436,10 +482,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                     }
                 }
             } catch (FileNotFoundException e) {
-                log.error(e, "File %s does not exist!", syncOrigin.toString());
+                log.error(e, "File {0} does not exist!", syncOrigin.toString());
                 throw new ConnectorIOException("File " + syncOrigin.toString() + " does not exist", e);
             } catch (IOException e) {
-                log.error(e, "Error reading from %s!", syncOrigin.toString());
+                log.error(e, "Error reading from {0}!", syncOrigin.toString());
                 throw new ConnectorIOException("Error reading from file " + syncOrigin.toString(), e);
             } finally {
                 if (reader != null) {
@@ -471,10 +517,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                     }
                 }
             } catch (FileNotFoundException e) {
-                log.error(e, "File %s does not exist!", config.getCsvFile().toString());
+                log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
                 throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
             } catch (IOException e) {
-                log.error(e, "Error reading from %s!", config.getCsvFile().toString());
+                log.error(e, "Error reading from {0}!", config.getCsvFile().toString());
                 throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
             } finally {
                 if (reader != null) {
@@ -667,10 +713,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 }
             }
         } catch (FileNotFoundException e) {
-            log.error(e, "File %s does not exist!", config.getCsvFile().toString());
+            log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
             throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
         } catch (IOException e) {
-            log.error(e, "Error reading from %s!", config.getCsvFile().toString());
+            log.error(e, "Error reading from {0}!", config.getCsvFile().toString());
             throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
         } finally {
             if (reader != null) {
@@ -695,7 +741,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         try {
             hdr = reader.getHeader(true);
         } catch (IOException e) {
-            log.error(e, "Error reading from %s!", config.getCsvFile().toString());
+            log.error(e, "Error reading from {0}!", config.getCsvFile().toString());
             throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
         }
 
@@ -715,7 +761,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         try {
             return new CsvMapReader(new FileReader(file), csvPreference);
         } catch (FileNotFoundException e) {
-            log.error(e, "File %s does not exist!", file.toString());
+            log.error(e, "File {0} does not exist!", file.toString());
             throw new ConnectorIOException("File " + file.toString() + " does not exist", e);
         }
     }
@@ -787,10 +833,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 }
             }
         } catch (FileNotFoundException e) {
-            log.error(e, "File %s does not exist!", config.getCsvFile().toString());
+            log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
             throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
         } catch (IOException e) {
-            log.error(e, "Error reading from %s!", config.getCsvFile().toString());
+            log.error(e, "Error reading from {0}!", config.getCsvFile().toString());
             throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
         } finally {
             if (reader != null) {
@@ -919,6 +965,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             mapWriter = new CsvMapWriter(new FileWriter(config.getCsvFile(), true), csvPreference);
             final CellProcessor[] processors = getProcessors(header);
             mapWriter.write(colMap, header, processors);
+            totalRowCount.put(csvFilePath, totalRowCount.get(csvFilePath) + 1);
         } catch (IOException e) {
             throw new ConnectorException("Failed to create object", e);
         } finally {
@@ -968,11 +1015,12 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 tmp.delete();
                 throw new UnknownUidException("Object for uid " + uid.toString() + " does not exist");
             }
+            totalRowCount.put(csvFilePath, totalRowCount.get(csvFilePath) - 1);
         } catch (FileNotFoundException e) {
-            log.error(e, "File %s does not exist!", config.getCsvFile().toString());
+            log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
             throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
         } catch (IOException e) {
-            log.error(e, "Error reading from %s!", config.getCsvFile().toString());
+            log.error(e, "Error reading from {0}!", config.getCsvFile().toString());
             throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
         } finally {
             if (reader != null) {
@@ -1045,10 +1093,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 throw new UnknownUidException("Uid " + uid.getUidValue() + " does not exist");
             }
         } catch (FileNotFoundException e) {
-            log.error(e, "File %s does not exist!", config.getCsvFile().toString());
+            log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
             throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
         } catch (IOException e) {
-            log.error(e, "Error reading from %s!", config.getCsvFile().toString());
+            log.error(e, "Error reading from {0}!", config.getCsvFile().toString());
             throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
         } finally {
             if (reader != null) {

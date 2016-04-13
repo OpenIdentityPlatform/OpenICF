@@ -16,15 +16,22 @@
  */
 package org.forgerock.openicf.csvfile;
 
+import static org.testng.Assert.*;
+
+import java.io.File;
 import java.io.FileWriter;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.forgerock.openicf.csvfile.util.TestUtils;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
+import org.identityconnectors.framework.common.objects.SearchResult;
 import org.identityconnectors.framework.impl.api.local.operations.FilteredResultsHandler;
+import org.identityconnectors.framework.spi.SearchResultsHandler;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -45,22 +52,7 @@ public class CSVFileConnectorTests {
     @BeforeMethod
     public void setup() throws Exception {
         config = new CSVFileConfiguration();
-        config.setCsvFile(TestUtils.getTestFile("connector-csv-test.csv"));
-        config.setFieldDelimiter("*");
-        config.setHeaderUid("uid");
-        config.setHeaderPassword(OperationalAttributes.PASSWORD_NAME);
-    }
-
-    /**
-     * Delete any files created during the test.
-     *
-     * @throws Exception
-     */
-    @AfterMethod
-    public void tearDown() throws Exception {
-        if (null != config.getCsvFile()) {
-            config.getCsvFile().delete();
-        }
+        config.setCsvFile(TestUtils.getTestFile("four-rows.csv"));
     }
 
     /**
@@ -70,24 +62,77 @@ public class CSVFileConnectorTests {
      */
     @Test(expectedExceptions = ConfigurationException.class)
     public void testEmptyHeader() throws Exception {
-        FileWriter f2 = new FileWriter(config.getCsvFile(), false);
-        f2.write(new StringBuilder("uid")
-                .append(config.getFieldDelimiter())
-                .append(OperationalAttributes.PASSWORD_NAME)
-                .append(config.getFieldDelimiter())
-                .append("fullName")
-                .append(config.getFieldDelimiter()).toString());
-        // The extra delimiter at the end is an empty header and should cause the ConfigurationException.
-        f2.close();
+        File dest = TestUtils.getTestFile("empty-header.csv");
+        TestUtils.copyAndReplace(config.getCsvFile(), dest);
+        config.setCsvFile(dest);
+        config.setFieldDelimiter("*");
+        config.setHeaderUid("uid");
+        config.setHeaderPassword(OperationalAttributes.PASSWORD_NAME);
 
-        CSVFileConnector connector = new CSVFileConnector();
-        connector.init(config);
-        // Running a query on the file with the invalid header config should cause the ConfigurationException
-        connector.executeQuery(ObjectClass.ACCOUNT, new FilteredResultsHandler.PassThroughFilter(),
-                new ResultsHandler() {
+        try {
+            FileWriter f2 = new FileWriter(config.getCsvFile(), false);
+            f2.write(new StringBuilder("uid")
+                    .append(config.getFieldDelimiter())
+                    .append(OperationalAttributes.PASSWORD_NAME)
+                    .append(config.getFieldDelimiter())
+                    .append("fullName")
+                    .append(config.getFieldDelimiter()).toString());
+            // The extra delimiter at the end is an empty header and should cause the ConfigurationException.
+            f2.close();
+
+            CSVFileConnector connector = new CSVFileConnector();
+            connector.init(config);
+            // Running a query on the file with the invalid header config should cause the ConfigurationException
+            connector.executeQuery(ObjectClass.ACCOUNT, new FilteredResultsHandler.PassThroughFilter(),
+                    new ResultsHandler() {
+                        public boolean handle(ConnectorObject connectorObject) {
+                            return true;
+                        }
+                    }, null);
+        } finally {
+            config.getCsvFile().delete();
+        }
+    }
+
+    @Test
+    public void testPaging() throws Exception {
+        CSVFileConnector csvFileConnector = new CSVFileConnector();
+        csvFileConnector.init(config);
+        OperationOptionsBuilder options = new OperationOptionsBuilder().setPageSize(2);
+        final AtomicInteger count = new AtomicInteger(0);
+        final AtomicInteger cookiePage = new AtomicInteger(0);
+        final AtomicInteger cookieCount = new AtomicInteger(0);
+        csvFileConnector.executeQuery(ObjectClass.ACCOUNT, new FilteredResultsHandler.PassThroughFilter(),
+                new SearchResultsHandler() {
+                    public void handleResult(SearchResult result) {
+                        cookiePage.set(Integer.valueOf(result.getPagedResultsCookie()));
+                        cookieCount.set(result.getTotalPagedResults());
+                    }
+
                     public boolean handle(ConnectorObject connectorObject) {
+                        count.incrementAndGet();
                         return true;
                     }
-                }, null);
+                }, options.build());
+        assertEquals(count.get(), 2);
+        assertEquals(cookiePage.get(), 1);
+        assertEquals(cookieCount.get(), 4);
+
+        options.setPagedResultsCookie(String.valueOf(cookiePage.get()));
+        csvFileConnector.executeQuery(ObjectClass.ACCOUNT, new FilteredResultsHandler.PassThroughFilter(),
+                new SearchResultsHandler() {
+                    public void handleResult(SearchResult result) {
+                        cookiePage.set(Integer.valueOf(result.getPagedResultsCookie()));
+                        cookieCount.set(result.getTotalPagedResults());
+                    }
+
+                    public boolean handle(ConnectorObject connectorObject) {
+                        count.incrementAndGet();
+                        return true;
+                    }
+                }, options.build());
+        assertEquals(count.get(), 4);
+        assertEquals(cookiePage.get(), 2);
+        assertEquals(cookieCount.get(), 4);
     }
 }
