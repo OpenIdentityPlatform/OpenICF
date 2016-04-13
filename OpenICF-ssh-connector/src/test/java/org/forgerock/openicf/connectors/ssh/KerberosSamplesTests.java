@@ -38,6 +38,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
@@ -313,10 +314,9 @@ public class KerberosSamplesTests {
         final OperationOptionsBuilder builder = new OperationOptionsBuilder();
         final ResultsHandler handler = new ToListResultsHandler();
 
-        SearchResult result =
-                facade.search(ObjectClass.ACCOUNT, FilterBuilder.equalTo(new Uid("user1")), handler,
-                        builder.build());
-        Assert.assertEquals(((ToListResultsHandler) handler).getObjects().size(), 1);
+        facade.search(ObjectClass.ACCOUNT, FilterBuilder.equalTo(new Uid("user1")), handler, builder.build());
+        List<ConnectorObject> res = ((ToListResultsHandler) handler).getObjects();
+        Assert.assertEquals(res.size(), 1);
     }
 
     @Test(enabled = true, groups = {"search"})
@@ -325,49 +325,67 @@ public class KerberosSamplesTests {
         final ConnectorFacade facade = getFacade("kerberos");
         final OperationOptionsBuilder builder = new OperationOptionsBuilder();
         final ResultsHandler handler = new ToListResultsHandler();
+
         facade.search(ObjectClass.ACCOUNT, null, handler, builder.build());
-        int size = ((ToListResultsHandler) handler).getObjects().size();
-        logger.info("Size is: {0}", size);
-        Assert.assertTrue(size > 0);
+        List<ConnectorObject> res  = ((ToListResultsHandler) handler).getObjects();
+        logger.info("Size is: {0}", res.size());
+        Assert.assertTrue(res.size() > 0);
     }
 
-    @Test(enabled = false, groups = {"search"})
+    @Test(enabled = true, groups = {"search"})
+    public void QueryAllPrincipalsWithAttrsTest() {
+        logger.info("Running Query All Principals With Attributes Test");
+        final ConnectorFacade facade = getFacade("kerberos");
+        final OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        builder.setAttributesToGet(new String[] {"policy", "expirationDate", "passwordExpiration", "maximumTicketLife"});
+        final ResultsHandler handler = new ToListResultsHandler();
+
+        facade.search(ObjectClass.ACCOUNT, null, handler, builder.build());
+        List<ConnectorObject> res  = ((ToListResultsHandler) handler).getObjects();
+        logger.info("Size is: {0}", res.size());
+        Assert.assertTrue(res.size() > 0);
+    }
+
+    @Test(enabled = true, groups = {"search"})
     public void QueryPrincipalStartsWithTest() {
         logger.info("Running Query Principals StartsWith Test");
         final ConnectorFacade facade = getFacade("kerberos");
-        final Filter filter = FilterBuilder.startsWith(AttributeBuilder.build("Principal", "test"));
+        final Filter filter = FilterBuilder.startsWith(AttributeBuilder.build("Principal", "a"));
         final OperationOptionsBuilder builder = new OperationOptionsBuilder();
         final ResultsHandler handler = new ToListResultsHandler();
 
         facade.search(ObjectClass.ACCOUNT, filter, handler, builder.build());
-        int size = ((ToListResultsHandler) handler).getObjects().size();
-        Assert.assertTrue(size > 0);
+        List<ConnectorObject> res  = ((ToListResultsHandler) handler).getObjects();
+        logger.info("Size is: {0}", res.size());
+        Assert.assertTrue(res.size() > 0);
     }
 
-    @Test(enabled = false, groups = {"search"})
+    @Test(enabled = true, groups = {"search"})
     public void QueryPrincipalEndsWithTest() {
         logger.info("Running Query Principal EndsWith Test");
         final ConnectorFacade facade = getFacade("kerberos");
-        final Filter filter = FilterBuilder.endsWith(AttributeBuilder.build("Principal", "st1"));
+        final Filter filter = FilterBuilder.endsWith(AttributeBuilder.build("Principal", "1"));
         final OperationOptionsBuilder builder = new OperationOptionsBuilder();
         final ResultsHandler handler = new ToListResultsHandler();
 
         facade.search(ObjectClass.ACCOUNT, filter, handler, builder.build());
-        int size = ((ToListResultsHandler) handler).getObjects().size();
-        Assert.assertTrue(size > 0);
+        List<ConnectorObject> res  = ((ToListResultsHandler) handler).getObjects();
+        logger.info("Size is: {0}", res.size());
+        Assert.assertTrue(res.size() > 0);
     }
 
-    @Test(enabled = false, groups = {"search"})
+    @Test(enabled = true, groups = {"search"})
     public void QueryPrincipalContainsTest() {
         logger.info("Running Query Principal Contains Test");
         final ConnectorFacade facade = getFacade("kerberos");
-        final Filter filter = FilterBuilder.contains(AttributeBuilder.build("Principal", "est"));
+        final Filter filter = FilterBuilder.contains(AttributeBuilder.build("Principal", "12"));
         final OperationOptionsBuilder builder = new OperationOptionsBuilder();
         final ResultsHandler handler = new ToListResultsHandler();
 
         facade.search(ObjectClass.ACCOUNT, filter, handler, builder.build());
-        int size = ((ToListResultsHandler) handler).getObjects().size();
-        Assert.assertTrue(size > 0);
+        List<ConnectorObject> res  = ((ToListResultsHandler) handler).getObjects();
+        logger.info("Size is: {0}", res.size());
+        Assert.assertTrue(res.size() > 0);
     }
 
     ////////////////////  Test Utils

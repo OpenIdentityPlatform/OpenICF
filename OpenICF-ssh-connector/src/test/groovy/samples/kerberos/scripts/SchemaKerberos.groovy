@@ -17,6 +17,7 @@
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import org.identityconnectors.common.logging.Log
 import org.identityconnectors.common.security.GuardedString
+import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationalAttributes
 import org.identityconnectors.framework.spi.operations.AuthenticateOp
 import org.identityconnectors.framework.spi.operations.ResolveUsernameOp
@@ -33,19 +34,26 @@ def builder = builder as Closure
 log.info("Entering {0} script", operation);
 assert operation == OperationType.SCHEMA, 'Operation must be a SCHEMA'
 
+// The __NAME__ and __UID__ are the principal name
+
 builder.schema({
     objectClass {
         type ObjectClass.ACCOUNT_NAME
         attribute OperationalAttributes.PASSWORD_NAME, GuardedString.class, REQUIRED
         attribute OperationalAttributes.LOCK_OUT_NAME
         attributes {
-            "principal" String.class
+            // The password policy used by this principal.
             "policy" String.class
+            // The expiration date of the principal
             "expirationDate" String.class
-            "lastPasswordChange" String.class
+            // The password expiration date.
             "passwordExpiration" String.class
+            // The maximum ticket life for the principal
             "maximumTicketLife" String.class
+            // The maximum renewable life of tickets for the principal.
             "maximumRenewableLife" String.class
+            // Read-only informative fields
+            "lastPasswordChange" String.class, NOT_CREATABLE, NOT_UPDATEABLE
             "lastModified" String.class, NOT_CREATABLE, NOT_UPDATEABLE
             "lastSuccessfulAuthentication" String.class, NOT_CREATABLE, NOT_UPDATEABLE
             "lastFailedAuthentication" String.class, NOT_CREATABLE, NOT_UPDATEABLE

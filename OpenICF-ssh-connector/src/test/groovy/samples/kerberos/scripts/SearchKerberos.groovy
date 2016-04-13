@@ -14,7 +14,6 @@
  * Copyright 2016 ForgeRock AS.
  */
 
-
 import org.forgerock.openicf.connectors.ssh.CommandLineBuilder
 import org.forgerock.openicf.connectors.ssh.SSHConfiguration
 import org.forgerock.openicf.connectors.ssh.SSHConnection
@@ -25,9 +24,11 @@ import org.identityconnectors.framework.common.objects.Name
 import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationOptions
 import org.identityconnectors.framework.common.objects.Uid
-import org.identityconnectors.framework.common.objects.filter.*
-
-import static org.identityconnectors.common.security.SecurityUtil.decrypt
+import org.identityconnectors.framework.common.objects.filter.ContainsFilter
+import org.identityconnectors.framework.common.objects.filter.EndsWithFilter
+import org.identityconnectors.framework.common.objects.filter.EqualsFilter
+import org.identityconnectors.framework.common.objects.filter.Filter
+import org.identityconnectors.framework.common.objects.filter.StartsWithFilter
 
 // SSH Connector specific bindings
 
@@ -54,55 +55,18 @@ def filter = filter as Filter
 def log = log as Log
 def objectClass = objectClass as ObjectClass
 def options = options as OperationOptions
+def handler = handler as Closure
 def attributesToGet = options.getAttributesToGet() as String[]
 def prompt = configuration.getPrompt()
 def kadmin = configuration.getPropertyBag().get("kadmin") as ConfigObject
 
-
-log.info("Entering {0} script", operation);
-assert operation == OperationType.SEARCH, 'Operation must be a CREATE'
-assert objectClass == ObjectClass.ACCOUNT, 'ObjectClass must be __ACCOUNT__'
-
-// The prompt is the first thing we should expect from the connection
-if (!promptReady(2)) {
-    throw new ConnectorException("Can't get the session prompt")
-}
-log.info("Prompt ready...")
-
-if (filter == null) {
-    def command = new CommandLineBuilder(kadmin.cmd).p(kadmin.user).q("listprincs").build()
-    log.info("Command is {0}", command)
+def getPrincipalDetails = { princ ->
+    def command = new CommandLineBuilder(kadmin.cmd).p(kadmin.user).q("getprinc $princ").build()
 
     if (!sudo(command)) {
         throw new ConnectorException("Failed to run sudo $command")
     }
     expect "Authenticating as principal $kadmin.user with password."
-
-    if (kadmin.cmd.endsWith("kadmin")) {
-        expect "\nPassword for $kadmin.user", { sendln kadmin.password }
-    }
-    expect prompt, {
-        if (it.getMatchedWhere() > 0) {
-            def list = it.getBuffer().substring(0, it.getMatchedWhere()).trim().split("\r\n")
-            list.each() { princ ->
-                handler {
-                    uid princ
-                    id princ
-                }
-            }
-        }
-    }
-} else if (filter instanceof EqualsFilter && ((EqualsFilter) filter).getAttribute().is(Uid.NAME)) {
-    def principal = ((EqualsFilter) filter).getAttribute().getValue().get(0)
-    //This is a get
-    def command = new CommandLineBuilder(kadmin.cmd).p(kadmin.user).q("getprinc $principal").build()
-    log.info("Command is {0}", command)
-
-    if (!sudo(command)) {
-        throw new ConnectorException("Failed to run sudo $command")
-    }
-    expect "Authenticating as principal $kadmin.user with password."
-
     if (kadmin.cmd.endsWith("kadmin")) {
         expect "\nPassword for $kadmin.user", { sendln kadmin.password }
     }
@@ -112,8 +76,10 @@ if (filter == null) {
             def attrs = [:]
             list.each() { attr ->
                 def name, value
-                (name, value) = attr.split(": ", 2)
-                attrs[name] = value
+                (name, value) = attr.split(":", 2)
+                if (value != null && value != '') {
+                    attrs[name] = value.trim()
+                }
             }
             handler {
                 uid attrs.Principal
@@ -131,12 +97,63 @@ if (filter == null) {
             }
         }
     }
-//} else if (filter instanceof StartsWithFilter ||
-//        filter instanceof EndsWithFilter ||
-//        filter instanceof ContainsFilter) {
-//    // we need to check if the filter matches the capabilities
-//    query = filter.accept(KerberosFilterVisistor.INSTANCE, null)
-//
+}
+
+log.info("Entering {0} script", operation);
+assert operation == OperationType.SEARCH, 'Operation must be a CREATE'
+assert objectClass == ObjectClass.ACCOUNT, 'ObjectClass must be __ACCOUNT__'
+
+// Remove __UID__ and __NAME__ from the attributes to get
+if (attributesToGet != null) {
+    attributesToGet = attributesToGet - [Uid.NAME] - [Name.NAME] as String[]
+}
+
+// The prompt is the first thing we should expect from the connection
+if (!promptReady(2)) {
+    throw new ConnectorException("Can't get the session prompt")
+}
+log.info("Prompt ready...")
+
+if (filter == null ||
+        filter instanceof StartsWithFilter ||
+        filter instanceof EndsWithFilter ||
+        filter instanceof ContainsFilter) {
+    def query = ""
+    if (filter != null) {
+        query = filter.accept(KerberosFilterVisistor.INSTANCE, null)
+    }
+    def command = new CommandLineBuilder(kadmin.cmd).p(kadmin.user).q("listprincs $query").build()
+    log.info("Command is {0}", command)
+
+    if (!sudo(command)) {
+        throw new ConnectorException("Failed to run sudo $command")
+    }
+    expect "Authenticating as principal $kadmin.user with password."
+
+    // using kadmin.local won't ask for extra authentication. kadmin will.
+    if (kadmin.cmd.endsWith("kadmin")) {
+        expect "\nPassword for $kadmin.user", { sendln kadmin.password }
+    }
+    expect prompt, {
+        if (it.getMatchedWhere() > 0) {
+            def list = it.getBuffer().substring(0, it.getMatchedWhere()).trim().split("\r\n")
+            list.each() { princ ->
+                if (attributesToGet != null && attributesToGet.length > 0) {
+                    getPrincipalDetails(princ)
+                } else {
+                    handler {
+                        uid princ
+                        id princ
+                    }
+                }
+            }
+        }
+    }
+} else if (filter instanceof EqualsFilter) {
+    //This is a get
+    def principal = filter.accept(KerberosFilterVisistor.INSTANCE, null)
+    log.info("Getting Principal {0}", principal)
+    getPrincipalDetails(principal)
 } else {
     throw new ConnectorException("Bad filter")
 }
