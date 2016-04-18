@@ -31,8 +31,8 @@ configuration {
 environments {
     linux {
         configuration {
-            classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/shared").file, "UTF-8")]
-            scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/scripts").file, "UTF-8")]
+            //classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/shared").file, "UTF-8")]
+            //scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/scripts").file, "UTF-8")]
             debug = true
             host = "localhost"
             user = "__configureme__"
@@ -43,8 +43,8 @@ environments {
     }
     kerberos {
         configuration {
-            classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/shared").file, "UTF-8")]
-            scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/scripts").file, "UTF-8")]
+            //classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/shared").file, "UTF-8")]
+            //scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/scripts").file, "UTF-8")]
             createScriptFileName = "CreateKerberos.groovy"
             deleteScriptFileName = "DeleteKerberos.groovy"
             schemaScriptFileName = "SchemaKerberos.groovy"
@@ -65,8 +65,8 @@ environments {
     }
     test {
         configuration {
-            classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/shared").file, "UTF-8")]
-            scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/scripts").file, "UTF-8")]
+            //classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/shared").file, "UTF-8")]
+            //scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/scripts").file, "UTF-8")]
             debug = true
             host = "localhost"
             user = "__configureme__"
