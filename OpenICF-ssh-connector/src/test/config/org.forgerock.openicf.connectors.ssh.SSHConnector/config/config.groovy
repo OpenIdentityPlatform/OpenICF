@@ -31,10 +31,9 @@ configuration {
 environments {
     linux {
         configuration {
-            //classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/shared").file, "UTF-8")]
-            //scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/scripts").file, "UTF-8")]
+            classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/shared").file, "UTF-8")]
+            scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/scripts").file, "UTF-8")]
             debug = true
-
             host = "localhost"
             user = "__configureme__"
             password = new GuardedString("__configureme__".toCharArray())
@@ -44,9 +43,8 @@ environments {
     }
     kerberos {
         configuration {
-            //classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/shared").file, "UTF-8")]
-            //scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/scripts").file, "UTF-8")]
-            scriptRoots = ["/dvlpt/git/ssh-connector/src/test/groovy/samples/kerberos/scripts"]
+            classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/shared").file, "UTF-8")]
+            scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/scripts").file, "UTF-8")]
             createScriptFileName = "CreateKerberos.groovy"
             deleteScriptFileName = "DeleteKerberos.groovy"
             schemaScriptFileName = "SchemaKerberos.groovy"
@@ -63,6 +61,20 @@ environments {
             sudoCommand = "/usr/bin/sudo"
             customConfiguration = "kadmin { cmd = '/usr/sbin/kadmin.local'; user = 'openidm/admin'; default_realm = 'EXAMPLE.COM' }"
             customSensitiveConfiguration = new GuardedString(("kadmin { password = '__configureme__'}").toCharArray())
+        }
+    }
+    test {
+        configuration {
+            classpath = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/shared").file, "UTF-8")]
+            scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/samples/linux/scripts").file, "UTF-8")]
+            debug = true
+            host = "localhost"
+            user = "__configureme__"
+            password = new GuardedString("__configureme__".toCharArray())
+            prompt = "root@localhost:~\\\$ "
+            echoOff = true
+            authenticationType = "PASSWORD"
+            testScriptFileName = "Test.groovy"
         }
     }
 }
