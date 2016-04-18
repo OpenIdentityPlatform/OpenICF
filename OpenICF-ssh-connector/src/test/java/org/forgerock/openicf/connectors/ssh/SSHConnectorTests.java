@@ -76,17 +76,10 @@ public class SSHConnectorTests {
 
     /////////////////////  TEST
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void testTest() {
         logger.info("Running academic Test");
         final ConnectorFacade facade = getFacade("test");
-        facade.test();
-    }
-
-    @Test(enabled = false)
-    public void testTestMac() {
-        logger.info("Running Test Test Mac");
-        final ConnectorFacade facade = getFacade("mac");
         facade.test();
     }
 

@@ -133,6 +133,11 @@ public class SSHConfiguration extends ScriptedConfiguration {
     private String authenticationType = AuthN.PASSWORD.toString()
 
     /**
+     * Throw OpenICF OperationTimeoutException if any expect() call times out
+     */
+    private boolean throwOperationTimeoutException = true
+
+    /**
      * Constructor.
      */
     public SSHConfiguration() {
@@ -303,6 +308,17 @@ public class SSHConfiguration extends ScriptedConfiguration {
 
     public void setExpectTimeout(long timeout) {
         this.expectTimeout = timeout;
+    }
+
+    @ConfigurationProperty(order = 15, displayMessageKey = "throwOperationTimeoutException.display",
+            groupMessageKey = "basic.group", helpMessageKey = "throwOperationTimeoutException.help",
+            required = true, confidential = false)
+    public boolean isThrowOperationTimeoutException() {
+        return throwOperationTimeoutException;
+    }
+
+    public void setThrowOperationTimeoutException(boolean throwOperationTimeoutException) {
+        this.throwOperationTimeoutException = throwOperationTimeoutException;
     }
 
     /**

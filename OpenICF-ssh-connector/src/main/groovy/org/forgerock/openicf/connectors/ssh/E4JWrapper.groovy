@@ -21,6 +21,7 @@ import expect4j.Closure
 import expect4j.Expect4j
 import expect4j.ExpectState
 import expect4j.matches.*
+import org.identityconnectors.framework.common.exceptions.OperationTimeoutException
 
 import static org.identityconnectors.common.security.SecurityUtil.decrypt
 
@@ -100,7 +101,11 @@ class E4JWrapper {
         if (maxTry > 0) {
             while (!ready) {
                 expect4j.send(new String(ctrlC))
-                expectGlobal(prompt, { ready = true })
+                try {
+                    expectGlobal(prompt, { ready = true })
+                } catch (OperationTimeoutException e) {
+                    // do nothing
+                }
                 retry++
                 if (retry > maxTry) {
                     break
@@ -235,6 +240,9 @@ class E4JWrapper {
                 break
         // the timeout value expired prior to finding a concluding match
             case Expect4j.RET_TIMEOUT:
+                if (configuration.isThrowOperationTimeoutException()) {
+                    throw new OperationTimeoutException()
+                }
                 break
         // some unforeseen condition occurred.
             case Expect4j.RET_UNKNOWN:

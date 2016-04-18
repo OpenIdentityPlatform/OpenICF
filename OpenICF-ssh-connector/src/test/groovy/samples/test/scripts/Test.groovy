@@ -20,6 +20,7 @@ import org.forgerock.openicf.connectors.ssh.SSHConnection
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import org.identityconnectors.common.logging.Log
 import org.identityconnectors.framework.common.exceptions.ConnectorException
+import org.identityconnectors.framework.common.exceptions.OperationTimeoutException
 
 def operation = operation as OperationType
 def configuration = configuration as SSHConfiguration
@@ -68,52 +69,40 @@ setTimeoutSec 2
 // The prompt is the first thing we should expect from the connection
 // before sending any commands
 // The most simple way is to just expect it without doing nothing.
-// The problem is that a timeout is not handled...
-// If we do not have the prompt after the timeout, program will just continue
+// If the configuration parameter throwOperationTimeoutException is set to true,
+// this call will throw an OperationTimeoutException on timeout.
 
 expect prompt
 
 // The initial buffer content was ending with the prompt
 // Now the buffer is empty since the previous call to 'expect prompt'
 // We can try to expect prompt again, but that will timeout.
+
+try {
+    expect prompt
+} catch (OperationTimeoutException e) {
+    log.info("Timeout caught...")
+}
+
+//
 // A call to expect returns an integer values. If negative, it is an error code.
 // 2 special values are injected to the script: TIMEOUT_EXPIRED, EOF_FOUND
+// If throwOperationTimeoutException is set to false, and a timeout happens,
+// TIMEOUT_EXPIRED is returned
 
+configuration.setThrowOperationTimeoutException(false)
 if (TIMEOUT_EXPIRED == expect(prompt)) {
     log.info("TIMEOUT EXPIRED")
 }
+configuration.setThrowOperationTimeoutException(true)
 // just send carriage return to fill the read buffer with the prompt
 sendln ""
 
 // Same but with a closure to do something if we have the prompt
 expect prompt, { log.info("Prompt ready!") }
 
-// One way to make sure we are prompt ready
-// is to set a boolean in a closure when the prompt is ready
-// If not, send Ctrl+C and try again...
-// If still no prompt, just throw and leave
-
-// send sleep 4 since our global timeout is 2 sec
-sendln "sleep 4"
-
-def ready = false
-def maxTry = 0
-// Should timeout
-expect prompt, { ready = true }
-while (!ready) {
-    log.info("Trying to get the prompt...")
-    // That will kill the "sleep 4"
-    sendControlC()
-    expect prompt, { ready = true }
-    maxTry++
-    if (maxTry > 5) {
-        throw new ConnectorException("Can't get the session prompt with Ctrl+C")
-    }
-}
-log.info("Prompt ready after Ctrl+C...")
-
-// This is actually what the promptReady() command is meant for.
-// It accepts the prompt string and an amount of retries with Ctrl+C
+// promptReady() command is there to help
+// It accepts the amount of retries with Ctrl+C
 // Return true if connection is in "Prompt Ready" mode, false otherwise
 
 if (!promptReady(2)) {
@@ -134,17 +123,6 @@ expect(
 )
 
 log.info("Passed the TIMEOUT_FOREVER test!...")
-
-//The opposite: you don't want to wait if the pattern is not there
-// The Read buffer should be empty at this stage
-
-expect(
-        [
-                match(prompt) {},
-                timeout(TIMEOUT_NEVER) { log.info("Don't want to wait for prompt ready...") }
-        ]
-)
-log.info("Passed the TIMEOUT_NEVER prompt ready tests!...")
 
 // Simple send/expect
 log.info("Simple echo TEST...")
