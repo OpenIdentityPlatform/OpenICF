@@ -21,7 +21,6 @@ import com.jcraft.jsch.JSch
 import com.jcraft.jsch.JSchException
 import com.jcraft.jsch.Session
 import expect4j.Expect4j
-import org.apache.commons.net.imap.AuthenticatingIMAPClient
 import org.codehaus.groovy.runtime.InvokerHelper
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration
 import org.identityconnectors.common.Assertions
