@@ -21,6 +21,7 @@ import com.jcraft.jsch.JSch
 import com.jcraft.jsch.JSchException
 import com.jcraft.jsch.Session
 import expect4j.Expect4j
+import org.apache.commons.net.imap.AuthenticatingIMAPClient
 import org.codehaus.groovy.runtime.InvokerHelper
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration
 import org.identityconnectors.common.Assertions
@@ -84,7 +85,8 @@ public class SSHConfiguration extends ScriptedConfiguration {
     /**
      * The private key used for PUBKEY authentication
      */
-    private GuardedString privateKey = null
+    private String[] privateKey = null
+    private GuardedString pKey = null
 
     /**
      * The default prompt
@@ -202,12 +204,16 @@ public class SSHConfiguration extends ScriptedConfiguration {
     @ConfigurationProperty(order = 5, displayMessageKey = "privateKey.display",
             groupMessageKey = "basic.group", helpMessageKey = "privateKey.help",
             confidential = true)
-    public GuardedString getPrivateKey() {
-        return privateKey;
+    public String[] getPrivateKey() {
+        return [];
     }
 
-    public void setPrivateKey(GuardedString privateKey) {
-        this.privateKey = privateKey;
+    public void setPrivateKey(String[] privateKey) {
+        this.pKey = new GuardedString(privateKey.join("\n").toCharArray());
+    }
+
+    public GuardedString fetchPrivateKey() {
+        return this.pKey
     }
 
 
@@ -334,6 +340,9 @@ public class SSHConfiguration extends ScriptedConfiguration {
 
         Assertions.blankCheck(user, "user");
         Assertions.nullCheck(password, "password");
+        if (authenticationType.equalsIgnoreCase(AuthN.PUBKEY.toString())) {
+            Assertions.nullCheck(passphrase, "passphrase");
+        }
     }
 
     private Closure init = null;

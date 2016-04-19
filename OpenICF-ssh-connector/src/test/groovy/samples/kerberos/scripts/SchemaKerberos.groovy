@@ -14,6 +14,7 @@
  * Copyright 2016 ForgeRock AS.
  */
 
+
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import org.identityconnectors.common.logging.Log
 import org.identityconnectors.common.security.GuardedString
@@ -25,11 +26,9 @@ import org.identityconnectors.framework.spi.operations.SyncOp
 
 import static org.identityconnectors.framework.common.objects.AttributeInfo.Flags.NOT_CREATABLE
 import static org.identityconnectors.framework.common.objects.AttributeInfo.Flags.NOT_UPDATEABLE
-import static org.identityconnectors.framework.common.objects.AttributeInfo.Flags.REQUIRED
 
 def operation = operation as OperationType
 def log = log as Log
-def builder = builder as Closure
 
 log.info("Entering {0} script", operation);
 assert operation == OperationType.SCHEMA, 'Operation must be a SCHEMA'
@@ -39,8 +38,8 @@ assert operation == OperationType.SCHEMA, 'Operation must be a SCHEMA'
 builder.schema({
     objectClass {
         type ObjectClass.ACCOUNT_NAME
-        attribute OperationalAttributes.PASSWORD_NAME, GuardedString.class, REQUIRED
         attribute OperationalAttributes.LOCK_OUT_NAME
+        attribute OperationalAttributes.PASSWORD_NAME, GuardedString.class
         attributes {
             // The password policy used by this principal.
             "policy" String.class

@@ -129,7 +129,7 @@ public class SSHConnection {
     private ChannelShell createPubKeyConnection(final String host, final int port, final String user) {
         final JSch jsch = new JSch();
         try {
-            configuration.getPrivateKey().access(new GuardedString.Accessor() {
+            configuration.fetchPrivateKey().access(new GuardedString.Accessor() {
                 public void access(final char[] privateKey) {
                     configuration.getPassphrase().access(new GuardedString.Accessor() {
                         public void access(final char[] passphrase) {
