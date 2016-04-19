@@ -14,7 +14,6 @@
  * Copyright 2016 ForgeRock AS.
  */
 
-
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import org.identityconnectors.common.logging.Log
 import org.identityconnectors.common.security.GuardedString
