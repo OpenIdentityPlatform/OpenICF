@@ -83,8 +83,13 @@ public class SSHConfiguration extends ScriptedConfiguration {
 
     /**
      * The private key used for PUBKEY authentication
+     * Never really set...
      */
     private String[] privateKey = null
+
+    /**
+     * The encrypted private key used for PUBKEY authentication
+     */
     private GuardedString pKey = null
 
     /**
@@ -209,10 +214,6 @@ public class SSHConfiguration extends ScriptedConfiguration {
 
     public void setPrivateKey(String[] privateKey) {
         this.pKey = new GuardedString(privateKey.join("\n").toCharArray());
-    }
-
-    public GuardedString fetchPrivateKey() {
-        return this.pKey
     }
 
 
@@ -342,6 +343,13 @@ public class SSHConfiguration extends ScriptedConfiguration {
         if (authenticationType.equalsIgnoreCase(AuthN.PUBKEY.toString())) {
             Assertions.nullCheck(passphrase, "passphrase");
         }
+    }
+
+    /**
+     * Get the encrypted (GuardedString) version of the private key
+     */
+    public GuardedString fetchPrivateKey() {
+        return this.pKey
     }
 
     private Closure init = null;
