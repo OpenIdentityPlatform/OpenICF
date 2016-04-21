@@ -117,7 +117,7 @@ public class KerberosSamplesTests {
         facade.validate();
     }
 
-    @Test(enabled = true, threadPoolSize = 4, invocationCount = 20, timeOut = 50000)
+    @Test(enabled = false, threadPoolSize = 4, invocationCount = 20, timeOut = 50000)
     public void testTestMulti() {
         logger.info("Running Multiple Test test");
         int id = (int) Thread.currentThread().getId();
@@ -175,7 +175,7 @@ public class KerberosSamplesTests {
         Assert.assertEquals(uid.getUidValue(), name);
     }
 
-    @Test(enabled = true, groups = {"create"}, threadPoolSize = 10, invocationCount = 2000, timeOut = 1000000)
+    @Test(enabled = false, groups = {"create"}, threadPoolSize = 10, invocationCount = 2000, timeOut = 1000000)
     public void multiCreatePrincipalTest() {
         logger.info("Running Parallel Create Principals test");
         final ConnectorFacade facade = getFacade("kerberos");
