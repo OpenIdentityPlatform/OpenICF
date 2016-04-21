@@ -14,6 +14,7 @@
  * Copyright 2016 ForgeRock AS.
  */
 
+package samples.kerberos.scripts
 
 import org.identityconnectors.framework.common.objects.filter.*
 

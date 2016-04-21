@@ -14,6 +14,8 @@
  * Copyright 2016 ForgeRock AS.
  */
 
+package samples.kerberos.scripts
+
 import org.forgerock.openicf.connectors.ssh.CommandLineBuilder
 import org.forgerock.openicf.connectors.ssh.SSHConfiguration
 import org.forgerock.openicf.connectors.ssh.SSHConnection
@@ -24,11 +26,7 @@ import org.identityconnectors.framework.common.objects.Name
 import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationOptions
 import org.identityconnectors.framework.common.objects.Uid
-import org.identityconnectors.framework.common.objects.filter.ContainsFilter
-import org.identityconnectors.framework.common.objects.filter.EndsWithFilter
-import org.identityconnectors.framework.common.objects.filter.EqualsFilter
-import org.identityconnectors.framework.common.objects.filter.Filter
-import org.identityconnectors.framework.common.objects.filter.StartsWithFilter
+import org.identityconnectors.framework.common.objects.filter.*
 
 // SSH Connector specific bindings
 
@@ -81,19 +79,22 @@ def getPrincipalDetails = { princ ->
                     attrs[name] = value.trim()
                 }
             }
-            handler {
-                uid attrs.Principal
-                id attrs.Principal
-                attribute "policy", attrs['Policy']
-                attribute "expirationDate", attrs['Expiration date']
-                attribute "lastPasswordChange", attrs['Last password change']
-                attribute "passwordExpiration", attrs['Password expiration date']
-                attribute "maximumTicketLife", attrs['Maximum ticket life']
-                attribute "maximumRenewableLife", attrs['Maximum renewable life']
-                attribute "lastModified", attrs['Last modified']
-                attribute "lastSuccessfulAuthentication", attrs['Last successful authentication']
-                attribute "lastFailedAuthentication", attrs['Last failed authentication']
-                attribute "failedPasswordAttempts", attrs['Failed password attempts']
+            def notExist = attrs["get_principal"] as String
+            if (!(notExist != null && notExist.startsWith("Principal does not exist"))) {
+                handler {
+                    uid attrs.Principal
+                    id attrs.Principal
+                    attribute "policy", attrs['Policy']
+                    attribute "expirationDate", attrs['Expiration date']
+                    attribute "lastPasswordChange", attrs['Last password change']
+                    attribute "passwordExpiration", attrs['Password expiration date']
+                    attribute "maximumTicketLife", attrs['Maximum ticket life']
+                    attribute "maximumRenewableLife", attrs['Maximum renewable life']
+                    attribute "lastModified", attrs['Last modified']
+                    attribute "lastSuccessfulAuthentication", attrs['Last successful authentication']
+                    attribute "lastFailedAuthentication", attrs['Last failed authentication']
+                    attribute "failedPasswordAttempts", attrs['Failed password attempts']
+                }
             }
         }
     }
