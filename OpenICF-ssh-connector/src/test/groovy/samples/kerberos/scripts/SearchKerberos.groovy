@@ -26,7 +26,12 @@ import org.identityconnectors.framework.common.objects.Name
 import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationOptions
 import org.identityconnectors.framework.common.objects.Uid
-import org.identityconnectors.framework.common.objects.filter.*
+import org.identityconnectors.framework.common.objects.filter.Filter
+import org.identityconnectors.framework.common.objects.filter.EqualsFilter
+import org.identityconnectors.framework.common.objects.filter.StartsWithFilter
+import org.identityconnectors.framework.common.objects.filter.ContainsFilter
+import org.identityconnectors.framework.common.objects.filter.EndsWithFilter
+
 
 // SSH Connector specific bindings
 
