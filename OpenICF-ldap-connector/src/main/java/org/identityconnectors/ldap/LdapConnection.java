@@ -448,6 +448,12 @@ public class LdapConnection {
                     log.info("UnboundID Directory server has been detected");
                     return ServerType.UNBOUNDID;
                 }
+                // Red Hat / Fedora
+                // vendorName: 389 Project
+                if (vendorName.contains("389")) {
+                    log.info("Red Hat/Fedora 389 Directory server has been detected");
+                    return ServerType.RHDS;
+                }
             }
             String vendorVersion = getStringAttrValue(attrs, "vendorVersion");
             if (vendorVersion != null) {

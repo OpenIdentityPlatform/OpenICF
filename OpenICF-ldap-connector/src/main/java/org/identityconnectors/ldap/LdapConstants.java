@@ -69,7 +69,8 @@ public class LdapConstants {
         MSAD_GC, 
         NOVELL, 
         UNBOUNDID, 
-        OPENLDAP, 
+        OPENLDAP,
+        RHDS,
         UNKNOWN
     }
 
