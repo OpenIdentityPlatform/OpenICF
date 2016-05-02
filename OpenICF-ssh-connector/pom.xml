@@ -34,7 +34,7 @@
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>ssh-connector</artifactId>
-    <version>1.4.0.0-SNAPSHOT</version>
+    <version>1.4.0.0</version>
     <packaging>bundle</packaging>
     <name>SSH Connector</name>
     <description>Generic SSH connector</description>
@@ -51,7 +51,8 @@
         <connection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/ssh-connector.git</connection>
         <developerConnection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/ssh-connector.git</developerConnection>
         <url>http://stash.forgerock.org/projects/OPENICF/repos/ssh-connector/browse/</url>
-    </scm>
+      <tag>M2RELEASE-TAG-1.4.0.0</tag>
+  </scm>
     <properties>
         <maven.compiler.target>1.7</maven.compiler.target>
         <maven.compiler.source>1.7</maven.compiler.source>
