@@ -57,7 +57,6 @@
 
     <xinclude:include href="preface.xml" />
     <xinclude:include href="chap-install-kerberos-connector.xml" />
-    <xinclude:include href="chap-config-kerberos-connector.xml" />
     <xinclude:include href='../shared/appendix-interfaces.xml' />
     <xinclude:include href='../shared/appendix-options.xml' />
 
