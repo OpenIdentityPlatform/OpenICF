@@ -41,6 +41,11 @@
         </openicf.osgi.import.defaults>
         <openicf.osgi.embed/>
     </properties>
+    <scm>
+        <connection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/kerberos-connector.git</connection>
+        <developerConnection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/kerberos-connector.git</developerConnection>
+        <url>https://stash.forgerock.org/projects/OPENICF/repos/kerberos-connector/browse</url>
+    </scm>
     <repositories>
         <repository>
             <id>forgerock-staging-repository</id>
