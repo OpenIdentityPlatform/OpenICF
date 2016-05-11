@@ -63,12 +63,12 @@
         <dependency>
             <groupId>org.forgerock.commons</groupId>
             <artifactId>forgerock-util</artifactId>
-            <version>3.0.0</version>
+            <version>20.0.0-alpha-1</version>
         </dependency>
         <dependency>
             <groupId>org.forgerock.commons.guava</groupId>
             <artifactId>forgerock-guava-collect</artifactId>
-            <version>18.0.1</version>
+            <version>20.0.0-alpha-1</version>
         </dependency>
 
        <dependency>
