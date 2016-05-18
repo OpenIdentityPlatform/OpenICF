@@ -16,11 +16,12 @@
  */
 package org.forgerock.openicf.csvfile;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.forgerock.openicf.csvfile.util.TestUtils;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
@@ -32,7 +33,6 @@ import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.SearchResult;
 import org.identityconnectors.framework.impl.api.local.operations.FilteredResultsHandler;
 import org.identityconnectors.framework.spi.SearchResultsHandler;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -96,43 +96,58 @@ public class CSVFileConnectorTests {
 
     @Test
     public void testPaging() throws Exception {
+        QueryRunner queryRunner = new QueryRunner();
+        CSVFileConfiguration config = new CSVFileConfiguration();
+        config.setCsvFile(TestUtils.getTestFile("thirteen-rows.csv"));
         CSVFileConnector csvFileConnector = new CSVFileConnector();
         csvFileConnector.init(config);
-        OperationOptionsBuilder options = new OperationOptionsBuilder().setPageSize(2);
-        final AtomicInteger count = new AtomicInteger(0);
-        final AtomicInteger cookiePage = new AtomicInteger(0);
-        final AtomicInteger cookieCount = new AtomicInteger(0);
-        csvFileConnector.executeQuery(ObjectClass.ACCOUNT, new FilteredResultsHandler.PassThroughFilter(),
-                new SearchResultsHandler() {
-                    public void handleResult(SearchResult result) {
-                        cookiePage.set(Integer.valueOf(result.getPagedResultsCookie()));
-                        cookieCount.set(result.getTotalPagedResults());
-                    }
+        // set page size to 5 records.
+        int pageSize = 5;
+        OperationOptionsBuilder options = new OperationOptionsBuilder().setPageSize(pageSize);
 
-                    public boolean handle(ConnectorObject connectorObject) {
-                        count.incrementAndGet();
-                        return true;
-                    }
-                }, options.build());
-        assertEquals(count.get(), 2);
-        assertEquals(cookiePage.get(), 1);
-        assertEquals(cookieCount.get(), 4);
+        // Call the query for the first time getting the first page of objects.
+        queryRunner.executeQuery(csvFileConnector, options);
+        assertEquals(queryRunner.result.getRemainingPagedResults(), 13 - pageSize, "remaining rows not right");
+        assertEquals(queryRunner.result.getPagedResultsCookie(), Integer.toString(pageSize),
+                "First page index offset should be equal to the pageSize which is " + pageSize);
+        assertEquals(queryRunner.result.getTotalPagedResults(), 13, "Expected total record count should be 13");
 
-        options.setPagedResultsCookie(String.valueOf(cookiePage.get()));
-        csvFileConnector.executeQuery(ObjectClass.ACCOUNT, new FilteredResultsHandler.PassThroughFilter(),
-                new SearchResultsHandler() {
-                    public void handleResult(SearchResult result) {
-                        cookiePage.set(Integer.valueOf(result.getPagedResultsCookie()));
-                        cookieCount.set(result.getTotalPagedResults());
-                    }
+        // Call the query again to get the second page of data.
+        options.setPagedResultsCookie(queryRunner.result.getPagedResultsCookie());
+        queryRunner.executeQuery(csvFileConnector, options);
+        assertEquals(queryRunner.result.getRemainingPagedResults(), 13 - pageSize * 2, "remaining rows not right");
+        assertEquals(queryRunner.result.getPagedResultsCookie(), "" + pageSize * 2,
+                "Second page index offset should now be twice pageSize");
+        assertEquals(queryRunner.result.getTotalPagedResults(), 13, "Expected total record count should be 13");
 
-                    public boolean handle(ConnectorObject connectorObject) {
-                        count.incrementAndGet();
-                        return true;
-                    }
-                }, options.build());
-        assertEquals(count.get(), 4);
-        assertEquals(cookiePage.get(), 2);
-        assertEquals(cookieCount.get(), 4);
+        // Call the query again to get the third and final partial set.
+        options.setPagedResultsCookie(queryRunner.result.getPagedResultsCookie());
+        queryRunner.executeQuery(csvFileConnector, options);
+        assertEquals(queryRunner.records.size(),3,"third partial page should have 3 records.");
+        assertEquals(queryRunner.result.getRemainingPagedResults(), 0,
+                "After third query, Expected remain row count should be 0");
+        assertEquals(queryRunner.result.getPagedResultsCookie(), null,
+                "Third page index offset should now be null as it is the last page");
+        assertEquals(queryRunner.result.getTotalPagedResults(), 13, "Expected total record count should be 13");
+    }
+
+    private class QueryRunner {
+        SearchResult result;
+        Set<ConnectorObject> records = new HashSet<ConnectorObject>();
+
+        private void executeQuery(CSVFileConnector csvFileConnector, OperationOptionsBuilder options) {
+            records.clear();
+            csvFileConnector.executeQuery(ObjectClass.ACCOUNT, new FilteredResultsHandler.PassThroughFilter(),
+                    new SearchResultsHandler() {
+                        public void handleResult(SearchResult result) {
+                            QueryRunner.this.result = result;
+                        }
+
+                        public boolean handle(ConnectorObject connectorObject) {
+                            records.add(connectorObject);
+                            return true;
+                        }
+                    }, options.build());
+        }
     }
 }

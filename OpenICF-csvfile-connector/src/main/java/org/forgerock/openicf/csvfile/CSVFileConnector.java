@@ -370,12 +370,14 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             int rowOffset = 0;
             if (options != null) {
                 if (options.getPagedResultsOffset() != null) {
-                    rowOffset = options.getPagedResultsOffset() * pageSize;
+                    rowOffset = options.getPagedResultsOffset();
                 } else if (options.getPagedResultsCookie() != null) {
-                    rowOffset = Integer.valueOf(options.getPagedResultsCookie()) * pageSize;
+                    rowOffset = Integer.valueOf(options.getPagedResultsCookie());
                 }
             }
-            int nextPageOffset = pageSize > 0 ? rowOffset / pageSize + 1 : 0;
+            int nextPageOffset = (pageSize > 0)
+                    ? rowOffset + pageSize
+                    : 0;
             int resultsHandled = pageSize;
 
             while ((entry = reader.read(header, processors)) != null) {
@@ -394,10 +396,12 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
 
             if (handler instanceof SearchResultsHandler && totalRowCount.get(csvFilePath) > -1) {
                 SearchResult searchResult = new SearchResult(
-                        String.valueOf(nextPageOffset),
+                        (nextPageOffset > totalRowCount.get(csvFilePath))
+                                ? null
+                                : String.valueOf(nextPageOffset),
                         SearchResult.CountPolicy.EXACT,
                         totalRowCount.get(csvFilePath),
-                        totalRowCount.get(csvFilePath) - (nextPageOffset * pageSize));
+                        Math.max(0, totalRowCount.get(csvFilePath) - nextPageOffset));
                 ((SearchResultsHandler) handler).handleResult(searchResult);
             }
         } catch (FileNotFoundException e) {
