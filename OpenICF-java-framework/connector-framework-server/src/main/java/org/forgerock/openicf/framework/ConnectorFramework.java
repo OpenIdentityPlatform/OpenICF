@@ -32,6 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -86,6 +87,9 @@ public class ConnectorFramework implements Closeable {
 
     private RemoteConnectionInfoManagerFactory remoteConnectionInfoManagerFactory = null;
 
+    private final ExecutorService messageExecutor = Executors.newCachedThreadPool(Utils.newThreadFactory(null,
+            "OpenICF ConnectorFramework Message executor %d", false));
+
     public ConnectorFramework(final ClassLoader defaultConnectorBundleParentClassLoader) {
         this.defaultConnectorBundleParentClassLoader = defaultConnectorBundleParentClassLoader;
     }
@@ -127,6 +131,8 @@ public class ConnectorFramework implements Closeable {
                 scheduledManagedFacadeCacheFuture = null;
             }
             scheduler.shutdown();
+
+            messageExecutor.shutdown();
 
             for (ConnectorFacade facade : MANAGED_FACADE_CACHE.values()) {
                 if (facade instanceof LocalConnectorFacadeImpl) {
@@ -295,6 +301,10 @@ public class ConnectorFramework implements Closeable {
             throw new IllegalArgumentException("Unknown ConnectorInfo type");
         }
         return ret;
+    }
+
+    public void executeMessage(Runnable processMessage) {
+        messageExecutor.execute(processMessage);
     }
 
     // ------ LocalConnectorFramework Implementation Start ------

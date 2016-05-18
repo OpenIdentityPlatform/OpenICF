@@ -135,8 +135,17 @@ public class OpenICFServerAdapter implements OperationMessageListener {
         logger.warn("String message is ignored: {0}", data);
     }
 
-    public void onMessage(final WebSocketConnectionHolder socket, byte[] bytes) {
+    public void onMessage(final WebSocketConnectionHolder socket, final byte[] bytes) {
         logger.ok("{0} onMessage({1}:bytes)", loggerName(), bytes.length);
+
+        connectorFramework.executeMessage(new Runnable() {
+            public void run() {
+                processMessage(socket, bytes);
+            }
+        });
+    }
+
+    public void processMessage(final WebSocketConnectionHolder socket, byte[] bytes){
         try {
             RemoteMessage message = RemoteMessage.parseFrom(bytes);
 
