@@ -454,6 +454,12 @@ public class LdapConnection {
                     log.info("Red Hat/Fedora 389 Directory server has been detected");
                     return ServerType.RHDS;
                 }
+                // CA LDAP for Zos
+                if (vendorName.contains("caldap")) {
+                    log.info("CA LDAP Directory server has been detected");
+                    return ServerType.CALDAP;
+                }
+
             }
             String vendorVersion = getStringAttrValue(attrs, "vendorVersion");
             if (vendorVersion != null) {

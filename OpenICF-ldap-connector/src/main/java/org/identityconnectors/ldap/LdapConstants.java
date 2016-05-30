@@ -71,6 +71,7 @@ public class LdapConstants {
         UNBOUNDID, 
         OPENLDAP,
         RHDS,
+        CALDAP,
         UNKNOWN
     }
 

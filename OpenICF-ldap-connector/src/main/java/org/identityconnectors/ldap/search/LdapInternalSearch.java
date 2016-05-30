@@ -28,6 +28,7 @@ import static org.identityconnectors.common.StringUtil.isNotBlank;
 import java.io.IOException;
 import java.util.List;
 
+import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
 import javax.naming.PartialResultException;
 import javax.naming.directory.SearchControls;
@@ -67,6 +68,16 @@ public class LdapInternalSearch {
             // AD issue: The default naming context on the DC is used  as the baseContexts, hence this PartialResultException.
             // Let's just silently catch it. It is thrown at the end of the search anyway...
             if (!(ServerType.MSAD.equals(conn.getServerType()) || ServerType.MSAD_GC.equals(conn.getServerType()))) {
+                throw new ConnectorException(e);
+            }
+        } catch (NameNotFoundException e) {
+            if (ServerType.CALDAP.equals(conn.getServerType())){
+                // CA LDAP with Zos returns a no such object
+                // when an exact search returns no entry.
+                // We catch it and ignore it.
+                // log the code 32?
+            }
+            else {
                 throw new ConnectorException(e);
             }
         } catch (NamingException e) {
