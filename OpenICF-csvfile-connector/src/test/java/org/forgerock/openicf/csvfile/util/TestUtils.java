@@ -31,6 +31,7 @@ import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.channels.FileChannel;
+import java.util.regex.Pattern;
 
 import org.testng.Assert;
 
@@ -102,6 +103,27 @@ public class TestUtils {
             }
             if (outChannel != null) {
                 outChannel.close();
+            }
+        }
+    }
+
+    /**
+     * Remove one or more file
+     *
+     * @param dir Directory to search for matches
+     * @param pattern File pattern to match
+     * @throws IOException on failure to remove the file
+     */
+    public static void remove(File dir, final String pattern) throws IOException {
+        final File[] files = dir.listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                Pattern pat = Pattern.compile(pattern);
+                return pat.matcher(name).matches();
+            }
+        });
+        for (final File file : files) {
+            if ( !file.delete() ) {
+                System.err.println( "Can't remove " + file.getAbsolutePath() );
             }
         }
     }

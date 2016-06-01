@@ -38,7 +38,7 @@ public class ComplexSyncOpTest {
     @BeforeMethod
     public void before() throws Exception {
         File file = new File("./src/test/resources/files/sync.csv.1300734815289");
-        TestUtils.copyAndReplace(new File("./src/test/resources/files/sync.csv.1300734815289.backup"), file);
+        TestUtils.copyAndReplace(new File("./src/test/resources/files/sync.backup.csv.1300734815289"), file);
 
         CSVFileConfiguration config = new CSVFileConfiguration();
         config.setCsvFile(new File("./src/test/resources/files/sync.csv"));

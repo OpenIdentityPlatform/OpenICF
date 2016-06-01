@@ -28,6 +28,7 @@
 package org.forgerock.openicf.csvfile;
 
 import org.forgerock.openicf.csvfile.util.TestUtils;
+import org.identityconnectors.common.Base64;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.*;
@@ -39,11 +40,15 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 public class SyncOpTest {
@@ -90,12 +95,14 @@ public class SyncOpTest {
 
     @Test
     public void syncTest() throws Exception {
-        initConnector("../../../src/test/resources/files/sync.csv");
-        TestUtils.copyAndReplace(new File("./src/test/resources/files/sync.csv.1300734815289.backup"),
-                new File("./src/test/resources/files/sync.csv.1300734815289"));
+        initConnector(TestUtils.class.getResource("/files/").getFile() + "sync.csv");
+        TestUtils.remove(new File(TestUtils.class.getResource("/files/").getFile()), "sync.csv[.].*");
+        TestUtils.copyAndReplace(
+                new File(TestUtils.class.getResource("/files/").getFile() + "sync.backup.csv.1300734815289"),
+                new File(TestUtils.class.getResource("/files/").getFile() + "sync.csv.1300734815289"));
 
         SyncToken oldToken = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
-        assertEquals("1300734815289", String.valueOf(oldToken.getValue()));
+        assertEquals(String.valueOf(oldToken.getValue()), "1300734815289");
         final List<SyncDelta> deltas = new ArrayList<SyncDelta>();
         final AtomicReference<SyncToken> newToken = new AtomicReference<SyncToken>();
         connector.sync(ObjectClass.ACCOUNT, oldToken, new SyncTokenResultsHandler() {
@@ -128,10 +135,52 @@ public class SyncOpTest {
     }
 
     @Test
+    public void syncTestSuccessive() throws Exception {
+        initConnector(TestUtils.class.getResource("/files/").getFile() + "sync-successive.csv");
+        TestUtils.remove(new File(TestUtils.class.getResource("/files/").getFile()), "sync-successive.csv[.].*");
+        SyncToken oldToken = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
+        final AtomicReference<SyncToken> newToken = new AtomicReference<SyncToken>();
+        connector.sync(ObjectClass.ACCOUNT, oldToken, new SyncTokenResultsHandler() {
+            public boolean handle(SyncDelta sd) {
+                return true;
+            }
+
+            public void handleResult(SyncToken syncToken) {
+                newToken.set(syncToken);
+            }
+        }, null);
+
+        oldToken = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
+
+        Set<Attribute> attributes = new HashSet<Attribute>();
+        attributes.add(AttributeBuilder.build("firstName", "Barbara"));
+        attributes.add(AttributeBuilder.build("lastName", "Jensen"));
+        attributes.add(AttributeBuilder.build("uid", "uid=bjensen,dc=example,dc=com"));
+        attributes.add(AttributeBuilder.buildPassword(new GuardedString(Base64.encode("asdf".getBytes()).toCharArray())));
+        Uid uid = connector.create(ObjectClass.ACCOUNT, attributes, null);
+        assertNotNull(uid);
+
+        connector.sync(ObjectClass.ACCOUNT, oldToken, new SyncTokenResultsHandler() {
+            public boolean handle(SyncDelta sd) {
+                return true;
+            }
+
+            public void handleResult(SyncToken syncToken) {
+                newToken.set(syncToken);
+            }
+        }, null);
+
+        newToken.set(connector.getLatestSyncToken(ObjectClass.ACCOUNT));
+        assertFalse(oldToken.getValue().equals(newToken.get().getValue()));
+    }
+
+    @Test
     public void syncTestHandlerStopped() throws Exception {
-        initConnector("../../../src/test/resources/files/sync.csv");
-        File file = new File("./src/test/resources/files/sync.csv.1300734815289");
-        TestUtils.copyAndReplace(new File("./src/test/resources/files/sync.csv.1300734815289.backup"), file);
+        initConnector(TestUtils.class.getResource("/files/").getFile() + "sync.csv");
+        TestUtils.remove(new File(TestUtils.class.getResource("/files/").getFile()), "sync.csv[.].*");
+        TestUtils.copyAndReplace(
+                new File(TestUtils.class.getResource("/files/").getFile() + "sync.backup.csv.1300734815289"),
+                new File(TestUtils.class.getResource("/files/").getFile() + "sync.csv.1300734815289"));
 
         SyncToken oldToken = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
         assertEquals(String.valueOf(oldToken.getValue()), "1300734815289");
@@ -164,10 +213,6 @@ public class SyncOpTest {
             deltaMap.remove(delta.getUid().getUidValue());
         }
         assertEquals(deltaMap.size(), 1);
-
-        if (file.exists()) {
-            file.delete();
-        }
     }
 
     private Map<String, SyncDelta> createSyncDeltaTestMap(SyncToken token) {

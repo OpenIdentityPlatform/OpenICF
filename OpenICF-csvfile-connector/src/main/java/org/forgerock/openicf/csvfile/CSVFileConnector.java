@@ -46,6 +46,7 @@ import java.util.regex.Pattern;
 
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.common.security.SecurityUtil;
 import org.identityconnectors.framework.api.Observer;
 import org.identityconnectors.framework.api.operations.batch.BatchEmptyResult;
 import org.identityconnectors.framework.api.operations.batch.BatchTask;
@@ -127,8 +128,6 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         SchemaOp, SearchOp<Filter>, SyncOp, TestOp, UpdateAttributeValuesOp {
 
     private static final Log log = Log.getLog(CSVFileConnector.class);
-
-    private static final Pattern syncFilenamePattern = Pattern.compile("(\\.[0-9]{13})$");
 
     /**
      * CSV file-name to {@link ReentrantReadWriteLock} lookup map. All read/write accesses must be protected by
@@ -433,6 +432,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
 
         final String[] header = getHeader();
         File syncOrigin = null;
+        boolean changesProcessed = false;
 
         // start with a write-lock
         final ReentrantReadWriteLock rwLock = fileNameToLockMap.get(csvFilePath);
@@ -482,6 +482,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                             if (!handler.handle(delta)) {
                                 break;
                             }
+                            changesProcessed = true;
                         }
                     }
                 }
@@ -518,6 +519,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                         if (!handler.handle(delta)) {
                             break;
                         }
+                        changesProcessed = true;
                     }
                 }
             } catch (FileNotFoundException e) {
@@ -533,6 +535,20 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                     } catch (Exception e) {
                         log.error(e, "Error closing file reader");
                     }
+                }
+            }
+
+            if (changesProcessed) {
+                long timestamp = config.getCsvFile().lastModified();
+                syncOrigin = new File(config.getCsvFile().getParentFile(),
+                        config.getCsvFile().getName() + "." + timestamp);
+                if (!syncOrigin.exists()) {
+                    try {
+                        Files.copy(config.getCsvFile().toPath(), syncOrigin.toPath());
+                    } catch (IOException e) {
+                        throw new ConnectorException("Unable to copy CSV file for sync operation", e);
+                    }
+                    token = new SyncToken(timestamp);
                 }
             }
 
@@ -556,10 +572,11 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         final ReadLock lock = fileNameToLockMap.get(csvFilePath).readLock();
         lock.lock();
         try {
+            Pattern filePattern = Pattern.compile("(" + config.getCsvFile().getName() + ")(\\.[0-9]{13})$");
             for (String filename : dataDir.list()) {
-                Matcher matcher = syncFilenamePattern.matcher(filename);
+                Matcher matcher = filePattern.matcher(filename);
                 if (matcher.find()) {
-                    Long timestamp = Long.valueOf(matcher.group().substring(1));
+                    Long timestamp = Long.valueOf(matcher.group(2).substring(1));
                     files.put(timestamp, filename);
                 }
             }
@@ -900,10 +917,11 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         File dataDir = config.getCsvFile().getParentFile();
         Map<Long, String> files = new TreeMap<Long, String>();
 
+        Pattern filePattern = Pattern.compile("(" + config.getCsvFile().getName() + ")(\\.[0-9]{13})$");
         for (String filename : dataDir.list()) {
-            Matcher matcher = syncFilenamePattern.matcher(filename);
+            Matcher matcher = filePattern.matcher(filename);
             if (matcher.find()) {
-                Long timestamp = Long.valueOf(matcher.group().substring(1));
+                Long timestamp = Long.valueOf(matcher.group(2).substring(1));
                 files.put(timestamp, filename);
             }
         }
@@ -940,7 +958,13 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                     attr.getName().equals(config.getHeaderUid())) {
                 uid = new Uid((String) attr.getValue().get(0));
             }
-            attrMap.put(attr.getName(), attr.getValue().get(0));
+            if (attr.getName().equals(OperationalAttributes.PASSWORD_NAME)
+                    && attr.getValue().get(0) instanceof GuardedString) {
+                attrMap.put(getHeaderNameForAttrName(attr.getName()),
+                        SecurityUtil.decrypt((GuardedString) attr.getValue().get(0)));
+            } else {
+                attrMap.put(getHeaderNameForAttrName(attr.getName()), attr.getValue().get(0));
+            }
         }
 
         if (uid == null) {
