@@ -44,6 +44,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.identityconnectors.common.Base64;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.common.security.SecurityUtil;
@@ -368,13 +369,17 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             int pageSize = options == null || options.getPageSize() == null ? 0 : options.getPageSize();
             int rowOffset = 0;
             if (options != null) {
-                if (options.getPagedResultsOffset() != null) {
+                if (options.getPagedResultsCookie() != null) {
+                    try {
+                        rowOffset = Integer.valueOf(new String(Base64.decode(options.getPagedResultsCookie())));
+                    } catch (Exception e) {
+                        throw new ConnectorException("PagedResultsCookie is invalid", e);
+                    }
+                } else if (options.getPagedResultsOffset() != null) {
                     rowOffset = options.getPagedResultsOffset();
-                } else if (options.getPagedResultsCookie() != null) {
-                    rowOffset = Integer.valueOf(options.getPagedResultsCookie());
                 }
             }
-            int nextPageOffset = (pageSize > 0)
+            int nextRowOffset = (pageSize > 0)
                     ? rowOffset + pageSize
                     : 0;
             int resultsHandled = pageSize;
@@ -395,12 +400,12 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
 
             if (handler instanceof SearchResultsHandler && totalRowCount.get(csvFilePath) > -1) {
                 SearchResult searchResult = new SearchResult(
-                        (nextPageOffset > totalRowCount.get(csvFilePath))
+                        nextRowOffset > totalRowCount.get(csvFilePath)
                                 ? null
-                                : String.valueOf(nextPageOffset),
+                                : Base64.encode(String.valueOf(nextRowOffset).getBytes()),
                         SearchResult.CountPolicy.EXACT,
                         totalRowCount.get(csvFilePath),
-                        Math.max(0, totalRowCount.get(csvFilePath) - nextPageOffset));
+                        Math.max(0, totalRowCount.get(csvFilePath) - nextRowOffset));
                 ((SearchResultsHandler) handler).handleResult(searchResult);
             }
         } catch (FileNotFoundException e) {

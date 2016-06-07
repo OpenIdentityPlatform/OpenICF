@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.forgerock.openicf.csvfile.util.TestUtils;
+import org.identityconnectors.common.Base64;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -108,7 +109,7 @@ public class CSVFileConnectorTests {
         // Call the query for the first time getting the first page of objects.
         queryRunner.executeQuery(csvFileConnector, options);
         assertEquals(queryRunner.result.getRemainingPagedResults(), 13 - pageSize, "remaining rows not right");
-        assertEquals(queryRunner.result.getPagedResultsCookie(), Integer.toString(pageSize),
+        assertEquals(queryRunner.result.getPagedResultsCookie(), Base64.encode(Integer.toString(pageSize).getBytes()),
                 "First page index offset should be equal to the pageSize which is " + pageSize);
         assertEquals(queryRunner.result.getTotalPagedResults(), 13, "Expected total record count should be 13");
 
@@ -116,7 +117,7 @@ public class CSVFileConnectorTests {
         options.setPagedResultsCookie(queryRunner.result.getPagedResultsCookie());
         queryRunner.executeQuery(csvFileConnector, options);
         assertEquals(queryRunner.result.getRemainingPagedResults(), 13 - pageSize * 2, "remaining rows not right");
-        assertEquals(queryRunner.result.getPagedResultsCookie(), "" + pageSize * 2,
+        assertEquals(queryRunner.result.getPagedResultsCookie(), Base64.encode(("" + pageSize * 2).getBytes()),
                 "Second page index offset should now be twice pageSize");
         assertEquals(queryRunner.result.getTotalPagedResults(), 13, "Expected total record count should be 13");
 

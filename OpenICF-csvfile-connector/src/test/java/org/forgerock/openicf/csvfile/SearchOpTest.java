@@ -35,9 +35,14 @@ import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
+import org.identityconnectors.framework.common.objects.SearchResult;
 import org.identityconnectors.framework.common.objects.filter.Filter;
+import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
+import org.identityconnectors.framework.spi.SearchResultsHandler;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -221,5 +226,45 @@ public class SearchOpTest {
             }
         };
         connector.executeQuery(ObjectClass.ACCOUNT, null, handler, null);
+    }
+
+    @Test
+    private void testPaging() throws Exception {
+        CSVFileConfiguration config = new CSVFileConfiguration();
+        config.setCsvFile(TestUtils.getTestFile("thirteen-rows.csv"));
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("password");
+
+        CSVFileConnector connector = new CSVFileConnector();
+        connector.init(config);
+
+        final List<SearchResult> result = new ArrayList<SearchResult>();
+
+        ResultsHandler handler = new SearchResultsHandler() {
+
+            public boolean handle(ConnectorObject co) {
+                return true;
+            }
+
+            public void handleResult(SearchResult res) {
+                result.add(res);
+            }
+        };
+
+        OperationOptions options = OperationOptionsBuilder.create().setPageSize(3).build();
+        connector.executeQuery(ObjectClass.ACCOUNT, FilterBuilder.present("firstName"), handler, options);
+        assertEquals(result.get(0).getTotalPagedResults(), 13);
+        assertEquals(result.get(0).getRemainingPagedResults(), 10);
+        assertNotNull(result.get(0).getPagedResultsCookie());
+
+        options = OperationOptionsBuilder.create()
+                .setPageSize(3)
+                .setPagedResultsCookie(result.get(0).getPagedResultsCookie())
+                .build();
+        connector.executeQuery(ObjectClass.ACCOUNT, FilterBuilder.present("firstName"), handler, options);
+        assertEquals(result.get(1).getTotalPagedResults(), 13);
+        assertEquals(result.get(1).getRemainingPagedResults(), 7);
+        assertNotNull(result.get(1).getPagedResultsCookie());
+        assertNotEquals(result.get(0).getPagedResultsCookie(), result.get(1).getPagedResultsCookie());
     }
 }
