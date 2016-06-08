@@ -45,6 +45,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.identityconnectors.common.Base64;
+import org.apache.commons.io.FileUtils;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.common.security.SecurityUtil;
@@ -1072,7 +1073,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             }
             if (tmp != null && tmp.exists()) {
                 try {
-                    tmp.renameTo(config.getCsvFile().getAbsoluteFile());
+                    if (config.getCsvFile().getAbsoluteFile().exists()) {
+                        config.getCsvFile().getAbsoluteFile().delete();
+                    }
+                    FileUtils.moveFile(tmp.getAbsoluteFile(), config.getCsvFile().getAbsoluteFile());
                 } catch (Exception e) {
                     log.error(e, "Error renaming file");
                 }
@@ -1148,7 +1152,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             }
             if (tmp != null) {
                 try {
-                    tmp.renameTo(config.getCsvFile().getAbsoluteFile());
+                    if (config.getCsvFile().getAbsoluteFile().exists()) {
+                        config.getCsvFile().getAbsoluteFile().delete();
+                    }
+                    FileUtils.moveFile(tmp.getAbsoluteFile(), config.getCsvFile().getAbsoluteFile());
                 } catch (Exception e) {
                     log.error(e, "Error renaming file");
                 }
