@@ -50,7 +50,7 @@
         <dependency>
             <groupId>org.forgerock.commons</groupId>
             <artifactId>forgerock-util</artifactId>
-            <version>20.0.0-alpha-4</version>
+            <version>20.0.0-RC1</version>
         </dependency>
 
         <!-- Test Dependencies -->
