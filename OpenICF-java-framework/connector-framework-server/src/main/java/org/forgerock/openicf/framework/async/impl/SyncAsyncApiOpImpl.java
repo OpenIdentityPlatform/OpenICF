@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2015-2016 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -37,6 +37,7 @@ import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
 import org.forgerock.util.Function;
+import org.forgerock.util.promise.ExceptionHandler;
 import org.forgerock.util.promise.Promise;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.logging.Log;
@@ -196,6 +197,13 @@ public class SyncAsyncApiOpImpl extends AbstractAPIOperation implements SyncApiO
         public Promise<SyncToken, RuntimeException> process() {
             // Use the application thread to process results synchronously
             try {
+                // send a poison pill if ever something goes wrong...
+                getPromise().thenOnException(new ExceptionHandler<RuntimeException>() {
+                    @Override
+                    public void handleException(RuntimeException e) {
+                        resultBuffer.enqueue(e);
+                    }
+                });
                 resultBuffer.process();
             } catch (RuntimeException e) {
                 getExceptionHandler().handleException(e);
