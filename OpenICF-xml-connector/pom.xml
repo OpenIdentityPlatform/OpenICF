@@ -31,7 +31,7 @@
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>xml-connector</artifactId>
-    <version>1.1.0.3-SNAPSHOT</version>
+    <version>1.1.0.3</version>
     <packaging>bundle</packaging>
     <name>Simulated XML Connector</name>
     <description>Connector can simulate almost any kind of resource.</description>
@@ -48,7 +48,8 @@
         <connection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/xml-connector.git</connection>
         <developerConnection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/xml-connector.git</developerConnection>
         <url>http://stash.forgerock.org/projects/OPENICF/repos/xml-connector/browse/</url>
-    </scm>
+      <tag>1.1.0.3</tag>
+  </scm>
     <properties>
         <openicf.osgi.embed>jaxen,saxon9he,xsom,relaxngDatatype,xml-apis,xercesImpl,stax-api</openicf.osgi.embed>
         <openicf.osgi.import.before.defaults>!javax.swing*,</openicf.osgi.import.before.defaults>
