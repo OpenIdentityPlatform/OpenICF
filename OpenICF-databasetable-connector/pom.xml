@@ -105,7 +105,7 @@
         <dependency>
             <groupId>org.forgerock.openicf.framework</groupId>
             <artifactId>connector-framework-contract</artifactId>
-            <version>${framework.version}</version>
+            <version>1.1.2.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
