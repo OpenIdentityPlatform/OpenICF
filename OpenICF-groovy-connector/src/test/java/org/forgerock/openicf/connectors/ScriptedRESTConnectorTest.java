@@ -51,19 +51,19 @@ public class ScriptedRESTConnectorTest extends RESTTestBase {
         return getFacade(ScriptedRESTConnector.class, TEST_NAME);
     }
 
-    @Test
+    @Test(enabled = false)
     public void testURI() throws Exception {
         URI host = new URI("http://localhost:8080/openidm");
         host.getAuthority();
     }
 
-    @Test
+    @Test(enabled = false)
     public void validate() throws Exception {
         final ConnectorFacade facade = getFacade();
         facade.validate();
     }
 
-    @Test
+    @Test(enabled = false)
     public void test() throws Exception {
         final ConnectorFacade facade = getFacade();
         facade.test();
