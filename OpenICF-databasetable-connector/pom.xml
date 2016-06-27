@@ -31,7 +31,7 @@
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>databasetable-connector</artifactId>
-    <version>1.1.0.2</version>
+    <version>1.1.0.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>Database Table Connector</name>
     <description>Database table connector use a single database table to store the Account attributes.</description>
@@ -40,7 +40,7 @@
         <connection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/databasetable-connector.git</connection>
         <developerConnection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/databasetable-connector.git</developerConnection>
         <url>http://stash.forgerock.org/projects/OPENICF/repos/databasetable-connector/browse</url>
-      <tag>1.1.0.2</tag>
+      <tag>HEAD</tag>
   </scm>
     <issueManagement>
         <system>jira</system>
