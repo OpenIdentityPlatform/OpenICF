@@ -58,8 +58,8 @@
         <maven.compiler.source>1.6</maven.compiler.source>
         <connectorPackage>org.forgerock.openicf</connectorPackage>
         <connectorClass>ScriptedConnector</connectorClass>
-        <framework.compatibilityVersion>1.5</framework.compatibilityVersion>
-        <framework.releaseVersion>0.0</framework.releaseVersion>
+        <framework.compatibilityVersion>1.4</framework.compatibilityVersion>
+        <framework.releaseVersion>1.0</framework.releaseVersion>
         <openicf.osgi.import.defaults>
             org.codehaus.groovy*;version="[2.2,3)",
             groovy.*;version="[2.2,3)",
