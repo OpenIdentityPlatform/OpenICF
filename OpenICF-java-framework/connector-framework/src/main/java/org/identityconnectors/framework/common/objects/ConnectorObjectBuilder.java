@@ -1,25 +1,18 @@
 /*
- * ====================
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+ * The contents of this file are subject to the terms of the Common Development and
+ * Distribution License (the License). You may not use this file except in compliance with the
+ * License.
+ *
+ * You can obtain a copy of the License at legal/CDDLv1.0.txt. See the License for the
+ * specific language governing permission and limitations under the License.
+ *
+ * When distributing Covered Software, include this CDDL Header Notice in each file and include
+ * the License file at legal/CDDLv1.0.txt. If applicable, add the following below the CDDL
+ * Header, with the fields enclosed by brackets [] replaced by your own identifying
+ * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Common Development
- * and Distribution License("CDDL") (the "License").  You may not use this file
- * except in compliance with the License.
- *
- * You can obtain a copy of the License at
- * http://opensource.org/licenses/cddl1.php
- * See the License for the specific language governing permissions and limitations
- * under the License.
- *
- * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at http://opensource.org/licenses/cddl1.php.
- * If applicable, add the following below this CDDL Header, with the fields
- * enclosed by brackets [] replaced by your own identifying information:
- * "Portions Copyrighted [year] [name of copyright owner]"
- * ====================
- * Portions Copyrighted 2014 ForgeRock AS.
+ * Portions copyright 2013-2016 ForgeRock AS.
  */
 package org.identityconnectors.framework.common.objects;
 
@@ -41,7 +34,7 @@ import org.identityconnectors.common.CollectionUtil;
 public final class ConnectorObjectBuilder {
 
     private ObjectClass objectClass;
-    private Map<String, Attribute> attributeMap;
+    private final Map<String, Attribute> attributeMap;
 
     // =======================================================================
     // Constructors
@@ -109,12 +102,27 @@ public final class ConnectorObjectBuilder {
     // Attribute based methods..
     // =======================================================================
     /**
-     * Adds one or many attributes to the {@link ConnectorObject}.
+     * Adds many attributes to the {@link ConnectorObject}. This method is needed to preserve backward API
+     * compatibility.
      */
-    public ConnectorObjectBuilder addAttribute(Attribute... attrs) {
+    public ConnectorObjectBuilder addAttribute(Attribute[] attrs) {
         Assertions.nullCheck(attrs, "attrs");
         for (Attribute a : attrs) {
             attributeMap.put(a.getName(), a);
+        }
+        return this;
+    }
+
+    /**
+     * Adds one or many attributes to the {@link ConnectorObject}.
+     */
+    public ConnectorObjectBuilder addAttribute(Attribute attr, Attribute... attrs) {
+        Assertions.nullCheck(attr, "attr");
+        attributeMap.put(attr.getName(), attr);
+        if (attrs != null) {
+            for (Attribute a : attrs) {
+                attributeMap.put(a.getName(), a);
+            }
         }
         return this;
     }
@@ -139,10 +147,50 @@ public final class ConnectorObjectBuilder {
     }
 
     /**
-     * Adds each object in the collection.
+     * Adds values to the attribute, using a recycled {@link AttributeBuilder}.
+     */
+    public ConnectorObjectBuilder addAttribute(AttributeBuilder builder, String name, Object... objs) {
+        builder.clearValue()
+                .setName(name)
+                .addValue(objs);
+        addAttribute(builder.build());
+        return this;
+    }
+
+    /**
+     * Adds each object in a collection.
      */
     public ConnectorObjectBuilder addAttribute(String name, Collection<?> obj) {
         addAttribute(AttributeBuilder.build(name, obj));
+        return this;
+    }
+
+    /**
+     * Adds each object in a collection, using a recycled {@link AttributeBuilder}.
+     */
+    public ConnectorObjectBuilder addAttribute(AttributeBuilder builder, String name, Collection<?> obj) {
+        builder.clearValue()
+                .setName(name)
+                .addValue(obj);
+        addAttribute(builder.build());
+        return this;
+    }
+
+    /**
+     * Removes an attribute by {@code name}.
+     */
+    public ConnectorObjectBuilder removeAttribute(String name) {
+        if (name != null) {
+            attributeMap.remove(name);
+        }
+        return this;
+    }
+
+    /**
+     * Clears all {@link Attribute}s, for recycling this {@code ConnectionObjectBuilder}.
+     */
+    public ConnectorObjectBuilder clearAttributes() {
+        attributeMap.clear();
         return this;
     }
 

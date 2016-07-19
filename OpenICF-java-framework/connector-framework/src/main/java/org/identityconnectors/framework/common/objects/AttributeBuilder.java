@@ -1,29 +1,22 @@
 /*
- * ====================
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+ * The contents of this file are subject to the terms of the Common Development and
+ * Distribution License (the License). You may not use this file except in compliance with the
+ * License.
+ *
+ * You can obtain a copy of the License at legal/CDDLv1.0.txt. See the License for the
+ * specific language governing permission and limitations under the License.
+ *
+ * When distributing Covered Software, include this CDDL Header Notice in each file and include
+ * the License file at legal/CDDLv1.0.txt. If applicable, add the following below the CDDL
+ * Header, with the fields enclosed by brackets [] replaced by your own identifying
+ * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Common Development
- * and Distribution License("CDDL") (the "License").  You may not use this file
- * except in compliance with the License.
- *
- * You can obtain a copy of the License at
- * http://opensource.org/licenses/cddl1.php
- * See the License for the specific language governing permissions and limitations
- * under the License.
- *
- * When distributing the Covered Code, include this CDDL Header Notice in each file
- * and include the License file at http://opensource.org/licenses/cddl1.php.
- * If applicable, add the following below this CDDL Header, with the fields
- * enclosed by brackets [] replaced by your own identifying information:
- * "Portions Copyrighted [year] [name of copyright owner]"
- * ====================
+ * Portions copyright 2013-2016 ForgeRock AS.
  */
 package org.identityconnectors.framework.common.objects;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -131,6 +124,16 @@ public final class AttributeBuilder {
     }
 
     /**
+     * Clears {@code value} to recycle this {@code AttributeBuilder}.
+     */
+    public AttributeBuilder clearValue() {
+        if (value != null) {
+            value.clear();
+        }
+        return this;
+    }
+
+    /**
      * Return any current value of the attribute that is being built.
      *
      * @return any current value of the attribute that is being built.
@@ -150,7 +153,7 @@ public final class AttributeBuilder {
      */
     public AttributeBuilder addValue(final Object... objs) {
         if (objs != null) {
-            addValuesInternal(Arrays.asList(objs));
+            addValuesInternal(objs);
         }
         return this;
     }
@@ -213,6 +216,20 @@ public final class AttributeBuilder {
             throw new IllegalArgumentException("Attribute value must be an instance of String.");
         }
         return (String) value.get(0);
+    }
+
+    private void addValuesInternal(final Object[] values) {
+        if (values != null) {
+            // make sure the list is ready to receive values.
+            if (value == null) {
+                value = new ArrayList<Object>();
+            }
+            // add each value checking to make sure its correct
+            for (Object v : values) {
+                FrameworkUtil.checkAttributeValue(name, v);
+                value.add(v);
+            }
+        }
     }
 
     private void addValuesInternal(final Iterable<?> values) {
