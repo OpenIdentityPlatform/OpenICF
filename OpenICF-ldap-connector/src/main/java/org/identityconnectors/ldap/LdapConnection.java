@@ -20,7 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  *
- * Portions Copyrighted 2013-2015 ForgeRock AS
+ * Portions Copyrighted 2013-2016 ForgeRock AS
  */
 package org.identityconnectors.ldap;
 
@@ -43,6 +43,8 @@ import javax.naming.CommunicationException;
 import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
 import javax.naming.ldap.StartTlsRequest;
 import javax.naming.ldap.StartTlsResponse;
 import javax.naming.ldap.InitialLdapContext;
@@ -308,16 +310,22 @@ public class LdapConnection {
     }
 
     private String getLdapUrls() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("ldap://");
-        builder.append(config.getHost());
-        builder.append(':');
-        builder.append(config.getPort());
-        for (String failover : nullAsEmpty(config.getFailover())) {
-            builder.append(' ');
-            builder.append(failover);
+        if (config.isUseDNSSRVRecord()) {
+            String ldapUrl = getSRVRecords(config.getHost());
+            log.info("LDAP url built with SRV records: {0}", ldapUrl);
+            return ldapUrl;
+        } else {
+            StringBuilder builder = new StringBuilder();
+            builder.append("ldap://");
+            builder.append(config.getHost());
+            builder.append(':');
+            builder.append(config.getPort());
+            for (String failover : nullAsEmpty(config.getFailover())) {
+                builder.append(' ');
+                builder.append(failover);
+            }
+            return builder.toString();
         }
-        return builder.toString();
     }
 
     public void close() {
@@ -413,6 +421,36 @@ public class LdapConnection {
             }
         }
         return supportedControls;
+    }
+
+    private String getSRVRecords(String server) {
+        StringBuilder builder = new StringBuilder();
+        try {
+            DirContext context = new InitialDirContext();
+            Attributes attributes = context.getAttributes("dns:/" + server, new String[]{"SRV"});
+
+            NamingEnumeration<?> servers = attributes.getAll();
+            while (servers.hasMoreElements()) {
+                Attribute attr = (Attribute) servers.nextElement();
+                Enumeration values = attr.getAll();
+                while (values.hasMoreElements()) {
+                    String value = (String) values.nextElement();
+                    String[] vals = value.split(" ");
+                    if (vals.length == 4) {
+                        builder.append("ldap://");
+                        builder.append(vals[3]);
+                        builder.append(":");
+                        builder.append(vals[2]);
+                        builder.append(" ");
+                    }
+                }
+            }
+            servers.close();
+            context.close();
+        } catch (NamingException e) {
+            log.warn(e + "Exception while retrieving DNS SRV records");
+        }
+        return builder.toString().trim();
     }
 
     public ServerType getServerType() {

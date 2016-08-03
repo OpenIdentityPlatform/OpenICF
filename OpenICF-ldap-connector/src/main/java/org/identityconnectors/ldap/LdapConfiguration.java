@@ -20,7 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  *
- * Portions Copyrighted 2013-2015 ForgeRock AS
+ * Portions Copyrighted 2013-2016 ForgeRock AS
  */
 package org.identityconnectors.ldap;
 
@@ -206,7 +206,12 @@ public class LdapConfiguration extends AbstractConfiguration implements Stateful
      * Whether to read the schema from the server.
      */
     private boolean readSchema = true;
-    
+
+    /**
+     * Whether to use DNS SRV records to find hostname
+     */
+    private boolean useDNSSRVRecord = false;
+
     // Sync configuration properties.
 
     private String[] baseContextsToSynchronize = { };
@@ -624,6 +629,14 @@ public class LdapConfiguration extends AbstractConfiguration implements Stateful
 
     public void setReadSchema(boolean readSchema) {
         this.readSchema = readSchema;
+    }
+
+    public boolean isUseDNSSRVRecord() {
+        return useDNSSRVRecord;
+    }
+
+    public void setUseDNSSRVRecord(boolean useDNSSRVRecord) {
+        this.useDNSSRVRecord = useDNSSRVRecord;
     }
 
     // Sync properties getters and setters.
