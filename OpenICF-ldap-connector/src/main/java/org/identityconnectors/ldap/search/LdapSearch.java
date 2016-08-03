@@ -335,27 +335,39 @@ public class LdapSearch {
 
     /**
      * Creates a search filter which will filter to a given {@link ObjectClass}.
-     * It will be composed of an optional filter to be applied before the object
-     * class filters, the filters for all LDAP object classes for the given
-     * {@code ObjectClass}, and an optional filter to be applied before the
-     * object class filters.
+     * It will be composed in order of an optional filter, the native filter
+     * from the query and last the user filter. If the user filter has not been
+     * defined, the object class filter is used.
      */
-    private String getSearchFilter(String... optionalFilters) {
+    private String getSearchFilter(String optionsFilter, String nativeFilter, String userFilter) {
         StringBuilder builder = new StringBuilder();
-        String ocFilter = getObjectClassFilter();
-        int nonBlank = isBlank(ocFilter) ? 0 : 1;
-        for (String optionalFilter : optionalFilters) {
-            nonBlank += (isBlank(optionalFilter) ? 0 : 1);
+        int nonBlank = 0;
+
+        //First, the optionsFilter
+        if ((null != optionsFilter) && (!isBlank(optionsFilter))) {
+            appendFilter(optionsFilter, builder);
+            nonBlank++;
         }
-        if (nonBlank > 1) {
-            builder.append("(&");
+        //Second, the native filter
+        if ((null != nativeFilter) && (!isBlank(nativeFilter))) {
+            appendFilter(nativeFilter, builder);
+            nonBlank++;
         }
-        appendFilter(ocFilter, builder);
-        for (String optionalFilter : optionalFilters) {
-            appendFilter(optionalFilter, builder);
+        //Last, userFilter. If this latter is null, then append the objectclass filter.
+        if ((null != userFilter) && (!isBlank(userFilter))){
+            appendFilter(userFilter, builder);
+            nonBlank++;
+        }
+        else {
+            String ocFilter = getObjectClassFilter();
+            if (!isBlank(ocFilter)) {
+                appendFilter(ocFilter, builder);
+                nonBlank++;
+            }
         }
         if (nonBlank > 1) {
             builder.append(')');
+            builder.insert(0,"(&");
         }
         return builder.toString();
     }
