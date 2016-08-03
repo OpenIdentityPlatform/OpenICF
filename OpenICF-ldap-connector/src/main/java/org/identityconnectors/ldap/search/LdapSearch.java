@@ -20,7 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * 
- * "Portions Copyrighted 2013-2015 Forgerock AS"
+ * "Portions Copyrighted 2013-2016 Forgerock AS"
  */
 package org.identityconnectors.ldap.search;
 
