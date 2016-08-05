@@ -1,7 +1,7 @@
 /**
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  * 
-* Copyright (c) 2014-2015 ForgeRock AS. All Rights Reserved
+* Copyright (c) 2014-2016 ForgeRock AS. All Rights Reserved
  * 
 * The contents of this file are subject to the terms of the Common Development
  * and Distribution License (the License). You may not use this file except in
@@ -68,7 +68,6 @@ public class PagedSearchStrategy extends LdapSearchStrategy {
 
         String returnedCookie = null;
         int context = 0;
-        int records = 0;
         int remainingResults = -1;
         boolean proceed = true;
         boolean needMore = false;
@@ -76,6 +75,7 @@ public class PagedSearchStrategy extends LdapSearchStrategy {
         PagedResultsResponseControl pagedControl = null;
         SortControl sortControl = null;
 
+        // Sort Keys
         if (sortKeys != null && sortKeys.length > 0) {
             javax.naming.ldap.SortKey[] skis = new javax.naming.ldap.SortKey[sortKeys.length];
             for (int i = 0; i < sortKeys.length; i++) {
@@ -85,6 +85,7 @@ public class PagedSearchStrategy extends LdapSearchStrategy {
             sortControl = new SortControl(skis, Control.NONCRITICAL);
         }
 
+        // Cookie
         if (StringUtil.isNotBlank(pagedResultsCookie)) {
             // we need to determine which base context we're dealing with...
             // The cookie value is <base64 encoded LDAP cookie>:<index in baseDNs>
@@ -103,21 +104,98 @@ public class PagedSearchStrategy extends LdapSearchStrategy {
         }
 
         LdapContext ctx = initCtx.newInstance(null);
+
         try {
-            do {
-                if (sortControl != null) {
-                    ctx.setRequestControls(new Control[]{new PagedResultsControl(pageSize - records, cookie, Control.CRITICAL), sortControl});
-                } else {
-                    ctx.setRequestControls(new Control[]{new PagedResultsControl(pageSize - records, cookie, Control.CRITICAL)});
+            // Offset
+            // If Offset > 0, then we need to skip Offset values before returning the first page of results.
+            // We use the pageSize value to determine our paging strategy. Using the offset value as the page size
+            // is risky since we have no clue about sizelimit for the results
+            if (pagedResultsOffset > 0) {
+                // Calculate how many pages we need to iterate over...
+                // If pageSize is small < 20 and offset is high > 1000, we fix the pageSize for the pages to skip
+                // to the value of 500 to avoid slow page skipping
+                int rounds;
+                int left;
+
+                if ((pageSize < 20) && (pagedResultsOffset > 1000)){
+                    rounds = pagedResultsOffset / 500;
+                    left = pagedResultsOffset % 500;
                 }
+                else {
+                    rounds = pagedResultsOffset / pageSize;
+                    left = pagedResultsOffset % pageSize;
+                }
+
+                for(int i = 0; i< rounds; i++) {
+                    int records = 0;
+                    do {
+                        setControls(ctx, pageSize - records, cookie, sortControl);
+                        NamingEnumeration<SearchResult> results = ctx.search(baseDNs.get(context), query, searchControls);
+                        while (results.hasMore()) {
+                            results.next();
+                            records++;
+                        }
+                        // We have less results than the pageSize and we're spanning multiple contexts...
+                        if ((records < pageSize) && (context + 1 < baseDNs.size())) {
+                            needMore = true;
+                            context++;
+                            cookie = null;
+                        } else {
+                            needMore = false;
+                            pagedControl = getPagedControl(ctx.getResponseControls());
+                            if (pagedControl != null) {
+                                cookie = pagedControl.getCookie();
+                                // if ever cookie is null, we've just reached the last page of that suffix
+                                // make sure we iterate over the suffix
+                                if ((null == cookie) && (context + 1 < baseDNs.size())) {
+                                    context++;
+                                }
+                            }
+                        }
+                        results.close();
+                    } while (needMore);
+                }
+                if (left > 0) {
+                    int records = 0;
+                    do {
+                        setControls(ctx, left - records, cookie, sortControl);
+                        NamingEnumeration<SearchResult> results = ctx.search(baseDNs.get(context), query, searchControls);
+                        while (results.hasMore()) {
+                            results.next();
+                            records++;
+                        }
+                        // We have less results than the pageSize and we're spanning multiple contexts...
+                        if ((records < left) && (context + 1 < baseDNs.size())) {
+                            needMore = true;
+                            context++;
+                            cookie = null;
+                        } else {
+                            needMore = false;
+                            pagedControl = getPagedControl(ctx.getResponseControls());
+                            if (pagedControl != null) {
+                                cookie = pagedControl.getCookie();
+                                // if ever cookie is null, we've just reached the last page of that suffix
+                                // make sure we iterate over the suffix
+                                if ((null == cookie) && (context + 1 < baseDNs.size())) {
+                                    context++;
+                                }
+                            }
+                        }
+                        results.close();
+                    } while (needMore);
+                }
+            }
+
+        // Pages
+            int records = 0;
+            do {
+                setControls(ctx,pageSize - records, cookie, sortControl);
                 NamingEnumeration<SearchResult> results = ctx.search(baseDNs.get(context), query, searchControls);
                 while (proceed && results.hasMore()) {
-                    SearchResult res = results.next();
+                    proceed = handler.handle(baseDNs.get(context), results.next());
                     records++;
-                    if (records > pagedResultsOffset) {
-                        proceed = handler.handle(baseDNs.get(context), res);
-                    }
                 }
+                // We have less results than the pageSize and we're spanning multiple contexts...
                 if ((records < pageSize) && (context + 1 < baseDNs.size())) {
                     needMore = true;
                     context++;
@@ -127,12 +205,13 @@ public class PagedSearchStrategy extends LdapSearchStrategy {
                     pagedControl = getPagedControl(ctx.getResponseControls());
                     if (pagedControl != null) {
                         cookie = pagedControl.getCookie();
-                        if (pagedControl.getResultSize() > 0) {
-                            remainingResults = pagedControl.getResultSize();
+                        // if ever cookie is null, we've just reached the last page of that suffix
+                        // make sure we iterate over the suffix and prepare a special cookie for next request
+                        if ((null == cookie) && (context + 1 < baseDNs.size())) {
+                            returnedCookie = ":"+ (context+1);
                         }
                     }
                 }
-
                 results.close();
             } while (needMore);
         } catch (OperationNotSupportedException e) {
@@ -147,6 +226,19 @@ public class PagedSearchStrategy extends LdapSearchStrategy {
             returnedCookie = Base64.encode(cookie).concat(":" + context);
         }
         searchResultHandler.handleResult(new org.identityconnectors.framework.common.objects.SearchResult(returnedCookie, remainingResults));
+    }
+
+    private void setControls(LdapContext ctx, int pageSize, byte[] cookie, SortControl sortControl) {
+        try {
+            if (sortControl != null) {
+                ctx.setRequestControls(new Control[]{new PagedResultsControl(pageSize, cookie, Control.CRITICAL), sortControl});
+            } else {
+                ctx.setRequestControls(new Control[]{new PagedResultsControl(pageSize, cookie, Control.CRITICAL)});
+            }
+        }
+        catch (Exception e) {
+            logger.warn(e, "Exception caught while setting paged results control");
+        }
     }
 
     private byte[] getResponseCookie(Control[] controls) {
