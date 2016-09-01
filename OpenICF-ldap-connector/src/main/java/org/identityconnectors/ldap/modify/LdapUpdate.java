@@ -425,7 +425,7 @@ public class LdapUpdate extends LdapModifyOperation {
                     }
                     break;
                 default:
-                    throw new org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException(e.getCause());
+                    throw new org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException(e.getMessage());
             }
         } catch (OperationNotSupportedException e) {
             String message = e.getMessage().toLowerCase();
@@ -439,6 +439,7 @@ public class LdapUpdate extends LdapModifyOperation {
                     }
                     break;
                 default:
+                    throw new ConnectorException(e);
             }
         } catch (NoPermissionException e) {
             throw new ConnectorException("Insufficient Access Rights to perform");
