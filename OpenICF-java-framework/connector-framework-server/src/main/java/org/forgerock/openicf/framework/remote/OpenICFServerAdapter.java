@@ -461,12 +461,7 @@ public class OpenICFServerAdapter implements OperationMessageListener {
         if (!message.getPublicKey().isEmpty()) {
             PublicKey publicKey =
                     SecurityUtil.createPublicKey(message.getPublicKey().toByteArray());
-            try {
-                Encryptor encryptor = new ECIESEncryptor(keyPair.getPrivate(), publicKey);
-            } catch (InvalidKeyException e) {
-                byte[] error = null;
-                // socket.sendBytes(error);
-            }
+            Encryptor encryptor = new ECIESEncryptor(keyPair, publicKey);
         }
         return null;
     }

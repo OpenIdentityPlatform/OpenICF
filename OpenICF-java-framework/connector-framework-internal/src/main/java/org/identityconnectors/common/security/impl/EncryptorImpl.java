@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2016 ForgeRock AS.
  */
 package org.identityconnectors.common.security.impl;
 
@@ -34,8 +35,8 @@ import org.identityconnectors.common.security.Encryptor;
 
 public class EncryptorImpl implements Encryptor {
 
-    private static final String ALGORITHM = "AES";
-    private static final String FULL_ALGORITHM = "AES/CBC/PKCS5Padding";
+    public static final String ALGORITHM = "AES";
+    public static final String FULL_ALGORITHM = "AES/CBC/PKCS5Padding";
 
     private final static byte [] DEFAULT_KEY_BYTES = {
         (byte) 0x23,(byte) 0x65,(byte) 0x87,(byte) 0x22,
