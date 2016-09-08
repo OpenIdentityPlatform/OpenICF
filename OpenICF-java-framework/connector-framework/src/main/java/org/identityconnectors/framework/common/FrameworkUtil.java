@@ -467,7 +467,7 @@ public final class FrameworkUtil {
      *         {@link org.identityconnectors.framework.api.operations.GetApiOp}
      * @since 1.5
      */
-    public Uid getUidIfGetOperation(Filter filter) {
+    public static Uid getUidIfGetOperation(Filter filter) {
         Uid uidToGet = null;
         if (filter instanceof EqualsFilter) {
             EqualsFilter equalsFilter = (EqualsFilter) filter;
