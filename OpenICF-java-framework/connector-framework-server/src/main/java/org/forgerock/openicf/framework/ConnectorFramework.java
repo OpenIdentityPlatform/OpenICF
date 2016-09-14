@@ -43,11 +43,13 @@ import org.forgerock.openicf.framework.remote.LoadBalancingConnectorInfoManager;
 import org.forgerock.openicf.framework.remote.OpenICFServerAdapter;
 import org.forgerock.openicf.framework.remote.RemoteAsyncConnectorFacade;
 import org.forgerock.openicf.framework.remote.RemoteConnectorInfoImpl;
+import org.forgerock.openicf.framework.remote.RemoteServerConnectorInfoManager;
 import org.forgerock.util.Function;
 import org.forgerock.util.Utils;
 import org.forgerock.util.promise.Promise;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.Pair;
+import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConfigurationPropertyChangeListener;
@@ -107,6 +109,13 @@ public class ConnectorFramework implements Closeable {
             // We need to complete all pending Promises
             while (!remoteManagerCache.isEmpty()) {
                 for (AsyncRemoteLegacyConnectorInfoManager manager : remoteManagerCache.values()) {
+                    manager.close();
+                }
+            }
+
+            // We need to complete all pending Promises
+            while (!serverConnectorInfoManagerCache.isEmpty()) {
+                for (RemoteServerConnectorInfoManager manager : serverConnectorInfoManagerCache.values()) {
                     manager.close();
                 }
             }
@@ -334,6 +343,34 @@ public class ConnectorFramework implements Closeable {
     }
 
     // ------ LocalConnectorFramework Implementation End ------
+
+    /**
+     * Cache of the various ConnectorFacades.
+     */
+    private final ConcurrentMap<String, RemoteServerConnectorInfoManager> serverConnectorInfoManagerCache =
+            new ConcurrentHashMap<String, RemoteServerConnectorInfoManager>();
+
+    public RemoteServerConnectorInfoManager getServerManager(String principal){
+        if (StringUtil.isBlank(principal)) {
+            return null;
+        }
+        RemoteServerConnectorInfoManager manager = serverConnectorInfoManagerCache.get(principal);
+        if (null == manager){
+            final RemoteServerConnectorInfoManager tmp = new RemoteServerConnectorInfoManager();
+            Object ignore = serverConnectorInfoManagerCache.putIfAbsent(principal, tmp);
+            if (ignore == null){
+                final String key = principal;
+                tmp.addCloseListener(new CloseListener<DelegatingAsyncConnectorInfoManager>() {
+                    @Override
+                    public void onClosed(final DelegatingAsyncConnectorInfoManager source) {
+                        serverConnectorInfoManagerCache.remove(key);
+                    }
+                });
+            }
+        }
+        return serverConnectorInfoManagerCache.get(principal);
+    }
+
 
     // ------ Legacy RemoteConnectorInfoManager Support ------
     private final Map<Pair<String, Integer>, AsyncRemoteLegacyConnectorInfoManager> remoteManagerCache =

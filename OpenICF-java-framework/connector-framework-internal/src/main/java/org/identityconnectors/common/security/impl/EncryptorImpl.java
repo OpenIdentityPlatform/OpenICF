@@ -35,8 +35,8 @@ import org.identityconnectors.common.security.Encryptor;
 
 public class EncryptorImpl implements Encryptor {
 
-    public static final String ALGORITHM = "AES";
-    public static final String FULL_ALGORITHM = "AES/CBC/PKCS5Padding";
+    private static final String ALGORITHM = "AES";
+    private static final String FULL_ALGORITHM = "AES/CBC/PKCS5Padding";
 
     private final static byte [] DEFAULT_KEY_BYTES = {
         (byte) 0x23,(byte) 0x65,(byte) 0x87,(byte) 0x22,

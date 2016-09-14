@@ -15,7 +15,6 @@
  */
 package org.forgerock.openicf.framework.remote;
 
-import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.ArrayList;
@@ -106,8 +105,7 @@ public class OpenICFServerAdapter implements OperationMessageListener {
 
     public void onConnect(final WebSocketConnectionHolder socket) {
         if (isClient()) {
-            logger.info("Client onConnect() - Send 'HandshakeMessage({0})'", handshakeMessage
-                    .build().getSessionId());
+            logger.info("Client onConnect() - send Handshake '({0})'", handshakeMessage.build().getSessionId());
             RemoteMessage.Builder requestBuilder =
                     MessagesUtil.createRequest(0, RPCRequest.newBuilder().setHandshakeMessage(
                             handshakeMessage));
@@ -140,7 +138,9 @@ public class OpenICFServerAdapter implements OperationMessageListener {
         try {
             RemoteMessage message = RemoteMessage.parseFrom(bytes);
 
-            logger.ok("onMessage({0})", message.toString());
+            if (logger.isOk()) {
+                logger.ok("{0} onMessage({1})", loggerName(), message.toString());
+            }
             if (message.hasRequest()) {
                 if (message.getRequest().hasHandshakeMessage()) {
                     if (isClient()) {
@@ -202,6 +202,8 @@ public class OpenICFServerAdapter implements OperationMessageListener {
 
     protected void handleRemoteMessage(final WebSocketConnectionHolder socket,
             final RemoteMessage message) {
+        logger.warn("{0} received unknown message('{1}') via socket:{2} ", loggerName(), message.getMessageId(),
+                socket.hashCode());
             socket.getRemoteConnectionContext().getRemoteConnectionGroup().trySendMessage(
                     MessagesUtil.createErrorResponse(message.getMessageId(),
                             new ConnectorException("Unknown RemoteMessage")).build());
@@ -210,10 +212,14 @@ public class OpenICFServerAdapter implements OperationMessageListener {
     protected void handleRequestMessage(final WebSocketConnectionHolder socket, long messageId,
             final RPCRequest message) {
         if (socket.isHandHooked()) {
+            logger.warn("{0} received unknown request('{1}') via socket:{2} ", loggerName(), messageId,
+                    socket.hashCode());
             socket.getRemoteConnectionContext().getRemoteConnectionGroup().trySendMessage(
                     MessagesUtil.createErrorResponse(messageId,
                             new ConnectorException("Unknown Request message")).build());
         } else {
+            logger.warn("{0} received request('{1}') before handshake via socket:{2} ", loggerName(), messageId,
+                    socket.hashCode());
             socket.sendBytes(
                     MessagesUtil.createErrorResponse(messageId,
                             new ConnectorException("Connection received request before handshake"))
@@ -224,10 +230,14 @@ public class OpenICFServerAdapter implements OperationMessageListener {
     protected void handleResponseMessage(final WebSocketConnectionHolder socket, long messageId,
             final RPCResponse message) {
         if (socket.isHandHooked()) {
+            logger.info("{0} received unknown response('{1}') via socket:{2} ", loggerName(), messageId,
+                    socket.hashCode());
             socket.getRemoteConnectionContext().getRemoteConnectionGroup().trySendMessage(
                     MessagesUtil.createErrorResponse(messageId,
                             new ConnectorException("Unknown Request message")).build());
         } else {
+            logger.info("{0} received response('{1}') before handshake via socket:{2} ", loggerName(), messageId,
+                    socket.hashCode());
             socket.sendBytes(
                     MessagesUtil.createErrorResponse(messageId,
                             new ConnectorException("Connection received response before handshake"))
@@ -269,9 +279,11 @@ public class OpenICFServerAdapter implements OperationMessageListener {
                 MessagesUtil.createResponse(messageId, RPCResponse.newBuilder()
                         .setHandshakeMessage(handshakeMessage));
         socket.sendBytes(responseBuilder.build().toByteArray());
+        logger.info("{0} respond Handshake ({1}:{2})", loggerName(), handshakeMessage.build().getSessionId(),
+                socket.hashCode());
         // Set Operational
         socket.receiveHandshake(message);
-        logger.info("{0} accept Handshake ({1})", loggerName(), message.getSessionId());
+        logger.info("{0} accept Handshake ({1}:{2})", loggerName(), message.getSessionId(), socket.hashCode());
     }
 
     public void processHandshakeResponse(final WebSocketConnectionHolder socket, long messageId,
@@ -279,7 +291,7 @@ public class OpenICFServerAdapter implements OperationMessageListener {
         // Set Operational
         socket.receiveHandshake(message);
 
-        logger.info("{0} accept Handshake ({1})", loggerName(), message.getSessionId());
+        logger.info("{0} accept Handshake ({1}:{2})", loggerName(), message.getSessionId(), socket.hashCode());
     }
 
     // Control Operations

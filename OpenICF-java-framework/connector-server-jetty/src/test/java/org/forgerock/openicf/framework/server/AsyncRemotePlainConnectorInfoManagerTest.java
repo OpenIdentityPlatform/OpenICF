@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2015-2016 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -30,6 +30,7 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.security.ConstraintMapping;
@@ -52,10 +53,14 @@ import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.security.Credential;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.forgerock.openicf.framework.AsyncConnectorInfoManagerTestBase;
+import org.forgerock.openicf.framework.ConnectorFramework;
 import org.forgerock.openicf.framework.ConnectorFrameworkFactory;
+import org.forgerock.openicf.framework.DelegatingAsyncConnectorInfoManager;
+import org.forgerock.openicf.framework.async.AsyncConnectorInfoManager;
 import org.forgerock.openicf.framework.client.RemoteWSFrameworkConnectionInfo;
-import org.forgerock.openicf.framework.remote.AsyncRemoteConnectorInfoManager;
+import org.forgerock.openicf.framework.remote.ReferenceCountedObject;
 import org.forgerock.openicf.framework.server.jetty.OpenICFWebSocketServletBase;
+import org.identityconnectors.framework.api.ConnectorInfo;
 import org.identityconnectors.testconnector.TstConnector;
 import org.testng.Assert;
 import org.testng.ITestContext;
@@ -64,7 +69,7 @@ import org.testng.annotations.Test;
 
 @Test
 public class AsyncRemotePlainConnectorInfoManagerTest extends
-        AsyncConnectorInfoManagerTestBase<AsyncRemoteConnectorInfoManager> {
+        AsyncConnectorInfoManagerTestBase<DelegatingAsyncConnectorInfoManager> {
 
     public final int PLAIN_PORT = findFreePort();
     public final int SECURE_PORT = findFreePort();
@@ -90,13 +95,19 @@ public class AsyncRemotePlainConnectorInfoManagerTest extends
     private final ConnectorFrameworkFactory localConnectorFrameworkFactory =
             new ConnectorFrameworkFactory();
 
-    private final ConnectorFrameworkFactory serverConnectorFrameworkFactory =
+    protected static final ConnectorFrameworkFactory serverConnectorFrameworkFactory =
             new ConnectorFrameworkFactory();
 
     private Server connectorServer = null;
+    protected static ReferenceCountedObject<ConnectorFramework>.Reference localConnectorFramework = null;
+    private static ReferenceCountedObject<ConnectorFramework>.Reference serverConnectorFramework = null;
 
     protected ConnectorFrameworkFactory getConnectorFrameworkFactory() throws Exception {
         return localConnectorFrameworkFactory;
+    }
+
+    protected DelegatingAsyncConnectorInfoManager getConnectorInfoManager() throws Exception {
+        return getConnectorFramework().getRemoteManager(CONNECTION_INFO);
     }
 
     private SecurityHandler getSecurityHandler() throws IOException {
@@ -190,6 +201,8 @@ public class AsyncRemotePlainConnectorInfoManagerTest extends
         ServletHolder holder =
                 handler.getServletHandler().newServletHolder(BaseHolder.Source.EMBEDDED);
 
+        serverConnectorFramework = serverConnectorFrameworkFactory.acquire();
+        localConnectorFramework = localConnectorFrameworkFactory.acquire();
         holder.setServlet(new OpenICFWebSocketServletBase(serverConnectorFrameworkFactory));
         holder.setInitParameter("maxIdleTime", "300000");
         holder.setInitParameter("maxAsyncWriteTimeout", "60000");
@@ -208,7 +221,10 @@ public class AsyncRemotePlainConnectorInfoManagerTest extends
 
         // Initialise the ConnectorFramework
 
-        serverConnectorFrameworkFactory.acquire().get().getLocalManager().addConnectorBundle(
+        serverConnectorFramework.get().getLocalManager().addConnectorBundle(
+                TstConnector.class.getProtectionDomain().getCodeSource().getLocation());
+
+        localConnectorFramework.get().getLocalManager().addConnectorBundle(
                 TstConnector.class.getProtectionDomain().getCodeSource().getLocation());
 
         connectorServer.start();
@@ -217,11 +233,10 @@ public class AsyncRemotePlainConnectorInfoManagerTest extends
     protected void shutdownTest(ITestContext context) throws Exception {
         connectorServer.stop();
         connectorServer.destroy();
-        Reporter.log("Jetty Server Stopped", true);
-    }
 
-    protected AsyncRemoteConnectorInfoManager getConnectorInfoManager() throws Exception {
-        return getConnectorFramework().getRemoteManager(CONNECTION_INFO);
+        serverConnectorFramework.release();
+        localConnectorFramework.release();
+        Reporter.log("Jetty Server Stopped", true);
     }
 
     private SslContextFactory createSsllContextFactory(boolean clientContext) {
@@ -258,5 +273,31 @@ public class AsyncRemotePlainConnectorInfoManagerTest extends
         sslContextFactory.setIncludeProtocols("TLSv1.2", "TLSv1.1", "TLSv1");
 
         return sslContextFactory;
+    }
+
+    @Test
+    public void testRequiredServerConnectorInfo() throws Exception {
+        AsyncConnectorInfoManager manager = localConnectorFramework.get()
+                .getRemoteManager(CONNECTION_INFO);
+        Assert.assertNotNull(manager);
+
+        manager = serverConnectorFramework.get().getServerManager("anonymous");
+        Assert.assertNotNull(manager);
+
+        ConnectorInfo c =
+                manager.findConnectorInfoAsync(getTestConnectorKey()).getOrThrowUninterruptibly(5,
+                        TimeUnit.MINUTES);
+        Assert.assertNotNull(c);
+
+        Assert.assertNotNull(manager.findConnectorInfoAsync(
+                getTestStatefulConnectorKey()).getOrThrowUninterruptibly(30, TimeUnit.SECONDS));
+
+        Assert.assertNotNull(manager.findConnectorInfoAsync(
+                getTestPoolableStatefulConnectorKey()).getOrThrowUninterruptibly(30,
+                TimeUnit.SECONDS));
+
+        for (ConnectorInfo ci : manager.getConnectorInfos()) {
+            Reporter.log(String.valueOf(ci.getConnectorKey()), true);
+        }
     }
 }

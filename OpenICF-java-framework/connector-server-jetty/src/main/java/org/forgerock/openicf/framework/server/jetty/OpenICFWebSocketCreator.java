@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2015-2016 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -25,14 +25,15 @@
 package org.forgerock.openicf.framework.server.jetty;
 
 import java.io.IOException;
-import java.security.Principal;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import javax.security.auth.callback.NameCallback;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.jetty.util.StringUtil;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
 import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
@@ -54,14 +55,45 @@ public class OpenICFWebSocketCreator implements WebSocketCreator {
 
     protected final ConcurrentMap<String, WebSocketConnectionGroup> globalConnectionGroups =
             new ConcurrentHashMap<String, WebSocketConnectionGroup>();
+    protected final ConnectorFramework connectorFramework;
+    protected final OperationMessageListener listener;
+    protected ConcurrentMap<String, ConnectionPrincipal<?>> principalCache = new ConcurrentHashMap<String, ConnectionPrincipal<?>>();
 
-    private final SinglePrincipal singleTenant;
-    
+
+    private Authenticator authenticator;
+
+
     public OpenICFWebSocketCreator(final ConnectorFramework connectorFramework,
-            final ScheduledExecutorService executorService) {
-        singleTenant =
-                new SinglePrincipal(new OpenICFServerAdapter(connectorFramework, connectorFramework
-                        .getLocalManager(), false), globalConnectionGroups);
+                                   final ScheduledExecutorService executorService) {
+        this(connectorFramework, null, null, executorService);
+    }
+
+
+    public OpenICFWebSocketCreator(final ConnectorFramework connectorFramework,
+                                   final OperationMessageListener listener,
+                                   final Authenticator authenticator,
+                                   final ScheduledExecutorService executorService) {
+        this.connectorFramework = connectorFramework;
+        if (null == listener) {
+            this.listener
+                    = new OpenICFServerAdapter(this.connectorFramework, connectorFramework.getLocalManager(), false);
+        } else {
+            this.listener = listener;
+        }
+
+
+        if (null == authenticator) {
+            logger.info("Creating single 'anonymous' authenticator");
+            this.authenticator = new Authenticator() {
+                @Override
+                public void authenticate(ServletUpgradeRequest request, ServletUpgradeResponse response, NameCallback callback) {
+                    callback.setName(ConnectionPrincipal.DEFAULT_NAME);
+                }
+            };
+        } else {
+            this.authenticator = authenticator;
+        }
+
         //Will be cancelled when executorService is shut down
         executorService.scheduleWithFixedDelay(new Runnable() {
             public void run() {
@@ -76,24 +108,17 @@ public class OpenICFWebSocketCreator implements WebSocketCreator {
 
     @Override
     public Object createWebSocket(ServletUpgradeRequest request, ServletUpgradeResponse response) {
-        Principal principal = request.getUserPrincipal();
 
         if (request.getSubProtocols().contains(RemoteWSFrameworkConnectionInfo.OPENICF_PROTOCOL)) {
             response.setAcceptedSubProtocol(RemoteWSFrameworkConnectionInfo.OPENICF_PROTOCOL);
         }
 
-        if (null != principal) {
-
-            ConnectionPrincipal<?> connectionPrincipal = authenticate(principal);
-            if (null != connectionPrincipal) {
-                return connectionPrincipal;
-            } else {
-                unauthorized(response, "Unknown Principal" + principal.getName());
-            }
-        } else {
-            unauthorized(response, "Authentication Required");
+        ConnectionPrincipal<?> connectionPrincipal = authenticate(request, response);
+        if (null != connectionPrincipal) {
+            return connectionPrincipal;
+        } else if (!response.isCommitted()) {
+            unauthorized(response, "Unknown Principal");
         }
-
         return null;
     }
 
@@ -107,15 +132,40 @@ public class OpenICFWebSocketCreator implements WebSocketCreator {
         }
     }
 
-    public ConnectionPrincipal authenticate(Principal principal) {
-        return singleTenant;
+    public ConnectionPrincipal<?> authenticate(ServletUpgradeRequest request, ServletUpgradeResponse response) {
+        NameCallback callback = new NameCallback("OpenICF user:>");
+        authenticator.authenticate(request, response, callback);
+        if (StringUtil.isNotBlank(callback.getName())) {
+            ConnectionPrincipal<?> connectionPrincipal = principalCache.get(callback.getName());
+            if (connectionPrincipal == null) {
+                principalCache.putIfAbsent(callback.getName(), new SinglePrincipal(callback.getName(), listener,
+                        connectorFramework, globalConnectionGroups));
+                return principalCache.get(callback.getName());
+            } else {
+                return connectionPrincipal;
+            }
+        }
+        return null;
     }
 
     public static class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> {
 
-        public SinglePrincipal(final OperationMessageListener listener,
-                final ConcurrentMap<String, WebSocketConnectionGroup> globalConnectionGroups) {
+
+        final String name;
+        final ConnectorFramework connectorFramework;
+
+        public SinglePrincipal(final String name,
+                               final OperationMessageListener listener,
+                               final ConnectorFramework connectorFramework,
+                               final ConcurrentMap<String, WebSocketConnectionGroup> globalConnectionGroups) {
             super(listener, globalConnectionGroups);
+            this.name = name;
+            this.connectorFramework = connectorFramework;
+        }
+
+        @Override
+        public String getName() {
+            return StringUtil.isBlank(name) ? super.getName() : name;
         }
 
         public RemoteOperationContext handshake(
@@ -128,5 +178,9 @@ public class OpenICFWebSocketCreator implements WebSocketCreator {
 
         }
 
+        @Override
+        protected void onNewWebSocketConnectionGroup(final WebSocketConnectionGroup connectionGroup) {
+            connectorFramework.getServerManager(getName()).addWebSocketConnectionGroup(connectionGroup);
+        }
     }
 }

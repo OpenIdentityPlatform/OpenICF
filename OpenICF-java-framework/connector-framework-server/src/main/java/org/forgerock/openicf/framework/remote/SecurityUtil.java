@@ -229,6 +229,7 @@ public class SecurityUtil {
      * @param N group parameters (prime)
      * @param g group parameters (generator)
      * @return new SRP Group Parameter
+     * org.bouncycastle.crypto.params.SRP6GroupParameters
      */
     private static SRPGroupParameter parseSRPParameters(String N, int g) {
         return new SRPGroupParameter(N, g);

@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -36,11 +37,17 @@ import java.util.List;
 import java.util.Properties;
 import java.util.logging.LogManager;
 
+import org.forgerock.openicf.framework.ConnectorFramework;
 import org.forgerock.openicf.framework.ConnectorFrameworkFactory;
+import org.forgerock.openicf.framework.client.RemoteWSFrameworkConnectionInfo;
+import org.forgerock.openicf.framework.local.AsyncLocalConnectorInfoManager;
+import org.forgerock.openicf.framework.remote.ReferenceCountedObject;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
+import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.common.security.SecurityUtil;
 import org.identityconnectors.framework.api.ConnectorInfoManagerFactory;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -55,11 +62,20 @@ public final class Main {
     private static final String PROP_KEY = "connectorserver.key";
     private static final String PROP_FACADE_LIFETIME = "connectorserver.maxFacadeLifeTime";
     private static final String PROP_LOGGER_CLASS = "connectorserver.loggerClass";
+    private static final String PROP_REMOTE_URL = "connectorserver.url";
+    private static final String PROP_REMOTE_PRINCIPAL = "connectorserver.principal";
+    private static final String PROP_REMOTE_PASSWORD = "connectorserver.password";
+
+    private static final String PROP_PROXY_HOST = "connectorserver.proxyHost";
+    private static final String PROP_PROXY_PORT = "connectorserver.proxyPort";
+    private static final String PROP_PROXY_PRINCIPAL = "connectorserver.proxyPrincipal";
+    private static final String PROP_PROXY_PASSWORD = "connectorserver.proxyPassword";
 
     private static final String DEFAULT_LOG_SPI =
             "org.identityconnectors.common.logging.StdOutLogger";
 
     private static ConnectorServer connectorServer;
+    private static ReferenceCountedObject<ConnectorFramework>.Reference connectorFramework;
 
     private static Log log; // Initialized lazily to avoid early initialization.
 
@@ -157,12 +173,14 @@ public final class Main {
 
     private static void run(Properties properties) throws Exception {
         loadProperties(properties);
-        connectorServer.start();
-        getLog().info("ConnectorServer listening on: " + connectorServer.getListeners());
+        if (connectorServer != null) {
+            connectorServer.start();
+            getLog().info("ConnectorServer listening on: " + connectorServer.getListeners());
+        }
     }
 
     private static void loadProperties(Properties properties) throws Exception {
-        if (connectorServer != null) {
+        if (connectorServer != null || connectorFramework != null) {
             // Procrun called main() without calling stop().
             // Do not use a logging statement here to avoid initializing logging
             // too early just because a bug in procrun.
@@ -177,15 +195,7 @@ public final class Main {
         String keyHash = properties.getProperty(PROP_KEY);
         String facadeLifeTime = properties.getProperty(PROP_FACADE_LIFETIME);
         String loggerClass = properties.getProperty(PROP_LOGGER_CLASS);
-        if (portStr == null) {
-            throw new ConnectorException("connectorserver.properties is missing " + PROP_PORT);
-        }
-        if (bundleDirStr == null) {
-            throw new ConnectorException("connectorserver.properties is missing " + PROP_BUNDLE_DIR);
-        }
-        if (keyHash == null) {
-            throw new ConnectorException("connectorserver.properties is missing " + PROP_KEY);
-        }
+        String url  = properties.getProperty(PROP_REMOTE_URL);
 
         if (loggerClass == null) {
             loggerClass = DEFAULT_LOG_SPI;
@@ -193,7 +203,12 @@ public final class Main {
         ensureLoggingNotInitialized();
         System.setProperty(Log.LOGSPI_PROP, loggerClass);
 
-        int port = Integer.parseInt(portStr);
+        int port = -1;
+        List<RemoteWSFrameworkConnectionInfo> connectionInfos = null;
+
+        if (bundleDirStr == null) {
+            throw new ConnectorException("connectorserver.properties is missing " + PROP_BUNDLE_DIR);
+        }
 
         // Work around issue 604. It seems that sometimes procrun will run
         // the start method in a thread with a null context class loader.
@@ -202,33 +217,94 @@ public final class Main {
             Thread.currentThread().setContextClassLoader(Main.class.getClassLoader());
         }
 
-        connectorServer = new ConnectorServer();
+        if (StringUtil.isNotBlank(url)){
+            String principal = properties.getProperty(PROP_REMOTE_PRINCIPAL);
+            if (principal == null){
+                throw new ConnectorException("connectorserver.properties is missing " + PROP_REMOTE_PRINCIPAL);
+            }
+            String password = properties.getProperty(PROP_REMOTE_PASSWORD);
+            if (password == null){
+                throw new ConnectorException("connectorserver.properties is missing " + PROP_REMOTE_PASSWORD);
+            }
+
+            String proxyHost = properties.getProperty(PROP_PROXY_HOST);
+            String proxyPort = properties.getProperty(PROP_PROXY_PORT);
+            String proxyPrincipal = properties.getProperty(PROP_PROXY_PRINCIPAL);
+            String proxyPassword = properties.getProperty(PROP_PROXY_PASSWORD);
+
+            RemoteWSFrameworkConnectionInfo.Builder builder = RemoteWSFrameworkConnectionInfo.newBuilder()
+                    .setRemoteURI(URI.create(url)).setPrincipal(principal)
+                    .setPassword(new GuardedString(password.toCharArray()));
+
+            if (proxyHost != null){
+                builder.setProxyHost(proxyHost);
+                if (proxyPort != null){
+                    builder.setProxyPort(Integer.getInteger(proxyPort));
+                }
+                if (proxyPrincipal != null) {
+                    builder.setProxyPrincipal(proxyPrincipal);
+                }
+                if (proxyPassword != null) {
+                    builder.setProxyPassword(
+                            new GuardedString(proxyPassword.toCharArray()));
+                }
+            }
+
+            connectionInfos = CollectionUtil.newList(builder.build());
+
+        } else if (StringUtil.isBlank(portStr)) {
+            throw new ConnectorException("connectorserver.properties is missing " + PROP_PORT);
+        } else {
+            port = Integer.parseInt(portStr);
+            if (keyHash == null) {
+                throw new ConnectorException("connectorserver.properties is missing " + PROP_KEY);
+            }
+        }
+
 
         final ConnectorFrameworkFactory connectorFrameworkFactory = new ConnectorFrameworkFactory();
         connectorFrameworkFactory.initialize(properties);
-        connectorServer.setConnectorFrameworkFactory(connectorFrameworkFactory);
 
+        ClassLoader bundleParentClassLoader = null;
         if (libDirStr != null) {
-            final ClassLoader bundleParentClassLoader = buildLibClassLoader(new File(libDirStr));
+            bundleParentClassLoader = buildLibClassLoader(new File(libDirStr));
             connectorFrameworkFactory
                     .setDefaultConnectorBundleParentClassLoader(bundleParentClassLoader);
-            connectorServer.setBundleParentClassLoader(bundleParentClassLoader);
         }
-        connectorServer.setConnectorBundleURLs(buildBundleURLs(new File(bundleDirStr)));
-        connectorServer.setKeyHash(keyHash);
+        List<URL> bundleUrls = buildBundleURLs(new File(bundleDirStr));
 
-        connectorServer.init();
-        if (useSSLStr != null) {
-            boolean useSSL = Boolean.parseBoolean(useSSLStr);
-            connectorServer.addListener(null, ifAddress, port, useSSL ? new SSLContextConfigurator(
-                    true) : null);
-        } else {
-            connectorServer.addListener(null, ifAddress, port);
+        if (port > 0) {
+            connectorServer = new ConnectorServer();
+            connectorServer.setConnectorFrameworkFactory(connectorFrameworkFactory);
+
+            if (bundleParentClassLoader != null) {
+                connectorServer.setBundleParentClassLoader(bundleParentClassLoader);
+            }
+            connectorServer.setConnectorBundleURLs(bundleUrls);
+            connectorServer.setKeyHash(keyHash);
+
+            connectorServer.init();
+            if (useSSLStr != null) {
+                boolean useSSL = Boolean.parseBoolean(useSSLStr);
+                connectorServer.addListener(null, ifAddress, port, useSSL ? new SSLContextConfigurator(
+                        true) : null);
+            } else {
+                connectorServer.addListener(null, ifAddress, port);
+            }
+        } else if (connectionInfos != null) {
+            connectorFramework = connectorFrameworkFactory.acquire();
+
+            connectorFramework.get().getLocalManager().addConnectorBundle(bundleUrls);
+
+            for (RemoteWSFrameworkConnectionInfo connectionInfo : connectionInfos) {
+                connectorFramework.get().getRemoteManager(connectionInfo);
+                getLog().info("ConnectorAgent connecting to : " + connectionInfo.getRemoteURI());
+            }
         }
     }
 
     public static void stop(String[] args) throws Exception {
-        if (connectorServer == null) {
+        if (connectorServer == null && connectorFramework == null) {
             // Procrun called stop() without calling main().
             // Do not use a logging statement here to avoid initializing logging
             // too early just because a bug in procrun.
@@ -243,13 +319,19 @@ public final class Main {
             Thread.currentThread().setContextClassLoader(Main.class.getClassLoader());
         }
 
-        connectorServer.stop();
-        // Do not set connectorServer to null, because that way the check in
-        // run() fails
-        // and we ensure that the server cannot be started twice in the same
-        // JVM.
-        getLog().info("Connector server stopped");
-        connectorServer.destroy();
+        if (connectorServer != null) {
+            connectorServer.stop();
+            // Do not set connectorServer to null, because that way the check in
+            // run() fails
+            // and we ensure that the server cannot be started twice in the same
+            // JVM.
+            getLog().info("Connector server stopped");
+            connectorServer.destroy();
+            connectorServer = null;
+        } else if (connectorFramework != null) {
+            connectorFramework.release();
+            connectorFramework = null;
+        }
         // LogManager installs a shutdown hook to reset the handlers (which
         // includes
         // closing any files opened by FileHandler-s). Procrun does not call
@@ -332,16 +414,25 @@ public final class Main {
         if (null == connectorServer) {
             loadProperties(IOUtil.loadPropertiesFile("conf/ConnectorServer.properties"));
         }
-        connectorServer.start();
+        if (null != connectorServer) {
+            connectorServer.start();
+        }
     }
 
     public void stop() throws Exception {
-        connectorServer.stop();
+        if (null != connectorServer) {
+            connectorServer.stop();
+        }
     }
 
     public void destroy() {
         try {
-            connectorServer.destroy();
+            if (null != connectorServer) {
+                connectorServer.destroy();
+            }
+            if (null != connectorFramework) {
+                connectorFramework.release();
+            }
         } catch (Exception e) {
             getLog().warn(e, "Failed to destroy ConnectorServer");
         }

@@ -35,10 +35,10 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import static org.identityconnectors.common.security.impl.EncryptorImpl.ALGORITHM;
-import static org.identityconnectors.common.security.impl.EncryptorImpl.FULL_ALGORITHM;
-
 public class ECIESEncryptor implements Encryptor {
+
+    public static final String ALGORITHM = "AES";
+    public static final String FULL_ALGORITHM = "AES/CBC/PKCS5Padding";
 
     private final Key key;
     private final IvParameterSpec iv;

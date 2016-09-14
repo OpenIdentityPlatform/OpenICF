@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 ForgeRock AS. All rights reserved.
+ * Copyright (c) 2015-2016 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -24,15 +24,20 @@
 
 package org.forgerock.openicf.framework.remote.rpc;
 
+import java.io.Closeable;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.forgerock.openicf.common.protobuf.RPCMessages;
 import org.forgerock.openicf.common.protobuf.RPCMessages.ControlRequest;
@@ -52,6 +57,7 @@ import org.forgerock.util.Function;
 import org.forgerock.util.Pair;
 import org.forgerock.util.promise.Promise;
 import org.identityconnectors.common.ConnectorKeyRange;
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.Encryptor;
 import org.identityconnectors.framework.api.ConfigurationProperty;
 import org.identityconnectors.framework.api.ConfigurationPropertyChangeListener;
@@ -64,7 +70,9 @@ import com.google.protobuf.MessageLite;
 public class WebSocketConnectionGroup
         extends
         RemoteConnectionGroup<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>
-        implements AsyncConnectorInfoManager {
+        implements AsyncConnectorInfoManager, Closeable {
+
+    private static final Log logger = Log.getLog(WebSocketConnectionGroup.class);
 
     private long lastActivity = System.currentTimeMillis();
     
@@ -72,6 +80,7 @@ public class WebSocketConnectionGroup
 
     private RemoteOperationContext operationContext = null;
 
+    private final AtomicBoolean isRunning = new AtomicBoolean(Boolean.TRUE);
     private final Set<String> principals = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 
     private final ConcurrentMap<String, ConfigurationPropertyChangeListener> configurationChangeListenerMap =
@@ -88,6 +97,7 @@ public class WebSocketConnectionGroup
                 }
             };
 
+    private boolean receivedConnectorInfo = false;
     private final RemoteConnectorInfoManager delegate = new RemoteConnectorInfoManager();
 
     public WebSocketConnectionGroup(final String remoteSessionId) {
@@ -112,7 +122,24 @@ public class WebSocketConnectionGroup
             if (webSockets.indexOf(entry) == 0) {
                 ControlMessageRequestFactory requestFactory = new ControlMessageRequestFactory();
                 requestFactory.infoLevels.add(InfoLevel.CONNECTOR_INFO);
-                trySubmitRequest(requestFactory);
+                final Function<Boolean, Boolean, RuntimeException> success = new Function<Boolean, Boolean, RuntimeException>() {
+                    @Override
+                    public Boolean apply(Boolean value) throws RuntimeException {
+                        receivedConnectorInfo = value;
+                        return receivedConnectorInfo;
+                    }
+                };
+
+                trySubmitRequest(requestFactory).getPromise().then(success, new Function<RuntimeException, Boolean, RuntimeException>() {
+                    @Override
+                    public Boolean apply(RuntimeException e) throws RuntimeException {
+                        logger.ok("Resending initial 'CONNECTOR_INFO' request", e);
+                        ControlMessageRequestFactory requestFactory = new ControlMessageRequestFactory();
+                        requestFactory.infoLevels.add(InfoLevel.CONNECTOR_INFO);
+                        trySubmitRequest(requestFactory).getPromise().then(success);
+                        return receivedConnectorInfo;
+                    }
+                });
             }
         }
         return operationContext;
@@ -173,6 +200,73 @@ public class WebSocketConnectionGroup
         return encryptor;
     }
 
+    // --- Closeable implementation ---
+
+    protected void doClose(){
+    }
+
+    public boolean isRunning() {
+        return isRunning.get() && delegate.isRunning();
+    }
+
+    public final void close() {
+        if (canCloseNow()) {
+            try {
+                principals.clear();
+                shutdown();
+                final List<Pair<String, WebSocketConnectionHolder>> tmp =
+                        new ArrayList<Pair<String, WebSocketConnectionHolder>>(webSockets);
+                for (Pair<String, WebSocketConnectionHolder> p : tmp) {
+                    p.getSecond().close();
+                }
+                doClose();
+            } catch (Throwable t) {
+                logger.ok(t, "Failed to close {0}", this);
+            }
+            // Notify CloseListeners
+            CloseListener<WebSocketConnectionGroup> closeListener;
+            while ((closeListener = closeListeners.poll()) != null) {
+                invokeCloseListener(closeListener);
+            }
+        }
+    }
+
+    protected boolean canCloseNow() {
+        return isRunning.compareAndSet(Boolean.TRUE, Boolean.FALSE);
+    }
+
+    private final Queue<CloseListener<WebSocketConnectionGroup>> closeListeners =
+            new ConcurrentLinkedQueue<CloseListener<WebSocketConnectionGroup>>();
+
+    public void addCloseListener(CloseListener<WebSocketConnectionGroup> closeListener) {
+        // check if this is still running
+        if (isRunning.get()) {
+            // add close listener
+            closeListeners.add(closeListener);
+            // check the its state again
+            if (!isRunning.get() && closeListeners.remove(closeListener)) {
+                // if this was closed during the method call - notify the
+                // listener
+                invokeCloseListener(closeListener);
+            }
+        } else { // if this is closed - notify the listener
+            invokeCloseListener(closeListener);
+        }
+    }
+
+    public void removeCloseListener(
+            CloseListener<WebSocketConnectionGroup> closeListener) {
+        closeListeners.remove(closeListener);
+    }
+
+    protected void invokeCloseListener(CloseListener<WebSocketConnectionGroup> closeListener) {
+        try {
+            closeListener.onClosed(this);
+        } catch (Exception ignored) {
+            logger.ok(ignored, "CloseListener failed");
+        }
+    }
+
     // --- AsyncConnectorInfoManager implementation ---
 
     public Promise<ConnectorInfo, RuntimeException> findConnectorInfoAsync(final ConnectorKey key) {
@@ -221,10 +315,9 @@ public class WebSocketConnectionGroup
     
     public boolean checkIsActive() {
         boolean operational = isOperational();
-        if (System.currentTimeMillis() - lastActivity > TimeUnit.HOURS.toMillis(1) && !operational) {
-            // 1 hour inactivity -> Shutdown
-            shutdown();
-            webSockets.clear();
+        if (System.currentTimeMillis() - lastActivity > TimeUnit.MINUTES.toMillis(12) && !operational) {
+            // (2 * (Control request interval)) + 2 hour inactivity -> Shutdown
+            close();
         } else {
 
             for (LocalRequest<?, ?, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> local : localRequests
@@ -238,6 +331,9 @@ public class WebSocketConnectionGroup
 
             if (operational) {
                 ControlMessageRequestFactory requestFactory = new ControlMessageRequestFactory();
+                if (!receivedConnectorInfo) {
+                    requestFactory.infoLevels.add(InfoLevel.CONNECTOR_INFO);
+                }
                 trySubmitRequest(requestFactory);
             }
         }
