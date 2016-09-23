@@ -212,6 +212,11 @@ public class LdapConfiguration extends AbstractConfiguration implements Stateful
      */
     private boolean useDNSSRVRecord = false;
 
+    /**
+     * what to do when sync token conflicts with cn=changelog lastChangeNumber
+     */
+    private String resetSyncToken = "never";
+
     // Sync configuration properties.
 
     private String[] baseContextsToSynchronize = { };
@@ -279,6 +284,7 @@ public class LdapConfiguration extends AbstractConfiguration implements Stateful
         checkNoInvalidLdapNames(baseContexts, "baseContexts.noInvalidLdapNames");
         checkReferralsHandling(referralsHandling, "referralsHandling.invalidPolicy");
         checkPasswordHashAlgorithm(passwordHashAlgorithm, "passwordHashAlgorithm.invalidName");
+        checkResetSyncToken(resetSyncToken, "resetSyncToken.invalidPolicy");
 
         checkNotBlank(passwordAttribute, "passwordAttribute.notBlank");
 
@@ -394,6 +400,12 @@ public class LdapConfiguration extends AbstractConfiguration implements Stateful
 
     private void checkPasswordHashAlgorithm(String algo, String errorMessage){
         if ((algo != null) && !algo.matches("(?i:SSHA|SHA|SMD5|MD5|WIN-AD)")){
+            failValidation(errorMessage);
+        }
+    }
+
+    private void checkResetSyncToken(String rule, String errorMessage){
+        if ((rule != null) && !rule.matches("(?i:NEVER|FIRST|LAST)")){
             failValidation(errorMessage);
         }
     }
@@ -639,6 +651,10 @@ public class LdapConfiguration extends AbstractConfiguration implements Stateful
         this.useDNSSRVRecord = useDNSSRVRecord;
     }
 
+    public String getResetSyncToken() {return resetSyncToken;}
+
+    public void setResetSyncToken(String resetSyncToken) {this.resetSyncToken = resetSyncToken;}
+
     // Sync properties getters and setters.
 
     @ConfigurationProperty(operations = { SyncOp.class })
@@ -857,6 +873,7 @@ public class LdapConfiguration extends AbstractConfiguration implements Stateful
         builder.append(vlvSortAttribute);
         builder.append(uidAttribute);
         builder.append(readSchema);
+        builder.append(useDNSSRVRecord);
         // Sync configuration properties.
         for (String baseContextToSynchronize : baseContextsToSynchronize) {
             builder.append(baseContextToSynchronize);
@@ -879,6 +896,7 @@ public class LdapConfiguration extends AbstractConfiguration implements Stateful
         builder.append(passwordAttributeToSynchronize);
         builder.append(passwordDecryptionKey);
         builder.append(passwordDecryptionInitializationVector);
+        builder.append(resetSyncToken);
         // Other state.
         builder.append(accountConfig);
         builder.append(groupConfig);

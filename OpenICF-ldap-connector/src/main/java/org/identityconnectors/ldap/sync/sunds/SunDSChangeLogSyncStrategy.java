@@ -99,6 +99,13 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
      */
     private static final Set<String> LDIF_MODIFY_OPS;
 
+    /**
+     * the policies for the reset sync token
+     */
+    private final static String RESET_SYNC_TOKEN_NEVER = "never";
+    private final static String RESET_SYNC_TOKEN_FIRST = "first";
+    private final static String RESET_SYNC_TOKEN_LAST = "last";
+
     protected final LdapConnection conn;
     private final ObjectClass oclass;
 
@@ -130,16 +137,8 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
         controls.setSearchScope(SearchControls.ONELEVEL_SCOPE);
         controls.setReturningAttributes(new String[] { changeNumberAttr, "targetDN", "changeType", "changes", "newRdn", "deleteOldRdn", "newSuperior", "targetEntryUUID", "targetUniqueID", "changeInitiatorsName" });
 
-        final int[] currentChangeNumber = { getStartChangeNumber(token) };
         final int[] processedChangeNumber = { -1 };
-        
-        if (token != null && log.isWarning()) {
-            if ((Integer) token.getValue() > getChangeLogAttributes().getLastChangeNumber()) {
-                //[OPENICF-402] The current SyncToken should never be greater than the lastChangeNumber in the changelog
-                // We log the issue and let the process go
-                log.warn("The current SyncToken value ({0}) is greater than the lastChangeNumber value ({1})", currentChangeNumber[0], getChangeLogAttributes().getLastChangeNumber());
-            }
-        }
+        final int[] currentChangeNumber = { getStartChangeNumber(token) };
 
         final boolean[] results = new boolean[1];
         do {
@@ -446,9 +445,26 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
     private int getStartChangeNumber(SyncToken lastToken) {
         Integer lastTokenValue = lastToken != null ? (Integer) lastToken.getValue() : null;
         if (lastTokenValue == null) {
-            return getChangeLogAttributes().getFirstChangeNumber();
+            lastTokenValue = getChangeLogAttributes().getFirstChangeNumber();
+        } else {
+            if ((Integer) lastToken.getValue() > getChangeLogAttributes().getLastChangeNumber()) {
+                String resetPolicy = conn.getConfiguration().getResetSyncToken();
+                // The current SyncToken should never be greater than the lastChangeNumber in the changelog
+                // We use the value defined by resetSyncToken to act
+                log.warn("The current SyncToken value ({0}) is greater than the lastChangeNumber value ({1})", (Integer) lastToken.getValue(), getChangeLogAttributes().getLastChangeNumber());
+                if (RESET_SYNC_TOKEN_NEVER.equalsIgnoreCase(resetPolicy)){
+                    // do nothing
+                    lastTokenValue++;
+                } else if (RESET_SYNC_TOKEN_FIRST.equalsIgnoreCase(resetPolicy)){
+                    log.warn("Resetting SyncToken to the firstChangeNumber value ({0})", getChangeLogAttributes().getFirstChangeNumber());
+                    lastTokenValue = getChangeLogAttributes().getFirstChangeNumber();
+                } else if (RESET_SYNC_TOKEN_LAST.equalsIgnoreCase(resetPolicy)){
+                    log.warn("Resetting SyncToken to the lastChangeNumber value ({0})", getChangeLogAttributes().getLastChangeNumber());
+                    lastTokenValue = getChangeLogAttributes().getLastChangeNumber() + 1;
+                }
+            }
         }
-        return lastTokenValue + 1; // Since the token value is the last value.
+        return lastTokenValue;
     }
 
     private Map<String, List<Object>> getAttributeChanges(String changeType, String ldif) {
