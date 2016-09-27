@@ -137,10 +137,10 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
         controls.setSearchScope(SearchControls.ONELEVEL_SCOPE);
         controls.setReturningAttributes(new String[] { changeNumberAttr, "targetDN", "changeType", "changes", "newRdn", "deleteOldRdn", "newSuperior", "targetEntryUUID", "targetUniqueID", "changeInitiatorsName" });
 
-        final int[] processedChangeNumber = { -1 };
-        final int[] currentChangeNumber = { getStartChangeNumber(token) };
-
         final boolean[] results = new boolean[1];
+        final int[] processedChangeNumber = { -1 };
+        final int[] currentChangeNumber = { getStartChangeNumber(token, handler) };
+
         do {
             results[0] = false;
 
@@ -442,7 +442,7 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
         return null;
     }
 
-    private int getStartChangeNumber(SyncToken lastToken) {
+    private int getStartChangeNumber(SyncToken lastToken, final SyncResultsHandler handler) {
         Integer lastTokenValue = lastToken != null ? (Integer) lastToken.getValue() : null;
         if (lastTokenValue == null) {
             lastTokenValue = getChangeLogAttributes().getFirstChangeNumber();
@@ -451,16 +451,19 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
                 String resetPolicy = conn.getConfiguration().getResetSyncToken();
                 // The current SyncToken should never be greater than the lastChangeNumber in the changelog
                 // We use the value defined by resetSyncToken to act
-                log.warn("The current SyncToken value ({0}) is greater than the lastChangeNumber value ({1})", (Integer) lastToken.getValue(), getChangeLogAttributes().getLastChangeNumber());
+                log.info("The current SyncToken value ({0}) is greater than the lastChangeNumber value ({1})", (Integer) lastToken.getValue(), getChangeLogAttributes().getLastChangeNumber());
                 if (RESET_SYNC_TOKEN_NEVER.equalsIgnoreCase(resetPolicy)){
                     // do nothing
                     lastTokenValue++;
                 } else if (RESET_SYNC_TOKEN_FIRST.equalsIgnoreCase(resetPolicy)){
-                    log.warn("Resetting SyncToken to the firstChangeNumber value ({0})", getChangeLogAttributes().getFirstChangeNumber());
+                    log.info("Resetting SyncToken to the firstChangeNumber value ({0})", getChangeLogAttributes().getFirstChangeNumber());
                     lastTokenValue = getChangeLogAttributes().getFirstChangeNumber();
                 } else if (RESET_SYNC_TOKEN_LAST.equalsIgnoreCase(resetPolicy)){
-                    log.warn("Resetting SyncToken to the lastChangeNumber value ({0})", getChangeLogAttributes().getLastChangeNumber());
-                    lastTokenValue = getChangeLogAttributes().getLastChangeNumber() + 1;
+                    log.info("Resetting SyncToken to the lastChangeNumber value ({0})", getChangeLogAttributes().getLastChangeNumber());
+                    lastTokenValue = getChangeLogAttributes().getLastChangeNumber();
+                    // Need to force the update of the token otherwise it will never be updated
+                    ((SyncTokenResultsHandler)handler).handleResult(new SyncToken(lastTokenValue));
+                    lastTokenValue++;
                 }
             }
         }
