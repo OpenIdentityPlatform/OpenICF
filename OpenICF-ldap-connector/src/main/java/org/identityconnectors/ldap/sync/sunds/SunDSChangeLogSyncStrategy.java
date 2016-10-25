@@ -446,8 +446,7 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
         Integer lastTokenValue = lastToken != null ? (Integer) lastToken.getValue() : null;
         if (lastTokenValue == null) {
             lastTokenValue = getChangeLogAttributes().getFirstChangeNumber();
-        } else {
-            if ((Integer) lastToken.getValue() > getChangeLogAttributes().getLastChangeNumber()) {
+        } else if ((Integer) lastToken.getValue() > getChangeLogAttributes().getLastChangeNumber()) {
                 String resetPolicy = conn.getConfiguration().getResetSyncToken();
                 // The current SyncToken should never be greater than the lastChangeNumber in the changelog
                 // We use the value defined by resetSyncToken to act
@@ -465,7 +464,8 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
                     ((SyncTokenResultsHandler)handler).handleResult(new SyncToken(lastTokenValue));
                     lastTokenValue++;
                 }
-            }
+        } else {
+                lastTokenValue++;
         }
         return lastTokenValue;
     }
