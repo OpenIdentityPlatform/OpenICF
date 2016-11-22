@@ -23,7 +23,7 @@
     </parent>
     <artifactId>kerberos-connector</artifactId>
     <groupId>org.forgerock.openicf.connectors</groupId>
-    <version>1.4.1.0-SNAPSHOT</version>
+    <version>1.4.1.0</version>
     <packaging>bundle</packaging>
     <description>Kerberos connector used to connect to kerberos systems via ssh</description>
     <properties>
@@ -44,7 +44,7 @@
         <connection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/kerberos-connector.git</connection>
         <developerConnection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/kerberos-connector.git</developerConnection>
         <url>https://stash.forgerock.org/projects/OPENICF/repos/kerberos-connector/browse</url>
-      <tag>HEAD</tag>
+      <tag>1.4.1.0</tag>
   </scm>
     <repositories>
         <repository>
