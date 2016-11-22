@@ -86,7 +86,7 @@ expect(
                     throw new UnknownUidException(uid)
                 },
                 timeout(500) {
-                    throw new ConnectorException("Delete of {0} failed", uid)
+                    throw new ConnectorException("Delete of $uid failed")
                 }
         ]
 )
