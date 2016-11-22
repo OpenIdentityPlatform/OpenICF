@@ -23,7 +23,7 @@
     </parent>
     <artifactId>kerberos-connector</artifactId>
     <groupId>org.forgerock.openicf.connectors</groupId>
-    <version>1.4.0.1-SNAPSHOT</version>
+    <version>1.4.1.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <description>Kerberos connector used to connect to kerberos systems via ssh</description>
     <properties>
@@ -68,12 +68,12 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>ssh-connector</artifactId>
-            <version>1.4.0.0</version>
+            <version>1.4.1.0</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>groovy-connector</artifactId>
-            <version>1.4.2.0</version>
+            <version>1.4.3.0</version>
         </dependency>
         <dependency>
             <groupId>org.forgerock.openicf.framework</groupId>
@@ -83,7 +83,7 @@
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-all</artifactId>
-            <version>2.2.2</version>
+            <version>2.4.7</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
