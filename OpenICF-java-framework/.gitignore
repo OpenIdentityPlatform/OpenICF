@@ -124,3 +124,5 @@ local.properties
 # Created by .ignore support plugin (hsz.mobi)
 
 target.db
+
+test-output
