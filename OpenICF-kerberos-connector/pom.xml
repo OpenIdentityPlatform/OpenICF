@@ -19,7 +19,7 @@
     <parent>
         <groupId>org.forgerock.openicf.connectors</groupId>
         <artifactId>connectors-parent</artifactId>
-        <version>1.5.0.0</version>
+        <version>1.5.2.0</version>
     </parent>
     <artifactId>kerberos-connector</artifactId>
     <groupId>org.forgerock.openicf.connectors</groupId>
@@ -40,29 +40,7 @@
         </openicf.osgi.import.defaults>
         <openicf.osgi.embed />
     </properties>
-    <scm>
-        <connection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/kerberos-connector.git</connection>
-        <developerConnection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/kerberos-connector.git</developerConnection>
-        <url>https://stash.forgerock.org/projects/OPENICF/repos/kerberos-connector/browse</url>
-      <tag>1.4.1.0</tag>
-  </scm>
     <repositories>
-        <repository>
-            <id>forgerock-staging-repository</id>
-            <name>ForgeRock Release Repository</name>
-            <url>http://maven.forgerock.org/repo/releases</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>forgerock-snapshots-repository</id>
-            <name>ForgeRock Snapshot Repository</name>
-            <url>http://maven.forgerock.org/repo/snapshots</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-        </repository>
     </repositories>
     <dependencies>
         <dependency>
@@ -78,7 +56,7 @@
         <dependency>
             <groupId>org.forgerock.openicf.framework</groupId>
             <artifactId>connector-framework</artifactId>
-            <version>1.5.0.0</version>
+            <version>1.5.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
@@ -142,7 +120,7 @@
             <plugin>
                 <groupId>org.forgerock.maven.plugins</groupId>
                 <artifactId>openicf-maven-plugin</artifactId>
-                <version>1.2.0</version>
+                <version>1.5.0</version>
                 <executions>
                     <execution>
                         <goals>
