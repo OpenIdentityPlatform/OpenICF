@@ -27,7 +27,7 @@
     <parent>
         <groupId>org.forgerock.openicf.connectors</groupId>
         <artifactId>connectors-parent</artifactId>
-        <version>1.5.0.0</version>
+        <version>1.5.2.0</version>
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>xml-connector</artifactId>
@@ -35,47 +35,16 @@
     <packaging>bundle</packaging>
     <name>Simulated XML Connector</name>
     <description>Connector can simulate almost any kind of resource.</description>
-    <url>http://openicf.forgerock.org/connectors/xml-connector</url>
-    <issueManagement>
-        <system>jira</system>
-        <url>https://bugster.forgerock.org/jira/browse/OPENICF/component/10181</url>
-    </issueManagement>
-    <ciManagement>
-        <system>jenkins</system>
-        <url>https://ci.forgerock.org/view/OpenICF/job/OpenICF - xml-connector - postcommit/</url>
-    </ciManagement>
-    <scm>
-        <connection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/xml-connector.git</connection>
-        <developerConnection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/xml-connector.git</developerConnection>
-        <url>http://stash.forgerock.org/projects/OPENICF/repos/xml-connector/browse/</url>
-      <tag>1.1.0.3</tag>
-  </scm>
     <properties>
         <openicf.osgi.embed>jaxen,saxon9he,xsom,relaxngDatatype,xml-apis,xercesImpl,stax-api</openicf.osgi.embed>
         <openicf.osgi.import.before.defaults>!javax.swing*,</openicf.osgi.import.before.defaults>
         <openicf.osgi.failok>true</openicf.osgi.failok>
         <connectorPackage>org.forgerock.openicf.connectors.xml</connectorPackage>
         <connectorClass>XMLConnector</connectorClass>
-        <framework.compatibilityVersion>1.1</framework.compatibilityVersion>
+        <framework.compatibilityVersion>1.5</framework.compatibilityVersion>
         <framework.releaseVersion>2.0</framework.releaseVersion>
     </properties>
     <repositories>
-        <repository>
-            <id>forgerock-staging-repository</id>
-            <name>ForgeRock Release Repository</name>
-            <url>http://maven.forgerock.org/repo/releases</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>forgerock-snapshots-repository</id>
-            <name>ForgeRock Snapshot Repository</name>
-            <url>http://maven.forgerock.org/repo/snapshots</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-        </repository>
         <repository>
             <id>JavaNet</id>
             <name>JavaNet Repository</name>
