@@ -44,8 +44,8 @@ import javax.naming.ldap.SortResponseControl;
 import org.forgerock.opendj.ldap.ByteString;
 import org.forgerock.opendj.ldap.controls.VirtualListViewRequestControl;
 import org.forgerock.opendj.ldap.controls.VirtualListViewResponseControl;
-import org.forgerock.opendj.asn1.ASN1;
-import org.forgerock.opendj.asn1.ASN1Reader;
+import org.forgerock.opendj.io.ASN1;
+import org.forgerock.opendj.io.ASN1Reader;
 
 import org.identityconnectors.common.logging.Log;
 
@@ -107,7 +107,7 @@ public class VlvIndexSearchStrategy extends LdapSearchStrategy {
 
             int afterCount = blockSize - 1;
 
-            VirtualListViewRequestControl vlvreq = VirtualListViewRequestControl.newOffsetControl(Control.CRITICAL, index, lastListSize, 0, afterCount, ByteString.valueOf(cookie));
+            VirtualListViewRequestControl vlvreq = VirtualListViewRequestControl.newOffsetControl(Control.CRITICAL, index, lastListSize, 0, afterCount, ByteString.valueOfBytes(cookie));
             BasicControl vlvControl = new BasicControl(VirtualListViewRequestControl.OID, Control.CRITICAL, vlvreq.getValue().toByteArray());
 
             getLog().ok("New search: target = {0}, afterCount = {1}", index, afterCount);

@@ -236,10 +236,10 @@ public abstract class LdapConnectorTestBase {
             config.setServerRoot(root);
             config.setConfigFile(configFile);
             config.setSchemaDirectory(schemaDir);
-            config.setLockDirectory(lockDir);
+            //config.setLockDirectory(lockDir);
             EmbeddedUtils.startServer(config);
-        } catch (ConfigException e) {
-            throw (IOException) new IOException(e.getMessage()).initCause(e);
+//        } catch (ConfigException e) {
+//            throw (IOException) new IOException(e.getMessage()).initCause(e);
         } catch (InitializationException e) {
             throw (IOException) new IOException(e.getMessage()).initCause(e);
         }
