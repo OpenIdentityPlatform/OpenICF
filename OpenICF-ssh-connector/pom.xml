@@ -30,7 +30,7 @@
     <parent>
         <groupId>org.forgerock.openicf.connectors</groupId>
         <artifactId>connectors-parent</artifactId>
-        <version>1.5.0.0</version>
+        <version>1.5.2.0</version>
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>ssh-connector</artifactId>
@@ -38,46 +38,15 @@
     <packaging>bundle</packaging>
     <name>SSH Connector</name>
     <description>Generic SSH connector</description>
-    <url>https://openicf.forgerock.org/connectors/ssh-connector</url>
-    <issueManagement>
-        <system>jira</system>
-        <url>https://bugster.forgerock.org/jira/browse/OPENICF/component/11055</url>
-    </issueManagement>
-    <ciManagement>
-        <system>jenkins</system>
-        <url>https://ci.forgerock.org/view/OpenICF/job/OpenICF - ssh-connector - postcommit/</url>
-    </ciManagement>
-    <scm>
-        <connection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/ssh-connector.git</connection>
-        <developerConnection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/ssh-connector.git</developerConnection>
-        <url>http://stash.forgerock.org/projects/OPENICF/repos/ssh-connector/browse/</url>
-      <tag>1.4.1.0</tag>
-  </scm>
     <properties>
         <maven.compiler.target>1.7</maven.compiler.target>
         <maven.compiler.source>1.7</maven.compiler.source>
         <connectorPackage>org.forgerock.openicf.connectors.ssh</connectorPackage>
         <connectorClass>SSHConnector</connectorClass>
-        <framework.compatibilityVersion>1.4</framework.compatibilityVersion>
-        <framework.releaseVersion>1.0</framework.releaseVersion>
+        <framework.compatibilityVersion>1.5</framework.compatibilityVersion>
+        <framework.releaseVersion>2.0</framework.releaseVersion>
     </properties>
     <repositories>
-        <repository>
-            <id>forgerock-staging-repository</id>
-            <name>ForgeRock Release Repository</name>
-            <url>http://maven.forgerock.org/repo/releases</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>forgerock-snapshots-repository</id>
-            <name>ForgeRock Snapshot Repository</name>
-            <url>http://maven.forgerock.org/repo/snapshots</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-        </repository>
     </repositories>
     <dependencies>
          <dependency>
