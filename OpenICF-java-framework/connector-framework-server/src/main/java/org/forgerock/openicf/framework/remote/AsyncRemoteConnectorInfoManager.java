@@ -27,8 +27,8 @@ package org.forgerock.openicf.framework.remote;
 import java.io.Closeable;
 import java.io.IOException;
 
-import org.forgerock.guava.common.base.Function;
-import org.forgerock.guava.common.collect.FluentIterable;
+import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
 import org.forgerock.openicf.common.rpc.RequestDistributor;
 import org.forgerock.openicf.framework.DelegatingAsyncConnectorInfoManager;
 import org.forgerock.openicf.framework.async.AsyncConnectorInfoManager;

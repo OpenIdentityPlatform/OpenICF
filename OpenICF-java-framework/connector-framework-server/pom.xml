@@ -64,11 +64,6 @@
             <groupId>org.forgerock.commons</groupId>
             <artifactId>forgerock-util</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.forgerock.commons.guava</groupId>
-            <artifactId>forgerock-guava-collect</artifactId>
-            <version>18.0.4</version>
-        </dependency>
 
        <dependency>
             <groupId>org.glassfish.grizzly</groupId>
@@ -92,6 +87,11 @@
             <version>1.46</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        
         <dependency>
             <groupId>org.ops4j.pax.swissbox</groupId>
             <artifactId>pax-swissbox-extender</artifactId>
