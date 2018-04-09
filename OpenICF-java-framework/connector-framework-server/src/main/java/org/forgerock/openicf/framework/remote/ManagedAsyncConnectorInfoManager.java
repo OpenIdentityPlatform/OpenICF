@@ -35,8 +35,8 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.forgerock.guava.common.base.Predicate;
-import org.forgerock.guava.common.collect.FluentIterable;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import org.forgerock.openicf.framework.async.AsyncConnectorInfoManager;
 import org.forgerock.openicf.framework.async.CloseableAsyncConnectorInfoManager;
 import org.forgerock.util.promise.Promise;
