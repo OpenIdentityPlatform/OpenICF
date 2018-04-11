@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.forgerock</groupId>
+        <artifactId>forgerock-parent</artifactId>
+        <version>2.0.6</version>
+    </parent>
+    <groupId>org.openidentityplatform</groupId>
+    <artifactId>openicf</artifactId>
+    <version>1.5.0</version>
+    <packaging>pom</packaging>
+    <name>OpenICF</name>
+    <description>
+        The Open Identity Connectors Framework and Toolkit (OpenICF) is built to help drive development of Connectors.
+        Connectors provide a consistent generic layer between applications and target resources.
+    </description>
+    <inceptionYear>2018</inceptionYear>
+    <url>https://github.com/OpenIdentityPlatform/OpenICF</url>
+    <licenses>
+        <license>
+            <name>CDDL-1.0</name>
+            <url>http://opensource.org/licenses/CDDL-1.0</url>
+            <comments>Common Development and Distribution License (CDDL) 1.0.
+                This license applies to OpenICF source code as indicated in the
+                sources.
+            </comments>
+        </license>
+        <license>
+            <name>CC BY-NC-ND 3.0</name>
+            <url>http://creativecommons.org/licenses/by-nc-nd/3.0/</url>
+            <comments>Creative Commons Attribution-NonCommercial-NoDerivs 3.0
+                Unported. This license applies to the site content, and to the
+                documentation as indicated in the documentation source code.
+            </comments>
+        </license>
+    </licenses>
+    <modules>
+        <module>OpenICF-dbcommon</module>
+        <module>OpenICF-maven-plugin</module>
+        <module>OpenICF-java-framework</module>
+        <module>OpenICF-csvfile-connector</module>
+        <module>OpenICF-databasetable-connector</module>
+        <module>OpenICF-groovy-connector</module>
+        <module>OpenICF-kerberos-connector</module>
+        <module>OpenICF-ldap-connector</module>
+        <module>OpenICF-ssh-connector</module>
+        <module>OpenICF-xml-connector</module>
+    </modules>
+
+    <profiles>
+    </profiles>
+
+    <dependencyManagement>
+        <dependencies>
+        </dependencies>
+    </dependencyManagement>
+    <build>
+        <pluginManagement>
+            <plugins>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+        </plugins>
+    </build>
+    <reporting>
+        <plugins>
+        </plugins>
+    </reporting>
+</project>
