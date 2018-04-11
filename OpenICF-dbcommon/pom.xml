@@ -28,6 +28,7 @@
         <groupId>org.forgerock.openicf.framework</groupId>
         <artifactId>framework</artifactId>
         <version>1.5.2.0</version>
+        <relativePath>../OpenICF-java-framework</relativePath>
     </parent>
     <groupId>org.forgerock.openicf.connectors.misc</groupId>
     <artifactId>dbcommon</artifactId>
