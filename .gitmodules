@@ -28,3 +28,6 @@
 [submodule "OpenICF-ssh-connector"]
 	path = OpenICF-ssh-connector
 	url = https://github.com/OpenIdentityPlatform/OpenICF-ssh-connector
+[submodule "OpenDJ"]
+	path = OpenDJ
+	url = https://github.com/OpenIdentityPlatform/OpenDJ
