@@ -31,6 +31,7 @@
         <groupId>org.forgerock.openicf.connectors</groupId>
         <artifactId>connectors-parent</artifactId>
         <version>1.5.2.0</version>
+        <relativePath>../OpenICF-java-framework/bundles-parent</relativePath>
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>ssh-connector</artifactId>
