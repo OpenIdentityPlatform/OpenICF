@@ -75,4 +75,4 @@ install:
   - mvn -q -B -DskipTests -Dmaven.javadoc.skip=true install -f OpenDJ/forgerock-parent
   - mvn -q -B -DskipTests -Dmaven.javadoc.skip=true install -f OpenDJ -P\!distribution
 script:
-  - mvn -B install 
+  - mvn -q -B clean install 
