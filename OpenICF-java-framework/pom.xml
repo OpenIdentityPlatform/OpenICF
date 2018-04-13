@@ -184,7 +184,7 @@
                 <module>connector-framework-protobuf</module>
                 <module>connector-framework-rpc</module>
                 <module>connector-framework-server</module>
-                <module>connector-server-jetty</module>
+<!--                 <module>connector-server-jetty</module> -->
                 <module>connector-server-grizzly</module>
             </modules>
             <activation>
