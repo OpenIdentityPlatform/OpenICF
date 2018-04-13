@@ -75,6 +75,10 @@ install:
   - mvn -q -B -DskipTests -Dmaven.javadoc.skip=true install -f OpenDJ/forgerock-parent
   - mvn -q -B -DskipTests -Dmaven.javadoc.skip=true install -f OpenDJ -P\!distribution
 script:
-  - travis_wait 30 mvn -q -B clean install >> build.log
+  - bash -c "while true; do tail -100 build.log; sleep 60; done" &
+  - PING_LOOP_PID=$!
+  - mvn -B clean install >> build.log 2>&1
+  - kill $PING_LOOP_PID
+  - tail -1024 build.log
 after_failure:
   - tail -8192 build.log
