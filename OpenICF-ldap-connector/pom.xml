@@ -125,6 +125,7 @@
                         </goals>
                         <phase>process-resources</phase>
                         <configuration>
+                        		<minPortNumber>60000</minPortNumber>
                             <portNames>
                                 <portName>opendj.port</portName>
                             </portNames>
