@@ -302,6 +302,7 @@
                         </goals>
                         <phase>process-resources</phase>
                         <configuration>
+                        		<minPortNumber>60000</minPortNumber>
                             <portNames>
                                 <portName>jetty.http.port</portName>
                             </portNames>
