@@ -179,7 +179,7 @@ public class ClientRemoteConnectorInfoManager extends
                                     "Connection is closed before WebSocket is established"));
                         }
                         // Immediately try to reconnect
-                        if (System.currentTimeMillis() - lastConnectithenOnException.get() > 30000) {
+                        if (isRunning.get() && System.currentTimeMillis() - lastConnectithenOnException.get() > 30000) {
                             // Try reconnect only if the last error is older
                             // then 30 sec
                             logger.ok("Try attempt to reconnect after connection is closed");
