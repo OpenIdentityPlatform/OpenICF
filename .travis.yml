@@ -76,11 +76,11 @@ install:
   - mvn -q -B -DskipTests -Dmaven.javadoc.skip=true install -f OpenDJ/forgerock-parent
   - mvn -q -B -DskipTests -Dmaven.javadoc.skip=true install -f OpenDJ -P\!distribution
 script:
-  - #bash -c "while true; do tail -1024 build.log; sleep 60; done" &
-  - #PING_LOOP_PID=$!
-  - #mvn -B clean install >> build.log 2>&1
-  - #kill $PING_LOOP_PID
-  - #tail -1024 build.log
-  - mvn -B clean install
+  - bash -c "while true; do tail -256 build.log; sleep 60; done" &
+  - PING_LOOP_PID=$!
+  - mvn -B clean install >> build.log 2>&1
+  - kill $PING_LOOP_PID
+  - tail -1024 build.log
+  - #mvn -B clean install
 after_failure:
-  - #tail -8192 build.log
+  - tail -8192 build.log
