@@ -172,6 +172,12 @@ public class ClientRemoteConnectorInfoManager extends
                 conn.addCloseListener(new CloseListener() {
                     public void onClosed(Closeable closeable, ICloseType type) throws IOException {
                         logger.ok("DEBUG = Connection Closed {0}", type);
+                        
+                        if (availableConnectionPermitCount.get()<1) {
+                        		logger.ok("Destroy onClosed. Remaining permits: {0}", availableConnectionPermitCount.get());
+                        		return;
+                        }
+                        
                         tryReleaseConnectionPermit();
 
                         if (!socket.connectPromise.isDone()) {
