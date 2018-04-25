@@ -91,6 +91,7 @@
                 <include>ch.qos.logback:*</include>
                 <include>org.codehaus.groovy:groovy-all</include>
                 <include>org.forgerock.commons.guava:*</include>
+                <include>com.google.guava:*</include>
             </includes>
         </dependencySet>
     </dependencySets>

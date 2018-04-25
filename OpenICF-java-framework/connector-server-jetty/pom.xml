@@ -41,7 +41,7 @@
         <!-- maven-compiler-plugin -->
         <maven.compiler.target>1.7</maven.compiler.target>
         <maven.compiler.source>1.7</maven.compiler.source>
-        <jetty.version>9.2.17.v20160517</jetty.version>
+        <jetty.version>9.2.24.v20180105</jetty.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 

@@ -123,22 +123,24 @@ public abstract class AsyncConnectorInfoManagerTestBase<T extends AsyncConnector
 
     protected ReferenceCountedObject<ConnectorFramework>.Reference connectorFramework = null;
 
+    static int fromPort=64000;
     public static int findFreePort() {
-        ServerSocket socket = null;
-        try {
-            socket = new ServerSocket(0);
-            return socket.getLocalPort();
-        } catch (IOException e) {
-            // IGNORE
-        } finally {
-            if (null != socket)
-                try {
-                    socket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-        }
-        return -1;
+    		while (true) {
+	        ServerSocket socket = null;
+	        try {
+	            socket = new ServerSocket(fromPort++);
+	            return socket.getLocalPort();
+	        } catch (IOException e) {
+	           continue;
+	        } finally {
+	            if (null != socket)
+	                try {
+	                    socket.close();
+	                } catch (IOException e) {
+	                    e.printStackTrace();
+	                }
+	        }
+    		}
     }
 
     public static RemoteWSFrameworkConnectionInfo buildRemoteWSFrameworkConnectionInfo(
