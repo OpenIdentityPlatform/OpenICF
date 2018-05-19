@@ -42,7 +42,6 @@
         <connectorClass>LdapConnector</connectorClass>
         <framework.compatibilityVersion>1.5</framework.compatibilityVersion>
         <framework.releaseVersion>2.0</framework.releaseVersion>
-        <opendj>4.1.7-SNAPSHOT</opendj>
     </properties>
     <dependencies>
         <dependency>
@@ -52,13 +51,11 @@
         <dependency>
             <groupId>org.forgerock.opendj</groupId>
             <artifactId>opendj-core</artifactId>
-            <version>${opendj}</version>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>org.forgerock.opendj</groupId>
             <artifactId>opendj-server-legacy</artifactId>
-            <version>${opendj}</version>
             <type>jar</type>
         </dependency>
         <!-- Test Dependencies -->
@@ -80,7 +77,6 @@
         <dependency>
             <groupId>org.forgerock.opendj</groupId>
             <artifactId>opendj-server</artifactId>
-            <version>${opendj}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
