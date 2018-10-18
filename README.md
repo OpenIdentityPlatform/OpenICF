@@ -56,6 +56,7 @@ openicf/bin/ConnectorServer.sh /run
 ```
 
 ## Support and Mailing List Information
+* OpenICF Community Wiki: https://github.com/OpenIdentityPlatform/OpenICF/wiki
 * OpenIDM Community Mailing List: open-identity-platform-openidm@googlegroups.com
 * OpenIDM Community Archive: https://groups.google.com/d/forum/open-identity-platform-openidm
 * OpenIDM Community on Gitter: https://gitter.im/OpenIdentityPlatform/OpenIDM
