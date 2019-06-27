@@ -18,7 +18,7 @@
     <inceptionYear>2018</inceptionYear>
     <url>https://github.com/OpenIdentityPlatform/OpenICF</url>
     <properties>
-    		<opendj>4.1.8</opendj>
+    		<opendj>4.4.2-SNAPSHOT</opendj>
     	</properties>
     <licenses>
         <license>
@@ -72,7 +72,7 @@
 	            <groupId>org.forgerock.opendj</groupId>
 	            <artifactId>opendj-server</artifactId>
 	            <version>${opendj}</version>
-	        </dependency>        		
+	        </dependency>
         </dependencies>
     </dependencyManagement>
     <build>
