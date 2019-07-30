@@ -51,8 +51,6 @@ matrix:
       -   #docker build ./openicf-distribution/target -t $DOCKER_USERNAME/openicf -t $DOCKER_USERNAME/openicf:$git_version
       -   #docker push $DOCKER_USERNAME/openicf:$git_version
       -   #docker push $DOCKER_USERNAME/openicf
-  - os: linux
-    jdk: oraclejdk8
   - os: osx
     osx_image: xcode9.1
   allow_failures:
