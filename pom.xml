@@ -18,7 +18,7 @@
     <inceptionYear>2018</inceptionYear>
     <url>https://github.com/OpenIdentityPlatform/OpenICF</url>
     <properties>
-    		<opendj>4.4.3-SNAPSHOT</opendj>
+    		<opendj>4.4.4-SNAPSHOT</opendj>
     	</properties>
     <licenses>
         <license>
