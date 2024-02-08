@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/*
+ * The contents of this file are subject to the terms of the Common Development and
+ * Distribution License (the License). You may not use this file except in compliance
+ * with the License.
+ *
+ * You can obtain a copy of the License at legal/CDDLv1.0.txt. See the License for
+ * the specific language governing permission and limitations under the License.
+ *
+ * When distributing Covered Software, include this CDDL Header Notice in each file
+ * and include the License file at legal/CDDLv1.0.txt. If applicable, add the following
+ * below the CDDL Header, with the fields enclosed by brackets [] replaced by your
+ * own identifying information: "Portions copyright [year] [name of copyright owner]".
+ *
+ * Copyright 2011-2016 ForgeRock AS.
+ */
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.forgerock.openicf.connectors</groupId>
+        <artifactId>connectors-parent</artifactId>
+        <version>1.5.2.0</version>
+        <relativePath>../OpenICF-java-framework/bundles-parent</relativePath>
+    </parent>
+    <groupId>org.forgerock.openicf.connectors</groupId>
+    <artifactId>csvfile-connector</artifactId>
+    <version>1.5.1.4</version>
+    <packaging>bundle</packaging>
+    <name>CSV File Connector</name>
+    <description>Connector for CSV File</description>
+    <properties>
+        <connectorPackage>org.forgerock.openicf.csvfile</connectorPackage>
+        <connectorClass>CSVFileConnector</connectorClass>
+        <framework.compatibilityVersion>1.5</framework.compatibilityVersion>
+        <framework.releaseVersion>2.0</framework.releaseVersion>
+    </properties>
+    <repositories>
+        <repository>
+            <id>forgerock-staging-repository</id>
+            <name>ForgeRock Release Repository</name>
+            <url>http://maven.forgerock.org/repo/releases</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>forgerock-snapshots-repository</id>
+            <name>ForgeRock Snapshot Repository</name>
+            <url>http://maven.forgerock.org/repo/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+    </repositories>
+    <dependencies>
+        <dependency>
+            <groupId>org.forgerock.openicf.framework</groupId>
+            <artifactId>connector-framework</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.supercsv</groupId>
+            <artifactId>super-csv</artifactId>
+            <version>2.3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.5</version>
+        </dependency>
+
+        <!-- Test Dependencies -->
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <scope>test</scope>
+        </dependency>  
+        <dependency>
+            <groupId>org.forgerock.openicf.framework</groupId>
+            <artifactId>connector-framework-internal</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.forgerock.openicf.framework</groupId>
+            <artifactId>connector-test-common</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+            </plugin>
+            <plugin>
+                <groupId>org.forgerock.maven.plugins</groupId>
+                <artifactId>openicf-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>reduce-pom</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+						<reuseForks>false</reuseForks>
+						<forkCount>1</forkCount>
+                        <shutdown>kill</shutdown>
+                        <forkedProcessTimeoutInSeconds>300</forkedProcessTimeoutInSeconds>
+                    </configuration>
+                </plugin>
+        </plugins>
+    </build>
+</project>
