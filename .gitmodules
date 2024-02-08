@@ -1,6 +1,3 @@
-[submodule "OpenICF-csvfile-connector"]
-	path = OpenICF-csvfile-connector
-	url = https://github.com/OpenIdentityPlatform/OpenICF-csvfile-connector
 [submodule "OpenICF-databasetable-connector"]
 	path = OpenICF-databasetable-connector
 	url = https://github.com/OpenIdentityPlatform/OpenICF-databasetable-connector
