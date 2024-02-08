@@ -1,6 +1,3 @@
-[submodule "OpenICF-kerberos-connector"]
-	path = OpenICF-kerberos-connector
-	url = https://github.com/OpenIdentityPlatform/OpenICF-kerberos-connector
 [submodule "OpenICF-dbcommon"]
 	path = OpenICF-dbcommon
 	url = https://github.com/OpenIdentityPlatform/OpenICF-dbcommon
