@@ -1,6 +1,3 @@
-[submodule "OpenICF-ldap-connector"]
-	path = OpenICF-ldap-connector
-	url = https://github.com/OpenIdentityPlatform/OpenICF-ldap-connector
 [submodule "OpenICF-groovy-connector"]
 	path = OpenICF-groovy-connector
 	url = https://github.com/OpenIdentityPlatform/OpenICF-groovy-connector
