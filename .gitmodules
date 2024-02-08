@@ -1,6 +1,3 @@
-[submodule "OpenICF-java-framework"]
-	path = OpenICF-java-framework
-	url = https://github.com/OpenIdentityPlatform/OpenICF-java-framework
 [submodule "OpenICF-maven-plugin"]
 	path = OpenICF-maven-plugin
 	url = https://github.com/OpenIdentityPlatform/OpenICF-maven-plugin.git
