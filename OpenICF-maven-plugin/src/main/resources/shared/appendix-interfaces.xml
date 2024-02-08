@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ! CCPL HEADER START
+  !
+  ! This work is licensed under the Creative Commons
+  ! Attribution-NonCommercial-NoDerivs 3.0 Unported License.
+  ! To view a copy of this license, visit
+  ! http://creativecommons.org/licenses/by-nc-nd/3.0/
+  ! or send a letter to Creative Commons, 444 Castro Street,
+  ! Suite 900, Mountain View, California, 94041, USA.
+  !
+  ! You can also obtain a copy of the license at
+  ! legal-notices/CC-BY-NC-ND.txt.
+  ! See the License for the specific language governing permissions
+  ! and limitations under the License.
+  !
+  ! If applicable, add the following below this CCPL HEADER, with the fields
+  ! enclosed by brackets "[]" replaced with your own identifying information:
+  !      Portions Copyright [yyyy] [name of copyright owner]
+  !
+  ! CCPL HEADER END
+  !
+  !      Copyright 2013-2015 ForgeRock AS
+  !
+-->
+<appendix xml:id='appendix-interfaces'
+ xmlns='http://docbook.org/ns/docbook'
+ version='5.0' xml:lang='en'
+ xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+ xsi:schemaLocation='http://docbook.org/ns/docbook
+ http://docbook.org/xml/5.0/xsd/docbook.xsd'>
+
+ <title>OpenICF Interfaces</title>
+
+ <para>
+  This chapter describes all of the interfaces supported by the OpenICF
+  framework, along with notes about their implementation. Specific connectors
+  may support only a subset of these interfaces.
+ </para>
+
+ <section xml:id="interface-attributeNormalizer">
+  <title>AttributeNormalizer</title>
+  <para>
+   Normalize attributes to ensure consistent filtering.
+  </para>
+ </section>
+
+ <section xml:id="interface-AuthenticationApiOp">
+  <title>Authenticate</title>
+  <para>
+   Provides simple authentication with two parameters, presumed to be a user
+   name and password. If the connector does not implement the AuthenticateOp
+   interface it can not be used in OpenIDM to provide pass-through
+   authentication.
+  </para>
+ </section>
+
+ <section xml:id="interface-BatchApiOp">
+  <title>Batch</title>
+  <para>
+   Execute a series of operations in a single request. If a resource does not support batch operations, the
+   connector will not implement the batch operation interface. The OpenICF framework will still support batched 
+   requests but the operations will be executed iteratively through the connector.
+  </para>
+ </section>
+
+ <section xml:id="interface-ConnectorEventSubscriptionApiOp">
+  <title>Connector Event</title>
+  <para>
+   Subscribe for notification of any specified event on the target resource. This operation can be used in the context
+   of IoT device reports, to receive notification of events such as low battery signals, inactive devices, and so on.
+  </para>
+ </section>
+
+ <section xml:id="interface-CreateApiOp">
+  <title>Create</title>
+  <para>
+   Create an object and return its uid.
+  </para>
+ </section>
+
+ <section xml:id="interface-DeleteApiOp">
+  <title>Delete</title>
+  <para>
+   Delete an object by its uid.
+  </para>
+ </section>
+
+ <section xml:id="interface-GetApiOp">
+  <title>Get</title>
+  <para>
+   Get an object by its uid.
+  </para>
+ </section>
+
+ <section xml:id="interface-PoolableConnector">
+  <title>PoolableConnector</title>
+  <para>
+   Use pools of target resources.
+  </para>
+ </section>
+
+ <section xml:id="interface-ResolveUsernameApiOp">
+  <title>Resolve Username</title>
+  <para>
+   Resolve an object to its uid based on its username.
+  </para>
+ </section>
+
+ <section xml:id="interface-SchemaApiOp">
+  <title>Schema</title>
+  <para>
+   Describe supported object types, operations, and options.
+  </para>
+ </section>
+
+ <section xml:id="interface-ScriptOnConnectorApiOp">
+  <title>Script on Connector</title>
+  <para>
+   Allow script execution on connector.
+  </para>
+ </section>
+
+ <section xml:id="interface-ScriptOnResourceApiOp">
+  <title>Script On Resource</title>
+  <para>
+   Allow script execution on the resource.
+  </para>
+ </section>
+
+ <section xml:id="interface-SearchApiOp">
+  <title>Search</title>
+  <para>
+   Allow searches for resource objects.
+  </para>
+  <para>
+   Connectors that implement <emphasis>only</emphasis> this interface can only
+   be used for reconciliation operations.
+  </para>
+ </section>
+
+ <section xml:id="interface-SyncApiOp">
+  <title>Sync</title>
+  <para>
+   Poll for synchronization events, which are native changes to target objects.
+  </para>
+ </section>
+
+ <section xml:id="interface-SyncEventSubscriptionApiOp">
+  <title>Sync Event</title>
+  <para>
+   Subscribe for notification of synchronization events, which are native changes to target objects.
+  </para>
+ </section>
+
+ <section xml:id="interface-TestApiOp">
+  <title>Test</title>
+  <para>
+   Test the connection configuration, including connecting to the resource.
+  </para>
+ </section>
+
+ <section xml:id="interface-UpdateApiOp">
+  <title>Update</title>
+  <para>
+   Allows an authorized caller to update (modify or replace) objects on the
+   target resource.
+  </para>
+ </section>
+
+ <section xml:id="interface-UpdateAttributeValuesOp">
+  <title>Update Attribute Values</title>
+  <para>
+   Allows an authorized caller to update (modify or replace) attribute values on
+   the target resource. This operation is more advanced than the
+   <literal>UpdateOp</literal> operation, and provides better performance and
+   atomicity semantics.
+  </para>
+ </section>
+
+</appendix>

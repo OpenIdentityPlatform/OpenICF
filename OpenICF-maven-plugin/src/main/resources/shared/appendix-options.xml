@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ! CCPL HEADER START
+  !
+  ! This work is licensed under the Creative Commons
+  ! Attribution-NonCommercial-NoDerivs 3.0 Unported License.
+  ! To view a copy of this license, visit
+  ! http://creativecommons.org/licenses/by-nc-nd/3.0/
+  ! or send a letter to Creative Commons, 444 Castro Street,
+  ! Suite 900, Mountain View, California, 94041, USA.
+  !
+  ! You can also obtain a copy of the license at
+  ! legal-notices/CC-BY-NC-ND.txt.
+  ! See the License for the specific language governing permissions
+  ! and limitations under the License.
+  !
+  ! If applicable, add the following below this CCPL HEADER, with the fields
+  ! enclosed by brackets "[]" replaced with your own identifying information:
+  !      Portions Copyright [yyyy] [name of copyright owner]
+  !
+  ! CCPL HEADER END
+  !
+  !      Copyright 2013-2015 ForgeRock AS
+  !
+-->
+<appendix xml:id='appendix-options'
+          xmlns='http://docbook.org/ns/docbook'
+          version='5.0' xml:lang='en'
+          xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+          xsi:schemaLocation='http://docbook.org/ns/docbook
+ http://docbook.org/xml/5.0/xsd/docbook.xsd'
+          xmlns:xlink='http://www.w3.org/1999/xlink'>
+
+ <title>OpenICF Operation Options</title>
+
+ <para>
+  This chapter describes all of the predefined operation options by the OpenICF
+  framework, along with notes about their use. Specific connectors
+  may support only a subset of these options.
+ </para>
+
+    <section xml:id="operation-option-scope">
+        <title>Scope</title>
+        <para>
+            An option to use with Search (in conjunction with <link linkend="operation-option-container">Container</link>) that specifies how far
+            beneath the specified container to search. Must be one of the following values:
+            <itemizedlist>
+                <listitem>
+                    <para>SCOPE_OBJECT</para>
+                </listitem>
+                <listitem>
+                    <para>SCOPE_ONE_LEVEL</para>
+                </listitem>
+                <listitem>
+                    <para>SCOPE_SUBTREE</para>
+                </listitem>
+            </itemizedlist>
+        </para>
+    </section>
+
+    <section xml:id="operation-option-container">
+        <title>Container</title>
+        <para>
+            An option to use with Search that specifies the container under which to perform the search. Must be of type QualifiedUid. Should be
+            implemented for those object classes whose ObjectClassInfo.isContainer() returns true.
+        </para>
+    </section>
+
+    <section xml:id="operation-option-run-as-user">
+        <title>Run as User</title>
+        <para>
+            An option to use with Script on Resource and possibly others that specifies an account under which to execute the script/operation. The specified
+            account will appear to have performed any action that the script/operation performs.
+        </para>
+    </section>
+
+    <section xml:id="operation-option-run-with-password">
+        <title>Run with Password</title>
+        <para>
+            An option to use with Script on Resource and possibly others that specifies a password under which to execute the script/operation.
+        </para>
+    </section>
+
+    <section xml:id="operation-option-attributes-to-get">
+        <title>Attributes to Get</title>
+        <para>
+            Determines which attributes to retrieve during Search and Sync.
+            This option overrides the default behavior, which is for the connector to return exactly the set of
+            attributes that are identified as returned by default in the schema for that connector.
+
+            This option allows a client application to request additional attributes that would not otherwise not be
+            returned (generally because such attributes are more expensive for a connector to fetch and to format)
+            and/or to request only a subset of the attributes that would normally be returned.
+        </para>
+    </section>
+
+    <section xml:id="operation-option-paged-results-cookie">
+        <title>Paged Results Cookie</title>
+        <para>
+            An option to use with Search that specifies an opaque cookie which is used by the connector to track its position in the set of query
+            results.
+        </para>
+    </section>
+
+    <section xml:id="operation-option-paged-results-offset">
+        <title>Paged Results Offset</title>
+        <para>
+            An option to use with Search that specifies the index within the result set of the first result which should be returned.
+        </para>
+    </section>
+
+    <section xml:id="operation-option-page-size">
+        <title>Page Size</title>
+        <para>
+            An option to use with Search that specifies the requested page results page size.
+        </para>
+    </section>
+
+    <section xml:id="operation-option-sort-keys">
+        <title>Sort Keys</title>
+        <para>
+            An option to use with Search that specifies the sort keys which should be used for ordering the ConnectorObject returned by search
+            request.
+        </para>
+    </section>
+
+    <section xml:id="operation-option-fail-on-error">
+        <title>Fail on Error</title>
+        <para>
+            This option is used with the Batch operation, to specify whether the batch process should be aborted when the first error is encountered.
+            The default behavior is to continue processing regardless of errors.
+        </para>
+    </section>
+
+    <section xml:id="operation-option-require-serial">
+        <title>Require Serial</title>
+        <para>
+            This option instructs the connector to execute batched requests in a serial manner if possible. 
+            The default behavior of the Batch operation is to execute requests in parallel, 
+            for speed and efficiency. In either case the task ID must be reflected in the response for each task,
+            so that tasks can be correctly reordered.
+        </para>
+    </section>
+
+</appendix>

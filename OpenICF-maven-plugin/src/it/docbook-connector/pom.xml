@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+  ~
+  ~ Copyright (c) 2012-2014 ForgeRock AS. All rights reserved.
+  ~
+  ~ The contents of this file are subject to the terms
+  ~ of the Common Development and Distribution License
+  ~ (the License). You may not use this file except in
+  ~ compliance with the License.
+  ~
+  ~ You can obtain a copy of the License at
+  ~ http://forgerock.org/license/CDDLv1.0.html
+  ~ See the License for the specific language governing
+  ~ permission and limitations under the License.
+  ~
+  ~ When distributing Covered Code, include this CDDL
+  ~ Header Notice in each file and include the License file
+  ~ at http://forgerock.org/license/CDDLv1.0.html
+  ~ If applicable, add the following below the CDDL Header,
+  ~ with the fields enclosed by brackets [] replaced by
+  ~ your own identifying information:
+  ~ "Portions Copyrighted [year] [name of copyright owner]"
+  ~
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.forgerock.openicf.connectors</groupId>
+        <artifactId>connectors-parent</artifactId>
+        <version>@frameworkVersion@</version>
+    </parent>
+    <groupId>org.forgerock.openicf.connectors</groupId>
+    <artifactId>docbook-connector</artifactId>
+    <version>@frameworkVersion@</version>
+    <packaging>bundle</packaging>
+    <name>DocBook Connector</name>
+    <description>Connector for DocBook</description>
+
+    <properties>
+        <maven.compiler.target>1.6</maven.compiler.target>
+        <maven.compiler.source>1.6</maven.compiler.source>
+        <skipTests>false</skipTests>
+        <contracts.skip>true</contracts.skip>
+        <connectorPackage>org.forgerock.openicf.connectors.docbook</connectorPackage>
+        <connectorClass>DocBookConnector</connectorClass>
+        <framework.compatibilityVersion>@framework.compatibilityVersion@</framework.compatibilityVersion>
+        <framework.releaseVersion>@framework.releaseVersion@</framework.releaseVersion>
+        <projectVersion>@frameworkVersion@</projectVersion>
+    </properties>
+    <repositories>
+<!--         <repository> -->
+<!--             <id>forgerock-staging-repository</id> -->
+<!--             <name>ForgeRock Release Repository</name> -->
+<!--             <url>http://maven.forgerock.org/repo/releases</url> -->
+<!--             <snapshots> -->
+<!--                 <enabled>false</enabled> -->
+<!--             </snapshots> -->
+<!--         </repository> -->
+<!--         <repository> -->
+<!--             <id>forgerock-snapshots-repository</id> -->
+<!--             <name>ForgeRock Snapshot Repository</name> -->
+<!--             <url>http://maven.forgerock.org/repo/snapshots</url> -->
+<!--             <releases> -->
+<!--                 <enabled>false</enabled> -->
+<!--             </releases> -->
+<!--         </repository> -->
+    </repositories>
+    <dependencies>
+        <dependency>
+            <groupId>org.forgerock.openicf.framework</groupId>
+            <artifactId>connector-framework</artifactId>
+        </dependency>
+
+        <!-- Test Dependencies >
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.forgerock.openicf.framework</groupId>
+            <artifactId>connector-framework-internal</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.forgerock.openicf.framework</groupId>
+            <artifactId>connector-test-common</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-all</artifactId>
+            <scope>test</scope>
+        </dependency-->
+    </dependencies>
+    <build>
+        <pluginManagement>
+            <plugins>
+                <!--plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>3.3</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.forgerock.maven.plugins</groupId>
+                            <artifactId>openicf-maven-plugin</artifactId>
+                            <version>@project.version@</version>
+                        </dependency>
+                    </dependencies>
+                </plugin-->
+                <plugin>
+                    <groupId>org.forgerock.maven.plugins</groupId>
+                    <artifactId>openicf-maven-plugin</artifactId>
+                    <version>@project.version@</version>
+                    <!--executions>
+                        <execution>
+                            <id>remote</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>docbkx</goal>
+                            </goals>
+                            <configuration>
+                                <remoteFrameworkConnectionInfo>
+                                    <host>localhost</host>
+                                    <port>8759</port>
+                                    <key>Passw0rd</key>
+                                    <timeout>60000</timeout>
+                                </remoteFrameworkConnectionInfo>
+                                <configurationProperties>
+                                    <Container>CN=Example</Container>
+                                    <DirectoryAdminName>administrator</DirectoryAdminName>
+                                    <DirectoryAdminPassword>Passw0rd</DirectoryAdminPassword>
+                                    <DomainName>example.com</DomainName>
+                                </configurationProperties>
+                                <includes>
+                                    <ConnectorKey>ActiveDirectory.Connector:Org.IdentityConnectors.ActiveDirectory.ActiveDirectoryConnector:1.4.0.0</ConnectorKey>
+                                    <ConnectorKey>org.forgerock.openicf.connectors.docbook:org.forgerock.openicf.connectors.docbook.:${project.version}</ConnectorKey>
+                                </includes>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>local</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>docbkx</goal>
+                            </goals>
+                            <configuration>
+                                <propertyEnviron>default</propertyEnviron>
+                            </configuration>
+                        </execution>
+                    </executions-->
+
+                    <configuration>
+                        <!-- http://jira.codehaus.org/browse/MSITE-516 -->
+                        <configurationProperties>
+                            <string>value1</string>
+                            <stringArray>
+                                <value>value1</value>
+                                <value>value2</value>
+                                <value>value3</value>
+                            </stringArray>
+                            <long>9223372036854775807</long>
+                            <longArray>
+                                <value>9223372036854775807</value>
+                            </longArray>
+                            <longObject></longObject>
+                            <longObjectArray></longObjectArray>
+                            <char>a</char>
+                            <charArray>Password</charArray>
+                            <character></character>
+                            <characterArray/>
+                            <double>3.141592653589793</double>
+                            <doubleArray>
+                                <value>141592653589793</value>
+                            </doubleArray>
+                            <doubleObject></doubleObject>
+                            <doubleObjectArray>
+                                <value></value>
+                            </doubleObjectArray>
+                            <float>3.1415927</float>
+                            <floatArray>
+                                <value>3.1415927</value>
+                            </floatArray>
+                            <floatObject>3.1415927</floatObject>
+                            <floatObjectArray>
+                                <value>3.1415927</value>
+                            </floatObjectArray>
+                            <int>42</int>
+                            <intArray/>
+                            <integer></integer>
+                            <integerArray>
+                                <value>42</value>
+                                <value>43</value>
+                            </integerArray>
+                            <boolean>true</boolean>
+                            <booleanArray>
+                                <value>false</value>
+                            </booleanArray>
+                            <booleanObject>false</booleanObject>
+                            <booleanObjectArray>
+                                <vale></vale>
+                            </booleanObjectArray>
+                            <URI>sample/case1</URI>
+                            <URIArray>
+                                <value>sample/case1</value>
+                                <value>sample/case2</value>
+                            </URIArray>
+                            <file>sample/case1/readme.txt</file>
+                            <fileArray/>
+                            <guardedByteArray>Passw0rd</guardedByteArray>
+                            <guardedByteArrayArray>
+                                <value>Passw0rd</value>
+                                <value>Passw1rd</value>
+                            </guardedByteArrayArray>
+                            <guardedString>Passw0rd</guardedString>
+                            <guardedStringArray>
+                                <value>Passw0rd</value>
+                                <value>Passw1rd</value>
+                            </guardedStringArray>
+                            <script scriptLanguage="Groovy">
+                                def name = 'name'
+                                println name
+                            </script>
+                            <scriptArray>
+                                <value scriptLanguage="Groovy">println 'Hello'</value>
+                                <value scriptLanguage="Groovy">println 'Bye'</value>
+                            </scriptArray>
+                        </configurationProperties>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.forgerock.maven.plugins</groupId>
+                <artifactId>openicf-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>reduce-pom</goal>
+                            <goal>docbkx</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.forgerock.maven.plugins</groupId>
+                <artifactId>openicf-maven-plugin</artifactId>
+                <!--reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>connector-info</report>
+                        </reports>
+                    </reportSet>
+                </reportSets-->
+                <configuration>
+                    <!-- http://jira.codehaus.org/browse/MSITE-516 -->
+                    <configurationProperties>
+                        <string>value1</string>
+                        <stringArray>
+                            <value>value1</value>
+                            <value>value2</value>
+                            <value>value3</value>
+                        </stringArray>
+                        <long>9223372036854775807</long>
+                        <longArray>
+                            <value>9223372036854775807</value>
+                        </longArray>
+                        <longObject></longObject>
+                        <longObjectArray></longObjectArray>
+                        <char>a</char>
+                        <charArray>Password</charArray>
+                        <character></character>
+                        <characterArray/>
+                        <double>3.141592653589793</double>
+                        <doubleArray>
+                            <value>141592653589793</value>
+                        </doubleArray>
+                        <doubleObject></doubleObject>
+                        <doubleObjectArray>
+                            <value></value>
+                        </doubleObjectArray>
+                        <float>3.1415927</float>
+                        <floatArray>
+                            <value>3.1415927</value>
+                        </floatArray>
+                        <floatObject>3.1415927</floatObject>
+                        <floatObjectArray>
+                            <value>3.1415927</value>
+                        </floatObjectArray>
+                        <int>42</int>
+                        <intArray/>
+                        <integer></integer>
+                        <integerArray>
+                            <value>42</value>
+                            <value>43</value>
+                        </integerArray>
+                        <boolean>true</boolean>
+                        <booleanArray>
+                            <value>false</value>
+                        </booleanArray>
+                        <booleanObject>false</booleanObject>
+                        <booleanObjectArray>
+                            <vale></vale>
+                        </booleanObjectArray>
+                        <URI>sample/case1</URI>
+                        <URIArray>
+                            <value>sample/case1</value>
+                            <value>sample/case2</value>
+                        </URIArray>
+                        <file>sample/case1/readme.txt</file>
+                        <fileArray/>
+                        <guardedByteArray>Passw0rd</guardedByteArray>
+                        <guardedByteArrayArray>
+                            <value>Passw0rd</value>
+                            <value>Passw1rd</value>
+                        </guardedByteArrayArray>
+                        <guardedString>Passw0rd</guardedString>
+                        <guardedStringArray>
+                            <value>Passw0rd</value>
+                            <value>Passw1rd</value>
+                        </guardedStringArray>
+                        <script scriptLanguage="Groovy">
+                            def name = 'name'
+                            println name
+                        </script>
+                        <scriptArray>
+                            <value scriptLanguage="Groovy">println 'Hello'</value>
+                            <value scriptLanguage="Groovy">println 'Bye'</value>
+                        </scriptArray>
+                    </configurationProperties>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
+</project>
