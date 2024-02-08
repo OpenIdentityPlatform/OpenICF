@@ -1,6 +1,3 @@
-[submodule "OpenICF-databasetable-connector"]
-	path = OpenICF-databasetable-connector
-	url = https://github.com/OpenIdentityPlatform/OpenICF-databasetable-connector
 [submodule "OpenICF-xml-connector"]
 	path = OpenICF-xml-connector
 	url = https://github.com/OpenIdentityPlatform/OpenICF-xml-connector
