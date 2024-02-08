@@ -1,6 +1,3 @@
-[submodule "OpenICF-xml-connector"]
-	path = OpenICF-xml-connector
-	url = https://github.com/OpenIdentityPlatform/OpenICF-xml-connector
 [submodule "OpenICF-ldap-connector"]
 	path = OpenICF-ldap-connector
 	url = https://github.com/OpenIdentityPlatform/OpenICF-ldap-connector
