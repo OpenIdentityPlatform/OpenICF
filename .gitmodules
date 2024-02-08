@@ -1,6 +1,3 @@
-[submodule "OpenICF-dbcommon"]
-	path = OpenICF-dbcommon
-	url = https://github.com/OpenIdentityPlatform/OpenICF-dbcommon
 [submodule "OpenICF-ssh-connector"]
 	path = OpenICF-ssh-connector
 	url = https://github.com/OpenIdentityPlatform/OpenICF-ssh-connector
