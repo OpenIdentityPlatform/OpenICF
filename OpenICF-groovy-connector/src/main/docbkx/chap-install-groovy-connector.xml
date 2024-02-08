@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ! CCPL HEADER START
+  !
+  ! This work is licensed under the Creative Commons
+  ! Attribution-NonCommercial-NoDerivs 3.0 Unported License.
+  ! To view a copy of this license, visit
+  ! http://creativecommons.org/licenses/by-nc-nd/3.0/
+  ! or send a letter to Creative Commons, 444 Castro Street,
+  ! Suite 900, Mountain View, California, 94041, USA.
+  !
+  ! You can also obtain a copy of the license at
+  ! legal-notices/CC-BY-NC-ND.txt.
+  ! See the License for the specific language governing permissions
+  ! and limitations under the License.
+  !
+  ! If applicable, add the following below this CCPL HEADER, with the fields
+  ! enclosed by brackets "[]" replaced with your own identifying information:
+  !      Portions Copyright [yyyy] [name of copyright owner]
+  !
+  ! CCPL HEADER END
+  !
+  !      Copyright 2011-2014 ForgeRock AS
+  !
+-->
+<chapter xml:id="install-org.forgerock.openicf.connectors-groovy-connector-${project.version}"
+ xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en'
+ xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+ xsi:schemaLocation='http://docbook.org/ns/docbook
+ http://docbook.org/xml/5.0/xsd/docbook.xsd'
+ xmlns:xlink='http://www.w3.org/1999/xlink'>
+
+ <title>${project.name} Installation Instructions</title>
+ <para>
+  This chapter describes how to install the ${project.name} and any
+  prerequisites specific to its use.
+ </para>
+
+ <section xml:id="before-you-install-org.forgerock.openicf.connectors-groovy-connector-${project.version}">
+  <title>Before You Install the ${project.name}</title>
+  <para>
+   The ${project.name} is a generic scripted connector that enables you to run
+   Groovy scripts on any external resource. The ${project.name} is provided with
+   OpenIDM, in the JAR
+   <filename>openidm/connectors/${project.artifactId}-${project.version}.jar</filename>.
+  </para>
+  <variablelist>
+   <para>
+    Sample scripted connector implementations are provided in the
+    <link xlink:show="new"
+    xlink:href="http://maven.forgerock.org/repo/webapp/browserepo.html?pathId=releases:org/forgerock/openicf/connectors/groovy-connector/${project.version}/groovy-connector-${project.version}-samples.zip">Maven repository</link>.
+    The following sample implementations are provided:
+   </para>
+   <varlistentry>
+    <term>Scripted SQL Connector</term>
+    <listitem>
+     <para>
+      The Scripted SQL Connector uses Groovy scripts to interact with a JDBC
+      database.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>Scripted REST Connector</term>
+    <listitem>
+     <para>
+      The Scripted REST Connector enables you to connect to any resource over
+      HTTP/REST. The connector creates the HTTP/REST context (specifying the
+      content type, authentication mode, encoding, and so on), and manages the
+      connection.
+     </para>
+     <para>
+      The connector relies on the Groovy scripting language and its RESTClient
+      package. The Groovy scripts are responsible for sending requests and
+      processing results.
+     </para>
+     <para>
+      The following sample Groovy script creates a new user in OpenDJ, using
+      OpenDJ's REST API:
+     </para>
+     <programlisting language="groovy">connection.put(
+    path: '/users/' + name,
+    headers: ['If-None-Match': '*'],
+    contentType: JSON,
+    requestContentType: JSON,
+    body: JsonOutput.toJson(
+        [_id : name,
+            name : [
+                familyName: "Doe",
+                givenName : "John"
+            ],
+            displayName: "John Doe"
+        ]
+    )
+);</programlisting>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>Scripted CREST Connector</term>
+    <listitem>
+     <para>
+      The Scripted CREST sample is a generic implementation that takes a schema
+      configuration file to define the attribute mapping from the OpenICF
+      connector object to the CREST resource. In the sample, the schema
+      configuration file has the same syntax as the OpenIDM provisioner
+      configuration file (for example,
+      <filename>provisioner.openicf-scriptedcrest.json</filename>), which
+      defines the mapping between OpenIDM and the OpenICF connector object. Most
+      CRUD operations should work with the sample scripts, however the Scripted
+      CREST sample is not intended to work "out of the box". It is expected that
+      the scripts will be customized to address the requirements of your
+      deployment. The sample scripts are a good starting point on which to base
+      your customization.
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+  <para>
+   Depending on the implementation that you use, the ${project.name} has
+   specific dependencies, as described in the following sections. If you use the
+   connector that is bundled with OpenIDM, the required OSGi-ready dependencies
+   are bundled and do not have to be downloaded. If you download the connector
+   outside of OpenIDM, you must download the dependencies required for your
+   connector implementation.
+  </para>
+  <section xml:id="scriptedsql-dependencies-org.forgerock.openicf.connectors-groovy-connector-${project.version}">
+   <title>ScriptedSQL Connector Dependencies</title>
+   <para>
+    The Scripted SQL Connector dependencies should be placed in either the
+    <filename>lib</filename> folder, or the <filename>bundle</filename> folder,
+    depending on the required OSGi compatibility. If the dependency is
+    "OSGi-ready" it can be placed in the <filename>bundle</filename> folder,
+    otherwise it must be placed in the <literal>lib</literal> folder. The
+    OSGi-ready jars described here, require Java version 7.
+   </para>
+   <variablelist>
+    <varlistentry>
+     <term>Non OSGi-ready jars:</term>
+     <listitem>
+      <para>
+       Create a <filename>lib/</filename> folder in your OpenIDM installation
+       directory.
+      </para>
+      <screen><userinput>$ mkdir /path/to/openidm/lib</userinput></screen>
+      <para>
+       Download the following dependencies and copy them to the
+       <filename>openidm/lib</filename> folder.
+      </para>
+      <itemizedlist>
+       <listitem>
+        <para>
+         Apache Tomcat Juli, <filename>tomcat-juli-7.0.55.jar</filename>
+         <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.tomcat%7Ctomcat-juli%7C7.0.55%7Cjar"
+         xlink:show="new">(org.apache.tomcat:tomcat-juli:7.0.55)</link>
+        </para>
+       </listitem>
+       <listitem>
+        <para>
+         Tomcat JDBC Pool Package, <filename>tomcat-jdbc-7.0.53.jar</filename>
+         <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.tomcat%7Ctomcat-jdbc%7C7.0.53%7Cjar"
+         xlink:show="new">(org.apache.tomcat:tomcat-jdbc:7.0.53)</link>
+        </para>
+       </listitem>
+      </itemizedlist>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>OSGi-ready jars:</term>
+     <listitem>
+      <para>
+       Download the following dependencies and place them in the
+       <filename>openidm/bundle</filename> folder.
+      </para>
+       <itemizedlist>
+        <listitem>
+         <para>
+          Tomcat Core Logging Package (Juli), <filename>tomcat-juli-8.0.12.jar</filename>
+          <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.tomcat%7Ctomcat-juli%7C8.0.12%7Cjar"
+          xlink:show="new">(org.apache.tomcat:juli:8.0.12)</link>
+         </para>
+        </listitem>
+        <listitem>
+        <para>
+         OSGi-ready Tomcat JDBC Pool Package, <filename>tomcat-jdbc-8.0.12.jar</filename>
+         <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.tomcat%7Ctomcat-jdbc%7C8.0.12%7Cjar"
+         xlink:show="new">(org.apache.tomcat:tomcat-jdbc:8.0.12)</link>
+        </para>
+       </listitem>
+      </itemizedlist>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+   <para>
+    The ${project.name} scripted SQL implementation uses Groovy scripts to
+    interact with a JDBC database. Before you set up the connector, your JDBC
+    database must be up and running. The required JDBC driver must be available
+    in either the <filename>openidm/bundle</filename> directory (if it is
+    OSGi-ready) or in the <filename>openidm/lib</filename> directory (if it is
+    not OSGi-ready).
+   </para>
+   <itemizedlist>
+    <para>
+     Download the driver that corresponds to your database:
+    </para>
+    <listitem>
+     <para>
+      For a MySQL database, download MySQL Connector/J, version 5.1 or later
+      from the MySQL website.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      For an MS SQL database, download the JDBC Driver 4.0 for SQL Server
+      (<filename>sqljdbc_4.0.2206.100_enu.tar.gz</filename>) from Microsoft's
+      download site.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      For an Oracle DB database, create an Oracle DB driver from two separate
+      jar files, as described in <link xlink:show="new"
+      xlink:href="http://docs.forgerock.org/en/openidm/3.0.0/install-guide/#repository-oracledb">To
+      Set Up OpenIDM With Oracle Database</link> in the <citetitle>OpenIDM
+      Installation Guide</citetitle>.
+     </para>
+    </listitem>
+   </itemizedlist>
+  </section>
+
+  <section xml:id="scriptedrest-dependencies-org.forgerock.openicf.connectors-groovy-connector-${project.version}">
+   <title>Scripted REST Connector Dependencies</title>
+   <para>
+    Download the following dependencies and copy them to the
+    <filename>openidm/bundle</filename> folder.
+   </para>
+   <itemizedlist>
+    <listitem>
+     <para>
+      HttpComponents Client (OSGi bundle), <filename>httpclient-osgi-4.3.6.jar</filename>
+      <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.httpcomponents%7Chttpclient-osgi%7C4.3.6%7Cbundle"
+      xlink:show="new">(org.apache.httpcomponents:httpclient-osgi:4.3.6)</link>
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      HttpComponents Core (OSGi bundle), <filename>httpcore-osgi-4.3.2.jar</filename>
+      <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.httpcomponents%7Chttpcore-osgi%7C4.3.2%7Cbundle"
+      xlink:show="new">(org.apache.httpcomponents:httpcore-osgi:4.3.2)</link>
+     </para>
+    </listitem>
+   </itemizedlist>
+  </section>
+
+  <section xml:id="scriptedcrest-dependencies-org.forgerock.openicf.connectors-groovy-connector-${project.version}">
+   <title>ScriptedCREST Connector Dependencies</title>
+   <para>
+    Download the following dependencies and copy them to the
+    <filename>openidm/bundle</filename> folder.
+   </para>
+   <itemizedlist>
+    <listitem>
+     <para>
+      HttpComponents AsyncClient (OSGi bundle), <filename>httpasyncclient-osgi-4.0.2.jar</filename>
+      <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.httpcomponents%7Chttpasyncclient-osgi%7C4.0.2%7Cbundle"
+      xlink:show="new">(org.apache.httpcomponents:httpasyncclient-osgi:4.0.2)</link>
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      HttpComponents Client (OSGi bundle), <filename>httpclient-osgi-4.3.3.jar</filename>
+      <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.httpcomponents%7Chttpclient-osgi%7C4.3.3%7Cbundle"
+      xlink:show="new">(org.apache.httpcomponents:httpclient-osgi:4.3.3)</link>
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      HttpComponents Core (OSGi bundle), <filename>httpcore-osgi-4.3.2.jar</filename>
+      <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.httpcomponents%7Chttpcore-osgi%7C4.3.2%7Cbundle"
+      xlink:show="new">(org.apache.httpcomponents:httpcore-osgi:4.3.2)</link>
+     </para>
+    </listitem>
+   </itemizedlist>
+  </section>
+ </section>
+
+ <section xml:id="connector-install-org.forgerock.openicf.connectors-groovy-connector-${project.version}">
+  <title>Installing the ${project.name}</title>
+  <para>
+   The ${project.name} is provided in the
+   <filename>openidm/connectors/${project.artifactId}-${project.version}.jar</filename>
+   file, for local use. If you are running the connector remotely, copy the
+   connector jar file to the <literal>openicf/bundles</literal> directory on the
+   Java connector server. Also, copy any dependencies (described in the previous
+   section) to the <literal>lib</literal> directory on the remote connector
+   server. Generate a connector configuration for your Groovy connector
+   implementation.
+  </para>
+  <para>
+   A sample connector configuration for a scripted SQL implementation is
+   provided in <filename>/path/to/openidm/samples/sample3</filename>. The
+   following excerpt of the configuration shows the connector bundle details and
+   the properties that are used to connect to the JDBC database:
+  </para>
+  <programlisting language="javascript">{
+   "name" : "scriptedsql",
+   "connectorRef" : {
+       "bundleName" : "org.forgerock.openicf.connectors.groovy-connector",
+       "bundleVersion" : "${project.version}",
+       "connectorName" : "org.forgerock.openicf.connectors.scriptedsql.ScriptedSQLConnector"
+   },
+   ...
+   "configurationProperties" : {
+        "username" : "root",
+        "password" : "",
+        "driverClassName" : "com.mysql.jdbc.Driver",
+        "url" : "jdbc:mysql://localhost:3306/HRDB",
+        "autoCommit" : true,
+        "reloadScriptOnExecution" : false,
+        "authenticateScriptFileName" : "AuthenticateScript.groovy",
+        "createScriptFileName" : "CreateScript.groovy",
+        "testScriptFileName" : "TestScript.groovy",
+        "searchScriptFileName" : "SearchScript.groovy",
+        "deleteScriptFileName" : "DeleteScript.groovy",
+        "updateScriptFileName" : "UpdateScript.groovy",
+        "syncScriptFileName" : "SyncScript.groovy",
+        "schemaScriptFileName" : "SchemaScript.groovy",
+        "classpath" : [
+            "&amp;{launcher.project.location}/tools"
+        ]
+    },
+... </programlisting>
+  <para>
+   The Groovy scripts required for the sample are located in the
+   <filename>path/to/openidm/samples/sample3/tools</filename> directory and can
+   be customized for your deployment.
+  </para>
+  <para>
+   Edit the <literal>"configurationProperties"</literal> in the connector
+   configuration file to match your JDBC database.
+  </para>
+  <para>
+   For details of all the configurable properties for this connector, see the
+   <link xlink:show="new"
+   xlink:href="CURRENT.DOCID#chap-config-org-forgerock-openicf-connectors-scriptedsql-ScriptedSQLConnector-${project.version}"
+   xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Configuration
+   chapter</citetitle></link>.
+  </para>
+ </section>
+
+ <section xml:id="connector-pooling-org-forgerock-openicf-connectors-groovy-ScriptedPoolableConnector-${project.version}">
+  <title>Configuring Connector Pooling</title>
+  <para>
+   The ${project.name} supports connection pooling, which can substantially
+   improve the performance of the connector. The basic connection pooling
+   configuration is described in the <link xlink:show="new"
+   xlink:href="CURRENT.DOCID#appendix-pooling"
+   xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Connection
+   Pooling Configuration Appendix</citetitle></link>.
+  </para>
+ </section>
+ <section
+         xml:id="connector-pooling-org-forgerock-openicf-connectors-scriptedcrest-ScriptedCRESTConnector-${project.version}">
+  <title>Configuring Scripted CREST Connector Pooling</title>
+  <para>
+   TO BE WRITTEN MANUALLY
+  </para>
+ </section>
+
+</chapter>
