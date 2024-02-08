@@ -1,0 +1,184 @@
+# -- START LICENSE
+# ====================
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+# 
+# Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
+# 
+# The contents of this file are subject to the terms of the Common Development 
+# and Distribution License("CDDL") (the "License").  You may not use this file 
+# except in compliance with the License.
+# 
+# You can obtain a copy of the License at 
+# http://IdentityConnectors.dev.java.net/legal/license.txt
+# See the License for the specific language governing permissions and limitations 
+# under the License. 
+# 
+# When distributing the Covered Code, include this CDDL Header Notice in each file
+# and include the License file at identityconnectors/legal/license.txt.
+# If applicable, add the following below this CDDL Header, with the fields 
+# enclosed by brackets [] replaced by your own identifying information: 
+# "Portions Copyrighted [year] [name of copyright owner]"
+# ====================
+# -- END LICENSE
+dn: dc=example,dc=com
+objectClass: top
+objectClass: domain
+dc: example
+
+# Acme Corp.
+
+dn: o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: organization
+o: Acme
+
+dn: c=Czech Republic,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: country
+c: Czech Republic
+
+dn: ou=Users,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+ou: Users
+
+dn: uid=bugs.bunny,ou=Users,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+uid: bugs.bunny
+uid: bbunny
+cn: Bugs Bunny
+sn: Bunny
+userPassword: carrot
+
+dn: uid=elmer.fudd,ou=Users,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+uid: elmer.fudd
+cn: Elmer Fudd
+sn: Fudd
+
+dn: uid=sylvester,ou=Users,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+uid: sylvester
+cn: Sylvester
+sn: Sylvester
+
+dn: uid=expired,ou=Users,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+uid: expired
+cn: Expired Password
+sn: Expired Password
+userPassword: password
+ds-pwp-password-policy-dn: cn=Quickly Expiring Password Policy,cn=Password Policies,cn=config
+
+# Non-unique groups.
+
+dn: cn=Bugs and Friends,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: groupOfNames
+cn: Bugs and Friends
+member: uid=bugs.bunny,ou=Users,o=Acme,dc=example,dc=com
+member: uid=elmer.fudd,ou=Users,o=Acme,dc=example,dc=com
+member: uid=sylvester,ou=Users,o=Acme,dc=example,dc=com
+
+dn: cn=External Peers,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: groupOfNames
+cn: External Peers
+member: uid=single.account,o=Small Company,dc=example,dc=com
+member: uid=sylvester,ou=Users,o=Acme,dc=example,dc=com
+
+# Unique groups.
+
+dn: cn=Unique Bugs and Friends,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: Unique Bugs and Friends
+uniqueMember: uid=bugs.bunny,ou=Users,o=Acme,dc=example,dc=com
+uniqueMember: uid=elmer.fudd,ou=Users,o=Acme,dc=example,dc=com
+uniqueMember: uid=sylvester,ou=Users,o=Acme,dc=example,dc=com
+
+dn: cn=Unique External Peers,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: Unique External Peers
+uniqueMember: uid=single.account,o=Small Company,dc=example,dc=com
+uniqueMember: uid=sylvester,ou=Users,o=Acme,dc=example,dc=com
+
+dn: cn=Unique Empty Group,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: Unique Empty Group
+
+# POSIX groups.
+
+dn: cn=POSIX Bugs and Friends,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: namedObject
+objectClass: posixGroup
+cn: POSIX Bugs and Friends
+gidNumber: 1
+memberUid: bugs.bunny
+memberUid: elmer.fudd
+memberUid: sylvester
+
+dn: cn=POSIX External Peers,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: namedObject
+objectClass: posixGroup
+cn: POSIX External Peers
+gidNumber: 2
+memberUid: single.account
+memberUid: owner
+memberUid: sylvester
+
+dn: cn=POSIX Empty Group,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: namedObject
+objectClass: posixGroup
+cn: POSIX Empty Group
+gidNumber: 3
+
+dn: cn=POSIX Bugs Bunny Group,o=Acme,dc=example,dc=com
+objectClass: top
+objectClass: namedObject
+objectClass: posixGroup
+cn: POSIX Bugs Bunny Group
+gidNumber: 4
+memberUid: bbunny
+
+# A small company with an account and a person.
+
+dn: o=Small Company,dc=example,dc=com
+objectClass: top
+objectClass: organization
+o: Small Company
+
+dn: uid=single.account,o=Small Company,dc=example,dc=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+uid: single.account
+cn: Single Account
+sn: Single Account
+
+dn: cn=Owner,o=Small Company,dc=example,dc=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+uid: owner
+cn: Owner
+sn: Owner
