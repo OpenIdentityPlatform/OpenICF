@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ! CCPL HEADER START
+  !
+  ! This work is licensed under the Creative Commons
+  ! Attribution-NonCommercial-NoDerivs 3.0 Unported License.
+  ! To view a copy of this license, visit
+  ! http://creativecommons.org/licenses/by-nc-nd/3.0/
+  ! or send a letter to Creative Commons, 444 Castro Street,
+  ! Suite 900, Mountain View, California, 94041, USA.
+  !
+  ! See the License for the specific language governing permissions
+  ! and limitations under the License.
+  !
+  ! If applicable, add the following below this CCPL HEADER, with the fields
+  ! enclosed by brackets "[]" replaced with your own identifying information:
+  !      Portions Copyright [yyyy] [name of copyright owner]
+  !
+  ! CCPL HEADER END
+  !
+  !      Copyright 2012-2013 ForgeRock AS.
+  !
+-->
+<document
+ xmlns="http://maven.apache.org/XDOC/2.0"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://maven.apache.org/XDOC/2.0 http://maven.apache.org/xsd/xdoc-2.0.xsd">
+ <properties>
+  <title>OpenICF Core User Documentation</title>
+  <author email="openicf-dev@forgerock.org">ForgeRock AS</author>
+ </properties>
+ <body>
+  <section name="Core Documentation">
+   <p>This core documentation is <strong>in progress</strong> as part of
+   the OpenICF project.</p>
+   <p>For completed, released documentation, see <a
+   href="http://docs.forgerock.org/en/index.html?product=openicf">docs.forgerock.org</a>.</p>
+   <dl>
+    <dt>Release Notes</dt>
+    <dd>
+     <a href="./doc/bootstrap/release-notes/index.html">HTML</a>,
+     <a href="./doc/OpenICF-${project.version}-Release-Notes.pdf">PDF</a>
+    </dd>
+
+    <!-- Add bootstrap format when Config Ref builds with 3.0 doc plugin -->
+    <dt>Configuration Reference</dt>
+    <dd>
+     <a href="./doc/bootstrap/config-reference/index.html">HTML</a>,
+     <a href="./doc/OpenICF-${project.version}-Config-Reference.pdf">PDF</a>
+    </dd>
+
+    <dt>Developer's Guide</dt>
+    <dd>
+     <a href="./doc/bootstrap/dev-guide/index.html">HTML</a>,
+     <a href="./doc/OpenICF-${project.version}-Dev-Guide.pdf">PDF</a>
+    </dd>
+
+
+   </dl>
+  </section>
+ </body>
+</document>

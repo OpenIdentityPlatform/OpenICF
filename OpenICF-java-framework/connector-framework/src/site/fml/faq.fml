@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<faqs xmlns="http://maven.apache.org/FML/1.0.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/FML/1.0.1 http://maven.apache.org/xsd/fml-1.0.1.xsd"
+  id="FAQ"
+  title="Frequently Asked Questions"
+  toplink="false">
+    <part id="General">
+        <title>Frequently Asked Questions</title>
+        <faq id="openicf-framework01">
+            <question>What are Connectors?</question>
+            <answer>
+                <p>Connectors provide applications with a way to
+                    <a href="/design.html">decouple</a> from the resources that they connect to. The Identity
+                    Connectors Framework is aimed at user provisioning and identity management, but is generalized enough to support
+                    several different kinds of applications. For example, in addition to basic CRUD operations, the API supports Search,
+                    Sync, Authenticate, and Scripting operations, as well as others.
+                </p>
+                <p>Connectors themselves are self-contained
+                    <a href="../connectors">connectors</a> that ride on top of the Connectors Framework.
+                    Applications are completely separated from the bundles, so that different implementations can be swapped in and out without affecting
+                    the app or its dependencies.
+                </p>
+            </answer>
+        </faq>
+        <faq id="openicf-framework02">
+            <question>How do I access the connector API?</question>
+            <answer>
+               It's available through the ConnectorFacade class. An application should do all its interaction with a Connector via an instance of ConnectorFacade.
+            </answer>
+        </faq>
+        <faq id="openicf-framework03">
+            <question>How do I create a ConnectorFacade?</question>
+            <answer>
+                <p>
+                    <ol>
+                        <li>Create a
+                            <b>ConnectorInfoManager</b> and a
+                            <b>ConnectorKey</b> for the connector.
+                        </li>
+                        <li>Using the manager and the key, create a
+                            <b>ConnectorInfo</b> instance.
+                        </li>
+                        <li>From the
+                            <b>ConnectorInfo</b> object, create the default
+                            <b>APIConfiguration</b>.
+                        </li>
+                        <li>From the default
+                            <b>APIConfiguration</b>, retrieve the
+                            <b>ConfigurationProperties</b>.
+                        </li>
+                        <li>Set all of the
+                            <b>ConfigurationProperties</b> needed by the connector using
+                            <i>setPropertyValue()</i>.
+                        </li>
+                        <li>Use the
+                            <b>ConnectorFacadeFactory</b>'s
+                            <i>newInstance()</i> method to create a new instance of the connector.
+                        </li>
+                    </ol>
+    Here is an example:
+                    <pre>
+    // Use the ConnectorInfoManager to retrieve a ConnectorInfo object for the connector
+    ConnectorInfoManagerFactory fact = ConnectorInfoManagerFactory.getInstance();
+    File bundleDirectory = new File("/connectorDir/bundles/foobar");
+    URL url = IOUtil.makeURL(bundleDirectory, "/dist/org.identityconnectors.foobar-1.0.jar");
+    ConnectorInfoManager manager = fact.getLocalManager(url);
+    ConnectorKey key = new ConnectorKey("org.identityconnectors.foobar", "1.0", "FooBarConnector");
+    ConnectorInfo info = manager.findConnectorInfo(key);
+
+    // From the ConnectorInfo object, create the default APIConfiguration.
+    APIConfiguration apiConfig = info.createDefaultAPIConfiguration();
+
+    // From the default APIConfiguration, retrieve the ConfigurationProperties.
+    ConfigurationProperties properties = apiConfig.getConfigurationProperties();
+
+    // Print out what the properties are (not necessary)
+    List&lt;String&gt; propertyNames = properties.getPropertyNames();
+    for(String propName : propertyNames) {
+        ConfigurationProperty prop = properties.getProperty(propName);
+        System.out.println("Property Name: " + prop.getName() + "\tProperty Type: " + prop.getType());
+    }
+
+    // Set all of the ConfigurationProperties needed by the connector.
+    properties.setPropertyValue("host", FOOBAR_HOST);
+    properties.setPropertyValue("adminName", FOOBAR_ADMIN);
+    properties.setPropertyValue("adminPassword", FOOBAR_PASSWORD);
+    properties.setPropertyValue("useSSL", false);
+
+    // Use the ConnectorFacadeFactory's newInstance() method to get a new connector.
+    ConnectorFacade conn = ConnectorFacadeFactory.getInstance().newInstance(apiConfig);
+
+    // Make sure we have set up the Configuration properly
+    conn.validate();
+
+    // Start using the Connector
+    conn.[authenticate|create|update|delete|search|...]
+                    </pre>
+                </p>
+            </answer>
+        </faq>
+        <faq id="openicf-framework04">
+            <question>How do I determine if the connector supports an operation?</question>
+            <answer>
+                <p>Check the set returned by ConnectorFacade.getSupportedOperations(). For example:
+                    <pre>
+    Set&lt;Class&lt; ? extends APIOperation&gt;&gt; ops = conn.getSupportedOperations();
+    // check to see if the set contains the operation you care about (e.g. CreateApiOp)
+    return ops.contains(CreateApiOp.class);
+                    </pre>
+    However, a connector may support an operation for only certain object classes. Therefore, it is more correct to check the schema to determine if the desired operation is supported for the specific ObjectClass you're specifying:
+                    <pre>
+    Schema schema = conn.schema();
+    Set&lt;ObjectClassInfo&gt; objectClasses = schema.getObjectClassInfo();
+    Set&lt;ObjectClassInfo&gt; ocinfos = schema.getSupportedObjectClassesByOperation(CreateApiOp.class);
+
+    for(ObjectClassInfo oci : objectClasses) {
+        // check the object class is supported for the operation
+        if (ocinfos.contains(ocinfo)) {
+            // object class is supported
+        }
+    }
+                    </pre>
+                </p>
+            </answer>
+        </faq>
+        <faq id="openicf-framework05">
+            <question>How do I determine what attributes are supported or required for a particular ObjectClass?</question>
+            <answer>
+                <p>Get the schema from the connector facade. From the schema, get the set of object class infos. From there, look for the ObjectClassInfo belonging to the ObjectClass of the object you want the attributes from.
+    From that ObjectClassInfo, get the set of AttributeInfos. Each AttributeInfo can be used to get the attribute name, attribute type, if it's required, if it's readable, writeable, etc.
+                    <pre>
+    Schema schema = conn.schema();
+    Set&lt;ObjectClassInfo&gt; objectClasses = schema.getObjectClassInfo();
+    for(ObjectClassInfo oci : objectClasses) {
+        Set&lt;AttributeInfo&gt; attributeInfos = oci.getAttributeInfo();
+        String type = oci.getType();
+        if(ObjectClass.ACCOUNT_NAME.equals(type)) {
+            for(AttributeInfo info : attributeInfos) {
+                System.out.println(info.toString());
+            }
+        }......
+        ........
+    }
+                    </pre>
+                </p>
+            </answer>
+        </faq>
+        <faq id="openicf-framework06">
+            <question>How do I create a new ConnectorObject (account, group, record, etc.)?</question>
+            <answer>
+                <p>To create a connector object, you must call the create() method of the connector facade. You should probably check to make sure that Create() is supported for the ObjectClass you would like to create.
+    The Create method takes two parameters: an ObjectClass and a set of Attributes. The ObjectClass specifies what type of ConnectorObject to create on the target resource. The attributes describe the ConnectorObject
+    (things such as username, password, address, etc.) These must be attributes that the connector supports for this type of ObjectClass. This can be checked via the schema. For example:
+                    <pre>
+    // .......
+    // set up ConnectorFacade
+    // .......
+
+    //create an account
+    Set&lt;Attribute&gt; attrs = new HashSet&lt;Attribute&gt;();
+    attrs.add(new Name("TESTUSER"));
+    attrs.add(AttributeBuilder.buildPassword("TESTPASSWORD"));
+    attrs.add(AttributeBuilder.build("Company", "Sun Microsystems"));
+    Uid userUid = conn.create(ObjectClass.ACCOUNT, attrs);
+                    </pre>
+                </p>
+            </answer>
+        </faq>
+        <faq id="openicf-framework07">
+            <question>How do I update an account's password using a Connector?</question>
+            <answer>
+                <p>Password is one of several special Attributes called OperationalAttributes. In the same way you create an account, to change a password (or perform any kind of update)
+    you need to set up a bag of Attributes using AttributeBuilder and add the new password to it. OperationalAttributes such as Password and Enabled are created via static methods in AttributeBuilder (see the example below).
+    Then invoke the Update() method on the ConnectorFacade.
+                    <pre>
+    // .......
+    // set up ConnectorFacade
+    // .......
+
+    //create an account
+    Set&lt;Attribute&gt; attrs = new HashSet&lt;Attribute&gt;();
+    attrs.add(new Name("TESTUSER"));
+    attrs.add(AttributeBuilder.buildPassword("NEWPASSWORD"));
+    Uid userUid = conn.update(ObjectClass.ACCOUNT, attrs);
+                    </pre>
+                </p>
+            </answer>
+        </faq>
+        <faq id="openicf-framework08">
+            <question>How do I delete a ConnectorObject?</question>
+            <answer>
+                <p>To delete a connector object, you need to know the ObjectClass of the object you want to delete, as well as its Uid.
+    If you don't have the Uid, you can search for it (if the connector supports SearchOp) using what you do know, such as the username. Here's an example:
+                    <pre>
+    // .......
+    // set up ConnectorFacade
+    // .......
+    Uid userUid = findUid(userName);
+    conn.delete(ObjectClass.ACCOUNT, userUid);
+                    </pre>
+                </p>
+            </answer>
+        </faq>
+        <faq id="openicf-framework09">
+            <question>How do I search for ConnectorObjects?</question>
+            <answer>
+                <p>You must first create a search Filter and a ResultsHandler. Then use the ConnectorFacade's Search() method (if SearchOp is supported) to search.
+    The results will be returned to the handler. You can build the filter using regular or "special" attributes, but they must be valid according to the schema for that Connector.
+    Here is an example using a compound filter:
+                    <pre>
+    // .......
+    // set up ConnectorFacade
+    // .......
+
+    Filter leftFilter = FilterBuilder.equalTo(AttributeBuilder.build("FIRSTNAME", "John"));
+    Filter rightFilter = FilterBuilder.equalTo(AttributeBuilder.build("DEPARTMENT", "Marketing"));
+    Filter filter = FilterBuilder.and(leftFilter, rightFilter);
+    final List&lt;ConnectorObject&gt; results = new ArrayList&lt;ConnectorObject&gt;();
+    ResultsHandler handler = new ResultsHandler() {
+        public boolean handle(ConnectorObject obj) {
+            results.add(obj);
+            return true;
+        }
+    };
+
+    conn.search(ObjectClass.ACCOUNT, filter, handler);
+    for(ConnectorObject obj : results ) {
+        System.out.println("Name: " + obj.getName() + "\tUID: " + obj.getUid());
+    }
+                    </pre>
+    Here is an example with special attributes:
+                    <pre>
+    Filter nameFilter = FilterBuilder.startsWith(new Name("Josh")); //same as AttributeBuilder.build(Name.NAME, "Josh")
+    Filter enabledFilter = FilterBuilder.equalTo(AttributeBuilder.buildEnabled(false)); //find accounts that are disabled
+    Filter filter = FilterBuilder.or(nameFilter, enabledFilter); //compound OR filter
+    final List&lt;ConnectorObject&gt; results = new ArrayList&lt;ConnectorObject&gt;();
+    ResultsHandler handler = new ResultsHandler() {
+        public boolean handle(ConnectorObject obj) {
+            results.add(obj);
+            return true;
+        }
+    };
+
+    conn.search(ObjectClass.ACCOUNT, filter, handler);
+    for(ConnectorObject obj : results ) {
+        System.out.println("Name: " + obj.getName() + "\tUID: " + obj.getUid());
+    }
+                    </pre>
+                </p>
+            </answer>
+        </faq>
+        <faq id="openicf-framework10">
+            <question>How do I get an ObjectClass when I have an ObjectClassInfo?</question>
+            <answer>
+                <p>Just pass the ObjectClassInfo type to the ObjectClass constructor, as follows:
+                    <pre>
+    ObjectClass objectClass = new ObjectClass(objectClassInfo.getType());
+                    </pre>
+                </p>
+            </answer>
+        </faq>
+    </part>
+</faqs>

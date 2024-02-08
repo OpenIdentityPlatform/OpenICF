@@ -1,0 +1,2 @@
+org.identityconnectors.common.script.groovy.GroovyScriptExecutorFactory
+org.identityconnectors.common.script.javascript.JavaScriptExecutorFactory

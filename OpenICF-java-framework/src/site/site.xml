@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ! CCPL HEADER START
+  !
+  ! This work is licensed under the Creative Commons
+  ! Attribution-NonCommercial-NoDerivs 3.0 Unported License.
+  ! To view a copy of this license, visit
+  ! http://creativecommons.org/licenses/by-nc-nd/3.0/
+  ! or send a letter to Creative Commons, 444 Castro Street,
+  ! Suite 900, Mountain View, California, 94041, USA.
+  !
+  ! See the License for the specific language governing permissions
+  ! and limitations under the License.
+  !
+  ! If applicable, add the following below this CCPL HEADER, with the fields
+  ! enclosed by brackets "[]" replaced with your own identifying information:
+  !      Portions Copyright [yyyy] [name of copyright owner]
+  !
+  ! CCPL HEADER END
+  !
+  !      Copyright 2010-2015 ForgeRock AS.
+  !
+-->
+
+<project xmlns="http://maven.apache.org/DECORATION/1.3.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/DECORATION/1.3.0 http://maven.apache.org/xsd/decoration-1.3.0.xsd">
+    <skin>
+        <groupId>org.forgerock.commons</groupId>
+        <artifactId>forgerock-community-skin</artifactId>
+        <version>1.0.0</version>
+    </skin>
+    <publishDate position="right" format="yyyy.MM.dd"/>
+    <version position="right"/>
+    <body>
+        <breadcrumbs>
+            <item name="OpenICF" href="http://openicf.forgerock.org/"/>
+        </breadcrumbs>
+
+        <menu name="OpenICF">
+            <item name="Welcome" href="index.html" />
+            <item name="Join" href="https://sso.forgerock.org/openam/UI/Login?gx_charset=UTF-8" />
+            <item name="FAQ" href="faq.html" />
+            <item name="Mailing Lists" href="mail-lists.html" />
+            <item name="Support" href="http://forgerock.com/what-we-offer/subscriptions/" />
+            <item name="Partners" href="http://forgerock.com/partners/" />
+            <item name="Connectors" href="./connectors/index.html"/>
+            <item name="Builds" href="http://forgerock.org/openicf.html" />
+            <item name="Archives" href="http://forgerock.org/openicf-archive.html" />
+            <item name="Enterprise Downloads" href="http://forgerock.com/download-stack/" />
+        </menu>
+
+        <menu name="OpenICF Docs (in progress)">
+            <item name="All Formats" href="docs.html" />
+            <item name="Release Notes" href="./doc/bootstrap/release-notes/index.html" />
+            <item name="Configuration Reference" href="./doc/bootstrap/config-reference/index.html" />
+            <item name="Developer Guide" href="./doc/bootstrap/dev-guide/index.html" />
+            <item name="Javadoc" href="./apidocs/index.html" />
+        </menu>
+
+        <menu name="OpenICF Development" img="images/arrow_right.png">
+            <item name="Join" href="https://sso.forgerock.org/openam/UI/Login?gx_charset=UTF-8" />
+            <item name="Issue Tracking" href="issue-tracking.html" />
+            <item name="License" href="license.html" />
+            <item name="Source Repository" href="source-repository.html" />
+            <item name="Contribute" href="http://www.forgerock.org/get_involved.html"/>
+            <item name="Developments" href="development.html"/>
+            <item name="Connector Archetype" href="connector-archetype/"/>
+            <item name="Modules" href="#">
+                <item name="Framework" href="connector-framework/"/>
+                <item name="Framework - Internal" href="connector-framework-internal/"/>
+                <item name="Common Test Library" href="connector-test-common/"/>
+                <item name="Contract Tests" href="connector-framework-contract/"/>
+            </item>
+        </menu>
+
+        <menu ref="reports"/>
+    </body>
+	<googleAnalyticsAccountId>UA-23412190-10</googleAnalyticsAccountId>
+    <custom>
+        <googleAnalytics>UA-23412190-10</googleAnalytics>
+        <openproject>
+            <href>http://openicf.forgerock.org</href>
+            <src>images/openicf-tagline-195x65.png</src>
+            <alt>OpenICF</alt>
+        </openproject>
+        <siteSearchFQDN>openicf.forgerock.org</siteSearchFQDN>
+    </custom>
+</project>

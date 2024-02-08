@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<faqs xmlns="http://maven.apache.org/FML/1.0.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/FML/1.0.1 http://maven.apache.org/xsd/fml-1.0.1.xsd"
+  id="FAQ"
+  title="Frequently Asked Questions"
+  toplink="false">
+    <part id="General">
+        <title>Frequently Asked Questions</title>
+        <faq id="openicf-framework-contract01">
+            <question>How to disable single attribute in tests?</question>
+            <answer>
+                <p>
+                    For instance we want to disable sending
+                    <code>FIRSTNAME</code> attribute of
+                    <code>__ACCOUNT__</code> objectclass in
+                    <code>CreateApiOpTests</code>:
+                    <pre>
+    import org.identityconnectors.test.common.ObjectNotFoundException
+    Create.__ACCOUNT__.FIRSTNAME = new ObjectNotFoundException()
+                    </pre>
+                </p>
+            </answer>
+        </faq>
+        <faq id="openicf-framework-contract02">
+            <question>How to escape special characters in test property names?</question>
+            <answer>
+                <p>
+                    Property names containing special characters (invalid Java identifiers), such as
+                    <span style="font-family: monospace;">@</span>,
+                    <span style="font-family: monospace;">-</span> etc. should be escaped. For example,
+                    <span style="font-family:monospace;">testsuite.
+                        <strong>"</strong>name-with-dash
+                        <strong>"</strong>
+                    </span>. Property names, however, cannot start with the escaped part(
+                    <span style="font-family: monospace;">name-with-dash</span> in this case).
+                </p>
+            </answer>
+        </faq>
+        <faq id="openicf-framework-contract03">
+            <question>Howto list and control presence of required JAR files for the connector?</question>
+            <answer>
+                <p>
+                    Contract tests can control the presence of required classes on Classpath. If the JAR is missing the error message will show
+                    the error message containing the name of missing JAR file.
+                </p>
+                <p>
+                    Example:
+                    <pre>
+    testsuite.requiredClasses = [
+        'com.mysql.jdbc.Driver' : 'Connector/J  5.0.8 (mysql-connector-java-5.0.8-bin.jar)',
+        'com.foo.bar' : 'foo-bar-1.1.jar'
+        //...
+        // 'class name' : 'text description of JAR containing the class'
+    ]
+                    </pre>
+                </p>
+            </answer>
+        </faq>
+        <faq id="openicf-framework-contract04">
+            <question>How to set up TestHelpers -- the unit test dataprovider?</question>
+            <answer>
+                <p>
+                    In Eclipse IDE you should add a 'linked resource' called USER_HOME, that will point to your home directory.
+                </p>
+            </answer>
+        </faq>
+    </part>
+</faqs>

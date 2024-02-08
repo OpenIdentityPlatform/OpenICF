@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+ Copyright (c) 2010-2015 ForgeRock AS. All rights reserved.
+
+ The contents of this file are subject to the terms
+ of the Common Development and Distribution License
+ (the License). You may not use this file except in
+ compliance with the License.
+
+ You can obtain a copy of the License at
+ http://forgerock.org/license/CDDLv1.0.html
+ See the License for the specific language governing
+ permission and limitations under the License.
+
+ When distributing Covered Code, include this CDDL
+ Header Notice in each file and include the License file
+ at http://forgerock.org/license/CDDLv1.0.html
+ If applicable, add the following below the CDDL Header,
+ with the fields enclosed by brackets [] replaced by
+ your own identifying information:
+ "Portions Copyrighted [year] [name of copyright owner]"
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.forgerock.openicf.framework</groupId>
+        <artifactId>framework</artifactId>
+        <version>1.5.2.0</version>
+    </parent>
+    <groupId>org.forgerock.openicf.connectors</groupId>
+    <artifactId>connectors-parent</artifactId>
+    <packaging>pom</packaging>
+    <name>OpenICF Connectors</name>
+    <description>
+        This pom module is the parent for all connector bundles. It defines the dependencies on framework, building the
+        connector bundle and common reporting for connectors.
+        This is not multi module project, it does not aggregate the connectors, it is just common parent.
+    </description>
+    <distributionManagement>
+        <site>
+            <id>forgerock.org</id>
+            <url>${siteDistributionURL}/connectors/</url>
+        </site>
+    </distributionManagement>
+    <!-- mvn help:effective-pom
+         mvn archetype:create-from-project
+         mvn help:active-profiles
+     -->
+    <properties>
+        <!--
+            These are the properties needed in manifest file of the bundle,
+            but now hardcoded in tests
+        -->
+        <ConnectorBundle-FrameworkVersion>${framework.compatibilityVersion}</ConnectorBundle-FrameworkVersion>
+        <ConnectorBundle-Name>${project.groupId}.${project.artifactId}</ConnectorBundle-Name>
+        <ConnectorBundle-Version>${project.version}</ConnectorBundle-Version>
+        <!--
+            These are the variables needs to define in order to a proper test coverage.
+        -->
+        <!-- These two properties must be set in the connector project -->
+        <connectorName>${connectorPackage}.${connectorClass}</connectorName>
+
+        <testConfigurations>default</testConfigurations>
+        <privateConfigPath>${user.home}/.connectors/${project.artifactId}-${project.version}/config</privateConfigPath>
+
+        <!-- OSGi Properties -->
+        <openicf.osgi.exclude.dependencies>false</openicf.osgi.exclude.dependencies>
+        <project.framework.version>${framework.compatibilityVersion}.${framework.releaseVersion}</project.framework.version>
+
+        <openicf.osgi.import.framework.version>
+            version="[$(version;==;${project.framework.version}),$(version;+;${project.framework.version}))"
+        </openicf.osgi.import.framework.version>
+        <openicf.osgi.import.strict.version>
+            version="[$(version;===;${project.framework.version}),$(version;=+;${project.framework.version}))"
+        </openicf.osgi.import.strict.version>
+
+        <openicf.osgi.import.before.defaults />
+        <openicf.osgi.import.defaults />
+        <openicf.osgi.import.additional />
+
+        <openicf.osgi.import.pkg>
+            org.identityconnectors.*;${openicf.osgi.import.framework.version},
+            ${openicf.osgi.import.before.defaults},
+            ${openicf.osgi.import.defaults},
+            ${openicf.osgi.import.additional},
+            *
+        </openicf.osgi.import.pkg>
+        <openicf.osgi.import>${openicf.osgi.import.pkg}</openicf.osgi.import>
+
+        <openicf.osgi.private />
+        <!--openicf.osgi.private>${connectorPackage}*.impl</openicf.osgi.private-->
+
+        <openicf.osgi.export.pkg>!*.impl*;!*.internal*;${connectorPackage}*</openicf.osgi.export.pkg>
+        <openicf.osgi.version>version=${project.version}</openicf.osgi.version>
+        <openicf.osgi.split.pkg>-split-package:=first</openicf.osgi.split.pkg>
+        <!--openicf.osgi.export>
+            ${openicf.osgi.export.pkg};${openicf.osgi.version};-noimport:=true;${openicf.osgi.split.pkg}
+        </openicf.osgi.export-->
+        <openicf.osgi.export>
+            ${openicf.osgi.export.pkg};${openicf.osgi.version};-noimport:=true
+        </openicf.osgi.export>
+
+
+        <openicf.osgi.symbolic.name>${project.groupId}.${project.artifactId}</openicf.osgi.symbolic.name>
+        <openicf.osgi.activator />
+        <openicf.osgi.dynamic.import />
+        <openicf.osgi.include.resource>{maven-resources}</openicf.osgi.include.resource>
+        <openicf.osgi.import.default.version>
+            [$(version;==;$(@)),$(version;=+;$(@)))
+        </openicf.osgi.import.default.version>
+        <openicf.osgi.remove.headers>
+            Ignore-Package,Include-Resource,Private-Package,Bundle-DocURL,Embedded-Artifacts,Embed-Dependency,Built-By,
+            Build-Jdk,Tool
+        </openicf.osgi.remove.headers>
+        <openicf.osgi.failok>false</openicf.osgi.failok>
+        <openicf.osgi.export.service />
+        <openicf.osgi.import.service />
+        <openicf.osgi.embed />
+        <!-- If we release this project, we need to include the ForgeRock binary license -->
+        <include.binary.license>
+            ${project.build.directory}/maven-shared-archive-resources/legal-notices
+        </include.binary.license>
+
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.forgerock.openicf.framework</groupId>
+                <artifactId>connector-framework</artifactId>
+                <version>${project.framework.version}</version>
+            </dependency>
+
+            <!-- Test Dependencies -->
+            <dependency>
+                <groupId>org.forgerock.openicf.framework</groupId>
+                <artifactId>connector-framework-internal</artifactId>
+                <version>${project.framework.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.forgerock.openicf.framework</groupId>
+                <artifactId>connector-test-common</artifactId>
+                <version>${project.framework.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.forgerock.openicf.framework</groupId>
+                <artifactId>connector-framework</artifactId>
+                <version>${project.framework.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <testResources>
+            <testResource>
+                <directory>${project.basedir}/src/test/config</directory>
+            </testResource>
+            <testResource>
+                <directory>${privateConfigPath}</directory>
+                <excludes>
+                    <exclude>lib/**</exclude>
+                    <exclude>**/target/**</exclude>
+                </excludes>
+            </testResource>
+            <!--testResource>
+                        <directory>src/test/java</directory>
+                        <excludes>
+                            <exclude>**/*.java</exclude>
+                        </excludes>
+                    </testResource-->
+            <testResource>
+                <directory>src/test/resources</directory>
+            </testResource>
+        </testResources>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <configuration>
+                        <links>
+                            <link>http://download.oracle.com/javase/8/docs/api/</link>
+                            <link>http://docs.groovy-lang.org/latest/html/api/</link>
+                            <link>http://openicf.forgerock.org/apidocs/</link>
+                        </links>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <configuration>
+                        <stagingSiteURL>
+                            ${siteDistributionURL}/connectors/${project.artifactId}-${project.version}
+                        </stagingSiteURL>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.forgerock.maven.plugins</groupId>
+                            <artifactId>openicf-maven-plugin</artifactId>
+                            <version>${openicf.maven.plugin.version}</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-scm-plugin</artifactId>
+                    <configuration>
+                        <tag>${project.version}</tag>
+                        <message>[ForgeRock Connector Release] ${project.name}</message>
+                    </configuration>
+                </plugin>
+
+
+                <!--<plugins>-->
+                <plugin>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>maven-bundle-plugin</artifactId>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <excludeDependencies>${openicf.osgi.exclude.dependencies}</excludeDependencies>
+                        <instructions>
+                            <!-- Required immutable instructions -->
+                            <Embed-Directory>lib</Embed-Directory>
+                            <Embed-Transitive>true</Embed-Transitive>
+
+                            <!-- OpenICF Headers -->
+                            <ConnectorBundle-FrameworkVersion>
+                                ${ConnectorBundle-FrameworkVersion}
+                            </ConnectorBundle-FrameworkVersion>
+                            <ConnectorBundle-Name>${ConnectorBundle-Name}</ConnectorBundle-Name>
+                            <ConnectorBundle-Version>${ConnectorBundle-Version}</ConnectorBundle-Version>
+
+
+                            <!-- OSGi Headers -->
+                            <Bundle-Name>${project.name}</Bundle-Name>
+                            <Bundle-SymbolicName>${openicf.osgi.symbolic.name}</Bundle-SymbolicName>
+                            <Bundle-Activator>${openicf.osgi.activator}</Bundle-Activator>
+                            <Export-Package>${openicf.osgi.export}</Export-Package>
+                            <Import-Package>${openicf.osgi.import}</Import-Package>
+                            <DynamicImport-Package>${openicf.osgi.dynamic.import}</DynamicImport-Package>
+                            <Private-Package>${openicf.osgi.private}</Private-Package>
+                            <Include-Resource>${openicf.osgi.include.resource}</Include-Resource>
+                            <_versionpolicy>${openicf.osgi.import.default.version}</_versionpolicy>
+                            <_removeheaders>${openicf.osgi.remove.headers}</_removeheaders>
+                            <_failok>${openicf.osgi.failok}</_failok>
+                            <Export-Service>${openicf.osgi.export.service}</Export-Service>
+                            <Import-Service>${openicf.osgi.import.service}</Import-Service>
+                            <Embed-Dependency>${openicf.osgi.embed}</Embed-Dependency>
+
+
+                            <!-- Implementation Entries -->
+                            <Implementation-Title>${project.name}</Implementation-Title>
+                            <Implementation-Version>${project.version}</Implementation-Version>
+                            <Implementation-Vendor-Id>${project.groupId}</Implementation-Vendor-Id>
+                            <Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
+                        </instructions>
+                    </configuration>
+                </plugin>
+
+                <!-- We want to package up license resources in the JARs produced -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-remote-resources-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>process</goal>
+                            </goals>
+                            <configuration>
+                                <resourceBundles>
+                                    <resourceBundle>${licenseResourceBundle}</resourceBundle>
+                                </resourceBundles>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <executions>
+
+                        <!-- Attach also test-jar -->
+                        <execution>
+                            <id>package-test</id>
+                            <configuration>
+                                <excludes>
+                                    <exclude>${connectorName}/**</exclude>
+                                </excludes>
+                            </configuration>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>test-jar</goal>
+                            </goals>
+                        </execution>
+
+                        <!-- Attach public test config -->
+                        <execution>
+                            <id>package-publictestconfig</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                            <configuration>
+                                <classesDirectory>${project.build.testOutputDirectory}</classesDirectory>
+                                <classifier>publictestconfig</classifier>
+                                <includes>
+                                    <include>${connectorName}/**</include>
+                                </includes>
+                                <excludes>
+                                    <exclude>**/config-private/**</exclude>
+                                </excludes>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                        <systemPropertyVariables>
+                            <bundleJar>${project.build.directory}/${project.build.finalName}.jar</bundleJar>
+                            <bundleName>${ConnectorBundle-Name}</bundleName>
+                            <bundleVersion>${ConnectorBundle-Version}</bundleVersion>
+                            <testConfig>${testConfigurations}</testConfig>
+                            <connectorName>${connectorName}</connectorName>
+                        </systemPropertyVariables>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.forgerock.maven.plugins</groupId>
+                    <artifactId>openicf-maven-plugin</artifactId>
+                    <version>${openicf.maven.plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.forgerock.maven.plugins</groupId>
+                <artifactId>openicf-maven-plugin</artifactId>
+                <version>${openicf.maven.plugin.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <links>
+                        <link>http://download.oracle.com/javase/8/docs/api/</link>
+                        <link>http://docs.groovy-lang.org/latest/html/api/</link>
+                        <link>http://openicf.forgerock.org/apidocs/</link>
+                    </links>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
+
+    <!-- Profiles-->
+
+    <profiles>
+        <profile>
+            <id>generate-docbook</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.forgerock.maven.plugins</groupId>
+                        <artifactId>openicf-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>docbkx</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.forgerock.commons</groupId>
+                        <artifactId>forgerock-doc-maven-plugin</artifactId>
+                        <inherited>true</inherited>
+                        <configuration>
+                            <projectName>OpenICF</projectName>
+                            <googleAnalyticsId>${googleAnalyticsAccountId}</googleAnalyticsId>
+                            <projectVersion>${docTargetVersion}</projectVersion>
+                            <releaseVersion>${docTargetVersion}</releaseVersion>
+                            <docbkxSourceDirectory>${project.build.directory}/openicf-docbkx</docbkxSourceDirectory>
+                            <projectVersion>${docTargetVersion}</projectVersion>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>pre-process-doc</id>
+                                <phase>pre-site</phase>
+                                <goals>
+                                    <goal>process</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>build-doc</id>
+                                <phase>pre-site</phase>
+                                <goals>
+                                    <goal>build</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>layout-site</id>
+                                <phase>site</phase>
+                                <goals>
+                                    <goal>site</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>layout-release</id>
+                                <phase>site</phase>
+                                <goals>
+                                    <goal>release</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!--
+
+        Maven uses when resolving custom properties:
+
+        1. System properties: set with -Dxyz=value on the command line.
+        2. From currently active profile(s): settings.xml in user home directory first,
+           then profiles.xml in project root directory, then in profiles defined in your pom.xml.
+           If many profiles are active, and a property is defined in more than one of those,
+           the order of precedence is based on the last profile in which this property is defined,
+           in alphabetical order of profile name.
+        3. In the properties section of your pom.xml.
+        4. Lastly, in properties defined in filters. If a property is defined in multiple filters,
+           then the last one (in order of appearance in your filters section)
+           has precedence over the others.
+
+        -->
+    </profiles>
+</project>
