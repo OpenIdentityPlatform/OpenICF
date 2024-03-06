@@ -1,0 +1,94 @@
+{
+    "__ACCOUNT__": {
+        "resourceContainer": "users",
+        "attributes": {
+            "__NAME__": {
+                "attributeInfo": null,
+                "jsonName": "userName",
+                "jsonType": "boolean"
+            }
+        }
+    },
+    "objectTypes": {
+        "groups": {
+            "$schema": "http://json-schema.org/draft-03/schema",
+            "id": "__GROUP__",
+            "type": "object",
+            "nativeType": "__GROUP__",
+            "properties": {
+                "_id": {
+                    "type": "string",
+                    "required": true,
+                    "nativeName": "__NAME__",
+                    "nativeType": "string"
+                },
+                "description": {
+                    "type": "string",
+                    "nativeName": "__DESCRIPTION__",
+                    "nativeType": "string"
+                }
+            }
+        },
+        "users": {
+            "$schema": "http://json-schema.org/draft-03/schema",
+            "id": "__ACCOUNT__",
+            "type": "object",
+            "nativeType": "__ACCOUNT__",
+            "properties": {
+                "userName": {
+                    "type": "string",
+                    "required": true,
+                    "nativeName": "__NAME__",
+                    "nativeType": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "nativeName": "__CURRENT_PASSWORD__",
+                    "nativeType": "JAVA_TYPE_GUARDEDSTRING",
+                    "flags": ["NOT_READABLE", "NOT_RETURNED_BY_DEFAULT"]
+                },
+                "givenName": {
+                    "type": "string",
+                    "required": true,
+                    "nativeName": "givenName",
+                    "nativeType": "string"
+                },
+                "sn": {
+                    "type": "string",
+                    "required": true,
+                    "nativeName": "sn",
+                    "nativeType": "string"
+                },
+                "mail": {
+                    "type": "string",
+                    "required": true,
+                    "nativeName": "mail",
+                    "nativeType": "string"
+                },
+                "telephoneNumber": {
+                    "type": "string",
+                    "nativeName": "telephoneNumber",
+                    "nativeType": "string"
+                },
+                "active": {
+                    "type": "boolean",
+                    "nativeName": "__ENABLE__",
+                    "nativeType": "boolean"
+                },
+                "createDate": {
+                    "type": "number",
+                    "nativeName": "createDate",
+                    "nativeType": "JAVA_TYPE_LONG"
+                },
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "nativeName": "__GROUPS__",
+                    "nativeType": "string"
+                }
+            }
+        }
+    }
+}

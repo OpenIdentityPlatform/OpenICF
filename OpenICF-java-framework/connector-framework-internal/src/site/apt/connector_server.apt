@@ -1,0 +1,285 @@
+   -------------------------
+    Title
+   -------------------------
+   -------------------------
+    Date
+   -------------------------
+~~
+~~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+~~
+~~ Copyright (c) 2010-2013 ForgeRock AS. All rights reserved.
+~~
+~~ The contents of this file are subject to the terms
+~~ of the Common Development and Distribution License
+~~ (the License). You may not use this file except in
+~~ compliance with the License.
+~~
+~~ You can obtain a copy of the License at
+~~ http://forgerock.org/license/CDDLv1.0.html
+~~ See the License for the specific language governing
+~~ permission and limitations under the License.
+~~
+~~ When distributing Covered Code, include this CDDL
+~~ Header Notice in each file and include the License file
+~~ at http://forgerock.org/license/CDDLv1.0.html
+~~ If applicable, add the following below the CDDL Header,
+~~ with the fields enclosed by brackets [] replaced by
+~~ your own identifying information:
+~~ "Portions Copyrighted [year] [name of copyright owner]"
+~~
+~~ $Id$
+~~
+
+Connector Server
+
+    A connector server is required when a connector bundle is not directly executed within your application. By using one or more connector servers, the connector architecture thus permits your application to communicate with externally deployed bundles.
+
+    Connector servers are available for both Java and .NET.
+
+    The use of .NET connector servers is especially useful when an application is written in Java, but a connector bundle is written using C#. Since a Java application (e.g. J2EE application) cannot load C# classes, it is necessary to instead deploy the C# bundles under a .NET connector server. The Java application can communicate with the C# connector server over the network, and the C# connector server serves as a proxy to provide to any authenticated application access to the C# bundles deployed within the C# connector server.
+
+    A Java connector server is useful when you do not wish to execute a Java connector bundle in the same VM as your application. It may be beneficial to run a Java connector on a different host for performance improvements if the bundle works faster when deployed on the same host as the native managed resource. Additionally, one may wish to use a Java connector server under a Java remote connector server in order to eliminate the possibility of an application VM crash due to a fault in a JNI-based connector.
+
+*.NET Connector Server
+
+**Installing a .NET Connector Server
+
+    <<Minimum Requirements:>>
+
+    *Windows Server 2003 or 2008
+
+    *.NET Framework 3.5 or higher but not 4.0 or above!
+
+    *Refer to your .NET connector to determine if there are any additional requirements
+
+    []
+
+    Execute <<ServiceInstall-1.1.0.xxxx.msi>>. Just follow the wizard. It will walk you through the whole process step by step. Upon completion, the Connector Server will be installed as a windows service.
+
+**Configuring the .NET Connector Server
+
+    Start the Microsoft Services Console. Check to see if the Connector Server is currently running. If so, stop it. From a command prompt, set the key for the connector Server. This is done by changing to the directory where the connector server was installed (by default: <\Program Files\Identity Connectors\Connector Server>) and executing the following command:
+
+---
+ConnectorServer /setkey <newkey>
+---
+
+    where <newkey> is the value for the new key. This key is required by any client that connects to this Connector Server.
+
+    Look through the configuration file and inspect all settings. The most common things to change would be the port, trace, and ssl settings.
+
+    For more information about configuring the Connector Server with SSL, see {{{Using SSL}this section}}.
+
+***Additional Notes about configuration
+
+    The port, address, and SSL settings are in the tag called AppSettings, and look like this:
+
+---
+<add key="connectorserver.port" value="8759" />
+<add key="connectorserver.usessl" value="false" />
+
+<add key="connectorserver.certificatestorename" value="ConnectorServerSSLCertificate" />
+<add key="connectorserver.ifaddress" value="0.0.0.0" />
+---
+
+    The port can be set by changing the value of <connectorserver.port>. The listening socket can be bound to a particular address, or can be left as 0.0.0.0. To setup to use SSL, you must set the value of <connectorserver.usessl> to true, and then set the value of <connectorserver.certifacatestorename> to your the certificate store name.
+
+    You will need to record for use later the following information regarding your connector server installation:
+
+    *Host name or IP address
+
+    *Connector server port
+
+    *Connector server key
+
+    *Whether SSL is enabled
+
+    []
+
+***Changing Trace Settings
+
+    Trace settings are in the configuration file. The settings look like this:
+
+---
+<system.diagnostics>
+  <trace autoflush="true" indentsize="4">
+     <listeners>
+       <remove name="Default" />
+       <add name="myListener" type="System.Diagnostics.TextWriterTraceListener" initializeData="c:\connectorserver2.log" traceOutputOptions="DateTime">
+         <filter type="System.Diagnostics.EventTypeFilter" initializeData="Information" />
+       </add>
+    </listeners>
+  </trace>
+</system.diagnostics>
+---
+
+    The Connector Server uses the the standard .NET trace mechanism. For more information about the tracing options, see Microsoft's .NET documentation for System.Diagnostics.
+
+    The default settings are a good starting point, but for less tracing, you can change the EventTypeFilter's initializeData to "Warning" or "Error". For very verbose logging you can set the value to "Verbose" or "All". The amount of logging performed has a direct effect on the performance of the Connector Servers, so be careful of the setting.
+
+    Any configuration changes will require the connector server to be stopped and restarted.
+
+**Running the .NET Connector Server
+
+    The best way to run the Connector Server is as a Windows service. When installing, the Connector Server is installed as a Windows service. This should be fine for most installations.
+
+    If for some reason, this is not adequate, the connector server may be installed or uninstalled as a Windows service by using the </install> or </uninstall> arguments on the command line. To run the Connector Server interactively, issue the command:
+
+---
+ConnectorServer /run
+---
+
+***Installing Connectors on a .NET Connector Server
+
+    To install new connectors, change to the directory where the Connector Server was installed, and unzip the zip file containing the connector there. Restart the Connector Server.
+
+***Running Multiple Connector Servers on the Same Machine
+
+    To install additional Connector Servers on the same machine, download the Connector Server zip file from the {{{../downloads.html}downloads}} section. Create a directory to install to, and unzip the file there. Edit the configuration file as described above ensuring that you have a unique port. You may also want to make sure that the trace file is different as well. You can then run the additional Connector Server interactively or as a service.
+
+*Java Connector Server
+
+**Installing a Java Connector Server
+
+    Minimum Requirements:
+
+    *Java 1.5 or later
+
+    *Refer to your Java connectors to determine if there are any additional requirements
+
+    []
+
+    Create your execution environment
+
+    *Create an empty directory (e.g. /usr/jconnserv) on the host where you wish to run the Java connector server.
+
+    *Copy the jars connector-framework.jar and connector-framework-internal.jar and groovy-all.jar from the IdM web app's WEB-INF/lib into the directory
+
+    *Create a new directory called bundles in the directory.
+
+    *Using jar or unzip or similar tool, extract the connectorserver.properties from the connector-framework-internal.jar into the directory. The connectoserver.properties file is located in the jar as the path org/identityconnectors/framework/server/connectorserver.properties.
+
+    []
+
+***Test your execution environment
+
+    Run the Java connector server with no arguments to see the list of command-line options
+
++---
+java -jar connector-framework-internal.jar
+Usage: Main -run -properties <connectorserver.properties>
+       Main -setKey -key <key> -properties <connectorserver.properties>
+       Main -setDefaults -properties <connectorserver.properties>
+NOTE: If using SSL, you must specify the system config
+    properties:
+        -Djavax.net.ssl.keyStore
+        -Djavax.net.ssl.keyStoreType (optional)
+        -Djavax.net.ssl.keyStorePassword
++---
+
+
+**Configure your Java connector server
+
+    *Run the connector server with the -setKey option as described above to set your desired key into your properties file
+
+    *For all other properties (e.g. port) , edit the connectorserver.properties manually. The available properties are described in the connectorserver.properties file.
+
+    []
+
+***Running your Java connector server
+
+    Run the server by launching with the -run option:
+
+---
+java -cp "connector-framework.jar:connector-framework-internal.jar:groovy-all.jar" org.identityconnectors.framework.server.Main -run -properties connectorserver.properties
+---
+
+***Installing Connectors on a Java Connector Server
+
+    To deploy a Java connector:
+
+    *Copy the Java connector bundle jar file change directory to the bundles directory in your Java connector server directory
+
+    *If necessary, add to the classpath any 3rd party jars required by any Java connector.
+
+    *Restart the Java connector server
+
+**{Using SSL} to communicate with connector servers
+
+    The following steps are necessary to successfully communicate with a connector server using SSL:
+
+    *Deploy an SSL certificate to the connector server's system.
+
+    *Configure your connector server to provide SSL sockets.
+
+    *Configure your application to communicate with the communicate with the connector server via SSL.
+
+    []
+
+***Configure your application to use SSL
+
+    Refer to your application manual for specific notes on how to configure connections to connector servers. You will need to indicate to your application that an SSL connection is required when establishing a connection for each SSL-enabled connector server.
+
+    Additionally, if any of the SSL certificates used by your connector servers is issued by a non-standard certificate authority, your application must be configured to respect the additional authorities. Refer to your application manual for notes regarding certificate authorities.
+
+    Java applications may solve the non-standard certificate authority issue by expecting that the following Java system properties are passed when launching the application:
+
+    *javax.net.ssl.trustStorePassword
+
+    For example, -Djavax.net.ssl.trustStorePassword=changeit
+
+    []
+
+    *javax.net.ssl.trustStore
+
+    For example, <-Djavax.net.ssl.trustStore=/usr/myApp_cacerts>
+
+    []
+
+    Or, instead, the non-standard certificate authorities may be imported to the standard <${JAVA_HOME}/lib/security/cacerts>.
+
+
+Example connector server properties file
+
+    Clear key value: changeit
+
++---
+##
+## The port we are to run on
+##
+connectorserver.port=8759
+
+##
+## The bundle directory in which to find the bundles
+##
+connectorserver.bundleDir=bundles
+
+##
+## The bundle directory in which to find any libraries needed by bundles at runtime
+##
+connectorserver.libDir=lib
+
+##
+## Set to true to use SSL.
+## NOTE: If using SSL, you must specify the following system config properties (on the command line):
+##      -Djavax.net.ssl.keyStore
+##      -Djavax.net.ssl.keyStoreType (optional);
+##      -Djavax.net.ssl.keyStorePassword;
+##
+connectorserver.usessl=false
+
+##
+## Optionally specify a specific address to bind to
+##
+#connectorserver.ifaddress=localhost
+
+##
+## Secure hash of the gateway key. Set this by using the
+## -setKey flag
+##
+connectorserver.key=lmA6bMfENJGlIDbfrVtklXFK32s\=
+
+##
+## Logger class.
+##
++---

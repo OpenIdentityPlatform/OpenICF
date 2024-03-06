@@ -1,0 +1,277 @@
+syntax = "proto3";
+
+option csharp_namespace = "Org.ForgeRock.OpenICF.Common.ProtoBuf";
+package org.forgerock.openicf.common.protobuf;
+
+import "CommonObjectMessages.proto";
+
+//import "FilterMessages.proto";
+
+//Interface AuthenticateOp
+message AuthenticateOpRequest {
+    string objectClass = 1;
+    string username = 2;
+    bytes password = 3;
+    bytes options = 4;
+}
+
+message AuthenticateOpResponse {
+    Uid uid = 1;
+}
+
+//Interface BatchOp
+message BatchOpRequest {
+    bool query = 1;
+    repeated BatchOpTask tasks = 2;
+    repeated string batchToken = 3;
+    bytes options = 4;
+}
+
+message BatchOpTask {
+    string taskId = 1;
+    CreateOpRequest createRequest = 2;
+    DeleteOpRequest deleteRequest = 3;
+    UpdateOpRequest updateRequest = 4;
+}
+
+message BatchOpResult {
+    repeated string batchToken = 1;
+    string taskId = 2;
+    bool complete = 3;
+    bool error = 4;
+    bool queryRequired = 5;
+    bool asynchronousResults = 6;
+    bool returnsResults = 7;
+    Uid uid = 8;
+    BatchEmptyResponse emptyResult = 9;
+}
+
+message BatchEmptyResponse {
+    string resultMessage = 2;
+}
+
+//Interface CreateOp
+message CreateOpRequest {
+    string objectClass = 1;
+    bytes createAttributes = 2;
+    //repeated AttributeMessage createAttributes = 2;
+    bytes options = 3;
+}
+
+message CreateOpResponse {
+    Uid uid = 1;
+}
+
+//Interface ConnectorEventSubscriptionOp
+message ConnectorEventSubscriptionOpRequest {
+    string objectClass = 1;
+    bytes eventFilter = 2;
+    bytes options = 3;
+}
+
+message ConnectorEventSubscriptionOpResponse {
+    ConnectorObject connectorObject = 1;
+    bool completed = 2;
+}
+
+//Interface DeleteOp
+message DeleteOpRequest {
+    string objectClass = 1;
+    Uid uid = 2;
+    bytes options = 3;
+}
+
+message DeleteOpResponse {
+}
+
+//Interface GetOp
+message GetOpRequest {
+    string objectClass = 1;
+    Uid uid = 2;
+    bytes options = 3;
+}
+
+message GetOpResponse {
+    bytes connectorObject = 1;
+}
+
+//Interface ResolveUsernameOp
+message ResolveUsernameOpRequest {
+    string objectClass = 1;
+    string username = 2;
+    bytes options = 3;
+}
+
+message ResolveUsernameOpResponse {
+    Uid uid = 1;
+}
+
+//Interface SchemaOp
+message SchemaOpRequest {
+}
+
+message SchemaOpResponse {
+    bytes schema = 1;
+}
+
+//Interface ScriptOnConnectorOp
+message ScriptOnConnectorOpRequest {
+    ScriptContext scriptContext = 1;
+    bytes options = 2;
+}
+
+message ScriptOnConnectorOpResponse {
+    bytes object = 1;
+}
+
+//Interface ScriptOnResourceOp
+message ScriptOnResourceOpRequest {
+    ScriptContext scriptContext = 1;
+    bytes options = 2;
+}
+
+message ScriptOnResourceOpResponse {
+    bytes object = 1;
+}
+
+//Interface SearchOp
+message SearchOpRequest {
+    string objectClass = 1;
+    bytes filter = 2;
+    //FilterUnionMessage filter = 2;
+    bytes options = 3;
+}
+
+message SearchOpResponse {
+    int64 sequence = 1;
+    SearchResult result = 2;
+    ConnectorObject connectorObject = 3;
+}
+
+//Interface SyncOp
+message SyncOpRequest {
+    message Sync {
+        string objectClass = 1;
+        SyncToken token = 2;
+        bytes options = 3;
+    }
+    message LatestSyncToken {
+        string objectClass = 1;
+    }
+    Sync sync = 1;
+    LatestSyncToken latestSyncToken = 2;
+}
+
+message SyncOpResponse {
+    message Sync {
+        int64 sequence = 1;
+        SyncToken syncToken = 2;
+        SyncDelta syncDelta = 3;
+    }
+    message LatestSyncToken {
+        SyncToken syncToken = 1;
+    }
+    Sync sync = 1;
+    LatestSyncToken latestSyncToken = 2;
+}
+
+//Interface SyncEventSubscriptionOp
+message SyncEventSubscriptionOpRequest {
+    string objectClass = 1;
+    SyncToken token = 2;
+    bytes options = 3;
+}
+
+message SyncEventSubscriptionOpResponse {
+    SyncDelta syncDelta = 1;
+    bool completed = 2;
+}
+
+//Interface TestOp
+message TestOpRequest {
+}
+
+message TestOpResponse {
+}
+
+//Interface UpdateOp
+message UpdateOpRequest {
+    enum UpdateType {
+        REPLACE = 0;
+        ADD = 1;
+        REMOVE = 2;
+    }
+    string objectClass = 1;
+    Uid uid = 2;
+    UpdateType updateType = 3;
+    bytes replaceAttributes = 4;
+    //repeated AttributeMessage replaceAttributes = 4;
+    bytes options = 5;
+}
+
+message UpdateOpResponse {
+    Uid uid = 1;
+}
+
+//Interface ValidateApiOp
+message ValidateOpRequest {
+}
+
+message ValidateOpResponse {
+}
+
+//Configuration Update Event
+message ConfigurationChangeEvent {
+    bytes configurationPropertyChange = 1;
+}
+
+//_______
+
+
+
+message OperationRequest {
+    ConnectorKey connectorKey = 1;
+    bytes connectorFacadeKey = 2;
+    Locale locale = 3;
+
+    //oneof request {
+    AuthenticateOpRequest authenticateOpRequest = 4;
+    CreateOpRequest createOpRequest = 5;
+    ConnectorEventSubscriptionOpRequest connectorEventSubscriptionOpRequest = 6;
+    DeleteOpRequest deleteOpRequest = 7;
+    GetOpRequest getOpRequest = 8;
+    ResolveUsernameOpRequest resolveUsernameOpRequest = 9;
+    SchemaOpRequest schemaOpRequest = 10;
+    ScriptOnConnectorOpRequest scriptOnConnectorOpRequest = 11;
+    ScriptOnResourceOpRequest scriptOnResourceOpRequest = 12;
+    SearchOpRequest searchOpRequest = 13;
+    SyncOpRequest syncOpRequest = 14;
+    SyncEventSubscriptionOpRequest syncEventSubscriptionOpRequest = 15;
+    TestOpRequest testOpRequest = 16;
+    UpdateOpRequest updateOpRequest = 17;
+    ValidateOpRequest ValidateOpRequest = 18;
+    ConfigurationChangeEvent configurationChangeEvent = 19;
+    BatchOpRequest batchOpRequest = 20;
+    //}
+}
+
+message OperationResponse {
+    //oneof response {
+    AuthenticateOpResponse authenticateOpResponse = 1;
+    CreateOpResponse createOpResponse = 2;
+    ConnectorEventSubscriptionOpResponse connectorEventSubscriptionOpResponse = 3;
+    DeleteOpResponse deleteOpResponse = 4;
+    GetOpResponse GetOpResponse = 5;
+    ResolveUsernameOpResponse resolveUsernameOpResponse = 6;
+    SchemaOpResponse schemaOpResponse = 7;
+    ScriptOnConnectorOpResponse scriptOnConnectorOpResponse = 8;
+    ScriptOnResourceOpResponse scriptOnResourceOpResponse = 9;
+    SearchOpResponse searchOpResponse = 10;
+    SyncOpResponse syncOpResponse = 11;
+    SyncEventSubscriptionOpResponse syncEventSubscriptionOpResponse = 12;
+    TestOpResponse testOpResponse = 13;
+    UpdateOpResponse updateOpResponse = 14;
+    ValidateOpResponse validateOpResponse = 15;
+    BatchOpResult batchOpResult = 16;
+    //}
+}

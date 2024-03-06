@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+option csharp_namespace = "Org.ForgeRock.OpenICF.Common.ProtoBuf";
+package org.forgerock.openicf.common.protobuf;
+
+import "ConnectorObjects.proto";
+
+message AttributeInfo {
+    enum AttributeType {
+        STRING = 0;
+        LONG = 1;
+        CHARACTER = 2;
+        DOUBLE = 3;
+        FLOAT = 4;
+        INTEGER = 5;
+        BOOLEAN = 6;
+        BYTE = 7;
+        BYTEARRAY = 8;
+        BIGDECIMAL = 9;
+        BIGINTEGER = 10;
+        MAP = 11;
+    }
+    enum Flags {
+        NONE = 0;
+        REQUIRED = 1;
+        MULTIVALUED = 2;
+        NOT_CREATABLE = 3;
+        NOT_UPDATEABLE = 4;
+        NOT_READABLE = 5;
+        NOT_RETURNED_BY_DEFAULT = 6;
+    }
+    string name = 1;
+    AttributeType type = 2;
+    repeated Flags flags = 3;
+}
+
+message ObjectClassInfo {
+    string type = 1;
+    AttributeInfo attributeInfos = 2;
+    bool isContainer = 3;
+}
+
+message OperationOptionInfo {
+    enum OperationOptionType {
+        STRING = 0;
+        LONG = 1;
+        CHARACTER = 2;
+        DOUBLE = 3;
+        FLOAT = 4;
+        INTEGER = 5;
+        BOOLEAN = 6;
+        URI = 7;
+        FILE = 8;
+        GUARDEDBYTEARRAY = 9;
+        GUARDEDSTRING = 10;
+        SCRIPT = 11;
+        OBJECTCLASS = 12;
+        UID = 13;
+        QUALIFIEDUID = 14;
+        SORTKEY = 15;
+    }
+    string name = 1;
+    OperationOptionType type = 2;
+    bool isArray = 3;
+}
+
+message SupportedMapFieldEntry {
+    APIOperation key = 1;
+    string name = 2;
+}
+
+message Schema {
+    repeated string declaredObjectClasses = 1;
+    repeated string declaredOperationOptions = 2;
+    repeated SupportedMapFieldEntry supportedObjectClassesByOperation = 3;
+    repeated SupportedMapFieldEntry supportedOptionsByOperation = 4;
+}
+

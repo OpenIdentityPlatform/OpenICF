@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+ ! CCPL HEADER START
+ !
+ ! This work is licensed under the Creative Commons
+ ! Attribution-NonCommercial-NoDerivs 3.0 Unported License.
+ ! To view a copy of this license, visit
+ ! http://creativecommons.org/licenses/by-nc-nd/3.0/
+ ! or send a letter to Creative Commons, 444 Castro Street,
+ ! Suite 900, Mountain View, California, 94041, USA.
+ !
+ ! See the License for the specific language governing permissions
+ ! and limitations under the License.
+ !
+ ! If applicable, add the following below this CCPL HEADER, with the fields
+ ! enclosed by brackets "[]" replaced with your own identifying information:
+ !      Portions Copyright [yyyy] [name of copyright owner]
+ !
+ ! CCPL HEADER END
+ !
+ !      Copyright 2010-2013 ForgeRock AS.
+ !
+-->
+
+<project xmlns="http://maven.apache.org/DECORATION/1.3.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/DECORATION/1.3.0 http://maven.apache.org/xsd/decoration-1.3.0.xsd">
+    <body>
+        <!--<breadcrumbs>
+            <item name="Connectors" href="http://openicf.forgerock.org/connectors/" />
+        </breadcrumbs>-->
+
+        <menu name="ForgeRock Supported">
+            <item name="CSV File Connector" href="csvfile-connector/openicf-report.html" />
+            <item name="Database Table Connector" href="databasetable-connector/openicf-report.html" />
+            <item name="Groovy Connector" href="groovy-connector/openicf-report.html" />
+            <item name="LDAP Connector" href="ldap-connector/openicf-report.html" />
+            <item name="Scripted SQL Connector" href="scriptedsql-connector/openicf-report.html" />
+            <item name="XML Connector" href="xml-connector/openicf-report.html" />
+        </menu>
+
+        <menu name="Community Supported">
+            <item name="DB2 Connector" href="db2-connector/openicf-report.html" />
+            <item name="Dummy Connector" href="dummy-connector/openicf-report.html" />
+            <item name="FlatFile Connector" href="flatfile-connector/openicf-report.html" />
+            <item name="GoogleApps Connector" href="googleapps-connector/openicf-report.html" />
+            <item name="MySQLUser Connector" href="mysqluser-connector/openicf-report.html" />
+            <item name="Oracle Connector" href="oracle-connector/openicf-report.html" />
+            <item name="SPML Connector" href="spml-connector/openicf-report.html" />
+            <item name="VMS File Connector" href="vms-connector/openicf-report.html" />
+            <item name="WebTimeSheet Connector" href="webtimesheet-connector/openicf-report.html" />
+        </menu>
+    </body>
+</project>
+

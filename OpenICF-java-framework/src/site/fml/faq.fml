@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<faqs xmlns="http://maven.apache.org/FML/1.0.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/FML/1.0.1 http://maven.apache.org/xsd/fml-1.0.1.xsd"
+  id="FAQ"
+  title="Frequently Asked Questions"
+  toplink="false">
+    <part id="General">
+        <title>Frequently Asked Questions</title>
+        <faq id="openicf01">
+            <question>What are Connectors?</question>
+            <answer>
+                <p>Connectors provide applications with a way to
+                    <a href="./doc/dev-guide/index.html">decouple</a> from the resources that they connect to. The Identity
+                    Connectors Framework is aimed at user provisioning and identity management, but is generalized enough to support
+                    several different kinds of applications. For example, in addition to basic CRUD operations, the API supports Search,
+                    Sync, Authenticate, and Scripting operations, as well as others.
+                </p>
+                <p>Connectors themselves are self-contained
+                    <a href="./connectors">connectors</a> that ride on top of the Connectors Framework.
+                    Applications are completely separated from the bundles, so that different implementations can be swapped in and out without affecting
+                    the app or its dependencies.
+                </p>
+            </answer>
+        </faq>
+        <faq id="openicf02">
+            <question>What are the goals of this project?</question>
+            <answer>
+                <p>At a high level: Provide a generic layer between applications and target resources.</p>
+                <p>At a lower level:</p>
+                <ul>
+                    <li>Offer generic features that are less resource-specific</li>
+                    <li>Extract common functionality out to the framework (reduce duplication in resource adapters)</li>
+                    <li>Server independence</li>
+                    <li>More frequent release cycle</li>
+                    <li>Continuous testing and improvement</li>
+                </ul>
+            </answer>
+        </faq>
+        <faq id="openicf03">
+            <question>What features does the Connectors Framework provide?</question>
+            <answer>
+                <ul>
+                    <li>Connection pooling</li>
+                    <li>Timeouts on all operations</li>
+                    <li>Search filtering</li>
+                    <li>Search and sync buffering and streaming of results</li>
+                    <li>Scripting through Groovy and Boo .NET</li>
+                    <li>Classloader and JVM Isolation</li>
+                    <li>Independent logging API/SPI (much like Apache Commons logging)</li>
+                    <li>Support for two programming platforms (Java/.NET)</li>
+                    <li>Opt-in operations that support simple and advanced implementations on the same CRUD operation</li>
+                    <li>Logging proxy that captures all API calls</li>
+                    <li>
+                        <a href="./connector-archetype">Connector Archetype</a> to create connectors with support for Ant, NetBeans and Eclipse
+                    </li>
+                </ul>
+                <p>See the
+                    <a href="./doc/dev-guide/index.html">design overview</a> for more information on the framework architecture.
+                </p>
+
+            </answer>
+        </faq>
+        <faq id="openicf04">
+            <question>How Do I Get Started Using Connectors?</question>
+            <answer>
+                <p>
+		To use Connectors in your application, start by downloading the
+                    <a href="https://download.forgerock.com/">Connectors Framework</a> and placing the following jars on your classpath:
+                </p>
+                <ul>
+                    <li>
+                        <b>connector-framework.jar</b> (compile and runtime dependency)
+                    </li>
+                    <li>
+                        <b>connector-framework-internal.jar</b> (runtime dependency only)
+                    </li>
+                </ul>
+                <p>Then, download the
+                    <a href="https://download.forgerock.com/">Connector Bundle(s)</a> you'd like to use and add them to the classpath as well. Now you are ready
+	to set up the ConnectorFacade and start programming to the API. See the
+                    <a href="./connector-framework/faq.html">API Info</a> section for more details on this.
+                </p>
+
+            </answer>
+        </faq>
+        <faq id="openicf05">
+            <question>How Do I Write My Own Connector?</question>
+            <answer>
+                <p>
+		We have developed a
+                    <a href="./connector-archetype">Connector Archetype</a> to help users develop their own connector bundles quickly and easily. To get started, you'll want to familiarize
+		yourself with the structure of the SPI, and the best way to do that is to read the javadoc for the Framework. Another great thing to do is study the source code of other connectors.
+                </p>
+                <p>
+		You'll also want to review the basic
+                    <a href="https://wikis.forgerock.org/confluence/display/devcom/Coding+Style+and+Guidelines">coding conventions</a> and eventually, the
+                    <a href="/connector-framework-contract/index.html">contract tests</a> section. The contract tests are an automated suite of tests that make sure a connector
+		generally looks, feels, and behaves like a connector should.
+                </p>
+                <p>
+		Finally, throughout the whole process, we encourage you to
+                    <a href="http://www.forgerock.org/get_involved.html">contribute</a> to the IdentityConnectors project. Asking questions on the mailing list, reporting bugs, and submitting patches are great ways to get involved, and we appreciate them.
+		If you would like to contribute a new connector, just
+                    <a href="mailto:laszlo.hordos@forgerock.org">send an email</a> to the community.
+                </p>
+            </answer>
+        </faq>
+        <faq id="openicf06">
+            <question>How Do I Contribute Code and Bug Fixes?</question>
+            <answer>
+                <p>See the
+                    <a href="http://www.forgerock.org/get_involved.html">Contribute</a> section of this site.
+                </p>
+            </answer>
+        </faq>
+        <faq id="openicf07">
+            <question>What is a Connector Server?</question>
+            <answer>
+                <p>A Connector Server is roughly analogous to the Java RMI paradigm; it lets your application run provisioning operations on a connector bundle that is deployed on a remote machine. This feature has several uses,
+	but the most important one is the ability to run connector bundles written in C#. The Java Connectors Framework cannot load C# classes, but it can communicate with a .NET Connector Server over the network. Thus, the two platforms
+	are compatible. For more information, see the
+                    <a href="./connector-framework-internal/connector_server.html">Connector Server</a> section.
+                </p>
+            </answer>
+        </faq>
+
+    </part>
+</faqs>

@@ -1,0 +1,279 @@
+   -------------------------
+    Title
+   -------------------------
+   -------------------------
+    Date
+   -------------------------
+
+~~
+~~ CCPL HEADER START
+~~
+~~ This work is licensed under the Creative Commons
+~~ Attribution-NonCommercial-NoDerivs 3.0 Unported License.
+~~ To view a copy of this license, visit
+~~ http://creativecommons.org/licenses/by-nc-nd/3.0/
+~~ or send a letter to Creative Commons, 444 Castro Street,
+~~ Suite 900, Mountain View, California, 94041, USA.
+~~
+~~ You can also obtain a copy of the license at
+~~ legal/CC-BY-NC-ND.txt.
+~~ See the License for the specific language governing permissions
+~~ and limitations under the License.
+~~
+~~ If applicable, add the following below this CCPL HEADER, with the fields
+~~ enclosed by brackets "[]" replaced with your own identifying information:
+~~      Portions Copyright [yyyy] [name of copyright owner]
+~~
+~~ CCPL HEADER END
+~~
+~~      Copyright 2010-2014 ForgeRock AS.
+~~
+~~
+
+Developing OpenICF
+
+*Developing Java Connector Framework
+
+    <<Requirements:>>
+
+    *{{{http://maven.apache.org/download.html}Maven 3.0}}
+
+    []
+
+    <<Checkout the Build>>
+
++---
+C:\build> svn checkout https://svn.forgerock.org/openicf/trunk/framework/java framework
+C:\build> cd framework
+
+C:\framework> mvn install
++---
+
+    This command will install the 1.4.2.0-SNAPSHOT version of the OpenICF Framework. The same binaries are published to frequently to the {{{http://maven.forgerock.org/repo/snapshots/org/forgerock/openicf/}ForgeRock Snapshot Repository}}.
+
+*Developing .NET Connector Framework
+
+    <<Requirements:>>
+
+    *{{{http://www.microsoft.com/en-us/download/details.aspx?id=8279}Microsoft Windows SDK for Windows 7 and .NET Framework 4}}
+
+    *{{{https://github.com/loresoft/msbuildtasks/}MSBuild Community Tasks}} {{{http://code.google.com/p/msbuildtasks/downloads/list}Download}}
+
+    *{{{http://www.nunit.org/index.php?p=download}NUnit}}
+
+    *{{{http://wixtoolset.org/}Wix}}
+
+    *{{{http://subversion.apache.org/}Subversion}}
+
+    []
+
+    <<Checkout the Build>>
+
+    <command>: msbuild.exe ConnectorFramework.sln /p:Configuration=Release /p:ZipRelease=true
+
++---
+C:\build> svn checkout https://svn.forgerock.org/openicf/trunk/framework/dotnet/ framework
+C:\build> set WIX_HOME=C:\Program Files (x86)\WiX Toolset v3.7
+C:\build> set Path=%Path%;%WIX_HOME%\bin
+C:\build> set NUNIT_HOME=C:\Program Files (x86)\NUnit 2.6.3
+
+C:\framework> C:\Windows\Microsoft.NET\Framework64\v4.0.30319\msbuild.exe ConnectorFramework.sln /p:Configuration=Release  /p:ProductName=OpenICF
++---
+
+    MSBUILD : warning MSB6004: The specified task executable location "\bin\nunit -console.exe" is invalid.
+    Copy the content of the C:\Program Files\NUnit 2.5.10\bin\net-2.0 to C:\Program Files\NUnit 2.5.10\bin
+
+*---+---+
+<<Properties>> | <<Default value>>
+*---+---+
+FrameworkDistDir | $(MSBuildProjectDirectory)\\..\\Dist
+*---+---+
+Configuration | Debug
+*---+---+
+ZipRelease | true
+*---+---+
+
+    <<Recommended:>>
+
+    {{{http://www.icsharpcode.net/OpenSource/SD/Download/#SharpDevelop4x}SharpDevelop}} free IDE to develop .NET applications with plus it includes most of the dependencies.
+
+    or
+
+    {{{http://www.visualstudio.com}Microsoft Visual Studio}}
+
+    {{{http://testdriven.net/overview.aspx}TestDriven.Net}}
+    {{{http://www.jetbrains.com/resharper/}ReSharper}}
+    {{{http://submain.com/products/testmatrix.aspx}TestMatrix}}
+
+    {{{http://submain.com/products/ghostdoc.aspx}GhostDoc}}
+    {{{http://shfb.codeplex.com/}Sandcastle Help File Builder}}
+
+*Developing Java Connector Bundles
+
+    Before you can start you need the following information:
+
+    *<groupId>: org.forgerock.openicf.connectors
+
+        <<See:>>: {{{https://bugster.forgerock.org/jira/browse/OPENICF-18}OPENICF-18}}
+
+    *<artifactId>: lowercase name of the connector. This name MUST be unique within the group.
+
+        <<Example>>: sample-connector
+
+    *<version>: This value will be prefixed with the compatibility version (1.4). The final version 1.4.2.0-SNAPSHOT
+
+        <<Example>>: 1.0-SNAPSHOT
+
+    *<package>: org.forgerock.openicf.connectors.[Connector Name]
+
+        <<Example>>: org.forgerock.openicf.connectors.sample
+
+    *<connectorName>: Camle-case artifactId. The classes are using this value (SampleConnector, SampleConfiguration, etc.)
+
+        <<Example>>: Sample
+
+    []
+
+    To create a new project open a console and navigate to the directory where you want to create project and simply type the following:
+
++---
+mvn archetype:generate \
+    -DarchetypeGroupId=org.forgerock.openicf \
+    -DarchetypeArtifactId=connector-archetype \
+    -DarchetypeVersion=1.4.0 \
+    -DremoteRepositories=http://maven.forgerock.org/repo/snapshots \
+    -DarchetypeRepository=http://maven.forgerock.org/repo/snapshots \
+    -DgroupId=org.forgerock.openicf.connectors \
+    -DartifactId=sample-connector \
+    -Dversion=0.0-SNAPSHOT \
+    -Dpackage=org.forgerock.openicf.connectors.sample \
+    -DconnectorName=Sample
++---
+
+    The result of this is a directory sample which is a maven project that defines a public package org.forgerock.openicf.connectors.misc The project is packaged as an OSGi bundle.
+
++---
+    $ mvn archetype:generate -DarchetypeCatalog=local
+    [INFO] Scanning for projects...
+    [INFO]
+    [INFO] ------------------------------------------------------------------------
+    [INFO] Building Maven Stub Project (No POM) 1
+    [INFO] ------------------------------------------------------------------------
+    [INFO]
+    [INFO] >>> maven-archetype-plugin:2.2:generate (default-cli) @ standalone-pom >>>
+    [INFO]
+    [INFO] <<< maven-archetype-plugin:2.2:generate (default-cli) @ standalone-pom <<<
+    [INFO]
+    [INFO] --- maven-archetype-plugin:2.2:generate (default-cli) @ standalone-pom ---
+    [INFO] Generating project in Interactive mode
+    [INFO] No archetype defined. Using maven-archetype-quickstart (org.apache.maven.archetypes:maven-archetype-quickstart:1.0)
+    Choose archetype:
+    1: local -> org.forgerock.openicf:connector-archetype (OpenICF Connector Development Archetype)
+    Choose a number or apply filter (format: [groupId:]artifactId, case sensitive contains): : 1
+    Define value for property 'groupId': : org.forgerock.openicf.connectors
+    Define value for property 'artifactId': : sample-connector
+    Define value for property 'version':  1.0-SNAPSHOT: : 0.0-SNAPSHOT
+    Define value for property 'package':  org.forgerock.openicf.connectors: : org.forgerock.openicf.connectors.sample
+    [INFO] Using property: ALL_OPERATIONS = n
+    [INFO] Using property: OP_AUTHENTICATE = n
+    [INFO] Using property: OP_CREATE = y
+    [INFO] Using property: OP_DELETE = y
+    [INFO] Using property: OP_RESOLVEUSERNAME = n
+    [INFO] Using property: OP_SCHEMA = n
+    [INFO] Using property: OP_SCRIPTONCONNECTOR = n
+    [INFO] Using property: OP_SCRIPTONRESOURCE = n
+    [INFO] Using property: OP_SEARCH = y
+    [INFO] Using property: OP_SYNC = n
+    [INFO] Using property: OP_TEST = y
+    [INFO] Using property: OP_UPDATE = y
+    [INFO] Using property: OP_UPDATEATTRIBUTEVALUES = n
+    [INFO] Using property: attributeNormalizer = n
+    [INFO] Using property: compatibility_version = 1.4
+    Define value for property 'connectorName': : Sample
+    [INFO] Using property: framework_version = 0.0
+    [INFO] Using property: poolableConnector = n
+    [INFO] Using property: statefulConnector = n
+    Confirm properties configuration:
+    groupId: org.forgerock.openicf.connectors
+    artifactId: sample-connector
+    version: 0.0-SNAPSHOT
+    package: org.forgerock.openicf.connectors.sample
+    ALL_OPERATIONS: n
+    OP_AUTHENTICATE: n
+    OP_CREATE: y
+    OP_DELETE: y
+    OP_RESOLVEUSERNAME: n
+    OP_SCHEMA: n
+    OP_SCRIPTONCONNECTOR: n
+    OP_SCRIPTONRESOURCE: n
+    OP_SEARCH: y
+    OP_SYNC: n
+    OP_TEST: y
+    OP_UPDATE: y
+    OP_UPDATEATTRIBUTEVALUES: n
+    attributeNormalizer: n
+    compatibility_version: 1.4
+    connectorName: Sample
+    framework_version: 0.0
+    poolableConnector: n
+    statefulConnector: n
+     Y: : y
+    [INFO] ----------------------------------------------------------------------------
+    [INFO] Using following parameters for creating project from Archetype: connector-archetype:1.4.0-SNAPSHOT
+    [INFO] ----------------------------------------------------------------------------
+    [INFO] Parameter: groupId, Value: org.forgerock.openicf.connectors
+    [INFO] Parameter: artifactId, Value: sample-connector
+    [INFO] Parameter: version, Value: 0.0-SNAPSHOT
+    [INFO] Parameter: package, Value: org.forgerock.openicf.connectors.sample
+    [INFO] Parameter: packageInPathFormat, Value: org/forgerock/openicf/connectors/sample
+    [INFO] Parameter: OP_SCRIPTONCONNECTOR, Value: n
+    [INFO] Parameter: artifactId, Value: sample-connector
+    [INFO] Parameter: ALL_OPERATIONS, Value: n
+    [INFO] Parameter: OP_DELETE, Value: y
+    [INFO] Parameter: OP_RESOLVEUSERNAME, Value: n
+    [INFO] Parameter: package, Value: org.forgerock.openicf.connectors.sample
+    [INFO] Parameter: version, Value: 0.0-SNAPSHOT
+    [INFO] Parameter: OP_AUTHENTICATE, Value: n
+    [INFO] Parameter: OP_TEST, Value: y
+    [INFO] Parameter: attributeNormalizer, Value: n
+    [INFO] Parameter: OP_UPDATEATTRIBUTEVALUES, Value: n
+    [INFO] Parameter: groupId, Value: org.forgerock.openicf.connectors
+    [INFO] Parameter: framework_version, Value: 0.0
+    [INFO] Parameter: poolableConnector, Value: n
+    [INFO] Parameter: statefulConnector, Value: n
+    [INFO] Parameter: OP_UPDATE, Value: y
+    [INFO] Parameter: OP_SEARCH, Value: y
+    [INFO] Parameter: OP_CREATE, Value: y
+    [INFO] Parameter: compatibility_version, Value: 1.4
+    [INFO] Parameter: OP_SYNC, Value: n
+    [INFO] Parameter: connectorName, Value: Sample
+    [INFO] Parameter: OP_SCHEMA, Value: n
+    [INFO] Parameter: OP_SCRIPTONRESOURCE, Value: n
+    [INFO] project created from Archetype in dir: /sample-connector
+    [INFO] ------------------------------------------------------------------------
+    [INFO] BUILD SUCCESS
+    [INFO] ------------------------------------------------------------------------
+    $ cd sample
+    $ mvn install
++---
+
+Developing .NET Connector Bundles
+
+
+~~    openicf-1.4.0.0-dotnet.msi
+
+    Install OpenICF .Net Server from {{{http://www.forgerock.org/openicf.html}OpenICF download site}}:
+
+    Set the <<OPENICF_HOME>>=<dir> to the install location: C:\Program Files (x86)\Identity Connectors\Connector Server.
+
+    <command>: msbuild.exe DotNetConnectors.sln /p:Configuration=Release /p:ZipRelease=true
+
+
++---
+C:\build> svn checkout https://svn.forgerock.org/openicf/trunk/connectors/dotnet/ connectors
+C:\build> set WIX_HOME=C:\Program Files (x86)\WiX Toolset v3.7
+C:\build> set Path=%Path%;%WIX_HOME%\bin
+C:\build> set NUNIT_HOME=C:\Program Files (x86)\NUnit 2.6.2
+
+C:\connectors> C:\Windows\Microsoft.NET\Framework64\v4.0.30319\msbuild.exe DotNetConnectors.sln /p:Configuration=Release /p:ZipRelease=true /p:ProductName=OpenICF
++---

@@ -1,0 +1,13 @@
+/* You can override this file with your own styles */
+.literal {
+    font-size: medium;
+    font-family: monospace;
+}
+.codeComment {
+    color: #006600;
+}
+hr {
+    margin-top: 20px;
+    margin-bottom: 7px;
+    width: 100%; height: 2px;
+}

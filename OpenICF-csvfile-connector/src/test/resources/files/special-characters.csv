@@ -1,0 +1,4 @@
+"uid","firstname","lastname","disabled","password","specialCharacter"
+"mmouse","Mickey","Mouse","false","Z29vZA==","embedded""doublequote"
+"dduck","Daffy","Duck","false","Z29vZA==","embedded,delimiter"
+"rrabbit","Roger","Rabbit","false","Z29vZA==","embedded'singlequote"

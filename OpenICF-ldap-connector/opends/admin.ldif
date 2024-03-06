@@ -1,0 +1,57 @@
+# -- START LICENSE
+# ====================
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+# 
+# Copyright 2008-2009 Sun Microsystems, Inc. All rights reserved.     
+# 
+# The contents of this file are subject to the terms of the Common Development 
+# and Distribution License("CDDL") (the "License").  You may not use this file 
+# except in compliance with the License.
+# 
+# You can obtain a copy of the License at 
+# http://IdentityConnectors.dev.java.net/legal/license.txt
+# See the License for the specific language governing permissions and limitations 
+# under the License. 
+# 
+# When distributing the Covered Code, include this CDDL Header Notice in each file
+# and include the License file at identityconnectors/legal/license.txt.
+# If applicable, add the following below this CDDL Header, with the fields 
+# enclosed by brackets [] replaced by your own identifying information: 
+# "Portions Copyrighted [year] [name of copyright owner]"
+# ====================
+# -- END LICENSE
+dn: uid=admin,dc=example,dc=com
+changetype: add
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+sn: Administrator
+cn: Administrator
+uid: admin
+userPassword: password
+# Cf. https://www.opends.org/wiki/page/HowToManageRootUserGlobalAdministratorAndAdministratorAccounts
+# This is needed for searches like (objectClass=inetOrgPerson) which return almost all entries.
+ds-privilege-name: unindexed-search
+# To be able to change passwords.
+ds-privilege-name: password-reset
+
+dn: dc=example,dc=com
+changetype: modify
+add: aci
+aci: (targetattr = "*")(version 3.0; acl "Admin Access"; allow(all) userdn = "ldap:///uid=admin,dc=example,dc=com";)
+
+dn: cn=Access Control Handler,cn=config
+changetype: modify
+add: ds-cfg-global-aci
+ds-cfg-global-aci: (targetcontrol = "1.2.840.113556.1.4.319")(version 3.0; acl "Allow Simple Paged Control Admin Access"; allow(read) userdn = "ldap:///uid=admin,dc=example,dc=com";)
+
+dn: cn=Access Control Handler,cn=config
+changetype: modify
+add: ds-cfg-global-aci
+ds-cfg-global-aci: (targetcontrol = "1.2.840.113556.1.4.473")(version 3.0; acl "Allow Sort Control Admin Access"; allow(read) userdn = "ldap:///uid=admin,dc=example,dc=com";)
+
+dn: cn=Access Control Handler,cn=config
+changetype: modify
+add: ds-cfg-global-aci
+ds-cfg-global-aci: (targetcontrol = "2.16.840.1.113730.3.4.9")(version 3.0; acl "Allow Virtual List View Control Admin Access"; allow(read) userdn = "ldap:///uid=admin,dc=example,dc=com";)

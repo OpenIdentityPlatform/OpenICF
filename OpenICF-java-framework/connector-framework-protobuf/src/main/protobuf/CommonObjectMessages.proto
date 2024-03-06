@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+option csharp_namespace = "Org.ForgeRock.OpenICF.Common.ProtoBuf";
+package org.forgerock.openicf.common.protobuf;
+
+message Uid {
+    string value = 1;
+    string revision = 2;
+}
+
+message BigDecimal {
+    string unscaled = 1;
+    int32 scale = 2;
+}
+
+message ConnectorKey {
+    string bundleName = 1;
+    string bundleVersion = 2;
+    string connectorName = 3;
+}
+
+message Locale {
+    string language = 1;
+    string country = 2;
+    string variant = 3;
+}
+
+message Script {
+    string scriptLanguage = 1;
+    string scriptText = 2;
+}
+
+message ScriptContext {
+    Script script = 1;
+    bytes scriptArguments = 2;
+}
+
+message SearchResult {
+    enum CountPolicy {
+        NONE = 0;
+        ESTIMATE = 1;
+        EXACT = 2;
+    }
+    string pagedResultsCookie = 1;
+    CountPolicy totalPagedResultsPolicy = 2;
+    int32 totalPagedResults = 3;
+    int32 remainingPagedResults = 4;
+}
+
+message SortKey {
+    string field = 1;
+    bool isAscending = 2;
+}
+
+message SyncToken {
+    bytes value = 1;
+}
+
+message SyncDelta {
+    enum SyncDeltaType {
+        CREATE_OR_UPDATE = 0;
+        DELETE = 1;
+        CREATE = 2;
+        UPDATE = 3;
+    }
+    SyncToken token = 1;
+    SyncDeltaType deltaType = 2;
+    Uid previousUid = 3;
+    string objectClass = 4;
+    Uid uid = 5;
+    bytes connectorObject = 6;
+    
+}
+
+message ConnectorObject {
+    /*message MapFieldEntry {
+        //option map_entry = true;
+        string key = 1;
+        AttributeCollectionValue value = 2;
+    }*/
+    string objectClass = 1;
+    bytes attributes = 2;
+    //repeated MapFieldEntry map_field = 2;
+}
+
+message QualifiedUid {
+    string objectClass = 1;
+    Uid uid = 2;
+}

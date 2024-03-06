@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+ ! CCPL HEADER START
+ !
+ ! This work is licensed under the Creative Commons
+ ! Attribution-NonCommercial-NoDerivs 3.0 Unported License.
+ ! To view a copy of this license, visit
+ ! http://creativecommons.org/licenses/by-nc-nd/3.0/
+ ! or send a letter to Creative Commons, 444 Castro Street,
+ ! Suite 900, Mountain View, California, 94041, USA.
+ !
+ ! See the License for the specific language governing permissions
+ ! and limitations under the License.
+ !
+ ! If applicable, add the following below this CCPL HEADER, with the fields
+ ! enclosed by brackets "[]" replaced with your own identifying information:
+ !      Portions Copyright [yyyy] [name of copyright owner]
+ !
+ ! CCPL HEADER END
+ !
+ !      Copyright 2012 ForgeRock Inc.
+ !
+-->
+
+<faqs xmlns="http://maven.apache.org/FML/1.0.1"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://maven.apache.org/FML/1.0.1 http://maven.apache.org/xsd/fml-1.0.1.xsd"
+      id="FAQ"
+      title="Frequently Asked Questions"
+      toplink="false">
+    <part id="General">
+        <title>Frequently Asked Questions</title>
+        <faq id="icf">
+            <question>What are Connectors?</question>
+            <answer>
+                <p>Connectors provide applications with a way to decouple from the resources that they connect to.
+                    The Identity Connectors Framework is aimed at user provisioning and identity management, but is
+                    generalized enough to support several different kinds of applications. For example, in addition to
+                    basic CRUD operations, the API supports Search, Sync, Authenticate, and Scripting operations, as
+                    well as others.
+                </p>
+                <p>Connectors themselves are self-contained bundles that ride on top of the Connectors Framework.
+                    Applications are completely separated from the bundles, so that different implementations can be
+                    swapped in and out without affecting the app or its dependencies.
+                </p>
+            </answer>
+        </faq>
+    </part>
+</faqs>

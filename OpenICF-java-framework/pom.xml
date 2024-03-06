@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+ Copyright (c) 2010-2015 ForgeRock AS. All rights reserved.
+
+ The contents of this file are subject to the terms
+ of the Common Development and Distribution License
+ (the License). You may not use this file except in
+ compliance with the License.
+
+ You can obtain a copy of the License at
+ http://forgerock.org/license/CDDLv1.0.html
+ See the License for the specific language governing
+ permission and limitations under the License.
+
+ When distributing Covered Code, include this CDDL
+ Header Notice in each file and include the License file
+ at http://forgerock.org/license/CDDLv1.0.html
+ If applicable, add the following below the CDDL Header,
+ with the fields enclosed by brackets [] replaced by
+ your own identifying information:
+ "Portions Copyrighted [year] [name of copyright owner]"
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+      	<groupId>org.openidentityplatform</groupId>
+	    <artifactId>openicf</artifactId>
+	    <version>1.5.0</version>
+    </parent>
+    <groupId>org.forgerock.openicf.framework</groupId>
+    <artifactId>framework</artifactId>
+    <version>1.5.2.0</version>
+    <packaging>pom</packaging>
+    <name>OpenICF</name>
+    <description>
+        The Open Identity Connectors Framework and Toolkit (OpenICF) is built to help drive development of Connectors.
+        Connectors provide a consistent generic layer between applications and target resources.
+    </description>
+    <inceptionYear>2010</inceptionYear>
+    <url>http://openicf.forgerock.org/</url>
+    <licenses>
+        <license>
+            <name>CDDL-1.0</name>
+            <url>http://opensource.org/licenses/CDDL-1.0</url>
+            <comments>Common Development and Distribution License (CDDL) 1.0.
+                This license applies to OpenICF source code as indicated in the
+                sources.
+            </comments>
+            <distribution>repo</distribution>
+        </license>
+        <license>
+            <name>CC BY-NC-ND 3.0</name>
+            <url>http://creativecommons.org/licenses/by-nc-nd/3.0/</url>
+            <comments>Creative Commons Attribution-NonCommercial-NoDerivs 3.0
+                Unported. This license applies to the site content, and to the
+                documentation as indicated in the documentation source code.
+            </comments>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+<!--     <scm> -->
+<!--         <connection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/java-framework.git</connection> -->
+<!--         <developerConnection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/java-framework.git</developerConnection> -->
+<!--         <url>http://stash.forgerock.org/projects/OPENICF/repos/java-framework/browse</url> -->
+<!--       <tag>1.5.2.0</tag> -->
+<!--   </scm> -->
+
+    <properties>
+        <!-- Version management -->
+        <commons.commons-bom.version>21.0.0-SNAPSHOT</commons.commons-bom.version>
+        <!-- maven-compiler-plugin -->
+        <maven.compiler.target>1.5</maven.compiler.target>
+        <maven.compiler.source>1.5</maven.compiler.source>
+        <framework.compatibilityVersion>1.5</framework.compatibilityVersion>
+        <framework.releaseVersion>1.0</framework.releaseVersion>
+        <licenseResourceBundle>org.forgerock.openicf:openicf-license:1.3.0</licenseResourceBundle>
+        <siteDistributionURL>scp://community.internal.forgerock.com/var/www/vhosts/openicf.forgerock.org/httpdocs
+        </siteDistributionURL>
+
+        <openicf.osgi.remove.headers>
+            Ignore-Package,Include-Resource,Private-Package,Bundle-DocURL,Embedded-Artifacts,Embed-Dependency,Built-By,
+            Build-Jdk,Tool
+        </openicf.osgi.remove.headers>
+
+        <openicf.maven.plugin.version>1.5.0</openicf.maven.plugin.version>
+        <slf4j.version>1.7.12</slf4j.version>
+        <logback.version>1.1.7</logback.version>
+        <groovy.version>2.2.2</groovy.version>
+        <grizzly.version>2.3.35</grizzly.version>
+        <protobuf-java.version>3.0.2</protobuf-java.version>
+
+        <!-- Core documentation properties -->
+        <frDocPluginVersion>3.1.0</frDocPluginVersion>
+        <docTargetVersion>${project.version}</docTargetVersion>
+        <googleAnalyticsAccountId>UA-23412190-10</googleAnalyticsAccountId>
+        <!--
+            Release date is specified only when building the documentation
+            for publication. For example:
+                -D"releaseDate=Software release date: January 1, 1970"
+            Otherwise release date should remain empty.
+        -->
+        <releaseDate />
+        <softwareReleaseDate>${releaseDate}</softwareReleaseDate>
+        <pubDate />
+        <publicationDate>${pubDate}</publicationDate>
+        <!--
+        <publishedDocBase>http://docs.forgerock.org/en/</publishedDocBase>
+        <forgerockSite>http://forgerock.com</forgerockSite>
+        -->
+        <!-- Doc Branding -->
+        <brandingGroupId>org.forgerock.commons</brandingGroupId>
+        <brandingArtifactId>forgerock-doc-default-branding</brandingArtifactId>
+        <brandingVersion>3.1.0</brandingVersion>
+
+    </properties>
+
+    <modules>
+        <module>connector-framework</module>
+        <module>connector-test-common</module>
+        <module>connector-framework-internal</module>
+        <module>connector-framework-osgi</module>
+        <module>connector-framework-contract</module>
+        <module>testcommonv1</module>
+        <module>testcommonv2</module>
+        <module>testbundlev1</module>
+        <module>testbundlev2</module>
+        <module>bundles-parent</module>
+        <module>icfl-over-slf4j</module>
+        <module>openicf-zip</module>
+    </modules>
+
+    <profiles>
+        <profile>
+            <id>1.5.profile</id>
+            <properties>
+                <!-- forgerock-build-tools stylesheet org/forgerock/javadoc/javadoc.css
+                does not work with JDK7 -->
+                <javadocStylesheet>org/forgerock/javadoc/javadoc.css</javadocStylesheet>
+            </properties>
+            <activation>
+                <jdk>1.5</jdk>
+            </activation>
+        </profile>
+        <profile>
+            <id>1.6.profile</id>
+            <properties>
+                <!-- forgerock-build-tools stylesheet org/forgerock/javadoc/javadoc.css
+                does not work with JDK7 -->
+                <javadocStylesheet>org/forgerock/javadoc/javadoc.css</javadocStylesheet>
+            </properties>
+            <modules>
+                <module>connector-framework-protobuf</module>
+                <module>connector-framework-rpc</module>
+                <module>connector-framework-server</module>
+                <module>connector-server-grizzly</module>
+            </modules>
+            <activation>
+                <jdk>1.6</jdk>
+            </activation>
+        </profile>
+        <profile>
+            <id>1.7.profile</id>
+            <modules>
+                <module>connector-framework-protobuf</module>
+                <module>connector-framework-rpc</module>
+                <module>connector-framework-server</module>
+                <module>connector-server-jetty</module>
+                <module>connector-server-grizzly</module>
+            </modules>
+            <activation>
+                <jdk>1.7</jdk>
+            </activation>
+        </profile>
+        <profile>
+            <id>1.8.profile</id>
+            <properties>
+                <!-- forgerock-build-tools stylesheet org/forgerock/javadoc/javadoc.css
+                does not work with JDK7 -->
+                <javadocStylesheet>org/forgerock/javadoc/javadoc.css</javadocStylesheet>
+            </properties>
+            <modules>
+                <module>connector-framework-protobuf</module>
+                <module>connector-framework-rpc</module>
+                <module>connector-framework-server</module>
+                <module>connector-server-jetty</module>
+                <module>connector-server-grizzly</module>
+            </modules>
+            <activation>
+                <jdk>1.8</jdk>
+            </activation>
+        </profile>
+        <profile>
+            <id>forgerock-release</id>
+            <build>
+                <resources>
+                    <resource>
+                        <directory>src/main/resources</directory>
+                        <filtering>true</filtering>
+                    </resource>
+                    <resource>
+                        <directory>${project.build.directory}/licenseResource</directory>
+                        <filtering>false</filtering>
+                    </resource>
+                </resources>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-release-plugin</artifactId>
+                        <version>2.5.2</version>
+                        <configuration>
+                            <mavenExecutorId>forked-path</mavenExecutorId>
+                            <autoVersionSubmodules>true</autoVersionSubmodules>
+                            <!-- mvn clean install -pl connector-framework -am -->
+                            <!--
+                                To fix the circular dependencies the actual
+                                artifacts should be available for the other
+                                modules. The default clean verify preparation
+                                goal leads to a missing artifact error.
+                             -->
+                            <preparationGoals>clean,install</preparationGoals>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Main ForgeRock Bill of Materials pom -->
+            <dependency>
+                <groupId>org.forgerock.commons</groupId>
+                <artifactId>commons-bom</artifactId>
+                <version>${commons.commons-bom.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+
+            <!-- Provided Dependencies -->
+            <dependency>
+                <groupId>org.codehaus.groovy</groupId>
+                <artifactId>groovy-all</artifactId>
+                <version>${groovy.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- Test Dependencies -->
+            <dependency>
+                <groupId>org.forgerock.openicf.framework</groupId>
+                <artifactId>connector-framework</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testng</groupId>
+                <artifactId>testng</artifactId>
+                <version>6.9.10</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.easytesting</groupId>
+                <artifactId>fest-assert</artifactId>
+                <version>1.4</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.21.0</version>
+                    <configuration>
+                        <includes>
+                            <include>**/Test*.java</include>
+                            <include>**/*Test.java</include>
+                            <include>**/*Tests.java</include>
+                            <include>**/*TestCase.java</include>
+                        </includes>
+                        <shutdown>kill</shutdown>
+                        <forkedProcessTimeoutInSeconds>300</forkedProcessTimeoutInSeconds>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.10.3</version>
+                    <configuration>
+                        <docfilessubdirs>true</docfilessubdirs>
+                        <source>${maven.compiler.source}</source>
+                        <show>public</show>
+                        <links>
+                            <link>http://docs.oracle.com/javase/6/docs/api/</link>
+                            <link>http://docs.groovy-lang.org/latest/html/api/</link>
+                        </links>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>aggregate</id>
+                            <goals>
+                                <goal>aggregate</goal>
+                            </goals>
+                            <phase>site</phase>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>2.10</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>3.4</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>maven-bundle-plugin</artifactId>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <instructions>
+                            <!-- OSGi Headers -->
+                            <_removeheaders>${openicf.osgi.remove.headers}</_removeheaders>
+
+                            <!-- Implementation Entries -->
+                            <Implementation-Title>${project.name}</Implementation-Title>
+                            <Implementation-Version>${project.version}</Implementation-Version>
+                            <Implementation-Vendor-Id>${project.groupId}</Implementation-Vendor-Id>
+                            <Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
+                        </instructions>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.forgerock.commons</groupId>
+                    <artifactId>forgerock-doc-maven-plugin</artifactId>
+                    <version>${frDocPluginVersion}</version>
+                    <configuration>
+                        <projectName>OpenICF</projectName>
+                        <googleAnalyticsId>${googleAnalyticsAccountId}</googleAnalyticsId>
+                        <projectVersion>${docTargetVersion}</projectVersion>
+                        <releaseVersion>${docTargetVersion}</releaseVersion>
+                        <docbkxSourceDirectory>${basedir}/src/main/docbkx</docbkxSourceDirectory>
+                        <copyResourceFiles>true</copyResourceFiles>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <!-- We want to package up license resources in the JARs produced -->
+<!--             <plugin> -->
+<!--                 <groupId>org.apache.maven.plugins</groupId> -->
+<!--                 <artifactId>maven-remote-resources-plugin</artifactId> -->
+<!--                 <version>1.5</version> -->
+<!--                 <executions> -->
+<!--                     <execution> -->
+<!--                         <id>legal-files</id> -->
+<!--                         <goals> -->
+<!--                             <goal>process</goal> -->
+<!--                         </goals> -->
+<!--                         <configuration> -->
+<!--                             <resourceBundles> -->
+<!--                                 <resourceBundle>${licenseResourceBundle}</resourceBundle> -->
+<!--                             </resourceBundles> -->
+<!--                         </configuration> -->
+<!--                     </execution> -->
+<!--                 </executions> -->
+<!--             </plugin> -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>3.3</version>
+                <executions>
+                    <execution>
+                        <id>attach-descriptor</id>
+                        <goals>
+                            <goal>attach-descriptor</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <outputEncoding>${project.build.sourceEncoding}</outputEncoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.forgerock.maven.plugins</groupId>
+                <artifactId>javadoc-updater-maven-plugin</artifactId>
+                <version>1.0.0</version>
+                <executions>
+                    <execution>
+                        <phase>post-site</phase>
+                        <goals>
+                            <goal>fixjavadoc</goal>
+                        </goals>
+                        <configuration>
+                            <directory>${project.reporting.outputDirectory}</directory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <version>2.8</version>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>cim</report>
+                            <report>dependencies</report>
+                            <report>dependency-convergence</report>
+                            <report>dependency-info</report>
+                            <report>dependency-management</report>
+                            <!--<report>distribution-management</report>-->
+                            <report>index</report>
+                            <report>issue-tracking</report>
+                            <report>license</report>
+                            <report>mailing-list</report>
+                            <!--<report>modules</report>
+                            <report>plugin-management</report>
+                            <report>plugins</report>
+                            <report>project-team</report>-->
+                            <report>scm</report>
+                            <report>summary</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.3</version>
+                <reportSets>
+                    <reportSet>
+                        <id>html</id>
+                        <configuration>
+                            <dependencySourceExcludes>
+                                <dependencySourceExclude>*:testcommonv1:*</dependencySourceExclude>
+                                <dependencySourceExclude>*:testcommonv2:*</dependencySourceExclude>
+                                <dependencySourceExclude>*:testbundlev1:*</dependencySourceExclude>
+                                <dependencySourceExclude>*:testbundlev2:*</dependencySourceExclude>
+                            </dependencySourceExcludes>
+                            <excludePackageNames>
+                                org.identityconnectors.testcommon:org.identityconnectors.testconnector
+                            </excludePackageNames>
+                        </configuration>
+                        <reports>
+                            <report>aggregate</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jxr-plugin</artifactId>
+                <version>2.5</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-report-plugin</artifactId>
+                <version>2.19</version>
+                <reportSets>
+                    <reportSet>
+                        <id>${project.artifactId}-test-report-only</id>
+                        <inherited>true</inherited>
+                        <reports>
+                            <report>report</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+        </plugins>
+    </reporting>
+</project>

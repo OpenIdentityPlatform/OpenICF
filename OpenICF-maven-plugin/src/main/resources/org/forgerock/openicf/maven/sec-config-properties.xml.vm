@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ! CCPL HEADER START
+  !
+  ! This work is licensed under the Creative Commons
+  ! Attribution-NonCommercial-NoDerivs 3.0 Unported License.
+  ! To view a copy of this license, visit
+  ! http://creativecommons.org/licenses/by-nc-nd/3.0/
+  ! or send a letter to Creative Commons, 444 Castro Street,
+  ! Suite 900, Mountain View, California, 94041, USA.
+  !
+  ! You can also obtain a copy of the license at
+  ! legal/CC-BY-NC-ND.txt.
+  ! See the License for the specific language governing permissions
+  ! and limitations under the License.
+  !
+  ! If applicable, add the following below this CCPL HEADER, with the fields
+  ! enclosed by brackets "[]" replaced with your own identifying information:
+  !      Portions Copyright [yyyy] [name of copyright owner]
+  !
+  ! CCPL HEADER END
+  !
+  !      Copyright 2013-2015 ForgeRock AS
+  !
+-->
+<section xml:id='sec-config-properties-${uniqueConnectorName}'
+         xmlns='http://docbook.org/ns/docbook'
+         version='5.0' xml:lang='en'
+         xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+         xsi:schemaLocation='http://docbook.org/ns/docbook
+         http://docbook.org/xml/5.0/xsd/docbook.xsd'
+         xmlns:xlink='http://www.w3.org/1999/xlink'>
+
+    <title>${connectorDisplayName} Configuration</title>
+    <para>
+        The ${connectorDisplayName} has the following configurable properties.
+    </para>
+
+    #foreach($configurationGroup in $configurationProperties.entrySet())
+        <!--THE FOLLOWING SECTION MUST BE GENERATED ONCE FOR EACH groupMessageKey -->
+
+        <section xml:id="$ConnectorUtils.safeNCName(${configurationGroup.key})-properties-${uniqueConnectorName}">
+            <title>$configurationGroup.key Properties</title>
+
+            <informaltable pgwide="1">
+                <tgroup cols="5">
+                    <?dbhtml cellspacing="0" ?>
+                    <?dbhtml cellpadding="2" ?>
+                    <colspec colname="a" colnum="1" colwidth="2*"/>
+                    <colspec colname="b" colnum="2" colwidth="1*"/>
+                    <colspec colname="c" colnum="3" colwidth="1*"/>
+                    <colspec colname="d" colnum="4" colwidth="1*"/>
+                    <colspec colname="e" colnum="5" colwidth="1*"/>
+                    <thead>
+                        <row>
+                            <entry>Property</entry>
+                            <entry>Type</entry>
+                            <entry>Default</entry>
+                            <entry>
+                             Encrypted
+                                <footnote>
+                                    <para>
+                                        Indicates whether the property value is considered confidential, and
+                                        therefore encrypted in OpenIDM.
+                                    </para>
+                                </footnote>
+                            </entry>
+                            <entry>
+                             Required
+                                <footnote>
+                                    <para>
+                                     A list of operations in this column indicates that the property is
+                                     required for those operations.
+                                    </para>
+                                </footnote>
+                            </entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        #foreach($property in $configurationGroup.value)
+                            <row valign="top">
+                                <?dbhtml bgcolor="#EBEDE6" ?><?dbfo bgcolor="#EBEDE6" ?>
+                                <entry>
+                                    <literal>${property.name}</literal>
+                                </entry>
+                                <entry>
+                                    <literal>${property.type}</literal>
+                                </entry>
+                                <entry>
+                                    <literal>$ConnectorUtils.defaultValue($property.property)</literal>
+                                </entry>
+                                <entry align="center">
+                                    #if (${property.confidential})
+                                        <mediaobject>
+                                            <imageobject>
+                                                <imagedata fileref="../shared/images/encrypted.png" format="PNG"/>
+                                            </imageobject>
+                                             <textobject role="fo"><para>Yes</para></textobject>
+                                        </mediaobject>
+                                    #end
+                                </entry>
+                                <entry align="center">
+                                    #if($property.operations.size() > 0)
+                                        <!--imageobject>
+                                            <imagedata
+                                                    fileref="../shared/images/#if($property.required)yes#{else}no#end-icon.png"
+                                                    format="PNG"/>
+                                        </imageobject-->
+                                        <simplelist>
+                                            #foreach($operation in $property.operations)
+                                                <member>
+                                                    <xref linkend="interface-${operation.key}" xrefstyle="select:title"/>
+                                                </member>
+                                            #end
+                                        </simplelist>
+                                    #else
+                                        <mediaobject>
+                                            <imageobject>
+                                                <imagedata
+                                                        fileref="../shared/images/#if($property.required)yes#{else}no#end-icon.png"
+                                                        format="PNG"/>
+                                            </imageobject>
+                                            <textobject role="fo"><para>#if($property.required)Yes#{else}No#end</para></textobject>
+                                        </mediaobject>
+                                    #end
+                                </entry>
+                            </row>
+                            <row>
+                                <?dbhtml bgcolor="#EBEDE6" ?><?dbfo bgcolor="#EBEDE6" ?>
+                                <entry namest="a" nameend="e">
+                                    <para>${property.description}</para>
+                                </entry>
+                            </row>
+                            <row>
+                                <?dbhtml row-height="10" ?>
+                                <entry namest="a" nameend="e">
+                                    <para> </para>
+                                </entry>
+                            </row>
+                        #end
+                    </tbody>
+                </tgroup>
+            </informaltable>
+
+        </section>
+    #end
+
+</section>
