@@ -25,11 +25,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.forgerock.openicf.framework</groupId>
+        <groupId>org.openidentityplatform.openicf.framework</groupId>
         <artifactId>framework</artifactId>
-        <version>1.5.2.0</version>
+        <version>1.5.3-SNAPSHOT</version>
     </parent>
-    <groupId>org.forgerock.openicf.connectors</groupId>
+    <groupId>org.openidentityplatform.openicf.connectors</groupId>
     <artifactId>connectors-parent</artifactId>
     <packaging>pom</packaging>
     <name>OpenICF Connectors</name>
@@ -128,28 +128,28 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.forgerock.openicf.framework</groupId>
+                <groupId>org.openidentityplatform.openicf.framework</groupId>
                 <artifactId>connector-framework</artifactId>
-                <version>${project.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
 
             <!-- Test Dependencies -->
             <dependency>
-                <groupId>org.forgerock.openicf.framework</groupId>
+                <groupId>org.openidentityplatform.openicf.framework</groupId>
                 <artifactId>connector-framework-internal</artifactId>
-                <version>${project.framework.version}</version>
+                <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>org.forgerock.openicf.framework</groupId>
+                <groupId>org.openidentityplatform.openicf.framework</groupId>
                 <artifactId>connector-test-common</artifactId>
-                <version>${project.framework.version}</version>
+                <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>org.forgerock.openicf.framework</groupId>
+                <groupId>org.openidentityplatform.openicf.framework</groupId>
                 <artifactId>connector-framework</artifactId>
-                <version>${project.framework.version}</version>
+                <version>${project.version}</version>
                 <type>test-jar</type>
                 <scope>test</scope>
             </dependency>
@@ -200,13 +200,6 @@
                             ${siteDistributionURL}/connectors/${project.artifactId}-${project.version}
                         </stagingSiteURL>
                     </configuration>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.forgerock.maven.plugins</groupId>
-                            <artifactId>openicf-maven-plugin</artifactId>
-                            <version>${openicf.maven.plugin.version}</version>
-                        </dependency>
-                    </dependencies>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -334,20 +327,14 @@
                         </systemPropertyVariables>
                     </configuration>
                 </plugin>
-                <plugin>
-                    <groupId>org.forgerock.maven.plugins</groupId>
-                    <artifactId>openicf-maven-plugin</artifactId>
-                    <version>${openicf.maven.plugin.version}</version>
-                </plugin>
             </plugins>
         </pluginManagement>
     </build>
     <reporting>
         <plugins>
             <plugin>
-                <groupId>org.forgerock.maven.plugins</groupId>
+                <groupId>org.openidentityplatform.openicf</groupId>
                 <artifactId>openicf-maven-plugin</artifactId>
-                <version>${openicf.maven.plugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -368,10 +355,11 @@
     <profiles>
         <profile>
             <id>generate-docbook</id>
+            <activation><activeByDefault>true</activeByDefault></activation>
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.forgerock.maven.plugins</groupId>
+                        <groupId>org.openidentityplatform.openicf</groupId>
                         <artifactId>openicf-maven-plugin</artifactId>
                         <executions>
                             <execution>
@@ -382,8 +370,8 @@
                         </executions>
                     </plugin>
                     <plugin>
-                        <groupId>org.forgerock.commons</groupId>
-                        <artifactId>forgerock-doc-maven-plugin</artifactId>
+                        <groupId>org.openidentityplatform.commons</groupId>
+                        <artifactId>doc-maven-plugin</artifactId>
                         <inherited>true</inherited>
                         <configuration>
                             <projectName>OpenICF</projectName>

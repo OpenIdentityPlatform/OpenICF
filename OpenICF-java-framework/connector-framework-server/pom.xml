@@ -25,8 +25,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>framework</artifactId>
-        <groupId>org.forgerock.openicf.framework</groupId>
-        <version>1.5.2.0</version>
+        <groupId>org.openidentityplatform.openicf.framework</groupId>
+        <version>1.5.3-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -46,23 +46,23 @@
     
     <dependencies>
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.openidentityplatform.openicf.framework</groupId>
             <artifactId>connector-framework-internal</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.openidentityplatform.openicf.framework</groupId>
             <artifactId>connector-framework-rpc</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.openidentityplatform.openicf.framework</groupId>
             <artifactId>connector-framework-protobuf</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.forgerock.commons</groupId>
-            <artifactId>forgerock-util</artifactId>
+            <groupId>org.openidentityplatform.commons</groupId>
+            <artifactId>util</artifactId>
         </dependency>
 
        <dependency>
@@ -135,7 +135,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.openidentityplatform.openicf.framework</groupId>
             <artifactId>testbundlev1</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>

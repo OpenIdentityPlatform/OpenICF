@@ -25,13 +25,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.forgerock.openicf.framework</groupId>
+        <groupId>org.openidentityplatform.openicf.framework</groupId>
         <artifactId>framework</artifactId>
-        <version>1.5.2.0</version>
+        <version>1.5.3-SNAPSHOT</version>
     </parent>
     <artifactId>connector-framework</artifactId>
     <packaging>bundle</packaging>
-    <name>OpenICF Framework</name>
+    <name>OpenICF Connectors Framework</name>
     <description>
         The IdentityConnectors framework provides a container to separate the Connector bundle from the application.
         The framework provides many common features that developers would otherwise need to implement on their own.
@@ -42,10 +42,12 @@
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.easytesting</groupId>
             <artifactId>fest-assert</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <properties>

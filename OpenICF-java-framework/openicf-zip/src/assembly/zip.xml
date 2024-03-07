@@ -81,16 +81,15 @@
             <outputDirectory>/openicf/lib/framework</outputDirectory>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <includes>
-                <include>org.forgerock.openicf.framework:*</include>
+                <include>org.openidentityplatform.openicf.framework:*</include>
                 <include>org.glassfish.grizzly:*</include>
                 <include>javax.servlet:javax.servlet-api</include>
-                <include>org.forgerock.commons:*</include>
+                <include>org.openidentityplatform.commons:*</include>
                 <include>com.google.protobuf:*</include>
                 <include>org.bouncycastle:*</include>
                 <include>org.slf4j:*</include>
                 <include>ch.qos.logback:*</include>
                 <include>org.codehaus.groovy:groovy-all</include>
-                <include>org.forgerock.commons.guava:*</include>
                 <include>com.google.guava:*</include>
             </includes>
         </dependencySet>

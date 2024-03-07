@@ -29,11 +29,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.forgerock.openicf.connectors</groupId>
+        <groupId>org.openidentityplatform.openicf.connectors</groupId>
         <artifactId>connectors-parent</artifactId>
-        <version>@frameworkVersion@</version>
+        <version>1.5.3-SNAPSHOT</version>
+        <relativePath>../OpenICF-java-framework/bundles-parent</relativePath>
     </parent>
-    <groupId>org.forgerock.openicf.connectors</groupId>
+    <groupId>org.openidentityplatform.openicf.connectors</groupId>
     <artifactId>docbook-connector</artifactId>
     <version>@frameworkVersion@</version>
     <packaging>bundle</packaging>
@@ -71,7 +72,7 @@
     </repositories>
     <dependencies>
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.openidentityplatform.openicf.framework</groupId>
             <artifactId>connector-framework</artifactId>
         </dependency>
 
@@ -82,12 +83,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.openidentityplatform.openicf.framework</groupId>
             <artifactId>connector-framework-internal</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.openidentityplatform.openicf.framework</groupId>
             <artifactId>connector-test-common</artifactId>
             <scope>test</scope>
         </dependency>
@@ -106,14 +107,14 @@
                     <version>3.3</version>
                     <dependencies>
                         <dependency>
-                            <groupId>org.forgerock.maven.plugins</groupId>
+                            <groupId>org.openidentityplatform.openicf</groupId>
                             <artifactId>openicf-maven-plugin</artifactId>
                             <version>@project.version@</version>
                         </dependency>
                     </dependencies>
                 </plugin-->
                 <plugin>
-                    <groupId>org.forgerock.maven.plugins</groupId>
+                    <groupId>org.openidentityplatform.openicf</groupId>
                     <artifactId>openicf-maven-plugin</artifactId>
                     <version>@project.version@</version>
                     <!--executions>
@@ -240,7 +241,7 @@
                 <artifactId>maven-bundle-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>org.forgerock.maven.plugins</groupId>
+                <groupId>org.openidentityplatform.openicf</groupId>
                 <artifactId>openicf-maven-plugin</artifactId>
                 <executions>
                     <execution>
@@ -256,7 +257,7 @@
     <reporting>
         <plugins>
             <plugin>
-                <groupId>org.forgerock.maven.plugins</groupId>
+                <groupId>org.openidentityplatform.openicf</groupId>
                 <artifactId>openicf-maven-plugin</artifactId>
                 <!--reportSets>
                     <reportSet>

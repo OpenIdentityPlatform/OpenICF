@@ -29,11 +29,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.forgerock.ce.openicf.connectors</groupId>
+        <groupId>org.openidentityplatform.openicf.connectors</groupId>
         <artifactId>connectors-parent</artifactId>
-        <version>1.1.2.0</version>
+        <version>1.5.3-SNAPSHOT</version>
+        <relativePath>../OpenICF-java-framework/bundles-parent</relativePath>
     </parent>
-    <groupId>org.forgerock.ce.openicf.connectors</groupId>
+    <groupId>org.openidentityplatform.ce.openicf.connectors</groupId>
     <artifactId>basic-connector</artifactId>
     <version>1.1.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
