@@ -56,8 +56,6 @@
         <url>http://sources.forgerock.org/browse/openicf/trunk/connectors/java/basic-connector</url>
     </scm>
     <properties>
-        <maven.compiler.target>1.6</maven.compiler.target>
-        <maven.compiler.source>1.6</maven.compiler.source>
         <connectorPackage>org.forgerock.openicf.connectors.basic</connectorPackage>
         <connectorClass>BasicConnector</connectorClass>
         <jira.componentIds>10191</jira.componentIds>

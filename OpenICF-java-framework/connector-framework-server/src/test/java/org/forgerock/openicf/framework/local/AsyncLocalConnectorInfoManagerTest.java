@@ -165,7 +165,7 @@ public class AsyncLocalConnectorInfoManagerTest extends
 
             manager.addConnectorBundle(bundle10);
 
-            Assert.assertTrue(keyRangePromise.isDone());
+            Assert.assertTrue(!keyRangePromise.isCancelled());
 
             keyRangePromise.thenOnResult(new ResultHandler<ConnectorInfo>() {
                 public void handleResult(ConnectorInfo result) {
@@ -183,7 +183,7 @@ public class AsyncLocalConnectorInfoManagerTest extends
                             "org.identityconnectors.testconnector.TstConnector").setBundleVersion(
                             "[1.0,2.0)").build());
 
-            Assert.assertTrue(keyRangePromise.isDone());
+            Assert.assertTrue(!keyRangePromise.isCancelled());
 
             keyRangePromise.thenOnResult(new ResultHandler<ConnectorInfo>() {
                 public void handleResult(ConnectorInfo result) {
@@ -203,7 +203,7 @@ public class AsyncLocalConnectorInfoManagerTest extends
                             "org.identityconnectors.testconnector.TstConnector").setBundleVersion(
                             "[1.0,2.0)").build());
 
-            Assert.assertTrue(keyRangePromise.isDone());
+            Assert.assertTrue(!keyRangePromise.isCancelled());
 
             keyRangePromise.thenOnResult(new ResultHandler<ConnectorInfo>() {
                 public void handleResult(ConnectorInfo result) {

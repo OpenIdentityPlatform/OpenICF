@@ -39,8 +39,6 @@
     </description>
     <properties>
         <!-- maven-compiler-plugin -->
-        <maven.compiler.target>1.6</maven.compiler.target>
-        <maven.compiler.source>1.6</maven.compiler.source>
         <connectorPackage>org.forgerock.openicf</connectorPackage>
         <connectorClass>ScriptedConnector</connectorClass>
         <framework.compatibilityVersion>1.5</framework.compatibilityVersion>

@@ -42,8 +42,6 @@
     <description>Connector for DocBook</description>
 
     <properties>
-        <maven.compiler.target>1.6</maven.compiler.target>
-        <maven.compiler.source>1.6</maven.compiler.source>
         <skipTests>false</skipTests>
         <contracts.skip>true</contracts.skip>
         <connectorPackage>org.forgerock.openicf.connectors.docbook</connectorPackage>
