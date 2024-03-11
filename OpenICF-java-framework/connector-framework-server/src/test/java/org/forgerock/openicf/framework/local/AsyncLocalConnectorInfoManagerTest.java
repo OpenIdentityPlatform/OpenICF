@@ -166,9 +166,6 @@ public class AsyncLocalConnectorInfoManagerTest extends
 
             manager.addConnectorBundle(bundle10);
 
-            keyRangePromise.getOrThrow(10, TimeUnit.SECONDS);
-            Assert.assertTrue(keyRangePromise.isDone());
-
             keyRangePromise.thenOnResult(new ResultHandler<ConnectorInfo>() {
                 public void handleResult(ConnectorInfo result) {
                     Assert.assertEquals(result.getConnectorKey().getBundleVersion(), "1.0.0.0");
@@ -178,14 +175,14 @@ public class AsyncLocalConnectorInfoManagerTest extends
                     Assert.fail("KeyRange search should succeed", error);
                 }
             });
+            keyRangePromise.getOrThrow(10, TimeUnit.SECONDS);
+            Assert.assertTrue(keyRangePromise.isDone());
 
             keyRangePromise =
                     manager.findConnectorInfoAsync(ConnectorKeyRange.newBuilder().setBundleName(
                             "testbundlev2").setConnectorName(
                             "org.identityconnectors.testconnector.TstConnector").setBundleVersion(
                             "[1.0,2.0)").build());
-            keyRangePromise.getOrThrow(10, TimeUnit.SECONDS);
-            Assert.assertTrue(keyRangePromise.isDone());
 
             keyRangePromise.thenOnResult(new ResultHandler<ConnectorInfo>() {
                 public void handleResult(ConnectorInfo result) {
@@ -196,6 +193,8 @@ public class AsyncLocalConnectorInfoManagerTest extends
                     Assert.fail("KeyRange search should succeed", error);
                 }
             });
+            keyRangePromise.getOrThrow(10, TimeUnit.SECONDS);
+            Assert.assertTrue(keyRangePromise.isDone());
 
             manager.addConnectorBundle(bundle11);
 
@@ -204,8 +203,6 @@ public class AsyncLocalConnectorInfoManagerTest extends
                             "testbundlev2").setConnectorName(
                             "org.identityconnectors.testconnector.TstConnector").setBundleVersion(
                             "[1.0,2.0)").build());
-            keyRangePromise.getOrThrow(10, TimeUnit.SECONDS);
-            Assert.assertTrue(keyRangePromise.isDone());
 
             keyRangePromise.thenOnResult(new ResultHandler<ConnectorInfo>() {
                 public void handleResult(ConnectorInfo result) {
@@ -216,6 +213,8 @@ public class AsyncLocalConnectorInfoManagerTest extends
                     Assert.fail("KeyRange search should succeed", error);
                 }
             });
+            keyRangePromise.getOrThrow(10, TimeUnit.SECONDS);
+            Assert.assertTrue(keyRangePromise.isDone());
 
         } finally {
             connectorFramework.release();
