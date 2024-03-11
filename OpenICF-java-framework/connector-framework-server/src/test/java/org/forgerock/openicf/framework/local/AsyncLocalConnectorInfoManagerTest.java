@@ -27,6 +27,7 @@ package org.forgerock.openicf.framework.local;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 import org.forgerock.openicf.framework.AsyncConnectorInfoManagerTestBase;
 import org.forgerock.openicf.framework.ConnectorFramework;
@@ -165,7 +166,8 @@ public class AsyncLocalConnectorInfoManagerTest extends
 
             manager.addConnectorBundle(bundle10);
 
-            Assert.assertTrue(!keyRangePromise.isCancelled());
+            keyRangePromise.getOrThrow(10, TimeUnit.SECONDS);
+            Assert.assertTrue(keyRangePromise.isDone());
 
             keyRangePromise.thenOnResult(new ResultHandler<ConnectorInfo>() {
                 public void handleResult(ConnectorInfo result) {
@@ -182,8 +184,8 @@ public class AsyncLocalConnectorInfoManagerTest extends
                             "testbundlev2").setConnectorName(
                             "org.identityconnectors.testconnector.TstConnector").setBundleVersion(
                             "[1.0,2.0)").build());
-
-            Assert.assertTrue(!keyRangePromise.isCancelled());
+            keyRangePromise.getOrThrow(10, TimeUnit.SECONDS);
+            Assert.assertTrue(keyRangePromise.isDone());
 
             keyRangePromise.thenOnResult(new ResultHandler<ConnectorInfo>() {
                 public void handleResult(ConnectorInfo result) {
@@ -202,8 +204,8 @@ public class AsyncLocalConnectorInfoManagerTest extends
                             "testbundlev2").setConnectorName(
                             "org.identityconnectors.testconnector.TstConnector").setBundleVersion(
                             "[1.0,2.0)").build());
-
-            Assert.assertTrue(!keyRangePromise.isCancelled());
+            keyRangePromise.getOrThrow(10, TimeUnit.SECONDS);
+            Assert.assertTrue(keyRangePromise.isDone());
 
             keyRangePromise.thenOnResult(new ResultHandler<ConnectorInfo>() {
                 public void handleResult(ConnectorInfo result) {
