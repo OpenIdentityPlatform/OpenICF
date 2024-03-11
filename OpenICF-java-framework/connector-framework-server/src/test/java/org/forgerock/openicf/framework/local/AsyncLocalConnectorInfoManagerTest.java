@@ -106,7 +106,6 @@ public class AsyncLocalConnectorInfoManagerTest extends
                     Assert.fail("Key search should succeed", error);
                 }
             });
-            Assert.assertTrue(keyRangePromise.isDone());
 
             keyRangePromise.thenOnResult(new ResultHandler<ConnectorInfo>() {
                 public void handleResult(ConnectorInfo result) {
@@ -117,6 +116,8 @@ public class AsyncLocalConnectorInfoManagerTest extends
                     Assert.fail("KeyRange search should succeed", error);
                 }
             });
+            keyRangePromise.getOrThrow(10, TimeUnit.SECONDS);
+            Assert.assertTrue(keyRangePromise.isDone());
         } finally {
             connectorFramework.release();
         }
