@@ -33,6 +33,14 @@ jobs:
         env:
           MAVEN_OPTS: -Dhttps.protocols=TLSv1.2 -Dmaven.wagon.httpconnectionManager.ttlSeconds=120 -Dmaven.wagon.http.retryHandler.requestSentEnabled=true -Dmaven.wagon.http.retryHandler.count=10
         run: mvn --batch-mode --errors --update-snapshots verify --file pom.xml
+      - name: Upload failure artifacts
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: failure-${{ matrix.os }}-${{ matrix.java }}
+          retention-days: 1
+          path:  |
+            **
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
