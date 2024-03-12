@@ -138,11 +138,6 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
                             public boolean apply(Pair<ConnectorKeyRange, PromiseImpl<ConnectorInfo, RuntimeException>> value) {
                                 return value.getKey().isInRange(connectorInfo.getConnectorKey());
                             }
-
-                            @Override
-                            public boolean test(Pair<ConnectorKeyRange, PromiseImpl<ConnectorInfo, RuntimeException>> input) {
-                                return apply(input);
-                            }
                         })) {
             rangeEntry.getValue().handleResult(connectorInfo);
         }
