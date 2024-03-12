@@ -157,7 +157,7 @@ public class AsyncLocalConnectorInfoManagerTest extends
             File testBundlesDir = getTestBundlesDir();
             URL bundle10 = IOUtil.makeURL(testBundlesDir, "testbundlev10");
             URL bundle11 = IOUtil.makeURL(testBundlesDir, "testbundlev11");
-
+            manager.addConnectorBundle(bundle10);
             Promise<ConnectorInfo, RuntimeException> keyRangePromise =
                     manager.findConnectorInfoAsync(ConnectorKeyRange.newBuilder().setBundleName(
                             "testbundlev2").setConnectorName(
