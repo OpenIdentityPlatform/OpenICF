@@ -172,6 +172,7 @@ public class AsyncLocalConnectorInfoManagerTest extends
                 }
             }).thenOnException(new ExceptionHandler<RuntimeException>() {
                 public void handleException(RuntimeException error) {
+                    error.printStackTrace();
                     Assert.fail("KeyRange search should succeed", error);
                 }
             });
@@ -192,6 +193,7 @@ public class AsyncLocalConnectorInfoManagerTest extends
                 }
             }).thenOnException(new ExceptionHandler<RuntimeException>() {
                 public void handleException(RuntimeException error) {
+                    error.printStackTrace();
                     Assert.fail("KeyRange search should succeed", error);
                 }
             });
@@ -214,6 +216,7 @@ public class AsyncLocalConnectorInfoManagerTest extends
                 }
             }).thenOnException(new ExceptionHandler<RuntimeException>() {
                 public void handleException(RuntimeException error) {
+                    error.printStackTrace();
                     Assert.fail("KeyRange search should succeed", error);
                 }
             });
