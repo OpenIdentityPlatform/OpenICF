@@ -186,12 +186,13 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
                 final Pair<ConnectorKeyRange, PromiseImpl<ConnectorInfo, RuntimeException>> cacheEntry =
                         Pair.of(keyRange, PromiseImpl.<ConnectorInfo, RuntimeException> create());
 
+                rangePromiseCacheList.add(cacheEntry);
                 cacheEntry.getValue().thenOnResultOrException(new Runnable() {
                     public void run() {
                         rangePromiseCacheList.remove(cacheEntry);
                     }
                 });
-                rangePromiseCacheList.add(cacheEntry);
+
 
                 for (Map.Entry<ConnectorKey, ConnectorEntry<V>> entry : managedConnectorInfos
                         .entrySet()) {
