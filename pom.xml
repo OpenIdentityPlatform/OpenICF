@@ -184,11 +184,6 @@
             </dependency>
             <dependency>
                 <groupId>org.openidentityplatform.openicf.connectors</groupId>
-                <artifactId>groovy-connector</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.openidentityplatform.openicf.connectors</groupId>
                 <artifactId>xml-connector</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -228,6 +223,12 @@
                 <classifier>samples</classifier>
                 <type>zip</type>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.reactivex</groupId>
+                <artifactId>rxjava</artifactId>
+                <version>1.2.0</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

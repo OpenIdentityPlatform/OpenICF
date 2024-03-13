@@ -179,6 +179,7 @@ public class AsyncLocalConnectorInfoManagerTest extends
 
             keyRangePromise.getOrThrowUninterruptibly(10, TimeUnit.SECONDS);
             Assert.assertTrue(keyRangePromise.isDone());
+            Assert.assertFalse(keyRangePromise.isCancelled());
 
             keyRangePromise =
                     manager.findConnectorInfoAsync(ConnectorKeyRange.newBuilder().setBundleName(
@@ -200,6 +201,7 @@ public class AsyncLocalConnectorInfoManagerTest extends
 
             keyRangePromise.getOrThrowUninterruptibly(10, TimeUnit.SECONDS);
             Assert.assertTrue(keyRangePromise.isDone());
+            Assert.assertFalse(keyRangePromise.isCancelled());
 
             manager.addConnectorBundle(bundle11);
 
@@ -222,6 +224,7 @@ public class AsyncLocalConnectorInfoManagerTest extends
             });
             keyRangePromise.getOrThrowUninterruptibly(10, TimeUnit.SECONDS);
             Assert.assertTrue(keyRangePromise.isDone());
+            Assert.assertFalse(keyRangePromise.isCancelled());
         } finally {
             connectorFramework.release();
         }
