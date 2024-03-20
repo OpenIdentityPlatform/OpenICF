@@ -27,6 +27,7 @@ package org.forgerock.openicf.framework.local;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 import org.forgerock.openicf.framework.AsyncConnectorInfoManagerTestBase;
 import org.forgerock.openicf.framework.ConnectorFramework;
@@ -156,7 +157,7 @@ public class AsyncLocalConnectorInfoManagerTest extends
             File testBundlesDir = getTestBundlesDir();
             URL bundle10 = IOUtil.makeURL(testBundlesDir, "testbundlev10");
             URL bundle11 = IOUtil.makeURL(testBundlesDir, "testbundlev11");
-
+            manager.addConnectorBundle(bundle10);
             Promise<ConnectorInfo, RuntimeException> keyRangePromise =
                     manager.findConnectorInfoAsync(ConnectorKeyRange.newBuilder().setBundleName(
                             "testbundlev2").setConnectorName(
@@ -165,17 +166,20 @@ public class AsyncLocalConnectorInfoManagerTest extends
 
             manager.addConnectorBundle(bundle10);
 
-            Assert.assertTrue(keyRangePromise.isDone());
-
             keyRangePromise.thenOnResult(new ResultHandler<ConnectorInfo>() {
                 public void handleResult(ConnectorInfo result) {
                     Assert.assertEquals(result.getConnectorKey().getBundleVersion(), "1.0.0.0");
                 }
             }).thenOnException(new ExceptionHandler<RuntimeException>() {
                 public void handleException(RuntimeException error) {
-                    Assert.fail("KeyRange search should succeed", error);
+                    error.printStackTrace();
+                    Assert.fail("1 KeyRange search should succeed "+ error.toString(), error);
                 }
             });
+
+            keyRangePromise.getOrThrowUninterruptibly(10, TimeUnit.SECONDS);
+            Assert.assertTrue(keyRangePromise.isDone());
+            Assert.assertFalse(keyRangePromise.isCancelled());
 
             keyRangePromise =
                     manager.findConnectorInfoAsync(ConnectorKeyRange.newBuilder().setBundleName(
@@ -183,7 +187,6 @@ public class AsyncLocalConnectorInfoManagerTest extends
                             "org.identityconnectors.testconnector.TstConnector").setBundleVersion(
                             "[1.0,2.0)").build());
 
-            Assert.assertTrue(keyRangePromise.isDone());
 
             keyRangePromise.thenOnResult(new ResultHandler<ConnectorInfo>() {
                 public void handleResult(ConnectorInfo result) {
@@ -191,9 +194,14 @@ public class AsyncLocalConnectorInfoManagerTest extends
                 }
             }).thenOnException(new ExceptionHandler<RuntimeException>() {
                 public void handleException(RuntimeException error) {
-                    Assert.fail("KeyRange search should succeed", error);
+                    error.printStackTrace();
+                    Assert.fail("2 KeyRange search should succeed "+ error.toString(), error);
                 }
             });
+
+            keyRangePromise.getOrThrowUninterruptibly(10, TimeUnit.SECONDS);
+            Assert.assertTrue(keyRangePromise.isDone());
+            Assert.assertFalse(keyRangePromise.isCancelled());
 
             manager.addConnectorBundle(bundle11);
 
@@ -203,7 +211,6 @@ public class AsyncLocalConnectorInfoManagerTest extends
                             "org.identityconnectors.testconnector.TstConnector").setBundleVersion(
                             "[1.0,2.0)").build());
 
-            Assert.assertTrue(keyRangePromise.isDone());
 
             keyRangePromise.thenOnResult(new ResultHandler<ConnectorInfo>() {
                 public void handleResult(ConnectorInfo result) {
@@ -211,10 +218,13 @@ public class AsyncLocalConnectorInfoManagerTest extends
                 }
             }).thenOnException(new ExceptionHandler<RuntimeException>() {
                 public void handleException(RuntimeException error) {
-                    Assert.fail("KeyRange search should succeed", error);
+                    error.printStackTrace();
+                    Assert.fail("3 KeyRange search should succeed "+ error.toString(), error);
                 }
             });
-
+            keyRangePromise.getOrThrowUninterruptibly(10, TimeUnit.SECONDS);
+            Assert.assertTrue(keyRangePromise.isDone());
+            Assert.assertFalse(keyRangePromise.isCancelled());
         } finally {
             connectorFramework.release();
         }

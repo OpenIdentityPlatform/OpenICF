@@ -1,10 +1,13 @@
 # OpenICF
 [![Latest release](https://img.shields.io/github/release/OpenIdentityPlatform/OpenICF.svg)](https://github.com/OpenIdentityPlatform/OpenICF/releases)
-[![Build Status](https://travis-ci.org/OpenIdentityPlatform/OpenICF.svg)](https://travis-ci.org/OpenIdentityPlatform/OpenICF)
+[![Build](https://github.com/OpenIdentityPlatform/OpenICF/actions/workflows/build.yml/badge.svg)](https://github.com/OpenIdentityPlatform/OpenICF/actions/workflows/build.yml)
+[![Deploy](https://github.com/OpenIdentityPlatform/OpenICF/actions/workflows/deploy.yml/badge.svg)](https://github.com/OpenIdentityPlatform/OpenICF/actions/workflows/deploy.yml)
 [![Issues](https://img.shields.io/github/issues/OpenIdentityPlatform/OpenICF.svg)](https://github.com/OpenIdentityPlatform/OpenICF/issues)
 [![Last commit](https://img.shields.io/github/last-commit/OpenIdentityPlatform/OpenICF.svg)](https://github.com/OpenIdentityPlatform/OpenICF/commits/master)
 [![License](https://img.shields.io/badge/license-CDDL-blue.svg)](https://github.com/OpenIdentityPlatform/OpenICF/blob/master/LICENSE.md)
+[![Downloads](https://img.shields.io/github/downloads/OpenIdentityPlatform/OpenICF/total.svg)](https://github.com/OpenIdentityPlatform/OpenICF/releases)
 [![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/OpenIdentityPlatform/OpenIDM)
+[![Top language](https://img.shields.io/github/languages/top/OpenIdentityPlatform/OpenICF.svg)](https://github.com/OpenIdentityPlatform/OpenICF)
 [![Code size in bytes](https://img.shields.io/github/languages/code-size/OpenIdentityPlatform/OpenICF.svg)](https://github.com/OpenIdentityPlatform/OpenICF)
 
 The Open Identity Connector Framework (OpenICF) project provides interoperability between identity, compliance and risk management solutions. An OpenICF Connector enables provisioning software, such as OpenIDM, to manage the identities that are maintained by a specific identity provider.
@@ -43,8 +46,6 @@ git config --system core.longpaths true
 
 ```bash
 git clone --recursive  https://github.com/OpenIdentityPlatform/OpenICF.git
-mvn -DskipTests -Dmaven.javadoc.skip=true install -f OpenICF/OpenDJ/forgerock-parent
-mvn -DskipTests -Dmaven.javadoc.skip=true install -f OpenICF/OpenDJ -P \!distribution
 mvn install -f OpenICF
 ```
 
@@ -60,11 +61,11 @@ openicf/bin/ConnectorServer.sh /run
 * OpenIDM Community Mailing List: open-identity-platform-openidm@googlegroups.com
 * OpenIDM Community Archive: https://groups.google.com/d/forum/open-identity-platform-openidm
 * OpenIDM Community on Gitter: https://gitter.im/OpenIdentityPlatform/OpenIDM
-* OpenIDM Commercial support RFP: support@openam.org.ru (English, Russian)
+* OpenIDM Commercial support RFP: support@3a-systems.ru (English, Russian)
 
 ## Contributing
 Please, make [Pull request](https://github.com/OpenIdentityPlatform/OpenICF/pulls)
 
-## Thanks for OpenICF
+## Thanks 🥰
 * Sun Identity Manager
 * Forgerock OpenICF

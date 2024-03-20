@@ -25,16 +25,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.forgerock.openicf.connectors</groupId>
+        <groupId>org.openidentityplatform.openicf.connectors</groupId>
         <artifactId>connectors-parent</artifactId>
-        <version>1.5.2.0</version>
+        <version>1.5.3-SNAPSHOT</version>
         <relativePath>../OpenICF-java-framework/bundles-parent</relativePath>
     </parent>
-    <groupId>org.forgerock.openicf.connectors</groupId>
+    <groupId>org.openidentityplatform.openicf.connectors</groupId>
     <artifactId>databasetable-connector</artifactId>
-    <version>1.1.0.2</version>
     <packaging>bundle</packaging>
-    <name>Database Table Connector</name>
+    <name>OpenICF Database Table Connector</name>
     <description>Database table connector use a single database table to store the Account attributes.</description>
     <properties>
         <openicf.osgi.embed>dbcommon</openicf.osgi.embed>
@@ -47,13 +46,13 @@
      </repositories>
     <dependencies>
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.openidentityplatform.openicf.framework</groupId>
             <artifactId>connector-framework</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.forgerock.openicf.connectors.misc</groupId>
+            <groupId>org.openidentityplatform.openicf.connectors.misc</groupId>
             <artifactId>dbcommon</artifactId>
-            <version>1.1.0.0</version>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -64,19 +63,18 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.openidentityplatform.openicf.framework</groupId>
             <artifactId>connector-framework-internal</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.openidentityplatform.openicf.framework</groupId>
             <artifactId>connector-test-common</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.openidentityplatform.openicf.framework</groupId>
             <artifactId>connector-framework-contract</artifactId>
-            <version>1.5.2.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -103,16 +101,16 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.forgerock.maven.plugins</groupId>
-                <artifactId>openicf-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>reduce-pom</goal>
-                        </goals>
-                    </execution>
-                </executions>
+                 <groupId>org.openidentityplatform.openicf</groupId>
+                 <artifactId>openicf-maven-plugin</artifactId>
+                 <executions>
+                     <execution>
+                         <goals>
+                             <goal>reduce-pom</goal>
+                         </goals>
+                     </execution>
+                 </executions>
             </plugin>
-        </plugins>
-    </build>
-</project>
+         </plugins>
+     </build>
+ </project>

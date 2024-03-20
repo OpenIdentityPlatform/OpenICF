@@ -25,9 +25,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.forgerock.openicf.framework</groupId>
+        <groupId>org.openidentityplatform.openicf.framework</groupId>
         <artifactId>framework</artifactId>
-        <version>1.5.2.0</version>
+        <version>1.5.3-SNAPSHOT</version>
     </parent>
     <artifactId>icfl-over-slf4j</artifactId>
     <packaging>bundle</packaging>
@@ -35,7 +35,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.openidentityplatform.openicf.framework</groupId>
             <artifactId>connector-framework</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -76,7 +76,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>!*</Export-Package>
-                        <Fragment-Host>org.forgerock.openicf.framework.connector-framework</Fragment-Host>
+                        <Fragment-Host>org.openidentityplatform.openicf.framework.connector-framework</Fragment-Host>
                     </instructions>
                 </configuration>
             </plugin>

@@ -17,20 +17,18 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.forgerock.openicf.connectors</groupId>
+        <groupId>org.openidentityplatform.openicf.connectors</groupId>
         <artifactId>connectors-parent</artifactId>
-        <version>1.5.2.0</version>
+        <version>1.5.3-SNAPSHOT</version>
         <relativePath>../OpenICF-java-framework/bundles-parent</relativePath>
     </parent>
     <artifactId>kerberos-connector</artifactId>
-    <groupId>org.forgerock.openicf.connectors</groupId>
-    <version>1.4.1.0</version>
+    <groupId>org.openidentityplatform.openicf.connectors</groupId>
     <packaging>bundle</packaging>
+    <name>OpenICF Kerberos connector</name>
     <description>Kerberos connector used to connect to kerberos systems via ssh</description>
     <properties>
         <!-- maven-compiler-plugin -->
-        <maven.compiler.target>1.6</maven.compiler.target>
-        <maven.compiler.source>1.6</maven.compiler.source>
         <connectorPackage>org.forgerock.openicf</connectorPackage>
         <connectorClass>KerberosConnector</connectorClass>
         <openicf.osgi.import.defaults>
@@ -45,19 +43,18 @@
     </repositories>
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.openidentityplatform.openicf.connectors</groupId>
             <artifactId>ssh-connector</artifactId>
-            <version>1.4.1.0</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.openidentityplatform.openicf.connectors</groupId>
             <artifactId>groovy-connector</artifactId>
-            <version>1.4.3.0</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.openidentityplatform.openicf.framework</groupId>
             <artifactId>connector-framework</artifactId>
-            <version>1.5.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
@@ -119,9 +116,8 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.forgerock.maven.plugins</groupId>
+                <groupId>org.openidentityplatform.openicf</groupId>
                 <artifactId>openicf-maven-plugin</artifactId>
-                <version>1.5.0</version>
                 <executions>
                     <execution>
                         <goals>

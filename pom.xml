@@ -1,14 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.forgerock</groupId>
-        <artifactId>forgerock-parent</artifactId>
-        <version>2.0.6</version>
-    </parent>
     <groupId>org.openidentityplatform</groupId>
     <artifactId>openicf</artifactId>
-    <version>1.5.0</version>
+    <version>1.5.3-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>OpenICF</name>
     <description>
@@ -18,8 +13,10 @@
     <inceptionYear>2018</inceptionYear>
     <url>https://github.com/OpenIdentityPlatform/OpenICF</url>
     <properties>
-    		<opendj>4.4.4-SNAPSHOT</opendj>
-    	</properties>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+   	</properties>
     <licenses>
         <license>
             <name>CDDL-1.0</name>
@@ -28,6 +25,7 @@
                 This license applies to OpenICF source code as indicated in the
                 sources.
             </comments>
+            <distribution>repo</distribution>
         </license>
         <license>
             <name>CC BY-NC-ND 3.0</name>
@@ -38,10 +36,65 @@
             </comments>
         </license>
     </licenses>
+    <developers>
+        <developer>
+            <id>Open Identity Platform Community</id>
+            <name>Open Identity Platform Community</name>
+            <email>open-identity-platform@googlegroups.com</email>
+            <organization>Open Identity Platform Community</organization>
+            <organizationUrl>https://www.openidentityplatform.org/</organizationUrl>
+            <url>https://github.com/OpenIdentityPlatform/OpenICF</url>
+        </developer>
+    </developers>
+    <issueManagement>
+        <system>github.com</system>
+        <url>https://github.com/OpenIdentityPlatform/OpenICF/issues</url>
+    </issueManagement>
+    <scm>
+        <connection>scm:git:https://github.com/OpenIdentityPlatform/OpenICFgit</connection>
+        <developerConnection>scm:git:https://github.com/OpenIdentityPlatform/OpenICF.git</developerConnection>
+        <url>https://github.com/OpenIdentityPlatform/OpenICF</url>
+        <tag>HEAD</tag>
+    </scm>
+    <repositories>
+        <repository>
+            <id>ossrh-snapshots</id>
+            <name>Sonatype OSS Repository</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+            <snapshots><enabled>true</enabled></snapshots>
+        </repository>
+        <repository>
+            <id>jboss-nexus-public</id>
+            <name>JBoss Nexus Public Repository</name>
+            <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>ossrh-snapshots</id>
+            <name>Sonatype OSS Repository</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
+    <distributionManagement>
+        <repository>
+            <id>ossrh</id>
+            <name>Sonatype OSS Repository</name>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+        </repository>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <name>Sonatype OSS Repository</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
     <modules>
         <module>OpenICF-dbcommon</module>
-        <module>OpenICF-maven-plugin</module>
         <module>OpenICF-java-framework</module>
+        <module>OpenICF-maven-plugin</module>
         <module>OpenICF-csvfile-connector</module>
         <module>OpenICF-databasetable-connector</module>
         <module>OpenICF-groovy-connector</module>
@@ -52,35 +105,214 @@
     </modules>
 
     <profiles>
+        <profile>
+            <id>release-sign-artifacts</id>
+            <activation>
+                <property>
+                    <name>gpg.passphrase</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.6</version>
+                        <configuration>
+                            <passphrase>${gpg.passphrase}</passphrase>
+                            <useAgent>true</useAgent>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <configuration>
+                                    <gpgArguments>
+                                        <arg>--pinentry-mode</arg>
+                                        <arg>loopback</arg>
+                                    </gpgArguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
-	            <groupId>org.forgerock.opendj</groupId>
-	            <artifactId>opendj-core</artifactId>
-	            <version>${opendj}</version>
-	            <type>jar</type>
-	        </dependency>
-	        <dependency>
-	            <groupId>org.forgerock.opendj</groupId>
-	            <artifactId>opendj-server-legacy</artifactId>
-	            <version>${opendj}</version>
-	            <type>jar</type>
-	        </dependency>
-	            <dependency>
-	            <groupId>org.forgerock.opendj</groupId>
-	            <artifactId>opendj-server</artifactId>
-	            <version>${opendj}</version>
-	        </dependency>
+                <groupId>org.openidentityplatform.opendj</groupId>
+                <artifactId>opendj-parent</artifactId>
+                <version>4.6.3-SNAPSHOT</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.openidentityplatform.openicf.framework</groupId>
+                <artifactId>connector-framework</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openidentityplatform.openicf.framework</groupId>
+                <artifactId>connector-test-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openidentityplatform.openicf.framework</groupId>
+                <artifactId>connector-framework-internal</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openidentityplatform.openicf.framework</groupId>
+                <artifactId>connector-framework-contract</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openidentityplatform.openicf.framework</groupId>
+                <artifactId>connector-framework-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openidentityplatform.openicf.connectors</groupId>
+                <artifactId>groovy-connector</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openidentityplatform.openicf.connectors</groupId>
+                <artifactId>xml-connector</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openidentityplatform.openicf.connectors</groupId>
+                <artifactId>csvfile-connector</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openidentityplatform.openicf.connectors</groupId>
+                <artifactId>ldap-connector</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openidentityplatform.openicf.connectors</groupId>
+                <artifactId>databasetable-connector</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openidentityplatform.openicf.connectors</groupId>
+                <artifactId>ssh-connector</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openidentityplatform.openicf.connectors</groupId>
+                <artifactId>kerberos-connector</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openidentityplatform.openicf.framework</groupId>
+                <artifactId>icfl-over-slf4j</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openidentityplatform.openicf.connectors</groupId>
+                <artifactId>groovy-connector</artifactId>
+                <classifier>samples</classifier>
+                <type>zip</type>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.reactivex</groupId>
+                <artifactId>rxjava</artifactId>
+                <version>1.2.0</version>
+                <scope>test</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <build>
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>org.openidentityplatform.openicf</groupId>
+                    <artifactId>openicf-maven-plugin</artifactId>
+                    <version>${project.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.11.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.2.5</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.2.0</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>3.2.5</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>3.7.1</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.13</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>false</autoReleaseAfterClose>
+                    <stagingProgressTimeoutMinutes>15</stagingProgressTimeoutMinutes>
+                    <keepStagingRepositoryOnFailure>true</keepStagingRepositoryOnFailure>
+                    <keepStagingRepositoryOnCloseRuleFailure>true</keepStagingRepositoryOnCloseRuleFailure>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.google.guava</groupId>
+                        <artifactId>guava</artifactId>
+                        <version>15.0</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.6.3</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <doclint>none</doclint>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <reporting>

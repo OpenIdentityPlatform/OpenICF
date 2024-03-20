@@ -25,23 +25,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.forgerock.openicf.connectors</groupId>
+        <groupId>org.openidentityplatform.openicf.connectors</groupId>
         <artifactId>connectors-parent</artifactId>
-        <version>1.5.2.0</version>
+        <version>1.5.3-SNAPSHOT</version>
         <relativePath>../OpenICF-java-framework/bundles-parent</relativePath>
     </parent>
-    <groupId>org.forgerock.openicf.connectors</groupId>
+    <groupId>org.openidentityplatform.openicf.connectors</groupId>
     <artifactId>groovy-connector</artifactId>
-    <version>1.4.3.0</version>
     <packaging>bundle</packaging>
-    <name>Groovy Connector Toolkit</name>
+    <name>OpenICF Groovy Connector Toolkit</name>
     <description>This is a generic bundle that contains base classes and interfaces needed to write a scripted
         connector, such as Scripted SQL connector.
     </description>
     <properties>
         <!-- maven-compiler-plugin -->
-        <maven.compiler.target>1.6</maven.compiler.target>
-        <maven.compiler.source>1.6</maven.compiler.source>
         <connectorPackage>org.forgerock.openicf</connectorPackage>
         <connectorClass>ScriptedConnector</connectorClass>
         <framework.compatibilityVersion>1.5</framework.compatibilityVersion>
@@ -54,12 +51,11 @@
             org.apache.http*;version="[4.3.0, 4.4.0)";resolution:=optional
         </openicf.osgi.import.defaults>
         <openicf.osgi.embed />
-        <forgerock.rest.version>21.0.0-SNAPSHOT</forgerock.rest.version>
         <jetty.http.port>8888</jetty.http.port>
     </properties>
     <dependencies>
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.openidentityplatform.openicf.framework</groupId>
             <artifactId>connector-framework</artifactId>
         </dependency>
         <dependency>
@@ -130,9 +126,8 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.forgerock.commons</groupId>
+            <groupId>org.openidentityplatform.commons</groupId>
             <artifactId>json-resource</artifactId>
-            <version>${forgerock.rest.version}</version>
         </dependency>
 <!--         <dependency> -->
 <!--             <groupId>com.fasterxml.jackson.core</groupId> -->
@@ -158,25 +153,23 @@
             <version>1.9.5</version>
         </dependency>        
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.openidentityplatform.openicf.framework</groupId>
             <artifactId>connector-framework-internal</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.openidentityplatform.openicf.framework</groupId>
             <artifactId>connector-test-common</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.forgerock.commons</groupId>
+            <groupId>org.openidentityplatform.commons</groupId>
             <artifactId>json-resource-http</artifactId>
-            <version>${forgerock.rest.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.forgerock.http</groupId>
-            <artifactId>chf-http-servlet</artifactId>
-            <version>${forgerock.rest.version}</version>
+            <groupId>org.openidentityplatform.commons.http-framework</groupId>
+            <artifactId>servlet</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -280,99 +273,97 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.forgerock.maven.plugins</groupId>
-                <artifactId>openicf-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>reduce-pom</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>1.8</version>
-                <executions>
-                    <execution>
-                        <id>reserve-network-port</id>
-                        <goals>
-                            <goal>reserve-network-port</goal>
-                        </goals>
-                        <phase>process-resources</phase>
-                        <configuration>
-                        		<minPortNumber>60000</minPortNumber>
-                            <portNames>
-                                <portName>jetty.http.port</portName>
-                            </portNames>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.17</version>
-                <configuration>
-                    <systemPropertyVariables>
-                        <jetty.http.port>${jetty.http.port}</jetty.http.port>
-                    </systemPropertyVariables>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <configuration>
-                    <excludes>**/generated-sources/groovy-stubs/**/*</excludes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-                <version>3.1</version>
-                <configuration>
-                    <excludes>
-                        <exclude>**/groovy-stubs/*.java</exclude>
-                    </excludes>
-                    <excludeRoots>
-                        <excludeRoot>${project.build.directory}/generated-sources/groovy-stubs</excludeRoot>
-                    </excludeRoots>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jxr-plugin</artifactId>
-                <version>2.4</version>
-                <configuration>
-                    <linkJavadoc>true</linkJavadoc>
-                    <includes>
-                        <include>**/*.java</include>
-                        <include>**/*.groovy</include>
-                    </includes>
-                    <excludes>
-                        <exclude>target/generated/groovy-stubs</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.4</version>
-                <configuration>
-                    <descriptors>
-                        <descriptor>src/assemble/samples.xml</descriptor>
-                    </descriptors>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-</project>
+                 <groupId>org.openidentityplatform.openicf</groupId>
+                 <artifactId>openicf-maven-plugin</artifactId>
+                 <executions>
+                     <execution>
+                         <goals>
+                             <goal>reduce-pom</goal>
+                         </goals>
+                     </execution>
+                 </executions>
+             </plugin>
+             <plugin>
+                 <groupId>org.codehaus.mojo</groupId>
+                 <artifactId>build-helper-maven-plugin</artifactId>
+                 <version>1.8</version>
+                 <executions>
+                     <execution>
+                         <id>reserve-network-port</id>
+                         <goals>
+                             <goal>reserve-network-port</goal>
+                         </goals>
+                         <phase>process-resources</phase>
+                         <configuration>
+                                 <minPortNumber>60000</minPortNumber>
+                             <portNames>
+                                 <portName>jetty.http.port</portName>
+                             </portNames>
+                         </configuration>
+                     </execution>
+                 </executions>
+             </plugin>
+             <plugin>
+                 <groupId>org.apache.maven.plugins</groupId>
+                 <artifactId>maven-surefire-plugin</artifactId>
+                 <configuration>
+                     <systemPropertyVariables>
+                         <jetty.http.port>${jetty.http.port}</jetty.http.port>
+                     </systemPropertyVariables>
+                 </configuration>
+             </plugin>
+             <plugin>
+                 <groupId>org.apache.maven.plugins</groupId>
+                 <artifactId>maven-checkstyle-plugin</artifactId>
+                 <configuration>
+                     <excludes>**/generated-sources/groovy-stubs/**/*</excludes>
+                 </configuration>
+             </plugin>
+             <plugin>
+                 <groupId>org.apache.maven.plugins</groupId>
+                 <artifactId>maven-pmd-plugin</artifactId>
+                 <version>3.1</version>
+                 <configuration>
+                     <excludes>
+                         <exclude>**/groovy-stubs/*.java</exclude>
+                     </excludes>
+                     <excludeRoots>
+                         <excludeRoot>${project.build.directory}/generated-sources/groovy-stubs</excludeRoot>
+                     </excludeRoots>
+                 </configuration>
+             </plugin>
+             <plugin>
+                 <groupId>org.apache.maven.plugins</groupId>
+                 <artifactId>maven-jxr-plugin</artifactId>
+                 <version>2.4</version>
+                 <configuration>
+                     <linkJavadoc>true</linkJavadoc>
+                     <includes>
+                         <include>**/*.java</include>
+                         <include>**/*.groovy</include>
+                     </includes>
+                     <excludes>
+                         <exclude>target/generated/groovy-stubs</exclude>
+                     </excludes>
+                 </configuration>
+             </plugin>
+             <plugin>
+                 <groupId>org.apache.maven.plugins</groupId>
+                 <artifactId>maven-assembly-plugin</artifactId>
+                 <configuration>
+                     <descriptors>
+                         <descriptor>src/assemble/samples.xml</descriptor>
+                     </descriptors>
+                 </configuration>
+                 <executions>
+                     <execution>
+                         <phase>package</phase>
+                         <goals>
+                             <goal>single</goal>
+                         </goals>
+                     </execution>
+                 </executions>
+             </plugin>
+         </plugins>
+     </build>
+ </project>

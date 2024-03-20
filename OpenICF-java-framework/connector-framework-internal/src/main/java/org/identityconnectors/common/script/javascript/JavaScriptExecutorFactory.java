@@ -46,7 +46,7 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 public class JavaScriptExecutorFactory extends ScriptExecutorFactory {
 
     public static final String JAVA_SCRIPT = "JavaScript";
-    private final ScriptEngineManager manager = new ScriptEngineManager();
+    private final ScriptEngineManager manager = new ScriptEngineManager(null);
     private final boolean compilable;
 
     /**

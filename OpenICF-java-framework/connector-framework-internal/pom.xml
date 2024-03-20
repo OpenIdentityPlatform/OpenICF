@@ -25,9 +25,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.forgerock.openicf.framework</groupId>
+        <groupId>org.openidentityplatform.openicf.framework</groupId>
         <artifactId>framework</artifactId>
-        <version>1.5.2.0</version>
+        <version>1.5.3-SNAPSHOT</version>
     </parent>
     <artifactId>connector-framework-internal</artifactId>
     <packaging>bundle</packaging>
@@ -39,7 +39,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.openidentityplatform.openicf.framework</groupId>
             <artifactId>connector-framework</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -52,7 +52,7 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.openidentityplatform.openicf.framework</groupId>
             <artifactId>connector-test-common</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
@@ -70,7 +70,7 @@
             <artifactId>fest-assert</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.openidentityplatform.openicf.framework</groupId>
             <artifactId>connector-framework</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
@@ -79,18 +79,17 @@
         <dependency>
             <groupId>io.reactivex</groupId>
             <artifactId>rxjava</artifactId>
-            <version>1.2.0</version>
             <scope>test</scope>
         </dependency>
         <!-- Force to build the test bundles before -->
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.openidentityplatform.openicf.framework</groupId>
             <artifactId>testbundlev1</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.openidentityplatform.openicf.framework</groupId>
             <artifactId>testbundlev2</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
@@ -120,7 +119,7 @@
                             org.identityconnectors.framework.impl.api*
                         </Export-Package>
                         <Main-Class>org.identityconnectors.framework.server.Main</Main-Class>
-                        <Fragment-Host>org.forgerock.openicf.framework.connector-framework</Fragment-Host>
+                        <Fragment-Host>org.openidentityplatform.openicf.framework.connector-framework</Fragment-Host>
                     </instructions>
                 </configuration>
             </plugin>
@@ -137,11 +136,11 @@
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
-                                    <groupId>org.forgerock.openicf.framework</groupId>
+                                    <groupId>org.openidentityplatform.openicf.framework</groupId>
                                     <artifactId>testbundlev1</artifactId>
                                 </artifactItem>
                                 <artifactItem>
-                                    <groupId>org.forgerock.openicf.framework</groupId>
+                                    <groupId>org.openidentityplatform.openicf.framework</groupId>
                                     <artifactId>testbundlev2</artifactId>
                                 </artifactItem>
                             </artifactItems>
