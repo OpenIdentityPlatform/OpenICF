@@ -140,6 +140,8 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestConnect
         try {
             Assert.assertTrue(client.isOperational());
             Assert.assertTrue(server.isOperational());
+            Assert.assertTrue(client.getRemoteRequests().isEmpty());
+            Assert.assertTrue(server.getLocalRequests().isEmpty());
             TestRemoteRequest<H> request = client.trySubmitRequest(new TestRequestFactory<H>(0));
             request.getPromise();
             
@@ -159,6 +161,10 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestConnect
         try {
             Assert.assertTrue(client.isOperational());
             Assert.assertTrue(server.isOperational());
+
+            Assert.assertTrue(client.getRemoteRequests().isEmpty());
+            Assert.assertTrue(server.getLocalRequests().isEmpty());
+
             TestRemoteRequest<H> request = client.trySubmitRequest(new TestRequestFactory<H>(1));
             
             Assert.assertEquals(request.getPromise().getOrThrowUninterruptibly(5, TimeUnit.SECONDS), "OK");
