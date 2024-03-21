@@ -40,7 +40,7 @@
     <repositories>
     </repositories>
     <properties>
-        <mavenVersion>3.0.4</mavenVersion>
+        <mavenVersion>3.8.1</mavenVersion>
         <mavenFilteringVersion>1.1</mavenFilteringVersion>
         <mavenPluginVersion>3.2</mavenPluginVersion>
         <mavenPluginPluginVersion>3.11.0</mavenPluginPluginVersion>
