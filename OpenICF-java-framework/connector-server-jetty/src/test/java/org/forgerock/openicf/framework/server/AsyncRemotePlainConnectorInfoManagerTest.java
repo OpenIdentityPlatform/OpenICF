@@ -242,10 +242,10 @@ public class AsyncRemotePlainConnectorInfoManagerTest extends
         String truststoreFile = null;
         truststoreFile = truststoreURL.getFile();//URLDecoder.decode(truststoreURL.getFile(), "UTF-8");
 
-        sslContextFactory.setTrustStorePath(truststoreFile);
+        sslContextFactory.setTrustStorePath("file://"+truststoreFile);
         sslContextFactory.setTrustStorePassword(JSK_PASSWORD);
 
-        sslContextFactory.setKeyStorePath(serverKeystoreFile);
+        sslContextFactory.setKeyStorePath("file://"+serverKeystoreFile);
         sslContextFactory.setKeyStorePassword(JSK_PASSWORD);
 
         sslContextFactory.setIncludeProtocols("TLSv1.2", "TLSv1.1", "TLSv1");
