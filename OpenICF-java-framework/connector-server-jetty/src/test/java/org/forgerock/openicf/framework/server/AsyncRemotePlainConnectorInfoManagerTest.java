@@ -25,10 +25,7 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jetty.http.HttpVersion;
-import org.eclipse.jetty.security.ConstraintMapping;
-import org.eclipse.jetty.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.security.MappedLoginService;
-import org.eclipse.jetty.security.SecurityHandler;
+import org.eclipse.jetty.security.*;
 import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -41,6 +38,7 @@ import org.eclipse.jetty.server.UserIdentity;
 import org.eclipse.jetty.servlet.BaseHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.servlet.Source;
 import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.security.Credential;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
@@ -114,23 +112,15 @@ public class AsyncRemotePlainConnectorInfoManagerTest extends
         sh.setAuthenticator(new BasicAuthenticator());
         sh.setConstraintMappings(Arrays.asList(new ConstraintMapping[] { cm }));
 
-        MappedLoginService loginService = new MappedLoginService() {
-
-            @Override
-            protected UserIdentity loadUser(String username) {
-                return null;
-            }
-
-            @Override
-            protected void loadUsers() throws IOException {
-                Credential credential = Credential.getCredential(DEFAULT_PASSWORD);
-                String[] roles = new String[] { "websocket" };
-                putUser("plain", credential, roles);
-                putUser("secure", credential, roles);
-                putUser("proxy", credential, roles);
-                putUser("anonymous", credential, roles);
-            }
-        };
+        HashLoginService loginService = new HashLoginService();
+        UserStore us=new UserStore();
+        String[] roles = new String[] { "websocket" };
+        Credential credential = Credential.getCredential(DEFAULT_PASSWORD);
+        us.addUser("plain", credential, roles);
+        us.addUser("secure", credential, roles);
+        us.addUser("proxy", credential, roles);
+        us.addUser("anonymous", credential, roles);
+        loginService.setUserStore(us);
         loginService.setName("OpenICF-Service");
         sh.setLoginService(loginService);
         sh.setConstraintMappings(Arrays.asList(new ConstraintMapping[] { cm }));
@@ -191,7 +181,7 @@ public class AsyncRemotePlainConnectorInfoManagerTest extends
                         | ServletContextHandler.SECURITY);
 
         ServletHolder holder =
-                handler.getServletHandler().newServletHolder(BaseHolder.Source.EMBEDDED);
+                handler.getServletHandler().newServletHolder(Source.EMBEDDED);
 
         serverConnectorFramework = serverConnectorFrameworkFactory.acquire();
         localConnectorFramework = localConnectorFrameworkFactory.acquire();
