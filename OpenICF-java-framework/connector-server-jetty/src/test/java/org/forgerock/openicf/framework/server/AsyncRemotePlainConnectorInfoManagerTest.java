@@ -240,11 +240,7 @@ public class AsyncRemotePlainConnectorInfoManagerTest extends
                         "truststore.jks");
         Assert.assertNotNull(truststoreURL);
         String truststoreFile = null;
-        try {
-            truststoreFile = URLDecoder.decode(truststoreURL.getFile(), "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        truststoreFile = truststoreURL.getFile();//URLDecoder.decode(truststoreURL.getFile(), "UTF-8");
 
         sslContextFactory.setTrustStorePath(truststoreFile);
         sslContextFactory.setTrustStorePassword(JSK_PASSWORD);
