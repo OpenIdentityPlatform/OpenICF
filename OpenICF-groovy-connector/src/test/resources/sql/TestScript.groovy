@@ -40,5 +40,5 @@ def log = log as Log
 
 log.info("This is TestScript")
 
-def rows = connection.rows("SELECT ID FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'USERS' AND TABLE_TYPE = 'TABLE'")
+def rows = connection.rows("SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='PUBLIC' and TABLE_NAME = 'USERS' ")
 assert rows.size() == 1
