@@ -108,7 +108,7 @@ public class WebSocketListenerBridge extends AbstractEventDriver {
         }
 
         protected void tryClose() {
-            WebSocketListenerBridge.this.terminateConnection(StatusCode.NORMAL, "TEST003");
+            WebSocketListenerBridge.this.session.close(StatusCode.NORMAL, "TEST003");
         }
 
     };

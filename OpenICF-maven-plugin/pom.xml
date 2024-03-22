@@ -40,7 +40,7 @@
     <repositories>
     </repositories>
     <properties>
-        <mavenVersion>3.0.4</mavenVersion>
+        <mavenVersion>3.8.1</mavenVersion>
         <mavenFilteringVersion>1.1</mavenFilteringVersion>
         <mavenPluginVersion>3.2</mavenPluginVersion>
         <mavenPluginPluginVersion>3.11.0</mavenPluginPluginVersion>
@@ -130,7 +130,7 @@
         <dependency>
             <groupId>org.codehaus.plexus</groupId>
             <artifactId>plexus-utils</artifactId>
-            <version>3.0.17</version>
+            <version>3.5.1</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.plexus</groupId>
@@ -140,7 +140,7 @@
         <dependency>
             <groupId>org.codehaus.plexus</groupId>
             <artifactId>plexus-archiver</artifactId>
-            <version>2.4.4</version>
+            <version>4.8.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.codehaus.plexus</groupId>
