@@ -36,6 +36,22 @@
         The IdentityConnectors framework provides a container to separate the Connector bundle from the application.
         The framework provides many common features that developers would otherwise need to implement on their own.
     </description>
+    <profiles>
+        <profile>
+            <id>jdk17.options</id>
+            <activation>
+                <jdk>[17,)</jdk>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.openjdk.nashorn</groupId>
+                    <artifactId>nashorn-core</artifactId>
+                    <version>15.4</version>
+                    <optional>true</optional>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 
     <dependencies>
         <dependency>

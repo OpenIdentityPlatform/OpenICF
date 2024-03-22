@@ -188,7 +188,7 @@
                         <links>
                             <link>http://download.oracle.com/javase/8/docs/api/</link>
                             <link>http://docs.groovy-lang.org/latest/html/api/</link>
-                            <link>http://openicf.forgerock.org/apidocs/</link>
+<!--                            <link>http://openicf.forgerock.org/apidocs/</link>-->
                         </links>
                     </configuration>
                 </plugin>
