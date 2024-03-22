@@ -44,9 +44,10 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
  * Creates a new ScriptExecutorFactory for executing JavaScript scripts.
  */
 public class JavaScriptExecutorFactory extends ScriptExecutorFactory {
-
     public static final String JAVA_SCRIPT = "JavaScript";
-    private final ScriptEngineManager manager = new ScriptEngineManager(null);
+    private final ScriptEngineManager manager =
+            Double.parseDouble(System.getProperty("java.specification.version")) < 15
+                    ? new ScriptEngineManager(null) : new ScriptEngineManager();
     private final boolean compilable;
 
     /**

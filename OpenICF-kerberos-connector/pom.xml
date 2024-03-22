@@ -76,11 +76,10 @@
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.gmaven</groupId>
-                <artifactId>gmaven-plugin</artifactId>
-                <version>1.5</version>
+                <groupId>org.codehaus.gmavenplus</groupId>
+                <artifactId>gmavenplus-plugin</artifactId>
+                <version>3.0.2</version>
                 <configuration>
-                    <providerSelection>2.0</providerSelection>
                     <sourceEncoding>UTF-8</sourceEncoding>
                 </configuration>
                 <executions>
@@ -93,14 +92,9 @@
                 </executions>
                 <dependencies>
                     <dependency>
-                        <groupId>org.codehaus.gmaven.runtime</groupId>
-                        <artifactId>gmaven-runtime-2.0</artifactId>
-                        <version>1.5</version>
-                    </dependency>
-                    <dependency>
                         <groupId>org.codehaus.groovy</groupId>
                         <artifactId>groovy-all</artifactId>
-                        <version>2.2.2</version>
+                        <version>${groovy.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>

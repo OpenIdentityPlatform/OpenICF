@@ -188,7 +188,7 @@
                         <links>
                             <link>http://download.oracle.com/javase/8/docs/api/</link>
                             <link>http://docs.groovy-lang.org/latest/html/api/</link>
-                            <link>http://openicf.forgerock.org/apidocs/</link>
+<!--                            <link>http://openicf.forgerock.org/apidocs/</link>-->
                         </links>
                     </configuration>
                 </plugin>
@@ -216,6 +216,7 @@
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
                     <extensions>true</extensions>
+                    <version>5.1.9</version>
                     <configuration>
                         <excludeDependencies>${openicf.osgi.exclude.dependencies}</excludeDependencies>
                         <instructions>

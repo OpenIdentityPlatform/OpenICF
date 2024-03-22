@@ -16,6 +16,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.source>1.8</maven.compiler.source>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.surefire.options></java.surefire.options>
    	</properties>
     <licenses>
         <license>
@@ -141,6 +142,21 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>jdk17.options</id>
+            <activation>
+                <jdk>[17,)</jdk>
+            </activation>
+            <properties>
+                <java.surefire.options>
+                    --add-opens java.base/java.lang=ALL-UNNAMED
+                    --add-opens java.base/java.security=ALL-UNNAMED
+                    --add-opens java.base/java.net=ALL-UNNAMED
+                    --add-opens java.base/java.lang.reflect=ALL-UNNAMED
+                    --add-opens java.base/java.util=ALL-UNNAMED
+                </java.surefire.options>
+            </properties>
+        </profile>
     </profiles>
 
     <dependencyManagement>
@@ -249,6 +265,9 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>3.2.5</version>
+                    <configuration>
+                        <argLine>${java.surefire.options}</argLine>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

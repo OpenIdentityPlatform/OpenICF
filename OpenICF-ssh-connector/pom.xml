@@ -39,8 +39,6 @@
     <name>OpenICF SSH Connector</name>
     <description>Generic SSH connector</description>
     <properties>
-        <maven.compiler.target>1.7</maven.compiler.target>
-        <maven.compiler.source>1.7</maven.compiler.source>
         <connectorPackage>org.forgerock.openicf.connectors.ssh</connectorPackage>
         <connectorClass>SSHConnector</connectorClass>
         <framework.compatibilityVersion>1.5</framework.compatibilityVersion>
@@ -108,11 +106,10 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.codehaus.gmaven</groupId>
-                <artifactId>gmaven-plugin</artifactId>
-                <version>1.5</version>
+                <groupId>org.codehaus.gmavenplus</groupId>
+                <artifactId>gmavenplus-plugin</artifactId>
+                <version>3.0.2</version>
                 <configuration>
-                    <providerSelection>2.0</providerSelection>
                     <sourceEncoding>UTF-8</sourceEncoding>
                 </configuration>
                 <executions>
@@ -121,20 +118,15 @@
                             <goal>generateStubs</goal>
                             <goal>compile</goal>
                             <goal>generateTestStubs</goal>
-                            <goal>testCompile</goal>
+                            <goal>compileTests</goal>
                         </goals>
                     </execution>
                 </executions>
                 <dependencies>
                     <dependency>
-                        <groupId>org.codehaus.gmaven.runtime</groupId>
-                        <artifactId>gmaven-runtime-2.0</artifactId>
-                        <version>1.5</version>
-                    </dependency>
-                    <dependency>
                         <groupId>org.codehaus.groovy</groupId>
                         <artifactId>groovy-all</artifactId>
-                        <version>2.2.2</version>
+                        <version>${groovy.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>
