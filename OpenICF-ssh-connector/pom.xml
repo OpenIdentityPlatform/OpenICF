@@ -39,8 +39,6 @@
     <name>OpenICF SSH Connector</name>
     <description>Generic SSH connector</description>
     <properties>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <maven.compiler.source>1.8</maven.compiler.source>
         <connectorPackage>org.forgerock.openicf.connectors.ssh</connectorPackage>
         <connectorClass>SSHConnector</connectorClass>
         <framework.compatibilityVersion>1.5</framework.compatibilityVersion>
