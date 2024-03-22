@@ -27,10 +27,7 @@ package org.forgerock.openicf.connectors;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.eclipse.jetty.security.ConstraintMapping;
-import org.eclipse.jetty.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.security.MappedLoginService;
-import org.eclipse.jetty.security.SecurityHandler;
+import org.eclipse.jetty.security.*;
 import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.UserIdentity;
@@ -82,21 +79,12 @@ public abstract class RESTTestBase {
         sh.setAuthenticator(new BasicAuthenticator());
         sh.setConstraintMappings(Arrays.asList(new ConstraintMapping[]{cm}));
 
-        MappedLoginService loginService = new MappedLoginService() {
-
-            @Override
-            protected UserIdentity loadUser(String username) {
-                return null;
-            }
-
-            @Override
-            protected void loadUsers() throws IOException {
-                Credential credential = Credential.getCredential("Passw0rd");
-                String[] roles = new String[]{"user"};
-                putUser("admin", credential, roles);
-
-            }
-        };
+        HashLoginService loginService = new HashLoginService();
+        UserStore us=new UserStore();
+        Credential credential = Credential.getCredential("Passw0rd");
+        String[] roles = new String[]{"user"};
+        us.addUser("admin", credential, roles);
+        loginService.setUserStore(us);
         loginService.setName("user");
         sh.setLoginService(loginService);
         sh.setConstraintMappings(Arrays.asList(new ConstraintMapping[]{cm}));
@@ -111,7 +99,7 @@ public abstract class RESTTestBase {
 
         server = new Server(Integer.parseInt(httpPort));
         for (org.eclipse.jetty.server.Connector c : server.getConnectors()) {
-            c.setHost("127.0.0.1");
+            //c.setHost("127.0.0.1");
         }
 
         // Initializing the security handler
