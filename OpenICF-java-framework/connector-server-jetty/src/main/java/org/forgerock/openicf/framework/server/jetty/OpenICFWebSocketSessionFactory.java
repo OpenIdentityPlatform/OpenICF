@@ -24,17 +24,20 @@
 
 package org.forgerock.openicf.framework.server.jetty;
 
-import org.eclipse.jetty.websocket.common.SessionListener;
 import org.eclipse.jetty.websocket.common.WebSocketSessionFactory;
 import org.eclipse.jetty.websocket.common.events.EventDriver;
 import org.eclipse.jetty.websocket.common.events.JettyAnnotatedEventDriver;
 import org.eclipse.jetty.websocket.common.events.JettyListenerEventDriver;
+import org.eclipse.jetty.websocket.common.scopes.WebSocketContainerScope;
 
 public class OpenICFWebSocketSessionFactory extends WebSocketSessionFactory {
-
-    public OpenICFWebSocketSessionFactory(SessionListener... sessionListeners) {
-        super(sessionListeners);
+    public OpenICFWebSocketSessionFactory(WebSocketContainerScope containerScope) {
+        super(containerScope);
     }
+
+    /*public OpenICFWebSocketSessionFactory(SessionListener... sessionListeners) {
+        super(sessionListeners);
+    }*/
 
     @Override
     public boolean supports(final EventDriver websocket) {
