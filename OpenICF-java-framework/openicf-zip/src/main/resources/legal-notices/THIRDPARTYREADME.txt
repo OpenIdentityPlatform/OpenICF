@@ -177,7 +177,7 @@ The MIT License
 Version: org.slf4j:slf4j-api:${slf4j.version}
 Copyright: Copyright (c) 2004-2013 QOS.ch
 
-Version: org.bouncycastle:bcprov-jdk16:1.46
+Version: org.bouncycastle:bcprov-jdk18on:1.77
 Copyright: Copyright (c) 2000 - 2015 The Legion of the Bouncy Castle Inc. (http://www.bouncycastle.org)
 
 ==================
