@@ -216,6 +216,7 @@
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
                     <extensions>true</extensions>
+                    <version>5.1.9</version>
                     <configuration>
                         <excludeDependencies>${openicf.osgi.exclude.dependencies}</excludeDependencies>
                         <instructions>
