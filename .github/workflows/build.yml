@@ -45,6 +45,7 @@ jobs:
           openicf/bin/ConnectorServer.sh
           openicf/bin/openicf.sh start
           openicf/bin/openicf.sh stop
+          rm -rf openicf/logs
           openicf/bin/ConnectorServer.sh /run &
       - name: Test on Windows
         if: runner.os == 'Windows'
@@ -52,7 +53,11 @@ jobs:
           unzip OpenICF-java-framework/openicf-zip/target/openicf-*.zip
           openicf\bin\ConnectorServer.bat
           openicf\bin\ConnectorServer.bat /install openicf
-          START /B CMD /C CALL "openicf\bin\ConnectorServer.bat" /run
+          net start openicf
+          net stop openicf
+          openicf\bin\ConnectorServer.bat /uninstall openicf
+          rmdir /s openicf\logs
+          cmd /c "START /b openicf\bin\ConnectorServer.bat /run"
       - name: Upload failure artifacts
         uses: actions/upload-artifact@v4
         if: ${{ failure() }}
