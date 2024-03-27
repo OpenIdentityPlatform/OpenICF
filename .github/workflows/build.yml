@@ -41,7 +41,7 @@ jobs:
       - name: Test on Windows
         if: runner.os == 'Windows'
         run: |
-          unzip -d OpenICF-java-framework/openicf-zip/target/openicf-*.zip
+          unzip OpenICF-java-framework/openicf-zip/target/openicf-*.zip
           openicf\bin\ConnectorServer.bat
       - name: Upload failure artifacts
         uses: actions/upload-artifact@v4
