@@ -52,7 +52,6 @@ mvn install -f OpenICF
 ## How-to run after build
 ```bash
 unzip OpenICF-java-framework/openicf-zip/target/openicf-*.zip
-openicf/bin/openicf.sh  start
 openicf/bin/ConnectorServer.sh /run
 ```
 
