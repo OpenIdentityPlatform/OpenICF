@@ -13,11 +13,11 @@ NAME="openicf"
 DESC="OpenICF Connector Server"
 
 # The path to Jsvc
-EXEC="/usr/bin/jsvc"
+EXEC="jsvc"
 
 # The path to the folder containing OpenICF
 # Only set OPENICF_HOME if not already set
-[ -z "$OPENICF_HOME" ] && OPENICF_HOME=/usr/local/$NAME
+[ -z "$OPENICF_HOME" ] && OPENICF_HOME=$(dirname $(dirname $(readlink -f "$0")))
 
 
 # The path to the folder containing the java runtime

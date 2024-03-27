@@ -62,16 +62,11 @@
             <directory>${project.build.directory}/maven-shared-archive-resources</directory>
             <outputDirectory>/openicf/</outputDirectory>
         </fileSet>
-        <fileSet>
-            <directory>${project.build.directory}/licenseResource</directory>
-            <outputDirectory>/openicf/</outputDirectory>
-         </fileSet>
-         <!-- Include the Forgerock binary license file if exists -->
          <fileSet>
-            <directory>${project.build.directory}</directory>
-            <outputDirectory>/openicf/legal-notices/</outputDirectory>
+            <directory>${basedir}/../../</directory>
+            <outputDirectory>/openicf/</outputDirectory>
             <includes>
-               <include>license.txt</include>
+               <include>LICENSE.md</include>
             </includes>
          </fileSet>
     </fileSets>
@@ -91,6 +86,7 @@
                 <include>ch.qos.logback:*</include>
                 <include>org.codehaus.groovy:groovy-all</include>
                 <include>com.google.guava:*</include>
+                <include>commons-daemon:*</include>
             </includes>
         </dependencySet>
     </dependencySets>
