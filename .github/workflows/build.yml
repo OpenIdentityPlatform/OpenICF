@@ -36,12 +36,12 @@ jobs:
       - name: Test on Unix
         if: runner.os != 'Windows'
         run: |
-          unzip OpenICF-java-framework/openicf-zip/target/openicf-*.zip
+          unzip -d OpenICF-java-framework/openicf-zip/target openicf-*.zip
           openicf/bin/ConnectorServer.sh
       - name: Test on Windows
         if: runner.os == 'Windows'
         run: |
-          unzip OpenICF-java-framework\openicf-zip\target\openicf-*.zip
+          unzip -d OpenICF-java-framework\openicf-zip\target openicf-*.zip
           openicf\bin\ConnectorServer.bat
       - name: Upload failure artifacts
         uses: actions/upload-artifact@v4
