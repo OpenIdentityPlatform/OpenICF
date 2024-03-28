@@ -13,7 +13,7 @@ NAME="openicf"
 DESC="OpenICF Connector Server"
 
 # The path to Jsvc
-EXEC="jsvc"
+EXEC="$(type -P -a jsvc)"
 
 # The path to the folder containing OpenICF
 # Only set OPENICF_HOME if not already set
@@ -81,14 +81,13 @@ jsvc_exec()
 case "$1" in
     start)
         echo "Starting the $DESC..."
-
         # Start the service
         jsvc_exec
 
-        echo "The $DESC has started."
+        echo "The $DESC has started. pid=$(cat $PID)"
     ;;
     stop)
-        echo "Stopping the $DESC..."
+        echo "Stopping the $DESC... pid=$(cat $PID)"
 
         # Stop the service
         jsvc_exec "-stop"
@@ -98,7 +97,7 @@ case "$1" in
     restart)
         if [ -f "$PID" ]; then
 
-            echo "Restarting the $DESC..."
+            echo "Restarting the $DESC... pid=$(cat $PID)"
 
             # Stop the service
             jsvc_exec "-stop"
@@ -106,7 +105,7 @@ case "$1" in
             # Start the service
             jsvc_exec
 
-            echo "The $DESC has restarted."
+            echo "The $DESC has restarted. pid=$(cat $PID)"
         else
             echo "Daemon not running, no action taken"
             exit 1
