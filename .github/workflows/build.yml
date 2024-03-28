@@ -47,7 +47,7 @@ jobs:
           openicf/bin/openicf.sh stop
           rm -rf openicf/logs
           openicf/bin/ConnectorServer.sh /run &
-          timeout 2m bash -c 'grep -q "ConnectorServer listening on" openicf/logs/ConnectorServer.log ; do sleep 5; done'
+          timeout 2m bash -c 'until grep -q "ConnectorServer listening on" openicf/logs/ConnectorServer.log ; do sleep 5; done'
       - name: Test on Windows
         if: runner.os == 'Windows'
         run: |
@@ -59,7 +59,7 @@ jobs:
           openicf\bin\ConnectorServer.bat /uninstall openicf
           Remove-Item -Path openicf\logs -Force -Recurse
           cmd /c "START /b openicf\bin\ConnectorServer.bat /run"
-          timeout /t 15 /nobreak 
+          Start-Sleep -s 15
           findstr "ConnectorServer listening on" openicf\logs\ConnectorServer.log
       - name: Upload failure artifacts
         uses: actions/upload-artifact@v4
