@@ -56,7 +56,7 @@ jobs:
           net start openicf
           net stop openicf
           openicf\bin\ConnectorServer.bat /uninstall openicf
-          del /f /s /q openicf\logs
+          del /f /q openicf\logs
           cmd /c "START /b openicf\bin\ConnectorServer.bat /run"
       - name: Upload failure artifacts
         uses: actions/upload-artifact@v4

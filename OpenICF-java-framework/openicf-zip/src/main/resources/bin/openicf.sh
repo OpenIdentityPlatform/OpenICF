@@ -13,7 +13,13 @@ NAME="openicf"
 DESC="OpenICF Connector Server"
 
 # The path to Jsvc
-EXEC="$(type -P -a jsvc)"
+EXEC="$(whereis -q jsvc)"
+if [ ! -f "$EXEC" ]; then
+  echo "Could not find jsvc on path $EXEC" 1>&2
+  echo "Ubuntu: sudo apt-get install jsvc" 1>&2
+  echo "Mac: brew install jsvc" 1>&2
+  exit 1
+fi
 
 # The path to the folder containing OpenICF
 # Only set OPENICF_HOME if not already set
