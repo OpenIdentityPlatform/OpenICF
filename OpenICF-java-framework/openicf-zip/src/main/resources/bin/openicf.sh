@@ -13,10 +13,11 @@ NAME="openicf"
 DESC="OpenICF Connector Server"
 
 # The path to Jsvc
-EXEC="$(whereis -q jsvc)"
+EXEC="$(which jsvc)"
 if [ ! -f "$EXEC" ]; then
   echo "Could not find jsvc on path $EXEC" 1>&2
   echo "Ubuntu: sudo apt-get install jsvc" 1>&2
+  echo "Centos: sudo yum install apache-commons-daemon-jsvc" 1>&2
   echo "Mac: brew install jsvc" 1>&2
   exit 1
 fi
