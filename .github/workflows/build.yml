@@ -39,7 +39,7 @@ jobs:
           if [ "$RUNNER_OS" == "Linux" ]; then
               sudo apt-get install jsvc
           else
-              brew install jsvc
+              brew install coreutils jsvc 
           fi
           unzip OpenICF-java-framework/openicf-zip/target/openicf-*.zip
           openicf/bin/ConnectorServer.sh
