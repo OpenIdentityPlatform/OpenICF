@@ -33,7 +33,7 @@ if [ -z "$JAVA_HOME" ] ; then
  OSTYPE=$(uname)
  if [[ "$OSTYPE" == "linux-gnu" ]]; then
         # Linux
-        JAVA_HOME="/usr/lib/jvm/default-java" 
+        JAVA_HOME="$(readlink -f $(type -P java))"
  elif [[ "$OSTYPE" == "darwin"* ]]; then
         # Mac 
         JAVA_HOME=$(/usr/libexec/java_home)
