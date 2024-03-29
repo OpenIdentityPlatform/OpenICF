@@ -48,6 +48,8 @@ jobs:
           rm -rf openicf/logs
           openicf/bin/ConnectorServer.sh /run &
           timeout 2m bash -c 'until grep -q "ConnectorServer listening on" openicf/logs/ConnectorServer.log ; do sleep 5; done'
+          grep -q " ERROR " openicf/logs/ConnectorServer.log 
+          grep -q " ERROR " openicf/logs/ConnectorServer.log | wc -l | grep -q 0
       - name: Test on Windows
         if: runner.os == 'Windows'
         run: |
@@ -61,6 +63,8 @@ jobs:
           cmd /c "START /b openicf\bin\ConnectorServer.bat /run"
           Start-Sleep -s 15
           findstr "ConnectorServer listening on" openicf\logs\ConnectorServer.log
+          findstr " ERROR " openicf\logs\ConnectorServer.log
+          findstr " ERROR " openicf\logs\ConnectorServer.log | find /c 'ERROR' | findstr "0"
       - name: Upload failure artifacts
         uses: actions/upload-artifact@v4
         if: ${{ failure() }}

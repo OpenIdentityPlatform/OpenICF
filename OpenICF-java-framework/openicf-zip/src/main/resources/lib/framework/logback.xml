@@ -23,13 +23,9 @@
  " Portions Copyrighted [year] [name of copyright owner]"
 -->
 <configuration>
-
     <appender name="SERVER-FILE" class="ch.qos.logback.core.FileAppender">
         <file>logs/ConnectorServer.log</file>
         <append>true</append>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/ConnectorServer-%d{yyyyMMdd}.log</fileNamePattern>
-        </rollingPolicy>
         <encoder>
             <pattern>%date{"MMM dd, yyyy h:mm:ss a"} %-5level %logger{35}: %msg %n</pattern>
         </encoder>
@@ -37,9 +33,6 @@
     <appender name="TRACE-FILE" class="ch.qos.logback.core.FileAppender">
         <file>logs/ConnectorServerTrace.log</file>
         <append>true</append>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/ConnectorServerTrace-%d{yyyyMMdd}.log</fileNamePattern>
-        </rollingPolicy>
         <encoder>
             <pattern>%date{"MMM dd, yyyy h:mm:ss a"} %-5level %logger{35}: %msg %n</pattern>
         </encoder>
@@ -47,16 +40,6 @@
     <appender name="CONNECTOR-FILE" class="ch.qos.logback.core.FileAppender">
         <file>logs/Connector.log</file>
         <append>true</append>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/Connector-%d{yyyyMMdd}.log</fileNamePattern>
-        </rollingPolicy>
-        <!--rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>logs/Connector.%i.log</fileNamePattern>
-            <maxIndex>10</maxIndex>
-        </rollingPolicy>
-        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-            <maxFileSize>10MB</maxFileSize>
-        </triggeringPolicy-->
         <encoder>
             <pattern>%date{"MMM dd, yyyy h:mm:ss a"} %-5level %logger{35}: %msg %n</pattern>
         </encoder>

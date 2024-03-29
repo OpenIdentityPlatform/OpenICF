@@ -258,10 +258,10 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
                         // it might be from a bundle
                         // fragment ( a bundle only included by other bundles ).
                         // However, we should definitely warn
-                        LOG.info(LOG.isOk() ?
+                        LOG.error(LOG.isOk() ?
                                  e : null,
-                                "Unable to load class {0} from bundle {1}. Class will be ignored and will not be listed in list of connectors.",
-                                className, bundleInfo.getOriginalLocation());
+                                "Unable to load class {0} from bundle {1}. Class will be ignored and will not be listed in list of connectors. {2}",
+                                className, bundleInfo.getOriginalLocation(),e);
                     }
                     if (connectorClass != null && options == null) {
 	                    for (Annotation annotation: connectorClass.getAnnotations()) {
@@ -298,15 +298,15 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
                         LOG.info("Add ConnectorInfo {0} to Local Connector Info Manager from {1}",
                                 info.getConnectorKey(), bundleInfo.getOriginalLocation());
                     } catch (final NoClassDefFoundError e) {
-                        LOG.info(LOG.isOk() ?
+                        LOG.error(LOG.isOk() ?
                                 e : null,
-                                "Unable to load configuration class of connector {0} from bundle {1}. Class will be ignored and will not be listed in list of connectors.",
-                                connectorClass, bundleInfo.getOriginalLocation());
+                                "Unable to load configuration class of connector {0} from bundle {1}. Class will be ignored and will not be listed in list of connectors.{2}",
+                                connectorClass, bundleInfo.getOriginalLocation(),e);
                     } catch (final TypeNotPresentException e) {
-                        LOG.info(LOG.isOk() ?
+                        LOG.error(LOG.isOk() ?
                                  e : null,
-                                "Unable to load configuration class of connector {0} from bundle {1}. Class will be ignored and will not be listed in list of connectors.",
-                                connectorClass, bundleInfo.getOriginalLocation());
+                                "Unable to load configuration class of connector {0} from bundle {1}. Class will be ignored and will not be listed in list of connectors. {2}",
+                                connectorClass, bundleInfo.getOriginalLocation(),e);
                     }
                 }
             }
