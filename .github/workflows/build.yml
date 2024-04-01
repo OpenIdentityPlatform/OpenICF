@@ -62,7 +62,8 @@ jobs:
           cmd /c "START /b openicf\bin\ConnectorServer.bat /run"
           Start-Sleep -s 15
           findstr "ConnectorServer listening on" openicf\logs\ConnectorServer.log
-          findstr " ERROR " openicf\logs\ConnectorServer.log || if %ERRORLEVEL% EQU 1 (echo "no error")  else assertError
+          findstr " ERROR " openicf\logs\ConnectorServer.log || echo "no error"
+          findstr " ERROR " openicf\logs\ConnectorServer.log | find /c "ERROR" | findstr "0"
       - name: Upload failure artifacts
         uses: actions/upload-artifact@v4
         if: ${{ failure() }}
