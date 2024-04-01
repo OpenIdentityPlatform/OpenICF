@@ -62,16 +62,11 @@
             <directory>${project.build.directory}/maven-shared-archive-resources</directory>
             <outputDirectory>/openicf/</outputDirectory>
         </fileSet>
-        <fileSet>
-            <directory>${project.build.directory}/licenseResource</directory>
-            <outputDirectory>/openicf/</outputDirectory>
-         </fileSet>
-         <!-- Include the Forgerock binary license file if exists -->
          <fileSet>
-            <directory>${project.build.directory}</directory>
-            <outputDirectory>/openicf/legal-notices/</outputDirectory>
+            <directory>${basedir}/../../</directory>
+            <outputDirectory>/openicf/</outputDirectory>
             <includes>
-               <include>license.txt</include>
+               <include>LICENSE.md</include>
             </includes>
          </fileSet>
     </fileSets>
@@ -79,18 +74,34 @@
         <dependencySet>
             <useProjectArtifact>false</useProjectArtifact>
             <outputDirectory>/openicf/lib/framework</outputDirectory>
-            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+            <outputFileNameMapping>${artifact.groupId}.${artifact.artifactId}-${artifact.version}.${artifact.extension}</outputFileNameMapping>
             <includes>
                 <include>org.openidentityplatform.openicf.framework:*</include>
                 <include>org.glassfish.grizzly:*</include>
-                <include>javax.servlet:javax.servlet-api</include>
                 <include>org.openidentityplatform.commons:*</include>
+                <include>org.openidentityplatform.commons.http-framework:*</include>
                 <include>com.google.protobuf:*</include>
                 <include>org.bouncycastle:*</include>
                 <include>org.slf4j:*</include>
                 <include>ch.qos.logback:*</include>
                 <include>org.codehaus.groovy:groovy-all</include>
                 <include>com.google.guava:*</include>
+                <include>commons-daemon:*</include>
+                <include>com.github.cverges:expect4j</include>
+                <include>org.apache.httpcomponents:*</include>
+                <include>org.apache.tomcat:*</include>
+                <include>net.sf.supercsv:*</include>
+                <include>org.codehaus.groovy.modules.http-builder:*</include>
+                <include>org.openidentityplatform.openicf.connectors:ssh-connector:jar</include>
+                <include>org.openidentityplatform.openicf.connectors:groovy-connector:jar</include>
+            </includes>
+        </dependencySet>
+        <dependencySet>
+            <useProjectArtifact>false</useProjectArtifact>
+            <outputDirectory>/openicf/bundles</outputDirectory>
+            <outputFileNameMapping>${artifact.groupId}.${artifact.artifactId}-${artifact.version}.${artifact.extension}</outputFileNameMapping>
+            <includes>
+                <include>org.openidentityplatform.openicf.connectors:*-connector:jar</include>
             </includes>
         </dependencySet>
     </dependencySets>

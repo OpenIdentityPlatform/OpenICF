@@ -147,6 +147,7 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestConnect
             
             Assert.assertEquals(request.getPromise()
                     .getOrThrowUninterruptibly(5, TimeUnit.SECONDS), "OK");
+            Thread.sleep(3000); // Wait to complete all other threads
             Assert.assertTrue(client.getRemoteRequests().isEmpty());
             Assert.assertTrue(server.getLocalRequests().isEmpty());
         } finally {
