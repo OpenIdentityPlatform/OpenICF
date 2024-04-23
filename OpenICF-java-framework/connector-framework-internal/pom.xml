@@ -132,7 +132,9 @@
                             *
                         </Import-Package>
                         <Export-Package>
-                            org.identityconnectors.framework.impl.api*
+                            org.identityconnectors.framework.impl.api*,
+                            org.identityconnectors.common.security.impl*,
+                            org.identityconnectors.framework.impl.serializer*
                         </Export-Package>
                         <Main-Class>org.identityconnectors.framework.server.Main</Main-Class>
                         <Fragment-Host>org.openidentityplatform.openicf.framework.connector-framework</Fragment-Host>
