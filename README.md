@@ -6,6 +6,7 @@
 [![Last commit](https://img.shields.io/github/last-commit/OpenIdentityPlatform/OpenICF.svg)](https://github.com/OpenIdentityPlatform/OpenICF/commits/master)
 [![License](https://img.shields.io/badge/license-CDDL-blue.svg)](https://github.com/OpenIdentityPlatform/OpenICF/blob/master/LICENSE.md)
 [![Downloads](https://img.shields.io/github/downloads/OpenIdentityPlatform/OpenICF/total.svg)](https://github.com/OpenIdentityPlatform/OpenICF/releases)
+[![Docker](https://img.shields.io/docker/pulls/openidentityplatform/openicf.svg)](https://hub.docker.com/r/openidentityplatform/openicf)
 [![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/OpenIdentityPlatform/OpenIDM)
 [![Top language](https://img.shields.io/github/languages/top/OpenIdentityPlatform/OpenICF.svg)](https://github.com/OpenIdentityPlatform/OpenICF)
 [![Code size in bytes](https://img.shields.io/github/languages/code-size/OpenIdentityPlatform/OpenICF.svg)](https://github.com/OpenIdentityPlatform/OpenICF)
@@ -26,6 +27,7 @@ This project is licensed under the [Common Development and Distribution License 
 
 ## Downloads 
 * [OpenICF ZIP](https://github.com/OpenIdentityPlatform/OpenICF/releases)
+* [OpenICF Docker](https://hub.docker.com/r/openidentityplatform/openicf/)
 
 ### OpenICF Java connectors:
 * [csvfile-connector](https://github.com/OpenIdentityPlatform/OpenICF/releases) 
