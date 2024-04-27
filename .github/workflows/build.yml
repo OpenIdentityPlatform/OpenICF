@@ -100,7 +100,7 @@ jobs:
       - name: Get latest release version
         shell: bash
         run:   |
-          git fetch -t; export git_version_last="$(git describe --abbrev=0 --tags)" ; echo "last release: $git_version_last"
+          export git_version_last="$(curl -i -o - --silent https://api.github.com/repos/${{ github.repository }}/releases/latest | grep -m1 "\"name\"" | cut -d\" -f4)" ; echo "last release: $git_version_last"
           echo "release_version=$git_version_last" >> $GITHUB_ENV
       - name: Docker meta
         id: meta
@@ -147,7 +147,7 @@ jobs:
       - name: Get latest release version
         shell: bash
         run:   |
-          git fetch -t; export git_version_last="$(git describe --abbrev=0 --tags)" ; echo "last release: $git_version_last"
+          export git_version_last="$(curl -i -o - --silent https://api.github.com/repos/${{ github.repository }}/releases/latest | grep -m1 "\"name\"" | cut -d\" -f4)" ; echo "last release: $git_version_last"
           echo "release_version=$git_version_last" >> $GITHUB_ENV
       - name: Docker meta
         id: meta

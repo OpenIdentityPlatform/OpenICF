@@ -28,6 +28,6 @@ EXPOSE 8759
 
 USER $USER
 
-HEALTHCHECK --interval=30s --timeout=30s --start-period=1s --retries=3 CMD curl -i -o - --silent  http://127.0.0.1:8759/openicf | grep -q "OpenICF0 Connector Server"
+HEALTHCHECK --interval=30s --timeout=30s --start-period=1s --retries=3 CMD curl -i -o - --silent  http://127.0.0.1:8759/openicf | grep -q "OpenICF Connector Server"
 
 ENTRYPOINT ["/opt/openicf/bin/ConnectorServer.sh","/run"]
