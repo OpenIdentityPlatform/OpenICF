@@ -116,7 +116,7 @@ jobs:
         uses: docker/build-push-action@v5
         continue-on-error: true
         with:
-          context: .opendj-packages/opendj-docker
+          context: .
           file: ./Dockerfile
           build-args: |
             VERSION=${{ github.event.inputs.releaseVersion }}
