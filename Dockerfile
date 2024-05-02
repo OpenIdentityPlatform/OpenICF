@@ -11,18 +11,18 @@ WORKDIR /opt
 
 #COPY OpenICF-java-framework/openicf-zip/target/*.zip ./
 
-RUN apt-get update
-RUN apt-get install -y --no-install-recommends curl unzip
-RUN if [ ! -z "$VERSION" ] ; then rm -rf ./*.zip ; curl -L https://github.com/OpenIdentityPlatform/OpenICF/releases/download/$VERSION/openicf-$VERSION.zip --output openicf-$VERSION.zip ; fi
-RUN unzip openicf-*.zip && rm -rf *.zip
-RUN apt-get remove -y --purge unzip
-RUN rm -rf /var/lib/apt/lists/*
-RUN groupadd $USER
-RUN useradd -m -r -u 1001 -g $USER $USER
-RUN install -d -o $USER /opt/openicf
-RUN chown -R $USER:$USER /opt/openicf
-RUN chmod -R g=u /opt/openicf
-RUN chmod +x /opt/openicf/bin/*.sh
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl unzip \
+ && bash -c  'if [ ! -z "$VERSION" ] ; then rm -rf ./*.zip ; curl -L https://github.com/OpenIdentityPlatform/OpenICF/releases/download/$VERSION/openicf-$VERSION.zip --output openicf-$VERSION.zip ; fi' \
+ && unzip openicf-*.zip && rm -rf *.zip \
+ && apt-get remove -y --purge unzip \
+ && rm -rf /var/lib/apt/lists/* \
+ && groupadd $USER \
+ && useradd -m -r -u 1001 -g $USER $USER \
+ && install -d -o $USER /opt/openicf \
+ && chown -R $USER:$USER /opt/openicf \
+ && chmod -R g=u /opt/openicf \
+ && chmod +x /opt/openicf/bin/*.sh
 
 EXPOSE 8759
 
