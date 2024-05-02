@@ -11,18 +11,18 @@ WORKDIR /opt
 
 #COPY OpenICF-java-framework/openicf-zip/target/*.zip ./
 
-RUN apk add --update --no-cache --virtual builddeps curl unzip
-RUN apk upgrade --update --no-cache
-RUN apk add bash
-RUN if [ ! -z "$VERSION" ] ; then rm -rf ./*.zip ; curl -L https://github.com/OpenIdentityPlatform/OpenICF/releases/download/$VERSION/openicf-$VERSION.zip --output openicf-$VERSION.zip ; fi
-RUN unzip openicf-*.zip && rm -rf *.zip
-RUN apk del unzip
-RUN addgroup -S $USER
-RUN adduser -S -u 1001 -G  $USER $USER
-RUN install -d -o $USER /opt/openicf
-RUN chown -R $USER:$USER /opt/openicf
-RUN chmod -R g=u /opt/openicf
-RUN chmod +x /opt/openicf/bin/*.sh
+RUN apk add --update --no-cache --virtual builddeps curl unzip \
+ && apk upgrade --update --no-cache \
+ && apk add bash \
+ && bash -c 'if [ ! -z "$VERSION" ] ; then rm -rf ./*.zip ; curl -L https://github.com/OpenIdentityPlatform/OpenICF/releases/download/$VERSION/openicf-$VERSION.zip --output openicf-$VERSION.zip ; fi' \
+ && unzip openicf-*.zip && rm -rf *.zip \
+ && apk del unzip \
+ && addgroup -S $USER \
+ && adduser -S -u 1001 -G  $USER $USER \
+ && install -d -o $USER /opt/openicf \
+ && chown -R $USER:$USER /opt/openicf \
+ && chmod -R g=u /opt/openicf \
+ && chmod +x /opt/openicf/bin/*.sh
 
 EXPOSE 8759
 
