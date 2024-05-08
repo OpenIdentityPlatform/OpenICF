@@ -489,10 +489,16 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
             if (!tempDir.exists()) {
                 throw new IOException("Temporary directory " + tempDir + " does not exist");
             }
+            if (!tempDir.canWrite()) {
+                throw new IOException("Temporary directory " + tempDir + " is read/only");
+            }
             File candidate;
             do {
                 candidate = new File(tempDir, "bundle-" + nextRandom());
-            } while (!candidate.mkdir());
+            } while (candidate.exists());
+            if (!candidate.mkdir()) {
+                throw new IOException("Temporary directory " + tempDir + " is read/only");
+            }
             candidate.deleteOnExit();
             _bundleTempDir = candidate;
             return candidate;
