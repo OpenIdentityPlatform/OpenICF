@@ -38,33 +38,6 @@
         Connectors provide a consistent generic layer between applications and target resources.
     </description>
     <inceptionYear>2010</inceptionYear>
-    <url>http://openicf.forgerock.org/</url>
-    <licenses>
-        <license>
-            <name>CDDL-1.0</name>
-            <url>http://opensource.org/licenses/CDDL-1.0</url>
-            <comments>Common Development and Distribution License (CDDL) 1.0.
-                This license applies to OpenICF source code as indicated in the
-                sources.
-            </comments>
-            <distribution>repo</distribution>
-        </license>
-        <license>
-            <name>CC BY-NC-ND 3.0</name>
-            <url>http://creativecommons.org/licenses/by-nc-nd/3.0/</url>
-            <comments>Creative Commons Attribution-NonCommercial-NoDerivs 3.0
-                Unported. This license applies to the site content, and to the
-                documentation as indicated in the documentation source code.
-            </comments>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
-<!--     <scm> -->
-<!--         <connection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/java-framework.git</connection> -->
-<!--         <developerConnection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/java-framework.git</developerConnection> -->
-<!--         <url>http://stash.forgerock.org/projects/OPENICF/repos/java-framework/browse</url> -->
-<!--       <tag>1.5.2.0</tag> -->
-<!--   </scm> -->
 
     <properties>
         <!-- maven-compiler-plugin -->
@@ -179,10 +152,6 @@
     <build>
         <pluginManagement>
             <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-source-plugin</artifactId>
-                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>

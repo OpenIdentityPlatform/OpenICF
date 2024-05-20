@@ -44,8 +44,6 @@
         <framework.compatibilityVersion>1.5</framework.compatibilityVersion>
         <framework.releaseVersion>2.0</framework.releaseVersion>
     </properties>
-    <repositories>
-    </repositories>
     <dependencies>
         <dependency>
             <groupId>org.openidentityplatform.openicf.framework</groupId>

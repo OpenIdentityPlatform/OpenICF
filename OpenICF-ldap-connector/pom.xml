@@ -35,7 +35,6 @@
     <packaging>bundle</packaging>
     <name>OpenICF Generic JNDI based LDAP Connector</name>
     <description>Connector for Sun DSEE and OpenDJ and Generic LDAP</description>
-    <url>http://openicf.forgerock.org/connectors/ldap-connector/</url>
     <properties>
         <connectorPackage>org.identityconnectors.ldap</connectorPackage>
         <connectorClass>LdapConnector</connectorClass>

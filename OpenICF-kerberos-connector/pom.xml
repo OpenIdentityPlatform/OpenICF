@@ -39,8 +39,6 @@
         </openicf.osgi.import.defaults>
         <openicf.osgi.embed />
     </properties>
-    <repositories>
-    </repositories>
     <dependencies>
         <dependency>
             <groupId>org.openidentityplatform.openicf.connectors</groupId>

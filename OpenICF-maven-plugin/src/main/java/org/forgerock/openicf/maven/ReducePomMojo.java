@@ -111,9 +111,9 @@ public class ReducePomMojo extends AbstractMojo {
                 if (removeSet == null || removeSet.contains("distributionManagement")) {
                     model.setDistributionManagement(null);
                 }
-                if (removeSet == null || removeSet.contains("parent")) {
+                /*if (removeSet == null || removeSet.contains("parent")) {
                     model.setParent(null);
-                }
+                }*/
                 if (removeSet == null || removeSet.contains("profiles")) {
                     model.setProfiles(null);
                 }

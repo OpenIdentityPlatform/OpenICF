@@ -38,12 +38,6 @@
         connector bundle and common reporting for connectors.
         This is not multi module project, it does not aggregate the connectors, it is just common parent.
     </description>
-    <distributionManagement>
-        <site>
-            <id>forgerock.org</id>
-            <url>${siteDistributionURL}/connectors/</url>
-        </site>
-    </distributionManagement>
     <!-- mvn help:effective-pom
          mvn archetype:create-from-project
          mvn help:active-profiles
@@ -199,14 +193,6 @@
                         <stagingSiteURL>
                             ${siteDistributionURL}/connectors/${project.artifactId}-${project.version}
                         </stagingSiteURL>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-scm-plugin</artifactId>
-                    <configuration>
-                        <tag>${project.version}</tag>
-                        <message>[ForgeRock Connector Release] ${project.name}</message>
                     </configuration>
                 </plugin>
 
