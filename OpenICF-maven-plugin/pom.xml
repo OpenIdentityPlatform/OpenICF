@@ -37,8 +37,6 @@
         OpenICF Connector build helper plugin
     </description>
     <inceptionYear>2012</inceptionYear>
-    <repositories>
-    </repositories>
     <properties>
         <mavenVersion>3.8.1</mavenVersion>
         <mavenFilteringVersion>1.1</mavenFilteringVersion>

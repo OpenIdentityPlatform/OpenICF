@@ -40,21 +40,6 @@
     <packaging>bundle</packaging>
     <name>Basic Connector</name>
     <description>Connector for Basic</description>
-    <url>https://openicf.forgerock.org/connectors/basic-connector</url>
-    <issueManagement>
-        <system>jira</system>
-        <url>https://bugster.forgerock.org/jira/browse/OPENICF/component/10191</url>
-    </issueManagement>
-    <ciManagement>
-        <system>jenkins</system>
-        <url>http://builds.forgerock.org/job/OpenICF Java - Basic Connector</url>
-    </ciManagement>
-    <scm>
-        <connection>scm:svn:https://svn.forgerock.org/openicf/trunk/connectors/java/basic-connector</connection>
-        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/trunk/connectors/java/basic-connector
-        </developerConnection>
-        <url>http://sources.forgerock.org/browse/openicf/trunk/connectors/java/basic-connector</url>
-    </scm>
     <properties>
         <connectorPackage>org.forgerock.openicf.connectors.basic</connectorPackage>
         <connectorClass>BasicConnector</connectorClass>
@@ -62,24 +47,6 @@
         <jira.versionPrefix>${project.artifactId}</jira.versionPrefix>
         <jira.fixVersionIds>0</jira.fixVersionIds>
     </properties>
-    <repositories>
-        <repository>
-            <id>forgerock-staging-repository</id>
-            <name>ForgeRock Release Repository</name>
-            <url>http://maven.forgerock.org/repo/releases</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>forgerock-snapshots-repository</id>
-            <name>ForgeRock Snapshot Repository</name>
-            <url>http://maven.forgerock.org/repo/snapshots</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-        </repository>
-    </repositories>
     <build>
         <plugins>
             <plugin>

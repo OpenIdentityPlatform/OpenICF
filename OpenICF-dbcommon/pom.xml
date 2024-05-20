@@ -36,8 +36,6 @@
     <name>OpenICF Database Common</name>
     <description>This is a generic bundle that contains many of the utilities needed for any sort of database connector, such as query builders, connection wrappers, and other SQL utilities.</description>
 
-    <repositories>
-    </repositories>
     <dependencies>
         <dependency>
             <groupId>org.openidentityplatform.openicf.framework</groupId>
