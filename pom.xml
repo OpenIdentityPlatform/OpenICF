@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.openidentityplatform</groupId>
     <artifactId>openicf</artifactId>
-    <version>1.5.3-SNAPSHOT</version>
+    <version>1.6.0</version>
     <packaging>pom</packaging>
     <name>OpenICF</name>
     <description>
@@ -16,7 +16,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.source>1.8</maven.compiler.source>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.surefire.options></java.surefire.options>
+        <java.surefire.options />
    	</properties>
     <licenses>
         <license>
@@ -55,7 +55,7 @@
         <connection>scm:git:https://github.com/OpenIdentityPlatform/OpenICFgit</connection>
         <developerConnection>scm:git:https://github.com/OpenIdentityPlatform/OpenICF.git</developerConnection>
         <url>https://github.com/OpenIdentityPlatform/OpenICF</url>
-        <tag>HEAD</tag>
+        <tag>1.6.0</tag>
     </scm>
     <repositories>
         <repository>
