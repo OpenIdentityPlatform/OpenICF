@@ -1,4 +1,4 @@
-# OpenICF
+# <img alt="OpenICF Logo" src="https://github.com/OpenIdentityPlatform/OpenICF/raw/master/logo.png" width="300"/>
 [![Latest release](https://img.shields.io/github/release/OpenIdentityPlatform/OpenICF.svg)](https://github.com/OpenIdentityPlatform/OpenICF/releases)
 [![Build](https://github.com/OpenIdentityPlatform/OpenICF/actions/workflows/build.yml/badge.svg)](https://github.com/OpenIdentityPlatform/OpenICF/actions/workflows/build.yml)
 [![Deploy](https://github.com/OpenIdentityPlatform/OpenICF/actions/workflows/deploy.yml/badge.svg)](https://github.com/OpenIdentityPlatform/OpenICF/actions/workflows/deploy.yml)
