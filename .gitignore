@@ -24,3 +24,4 @@ hs_err_pid*
 .settings
 /.idea/
 .DS_Store
+pom.xml.versionsBackup
