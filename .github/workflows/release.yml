@@ -68,14 +68,14 @@ jobs:
           fail_on_unmatched_files: false
           generate_release_notes: true
           files: |
-            OpenICF-java-framework/openicf-zip/target/*.zip
-            OpenICF-csvfile-connector/target/*.jar
-            OpenICF-databasetable-connector/target/*.jar
-            OpenICF-groovy-connector/target/*.jar
-            OpenICF-kerberos-connector/target/*.jar
-            OpenICF-ldap-connector/target/*.jar
-            OpenICF-ssh-connector/target/*.jar
-            OpenICF-xml-connector/target/*.jar
+            OpenICF-java-framework/openicf-zip/target/*${{ github.event.inputs.releaseVersion }}.zip
+            OpenICF-csvfile-connector/target/*${{ github.event.inputs.releaseVersion }}.jar
+            OpenICF-databasetable-connector/target/*${{ github.event.inputs.releaseVersion }}.jar
+            OpenICF-groovy-connector/target/*${{ github.event.inputs.releaseVersion }}.jar
+            OpenICF-kerberos-connector/target/*${{ github.event.inputs.releaseVersion }}.jar
+            OpenICF-ldap-connector/target/*${{ github.event.inputs.releaseVersion }}.jar
+            OpenICF-ssh-connector/target/*${{ github.event.inputs.releaseVersion }}.jar
+            OpenICF-xml-connector/target/*${{ github.event.inputs.releaseVersion }}.jar
   release-docker:
     name: Docker release
     runs-on: 'ubuntu-latest'
