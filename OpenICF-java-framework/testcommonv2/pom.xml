@@ -27,7 +27,7 @@
     <parent>
         <groupId>org.openidentityplatform.openicf.framework</groupId>
         <artifactId>framework</artifactId>
-        <version>1.6.2-SNAPSHOT</version>
+        <version>1.6.2</version>
     </parent>
     <artifactId>testcommonv2</artifactId>
     <name>OpenICF Common Test Library testcommonv2</name>
