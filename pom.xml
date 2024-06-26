@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.openidentityplatform</groupId>
     <artifactId>openicf</artifactId>
-    <version>1.6.2</version>
+    <version>1.6.3-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>OpenICF</name>
     <description>
@@ -55,7 +55,7 @@
         <connection>scm:git:https://github.com/OpenIdentityPlatform/OpenICFgit</connection>
         <developerConnection>scm:git:https://github.com/OpenIdentityPlatform/OpenICF.git</developerConnection>
         <url>https://github.com/OpenIdentityPlatform/OpenICF</url>
-        <tag>1.6.2</tag>
+        <tag>HEAD</tag>
     </scm>
     <repositories>
         <repository>
