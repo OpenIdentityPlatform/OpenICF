@@ -7,7 +7,6 @@
 [![License](https://img.shields.io/badge/license-CDDL-blue.svg)](https://github.com/OpenIdentityPlatform/OpenICF/blob/master/LICENSE.md)
 [![Downloads](https://img.shields.io/github/downloads/OpenIdentityPlatform/OpenICF/total.svg)](https://github.com/OpenIdentityPlatform/OpenICF/releases)
 [![Docker](https://img.shields.io/docker/pulls/openidentityplatform/openicf.svg)](https://hub.docker.com/r/openidentityplatform/openicf)
-[![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/OpenIdentityPlatform/OpenIDM)
 [![Top language](https://img.shields.io/github/languages/top/OpenIdentityPlatform/OpenICF.svg)](https://github.com/OpenIdentityPlatform/OpenICF)
 [![Code size in bytes](https://img.shields.io/github/languages/code-size/OpenIdentityPlatform/OpenICF.svg)](https://github.com/OpenIdentityPlatform/OpenICF)
 
@@ -56,12 +55,11 @@ unzip OpenICF-java-framework/openicf-zip/target/openicf-*.zip
 openicf/bin/ConnectorServer.sh /run
 ```
 
-## Support and Mailing List Information
-* OpenICF Community Wiki: https://github.com/OpenIdentityPlatform/OpenICF/wiki
-* OpenIDM Community Mailing List: open-identity-platform-openidm@googlegroups.com
-* OpenIDM Community Archive: https://groups.google.com/d/forum/open-identity-platform-openidm
-* OpenIDM Community on Gitter: https://gitter.im/OpenIdentityPlatform/OpenIDM
-* OpenIDM Commercial support RFP: support@3a-systems.ru (English, Russian)
+## Support
+* OpenICF Community [documentation](https://github.com/OpenIdentityPlatform/OpenICF/wiki)
+* OpenICF Community [discussions](https://github.com/OpenIdentityPlatform/OpenICF/discussions)
+* OpenICF Community [issues](https://github.com/OpenIdentityPlatform/OpenICF/issues)
+* OpenICF [commercial support](https://github.com/OpenIdentityPlatform/.github/wiki/Approved-Vendor-List)
 
 ## Contributing
 Please, make [Pull request](https://github.com/OpenIdentityPlatform/OpenICF/pulls)
