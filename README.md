@@ -61,9 +61,13 @@ openicf/bin/ConnectorServer.sh /run
 * OpenICF Community [issues](https://github.com/OpenIdentityPlatform/OpenICF/issues)
 * OpenICF [commercial support](https://github.com/OpenIdentityPlatform/.github/wiki/Approved-Vendor-List)
 
-## Contributing
-Please, make [Pull request](https://github.com/OpenIdentityPlatform/OpenICF/pulls)
-
 ## Thanks 🥰
 * Sun Identity Manager
 * Forgerock OpenICF
+
+## Contributing
+Please, make [Pull request](https://github.com/OpenIdentityPlatform/OpenICF/pulls)
+
+<a href="https://github.com/OpenIdentityPlatform/OpenICF/graphs/contributors">
+  <img src="https://contributors-img.web.app/image?repo=OpenIdentityPlatform/OpenICF" />
+</a>
