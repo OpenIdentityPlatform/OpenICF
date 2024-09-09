@@ -27,7 +27,7 @@
     <parent>
       	<groupId>org.openidentityplatform</groupId>
 	    <artifactId>openicf</artifactId>
-        <version>1.7.0</version>
+        <version>1.7.1-SNAPSHOT</version>
     </parent>
     <groupId>org.openidentityplatform.openicf.framework</groupId>
     <artifactId>framework</artifactId>
