@@ -144,7 +144,7 @@ for %%P in (%*) do (
     set T=%%P
     if "!T:~1,2!" == "%JVM_OPTION_IDENTIFIER%" (
       set JAVA_OPTS_PARAM=!JAVA_OPTS_PARAM!!JAVA_OPTS_DELIM!!T:~3,-1!
-      set JAVA_OPTS_DELIM=
+      set JAVA_OPTS_DELIM= 
     )
 )
 cd "%CONNECTOR_SERVER_HOME%"
