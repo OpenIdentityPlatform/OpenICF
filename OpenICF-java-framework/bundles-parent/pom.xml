@@ -21,6 +21,7 @@
  with the fields enclosed by brackets [] replaced by
  your own identifying information:
  "Portions Copyrighted [year] [name of copyright owner]"
+  Portions Copyrighted 2024 3A Systems, LLC
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -180,8 +181,7 @@
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <configuration>
                         <links>
-                            <link>http://download.oracle.com/javase/8/docs/api/</link>
-                            <link>http://docs.groovy-lang.org/latest/html/api/</link>
+                            <link>https://docs.groovy-lang.org/latest/html/api/</link>
 <!--                            <link>http://openicf.forgerock.org/apidocs/</link>-->
                         </links>
                     </configuration>
@@ -328,9 +328,7 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
                     <links>
-                        <link>http://download.oracle.com/javase/8/docs/api/</link>
-                        <link>http://docs.groovy-lang.org/latest/html/api/</link>
-                        <link>http://openicf.forgerock.org/apidocs/</link>
+                        <link>https://docs.groovy-lang.org/latest/html/api/</link>
                     </links>
                 </configuration>
             </plugin>
