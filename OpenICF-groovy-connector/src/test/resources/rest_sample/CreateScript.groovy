@@ -20,11 +20,12 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2024 3A Systems, LLC
  */
 
 @Grapes([
         @Grab(group = 'org.codehaus.groovy.modules.http-builder', module = 'http-builder', version = '0.7.1'),
-        @Grab(group = 'commons-io', module = 'commons-io', version = '2.4')]
+        @Grab(group = 'commons-io', module = 'commons-io', version = '2.16.1')]
 )
 import groovy.json.JsonBuilder
 import groovyx.net.http.RESTClient
