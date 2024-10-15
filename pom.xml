@@ -7,7 +7,7 @@
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
  (the License). You may not use this file except in
- compliance with the License.
+ compliance with the License.x
 
  You can obtain a copy of the License at
  http://forgerock.org/license/CDDLv1.0.html
@@ -182,9 +182,6 @@
             <activation>
                 <jdk>[9,)</jdk>
             </activation>
-            <properties>
-                <maven0.compiler.release>8</maven0.compiler.release>
-            </properties>
             <build>
                 <pluginManagement>
                     <plugins>
