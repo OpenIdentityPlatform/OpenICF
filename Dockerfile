@@ -3,7 +3,7 @@ FROM eclipse-temurin:21-jre-jammy
 MAINTAINER Open Identity Platform Community <open-identity-platform-openidm@googlegroups.com>
 
 ENV USER="openicf"
-ENV OPENICF_OPTS="-server -XX:+UseContainerSupport"
+ENV OPENICF_OPTS="-server -XX:+UseContainerSupport --add-exports java.base/com.sun.jndi.ldap=ALL-UNNAMED "
 
 ARG VERSION
 
