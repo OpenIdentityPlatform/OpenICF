@@ -38,7 +38,7 @@
     </description>
 
     <properties>
-        <jetty.version>9.4.51.v20230217</jetty.version>
+        <jetty.version>9.4.55.v20240627</jetty.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
