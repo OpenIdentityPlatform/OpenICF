@@ -54,7 +54,6 @@
 
         <slf4j.version>1.7.36</slf4j.version>
         <logback.version>1.2.13</logback.version>
-        <groovy.version>2.4.21</groovy.version>
         <grizzly.version>2.3.35</grizzly.version>
         <protobuf-java.version>3.0.2</protobuf-java.version>
 
@@ -120,13 +119,6 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- Provided Dependencies -->
-            <dependency>
-                <groupId>org.codehaus.groovy</groupId>
-                <artifactId>groovy-all</artifactId>
-                <version>${groovy.version}</version>
-                <scope>provided</scope>
-            </dependency>
             <!-- Test Dependencies -->
             <dependency>
                 <groupId>org.openidentityplatform.openicf.framework</groupId>
