@@ -22,7 +22,7 @@
  your own identifying information:
  "Portions Copyrighted [year] [name of copyright owner]"
 
-  Portions Copyrighted 2018-2024 3A Systems, LLC
+  Portions Copyrighted 2018-2025 3A Systems, LLC
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
@@ -51,15 +51,25 @@
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty.websocket</groupId>
-            <artifactId>websocket-server</artifactId>
+            <artifactId>websocket-jetty-server</artifactId>
             <scope>provided</scope>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.eclipse.jetty.websocket</groupId>-->
+<!--            <artifactId>javax-websocket-server-impl</artifactId>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>3.1.0</version>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>javax.servlet</groupId>-->
+<!--            <artifactId>javax.servlet-api</artifactId>-->
+<!--            <version>3.1.0</version>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
 
         <!-- Test Dependencies -->
         <dependency>
@@ -124,7 +134,12 @@
                 <configuration>
                     <reuseForks>false</reuseForks>
                     <shutdown>kill</shutdown>
+                    <forkCount>1</forkCount>
                     <forkedProcessTimeoutInSeconds>300</forkedProcessTimeoutInSeconds>
+                    <argLine>-Dorg.eclipse.jetty.LEVEL=DEBUG</argLine>
+<!--                    <includes>-->
+<!--                        <include>AsyncRemotePlainConnectorInfoManagerTest.java</include>-->
+<!--                    </includes>-->
                 </configuration>
             </plugin>
         </plugins>

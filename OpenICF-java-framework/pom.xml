@@ -21,7 +21,8 @@
  with the fields enclosed by brackets [] replaced by
  your own identifying information:
  "Portions Copyrighted [year] [name of copyright owner]"
- Portions Copyrighted 2018-2024 3A Systems, LLC
+
+ Portions Copyrighted 2018-2025 3A Systems, LLC
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -54,7 +55,7 @@
 
         <slf4j.version>1.7.36</slf4j.version>
         <logback.version>1.2.13</logback.version>
-        <grizzly.version>2.3.35</grizzly.version>
+        <grizzly.version>4.0.2</grizzly.version>
         <protobuf-java.version>3.0.2</protobuf-java.version>
 
         <!-- Core documentation properties -->

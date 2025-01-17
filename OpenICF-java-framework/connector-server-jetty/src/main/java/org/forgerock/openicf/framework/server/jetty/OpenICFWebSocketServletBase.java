@@ -12,33 +12,35 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2015-2016 ForgeRock AS.
+ * Portions copyright 2025 3A Systems LLC.
  */
 
 package org.forgerock.openicf.framework.server.jetty;
 
 import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import javax.security.auth.callback.NameCallback;
-import javax.servlet.ServletConfig;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
-import org.eclipse.jetty.websocket.server.WebSocketServerFactory;
-import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
-import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
-import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
-import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
+import org.eclipse.jetty.websocket.api.WebSocketPingPongListener;
+import org.eclipse.jetty.websocket.server.JettyServerUpgradeRequest;
+import org.eclipse.jetty.websocket.server.JettyServerUpgradeResponse;
+import org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
+import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;
 import org.forgerock.openicf.framework.ConnectorFramework;
 import org.forgerock.openicf.framework.ConnectorFrameworkFactory;
 import org.forgerock.openicf.framework.remote.ReferenceCountedObject;
 import org.forgerock.util.Utils;
 import org.identityconnectors.common.StringUtil;
 
-public class OpenICFWebSocketServletBase extends WebSocketServlet {
+public class OpenICFWebSocketServletBase extends JettyWebSocketServlet {
 
     public static final String INIT_PARAM_CONNECTOR_FRAMEWORK_FACTORY_CLASS =
             "connector-framework-factory-class";
@@ -91,18 +93,8 @@ public class OpenICFWebSocketServletBase extends WebSocketServlet {
     }
 
     @Override
-    public void configure(WebSocketServletFactory factory) {
+    public void configure(JettyWebSocketServletFactory factory) {
         factory.setCreator(getWebsocketCreator());
-        // To support onPing/onPong we need custom EventDriverFactory
-        WebSocketServerFactory serverFactory = ((WebSocketServerFactory) factory);
-        serverFactory.getEventDriverFactory().clearImplementations();
-        serverFactory.getEventDriverFactory().addImplementation(new OpenICFListenerImpl());
-        serverFactory.addSessionFactory(new OpenICFWebSocketSessionFactory(serverFactory));
-
-        String max = getInitParameter("maxAsyncWriteTimeout");
-        if (max != null) {
-            factory.getPolicy().setAsyncWriteTimeout(Long.parseLong(max));
-        }
     }
 
     protected ConnectorFramework getConnectorFramework() {
@@ -205,7 +197,7 @@ public class OpenICFWebSocketServletBase extends WebSocketServlet {
         }
 
         @Override
-        public void authenticate(ServletUpgradeRequest request, ServletUpgradeResponse response, NameCallback callback) {
+        public void authenticate(JettyServerUpgradeRequest request, JettyServerUpgradeResponse response, NameCallback callback) {
             Object value = request.getServletAttribute(attributeName);
             if (value instanceof String) {
                 callback.setName((String) value);
@@ -213,3 +205,7 @@ public class OpenICFWebSocketServletBase extends WebSocketServlet {
         }
     }
 }
+
+
+
+
