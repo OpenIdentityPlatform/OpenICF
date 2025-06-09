@@ -213,7 +213,7 @@
             <dependency>
                 <groupId>org.openidentityplatform.opendj</groupId>
                 <artifactId>opendj-parent</artifactId>
-                <version>4.9.4</version>
+                <version>4.9.5-SNAPSHOT</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -398,7 +398,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.10.1</version>
+                <version>3.11.2</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
@@ -410,6 +410,9 @@
                 <configuration>
                     <doclint>none</doclint>
                     <encoding>UTF-8</encoding>
+                    <additionalOptions>
+                        <additionalOption>--add-exports java.naming/com.sun.jndi.ldap=ALL-UNNAMED</additionalOption>
+                    </additionalOptions>
                 </configuration>
             </plugin>
         </plugins>
