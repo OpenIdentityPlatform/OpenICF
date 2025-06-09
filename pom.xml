@@ -28,7 +28,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.openidentityplatform</groupId>
     <artifactId>openicf</artifactId>
-    <version>1.7.2-SNAPSHOT</version>
+    <version>1.7.4-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>OpenICF</name>
     <description>
@@ -93,16 +93,6 @@
             <id>jboss-nexus-public</id>
             <name>JBoss Nexus Public Repository</name>
             <url>https://repository.jboss.org/nexus/content/groups/public/</url>
-        </repository>
-        <repository>
-            <id>com.springsource.repository.bundles.release</id>
-            <name>SpringSource Enterprise Bundle Repository - SpringSource Bundle Releases</name>
-            <url>https://repository.springsource.com/maven/bundles/release</url>
-        </repository>
-        <repository>
-            <id>com.springsource.repository.bundles.external</id>
-            <name>SpringSource Enterprise Bundle Repository - External Bundle Releases</name>
-            <url>https://repository.springsource.com/maven/bundles/external</url>
         </repository>
     </repositories>
     <pluginRepositories>
@@ -223,7 +213,7 @@
             <dependency>
                 <groupId>org.openidentityplatform.opendj</groupId>
                 <artifactId>opendj-parent</artifactId>
-                <version>4.8.3-SNAPSHOT</version>
+                <version>4.9.4</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -420,7 +410,6 @@
                 <configuration>
                     <doclint>none</doclint>
                     <encoding>UTF-8</encoding>
-                    <source>8</source>
                 </configuration>
             </plugin>
         </plugins>
