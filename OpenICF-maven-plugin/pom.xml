@@ -27,7 +27,7 @@
     <parent>
         <groupId>org.openidentityplatform</groupId>
         <artifactId>openicf</artifactId>
-        <version>1.7.4-SNAPSHOT</version>
+        <version>1.8.1-SNAPSHOT</version>
     </parent>
     <groupId>org.openidentityplatform.openicf</groupId>
     <artifactId>openicf-maven-plugin</artifactId>
