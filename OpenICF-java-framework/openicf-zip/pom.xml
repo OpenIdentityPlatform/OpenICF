@@ -138,6 +138,11 @@
             <artifactId>xml-connector</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <scope>compile</scope>
+        </dependency>
     </dependencies> 
     <properties>
         <!-- If we release this project, we need to include the Forgerock binary license -->
