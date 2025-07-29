@@ -39,6 +39,7 @@
     <properties>
         <!-- maven-compiler-plugin -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <osgi.grizzly.version>[3.0,5)</osgi.grizzly.version>
     </properties>
     
     <dependencies>
@@ -163,6 +164,22 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Import-Package>
+                            org.glassfish.grizzly;version="${osgi.grizzly.version}",
+                            org.glassfish.grizzly.asyncqueue;version="${osgi.grizzly.version}",
+                            org.glassfish.grizzly.attributes;version="${osgi.grizzly.version}",
+                            org.glassfish.grizzly.filterchain;version="${osgi.grizzly.version}",
+                            org.glassfish.grizzly.http;version="${osgi.grizzly.version}",
+                            org.glassfish.grizzly.http.util;version="${osgi.grizzly.version}",
+                            org.glassfish.grizzly.nio.transport;version="${osgi.grizzly.version}",
+                            org.glassfish.grizzly.ssl;version="${osgi.grizzly.version}",
+                            org.glassfish.grizzly.strategies;version="${osgi.grizzly.version}",
+                            org.glassfish.grizzly.threadpool;version="${osgi.grizzly.version}",
+                            org.glassfish.grizzly.utils;version="${osgi.grizzly.version}",
+                            org.glassfish.grizzly.websockets;version="${osgi.grizzly.version}",
+                            org.glassfish.grizzly.websockets.frametypes;version="${osgi.grizzly.version}",
+                            *
+                        </Import-Package>
                         <Bundle-Activator>org.forgerock.openicf.framework.osgi.internal.Activator</Bundle-Activator>
                     </instructions>
                 </configuration>
