@@ -54,7 +54,6 @@
         </openicf.osgi.remove.headers>
 
         <logback.version>1.2.13</logback.version>
-        <grizzly.version>4.0.2</grizzly.version>
         <protobuf-java.version>3.0.2</protobuf-java.version>
 
         <!-- Core documentation properties -->
