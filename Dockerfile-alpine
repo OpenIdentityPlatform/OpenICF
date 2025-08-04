@@ -5,7 +5,7 @@ LABEL org.opencontainers.image.authors="Open Identity Platform Community"
 ENV USER="openicf"
 ENV OPENICF_OPTS="-server -XX:+UseContainerSupport"
 
-ARG VERSION=1.8.0
+ARG VERSION
 
 WORKDIR /opt
 
