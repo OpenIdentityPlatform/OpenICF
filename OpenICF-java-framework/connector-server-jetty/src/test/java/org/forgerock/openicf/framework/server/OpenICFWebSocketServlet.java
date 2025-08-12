@@ -20,17 +20,17 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2025 3A Systems LLC.
  */
 
 package org.forgerock.openicf.framework.server;
 
-import javax.servlet.annotation.WebServlet;
-
+import jakarta.servlet.annotation.WebServlet;
 import org.forgerock.openicf.framework.server.jetty.OpenICFWebSocketServletBase;
 
 @WebServlet(name = "OpenICF WebSocket Servlet", urlPatterns = { "/openicf" })
 public class OpenICFWebSocketServlet extends OpenICFWebSocketServletBase {
 
     private static final long serialVersionUID = 1L;
-
 }
