@@ -1,6 +1,6 @@
-FROM openjdk:8-jre-alpine
+FROM alpine:latest
 
-MAINTAINER Open Identity Platform Community <open-identity-platform-opendj@googlegroups.com>
+LABEL org.opencontainers.image.authors="Open Identity Platform Community"
 
 ENV USER="openicf"
 ENV OPENICF_OPTS="-server -XX:+UseContainerSupport"
@@ -11,7 +11,7 @@ WORKDIR /opt
 
 #COPY OpenICF-java-framework/openicf-zip/target/*.zip ./
 
-RUN apk add --update --no-cache --virtual builddeps curl unzip \
+RUN apk add --update --no-cache --virtual builddeps curl unzip openjdk11-jre \
  && apk upgrade --update --no-cache \
  && apk add bash \
  && bash -c 'if [ ! -z "$VERSION" ] ; then rm -rf ./*.zip ; curl -L https://github.com/OpenIdentityPlatform/OpenICF/releases/download/$VERSION/openicf-$VERSION.zip --output openicf-$VERSION.zip ; fi' \

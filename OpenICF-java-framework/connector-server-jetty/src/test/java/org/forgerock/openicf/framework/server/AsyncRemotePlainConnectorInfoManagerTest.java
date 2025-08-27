@@ -12,6 +12,7 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2015-2016 ForgeRock AS.
+ * Portions copyright 2025 3A Systems LLC.
  */
 
 package org.forgerock.openicf.framework.server;
@@ -21,7 +22,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jetty.http.HttpVersion;
@@ -42,6 +45,8 @@ import org.eclipse.jetty.servlet.Source;
 import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.security.Credential;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.forgerock.openicf.framework.AsyncConnectorInfoManagerTestBase;
 import org.forgerock.openicf.framework.ConnectorFramework;
 import org.forgerock.openicf.framework.ConnectorFrameworkFactory;
@@ -50,7 +55,14 @@ import org.forgerock.openicf.framework.async.AsyncConnectorInfoManager;
 import org.forgerock.openicf.framework.client.RemoteWSFrameworkConnectionInfo;
 import org.forgerock.openicf.framework.remote.ReferenceCountedObject;
 import org.forgerock.openicf.framework.server.jetty.OpenICFWebSocketServletBase;
+import org.forgerock.util.Function;
+import org.forgerock.util.promise.Promise;
+import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.framework.api.APIConfiguration;
+import org.identityconnectors.framework.api.ConfigurationProperties;
+import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorInfo;
+import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.testconnector.TstConnector;
 import org.testng.Assert;
 import org.testng.ITestContext;
@@ -110,7 +122,7 @@ public class AsyncRemotePlainConnectorInfoManagerTest extends
 
         ConstraintSecurityHandler sh = new ConstraintSecurityHandler();
         sh.setAuthenticator(new BasicAuthenticator());
-        sh.setConstraintMappings(Arrays.asList(new ConstraintMapping[] { cm }));
+        sh.setConstraintMappings(List.of(cm));
 
         HashLoginService loginService = new HashLoginService();
         UserStore us=new UserStore();
@@ -123,7 +135,7 @@ public class AsyncRemotePlainConnectorInfoManagerTest extends
         loginService.setUserStore(us);
         loginService.setName("OpenICF-Service");
         sh.setLoginService(loginService);
-        sh.setConstraintMappings(Arrays.asList(new ConstraintMapping[] { cm }));
+        sh.setConstraintMappings(List.of(cm));
 
         return sh;
     }
@@ -147,7 +159,7 @@ public class AsyncRemotePlainConnectorInfoManagerTest extends
         http.setIdleTimeout(30000);
 
         // HTTPS
-        SslContextFactory sslContextFactory = createSsllContextFactory(false);
+        SslContextFactory.Server sslContextFactory = createSsllContextFactory(false);
 
         // HTTPS Configuration
         HttpConfiguration httpsConfig = new HttpConfiguration(httpConfig);
@@ -194,6 +206,8 @@ public class AsyncRemotePlainConnectorInfoManagerTest extends
 
         handler.addServlet(holder, "/openicf/*");
 
+        JettyWebSocketServletContainerInitializer.configure(handler, null);
+
         SecurityHandler sh = getSecurityHandler();
         sh.setHandler(handler);
 
@@ -221,8 +235,8 @@ public class AsyncRemotePlainConnectorInfoManagerTest extends
         Reporter.log("Jetty Server Stopped", true);
     }
 
-    private SslContextFactory createSsllContextFactory(boolean clientContext) {
-        final SslContextFactory sslContextFactory = new SslContextFactory(false);
+    private SslContextFactory.Server createSsllContextFactory(boolean clientContext) {
+        final SslContextFactory.Server sslContextFactory = new SslContextFactory.Server();
 
         URL keystoreURL =
                 AsyncRemotePlainConnectorInfoManagerTest.class.getClassLoader().getResource(
