@@ -68,6 +68,20 @@ openicf/bin/ConnectorServer.sh /run
 ## Contributing
 Please, make [Pull request](https://github.com/OpenIdentityPlatform/OpenICF/pulls)
 
-<a href="https://github.com/OpenIdentityPlatform/OpenICF/graphs/contributors">
+<a href="https://opencollective.com/OpenIDM/tiers" target="_blank">
   <img src="https://contributors-img.web.app/image?repo=OpenIdentityPlatform/OpenICF" />
+</a>
+
+## Backers
+Thank you to all our backers! [Become a backer 🙏](https://opencollective.com/OpenIDM/tiers)
+
+<a href="https://opencollective.com/OpenIDM/tiers" target="_blank">
+ <img src="https://opencollective.com/OpenIDM/backers.svg?width=890">
+</a>
+
+## Sponsors
+Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [Become a sponsor ❤️](https://opencollective.com/OpenIDM/tiers)
+
+<a href="https://opencollective.com/OpenIDM/tiers" target="_blank">
+ <img src="https://opencollective.com/OpenIDM/sponsors.svg?width=890">
 </a>
