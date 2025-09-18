@@ -20,13 +20,15 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2025 3A Systems LLC.
  */
 
 package org.forgerock.openicf.framework.server.grizzly;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
 
 import org.forgerock.openicf.framework.ConnectorFramework;
 import org.glassfish.grizzly.websockets.WebSocketEngine;

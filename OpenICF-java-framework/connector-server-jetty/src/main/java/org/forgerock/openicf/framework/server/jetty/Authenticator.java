@@ -12,18 +12,19 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2016 ForgeRock AS.
+ * Portions copyright 2025 3A Systems LLC.
  */
 
 package org.forgerock.openicf.framework.server.jetty;
 
 
-import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
-import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
+import org.eclipse.jetty.websocket.server.JettyServerUpgradeRequest;
+import org.eclipse.jetty.websocket.server.JettyServerUpgradeResponse;
 
 import javax.security.auth.callback.NameCallback;
 
 public interface Authenticator {
 
-    void authenticate(ServletUpgradeRequest request, ServletUpgradeResponse response,
+    void authenticate(JettyServerUpgradeRequest request, JettyServerUpgradeResponse response,
                                         NameCallback callback);
 }

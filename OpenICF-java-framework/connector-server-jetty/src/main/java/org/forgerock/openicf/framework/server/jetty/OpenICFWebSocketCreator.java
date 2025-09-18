@@ -12,6 +12,7 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2015-2016 ForgeRock AS.
+ * Portions copyright 2025 3A Systems LLC.
  */
 
 package org.forgerock.openicf.framework.server.jetty;
@@ -23,27 +24,24 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.security.auth.callback.NameCallback;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.util.StringUtil;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
-import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
-import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
-import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
-import org.forgerock.openicf.common.protobuf.RPCMessages;
+import org.eclipse.jetty.websocket.server.JettyServerUpgradeRequest;
+import org.eclipse.jetty.websocket.server.JettyServerUpgradeResponse;
+import org.eclipse.jetty.websocket.server.JettyWebSocketCreator;
 import org.forgerock.openicf.framework.ConnectorFramework;
 import org.forgerock.openicf.framework.client.RemoteWSFrameworkConnectionInfo;
 import org.forgerock.openicf.framework.remote.ConnectionPrincipal;
 import org.forgerock.openicf.framework.remote.OpenICFServerAdapter;
 import org.forgerock.openicf.framework.remote.rpc.OperationMessageListener;
-import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
-import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
 
-public class OpenICFWebSocketCreator implements WebSocketCreator {
+public class OpenICFWebSocketCreator implements JettyWebSocketCreator {
 
-    private static final Logger logger = Log.getLogger(WebSocketListenerBridge.class);
+    private static final Logger logger = Log.getLogger(OpenICFWebSocketCreator.class);
 
     protected final ConcurrentMap<String, WebSocketConnectionGroup> globalConnectionGroups =
             new ConcurrentHashMap<String, WebSocketConnectionGroup>();
@@ -78,7 +76,7 @@ public class OpenICFWebSocketCreator implements WebSocketCreator {
             logger.info("Creating single 'anonymous' authenticator");
             this.authenticator = new Authenticator() {
                 @Override
-                public void authenticate(ServletUpgradeRequest request, ServletUpgradeResponse response, NameCallback callback) {
+                public void authenticate(JettyServerUpgradeRequest request, JettyServerUpgradeResponse response, NameCallback callback) {
                     callback.setName(ConnectionPrincipal.DEFAULT_NAME);
                 }
             };
@@ -99,7 +97,7 @@ public class OpenICFWebSocketCreator implements WebSocketCreator {
     }
 
     @Override
-    public Object createWebSocket(ServletUpgradeRequest request, ServletUpgradeResponse response) {
+    public Object createWebSocket(JettyServerUpgradeRequest request, JettyServerUpgradeResponse response) {
 
         if (request.getSubProtocols().contains(RemoteWSFrameworkConnectionInfo.OPENICF_PROTOCOL)) {
             response.setAcceptedSubProtocol(RemoteWSFrameworkConnectionInfo.OPENICF_PROTOCOL);
@@ -114,7 +112,7 @@ public class OpenICFWebSocketCreator implements WebSocketCreator {
         return null;
     }
 
-    protected void unauthorized(ServletUpgradeResponse response, String message) {
+    protected void unauthorized(JettyServerUpgradeResponse response, String message) {
         try {
             response.sendError(
                     HttpServletResponse.SC_FORBIDDEN,
@@ -124,7 +122,7 @@ public class OpenICFWebSocketCreator implements WebSocketCreator {
         }
     }
 
-    public ConnectionPrincipal<?> authenticate(ServletUpgradeRequest request, ServletUpgradeResponse response) {
+    public ConnectionPrincipal<?> authenticate(JettyServerUpgradeRequest request, JettyServerUpgradeResponse response) {
         NameCallback callback = new NameCallback("OpenICF user:>");
         authenticator.authenticate(request, response, callback);
         if (StringUtil.isNotBlank(callback.getName())) {
@@ -140,39 +138,4 @@ public class OpenICFWebSocketCreator implements WebSocketCreator {
         return null;
     }
 
-    public static class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> {
-
-
-        final String name;
-        final ConnectorFramework connectorFramework;
-
-        public SinglePrincipal(final String name,
-                               final OperationMessageListener listener,
-                               final ConnectorFramework connectorFramework,
-                               final ConcurrentMap<String, WebSocketConnectionGroup> globalConnectionGroups) {
-            super(listener, globalConnectionGroups);
-            this.name = name;
-            this.connectorFramework = connectorFramework;
-        }
-
-        @Override
-        public String getName() {
-            return StringUtil.isBlank(name) ? super.getName() : name;
-        }
-
-        public RemoteOperationContext handshake(
-                final WebSocketConnectionHolder webSocketConnection,
-                final RPCMessages.HandshakeMessage message) {
-            return super.handshake(webSocketConnection, message);
-        }
-
-        protected void doClose() {
-
-        }
-
-        @Override
-        protected void onNewWebSocketConnectionGroup(final WebSocketConnectionGroup connectionGroup) {
-            connectorFramework.getServerManager(getName()).addWebSocketConnectionGroup(connectionGroup);
-        }
-    }
 }

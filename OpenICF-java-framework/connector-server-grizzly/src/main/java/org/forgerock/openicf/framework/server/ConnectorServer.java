@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2025 3A Systems LLC.
  */
 
 package org.forgerock.openicf.framework.server;
@@ -106,7 +108,7 @@ public class ConnectorServer {
             "SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA",
             "SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA",
             "SSL_RSA_WITH_RC4_128_MD5",
-            "TLS_EMPTY_RENEGOTIATION_INFO_SCSVFo", // per RFC 5746
+            "TLS_EMPTY_RENEGOTIATION_INFO_SCSV", // per RFC 5746
     };
     // @formatter:on
 

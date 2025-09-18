@@ -94,7 +94,7 @@
                 <include>org.codehaus.groovy.modules.http-builder:*</include>
                 <include>org.openidentityplatform.openicf.connectors:ssh-connector:jar</include>
                 <include>org.openidentityplatform.openicf.connectors:groovy-connector:jar</include>
-                <include>javax.servlet:*</include>
+                <include>jakarta.servlet:*</include>
             </includes>
         </dependencySet>
         <dependencySet>

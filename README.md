@@ -36,7 +36,7 @@ This project is licensed under the [Common Development and Distribution License 
 * [groovy-connector](https://github.com/OpenIdentityPlatform/OpenICF/releases) 
 * [kerberos-connector](https://github.com/OpenIdentityPlatform/OpenICF/releases) 
 
-Java 1.8+ required
+Java 11 or later required
 
 ## How-to build
 For windows use:
