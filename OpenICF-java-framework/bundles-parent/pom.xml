@@ -181,7 +181,7 @@
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <configuration>
                         <links>
-                            <link>https://docs.groovy-lang.org/latest/html/api/</link>
+                            <!--link>https://docs.groovy-lang.org/latest/html/api/</link-->
 <!--                            <link>http://openicf.forgerock.org/apidocs/</link>-->
                         </links>
                     </configuration>
@@ -328,7 +328,7 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
                     <links>
-                        <link>https://docs.groovy-lang.org/latest/html/api/</link>
+                        <!--link>https://docs.groovy-lang.org/latest/html/api/</link-->
                     </links>
                 </configuration>
             </plugin>
