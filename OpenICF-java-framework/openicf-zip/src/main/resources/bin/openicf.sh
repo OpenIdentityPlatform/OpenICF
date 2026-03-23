@@ -98,7 +98,7 @@ case "$1" in
 
         # Stop the service
         jsvc_exec "-stop"
-
+        kill -9 $PID 2>/dev/null || true
         echo "The $DESC has stopped."
     ;;
     restart)
@@ -108,7 +108,7 @@ case "$1" in
 
             # Stop the service
             jsvc_exec "-stop"
-
+            kill -9 $PID 2>/dev/null || true
             # Start the service
             jsvc_exec "-wait 120"
 
