@@ -44,6 +44,8 @@ jobs:
               brew install coreutils jsvc 
           fi
           openicf/bin/openicf.sh start
+          timeout 2m bash -c 'until grep -q "ConnectorServer listening on" openicf/logs/ConnectorServer.log ; do sleep 5; done'
+          ! grep " ERROR " openicf/logs/ConnectorServer.log || cat openicf/logs/ConnectorServer.log
           openicf/bin/openicf.sh stop
           rm -rf openicf/logs
           openicf/bin/ConnectorServer.sh /run &
