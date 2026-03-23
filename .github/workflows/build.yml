@@ -40,14 +40,12 @@ jobs:
           openicf/bin/ConnectorServer.sh
           if [ "$RUNNER_OS" == "Linux" ]; then
               sudo apt-get install jsvc
-          else
-              brew install coreutils jsvc 
+              openicf/bin/openicf.sh start
+              timeout 2m bash -c 'until grep -q "ConnectorServer listening on" openicf/logs/openicf.err ; do sleep 5; done' || cat openicf/logs/*
+              ! grep " ERROR " openicf/logs/ConnectorServer.log
+              openicf/bin/openicf.sh stop
+              rm -rf openicf/logs/*
           fi
-          openicf/bin/openicf.sh start
-          timeout 2m bash -c 'until grep -q "ConnectorServer listening on" openicf/logs/openicf.err ; do sleep 5; done' || cat openicf/logs/*
-          ! grep " ERROR " openicf/logs/ConnectorServer.log
-          openicf/bin/openicf.sh stop
-          rm -rf openicf/logs
           openicf/bin/ConnectorServer.sh /run &
           timeout 2m bash -c 'until grep -q "ConnectorServer listening on" openicf/logs/ConnectorServer.log ; do sleep 5; done'
           ! grep " ERROR " openicf/logs/ConnectorServer.log
