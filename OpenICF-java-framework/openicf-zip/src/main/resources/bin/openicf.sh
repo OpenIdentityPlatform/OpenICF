@@ -89,7 +89,7 @@ case "$1" in
     start)
         echo "Starting the $DESC..."
         # Start the service
-        jsvc_exec
+        jsvc_exec "-wait 120"
 
         echo "The $DESC has started. pid=$(cat $PID)"
     ;;
@@ -110,7 +110,7 @@ case "$1" in
             jsvc_exec "-stop"
 
             # Start the service
-            jsvc_exec
+            jsvc_exec "-wait 120"
 
             echo "The $DESC has restarted. pid=$(cat $PID)"
         else
