@@ -153,7 +153,7 @@
                         <source>${maven.compiler.source}</source>
                         <show>public</show>
                         <links>
-                            <!--link>https://docs.groovy-lang.org/latest/html/api/</link-->
+                            <link>https://docs.groovy-lang.org/latest/html/api/</link>
                         </links>
                     </configuration>
                     <executions>
