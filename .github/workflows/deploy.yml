@@ -16,13 +16,13 @@ jobs:
         env:
           GITHUB_CONTEXT: ${{ toJSON(github) }}
         run: echo "$GITHUB_CONTEXT"
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: recursive
           ref: ${{ github.event.workflow_run.head_branch }}
       - name: Set up Java for publishing to Maven Central Repository OSS
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: ${{ github.event.workflow_run.head_branch == 'sustaining/1.8.x' && '8' || '11'}}
           distribution: 'temurin'
@@ -30,7 +30,7 @@ jobs:
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
       - name: Cache Maven packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-m2-repository-${{ hashFiles('**/pom.xml') }}
@@ -57,42 +57,42 @@ jobs:
         if: ${{ github.event.workflow_run.event=='push' && env.MAVEN_USERNAME!='' && env.MAVEN_PASSWORD!=''}}
         run: mvn --batch-mode --errors --update-snapshots -Dgpg.passphrase=${{ secrets.GPG_PASSPHRASE }} deploy --file pom.xml
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: OpenICF Framework
           path: OpenICF-java-framework/openicf-zip/target/*.zip
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: OpenICF CSV File Connector
           path: OpenICF-csvfile-connector/target/*.jar
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: OpenICF Database Connector
           path: OpenICF-databasetable-connector/target/*.jar
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: OpenICF Groovy Connector
           path: OpenICF-groovy-connector/target/*.jar
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: OpenICF Kerberos connector
           path: OpenICF-kerberos-connector/target/*.jar
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: OpenICF LDAP Connector
           path: OpenICF-ldap-connector/target/*.jar
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: OpenICF SSH Connector
           path: OpenICF-ssh-connector/target/*.jar
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: OpenICF XML Connector
           path: OpenICF-xml-connector/target/*.jar
