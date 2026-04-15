@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2024-2026 3A Systems LLC.
  */
 
 package org.identityconnectors.common.script.javascript;
@@ -55,6 +57,10 @@ public class JavaScriptExecutorFactory extends ScriptExecutorFactory {
      */
     public JavaScriptExecutorFactory() {
         ScriptEngine engine = manager.getEngineByName(JAVA_SCRIPT);
+        if(engine == null) {
+            manager.registerEngineName(JAVA_SCRIPT, new org.mozilla.javascript.engine.RhinoScriptEngineFactory());
+            engine = manager.getEngineByName(JAVA_SCRIPT);
+        }
         if (null == engine) {
             throw new IllegalStateException("JavaScript Engine is not found");
         }

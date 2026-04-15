@@ -2,7 +2,7 @@ name: Build
 
 on:
   push:
-    branches: [ 'sustaining/1.8.x','master' ]
+    branches: [ 'sustaining/1.8.x','master', 'issues/**', 'features/**' ]
   pull_request:
 jobs:
   build-maven:
