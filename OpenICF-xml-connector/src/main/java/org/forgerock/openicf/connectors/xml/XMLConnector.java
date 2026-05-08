@@ -99,8 +99,19 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      * @see org.identityconnectors.framework.spi.Connector#dispose()
      */
     public void dispose() {
-        xmlInstanceHandler.dispose();
-        log.ok("Dispose {0}", config.getXmlFilePath());
+        if (xmlInstanceHandler == null) {
+            // init() never completed successfully (e.g. invalid XML/XSD path),
+            // nothing to release. Avoid throwing NPE so the original failure
+            // from init()/operation is not masked.
+            log.ok("Dispose called but XML handler was not initialized; nothing to release");
+            return;
+        }
+        try {
+            xmlInstanceHandler.dispose();
+        } finally {
+            xmlInstanceHandler = null;
+        }
+        log.ok("Dispose {0}", config != null ? config.getXmlFilePath() : null);
     }
     
     private synchronized Object getLock() {
