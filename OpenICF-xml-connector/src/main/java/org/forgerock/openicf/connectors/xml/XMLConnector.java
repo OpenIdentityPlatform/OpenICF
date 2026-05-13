@@ -21,6 +21,7 @@
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
  *
+ * Portions Copyrighted 2026 3A Systems LLC
  * $Id$
  */
 package org.forgerock.openicf.connectors.xml;
