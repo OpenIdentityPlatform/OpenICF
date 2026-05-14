@@ -388,47 +388,74 @@ public class XMLHandlerImpl implements XMLHandler {
         }
 
         try {
-            try {
-                XPathFactory xpathFactory = new net.sf.saxon.xpath.XPathFactoryImpl();
-                // XPath to find empty text nodes.
-                XPathExpression xpathExp = xpathFactory.newXPath().compile("//text()[normalize-space(.) = '']");
-                NodeList emptyTextNodes = null;
-                emptyTextNodes = (NodeList) xpathExp.evaluate(document, XPathConstants.NODESET);
+            // Synchronize on the document so that XPath cleanup and the
+            // Saxon transform happen atomically with respect to any other
+            // thread that might still hold a reference to the same DOM.
+            // Saxon's DOMSender walks children via NodeList.item(i) after
+            // calling getLength(); a concurrent removeChild on the DOM
+            // can make item(i) return null and trigger a NullPointerException
+            // in DOMSender.walkNode.
+            synchronized (document) {
+                try {
+                    XPathFactory xpathFactory = new net.sf.saxon.xpath.XPathFactoryImpl();
+                    // XPath to find empty text nodes.
+                    XPathExpression xpathExp = xpathFactory.newXPath().compile("//text()[normalize-space(.) = '']");
+                    NodeList emptyTextNodes = (NodeList) xpathExp.evaluate(document, XPathConstants.NODESET);
 
-                // Remove each empty text node from document.
-                for (int i = 0; i < emptyTextNodes.getLength(); i++) {
-                    Node emptyTextNode = emptyTextNodes.item(i);
-                    emptyTextNode.getParentNode().removeChild(emptyTextNode);
+                    // Snapshot the list before mutating the DOM, then remove
+                    // each empty text node (guarding against nodes whose
+                    // parent has already been detached).
+                    int len = emptyTextNodes.getLength();
+                    List<Node> toRemove = new ArrayList<Node>(len);
+                    for (int i = 0; i < len; i++) {
+                        Node n = emptyTextNodes.item(i);
+                        if (n != null) {
+                            toRemove.add(n);
+                        }
+                    }
+                    for (Node emptyTextNode : toRemove) {
+                        Node parent = emptyTextNode.getParentNode();
+                        if (parent != null) {
+                            parent.removeChild(emptyTextNode);
+                        }
+                    }
+                } catch (XPathExpressionException e) {
+                    //We don't care. It's just formatting.
                 }
-            } catch (XPathExpressionException e) {
-                //We don't care. It's just formatting.
+
+                TransformerFactory transformerFactory = new net.sf.saxon.TransformerFactoryImpl();
+                Transformer transformer = transformerFactory.newTransformer();
+                transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+                transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+                transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+                transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+
+                DOMSource source = new DOMSource(document);
+                /* Running this code in java 5 we had to change
+                StreamResult result = new StreamResult(config.getXmlFilePath());
+                into
+                StreamResult result = new StreamResult(config.getXmlFilePath().getPath());
+                Otherwise you get the following error:
+                javax.xml.transform.TransformerException: java.io.FileNotFoundException:
+                 */
+                /*
+                 * If the safePath is not escaped then it throws
+                 * net.sf.saxon.trans.XPathException: java.net.URISyntaxException:
+                 * Illegal character in safePath at index 9: /temp/XML Connector/test.xml
+                 * String safePath = config.getXmlFilePath().getPath().replaceAll(" ", "%20");
+                 */
+                FileOutputStream fos = new FileOutputStream(config.getXmlFilePath());
+                try {
+                    StreamResult result = new StreamResult(fos);
+                    transformer.transform(source, result);
+                } finally {
+                    try {
+                        fos.close();
+                    } catch (IOException ioe) {
+                        log.warn("Failed to close XML output stream: {0}", ioe);
+                    }
+                }
             }
-
-            TransformerFactory transformerFactory = new net.sf.saxon.TransformerFactoryImpl();
-            Transformer transformer = transformerFactory.newTransformer();
-            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-            transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-
-            DOMSource source = new DOMSource(document);
-            /* Running this code in java 5 we had to change
-            StreamResult result = new StreamResult(config.getXmlFilePath());
-            into
-            StreamResult result = new StreamResult(config.getXmlFilePath().getPath());
-            Otherwise you get the following error:
-            javax.xml.transform.TransformerException: java.io.FileNotFoundException:
-             */
-            /*
-             * If the safePath is not escaped then it throws
-             * net.sf.saxon.trans.XPathException: java.net.URISyntaxException:
-             * Illegal character in safePath at index 9: /temp/XML Connector/test.xml
-             * String safePath = config.getXmlFilePath().getPath().replaceAll(" ", "%20");
-             */
-            FileOutputStream fos = new FileOutputStream(config.getXmlFilePath());
-            StreamResult result = new StreamResult(fos);
-
-            transformer.transform(source, result);
 
             log.info("Saving changes to xml file");
         } catch (TransformerException ex) {
