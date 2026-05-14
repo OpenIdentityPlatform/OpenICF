@@ -111,7 +111,10 @@ public class ConcurrentXMLHandler implements XMLHandler {
     }    
 
     public XMLHandler init() {
-        lock.readLock().lock();
+        // Use the write lock so the invokers counter and proxy.init()
+        // are not racing against a concurrent dispose() (or another init())
+        // running under a shared read lock.
+        lock.writeLock().lock();
         try {
             if (0 == invokers) {
                 proxy.init();
@@ -119,13 +122,17 @@ public class ConcurrentXMLHandler implements XMLHandler {
             invokers++;
         }
         finally {
-            lock.readLock().unlock();
+            lock.writeLock().unlock();
         }
         return this;
     }
 
     public void dispose() {
-        lock.readLock().lock();
+        // Use the write lock so that proxy.dispose() (which serializes the
+        // shared DOM through Saxon) cannot run concurrently with itself or
+        // with any read-lock operation (search/authenticate) that walks the
+        // same DOM. Mutating the invokers counter also requires exclusion.
+        lock.writeLock().lock();
         try {
             invokers--;
             if (0 == invokers) {
@@ -133,7 +140,7 @@ public class ConcurrentXMLHandler implements XMLHandler {
             }
         }
         finally {
-            lock.readLock().unlock();
+            lock.writeLock().unlock();
         }
     }
 
