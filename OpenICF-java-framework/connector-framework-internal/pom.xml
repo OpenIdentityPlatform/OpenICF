@@ -64,20 +64,25 @@
 
         <!--Optional dependencies-->
         <dependency>
-            <groupId>org.apache.servicemix.bundles</groupId>
-            <artifactId>org.apache.servicemix.bundles.rhino</artifactId>
-            <version>1.7.15_1</version>
+            <groupId>org.mozilla</groupId>
+            <artifactId>rhino</artifactId>
             <optional>true</optional>
         </dependency>
-
+        <dependency>
+            <groupId>org.mozilla</groupId>
+            <artifactId>rhino-engine</artifactId>
+            <optional>true</optional>
+        </dependency>
         <!-- Test Dependencies -->
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.easytesting</groupId>
             <artifactId>fest-assert</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.openidentityplatform.openicf.framework</groupId>
