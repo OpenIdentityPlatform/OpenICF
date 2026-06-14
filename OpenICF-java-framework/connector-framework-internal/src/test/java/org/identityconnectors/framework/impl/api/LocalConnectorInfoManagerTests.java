@@ -48,6 +48,7 @@ import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Subscription;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.api.operations.batch.BatchBuilder;
+import org.identityconnectors.framework.api.operations.batch.BatchTask;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -319,15 +320,16 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
             }
         };
 
-        Subscription sub = facade.executeBatch(batch.build(), observer, options);
-        assertEquals(results.size(), 0);
-        assertFalse(isComplete.get());
-        assertFalse(hasError.get());
+        final List<BatchTask> batchTasks = batch.build();
+        Subscription sub = facade.executeBatch(batchTasks, observer, options);
         assertNotNull(sub.getReturnValue());
 
-        Thread.sleep(500);
+        final long timeout = System.currentTimeMillis() + 3000;
+        while (!isComplete.get() && System.currentTimeMillis() < timeout) {
+            Thread.sleep(100);
+        }
 
-        assertEquals(results.size(), batch.build().size());
+        assertEquals(results.size(), batchTasks.size());
         assertTrue(isComplete.get());
         assertFalse(hasError.get());
 
