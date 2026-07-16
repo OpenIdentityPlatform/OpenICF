@@ -1,19 +1,35 @@
+# The contents of this file are subject to the terms of the Common Development and
+# Distribution License (the License). You may not use this file except in compliance with the
+# License.
+#
+# You can obtain a copy of the License at legal/CDDLv1.0.txt. See the License for the
+# specific language governing permission and limitations under the License.
+#
+# When distributing Covered Software, include this CDDL Header Notice in each file and include
+# the License file at legal/CDDLv1.0.txt. If applicable, add the following below the CDDL
+# Header, with the fields enclosed by brackets [] replaced by your own identifying
+# information: "Portions copyright [year] [name of copyright owner]".
+#
+# Copyright 2024-2026 3A Systems, LLC.
 FROM alpine:latest
 
 LABEL org.opencontainers.image.authors="Open Identity Platform Community"
 
 ENV USER="openicf"
-ENV OPENICF_OPTS="-server -XX:+UseContainerSupport"
+ENV OPENICF_OPTS="-server -XX:+UseContainerSupport --add-exports java.base/com.sun.jndi.ldap=ALL-UNNAMED "
 
 ARG VERSION
+
+ARG TARGETARCH
 
 WORKDIR /opt
 
 #COPY OpenICF-java-framework/openicf-zip/target/*.zip ./
 
-RUN apk add --update --no-cache --virtual builddeps curl unzip openjdk11-jre \
+RUN apk add --update --no-cache --virtual builddeps curl unzip \
  && apk upgrade --update --no-cache \
- && apk add bash \
+ && if [ "$TARGETARCH" = "386" ]; then JDK=openjdk11-jre; else JDK=openjdk25-jre; fi \
+ && apk add bash "$JDK" \
  && bash -c 'if [ ! -z "$VERSION" ] ; then rm -rf ./*.zip ; curl -L https://github.com/OpenIdentityPlatform/OpenICF/releases/download/$VERSION/openicf-$VERSION.zip --output openicf-$VERSION.zip ; fi' \
  && unzip openicf-*.zip && rm -rf *.zip \
  && apk del unzip \
