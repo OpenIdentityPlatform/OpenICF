@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2015 ForgeRock AS
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.dbcommon;
 
@@ -74,6 +75,7 @@ public final class SQLUtil {
      * Get the connection from the datasource.
      *
      * @param datasourceName
+     *            the JNDI name of the DataSource to look up
      * @param env
      *            propertyHastable
      * @return the connection get from default jndi context
@@ -93,6 +95,7 @@ public final class SQLUtil {
      * Get the connection from the dataSource with specified user and password.
      *
      * @param datasourceName
+     *            the JNDI name of the DataSource to look up
      * @param user
      *            DB user
      * @param password
@@ -129,6 +132,7 @@ public final class SQLUtil {
      * Get the connection from the dataSource with specified user and password.
      *
      * @param datasourceName
+     *            the JNDI name of the DataSource to look up
      * @param user
      *            DB user
      * @param password
@@ -164,6 +168,7 @@ public final class SQLUtil {
      * Get the connection from the datasource.
      *
      * @param datasourceName
+     *            the JNDI name of the DataSource to look up
      * @return the connection get from default jndi context
      */
     public static Connection getDatasourceConnection(final String datasourceName) {
@@ -292,8 +297,8 @@ public final class SQLUtil {
      *
      * @param connection
      *            JDBC connection to close.
-     * @deprecated @see {@link
-     *             org.identityconnectors.common.IOUtil.quietClose(Statement);}
+     * @deprecated Use {@link org.identityconnectors.common.IOUtil#quietClose(Connection)}
+     *             instead.
      */
     @SuppressWarnings("dep-ann")
     public static void closeQuietly(final Connection connection) {
@@ -324,8 +329,8 @@ public final class SQLUtil {
      *
      * @param statement
      *            {@link Statement} to close.
-     * @deprecated @see {@link
-     *             org.identityconnectors.common.IOUtil.quietClose(Statement);}
+     * @deprecated Use {@link org.identityconnectors.common.IOUtil#quietClose(Statement)}
+     *             instead.
      */
     @SuppressWarnings("dep-ann")
     public static void closeQuietly(final Statement statement) {
@@ -344,8 +349,8 @@ public final class SQLUtil {
      *
      * @param resultSet
      *            {@link ResultSet} to close quitely.
-     * @deprecated @see {@link
-     *             org.identityconnectors.common.IOUtil.quietClose(ResultSet);}
+     * @deprecated Use {@link org.identityconnectors.common.IOUtil#quietClose(ResultSet)}
+     *             instead.
      */
     @SuppressWarnings("dep-ann")
     public static void closeQuietly(final ResultSet resultSet) {
@@ -488,6 +493,7 @@ public final class SQLUtil {
      * The null param value normalizer.
      *
      * @param sql
+     *            the SQL statement containing "?" bind markers
      * @param params
      *            list
      * @param out
@@ -529,6 +535,7 @@ public final class SQLUtil {
      *            blob
      * @return a converted value
      * @throws SQLException
+     *             if the BLOB's binary stream cannot be obtained
      */
     public static byte[] blob2ByteArray(Blob blobValue) throws SQLException {
         byte[] newValue = null;
@@ -554,6 +561,7 @@ public final class SQLUtil {
      * </p>
      *
      * @param statement
+     *            the prepared statement whose "?" markers are to be bound
      * @param params
      *            a <CODE>List</CODE> of the object arguments
      * @throws SQLException
@@ -584,6 +592,7 @@ public final class SQLUtil {
      * </p>
      *
      * @param statement
+     *            the callable statement whose "?" markers are to be bound
      * @param params
      *            a <CODE>List</CODE> of the object arguments
      * @throws SQLException
@@ -628,6 +637,8 @@ public final class SQLUtil {
      *            database data
      * @return The transformed attribute set
      * @throws SQLException
+     *             if the column metadata or values cannot be read from the
+     *             result set
      */
     public static Map<String, SQLParam> getColumnValues(ResultSet resultSet) throws SQLException {
         Assertions.nullCheck(resultSet, "resultSet");
@@ -889,6 +900,7 @@ public final class SQLUtil {
      *            the target sql type
      * @return the converted object value
      * @throws SQLException
+     *             if the value cannot be converted to the target SQL type
      */
     public static Object attribute2jdbcValue(final Object value, int sqlType) throws SQLException {
         if (value == null) {
@@ -978,6 +990,8 @@ public final class SQLUtil {
      * @param guard
      *            a <CODE>GuardedString</CODE> parameter
      * @throws SQLException
+     *             if the guarded string's clear-text value cannot be bound to
+     *             the statement
      */
     public static void setGuardedStringParam(final PreparedStatement stmt, final int idx,
             GuardedString guard) throws SQLException {
@@ -1019,6 +1033,7 @@ public final class SQLUtil {
      *            Parameters to use in statement
      * @return first row and first column value
      * @throws SQLException
+     *             if the statement cannot be prepared or executed
      */
     public static Object selectSingleValue(Connection conn, String sql, SQLParam... params)
             throws SQLException {
@@ -1052,8 +1067,11 @@ public final class SQLUtil {
      * @param sql
      *            SQL select with or without params
      * @param params
+     *            the parameters to bind to the "?" markers in the SQL
+     *            statement
      * @return list of selected rows
      * @throws SQLException
+     *             if the statement cannot be prepared or executed
      */
     public static List<Object[]> selectRows(Connection conn, String sql, SQLParam... params)
             throws SQLException {
@@ -1090,11 +1108,17 @@ public final class SQLUtil {
      * specific statement in one call
      *
      * @param conn
+     *            JDBC connection to execute the statement on
      * @param sql
+     *            the DML statement to execute, with "?" markers for
+     *            parameters
      * @param params
+     *            the parameters to bind to the "?" markers in the SQL
+     *            statement
      * @return number of rows affected as defined by
      *         {@link PreparedStatement#executeUpdate()}
      * @throws SQLException
+     *             if the statement cannot be prepared or executed
      */
     public static int executeUpdateStatement(Connection conn, String sql, SQLParam... params)
             throws SQLException {

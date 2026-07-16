@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.databasetable;
 
@@ -66,8 +67,8 @@ public final class DatabaseTableSQLUtil {
      * concentrates the replacement of all params. <code>GuardedString</code> are handled so the password is never
      * visible.
      * </p>
-     * @param sms 
-     * @param statement
+     * @param sms the mapping strategy used to bind each parameter to the statement
+     * @param statement the prepared statement whose "?" markers are to be bound
      * @param params a <CODE>List</CODE> of the object arguments
      * @throws SQLException an exception in statement
      */
@@ -88,8 +89,8 @@ public final class DatabaseTableSQLUtil {
      * concentrates the replacement of all params. <code>GuardedString</code> are handled so the password is never
      * visible.
      * </p>
-     * @param sms 
-     * @param statement
+     * @param sms the mapping strategy used to bind each parameter to the statement
+     * @param statement the callable statement whose "?" markers are to be bound
      * @param params a <CODE>List</CODE> of the object arguments
      * @throws SQLException an exception in statement
      */
@@ -121,7 +122,8 @@ public final class DatabaseTableSQLUtil {
      * @param sms a mapping strategy
      * @param resultSet database data
      * @return The transformed column values map
-     * @throws SQLException 
+     * @throws SQLException if a database access error occurs while reading
+     *             the result set
      */
     public static Map<String, SQLParam> getColumnValues(final MappingStrategy sms, ResultSet resultSet) throws SQLException {
         Assertions.nullCheck(resultSet,"resultSet");

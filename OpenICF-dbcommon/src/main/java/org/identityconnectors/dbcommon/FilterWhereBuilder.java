@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.dbcommon;
 
@@ -37,7 +38,7 @@ import org.identityconnectors.common.CollectionUtil;
  * <p>
  * The builder can return a List of params to be used within preparedStatement
  * creation
- * <p>
+ * </p>
  *
  * @since 1.0
  */

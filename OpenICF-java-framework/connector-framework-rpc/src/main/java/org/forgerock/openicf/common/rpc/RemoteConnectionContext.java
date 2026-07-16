@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.common.rpc;
@@ -28,7 +30,7 @@ package org.forgerock.openicf.common.rpc;
  * A RemoteConnectionContext is a custom context to provide application specific
  * information to create the
  * {@link org.forgerock.openicf.common.rpc.RemoteRequest}.
- * <p/>
+ * <p>
  * The {@link org.forgerock.openicf.common.rpc.RemoteRequest} may depends on
  * which {@link org.forgerock.openicf.common.rpc.RemoteConnectionGroup}
  * distributes the request. Instance of this class is provided to
@@ -41,7 +43,7 @@ public interface RemoteConnectionContext<G extends RemoteConnectionGroup<G, H, P
 
     /**
      * Return the {@link org.forgerock.openicf.common.rpc.RemoteConnectionGroup}
-     * <p/>
+     * <p>
      * Return the {@link org.forgerock.openicf.common.rpc.RemoteConnectionGroup}
      * in which this instance belongs to.
      * 

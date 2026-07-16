@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2014 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local;
 
@@ -95,11 +96,16 @@ public class JavaClassProperties {
 
     /**
      * Calculate the difference between the given config and the properties.
-     * 
+     *
      * @param properties
+     *            the current configuration properties to compare against the bean
      * @param config
-     * @return
+     *            the configuration bean whose live property values are compared
+     *            to the given properties
+     * @return the list of properties whose value differs between the bean and
+     *         the given properties, each populated with the new value from the bean
      * @throws Exception
+     *             if a property getter cannot be invoked on the configuration bean
      */
     public static List<org.identityconnectors.framework.api.ConfigurationProperty> calculateDiff(ConfigurationPropertiesImpl properties, Configuration config)
             throws Exception {

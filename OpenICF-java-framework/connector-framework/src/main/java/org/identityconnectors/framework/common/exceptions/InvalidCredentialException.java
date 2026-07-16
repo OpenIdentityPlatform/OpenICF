@@ -19,12 +19,13 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.common.exceptions;
 
 /**
  * InvalidCredentialException signals that user authentication failed.
- * <p/>
+ * <p>
  * This exception is thrown by Connector if authentication failed. For example,
  * a <code>Connector</code> throws this exception if the user entered an
  * incorrect password.

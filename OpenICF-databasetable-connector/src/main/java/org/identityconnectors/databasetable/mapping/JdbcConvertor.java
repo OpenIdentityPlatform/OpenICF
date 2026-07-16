@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.databasetable.mapping;
 
@@ -42,7 +43,9 @@ public class JdbcConvertor implements MappingStrategy {
     
     /**
      * Final sql mapping
-     * @param delegate
+     * @param delegate the next strategy in the chain to which the
+     *            get/set calls are forwarded after values are converted
+     *            back to their database (JDBC) type
      */
     public JdbcConvertor(MappingStrategy delegate) {
         Assertions.nullCheck(delegate, "MappingStrategy delegate");

@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.forgerock.openicf.misc.scriptedcommon;
 
@@ -81,7 +83,7 @@ import groovy.util.ScriptException;
  * Extends the {@link AbstractConfiguration} class to provide all the necessary
  * parameters to initialize the Scripted Connector.
  *
- * @author Gael Allioux <gael.allioux@forgerock.com>
+ * @author Gael Allioux &lt;gael.allioux@forgerock.com&gt;
  */
 @ConfigurationClass(skipUnsupported = true)
 public class ScriptedConfiguration extends AbstractConfiguration implements StatefulConfiguration {
@@ -122,7 +124,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     /**
      * Set the Authenticate script FileName
      *
-     * @param value
+     * @param value the file name of the Authenticate script, relative to one of the configured script roots
      */
     public void setAuthenticateScriptFileName(String value) {
         this.authenticateScriptFileName = value;
@@ -147,7 +149,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     /**
      * Set the Create script FileName
      *
-     * @param value
+     * @param value the file name of the Create script, relative to one of the configured script roots
      */
     public void setCreateScriptFileName(String value) {
         this.createScriptFileName = value;
@@ -172,7 +174,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     /**
      * Set the Update script FileName
      *
-     * @param value
+     * @param value the file name of the Update script, relative to one of the configured script roots
      */
     public void setUpdateScriptFileName(String value) {
         this.updateScriptFileName = value;
@@ -197,7 +199,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     /**
      * Set the Delete script FileName
      *
-     * @param value
+     * @param value the file name of the Delete script, relative to one of the configured script roots
      */
     public void setDeleteScriptFileName(String value) {
         this.deleteScriptFileName = value;
@@ -222,7 +224,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     /**
      * Set the Test script FileName
      *
-     * @param value
+     * @param value the file name of the ResolveUsername script, relative to one of the configured script roots
      */
     public void setResolveUsernameScriptFileName(String value) {
         this.resolveUsernameScriptFileName = value;
@@ -247,7 +249,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     /**
      * Set the ScriptOnResource script FileName
      *
-     * @param value
+     * @param value the file name of the ScriptOnResource script, relative to one of the configured script roots
      */
     public void setScriptOnResourceScriptFileName(String value) {
         this.scriptOnResourceScriptFileName = value;
@@ -272,7 +274,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     /**
      * Set the Search script FileName
      *
-     * @param value
+     * @param value the file name of the Search script, relative to one of the configured script roots
      */
     public void setSearchScriptFileName(String value) {
         this.searchScriptFileName = value;
@@ -296,7 +298,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     /**
      * Set the Sync script FileName
      *
-     * @param value
+     * @param value the file name of the Sync script, relative to one of the configured script roots
      */
     public void setSyncScriptFileName(String value) {
         this.syncScriptFileName = value;
@@ -321,7 +323,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     /**
      * Set the Schema script FileName
      *
-     * @param value
+     * @param value the file name of the Schema script, relative to one of the configured script roots
      */
     public void setSchemaScriptFileName(String value) {
         this.schemaScriptFileName = value;
@@ -345,7 +347,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     /**
      * Set the Test script FileName
      *
-     * @param value
+     * @param value the file name of the Test script, relative to one of the configured script roots
      */
     public void setTestScriptFileName(String value) {
         this.testScriptFileName = value;

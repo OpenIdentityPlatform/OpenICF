@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.forgerock.openicf.framework.impl.api.osgi.internal;
 
@@ -75,7 +76,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The OSGi ConnectorInfoManager Implementation ...
- * <p/>
  *
  * @author Laszlo Hordos
  * @since 1.1

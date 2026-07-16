@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.maven;
@@ -81,7 +82,7 @@ import org.identityconnectors.framework.api.RemoteFrameworkConnectionInfo;
 
 /**
  * A DocBookResourceMojo generate the DocBook xml.
- * <p/>
+ * <p>
  * To debug execute this command:
  * {@code mvnDebug org.forgerock.maven.plugins:openicf-maven-plugin:docbkx}
  *
@@ -163,7 +164,7 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
     private String finalName;
 
     /**
-     * Specifies whether to attach the generated artifact to the project helper. <br/>
+     * Specifies whether to attach the generated artifact to the project helper. <br>
      */
     @Parameter(property = "attach", defaultValue = "true")
     private boolean attach;

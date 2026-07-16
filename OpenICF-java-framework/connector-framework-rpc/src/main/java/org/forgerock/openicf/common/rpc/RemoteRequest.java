@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.common.rpc;
@@ -36,7 +38,7 @@ import org.forgerock.util.promise.ResultHandler;
 /**
  * A RemoteRequest represents a locally requested procedure call executed
  * remotely.
- * <p/>
+ * <p>
  * The RemoteRequest and {@link LocalRequest} are the representation of the same
  * call on caller and receiver side.
  *
@@ -59,7 +61,7 @@ public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConn
     }
 
     /**
-     * Check if this object was {@ref inconsistent}-ed and don't dispose.
+     * Check if this object was marked {@link #inconsistent() inconsistent} and don't dispose.
      *
      * @return 'true' when object is still active or 'false' when this can be
      *         disposed.

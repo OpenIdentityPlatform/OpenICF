@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2014 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.common.objects;
 
@@ -107,6 +108,7 @@ public final class SchemaBuilder {
      * defined by the Connector.
      *
      * @param info
+     *            the object class definition to add.
      * @throws IllegalStateException
      *             If already defined
      */
@@ -135,6 +137,7 @@ public final class SchemaBuilder {
      * defined by the Connector.
      *
      * @param objectClassInfo
+     *            the object class definition to add.
      * @param operations
      *            The SPI operation which use supports this
      *            {@code objectClassInfo}
@@ -202,7 +205,10 @@ public final class SchemaBuilder {
      * set of supported options for operation defined.
      *
      * @param operationOptionInfo
+     *            the operation option definition to add.
      * @param operations
+     *            the SPI operations that support this
+     *            {@code operationOptionInfo}.
      *
      * @throws IllegalStateException
      *             If already defined

@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2013 ConnId
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.common.l10n;
 
@@ -29,7 +30,7 @@ import java.util.Locale;
  * Thread local variable that impacts localization of all messages in the
  * connector framework. This is roughly equivalent to .Net's
  * Thread.CurrentCulture.
- * <p/>
+ * <p>
  * Note that this is an inheritable thread local so it is automatically
  * inherited from parent to child thread. Of course, if the child thread is part
  * of a thread pool, you will still need to manually propagate from parent to

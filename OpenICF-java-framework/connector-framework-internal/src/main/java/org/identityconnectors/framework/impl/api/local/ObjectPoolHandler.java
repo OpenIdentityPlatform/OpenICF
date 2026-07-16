@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2013 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.framework.impl.api.local;
@@ -31,7 +32,7 @@ public interface ObjectPoolHandler<T> {
     /**
      * Validates, copies and updates the original
      * {@code ObjectPoolConfiguration}.
-     * <p/>
+     * <p>
      * This class can validate and if necessary it changes the {@code original}
      * configuration.
      *
@@ -43,7 +44,7 @@ public interface ObjectPoolHandler<T> {
 
     /**
      * Makes a new instance of the pooled object.
-     * <p/>
+     * <p>
      * This method is called whenever a new instance is needed.
      *
      * @return new instance of T.
@@ -52,7 +53,7 @@ public interface ObjectPoolHandler<T> {
 
     /**
      * Tests the borrowed object.
-     * <p/>
+     * <p>
      * This method is invoked on head instances to make sure they can be
      * borrowed from the pool.
      *
@@ -63,7 +64,7 @@ public interface ObjectPoolHandler<T> {
 
     /**
      * Disposes the object.
-     * <p/>
+     * <p>
      * This method is invoked on every instance when it is being "dropped" from
      * the pool (whether due to the response from {@link #testObject(Object)},
      * or for reasons specific to the pool implementation.)
@@ -75,7 +76,7 @@ public interface ObjectPoolHandler<T> {
 
     /**
      * Releases any allocated resources.
-     * <p/>
+     * <p>
      * Existing active objects will remain alive and be allowed to shutdown
      * gracefully, but no more objects will be allocated.
      */

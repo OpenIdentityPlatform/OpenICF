@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2014 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -63,7 +64,11 @@ public class OperationalContext implements AbstractConfiguration.ConfigurationCh
      * to Connector.
      *
      * @param connectorInfo
+     *            metadata about the connector bundle and class for which this
+     *            context is being created
      * @param apiConfiguration
+     *            the API configuration, including the raw configuration
+     *            properties, from which the {@code Configuration} bean is built
      */
     public OperationalContext(final LocalConnectorInfoImpl connectorInfo,
             final APIConfigurationImpl apiConfiguration) {

@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.common;
 
@@ -52,7 +53,9 @@ public final class EqualsHashCodeBuilder {
      * testing.
      *
      * @param object
-     * @return
+     *            the field value to append; may be an array, in which case
+     *            each element is appended recursively.
+     * @return this builder, to allow chained calls to {@code append}.
      * @throws IllegalArgumentException
      *             if a collection is passed since collections do <b>not</b>
      *             support value based equality. Sets, Lists, and Maps will work

@@ -36,6 +36,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * -----------
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.databasetable.mapping;
 
@@ -68,10 +69,10 @@ public interface MappingStrategy {
 
     /**
      * Convert database type to connector supported set of attribute types
-     * @param stmt 
-     * @param idx 
-     * @param parm 
-     * @throws SQLException 
+     * @param stmt the prepared statement whose bind parameter is being set
+     * @param idx the 1-based index of the "?" marker to bind
+     * @param parm the parameter, carrying the value and its SQL type, to bind
+     * @throws SQLException if the parameter cannot be bound on the statement
      */
     public void setSQLParam(final PreparedStatement stmt, final int idx, SQLParam parm) throws SQLException;
     

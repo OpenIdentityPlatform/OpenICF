@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api;
 
@@ -55,6 +56,8 @@ public class DelegatingTimeoutProxy implements InvocationHandler {
      * @param target
      *            The object we are wrapping
      * @param timeoutMillis
+     *            The timeout, in milliseconds, after which the operation is
+     *            aborted; {@link APIOperation#NO_TIMEOUT} disables the timeout
      */
     public DelegatingTimeoutProxy(Object target, long timeoutMillis, int bufferSize) {
         this.target = target;

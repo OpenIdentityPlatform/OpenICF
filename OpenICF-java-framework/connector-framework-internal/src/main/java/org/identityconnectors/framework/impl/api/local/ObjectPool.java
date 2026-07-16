@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2015 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.framework.impl.api.local;
@@ -346,7 +347,7 @@ public class ObjectPool<T> {
 
     /**
      * Closes any idle objects in the pool.
-     * <p/>
+     * <p>
      * Existing active objects will remain alive and be allowed to shutdown
      * gracefully, but no more objects will be allocated.
      */

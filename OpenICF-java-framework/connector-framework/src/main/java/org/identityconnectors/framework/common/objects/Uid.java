@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2013 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.framework.common.objects;
@@ -36,7 +37,7 @@ import org.identityconnectors.framework.api.operations.UpdateApiOp;
  * A single-valued attribute that represents the <i>unique identifier</i> of an
  * object within the name-space of the target resource. If possible, this unique
  * identifier also should be immutable.
- * <p/>
+ * <p>
  * When an application creates an object on a target resource, the
  * {@link CreateApiOp#create create} operation returns as its result the
  * <code>Uid</code> of the created object. An application also can use the
@@ -46,7 +47,7 @@ import org.identityconnectors.framework.api.operations.UpdateApiOp;
  * {@link GetApiOp#getObject get}, {@link DeleteApiOp#delete delete} or
  * {@link UpdateApiOp#update update} that object. See the documentation for
  * {@link Name} for comparison.
- * <p/>
+ * <p>
  * Ideally, the value of <code>Uid</code> would be a <i>Globally Unique
  * IDentifier (GUID)</i>. However, not every target resource provides a globally
  * unique and immutable identifier for each of its objects. For some connector
@@ -58,12 +59,12 @@ import org.identityconnectors.framework.api.operations.UpdateApiOp;
  * the <code>Uid</code> of an object. The fact that changing an object might
  * change its <code>Uid</code> is the reason that {@link UpdateApiOp#update
  * update} returns <code>Uid</code>.
- * <p/>
+ * <p>
  * {@link Uid} by definition must be a single-valued attribute. Its value must
  * always convert to a string, regardless of the underlying type of the native
  * identifier on the target. The string value of any native id must be
  * canonical.
- * <p/>
+ * <p>
  * Uid is never allowed to appear in the {@link Schema}, nor may Uid appear in
  * the attribute set of a {@link CreateApiOp#create create} operation. This is
  * because Uid is not a true attribute of an object, but rather a reference to
@@ -112,7 +113,7 @@ public final class Uid extends Attribute {
 
     /**
      * Return the string representation of the revision value of the
-     * <p/>
+     * <p>
      * The revision number specifies a given version ot the
      * {@link ConnectorObject object} identified by the
      * {@link org.identityconnectors.framework.common.objects.Uid#getUidValue()}

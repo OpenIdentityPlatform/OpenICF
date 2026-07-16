@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.common.objects;
 
@@ -48,7 +49,7 @@ public enum SyncDeltaType {
 
     /**
      * The change represents a CREATE in the resource.
-     * <p/>
+     * <p>
      * Experimental type to support better event mechanism where it's possible.
      *
      * @see #CREATE_OR_UPDATE
@@ -58,7 +59,7 @@ public enum SyncDeltaType {
 
     /**
      * The change represents a UPDATE in the resource.
-     * <p/>
+     * <p>
      * Experimental type to support better event mechanism where it's possible.
      *
      * @see #CREATE_OR_UPDATE

@@ -19,6 +19,8 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.contract.data;
 
@@ -39,13 +41,16 @@ public interface DataProvider {
     /**
      * Gets data value by the specified parameters
      *
-     * @param dataTypeName
-     * @param name
-     * @param componentName
-     * @param sequenceNumber
+     * @param dataTypeName the Java type that the returned value should be converted to
+     * @param name the name of the data item to look up
+     * @param componentName the name of the test component (object class, test suite, ...)
+     *            the data belongs to
+     * @param sequenceNumber the iteration index to use when several values are defined
+     *            for the same name (e.g. i0, i1, i2, ...)
      * @param isMultivalue switch between single and multivalue query
-     * @return
+     * @return the data value matching the given parameters, converted to {@code dataTypeName}
      * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
+     *             if no data value matching the given parameters could be found
      */
     public Object get(Class<?> dataTypeName, String name,
             String componentName, int sequenceNumber, boolean isMultivalue);
@@ -53,11 +58,13 @@ public interface DataProvider {
     /**
      * Gets data value by the specified parameters
      *
-     * @param dataTypeName
-     * @param name
-     * @param componentName
-     * @return
+     * @param dataTypeName the Java type that the returned value should be converted to
+     * @param name the name of the data item to look up
+     * @param componentName the name of the test component (object class, test suite, ...)
+     *            the data belongs to
+     * @return the data value matching the given parameters, converted to {@code dataTypeName}
      * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
+     *             if no data value matching the given parameters could be found
      */
     public Object get(Class<?> dataTypeName, String name,
             String componentName);
@@ -65,11 +72,14 @@ public interface DataProvider {
     /**
      * Gets data value by the specified parameters
      *
-     * @param name
-     * @param componentName
-     * @param sequenceNumber
-     * @return
+     * @param name the name of the data item to look up
+     * @param componentName the name of the test component (object class, test suite, ...)
+     *            the data belongs to
+     * @param sequenceNumber the iteration index to use when several values are defined
+     *            for the same name (e.g. i0, i1, i2, ...)
+     * @return the {@code String} value matching the given parameters
      * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
+     *             if no data value matching the given parameters could be found
      */
     public String getString(String name,
             String componentName, int sequenceNumber);
@@ -77,38 +87,47 @@ public interface DataProvider {
     /**
      * Gets data value by the specified parameters
      *
-     * @param name
-     * @param componentName
-     * @return
+     * @param name the name of the data item to look up
+     * @param componentName the name of the test component (object class, test suite, ...)
+     *            the data belongs to
+     * @return the {@code String} value matching the given parameters
      * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
+     *             if no data value matching the given parameters could be found
      */
     public String getString(String name,
             String componentName);
 
     /**
      * Gets data value by the specified parameters
-     * @param propName
+     * @param propName the name of the connector configuration property to look up,
+     *            relative to the {@code connector} property prefix
      *
-     * @return
+     * @return the value configured for the given connector attribute
      * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
+     *             if no value is configured for the given attribute name
      */
     public Object getConnectorAttribute(String propName);
 
     /**
      * Gets test suite attribute
-     * @param propName
+     * @param propName the name of the test suite property to look up, relative to the
+     *            {@code testsuite} property prefix
      *
-     * @return
+     * @return the value configured for the given test suite attribute
      * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
+     *             if no value is configured for the given attribute name
      */
     public Object getTestSuiteAttribute(String propName);
 
     /**
      * Gets test suite attribute
-     * @param propName
+     * @param propName the name of the test suite property to look up, relative to
+     *            {@code testsuite.testName}
+     * @param testName the name of the test whose attributes are queried
      *
-     * @return
+     * @return the value configured for the given test suite attribute
      * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
+     *             if no value is configured for the given attribute name
      */
     public Object getTestSuiteAttribute(String propName,
             String testName);
@@ -125,7 +144,7 @@ public interface DataProvider {
      * for example i1.testProperty
      *
      * @param name the suffix
-     * @param sequenceNumber
+     * @param sequenceNumber the iteration index prepended to {@code name} (e.g. 1 for i1.testProperty)
      * @return the property value
      */
     public Object get(String name, int sequenceNumber);
@@ -167,7 +186,11 @@ public interface DataProvider {
 
     /* ***************** ADDITIONAL PROPERTY UTILS ************** */
     /**
-     * adds to 'cfg' the complete map defined by property 'propertyName'
+     * adds to 'cfg' the complete map defined by property 'propertyName'. For every entry
+     * of the submap, the setter method whose name derives from the entry's key is looked
+     * up on {@code cfg} and invoked reflectively with the entry's value; if the setter
+     * cannot be found, is not accessible, or throws while being invoked, the failure is
+     * wrapped and re-thrown as an unchecked exception.
      *
      * @param propertyName
      *            the name of property which represents the submap that will be
@@ -184,7 +207,7 @@ public interface DataProvider {
      *     // attempt to create the database in the directory..
      *     config = new ConnectorConfiguration();
      *
-     *     // LOAD THE submap in 'configuration' <strong>prefix</prefix> to 'config' object.
+     *     // LOAD THE submap in 'configuration' <strong>prefix</strong> to 'config' object.
      *     dataProvider.loadConfiguration(DEFAULT_CONFIGURATINON, config);
      * //////// The groovy configuration
      *
@@ -195,10 +218,8 @@ public interface DataProvider {
      *       init.port="boo"
      *     }
      * </pre>
-     * @throws NoSuchMethodException the Setter method for the property in the configuration does not exist
-     * @throws IllegalAccessException
-     * @throws InvocationTargetException
-     * @throws SecurityException
+     * @throws SecurityException if reflective access to the configuration's setter
+     *             method is denied
      */
     public void loadConfiguration(final String propertyName, Configuration cfg);
 

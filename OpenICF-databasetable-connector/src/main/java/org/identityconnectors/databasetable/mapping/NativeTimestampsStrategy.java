@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.databasetable.mapping;
 
@@ -42,7 +43,9 @@ public class NativeTimestampsStrategy implements MappingStrategy {
     
     /**
      * Final sql mapping
-     * @param delegate
+     * @param delegate the next strategy in the chain used for any SQL type
+     *            other than {@link Types#TIMESTAMP}, which this strategy
+     *            handles by reading the native {@code java.sql.Timestamp}
      */
     public NativeTimestampsStrategy(MappingStrategy delegate) {
         Assertions.nullCheck(delegate, "MappingStrategy delegate");

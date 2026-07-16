@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api;
 
@@ -69,6 +70,8 @@ public class MethodTimeoutProxy implements InvocationHandler {
      * @param target
      *            The object we are wrapping
      * @param timeoutMillis
+     *            the number of milliseconds to wait for the invoked method to
+     *            complete before throwing an {@link OperationTimeoutException}
      */
     public MethodTimeoutProxy(Object target, long timeoutMillis) {
         this.target = target;

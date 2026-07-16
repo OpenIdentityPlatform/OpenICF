@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 /**
@@ -48,5 +49,7 @@
  * but exposes more options.   For instance there are two update operations.
  * {@link org.identityconnectors.framework.spi.operations.UpdateOp} is simpler to implement than
  * {@link org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp}.
+ * </li>
+ * </ul>
  */
 package org.identityconnectors.framework.spi;

@@ -22,6 +22,7 @@
  *
  * Portions Copyrighted 2012 ForgeRock AS
  *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.contract.test;
 
@@ -211,7 +212,7 @@ public class UpdateApiOpTests extends ObjectClassRunner {
      * 2) Set all attributes' values to null
      *    If you want to skip some attributes from being set to null list them in Update.updateToNullValue.skippedAttributes property
      *    in groovy.config
-     * 3) Try to update the object with property's value = null -> IF no exception, property has been removed or set to null
+     * 3) Try to update the object with property's value = null -&gt; IF no exception, property has been removed or set to null
      * 4) Check if the property has been really removed or set to null
      * 5) TODO something went wrong because the value has not been set to null value or removed. The value of nulled property pesisted.
      *

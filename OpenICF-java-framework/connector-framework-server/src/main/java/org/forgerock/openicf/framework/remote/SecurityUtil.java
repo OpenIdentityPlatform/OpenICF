@@ -12,6 +12,7 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2015-2016 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.remote;
@@ -137,7 +138,9 @@ public class SecurityUtil {
      *
      * @param username     user name (aka "identity")
      * @param password     password
-     * @param verification
+     * @param verification the verifier and salt pair previously produced by
+     *                     {@link #generateVerifier}, against which the
+     *                     supplied username and password are checked
      * @param random       the source of randomness for this generator
      * @param params       group parameters (prime, generator)
      * @return true if client and server secret is equals
@@ -169,7 +172,7 @@ public class SecurityUtil {
 
     /**
      * Load a class with a given name.
-     * <p/>
+     * <p>
      * It will try to load the class in the following order:
      * <ul>
      * <li>From Thread.currentThread().getContextClassLoader()

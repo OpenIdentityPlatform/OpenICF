@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.common.event;
@@ -82,6 +83,7 @@ public class ConnectorEvent extends EventObject {
      * Copy Constructor.
      *
      * @param source
+     *            the event to copy the topic, source and properties from.
      */
     public ConnectorEvent(ConnectorEvent source) {
         super(source.getSource());

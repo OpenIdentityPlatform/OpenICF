@@ -19,6 +19,8 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.contract.data;
 
@@ -57,13 +59,15 @@ import org.testng.Assert;
  * Default implementation of {@link DataProvider}. It uses ConfigSlurper from
  * Groovy to parse the property file.
  * The groovy files are read as classpath resources using following paths :
-     * <ul>
-     *  <li><code>loader.getResource(prefix + "/config/config.groovy")</code></li>
-     *  <li><code>loader.getResource(prefix + "/config/" + cfg + "/config.groovy") </code> optionally where cfg is passed configuration</li>
-     *  <li> <code> loader.getResource(prefix + "/config-private/config.groovy") </<code> </li>
-     *  <li> <code >loader.getResource(prefix + "/config-private/" + cfg + "/config.groovy") </code> optionally where cfg is passed configuration</li>
-     * </ul>
-   where prefix is FQN of your connector set as "connectorName" system property.
+ * </p>
+ * <ul>
+ *  <li><code>loader.getResource(prefix + "/config/config.groovy")</code></li>
+ *  <li><code>loader.getResource(prefix + "/config/" + cfg + "/config.groovy")</code> optionally where cfg is passed configuration</li>
+ *  <li><code>loader.getResource(prefix + "/config-private/config.groovy")</code></li>
+ *  <li><code>loader.getResource(prefix + "/config-private/" + cfg + "/config.groovy")</code> optionally where cfg is passed configuration</li>
+ * </ul>
+ * <p>
+ * where prefix is FQN of your connector set as "connectorName" system property.
  * Note: If two property files contain the same property name, the value from
  * the latter file the list <b>overrides</b> the others. I.e. the last file
  * from the list has the greatest chance to propagate its values to the final
@@ -101,11 +105,13 @@ import org.testng.Assert;
  * <p>
  * <strong>default values</strong> -- these values reside in file bootstrap.groovy.
  * When the property foo.bar.boo is queried the following queries are executed:
+ * </p>
  * <pre>
  * 1) foo.bar.boo
  * 2) bar.boo
  * 3) boo
  * </pre>
+ * <p>
  * In case none of these queries succeed, the default value is used based on the type of the query.
  * </p>
  * <p>
@@ -779,8 +785,9 @@ public class GroovyDataProvider implements DataProvider {
     }
 
     /**
-     * @param propertySetName
-     * @return The set <CODE>Set<Attribute></CODE> of attributes
+     * @param propertySetName the property that marks the submap to be converted, e.g.
+     *            {@code account.create}
+     * @return the {@code Set<Attribute>} built from the entries of the given property submap
      */
     public Set<Attribute> getAttributeSet(final String propertySetName) {
         Map<String, Object> propMap = getPropertyMap(propertySetName);
@@ -803,12 +810,17 @@ public class GroovyDataProvider implements DataProvider {
     }
 
     /**
-     * @param configName
-     * @throws NoSuchFieldException
-     * @throws IllegalAccessException
-     * @throws InvocationTargetException
-     * @throws NoSuchMethodException
-     * @throws SecurityException
+     * Populates {@code cfg} with the values of the property submap identified by
+     * {@code configName}, setting each entry on {@code cfg} via its corresponding
+     * JavaBean setter reflectively. Any failure to find, access, or invoke a setter
+     * (e.g. a {@code NoSuchFieldException}, {@code IllegalAccessException},
+     * {@code InvocationTargetException} or {@code NoSuchMethodException}) is wrapped
+     * and re-thrown as an unchecked exception.
+     *
+     * @param configName the name of the property that represents the submap that
+     *            will be converted to configuration
+     * @throws SecurityException if reflective access to the configuration's setter
+     *             method is denied
      */
     public void loadConfiguration(final String configName, Configuration cfg) {
         Map<String, ? extends Object> propMap = getPropertyMap(configName);

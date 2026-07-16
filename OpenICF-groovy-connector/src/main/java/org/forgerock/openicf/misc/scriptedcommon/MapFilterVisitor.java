@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.misc.scriptedcommon;
@@ -50,7 +52,7 @@ import org.identityconnectors.framework.common.objects.filter.StartsWithFilter;
  * {@link org.identityconnectors.framework.common.objects.filter.Filter} to
  * {@link Map}.
  *
- * @author Gael Allioux <gael.allioux@forgerock.com>
+ * @author Gael Allioux &lt;gael.allioux@forgerock.com&gt;
  */
 public class MapFilterVisitor implements FilterVisitor<Map<String, Object>, Void> {
 

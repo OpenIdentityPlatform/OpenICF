@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.framework.api.operations;
@@ -41,10 +42,12 @@ public interface SyncEventSubscriptionApiOp extends APIOperation {
      * Create a subscription to a given sync topic.
      * 
      * @param objectClass
+     *            the type of object for which to receive sync notifications.
      * @param handler
      *            the Observer that will handle emissions and notifications from
      *            the Observable
      * @param operationOptions
+     *            additional options that impact the way this operation is run.
      * @return a {@link Subscription} reference with which the {@link Observer}
      *         can stop receiving items before the Observable has completed
      * @throws java.lang.RuntimeException

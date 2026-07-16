@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2013 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.framework.server;
@@ -355,7 +356,7 @@ public abstract class ConnectorServer {
 
     /**
      * Gets the time when the servers was started last time.
-     * <p/>
+     * <p>
      * {@code System.currentTimeMillis()}
      *
      * @return last start dateTime in milliseconds

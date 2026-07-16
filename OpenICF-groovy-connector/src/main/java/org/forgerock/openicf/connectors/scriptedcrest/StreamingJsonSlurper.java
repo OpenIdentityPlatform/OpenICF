@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.forgerock.openicf.connectors.scriptedcrest;
 
@@ -36,17 +38,18 @@ import static groovy.json.JsonTokenType.*;
 
 /**
  * JSON slurper which parses text or reader content into a data structure of lists and maps.
- * <p/>
- * Example usage: <code><pre>
+ * <p>
+ * Example usage:
+ * <pre>
  * def slurper = new JsonSlurper()
  * def result = slurper.parseText('{"person":{"name":"Guillaume","age":33,"pets":["dog","cat"]}}')
- * <p/>
+ *
  * assert result.person.name == "Guillaume"
  * assert result.person.age == 33
  * assert result.person.pets.size() == 2
  * assert result.person.pets[0] == "dog"
  * assert result.person.pets[1] == "cat"
- * </pre></code>
+ * </pre>
  *
  * @author Guillaume Laforge
  * @since 1.8.0

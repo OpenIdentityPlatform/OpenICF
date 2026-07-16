@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.common.rpc;
@@ -43,7 +45,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * "fails over" to the next operational {@link RequestDistributor} in the list.
  * If none of the {@link RequestDistributor} are operational then a {@code null}
  * is returned to the client.
- * <p>
  *
  * @see FailoverLoadBalancingAlgorithm
  */

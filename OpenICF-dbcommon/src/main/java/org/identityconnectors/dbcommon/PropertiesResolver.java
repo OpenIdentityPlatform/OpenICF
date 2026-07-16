@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.dbcommon;
 
@@ -28,13 +29,13 @@ import java.util.Properties;
 import java.util.Set;
 
 /**
- * Resolver of properties in UNIX/ant style. <br/>
- * Example of usage : <br/>
+ * Resolver of properties in UNIX/ant style. <br>
+ * Example of usage : <br>
  * <code>
- *  Properties p = new Properties();<br/>
- *  p.setProperty("p1","value1"); <br/>
- *  p.setProperty("p2","Value of p1 is ${p1}"); <br/>
- *  p = PropertiesResolver.resolveProperties(p);<br/>
+ *  Properties p = new Properties();<br>
+ *  p.setProperty("p1","value1"); <br>
+ *  p.setProperty("p2","Value of p1 is ${p1}"); <br>
+ *  p = PropertiesResolver.resolveProperties(p);<br>
  * </code>
  *
  * It is shield against recursion.
@@ -69,6 +70,8 @@ public final class PropertiesResolver {
      * Resolve properties containing already known values.
      *
      * @param properties
+     *            the properties to resolve; each value may reference other
+     *            entries in this same set using ${propertyName} placeholders
      * @return resolved properties
      */
     public static Properties resolveProperties(Properties properties) {

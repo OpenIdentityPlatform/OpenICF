@@ -12,6 +12,7 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2016 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.forgerock.openicf.connectors.kerberos;
 
@@ -24,9 +25,10 @@ import org.identityconnectors.framework.spi.ConnectorClass;
 
 /**
  * Main implementation of the ScriptedKerberosConnector Connector.
+ * <p>
+ * Kerberos connector used to connect to kerberos systems via ssh.
  *
  * @author ForgeRock
- * @description Kerberos connector used to connect to kerberos systems via ssh
  * @version 1.0
  */
 @ConnectorClass(displayNameKey = "kerberos.connector.display",

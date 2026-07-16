@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.api;
 
@@ -96,7 +97,7 @@ public abstract class ConnectorInfoManagerFactory {
      * NOTICE: This method is an early specification of the Events API for
      * 1.2.x.x version. Use carefully, this package may change before the final
      * 1.2.0.0 release.
-     * <p/>
+     * <p>
      * As now the {@code ConnectorInfoManager} MUST implement the
      * {@link Runnable} to connect to the remote connector server. <b>NOTE:</b>
      * The results from this call are automatically cached and keyed by the

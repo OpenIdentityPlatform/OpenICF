@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.async;
@@ -31,7 +32,9 @@ import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.Uid;
 
 /**
- * {@inheritDoc}
+ * Asynchronous variant of {@link ResolveUsernameApiOp}, exposing the
+ * username resolution operation as a {@link Promise} instead of a blocking
+ * call.
  *
  * @since 1.5
  */

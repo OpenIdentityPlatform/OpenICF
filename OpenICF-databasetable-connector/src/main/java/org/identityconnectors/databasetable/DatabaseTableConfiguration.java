@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2013 Radovan Semancik, Evolveum
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.databasetable;
 
@@ -69,7 +70,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
 
     /**
      * NameQuote Setter
-     * @param value
+     * @param value the quoting style to use for column names in SQL statements
+     * (for example NONE, SINGLE, DOUBLE, BRACKETS or BACKSLASH)
      */
     public void setQuoting(String value) {
         this.quoting = value;
@@ -94,7 +96,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
 
     /**
      * NameQuote Setter
-     * @param value
+     * @param value the host name or IP address of the database server
      */
     public void setHost(String value) {
         this.host = value;
@@ -120,7 +122,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
 
     /**
      * NameQuote Setter
-     * @param value
+     * @param value the port number on which the database server is listening
      */
     public void setPort(String value) {
         this.port = value;
@@ -144,7 +146,9 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     }
 
     /**
-     * @param value
+     * @param value the user name used to log in to the database; this user
+     * must have rights to insert, update and delete rows in the configured
+     * identity holder table
      */
     public void setUser(String value) {
         this.user = value;
@@ -168,7 +172,9 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     }
 
     /**
-     * @param value
+     * @param value the password used to log in to the database; this user
+     * must have rights to insert, update and delete rows in the configured
+     * identity holder table
      */
     public void setPassword(GuardedString value) {
         this.password = value;
@@ -191,7 +197,7 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     }
     
     /**
-     * @param value
+     * @param value the name of the database to connect to
      */
     public void setDatabase(String value) {
         this.database = value;
@@ -269,8 +275,9 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
 
     /**
      * Password Column setter
-     * 
-     * @param value
+     *
+     * @param value the name of the password column, or an empty string if
+     * the password attribute is not supported by the schema
      */
     public void setPasswordColumn(String value) {
         this.passwordColumn = value;
@@ -293,7 +300,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     }
 
     /**
-     * @param value
+     * @param value the fully qualified class name of the JDBC driver to be
+     * located on the class path
      */
     public void setJdbcDriver(String value) {
         this.jdbcDriver = value;
@@ -317,7 +325,9 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     }    
    
     /**
-     * @param value
+     * @param value the JDBC URL template, containing the %h (host), %p
+     * (port) and %d (database) placeholders, used to build the database
+     * connection URL
      */
     public void setJdbcUrlTemplate(String value) {
         this.jdbcUrlTemplate = value;
@@ -446,7 +456,9 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
 
     /**
      * Connection validation query setter
-     * @param value
+     * @param value the SQL query used to validate that a pooled connection
+     * is still usable, or an empty string to rely on the default
+     * auto-commit true/false command instead
      */
     public void setValidConnectionQuery(String value) {
         this.validConnectionQuery = value;
@@ -471,7 +483,9 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     }
 
     /**
-     * @param value
+     * @param value the name of the change log column used to detect
+     * changed rows for the sync operation, or an empty string to leave
+     * the sync operation unsupported
      */
     public void setChangeLogColumn(String value) {
         this.changeLogColumn = value;
@@ -498,7 +512,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     }
 
     /**
-     * @param value
+     * @param value the JNDI name of the datasource used to connect to the
+     * database
      */
     public void setDatasource(String value) {
         this.datasource = value;
@@ -522,7 +537,8 @@ public class DatabaseTableConfiguration extends AbstractConfiguration {
     }
 
     /**
-     * @param value
+     * @param value the JNDI environment properties, each in "name=value"
+     * form, used to look up the datasource
      */
     public void setJndiProperties(String[] value) {
         this.jndiProperties = value;

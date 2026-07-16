@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.databasetable.mapping;
 
@@ -45,7 +46,8 @@ public class StringStrategy implements MappingStrategy {
     /**
      * The SQL get/set strategy class implementation write as a string all types mapped as a String.
      * Final sql mapping
-     * @param delegate
+     * @param delegate the next strategy in the chain used whenever the
+     *            column's attribute type is not a String
      */
     public StringStrategy(MappingStrategy delegate) {
         Assertions.nullCheck(delegate, "MappingStrategy delegate");

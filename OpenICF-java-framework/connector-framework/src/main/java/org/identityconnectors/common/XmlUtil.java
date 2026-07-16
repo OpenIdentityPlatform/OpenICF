@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.common;
 
@@ -93,7 +94,7 @@ public final class XmlUtil {
 
     /**
      * Return the value of an attribute on an element.
-     * <p/>
+     * <p>
      * The DOM getAttribute method returns an empty string if the attribute
      * doesn't exist. Here, we detect this and return null.
      */
@@ -173,7 +174,7 @@ public final class XmlUtil {
      * Locate the first text node at any level below the given node. If the
      * ignoreEmpty flag is true, we will ignore text nodes that contain only
      * whitespace characteres.
-     * <p/>
+     * <p>
      * Note that if you're trying to extract element content, you probably don't
      * want this since parser's can break up pcdata into multiple adjacent text
      * nodes. See getContent() for a more useful method.
@@ -213,16 +214,16 @@ public final class XmlUtil {
 
     /**
      * Return the content of the given element.
-     * <p/>
+     * <p>
      * We will descend to an arbitrary depth looking for the first text node.
-     * <p/>
+     * <p>
      * Note that the parser may break what was originally a single string of
      * pcdata into multiple adjacent text nodes. Xerces appears to do this when
      * it encounters a '$' in the text, not sure if there is specified behavior,
      * or if its parser specific.
-     * <p/>
+     * <p>
      * Here, we will congeal adjacent text nodes.
-     * <p/>
+     * <p>
      * We will NOT ignore text nodes that have only whitespace.
      */
     public static String getContent(Element e) {

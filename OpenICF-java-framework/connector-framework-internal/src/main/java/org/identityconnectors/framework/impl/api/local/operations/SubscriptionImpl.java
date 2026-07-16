@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.framework.impl.api.local.operations;
@@ -253,8 +254,13 @@ public class SubscriptionImpl extends ConnectorAPIOperationRunner {
          * Creates the API operation so it can called multiple times.
          *
          * @param context
+         *            the operational context providing access to the connector
+         *            configuration and info
          * @param connector
+         *            the connector instance on which the operation is executed
          * @param referenceCounter
+         *            tracks the number of in-flight subscriptions so the
+         *            connector is not disposed while a subscription is active
          */
         public ConnectorEventSubscriptionApiOpImp(ConnectorOperationalContext context,
                 Connector connector, ReferenceCounter referenceCounter) {
@@ -269,8 +275,13 @@ public class SubscriptionImpl extends ConnectorAPIOperationRunner {
          * Creates the API operation so it can called multiple times.
          *
          * @param context
+         *            the operational context providing access to the connector
+         *            configuration and info
          * @param connector
+         *            the connector instance on which the operation is executed
          * @param referenceCounter
+         *            tracks the number of in-flight subscriptions so the
+         *            connector is not disposed while a subscription is active
          */
         public SyncEventSubscriptionApiOpImpl(ConnectorOperationalContext context,
                 Connector connector, ReferenceCounter referenceCounter) {
@@ -284,8 +295,13 @@ public class SubscriptionImpl extends ConnectorAPIOperationRunner {
          * Creates the API operation so it can called multiple times.
          *
          * @param context
+         *            the operational context providing access to the connector
+         *            configuration and info
          * @param connector
+         *            the connector instance on which the operation is executed
          * @param referenceCounter
+         *            tracks the number of in-flight subscriptions so the
+         *            connector is not disposed while a subscription is active
          */
         public BatchApiOpImpl(ConnectorOperationalContext context,
                                               Connector connector, ReferenceCounter referenceCounter) {

@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.spi.operations;
 
@@ -55,7 +56,6 @@ public interface UpdateAttributeValuesOp extends UpdateOp {
      * the values for an attribute may contain duplicates. Therefore, in general
      * simply <em>append</em> the provided values to the current value for each
      * attribute.
-     * <p>
      *
      * @param objclass
      *            the type of object to modify. Will never be null.

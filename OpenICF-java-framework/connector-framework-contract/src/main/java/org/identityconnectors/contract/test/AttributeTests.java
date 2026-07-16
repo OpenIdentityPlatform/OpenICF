@@ -22,6 +22,7 @@
  *
  * Portions Copyrighted 2012 ForgeRock AS
  *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.contract.test;
 
@@ -69,8 +70,7 @@ import org.testng.log4testng.Logger;
  * <ul>
  * <li>non-readable attributes are not returnedByDefault</li>
  * <li>attributes which are not returnedByDefault really are not returned
- * unless</li>
- * specified in attrsToGet </li>
+ * unless specified in attrsToGet</li>
  * <li>update of non-updateable attribute will fail</li>
  * <li>required attributes must be creatable</li>
  * </ul>

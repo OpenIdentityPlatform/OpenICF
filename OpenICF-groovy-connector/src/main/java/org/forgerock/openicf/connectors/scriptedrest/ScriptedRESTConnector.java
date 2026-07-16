@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.forgerock.openicf.connectors.scriptedrest;
 
@@ -40,7 +42,7 @@ import groovy.lang.Binding;
 /**
  * Main implementation of the ScriptedREST Connector.
  *
- * @author Gael Allioux <gael.allioux@forgerock.com>
+ * @author Gael Allioux &lt;gael.allioux@forgerock.com&gt;
  */
 @ConnectorClass(displayNameKey = "groovy.rest.connector.display",
         configurationClass = ScriptedRESTConfiguration.class, messageCatalogPaths = {
