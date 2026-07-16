@@ -21,6 +21,8 @@
  with the fields enclosed by brackets [] replaced by
  your own identifying information:
  "Portions Copyrighted [year] [name of copyright owner]"
+
+ Portions Copyrighted 2026 3A Systems, LLC
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -75,10 +77,30 @@
             <artifactId>connector-framework-contract</artifactId>
             <scope>test</scope>
         </dependency>
+        <!--
+          Derby is used only as an embedded test database (test scope).
+          10.15.2.0 is the newest release that still supports Java 9+ (i.e. Java 11),
+          which is the minimum of the CI build matrix; 10.16 requires Java 17 and
+          10.17 requires Java 21. Since 10.15 the jars were split into JPMS modules,
+          so org.apache.derby.jdbc.EmbeddedDriver now lives in derbytools and the
+          shared classes in derbyshared - both are required on the test classpath.
+        -->
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>
-            <version>10.14.2.0</version>
+            <version>10.15.2.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derbytools</artifactId>
+            <version>10.15.2.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derbyshared</artifactId>
+            <version>10.15.2.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
