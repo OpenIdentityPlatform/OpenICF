@@ -42,6 +42,7 @@
         <maven.compiler.source>11</maven.compiler.source>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.surefire.options />
+        <doclint>all,-missing</doclint>
    	</properties>
     <licenses>
         <license>
@@ -300,6 +301,11 @@
                     <artifactId>maven-assembly-plugin</artifactId>
                     <version>3.7.1</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>3.12.0</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -331,7 +337,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.11.2</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
@@ -341,7 +346,8 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <doclint>none</doclint>
+                    <doclint>${doclint}</doclint>
+                    <failOnWarnings>true</failOnWarnings>
                     <encoding>UTF-8</encoding>
                     <additionalOptions>
                         <additionalOption>--add-exports java.naming/com.sun.jndi.ldap=ALL-UNNAMED</additionalOption>

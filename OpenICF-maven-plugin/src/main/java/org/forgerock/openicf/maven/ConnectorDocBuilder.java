@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.maven;
@@ -142,8 +143,10 @@ public class ConnectorDocBuilder {
     /**
      * Execute the generation of the report.
      *
-     * @throws org.apache.maven.reporting.MavenReportException
-     *             if any
+     * @throws MojoExecutionException
+     *             if the connector document cannot be generated, for example
+     *             when the Velocity template used to render the report cannot
+     *             be located or fails to merge with the connector context
      */
     protected void executeReport() throws MojoExecutionException {
         List<ConnectorInfo> infoList = null;

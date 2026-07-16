@@ -12,6 +12,7 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2016 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 
@@ -76,7 +77,7 @@ public class SSHConnector extends ScriptedConnectorBase<SSHConfiguration> implem
     /**
      * Disposes of {@link SSHConnector}'s resources.
      * <p>
-     * {@see org.identityconnectors.framework.spi.Connector#dispose()}
+     * See {@link org.identityconnectors.framework.spi.Connector#dispose()}.
      */
     @Override
     public void dispose() {

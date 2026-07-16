@@ -21,6 +21,7 @@
  * ====================
  * Portions Copyrighted 2013 Radovan Semancik, Evolveum
  * Portions Copyrighted 2015 ForgeRock AS
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.databasetable;
 
@@ -117,8 +118,7 @@ import org.identityconnectors.framework.spi.operations.UpdateOp;
  * This connector assumes that all account data is stored in a single database
  * table. The delete action is implemented to simply remove the row from the
  * table.
- * <p>
- * 
+ *
  * @author Will Droste
  * @author Keith Yarbrough
  * @version $Revision $
@@ -945,8 +945,9 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
 
     /**
      * Convert the attribute name to resource specific columnName
-     * 
-     * @param attributeName
+     *
+     * @param attributeName the connector attribute name (for example
+     *            {@code Name} or {@code Password}) to translate
      * @return the Column Name value
      */
     public String getColumnName(String attributeName) {

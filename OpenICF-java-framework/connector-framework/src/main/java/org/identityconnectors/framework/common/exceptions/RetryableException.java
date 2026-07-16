@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.framework.common.exceptions;
@@ -30,8 +31,6 @@ import org.identityconnectors.framework.common.objects.Uid;
 /**
  * RetryableException indicates that a failure may be temporary, and that
  * retrying the same request may be able to succeed in the future.
- * <p/>
- *
  *
  * @author Laszlo Hordos
  * @since 1.4
@@ -42,14 +41,14 @@ public class RetryableException extends ConnectorException {
 
     /**
      * Constructs a new RetryableException exception with the specified cause
-     * and a detail message of <tt>(cause==null ? null : cause.toString())</tt>
-     * (which typically contains the class and detail message of <tt>cause</tt>
-     * ). This constructor is useful for InvalidAccountException exceptions that
-     * are little more than wrappers for other throwables.
+     * and a detail message of <code>(cause==null ? null : cause.toString())</code>
+     * (which typically contains the class and detail message of
+     * <code>cause</code>). This constructor is useful for InvalidAccountException
+     * exceptions that are little more than wrappers for other throwables.
      *
      * @param cause
      *            the cause (which is saved for later retrieval by the
-     *            {@link #getCause()} method). (A <tt>null</tt> value is
+     *            {@link #getCause()} method). (A <code>null</code> value is
      *            permitted, and indicates that the cause is nonexistent or
      *            unknown.)
      */
@@ -70,7 +69,7 @@ public class RetryableException extends ConnectorException {
      *            {@link #getMessage()} method).
      * @param cause
      *            the cause (which is saved for later retrieval by the
-     *            {@link #getCause()} method). (A <tt>null</tt> value is
+     *            {@link #getCause()} method). (A <code>null</code> value is
      *            permitted, and indicates that the cause is nonexistent or
      *            unknown.)
      */
@@ -115,7 +114,7 @@ public class RetryableException extends ConnectorException {
      * was created with <code>Uid</code> and Application should call the
      * {@link org.identityconnectors.framework.spi.operations.UpdateOp#update(org.identityconnectors.framework.common.objects.ObjectClass, org.identityconnectors.framework.common.objects.Uid, java.util.Set, org.identityconnectors.framework.common.objects.OperationOptions)}
      * method now.
-     * <p/>
+     * <p>
      * Use this only if the created object can not be deleted. The best-practice
      * should always be the Connector implementation reverts the changes if the
      * operation failed.

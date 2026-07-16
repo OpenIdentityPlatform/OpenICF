@@ -1,3 +1,6 @@
+/*
+ * Portions Copyrighted 2026 3A Systems, LLC
+ */
 package org.identityconnectors.dbcommon;
 
 import org.identityconnectors.framework.common.objects.ConnectorMessages;
@@ -19,6 +22,8 @@ public class LocalizedAssert {
      * Creates asserts with messages.
      *
      * @param cm
+     *            the connector messages used to look up and format the
+     *            localized assertion failure messages
      * @throws IllegalArgumentException
      *             if cm param is null
      */
@@ -34,6 +39,8 @@ public class LocalizedAssert {
      * names
      *
      * @param cm
+     *            the connector messages used to look up and format the
+     *            localized assertion failure messages
      * @param localizeArguments
      *            the arg
      * @throws IllegalArgumentException
@@ -61,8 +68,12 @@ public class LocalizedAssert {
      * If argument is null, throws localized IllegalArgumentException
      *
      * @param <T>
+     *            the type of the value being checked
      * @param o
+     *            the value to check for null
      * @param argument
+     *            the name of the argument being validated, used to build the
+     *            localized error message
      * @return o param
      */
     public <T> T assertNotNull(T o, String argument) {
@@ -78,8 +89,12 @@ public class LocalizedAssert {
      * If argument is not null, throws localized IllegalArgumentException
      *
      * @param <T>
+     *            the type of the value being checked
      * @param o
+     *            the value to check for null
      * @param argument
+     *            the name of the argument being validated, used to build the
+     *            localized error message
      * @return o
      */
     public <T> T assertNull(T o, String argument) {
@@ -95,7 +110,11 @@ public class LocalizedAssert {
      * If argument is null or blank, throws localized IllegalArgumentException
      *
      * @param o
+     *            the string to check; the assertion fails if it is null or
+     *            has zero length
      * @param argument
+     *            the name of the argument being validated, used to build the
+     *            localized error message
      * @return same string
      */
     public String assertNotBlank(String o, String argument) {
@@ -111,7 +130,11 @@ public class LocalizedAssert {
      * If argument is not blank, throws localized IllegalArgumentException
      *
      * @param s
+     *            the string to check; the assertion fails if it is not null
+     *            and has a non-zero length
      * @param argument
+     *            the name of the argument being validated, used to build the
+     *            localized error message
      * @return same string
      */
     public String assertBlank(String s, String argument) {

@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2015 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.common.objects;
 
@@ -194,7 +195,6 @@ public final class OperationOptionsBuilder {
      * @return This query request.
      * @see SearchResult#getTotalPagedResultsPolicy()
      * @see SearchResult#getTotalPagedResults()
-     * @return A this reference to allow chaining
      * @since 1.5
      */
     public OperationOptionsBuilder setTotalPagedResultsPolicy(CountPolicy policy) {

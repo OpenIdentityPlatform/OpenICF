@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap.search;
 
@@ -86,7 +87,7 @@ public final class LdapFilter {
      * <p>If at most one of the two filters has an entry DN, the
      * result is a filter with that entry DN (if any) and a native filter
      * whose value is the native filters of the two filters "ANDed"
-     * together using the LDAP <code>&</code> operator.</p>
+     * together using the LDAP <code>&amp;</code> operator.</p>
      *
      * <p>Otherwise, the method returns <code>null</code>.
      *

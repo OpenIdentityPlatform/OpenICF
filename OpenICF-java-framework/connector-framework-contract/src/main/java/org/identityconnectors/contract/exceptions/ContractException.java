@@ -19,6 +19,8 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.contract.exceptions;
 
@@ -59,6 +61,7 @@ public class ContractException extends RuntimeException {
      * masquerade as the original only be a {@link RuntimeException}.
      *
      * @param message
+     *            passed to the {@link RuntimeException} message.
      * @param originalException
      *            the original exception adapted to {@link RuntimeException}.
      */

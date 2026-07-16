@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2014-2015 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.common.objects.filter;
 
@@ -39,6 +40,8 @@ public class ContainsAllValuesFilter extends AttributeFilter {
      * {@code ContainsAllValuesFilter}.
      *
      * @param attr
+     *            the attribute whose values must all be present for a match;
+     *            its name identifies the attribute to compare against.
      */
     public ContainsAllValuesFilter(Attribute attr) {
         super(attr);

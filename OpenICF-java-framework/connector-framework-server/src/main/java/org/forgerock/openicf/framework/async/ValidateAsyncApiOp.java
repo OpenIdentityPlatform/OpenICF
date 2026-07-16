@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.async;
@@ -28,7 +29,8 @@ import org.forgerock.util.promise.Promise;
 import org.identityconnectors.framework.api.operations.ValidateApiOp;
 
 /**
- * {@inheritDoc}
+ * Asynchronous variant of {@link ValidateApiOp}, exposing the configuration
+ * validation operation as a {@link Promise} instead of a blocking call.
  *
  * @since 1.5
  */

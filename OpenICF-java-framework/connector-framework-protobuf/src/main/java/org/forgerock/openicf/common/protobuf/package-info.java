@@ -20,12 +20,13 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 /**
  * Provide the Google Protocol Buffer Messages required for the Remote OpenICF Server communication.
- * <p/>
- * The messages are extracted for easy extensibility in the future.  
+ * <p>
+ * The messages are extracted for easy extensibility in the future.
  * 
  * @since 1.5
  */

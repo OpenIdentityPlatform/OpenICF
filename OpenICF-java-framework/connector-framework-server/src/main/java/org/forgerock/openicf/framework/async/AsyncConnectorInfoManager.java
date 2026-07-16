@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.async;
@@ -41,13 +42,16 @@ public interface AsyncConnectorInfoManager extends ConnectorInfoManager {
     /**
      * Add a promise which will be fulfilled with the
      * {@link org.identityconnectors.framework.api.ConnectorInfo} for the given
-     * {@ConnectorKey}.
-     * 
+     * {@link ConnectorKey}.
+     *
      * Add a Promise which will be fulfilled immediately if the
      * {@link org.identityconnectors.framework.api.ConnectorInfo} is maintained
      * currently by this instance or later when it became available.
-     * 
+     *
      * @param key
+     *            the key that uniquely identifies the connector bundle,
+     *            connector class, and version whose
+     *            {@code ConnectorInfo} should be resolved.
      * @return new promise
      */
     public Promise<ConnectorInfo, RuntimeException> findConnectorInfoAsync(ConnectorKey key);
@@ -55,12 +59,12 @@ public interface AsyncConnectorInfoManager extends ConnectorInfoManager {
     /**
      * Add a promise which will be fulfilled with the
      * {@link org.identityconnectors.framework.api.ConnectorInfo} for the given
-     * {@ConnectorKeyRange}.
+     * {@link ConnectorKeyRange}.
      *
      * Add a Promise which will be fulfilled immediately if the
      * {@link org.identityconnectors.framework.api.ConnectorInfo} is maintained
      * currently by this instance or later when it became available.
-     * 
+     *
      * There may be multiple ConnectorInfo matching the range. The
      * implementation can only randomly fulfill the promise. It can not grantee
      * the highest version to return because it may became available after the
@@ -68,6 +72,9 @@ public interface AsyncConnectorInfoManager extends ConnectorInfoManager {
      * available in this manager.
      *
      * @param keyRange
+     *            the range of connector bundle versions to match; the
+     *            promise is fulfilled with the {@code ConnectorInfo} of any
+     *            connector whose key falls within this range.
      * @return new promise
      */
     public Promise<ConnectorInfo, RuntimeException> findConnectorInfoAsync(

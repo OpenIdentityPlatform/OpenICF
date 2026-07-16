@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2015 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local;
 
@@ -80,7 +81,6 @@ import org.identityconnectors.framework.spi.Connector;
 
 /**
  * Implements all the methods of the facade.
- * <p>
  */
 public class LocalConnectorFacadeImpl extends AbstractConnectorFacade {
 

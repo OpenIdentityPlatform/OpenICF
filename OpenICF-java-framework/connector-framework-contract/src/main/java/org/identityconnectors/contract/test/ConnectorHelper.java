@@ -22,6 +22,7 @@
  *
  * Portions Copyrighted 2012 ForgeRock AS
  *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.contract.test;
 
@@ -134,8 +135,9 @@ public class ConnectorHelper {
     /**
      * Gets {@link ConfigurationProperties} for the connector
      *
-     * @param dataProvider
-     * @return
+     * @param dataProvider the data provider from which the connector's configuration
+     *            properties are read
+     * @return the configuration properties declared by the connector under test
      */
     public static ConfigurationProperties getConfigurationProperties(DataProvider dataProvider) {
         ConnectorInfoManager manager = getInfoManager(dataProvider);
@@ -328,7 +330,7 @@ public class ConnectorHelper {
 
     /**
      * Performs sync on connector facade.
-     * @returns list of deltas
+     * @return list of deltas
      */
     public static List<SyncDelta> sync(ConnectorFacade connectorFacade, ObjectClass objClass,
             SyncToken token, OperationOptions opOptions) {
@@ -630,14 +632,18 @@ public class ConnectorHelper {
 
     /**
      * get attribute values (concatenates the qualifier with the name)
-     * @param dataProvider
-     * @param objectClassInfo
-     * @param testName
-     * @param qualifier
-     * @param sequenceNumber
-     * @param checkRequired
-     * @return
+     * @param dataProvider the data provider supplying the attribute values
+     * @param objectClassInfo the object class whose attributes are built
+     * @param testName the name of the test component the data belongs to
+     * @param qualifier prefix concatenated with the attribute name when looking up its value
+     * @param sequenceNumber the iteration index to use when several values are defined
+     *            for the same attribute
+     * @param checkRequired if {@code true}, a missing value for a required attribute is
+     *            rethrown instead of just logged as a warning
+     * @return the set of attributes resolved from the data provider for the given object class
      * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
+     *             if a required attribute's value could not be found and {@code checkRequired}
+     *             is {@code true}
      */
     public static Set<Attribute> getAttributes(DataProvider dataProvider,
             ObjectClassInfo objectClassInfo, String testName,
@@ -697,14 +703,16 @@ public class ConnectorHelper {
 
     /**
      * gets the attributes for you, appending the qualifier to the attribute name
-     * @param connectorFacade
-     * @param dataProvider
-     * @param objectClassInfo
-     * @param testName
-     * @param qualifier
-     * @param sequenceNumber
-     * @return
+     * @param connectorFacade the connector facade used to create the object
+     * @param dataProvider the data provider supplying the attribute values
+     * @param objectClassInfo the object class of the object to create
+     * @param testName the name of the test component the data belongs to
+     * @param qualifier prefix concatenated with the attribute name when looking up its value
+     * @param sequenceNumber the iteration index to use when several values are defined
+     *            for the same attribute
+     * @return the {@link Uid} of the newly created object
      * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
+     *             if a required attribute's value could not be found
      */
     public static Uid createObject(ConnectorFacade connectorFacade,
             DataProvider dataProvider, ObjectClassInfo objectClassInfo,
@@ -718,13 +726,15 @@ public class ConnectorHelper {
 
     /**
      * gets the attributes for you
-     * @param connectorFacade
-     * @param dataProvider
-     * @param objectClassInfo
-     * @param testName
-     * @param sequenceNumber
-     * @return
+     * @param connectorFacade the connector facade used to create the object
+     * @param dataProvider the data provider supplying the attribute values
+     * @param objectClassInfo the object class of the object to create
+     * @param testName the name of the test component the data belongs to
+     * @param sequenceNumber the iteration index to use when several values are defined
+     *            for the same attribute
+     * @return the {@link Uid} of the newly created object
      * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
+     *             if a required attribute's value could not be found
      */
     public static Uid createObject(ConnectorFacade connectorFacade,
             DataProvider dataProvider, ObjectClassInfo objectClassInfo,
@@ -738,10 +748,10 @@ public class ConnectorHelper {
     /**
      * check to see if a particular objectclass supports a particular operation
      *
-     * @param connectorFacade
-     * @param oClass
-     * @param operation
-     * @return
+     * @param connectorFacade the connector facade whose schema is queried
+     * @param oClass the object class to check
+     * @param operation the API operation that must be supported
+     * @return {@code true} if {@code oClass} supports {@code operation}, {@code false} otherwise
      */
     public static boolean operationSupported(ConnectorFacade connectorFacade,
             ObjectClass oClass, Class<? extends APIOperation> operation) {
@@ -755,11 +765,11 @@ public class ConnectorHelper {
     /**
      * check to see if a particular objectclass supports a particular operations
      *
-     * @param connectorFacade
-     * @param oClass
-     * @param operation1
-     * @param operation2
-     * @return
+     * @param connectorFacade the connector facade whose schema is queried
+     * @param oClass the object class to check
+     * @param operation1 an API operation that must be supported
+     * @param operation2 another API operation that must be supported
+     * @return {@code true} if {@code oClass} supports both operations, {@code false} otherwise
      */
     public static boolean operationSupported(ConnectorFacade connectorFacade,
             ObjectClass oClass, Class<? extends APIOperation> operation1,
@@ -776,10 +786,11 @@ public class ConnectorHelper {
      * check to see if a particular objectclass supports a particular operations
      * To succeed all the operations must be supported.
      *
-     * @param connectorFacade
-     * @param oClass
-     * @param operations
-     * @return
+     * @param connectorFacade the connector facade whose schema is queried
+     * @param oClass the object class to check
+     * @param operations the API operations that must all be supported
+     * @return {@code true} if {@code oClass} supports every operation in {@code operations},
+     *         {@code false} otherwise
      */
     public static boolean operationsSupported(ConnectorFacade connectorFacade, ObjectClass oClass,
             Set<Class<? extends APIOperation>> operations) {
@@ -819,9 +830,10 @@ public class ConnectorHelper {
 
     /**
      * check to see if ANY objectclass supports a particular operation
-     * @param connectorFacade
-     * @param operation
-     * @return
+     * @param connectorFacade the connector facade whose schema is queried
+     * @param operation the API operation that must be supported
+     * @return {@code true} if at least one object class in the connector's schema
+     *         supports {@code operation}, {@code false} otherwise
      */
     public static boolean operationSupported(ConnectorFacade connectorFacade,
             Class<? extends APIOperation> operation) {
@@ -833,10 +845,11 @@ public class ConnectorHelper {
 
     /**
      * check to see if ANY objectclass supports a particular operation
-     * @param connectorFacade
-     * @param operations1
-     * @param operations2
-     * @return
+     * @param connectorFacade the connector facade whose schema is queried
+     * @param operations1 an API operation that must be supported
+     * @param operations2 another API operation that must be supported
+     * @return {@code true} if at least one object class in the connector's schema
+     *         supports both operations, {@code false} otherwise
      */
     public static boolean operationSupported(ConnectorFacade connectorFacade,
             Class<? extends APIOperation> operations1, Class<? extends APIOperation> operations2) {
@@ -849,9 +862,10 @@ public class ConnectorHelper {
 
     /**
      * check to see if ANY objectclass supports a particular operations
-     * @param connectorFacade
-     * @param operations
-     * @return
+     * @param connectorFacade the connector facade whose schema is queried
+     * @param operations the API operations that must all be supported
+     * @return {@code true} if at least one object class in the connector's schema
+     *         supports every operation in {@code operations}, {@code false} otherwise
      */
     public static boolean operationsSupported(ConnectorFacade connectorFacade,
             Set<Class<? extends APIOperation>> operations) {
@@ -1004,12 +1018,13 @@ public class ConnectorHelper {
 
     /**
      * no sequence number or qualifier, appends objectclass to name
-     * @param dataProvider
-     * @param componentName
-     * @param name
-     * @param objectClassName
-     * @return
+     * @param dataProvider the data provider supplying the value
+     * @param componentName the name of the test component the data belongs to
+     * @param name the name of the data item to look up
+     * @param objectClassName the object class name prepended to {@code name}
+     * @return the {@code String} value matching the given parameters
      * @throws org.identityconnectors.contract.exceptions.ObjectNotFoundException
+     *             if no data value matching the given parameters could be found
      */
     public static String getString(DataProvider dataProvider, String componentName,
             String name, String objectClassName) throws ObjectNotFoundException {

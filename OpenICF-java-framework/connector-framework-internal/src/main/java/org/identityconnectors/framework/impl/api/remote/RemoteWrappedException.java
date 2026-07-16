@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.framework.impl.api.remote;
@@ -36,10 +37,9 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 /**
  * RemoteWrappedException wraps every exception which are received from Remote
  * Connector Server.
- * <p/>
+ * <p>
  * <b>This Exception is not allowed to use in Connectors!!!</b>
- * <p/>
- *
+ * <p>
  *
  *
  * This type of exception is not allowed to be serialise because this exception
@@ -64,7 +64,7 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
  *          t.printStackTrace();
  *      }
  *  }
- * <code>
+ * </code>
  * </pre>
  *
  * @author Laszlo Hordos

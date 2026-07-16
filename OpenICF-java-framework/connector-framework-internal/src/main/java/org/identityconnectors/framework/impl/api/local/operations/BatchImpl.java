@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -70,7 +71,7 @@ public class BatchImpl extends ConnectorAPIOperationRunner implements
     }
 
     /**
-     * {@inherit}
+     * {@inheritDoc}
      */
     public Subscription executeBatch(final List<BatchTask> tasks, final Observer<BatchResult> observer,
                                final OperationOptions options) {
@@ -110,7 +111,7 @@ public class BatchImpl extends ConnectorAPIOperationRunner implements
     }
 
     /**
-     * {@inherit}
+     * {@inheritDoc}
      */
     public Subscription queryBatch(final BatchToken batchToken, final Observer<BatchResult> observer,
                              final OperationOptions options) {

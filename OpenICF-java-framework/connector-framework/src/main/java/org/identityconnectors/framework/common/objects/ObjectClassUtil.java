@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.common.objects;
 
@@ -66,7 +67,9 @@ public final class ObjectClassUtil {
      * that a name identifies a special object class such as a predefined one.
      *
      * @param name
-     * @return
+     *            the base name to turn into a special name.
+     * @return the name wrapped with the leading and trailing
+     *         <code>__</code> markers.
      */
     public static String createSpecialName(String name) {
         return NameUtil.createSpecialName(name);

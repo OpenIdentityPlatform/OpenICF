@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2013 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.framework.impl.api.remote;
@@ -147,7 +148,10 @@ public class RemoteConnectorInfoManagerImpl implements ConnectorInfoManager,
      * metadata.
      *
      * @param info
-     * @return
+     *            the connection information (host, port, credentials, timeout) to
+     *            use for the derived manager
+     * @return a new manager sharing this instance's cached connector metadata but
+     *         connecting via the given {@code info}
      */
     public RemoteConnectorInfoManagerImpl derive(RemoteFrameworkConnectionInfo info) {
         RemoteConnectorInfoManagerImpl rv = new RemoteConnectorInfoManagerImpl();

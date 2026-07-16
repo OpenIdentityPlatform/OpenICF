@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.common.rpc;
@@ -28,15 +30,15 @@ package org.forgerock.openicf.common.rpc;
  * A RequestDistributor delivers the
  * {@link org.forgerock.openicf.common.rpc.RemoteRequest} to the connected
  * endpoint.
- * <p/>
+ * <p>
  * The {@link org.forgerock.openicf.common.rpc.RemoteRequestFactory} is used to
  * create a {@link org.forgerock.openicf.common.rpc.RemoteConnectionContext}
  * aware {@link org.forgerock.openicf.common.rpc.RemoteRequest} which will be
  * delivered.
- * <p/>
+ * <p>
  * The implementation may hold multiple transmission channels and try all to
  * deliver the message before if fails.
- * <p/>
+ * <p>
  * The failed delivery signaled with null empty to avoid the expensive Throw and
  * Catch especially when many implementation are chained together.
  * 

@@ -21,6 +21,7 @@
  * ====================
  * Portions Copyrighted 2013 ConnId
  * Portions Copyrighted 2015 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.common;
 
@@ -70,7 +71,7 @@ public final class IOUtil {
 
     /**
      * Quietly closes the reader.
-     * <p/>
+     * <p>
      * This avoids having to handle exceptions, and then inside of the exception
      * handling have a try catch block to close the reader and catch any
      * {@link IOException} which may be thrown and ignore it.
@@ -90,7 +91,7 @@ public final class IOUtil {
 
     /**
      * Quietly closes the stream.
-     * <p/>
+     * <p>
      * This avoids having to handle exceptions, and then inside of the exception
      * handling have a try catch block to close the stream and catch any
      * {@link IOException} which may be thrown.
@@ -110,7 +111,7 @@ public final class IOUtil {
 
     /**
      * Quietly closes the writer.
-     * <p/>
+     * <p>
      * This avoids having to handle exceptions, and then inside of the exception
      * handling have a try catch block to close the Writer and catch any
      * {@link IOException} which may be thrown.
@@ -130,7 +131,7 @@ public final class IOUtil {
 
     /**
      * Quietly closes the stream.
-     * <p/>
+     * <p>
      * This avoids having to handle exceptions, and then inside of the exception
      * handling have a try catch block to close the stream and catch any
      * {@link IOException} which may be thrown.
@@ -150,7 +151,7 @@ public final class IOUtil {
 
     /**
      * Quietly closes the statement.
-     * <p/>
+     * <p>
      * This avoids having to handle exceptions, and then inside of the exception
      * handling have a try catch block to close the statement and catch any
      * {@link SQLException} which may be thrown.
@@ -171,7 +172,7 @@ public final class IOUtil {
 
     /**
      * Quietly closes the connection.
-     * <p/>
+     * <p>
      * This avoids having to handle exceptions, and then inside of the exception
      * handling have a try catch block to close the connection and catch any
      * {@link SQLException} which may be thrown.
@@ -192,7 +193,7 @@ public final class IOUtil {
 
     /**
      * Quietly closes the resultset.
-     * <p/>
+     * <p>
      * This avoids having to handle exceptions, and then inside of the exception
      * handling have a try catch block to close the connection and catch any
      * {@link SQLException} which may be thrown.
@@ -241,7 +242,9 @@ public final class IOUtil {
      * Returns an input stream of the resource specified.
      *
      * @param clazz
+     *            Class used to locate the resource and its class loader.
      * @param res
+     *            Name of the resource to load.
      * @return Returns an InputStream to the resource.
      */
     public static InputStream getResourceAsStream(final Class<?> clazz, final String res) {
@@ -260,8 +263,10 @@ public final class IOUtil {
      * Get the resource as a byte array.
      *
      * @param clazz
+     *            Class used to locate the resource and its class loader.
      * @param res
-     * @return
+     *            Name of the resource to load.
+     * @return the bytes read from the resource.
      */
     public static byte[] getResourceAsBytes(final Class<?> clazz, final String res) {
         assert clazz != null && StringUtil.isNotBlank(res);
@@ -279,8 +284,11 @@ public final class IOUtil {
      * Read the entire stream into a String and return it.
      *
      * @param clazz
+     *            Class used to locate the resource and its class loader.
      * @param res
-     * @return
+     *            Name of the resource to load.
+     * @return the contents of the resource decoded using the given charset,
+     *         or {@code null} if the resource could not be found.
      */
     public static String getResourceAsString(final Class<?> clazz, final String res,
             final Charset charset) {
@@ -302,8 +310,11 @@ public final class IOUtil {
      * Read the entire stream into a String and return it.
      *
      * @param clazz
+     *            Class used to locate the resource and its class loader.
      * @param res
-     * @return
+     *            Name of the resource to load.
+     * @return the contents of the resource decoded as UTF-8, or
+     *         {@code null} if the resource could not be found.
      */
     public static String getResourceAsString(final Class<?> clazz, final String res) {
         assert clazz != null && StringUtil.isNotBlank(res);
@@ -314,7 +325,9 @@ public final class IOUtil {
      * Takes a 'InputStream' and returns a byte array.
      *
      * @param ins
-     * @return
+     *            the stream to read from; not closed by this method.
+     * @return the bytes read from the stream, or {@code null} if an
+     *         {@link IOException} occurred while reading.
      */
     public static byte[] inputStreamToBytes(final InputStream ins) {
         byte[] ret = null;
@@ -403,7 +416,9 @@ public final class IOUtil {
      * NOTE: does not close streams.
      *
      * @param fis
+     *            the source stream to read from.
      * @param fos
+     *            the destination stream to write to.
      * @return total bytes copied.
      */
     public static long copyFile(final InputStream fis, final OutputStream fos) throws IOException {
@@ -421,7 +436,7 @@ public final class IOUtil {
      *
      * @param fileName
      *            the path to the file on which to calculate the checksum
-     * @return
+     * @return the CRC32 checksum value of the file's contents.
      */
     public static long checksum(final String fileName) throws IOException, FileNotFoundException {
         return (checksum(new File(fileName)));
@@ -432,7 +447,7 @@ public final class IOUtil {
      *
      * @param file
      *            the file on which to calculate the checksum
-     * @return
+     * @return the CRC32 checksum value of the file's contents.
      */
     public static long checksum(final File file) throws IOException, FileNotFoundException {
         FileInputStream fis = null;
@@ -456,6 +471,8 @@ public final class IOUtil {
      * Reads an entire file and returns the bytes.
      *
      * @param is
+     *            the stream to read; if {@code null}, {@code null} is
+     *            returned.
      * @param close
      *            if true, close when finished reading.
      * @return file bytes.
@@ -712,10 +729,16 @@ public final class IOUtil {
     }
 
     /**
+     * Joins the string representations of a collection's elements together,
+     * separated by the given separator character.
      *
      * @param collection
+     *            the elements to join, in iteration order; may be
+     *            {@code null}.
      * @param separator
-     * @return
+     *            the character placed between consecutive elements.
+     * @return the joined string, or {@code null} if {@code collection} is
+     *         {@code null}.
      * @since 1.3
      */
     public static String join(final Collection<String> collection, final char separator) {
@@ -728,10 +751,15 @@ public final class IOUtil {
     }
 
     /**
+     * Joins the string representations of an array's elements together,
+     * separated by the given separator character.
      *
      * @param array
+     *            the elements to join, in order; may be {@code null}.
      * @param separator
-     * @return
+     *            the character placed between consecutive elements.
+     * @return the joined string, or {@code null} if {@code array} is
+     *         {@code null}.
      * @since 1.3
      */
     public static String join(final Object[] array, final char separator) {
@@ -743,12 +771,19 @@ public final class IOUtil {
     }
 
     /**
+     * Joins the string representations of the elements of the given range of
+     * an array together, separated by the given separator character.
      *
      * @param array
+     *            the elements to join; may be {@code null}.
      * @param separator
+     *            the character placed between consecutive elements.
      * @param startIndex
+     *            the index of the first element to include, inclusive.
      * @param endIndex
-     * @return
+     *            the index of the last element to include, exclusive.
+     * @return the joined string, or {@code null} if {@code array} is
+     *         {@code null}.
      * @since 1.3
      */
     public static String join(final Object[] array, final char separator, final int startIndex,

@@ -22,6 +22,7 @@
  * "Portions Copyrighted 2010 [name of copyright owner]"
  *
  * $Id$
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.forgerock.openicf.connectors.xml;
 
@@ -47,7 +48,8 @@ import org.identityconnectors.framework.common.objects.Uid;
  * method should return null. This level of filtering is present only to allow any
  * native contructs that may be available to help reduce the result set for the framework,
  * which will (strictly) reapply all filters specified after the connector does the initial
- * filtering.<p><p>Note: The generic query type is most commonly a String, but does not have to be.
+ * filtering.
+ * <p>Note: The generic query type is most commonly a String, but does not have to be.
  *
  * @author $author$
  * @version $Revision$ $Date$

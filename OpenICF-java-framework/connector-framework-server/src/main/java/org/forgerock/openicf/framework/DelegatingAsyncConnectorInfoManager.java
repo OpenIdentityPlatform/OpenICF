@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework;
@@ -288,12 +289,23 @@ public abstract class DelegatingAsyncConnectorInfoManager extends
     }
 
     /**
-     * One Success or All Fail
+     * One Success or All Fail.
+     * <p>
+     * Combines a list of promises into a single composite promise that is
+     * fulfilled as soon as any one of the given promises succeeds, or is
+     * rejected only once every one of the given promises has failed.
      *
      * @param promises
+     *            the list of promises to combine; must not be {@code null}.
      * @param <V>
+     *            the type of the successful result shared by all of the
+     *            given promises.
      * @param <E>
-     * @return
+     *            the type of exception that may be thrown by any of the
+     *            given promises.
+     * @return a composite promise that resolves with the first successful
+     *         result among {@code promises}, or is rejected with the
+     *         exception of the last promise to fail if none of them succeed.
      */
     public static <V, E extends Exception> Promise<V, E> when(final List<Promise<V, E>> promises) {
         final AtomicInteger remaining = new AtomicInteger(promises.size());

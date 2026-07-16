@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2015 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.common.objects.filter;
 
@@ -62,7 +63,6 @@ import java.util.Set;
  * </ol>
  * <p>
  * Translation can then be performed using {@link #translate(Filter)}.
- * <p>
  *
  * @param <T>
  *            The result type of the translator. Commonly this will be a string,
@@ -91,7 +91,7 @@ abstract public class AbstractFilterTranslator<T> implements FilterTranslator<T>
      *         behavior standpoint since <code>ConnectorFacade</code> performs a
      *         second level of filtering. However it is undesirable from a
      *         performance standpoint.</li>
-     *         <li>>1 - List contains multiple queries that must be performed in
+     *         <li>&gt;1 - List contains multiple queries that must be performed in
      *         order to meet the filter that was passed in. Note that this only
      *         occurs if your {@link #createOrExpression} method can return
      *         null. If this happens, it is the responsibility of the connector

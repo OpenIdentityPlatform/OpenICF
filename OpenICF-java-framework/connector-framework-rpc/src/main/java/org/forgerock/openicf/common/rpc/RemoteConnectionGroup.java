@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.common.rpc;
@@ -38,11 +40,11 @@ import org.forgerock.util.promise.Promise;
 /**
  * A RemoteConnectionGroups represent a remote pair of another instance of
  * RemoteConnectionGroups.
- * <p/>
+ * <p>
  * RemoteConnectionGroups holds the
  * {@link org.forgerock.openicf.common.rpc.RemoteConnectionHolder} which are
  * connected to the remotely paired RemoteConnectionGroups.
- * <p/>
+ * <p>
  * The local instance of {@link RemoteConnectionGroup#remoteRequests} paired
  * with the remote instance of {@link RemoteConnectionGroup#localRequests}.
  *

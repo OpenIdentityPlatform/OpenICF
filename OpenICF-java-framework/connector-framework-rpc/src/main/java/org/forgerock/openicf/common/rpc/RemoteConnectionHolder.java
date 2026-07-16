@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.common.rpc;
@@ -29,7 +31,7 @@ import java.util.concurrent.Future;
 /**
  * A RemoteConnectionHolder is a wrapper class for the underlying communication
  * chanel.
- * <p/>
+ * <p>
  * The API is detached from the real underlying protocol and abstracted through
  * this interface. The message transmitted via this implementation should
  * trigger the appropriate method on

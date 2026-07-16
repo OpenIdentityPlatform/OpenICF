@@ -20,13 +20,14 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.common;
 
 /**
  * A version range is an interval describing a set of {@link Version versions}.
- * <p/>
+ * <p>
  * A range has a left (lower) endpoint and a right (upper) endpoint. Each
  * endpoint can be open (excluded from the set) or closed (included in the set).
  *
@@ -34,7 +35,6 @@ package org.identityconnectors.common;
  * {@code VersionRange} objects are immutable.
  *
  * @author Laszlo Hordos
- * @Immutable
  * @since 1.4
  */
 public class VersionRange {

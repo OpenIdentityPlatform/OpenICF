@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.maven;
@@ -46,7 +47,7 @@ import edu.emory.mathcs.backport.java.util.Arrays;
 
 /**
  * Goal generate a new POM and keeps only the minimal information.
- * <p/>
+ * <p>
  * To debug execute this command:
  * {@code mvnDebug org.forgerock.maven.plugins:openicf-maven-plugin:reduce-pom}
  *

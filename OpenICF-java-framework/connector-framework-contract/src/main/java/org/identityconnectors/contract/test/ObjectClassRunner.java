@@ -22,6 +22,7 @@
  *
  * Portions Copyrighted 2012 ForgeRock AS
  *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.contract.test;
 
@@ -203,7 +204,9 @@ public abstract class ObjectClassRunner extends ContractTestBase {
     /**
      * Identifier which tells if the tested ObjectClass
      * is supported by connector or not, supported means that the ObjectClass is included in the Schema
-     * @return
+     * @param objectClass the object class to check against the connector's schema
+     * @return {@code true} if {@code objectClass} is supported by the connector for every
+     *         operation required by the current contract test, {@code false} otherwise
      */
     public boolean isObjectClassSupported(ObjectClass objectClass) {
         // get all the required operations for current contract test

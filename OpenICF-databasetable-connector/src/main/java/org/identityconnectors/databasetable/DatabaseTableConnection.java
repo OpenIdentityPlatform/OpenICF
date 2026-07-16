@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.databasetable;
 
@@ -168,9 +169,10 @@ public class DatabaseTableConnection extends DatabaseConnection {
 
     /**
      * The strategy utility
-     * 
-     * @param conn
-     * @param config
+     *
+     * @param conn the live JDBC connection the resulting strategy chain will operate on
+     * @param config the configuration used to decide which optional strategies
+     *            (string, native timestamps) to append to the chain
      * @return the created strategy
      */
     public MappingStrategy createMappingStrategy(Connection conn, DatabaseTableConfiguration config) {
@@ -195,10 +197,11 @@ public class DatabaseTableConnection extends DatabaseConnection {
 
     /**
      * Get the Column Values map
-     * 
-     * @param result
+     *
+     * @param result the current row of the result set to read column values from
      * @return the result of Column Values map
-     * @throws SQLException
+     * @throws SQLException if a database access error occurs while reading
+     *             the result set
      */
     public Map<String, SQLParam> getColumnValues(ResultSet result) throws SQLException {
         return DatabaseTableSQLUtil.getColumnValues(sms, result);

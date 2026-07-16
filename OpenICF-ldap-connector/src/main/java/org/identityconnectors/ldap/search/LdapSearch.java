@@ -21,6 +21,7 @@
  * ====================
  * 
  * "Portions Copyrighted 2013-2016 Forgerock AS"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap.search;
 
@@ -128,10 +129,11 @@ public class LdapSearch {
 
     /**
      * Performs the search and passes the resulting {@link ConnectorObject}s to
-     * the given handler.
+     * the given handler. Any {@link NamingException} raised by the underlying
+     * JNDI search is caught internally and rethrown as a
+     * {@link org.identityconnectors.framework.common.exceptions.ConnectorException}.
      *
      * @param handler the handler.
-     * @throws NamingException if a JNDI exception occurs.
      */
     public final void execute(final ResultsHandler handler) {
         final String[] attrsToGetOption = options.getAttributesToGet();

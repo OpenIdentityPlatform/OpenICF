@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.databasetable;
 
@@ -40,8 +41,9 @@ public class DatabaseTableFilterTranslator extends DatabaseFilterTranslator {
     DatabaseTableConnector connector;
     /**
      * @param connector the database table connector
-     * @param oclass
-     * @param options
+     * @param oclass the object class the produced filters apply to
+     * @param options options controlling how the filters are built (for
+     *            example the attributes to fetch)
      */
     public DatabaseTableFilterTranslator(DatabaseTableConnector connector, ObjectClass oclass, OperationOptions options) {
         super(oclass, options);

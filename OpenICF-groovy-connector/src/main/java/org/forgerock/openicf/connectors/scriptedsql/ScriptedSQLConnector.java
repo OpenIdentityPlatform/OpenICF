@@ -21,6 +21,7 @@
  * your own identifying information:
  * " Portions Copyrighted [year] [name of copyright owner]"
  *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.forgerock.openicf.connectors.scriptedsql;
 
@@ -36,7 +37,7 @@ import groovy.lang.Closure;
 /**
  * Main implementation of the ScriptedSQL Connector.
  *
- * @author Gael Allioux <gael.allioux@forgerock.com>
+ * @author Gael Allioux &lt;gael.allioux@forgerock.com&gt;
  */
 @ConnectorClass(displayNameKey = "groovy.sql.connector.display",
         configurationClass = ScriptedSQLConfiguration.class, messageCatalogPaths = {

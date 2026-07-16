@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.api.operations.batch;
 
@@ -73,7 +74,11 @@ public class UpdateBatchTask implements BatchTask<Uid> {
     }
 
     /**
-     * @{inherit}
+     * Executes this update task by delegating back to the given executor.
+     *
+     * @param executor
+     *            the executor that will perform the actual update operation.
+     * @return the {@link Uid} of the updated object.
      */
     public Uid execute(BatchTaskExecutor executor) {
         return executor.execute(this);
@@ -84,7 +89,9 @@ public class UpdateBatchTask implements BatchTask<Uid> {
     }
 
     /**
-     * @{inherit}
+     * Returns the object class of the object to update.
+     *
+     * @return the object class specified when this task was constructed.
      */
     public ObjectClass getObjectClass() {
         return objectClass;

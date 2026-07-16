@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.api.operations.batch;
 
@@ -55,14 +56,20 @@ public class DeleteBatchTask implements BatchTask<BatchEmptyResult> {
     }
 
     /**
-     * @{inherit}
+     * Executes this delete task by delegating back to the given executor.
+     *
+     * @param executor
+     *            the executor that will perform the actual delete operation.
+     * @return an empty result confirming the delete completed.
      */
     public BatchEmptyResult execute(BatchTaskExecutor executor) {
         return executor.execute(this);
     }
 
     /**
-     * @{inherit}
+     * Returns the object class of the object to delete.
+     *
+     * @return the object class specified when this task was constructed.
      */
     public ObjectClass getObjectClass() {
         return objectClass;

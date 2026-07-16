@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.common.objects;
 
@@ -46,7 +47,7 @@ import org.identityconnectors.framework.common.serializer.SerializerUtil;
  * <li>Supported ObjectClasses by operation (
  * {@link #getSupportedObjectClassesByOperation()}).</li>
  * <li>Supported OperationOptionInfo by operation(
- * {@link #getSupportedOptionsByOperation()()}).</li>
+ * {@link #getSupportedOptionsByOperation()}).</li>
  * </ol>
  *
  * TODO: add more to describe and what is expected from this call and how it is
@@ -65,7 +66,9 @@ public final class Schema {
      * Public only for serialization; please use SchemaBuilder instead.
      *
      * @param info
+     *            the declared {@link ObjectClassInfo} for this schema.
      * @param supportedObjectClassesByOperation
+     *            the object classes supported by each API operation.
      */
     public Schema(
             Set<ObjectClassInfo> info,

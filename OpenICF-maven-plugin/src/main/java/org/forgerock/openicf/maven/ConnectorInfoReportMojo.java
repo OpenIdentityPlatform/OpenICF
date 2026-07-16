@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.maven;
@@ -56,7 +57,7 @@ import org.identityconnectors.framework.api.RemoteFrameworkConnectionInfo;
 
 /**
  * Goal generate a Connector Report.
- * <p/>
+ * <p>
  * To debug execute this command:
  * {@code mvnDebug org.forgerock.maven.plugins:openicf-maven-plugin:connector-info}
  *
@@ -221,7 +222,7 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
     /**
      * The output directory when the mojo is run directly from the command line.
      * Implementors should use this method to return the value of a mojo
-     * parameter that the user may use to customize the output directory. <br/>
+     * parameter that the user may use to customize the output directory. <br>
      * <strong>Note:</strong> When the mojo is run as part of a site generation,
      * Maven will set the effective output directory via
      * {@link org.apache.maven.reporting.MavenReport#setReportOutputDirectory(java.io.File)}

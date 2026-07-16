@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2014 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -45,7 +46,9 @@ public class AuthenticationImpl extends ConnectorAPIOperationRunner implements
     /**
      * Authenticate using the basic credentials.
      *
-     * @see AuthenticationOpTests#authenticate(String, String)
+     * <p>
+     * Delegates to the connector's {@link AuthenticateOp#authenticate} implementation
+     * after validating that the object class, username and password are supplied.
      */
     public Uid authenticate(final ObjectClass objectClass, final String username,
             final GuardedString password,

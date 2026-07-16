@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.framework.spi;
@@ -27,7 +28,7 @@ package org.identityconnectors.framework.spi;
 /**
  * A Stateful Configuration interface extends the default {@link Configuration}
  * and makes the framework keep the same instance.
- * <p/>
+ * <p>
  * The default Configuration object instance is constructed every single time
  * before the {@link Connector#init(Configuration)} is called. If the
  * configuration class implements this interface then the Framework keeps one
@@ -39,12 +40,12 @@ package org.identityconnectors.framework.spi;
  * Connector developer must quarantine that the necessary resource
  * initialisation are thread-safe.
  *
- * <p/>
+ * <p>
  * If the connector implements the {@link PoolableConnector} then this
  * configuration is kept in the
- * {@link org.identityconnectors.framework.impl.api.local.ConnectorPoolManager}
+ * {@code org.identityconnectors.framework.impl.api.local.ConnectorPoolManager}
  * and when the
- * {@link org.identityconnectors.framework.impl.api.local.ConnectorPoolManager#dispose()}
+ * {@code ConnectorPoolManager.dispose()}
  * calls the {@link #release()} method. If the connector implements only the
  * {@link Connector} then this configuration is kept in the
  * {@link org.identityconnectors.framework.api.ConnectorFacade} and the

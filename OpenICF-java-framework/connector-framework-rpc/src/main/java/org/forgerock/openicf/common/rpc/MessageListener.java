@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.common.rpc;
@@ -41,7 +43,7 @@ public interface MessageListener<G extends RemoteConnectionGroup<G, H, P>, H ext
      * <p>
      * Invoked when {@link RemoteConnectionHolder#close()} has been called on a
      * particular {@link RemoteConnectionHolder} instance.
-     * <p>
+     * </p>
      *
      * @param socket
      *            the {@link RemoteConnectionHolder} being closed.
@@ -59,6 +61,7 @@ public interface MessageListener<G extends RemoteConnectionGroup<G, H, P>, H ext
      * </p>
      *
      * @param t
+     *            the error that occurred while processing the request.
      */
     public void onError(Throwable t);
 

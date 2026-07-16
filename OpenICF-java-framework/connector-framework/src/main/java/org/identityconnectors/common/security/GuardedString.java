@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.common.security;
 
@@ -60,6 +61,8 @@ public final class GuardedString {
          * thus keeping the window of potential exposure to a bare-minimum.
          *
          * @param clearChars
+         *            the decrypted characters, valid only for the duration of
+         *            this call.
          */
         public void access(char[] clearChars);
     }

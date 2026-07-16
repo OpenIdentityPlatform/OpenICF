@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.misc.crest;
@@ -36,7 +38,7 @@ public interface VisitorParameter {
     /**
      * Translates the attribute name from ICF to JSON.
      *
-     * @param name
+     * @param name the ICF attribute name to translate
      * @return the new name.
      */
     String translateName(String name);
@@ -48,7 +50,7 @@ public interface VisitorParameter {
      * converts to JSON Type. Number, Boolean, String, Null, Map or Array of
      * these.
      *
-     * @param attribute
+     * @param attribute the ICF attribute whose value is to be converted
      * @return the new value. It could be Null, String, Boolean or Number.
      */
     Object convertValue(Attribute attribute);

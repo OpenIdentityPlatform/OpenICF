@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.api;
 
@@ -56,7 +57,6 @@ public interface APIConfiguration {
      * 
      * @param changeListener
      *            the callback handler to receive the change event.
-     * @return a closeable to unregister the change listener.
      */
    void setChangeListener(ConfigurationPropertyChangeListener changeListener);
 

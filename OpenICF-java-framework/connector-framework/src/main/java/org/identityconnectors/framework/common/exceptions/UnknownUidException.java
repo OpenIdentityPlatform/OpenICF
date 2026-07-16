@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.common.exceptions;
 
@@ -28,7 +29,7 @@ import org.identityconnectors.framework.common.objects.Uid;
 /**
  * Thrown when a {@link Uid} that is specified as input to a connector operation
  * identifies no object on the target resource.
- * <p/>
+ * <p>
  * When implementing {@code AuthenticateOp} this exception may be thrown by a
  * Connector if it is unable to locate an account necessary to perform
  * authentication.

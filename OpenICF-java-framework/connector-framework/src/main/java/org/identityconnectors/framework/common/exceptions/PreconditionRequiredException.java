@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.framework.common.exceptions;
@@ -64,14 +65,14 @@ public class PreconditionRequiredException extends ConnectorException {
     /**
      * Constructs a new PreconditionRequiredException exception with the
      * specified cause and a detail message of
-     * <tt>(cause==null ? null : cause.toString())</tt> (which typically
-     * contains the class and detail message of <tt>cause</tt>). This
+     * <code>(cause==null ? null : cause.toString())</code> (which typically
+     * contains the class and detail message of <code>cause</code>). This
      * constructor is useful for InvalidAccountException exceptions that are
      * little more than wrappers for other throwables.
      *
      * @param cause
      *            the cause (which is saved for later retrieval by the
-     *            {@link #getCause()} method). (A <tt>null</tt> value is
+     *            {@link #getCause()} method). (A <code>null</code> value is
      *            permitted, and indicates that the cause is nonexistent or
      *            unknown.)
      */
@@ -92,7 +93,7 @@ public class PreconditionRequiredException extends ConnectorException {
      *            {@link #getMessage()} method).
      * @param cause
      *            the cause (which is saved for later retrieval by the
-     *            {@link #getCause()} method). (A <tt>null</tt> value is
+     *            {@link #getCause()} method). (A <code>null</code> value is
      *            permitted, and indicates that the cause is nonexistent or
      *            unknown.)
      */
