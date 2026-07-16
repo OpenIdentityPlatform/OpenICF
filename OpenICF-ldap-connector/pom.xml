@@ -22,7 +22,7 @@
  your own identifying information:
  "Portions Copyrighted [year] [name of copyright owner]"
 
- Portions Copyrighted 2018-2025 3A Systems, LLC
+ Portions Copyrighted 2018-2026 3A Systems, LLC
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -107,6 +107,18 @@
             <artifactId>opendj-server</artifactId>
             <scope>test</scope>
         </dependency>
+        <!--
+            The OpenDJ distribution archive. LdapConnectorTestBase sets up the embedded test
+            instance from it (schema, MakeLDIF name dictionaries, self-signed certificate).
+        -->
+        <dependency>
+            <groupId>org.openidentityplatform.opendj</groupId>
+            <artifactId>opendj-server-legacy</artifactId>
+            <version>${opendj.version}</version>
+            <classifier>slim</classifier>
+            <type>zip</type>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
@@ -128,14 +140,26 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <skip>true</skip>
-                    <suiteXmlFiles>
-                        <suiteXmlFile>testng.xml</suiteXmlFile>
-                    </suiteXmlFiles>
                     <systemPropertyVariables>
                         <opendj.port>${opendj.port}</opendj.port>
+                        <!-- Set from the dependency above; LdapConnectorTestBase sets the instance up from it. -->
+                        <opendj.archive>${org.openidentityplatform.opendj:opendj-server-legacy:zip:slim}</opendj.archive>
                     </systemPropertyVariables>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <!-- Resolves ${org.openidentityplatform.opendj:opendj-server-legacy:zip:slim} to the archive path. -->
+                        <id>resolve-opendj-archive</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

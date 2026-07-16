@@ -19,16 +19,26 @@
 # enclosed by brackets [] replaced by your own identifying information: 
 # "Portions Copyrighted [year] [name of copyright owner]"
 # ====================
+# Portions Copyrighted 2026 3A Systems, LLC
 # -- END LICENSE
+#
+# The suffix entry itself is not generated here: data.ldif already defines
+# dc=example,dc=com, and both files are imported into the same backend.
+#
+# Branches must spell out their objectClasses. The Sun-era MakeLDIF derived them
+# from the RDN attribute; the OpenDJ one does not, and leaves the entry without a
+# structural objectClass, which the server then rejects on import.
 define suffix=dc=example,dc=com
 define maildomain=example.com
 define numusers=2000
 
-branch: [suffix]
-
 branch: o=Big Company,[suffix]
+objectClass: top
+objectClass: organization
 
 branch: ou=People,o=Big Company,[suffix]
+objectClass: top
+objectClass: organizationalUnit
 subordinateTemplate: person:[numusers]
 
 template: person

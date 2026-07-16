@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap.schema;
 
@@ -46,6 +47,7 @@ import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.LdapConnectorTestBase;
 import org.identityconnectors.ldap.LdapConstants;
 import org.identityconnectors.ldap.LdapConstants.ServerType;
+import org.identityconnectors.ldap.LdapUtil;
 
 public class LdapSchemaMappingTests extends LdapConnectorTestBase {
 
@@ -62,6 +64,11 @@ public class LdapSchemaMappingTests extends LdapConnectorTestBase {
         LdapConfiguration config = newConfiguration(true);
         Schema schema = newFacade(config).schema();
         for (ObjectClassInfo oci : schema.getObjectClassInfo()) {
+            if (oci.is(LdapUtil.SERVER_INFO_NAME)) {
+                // Not an LDAP object class: the connector makes this one up to report server
+                // information through, and it has no attributes at all, objectClass included.
+                continue;
+            }
             AttributeInfo attrInfo = AttributeInfoUtil.find("objectClass", oci.getAttributeInfo());
             assertFalse(attrInfo.isRequired());
             assertFalse(attrInfo.isCreateable());
@@ -165,11 +172,16 @@ public class LdapSchemaMappingTests extends LdapConnectorTestBase {
     }
 
     @Test
-    public void testSyncNotSupported() {
+    public void testSyncSupported() {
         LdapConfiguration config = newConfiguration();
         LdapConnection conn = new LdapConnection(config);
-        assertEquals(ServerType.OPENDS, conn.getServerType());
+        // The test instance is OpenDJ; it was OpenDS back when this test last ran, and used to
+        // assert the opposite. OpenDJ serves the change log, so the connector reports sync as
+        // supported (it only takes it away for OpenDS), and SunDSChangeLogSyncStrategyTests
+        // exercises it end to end.
+        assertEquals(ServerType.OPENDJ, conn.getServerType());
         Schema schema = newFacade(config).schema();
-        assertTrue(schema.getSupportedObjectClassesByOperation().get(SyncApiOp.class).isEmpty());
+        ObjectClassInfo accountInfo = schema.findObjectClassInfo(ObjectClass.ACCOUNT_NAME);
+        assertTrue(schema.getSupportedObjectClassesByOperation().get(SyncApiOp.class).contains(accountInfo));
     }
 }

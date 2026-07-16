@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap;
 
@@ -306,7 +307,7 @@ public class LdapConfigurationTests {
         assertFalse(config.isMaintainPosixGroupMembership());
         assertFalse(config.isRespectResourcePasswordPolicyChangeAfterReset());
         assertNull(config.getPasswordHashAlgorithm());
-        assertTrue(config.isUseBlocks());
+        assertFalse(config.isUseBlocks());
         assertEquals(100, config.getBlockSize());
         assertFalse(config.isUsePagedResultControl());
         assertEquals("uid", config.getVlvSortAttribute());

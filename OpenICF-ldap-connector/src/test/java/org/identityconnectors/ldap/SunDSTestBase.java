@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap;
 
@@ -34,27 +35,40 @@ import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.LdapName;
 
-import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.ldap.search.DefaultSearchStrategy;
 import org.identityconnectors.ldap.search.LdapInternalSearch;
 import org.identityconnectors.ldap.search.LdapSearchResultsHandler;
-import org.identityconnectors.test.common.PropertyBag;
 import org.identityconnectors.test.common.TestHelpers;
 
-public class SunDSTestBase {
+/**
+ * Base for the tests written against Sun DSEE, run against the embedded OpenDJ instance.
+ *
+ * OpenDJ serves the change log these tests read and supports the VLV searches they make, so it
+ * stands in for the Sun DSEE they were pointed at through sunds.* properties, which nobody can
+ * supply any more.
+ *
+ * The tests here empty their base context and repopulate it, so they get one of their own rather
+ * than the contexts the other tests read. Whatever they leave behind is cleared up anyway: the
+ * server stops when the class ends, and the next start puts the data back as it was.
+ */
+public class SunDSTestBase extends LdapConnectorTestBase {
+
+    @Override
+    protected boolean restartServerAfterEachTest() {
+        return false;
+    }
 
     public static LdapConfiguration newConfiguration() {
         LdapConfiguration config = new LdapConfiguration();
         config.setConnectorMessages(TestHelpers.createDummyMessages());
-        PropertyBag testProps = TestHelpers.getProperties(LdapConnector.class);
-        config.setHost(testProps.getStringProperty("sunds.host"));
-        config.setPort(testProps.getProperty("sunds.port", Integer.class, 389));
-        config.setPrincipal(testProps.getStringProperty("sunds.principal"));
-        config.setCredentials(testProps.getProperty("sunds.credentials", GuardedString.class));
-        config.setBaseContexts(testProps.getStringProperty("sunds.baseContext"));
+        config.setHost("localhost");
+        config.setPort(PORT);
+        config.setPrincipal(ADMIN_DN);
+        config.setCredentials(ADMIN_PASSWORD);
+        config.setBaseContexts(SMALL_COMPANY_DN);
         config.setUidAttribute("entryDN");
         config.setReadSchema(false); // To be compatible with IdM.
         config.validate();

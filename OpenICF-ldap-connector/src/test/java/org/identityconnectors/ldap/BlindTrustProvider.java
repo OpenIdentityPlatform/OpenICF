@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap;
 
@@ -86,7 +87,9 @@ public class BlindTrustProvider extends Provider {
         }
 
         public X509Certificate[] getAcceptedIssuers() {
-            return null;
+            // Not null: this provider is installed as the JVM-wide default, so the embedded
+            // server picks it up for its own side of the handshake too, and null there aborts it.
+            return new X509Certificate[0];
         }
     }
 }

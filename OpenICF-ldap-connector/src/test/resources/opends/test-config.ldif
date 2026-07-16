@@ -1,0 +1,112 @@
+# The contents of this file are subject to the terms of the Common Development and
+# Distribution License (the License). You may not use this file except in compliance with the
+# License.
+#
+# You can obtain a copy of the License at legal/CDDLv1.0.txt. See the License for the
+# specific language governing permission and limitations under the License.
+#
+# When distributing Covered Software, include this CDDL Header Notice in each file and include
+# the License file at legal/CDDLv1.0.txt. If applicable, add the following below the CDDL
+# Header, with the fields enclosed by brackets [] replaced by your own identifying
+# information: "Portions copyright [year] [name of copyright owner]".
+#
+# Copyright 2026 3A Systems, LLC.
+#
+# Server configuration the tests need on top of a stock setup. Carried over from the OpenDS-era
+# config.ldif this module used to ship, adapted to OpenDJ 5.
+#
+# The default search size limit of 1000 is deliberately left alone: testSimplePagedSearch and
+# testVlvIndexSearch assert they get more than 1000 entries back, which only proves anything
+# about paging while the server would otherwise cut the search off.
+
+# data.ldif carries "c: Czech Republic", which is not the two-letter code the country string
+# syntax calls for. OpenDS let it through; OpenDJ rejects the entry outright, and
+# testSearchArbitraryObjectClass is then left with nothing to find. Warn instead of reject, so
+# the entry is imported as it always was.
+#
+# ds-cfg-strict-format-country-string on cn=Core Schema,cn=Schema Providers would be the
+# narrower knob, but the schema providers are only consulted when the server starts, and the
+# entries are imported offline, where that setting has no bearing.
+dn: cn=config
+changetype: modify
+replace: ds-cfg-invalid-attribute-syntax-behavior
+ds-cfg-invalid-attribute-syntax-behavior: warn
+
+# uid=expired in data.ldif is bound to this one. The password expires two seconds after it is
+# set, but the grace logins let the bind through, and the server flags it with the password
+# expired control; that pair is what testAuthenticateExpiredPassword exercises.
+dn: cn=Quickly Expiring Password Policy,cn=Password Policies,cn=config
+changetype: add
+objectClass: top
+objectClass: ds-cfg-password-policy
+cn: Quickly Expiring Password Policy
+ds-cfg-java-class: org.opends.server.core.PasswordPolicyFactory
+ds-cfg-password-attribute: userPassword
+ds-cfg-default-password-storage-scheme: cn=Salted SHA-1,cn=Password Storage Schemes,cn=config
+ds-cfg-max-password-age: 2 seconds
+# Has to stay below the maximum password age, or the server rejects the policy.
+ds-cfg-password-expiration-warning-interval: 1 seconds
+ds-cfg-grace-login-count: 42
+ds-cfg-expire-passwords-without-warning: true
+
+# AdapterCompatibilityTests puts the accounts it hashes passwords for under this policy, so that
+# it can read back what it stored.
+dn: cn=Clear Text Password Policy,cn=Password Policies,cn=config
+changetype: add
+objectClass: top
+objectClass: ds-cfg-password-policy
+cn: Clear Text Password Policy
+ds-cfg-java-class: org.opends.server.core.PasswordPolicyFactory
+ds-cfg-password-attribute: userPassword
+ds-cfg-default-password-storage-scheme: cn=Clear,cn=Password Storage Schemes,cn=config
+ds-cfg-allow-pre-encoded-passwords: true
+
+# When a search asks for debugsearchindex, the server answers with a single made-up entry,
+# cn=debugsearch, describing the indexes it used. That entry sits outside dc=example,dc=com, so
+# the ACIs in admin.ldif do not reach it and it would be filtered out of the results before
+# testVlvIndexSearch ever saw it.
+dn: cn=Access Control Handler,cn=config
+changetype: modify
+add: ds-cfg-global-aci
+ds-cfg-global-aci: (target = "ldap:///cn=debugsearch")(targetattr = "debugsearchindex")(version 3.0; acl "Allow Debug Search Index Admin Access"; allow(read,search) userdn = "ldap:///uid=admin,dc=example,dc=com";)
+
+# SunDSChangeLogSyncStrategyTests reads the change log at cn=changelog. OpenDJ serves it out of
+# the replication machinery, so replication has to be configured even though there is no second
+# server to replicate to. compute-change-number is what fills in the changeNumber attribute the
+# strategy keys off; without it the log is only readable by cookie.
+dn: cn=replication server,cn=Multimaster Synchronization,cn=Synchronization Providers,cn=config
+changetype: add
+objectClass: top
+objectClass: ds-cfg-replication-server
+cn: replication server
+ds-cfg-replication-port: %REPLICATION_PORT%
+ds-cfg-replication-server-id: 1
+ds-cfg-compute-change-number: true
+
+dn: cn=example,cn=domains,cn=Multimaster Synchronization,cn=Synchronization Providers,cn=config
+changetype: add
+objectClass: top
+objectClass: ds-cfg-replication-domain
+cn: example
+ds-cfg-base-dn: dc=example,dc=com
+ds-cfg-replication-server: localhost:%REPLICATION_PORT%
+ds-cfg-server-id: 1
+
+# testVlvIndexSearch checks that the server reports having used a VLV index for its search.
+dn: cn=VLV Index,ds-cfg-backend-id=userRoot,cn=Backends,cn=config
+changetype: add
+objectClass: top
+objectClass: ds-cfg-branch
+cn: VLV Index
+
+dn: ds-cfg-name=index-uid,cn=VLV Index,ds-cfg-backend-id=userRoot,cn=Backends,cn=config
+changetype: add
+objectClass: top
+objectClass: ds-cfg-backend-vlv-index
+ds-cfg-name: index-uid
+ds-cfg-base-dn: dc=example,dc=com
+ds-cfg-scope: whole-subtree
+# Spelled in the order the connector builds it from the default account object classes: the
+# server only picks the index up for a search whose filter matches this one.
+ds-cfg-filter: (&(objectClass=top)(objectClass=person)(objectClass=organizationalPerson)(objectClass=inetOrgPerson))
+ds-cfg-sort-order: uid

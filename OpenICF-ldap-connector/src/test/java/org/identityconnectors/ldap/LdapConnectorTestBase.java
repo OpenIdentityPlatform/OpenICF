@@ -19,8 +19,13 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap;
+
+import static org.forgerock.opendj.server.embedded.ConfigParameters.configParams;
+import static org.forgerock.opendj.server.embedded.ConnectionParameters.connectionParams;
+import static org.forgerock.opendj.server.embedded.SetupParameters.setupParams;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -28,10 +33,26 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.Assert;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 
+import com.forgerock.opendj.ldap.tools.MakeLDIF;
+import org.forgerock.opendj.ldap.Connection;
+import org.forgerock.opendj.ldif.ConnectionChangeRecordWriter;
+import org.forgerock.opendj.ldif.LDIFChangeRecordReader;
+import org.forgerock.opendj.server.embedded.EmbeddedDirectoryServer;
+import org.forgerock.opendj.server.embedded.EmbeddedDirectoryServerException;
 import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.APIConfiguration;
@@ -45,17 +66,18 @@ import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.test.common.TestHelpers;
-import org.opends.server.config.ConfigException;
-import org.opends.server.types.DirectoryEnvironmentConfig;
-import org.opends.server.types.InitializationException;
+import org.opends.server.tools.ImportLDIF;
 import org.opends.server.util.EmbeddedUtils;
 
 public abstract class LdapConnectorTestBase {
 
-    // Cf. data.ldif and bigcompany.ldif.
+    // Cf. data.ldif and bigcompany.template.
 
-    public static final int PORT = 2389;
-    public static final int SSL_PORT = 2636;
+    // Picked at run time rather than fixed, so that a developer box already running a directory
+    // server on the traditional 2389/2636 does not break the build. The instance is set up from
+    // these, so config and tests cannot drift apart.
+    public static final int PORT = findFreePort();
+    public static final int SSL_PORT = findFreePort();
 
     public static final String EXAMPLE_COM_DN = "dc=example,dc=com";
 
@@ -108,27 +130,33 @@ public abstract class LdapConnectorTestBase {
     public static final String USER_0_SN = "Amar";
     public static final String USER_0_GIVEN_NAME = "Aaccf";
 
-    // Cf. test/opends/config/config.ldif and setup-test-opends.xml.
+    private static final int ADMIN_PORT = findFreePort();
+    private static final int JMX_PORT = findFreePort();
+    /** Replication carries the change log the sync tests read, even with nothing to replicate to. */
+    private static final int REPLICATION_PORT = findFreePort();
 
-    private static final String[] FILES = {
-        "config/config.ldif",
-        "config/admin-backend.ldif",
-        "config/keystore",
-        "config/keystore.pin",
-        "config/schema/00-core.ldif",
-        "config/schema/01-pwpolicy.ldif",
-        "config/schema/02-config.ldif",
-        "config/schema/03-changelog.ldif",
-        "config/schema/03-rfc2713.ldif",
-        "config/schema/03-rfc2714.ldif",
-        "config/schema/03-rfc2739.ldif",
-        "config/schema/03-rfc2926.ldif",
-        "config/schema/03-rfc3112.ldif",
-        "config/schema/03-rfc3712.ldif",
-        "config/schema/03-uddiv3.ldif",
-        "config/schema/04-rfc2307bis.ldif",
-        "db/userRoot/00000000.jdb"
-    };
+    private static final String ROOT_DN = "cn=Directory Manager";
+    private static final String ROOT_PASSWORD = "password";
+
+    /** EmbeddedDirectoryServer.extractArchiveForSetup() insists on this server root name. */
+    private static final String SERVER_ROOT_NAME = "opendj";
+
+    private static final File WORK_DIR = new File(System.getProperty("java.io.tmpdir"), "openicf-ldap-opendj");
+    private static final File SERVER_ROOT = new File(new File(WORK_DIR, "instance"), SERVER_ROOT_NAME);
+    /** Pristine copy of the directories below, taken once the instance is fully populated. */
+    private static final File PRISTINE_DIR = new File(WORK_DIR, "pristine");
+    /** The parts of the instance the tests write to; restored from PRISTINE_DIR on every start. */
+    private static final String[] MUTABLE_DIRS = { "config", "db", "changelogDb" };
+
+    private static EmbeddedDirectoryServer server;
+    private static boolean instanceCreated;
+
+    static {
+        // testSSL() registers this too, but by then the embedded server has started and brought
+        // SSL up with it. The default SSL context is built once and cached, so registering after
+        // that has no effect on it and the test would fail to trust the generated certificate.
+        BlindTrustProvider.register();
+    }
 
     @AfterClass
     public static void afterClass() {
@@ -208,64 +236,288 @@ public abstract class LdapConnectorTestBase {
         return null;
     }
 
+    /**
+     * Starts the embedded directory, restoring its data to the state the tests expect.
+     *
+     * The instance is only built once per JVM: setting it up and importing the Big Company
+     * entries is far too slow to repeat for every test that asks for a restart. Afterwards a
+     * pristine copy of the mutable directories is kept aside, and starting means putting that
+     * copy back, which is what makes each test see the same data.
+     */
     protected void startServer() throws IOException {
-        File root = new File(System.getProperty("java.io.tmpdir"), "opends");
-        IOUtil.delete(root);
-        if (!root.mkdirs()) {
-            throw new IOException();
-        }
-        for (String path : FILES) {
-            File file = new File(root, path);
-            File parent = file.getParentFile();
-            if (!parent.exists() && !parent.mkdirs()) {
-                throw new IOException(file.getAbsolutePath());
-            }
-            IOUtil.extractResourceToFile(LdapConnectorTestBase.class, "opends/" + path, file);
-        }
-
-        File configDir = new File(root, "config");
-        File configFile = new File(configDir, "config.ldif");
-        File schemaDir = new File(configDir, "schema");
-        File lockDir = new File(root, "locks");
-        if (!lockDir.mkdirs()) {
-            throw new IOException();
-        }
-
         try {
-            DirectoryEnvironmentConfig config = new DirectoryEnvironmentConfig();
-            config.setServerRoot(root);
-            config.setConfigFile(configFile);
-            config.setSchemaDirectory(schemaDir);
-            //config.setLockDirectory(lockDir);
-            EmbeddedUtils.startServer(config);
-//        } catch (ConfigException e) {
-//            throw (IOException) new IOException(e.getMessage()).initCause(e);
-        } catch (InitializationException e) {
+            createInstance();
+            restorePristineState();
+            server = manageServer();
+            server.start();
+            waitUntilListening();
+        } catch (EmbeddedDirectoryServerException e) {
             throw (IOException) new IOException(e.getMessage()).initCause(e);
         }
     }
 
+    /**
+     * Starting is asynchronous: it reports the server as running before the connection handler
+     * has bound its port, so a test that connected straight away would be refused.
+     */
+    private static void waitUntilListening() throws IOException {
+        final int WAIT = 200; // ms
+        final int ITERATIONS = 50;
+        for (int i = 1; !isListening(PORT) || !isListening(SSL_PORT); i++) {
+            if (i >= ITERATIONS) {
+                throw new IOException("OpenDJ is not listening on ports " + PORT + " and " + SSL_PORT
+                        + " " + (WAIT * ITERATIONS) + "ms after being started");
+            }
+            try {
+                Thread.sleep(WAIT);
+            } catch (InterruptedException e) {}
+        }
+    }
+
     protected static void stopServer() {
-        EmbeddedUtils.stopServer("org.test.opends.EmbeddedOpenDS", null);
-        // It seems that EmbeddedUtils.stopServer() returns before the server has stopped listening on its port,
-        // causing the next test to fail when starting the server.
+        if (server != null) {
+            server.stop(LdapConnectorTestBase.class.getName(), null);
+            server = null;
+        }
+        if (!waitUntilStopped()) {
+            Assert.fail("OpenDJ failed to stop");
+        }
+    }
+
+    /**
+     * Shutting down is asynchronous, so wait for it to finish. Both conditions matter: the port
+     * has to be free before the next start can bind it again, and isRunning() has to agree the
+     * server is down, or before() would decide there is nothing to restart and leave the next
+     * test without a server.
+     */
+    private static boolean waitUntilStopped() {
         final int WAIT = 200; // ms
         final int ITERATIONS = 25;
-        for (int i = 1; ; i++) {
-            try {
-                new Socket(InetAddress.getLocalHost(), PORT).close();
-            } catch (IOException e) {
-                // Okay, server has stopped.
-                return;
+        for (int i = 1; EmbeddedUtils.isRunning() || isAnyPortStillBound(); i++) {
+            if (i >= ITERATIONS) {
+                return false;
             }
-            if (i < ITERATIONS) {
-                try {
-                    Thread.sleep(WAIT);
-                } catch (InterruptedException e) {}
-            } else {
-                break;
+            try {
+                Thread.sleep(WAIT);
+            } catch (InterruptedException e) {}
+        }
+        return true;
+    }
+
+    /** Every port the server binds, since starting again fails on whichever is not free yet. */
+    private static boolean isAnyPortStillBound() {
+        return isListening(PORT) || isListening(SSL_PORT) || isListening(ADMIN_PORT)
+                || isListening(REPLICATION_PORT);
+    }
+
+    private static boolean isListening(int port) {
+        try {
+            new Socket(InetAddress.getLocalHost(), port).close();
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    private static EmbeddedDirectoryServer manageServer() {
+        return EmbeddedDirectoryServer.manageEmbeddedDirectoryServer(
+                configParams()
+                        .serverRootDirectory(SERVER_ROOT.getPath())
+                        .configurationFile(new File(SERVER_ROOT, "config/config.ldif").getPath()),
+                connectionParams()
+                        .hostName("localhost")
+                        .ldapPort(PORT)
+                        .ldapSecurePort(SSL_PORT)
+                        .adminPort(ADMIN_PORT)
+                        .bindDn(ROOT_DN)
+                        .bindPassword(ROOT_PASSWORD),
+                System.out, System.err);
+    }
+
+    private static void createInstance() throws IOException, EmbeddedDirectoryServerException {
+        if (instanceCreated) {
+            return;
+        }
+        IOUtil.delete(WORK_DIR);
+        if (!SERVER_ROOT.mkdirs()) {
+            throw new IOException("Cannot create " + SERVER_ROOT);
+        }
+
+        EmbeddedDirectoryServer setupServer = manageServer();
+        setupServer.extractArchiveForSetup(archive());
+        // Set up empty: the data is imported further down, once the configuration it has to
+        // satisfy is in place. --ldapsPort implies a generated self-signed certificate, which is
+        // all testSSL() needs, as it registers a blind trust provider.
+        setupServer.setup(setupParams()
+                .baseDn(EXAMPLE_COM_DN)
+                .backendType("je")
+                .jmxPort(JMX_PORT));
+
+        // Configuration goes in over a connection, so the server has to be up for it.
+        startAndApply(setupServer, "test-config.ldif");
+
+        // Now that the server will accept the entries and knows which indexes to build for them,
+        // import. Doing this before the configuration above would get entries rejected and leave
+        // the VLV index empty.
+        importData();
+
+        // uid=admin and the ACIs granting it access can only be added once the entries they refer
+        // to exist.
+        startAndApply(setupServer, "admin.ldif");
+
+        for (String dir : MUTABLE_DIRS) {
+            copyDirectory(new File(SERVER_ROOT, dir).toPath(), new File(PRISTINE_DIR, dir).toPath());
+        }
+        instanceCreated = true;
+    }
+
+    private static void restorePristineState() throws IOException {
+        for (String dir : MUTABLE_DIRS) {
+            File target = new File(SERVER_ROOT, dir);
+            IOUtil.delete(target);
+            copyDirectory(new File(PRISTINE_DIR, dir).toPath(), target.toPath());
+        }
+    }
+
+    /** The OpenDJ distribution archive, handed over by the build; cf. the pom. */
+    private static File archive() throws IOException {
+        String path = System.getProperty("opendj.archive");
+        if (path == null) {
+            throw new IOException("The opendj.archive system property is not set; "
+                    + "it should point at the OpenDJ distribution archive to set the test instance up from.");
+        }
+        File archive = new File(path);
+        if (!archive.isFile()) {
+            throw new IOException("No OpenDJ distribution archive at " + archive);
+        }
+        return archive;
+    }
+
+    private static File generateBigCompanyLdif() throws IOException {
+        File template = copyResourceToWorkDir("bigcompany.template");
+        File ldif = new File(WORK_DIR, "bigcompany.ldif");
+        // The name dictionaries the template draws from ship with the distribution.
+        File resourcePath = new File(SERVER_ROOT, "template/config/MakeLDIF");
+        // A fixed seed keeps the generated entries stable from run to run.
+        int rc = MakeLDIF.run(System.out, System.err,
+                "--outputLDIF", ldif.getPath(),
+                "--resourcePath", resourcePath.getPath(),
+                "--randomSeed", "1",
+                template.getPath());
+        if (rc != 0) {
+            throw new IOException("Generating " + ldif + " from " + template + " failed with code " + rc);
+        }
+        return ldif;
+    }
+
+    /**
+     * Grants uid=admin the privileges and ACIs the tests rely on. Kept as an LDIF changes file
+     * because part of it modifies cn=config, which cannot be expressed in imported data.
+     */
+    private static void applyChanges(EmbeddedDirectoryServer target, String resource)
+            throws IOException, EmbeddedDirectoryServerException {
+        // The ports are only known at run time, so the files spell them as placeholders.
+        String ldif = readResource(resource)
+                .replace("%REPLICATION_PORT%", String.valueOf(REPLICATION_PORT));
+        try (Connection connection = target.getInternalConnection();
+                LDIFChangeRecordReader reader = new LDIFChangeRecordReader(new StringReader(ldif));
+                ConnectionChangeRecordWriter writer = new ConnectionChangeRecordWriter(connection)) {
+            while (reader.hasNext()) {
+                writer.writeChangeRecord(reader.readChangeRecord());
             }
         }
-        Assert.fail("OpenDS failed to stop");
+    }
+
+    private static String readResource(String name) throws IOException {
+        try (InputStream in = openResource(name)) {
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
+    }
+
+    /** Brings the server up, feeds it an LDIF changes file, and puts it back down. */
+    private static void startAndApply(EmbeddedDirectoryServer target, String resource)
+            throws IOException, EmbeddedDirectoryServerException {
+        target.start();
+        waitUntilListening();
+        try {
+            applyChanges(target, resource);
+        } finally {
+            target.stop(LdapConnectorTestBase.class.getName(), null);
+        }
+        if (!waitUntilStopped()) {
+            throw new IOException("OpenDJ failed to stop after applying " + resource);
+        }
+    }
+
+    /**
+     * Imports the test entries with the server down.
+     *
+     * This drives the tool directly rather than through EmbeddedDirectoryServer.importLDIF(),
+     * which requires a running server, and an online import would go through the task backend
+     * and the admin connector for no benefit here.
+     */
+    private static void importData() throws IOException {
+        File rejects = new File(WORK_DIR, "rejects.ldif");
+        int rc = ImportLDIF.mainImportLDIF(new String[] {
+                "--configFile", new File(SERVER_ROOT, "config/config.ldif").getPath(),
+                "--backendID", "userRoot",
+                "--ldifFile", copyResourceToWorkDir("data.ldif").getPath(),
+                "--ldifFile", generateBigCompanyLdif().getPath(),
+                "--rejectFile", rejects.getPath(),
+                "--offline",
+                "--noPropertiesFile" }, true, System.out, System.err);
+        if (rc != 0) {
+            throw new IOException("Importing the test entries into " + SERVER_ROOT + " failed with code " + rc);
+        }
+        // A rejected entry does not fail the import, it just quietly goes missing and surfaces
+        // much later as a test looking for data that is not there.
+        if (rejects.length() > 0) {
+            throw new IOException("The server rejected some of the test entries; see " + rejects);
+        }
+    }
+
+    private static InputStream openResource(String name) throws IOException {
+        InputStream in = LdapConnectorTestBase.class.getClassLoader().getResourceAsStream("opends/" + name);
+        if (in == null) {
+            throw new IOException("Missing resource: opends/" + name);
+        }
+        return in;
+    }
+
+    private static File copyResourceToWorkDir(String name) throws IOException {
+        File file = new File(WORK_DIR, name);
+        try (InputStream in = openResource(name)) {
+            Files.copy(in, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
+        return file;
+    }
+
+    private static void copyDirectory(final Path source, final Path target) throws IOException {
+        if (!Files.isDirectory(source)) {
+            // The server only creates some of these once it has something to put in them.
+            return;
+        }
+        Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                Files.createDirectories(target.resolve(source.relativize(dir)));
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.copy(file, target.resolve(source.relativize(file)), StandardCopyOption.REPLACE_EXISTING);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+
+    private static int findFreePort() {
+        try (ServerSocket socket = new ServerSocket(0)) {
+            socket.setReuseAddress(true);
+            return socket.getLocalPort();
+        } catch (IOException e) {
+            throw new RuntimeException("Cannot reserve a port for the test directory server", e);
+        }
     }
 }

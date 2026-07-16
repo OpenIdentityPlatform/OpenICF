@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap;
 
@@ -172,6 +173,7 @@ public class LdapConnectionTests extends LdapConnectorTestBase {
     @Test
     public void testServerType() {
         LdapConnection conn = new LdapConnection(newConfiguration());
-        assertEquals(ServerType.OPENDS, conn.getServerType());
+        // The test instance is OpenDJ; it was OpenDS back when this test last ran.
+        assertEquals(ServerType.OPENDJ, conn.getServerType());
     }
 }

@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * "Portions Copyrighted 2014 ForgeRock AS"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap.search;
 
@@ -271,7 +272,11 @@ public class LdapSearchTests extends LdapConnectorTestBase {
 
     @Test
     public void testScope() {
-        ConnectorFacade facade = newFacade();
+        // The subtree search below returns more accounts than the server will hand over in one
+        // go; cf. testMultipleBaseDNs.
+        LdapConfiguration config = newConfiguration();
+        config.setUseBlocks(true);
+        ConnectorFacade facade = newFacade(config);
         // Find an organization to pass in OP_CONTAINER.
         ObjectClass oclass = new ObjectClass("organization");
         ConnectorObject organization = searchByAttribute(facade, oclass, new Name(BIG_COMPANY_DN));
@@ -334,7 +339,12 @@ public class LdapSearchTests extends LdapConnectorTestBase {
 
     @Test
     public void testMultipleBaseDNs() {
-        ConnectorFacade facade = newFacade();
+        // Big Company holds more accounts than the server will return in one search, so the
+        // search has to be broken up. This used to be the default, until useBlocks was changed
+        // to default to false.
+        LdapConfiguration config = newConfiguration();
+        config.setUseBlocks(true);
+        ConnectorFacade facade = newFacade(config);
 
         // This should find accounts from both base DNs.
         List<ConnectorObject> objects = TestHelpers.searchToList(facade, ObjectClass.ACCOUNT, null);
