@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.remote.rpc;
@@ -45,6 +47,14 @@ public abstract class WebSocketConnectionHolder
     public boolean receiveHandshake(HandshakeMessage message) {
         if (null == getRemoteConnectionContext()) {
             handshake(message);
+            final RemoteOperationContext context = getRemoteConnectionContext();
+            if (null != context) {
+                // The context is visible only from this point on, so the
+                // initial connector info exchange is started here instead of
+                // inside handshake(message) - a response arriving before the
+                // context is assigned would otherwise be dropped.
+                context.getRemoteConnectionGroup().handshakeComplete();
+            }
         }
         return isHandHooked();
     }

@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.server;
@@ -37,6 +39,7 @@ import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.forgerock.openicf.framework.ConnectorFramework;
 import org.forgerock.openicf.framework.ConnectorFrameworkFactory;
@@ -204,13 +207,17 @@ public class OpenICFWebSocketTest {
             Assert.assertNotNull(manager);
 
             ConnectorInfo c = null;
-            for (int i = 0; (c =
-                    manager.findConnectorInfoAsync(TEST_CONNECTOR_KEY).getOrThrowUninterruptibly(5,
-                            TimeUnit.MINUTES)) == null
-                    && i < 5; i++) {
-                // Wait until the connection is established and the connector
-                // info are transferred.
-                Thread.sleep(20000);
+            for (int i = 0; null == c && i < 5; i++) {
+                try {
+                    // Wait until the connection is established and the
+                    // connector info are transferred. Keep each attempt well
+                    // below the Surefire fork timeout so a hang fails this
+                    // test instead of killing the whole forked JVM.
+                    c = manager.findConnectorInfoAsync(TEST_CONNECTOR_KEY)
+                            .getOrThrowUninterruptibly(20, TimeUnit.SECONDS);
+                } catch (TimeoutException e) {
+                    Reporter.log("Connector info not received yet, retrying", true);
+                }
             }
             Assert.assertNotNull(c);
             for (ConnectorInfo ci : manager.getConnectorInfos()) {
