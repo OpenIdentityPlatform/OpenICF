@@ -43,7 +43,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.surefire.options />
         <doclint>all,-missing</doclint>
-        <opendj.version>5.1.2-SNAPSHOT</opendj.version>
+        <opendj.version>5.1.2</opendj.version>
    	</properties>
     <licenses>
         <license>
