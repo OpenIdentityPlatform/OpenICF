@@ -19,6 +19,7 @@
 # enclosed by brackets [] replaced by your own identifying information: 
 # "Portions Copyrighted [year] [name of copyright owner]"
 # ====================
+# Portions Copyrighted 2026 3A Systems, LLC
 # -- END LICENSE
 dn: uid=admin,dc=example,dc=com
 changetype: add
@@ -35,6 +36,8 @@ userPassword: password
 ds-privilege-name: unindexed-search
 # To be able to change passwords.
 ds-privilege-name: password-reset
+# To be able to read cn=changelog, which sync() works off.
+ds-privilege-name: changelog-read
 
 dn: dc=example,dc=com
 changetype: modify
@@ -55,3 +58,19 @@ dn: cn=Access Control Handler,cn=config
 changetype: modify
 add: ds-cfg-global-aci
 ds-cfg-global-aci: (targetcontrol = "2.16.840.1.113730.3.4.9")(version 3.0; acl "Allow Virtual List View Control Admin Access"; allow(read) userdn = "ldap:///uid=admin,dc=example,dc=com";)
+
+# sync() finds the change log by reading changelog, firstChangeNumber and lastChangeNumber from
+# the root DSE. They are operational attributes, so targetattr="*" does not cover them and the
+# stock "User-Visible Root DSE Operational Attributes" ACI does not list them.
+dn: cn=Access Control Handler,cn=config
+changetype: modify
+add: ds-cfg-global-aci
+ds-cfg-global-aci: (target = "ldap:///")(targetscope = "base")(targetattr = "changelog||firstChangeNumber||lastChangeNumber")(version 3.0; acl "Allow Change Log Root DSE Attributes Admin Access"; allow(read,search,compare) userdn = "ldap:///uid=admin,dc=example,dc=com";)
+
+# cn=changelog sits outside dc=example,dc=com, so the ACI on that suffix does not reach it. The
+# attributes are named one by one because the stock "Anonymous read access" global ACI excludes
+# exactly these from targetattr="*".
+dn: cn=Access Control Handler,cn=config
+changetype: modify
+add: ds-cfg-global-aci
+ds-cfg-global-aci: (target = "ldap:///cn=changelog")(targetattr = "*||changeNumber||targetDN||changeType||changes||newRDN||deleteOldRDN||newSuperior||targetEntryUUID||changeTime||changeInitiatorsName")(version 3.0; acl "Allow Change Log Admin Access"; allow(read,search,compare) userdn = "ldap:///uid=admin,dc=example,dc=com";)

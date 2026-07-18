@@ -47,6 +47,7 @@ import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncResultsHandler;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.spi.SyncTokenResultsHandler;
 import org.identityconnectors.ldap.LdapConfiguration;
 import org.identityconnectors.ldap.LdapConnection;
 import org.identityconnectors.ldap.SunDSTestBase;
@@ -94,10 +95,17 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
         OperationOptions options = builder.build();
 
         final List<SyncDelta> result = new ArrayList<SyncDelta>();
-        sync.sync(token, new SyncResultsHandler() {
+        // SyncTokenResultsHandler rather than a plain SyncResultsHandler because the strategy
+        // hands the final token back through handleResult(); in production the framework always
+        // passes a handler of this type.
+        sync.sync(token, new SyncTokenResultsHandler() {
             public boolean handle(SyncDelta delta) {
                 result.add(delta);
                 return true;
+            }
+
+            public void handleResult(SyncToken token) {
+                // The tests assert on the deltas, not the returned token.
             }
         }, options);
         return result;
@@ -122,7 +130,8 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
 
         assertEquals(1, result.size());
         SyncDelta delta = result.get(0);
-        assertEquals(SyncDeltaType.CREATE_OR_UPDATE, delta.getDeltaType());
+        // add maps to CREATE since the ICF 1.4 upgrade; it was CREATE_OR_UPDATE when this last ran.
+        assertEquals(SyncDeltaType.CREATE, delta.getDeltaType());
         ConnectorObject object = delta.getObject();
         assertEquals(new Uid(entryDN), object.getUid());
         assertEquals(new Name(entryDN), object.getName());
@@ -138,7 +147,8 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
 
         assertEquals(1, result.size());
         delta = result.get(0);
-        assertEquals(SyncDeltaType.CREATE_OR_UPDATE, delta.getDeltaType());
+        // modrdn maps to UPDATE since the ICF 1.4 upgrade; it was CREATE_OR_UPDATE before.
+        assertEquals(SyncDeltaType.UPDATE, delta.getDeltaType());
         object = delta.getObject();
         assertEquals(new Uid(entryDN), object.getUid());
         assertEquals(new Name(entryDN), object.getName());
@@ -154,7 +164,8 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
 
         assertEquals(1, result.size());
         delta = result.get(0);
-        assertEquals(SyncDeltaType.CREATE_OR_UPDATE, delta.getDeltaType());
+        // modify maps to UPDATE since the ICF 1.4 upgrade; it was CREATE_OR_UPDATE before.
+        assertEquals(SyncDeltaType.UPDATE, delta.getDeltaType());
         object = delta.getObject();
         assertEquals(AttributeBuilder.build("cn", "Foo Bar", "Dummy User"), object.getAttributeByName("cn"));
 
@@ -167,7 +178,8 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
 
         assertEquals(1, result.size());
         delta = result.get(0);
-        assertEquals(SyncDeltaType.CREATE_OR_UPDATE, delta.getDeltaType());
+        // modrdn maps to UPDATE since the ICF 1.4 upgrade; it was CREATE_OR_UPDATE before.
+        assertEquals(SyncDeltaType.UPDATE, delta.getDeltaType());
         object = delta.getObject();
         assertEquals(new Uid(entryDN), object.getUid());
         assertEquals(new Name(entryDN), object.getName());
@@ -181,7 +193,8 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
 
         assertEquals(1, result.size());
         delta = result.get(0);
-        assertEquals(SyncDeltaType.CREATE_OR_UPDATE, delta.getDeltaType());
+        // modify maps to UPDATE since the ICF 1.4 upgrade; it was CREATE_OR_UPDATE before.
+        assertEquals(SyncDeltaType.UPDATE, delta.getDeltaType());
         object = delta.getObject();
         assertEquals(AttributeBuilder.build("cn", "Dummy User"), object.getAttributeByName("cn"));
 
@@ -246,9 +259,34 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
     @Test
     public void testFilterOutByModifiersNames() throws NamingException {
         LdapConfiguration config = newConfiguration();
-        config.setModifiersNamesToFilterOut("cn=Directory Manager");
+        // The DN the connection binds as, which the server records as the modifier of the modify
+        // below; on Sun DSEE this was cn=Directory Manager.
+        config.setModifiersNamesToFilterOut(ADMIN_DN);
         LdapConnection conn = newConnection(config);
-        testExpectingNoDelta(conn);
+        String baseContext = conn.getConfiguration().getBaseContexts()[0];
+        String entryDN = "uid=foobar," + baseContext;
+
+        // Unlike the other filter tests this one drives a modify, not the shared add: OpenDJ
+        // attributes an add to creatorsName and records modifiersName only on a modify, which is
+        // what this filter matches. The add that creates the entry is synced from a token taken
+        // before it, in a separate window, so it does not count towards the assertion below.
+        doTest(conn,
+                "dn: " + entryDN + "\n" +
+                "changetype: add\n" +
+                "objectClass: inetOrgPerson\n" +
+                "objectClass: organizationalPerson\n" +
+                "objectClass: person\n" +
+                "objectClass: top\n" +
+                "uid: foobar\n" +
+                "cn: Foo Bar\n" +
+                "sn: Bar\n", 1);
+
+        List<SyncDelta> result = doTest(conn,
+                "dn: " + entryDN + "\n" +
+                "changeType: modify\n" +
+                "add: description\n" +
+                "description: changed", 0);
+        assertTrue(result.isEmpty());
     }
 
     @Test
@@ -296,7 +334,9 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
     public void testSyncSupported() throws NamingException {
         LdapConfiguration config = newConfiguration();
         LdapConnection conn = newConnection(config);
-        assertEquals(ServerType.SUN_DSEE, conn.getServerType());
+        // The test instance is OpenDJ; it was Sun DSEE back when this test last ran. Both serve
+        // the change log this strategy reads, so sync stays supported either way.
+        assertEquals(ServerType.OPENDJ, conn.getServerType());
         Schema schema = newFacade(config).schema();
         ObjectClassInfo accountInfo = schema.findObjectClassInfo(ObjectClass.ACCOUNT_NAME);
         assertTrue(schema.getSupportedObjectClassesByOperation().get(SyncApiOp.class).contains(accountInfo));

@@ -19,19 +19,15 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap.search;
 
 import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
 import org.testng.annotations.Test;
-import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.identityconnectors.common.logging.Log;
-import org.identityconnectors.common.logging.LogSpi;
-import org.identityconnectors.common.logging.Log.Level;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
@@ -92,59 +88,13 @@ public class VlvIndexSearchStrategyTests extends SunDSTestBase {
         }
 
         ToListResultsHandler handler = new ToListResultsHandler();
+        facade.search(ObjectClass.ACCOUNT, null, handler, null);
 
-        Log oldLog = VlvIndexSearchStrategy.getLog();
-        OverlapLogImpl overlapLog = new OverlapLogImpl(oldLog);
-        try {
-            VlvIndexSearchStrategy.setLog(createLog(VlvIndexSearchStrategy.class, overlapLog));
-            facade.search(ObjectClass.ACCOUNT, null, handler, null);
-        } finally {
-            VlvIndexSearchStrategy.setLog(oldLog);
-        }
-
-        assertTrue("The server should have sent overlapping blocks", overlapLog.hasOverlap());
+        // Blocks of two mean the VLV search strategy makes 45 round trips to gather the 90
+        // accounts; getting all of them back is what shows its paging loop stitches the blocks
+        // together correctly. This used to also assert the server returned overlapping blocks, a
+        // VLV offset rounding bug specific to Sun DSEE; OpenDJ computes the offsets exactly and
+        // never overlaps, so that half of the check no longer applies.
         assertEquals(COUNT, handler.getObjects().size());
-    }
-
-    private static Log createLog(Class<?> clazz, LogSpi spi) throws Exception {
-        Method getLogMethod = Log.class.getDeclaredMethod("getLog", Class.class, LogSpi.class);
-        getLogMethod.setAccessible(true);
-        return (Log) getLogMethod.invoke(null, clazz, spi);
-    }
-
-    static class OverlapLogImpl implements LogSpi {
-
-        private final Log delegate;
-
-        private boolean overlap = false;
-
-        public OverlapLogImpl(Log delegate) {
-            this.delegate = delegate;
-        }
-
-        public boolean isLoggable(Class<?> clazz, Level level) {
-            return true; // We need to, in order to ensure log() will be called.
-        }
-
-        public void log(Class<?> clazz, StackTraceElement caller, Level level, String message, Throwable ex) {
-            log(clazz,"unknown", level, message, ex);
-        }
-
-        public boolean needToInferCaller(Class<?> clazz, Level level) {
-            return false;
-        }
-
-        public void log(Class<?> clazz, String method, Level level, String message, Throwable ex) {
-            if (VlvIndexSearchStrategy.class.equals(clazz) && message != null && message.contains("overlap")) {
-                overlap = true;
-            }
-            if (delegate.isLoggable(level)) {
-                delegate.log(clazz, method, level, message, ex);
-            }
-        }
-
-        public boolean hasOverlap() {
-            return overlap;
-        }
     }
 }
