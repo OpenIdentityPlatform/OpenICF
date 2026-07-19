@@ -196,6 +196,12 @@ public class ClientRemoteConnectorInfoManager extends
                         }
                     }
                 });
+
+                // Stamped after the close listener is registered: once this
+                // timestamp is >= lastConnectAttempt, the permit held by the
+                // last attempt is guaranteed to be released on close, so the
+                // heartbeat self-heal must not restore it.
+                lastConnectionCreated.set(System.currentTimeMillis());
             }
         };
 
@@ -207,12 +213,19 @@ public class ClientRemoteConnectorInfoManager extends
                     }
                 }
                 // Self-heal: a connect attempt that failed before Grizzly
-                // created the Connection has no close listener to release its
-                // permit. If there is no live connection, no free permit and
-                // no recent connect attempt, restore the lost permit so the
-                // client can reconnect instead of staying wedged forever.
+                // created the Connection (openSocketChannel or
+                // obtainNIOConnection threw, e.g. fd exhaustion) has no close
+                // listener to release its permit. If there is no live
+                // connection, no free permit, no recent connect attempt and
+                // the last attempt never created a Connection
+                // (lastConnectionCreated < lastConnectAttempt), restore the
+                // lost permit so the client can reconnect instead of staying
+                // wedged forever. When a Connection exists its close listener
+                // releases the permit, so healing then would over-credit
+                // while the connection is still pending its handshake.
                 if (isRunning.get() && privateConnections.isEmpty() && !hasFreeConnectionPermit()
-                        && System.currentTimeMillis() - lastConnectAttempt.get() > 30000) {
+                        && System.currentTimeMillis() - lastConnectAttempt.get() > 30000
+                        && lastConnectionCreated.get() < lastConnectAttempt.get()) {
                     logger.ok("Restoring connection permit lost by a failed connect attempt - {0}",
                             getName());
                     tryReleaseConnectionPermit();
@@ -337,6 +350,7 @@ public class ClientRemoteConnectorInfoManager extends
 
     private final AtomicLong lastConnectithenOnException = new AtomicLong(0L);
     private final AtomicLong lastConnectAttempt = new AtomicLong(0L);
+    private final AtomicLong lastConnectionCreated = new AtomicLong(0L);
 
     public Promise<WebSocketConnectionHolder, RuntimeException> connect() {
         return connect(true);

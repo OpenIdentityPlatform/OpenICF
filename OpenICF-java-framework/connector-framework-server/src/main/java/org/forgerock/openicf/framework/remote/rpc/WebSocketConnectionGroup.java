@@ -90,7 +90,9 @@ public class WebSocketConnectionGroup
                 }
             };
 
-    private boolean receivedConnectorInfo = false;
+    // Written from transport callback threads, read by the scheduler in
+    // checkIsActive().
+    private volatile boolean receivedConnectorInfo = false;
     private final AtomicBoolean initialConnectorInfoRequest = new AtomicBoolean(false);
     private final RemoteConnectorInfoManager delegate = new RemoteConnectorInfoManager();
 
@@ -141,9 +143,7 @@ public class WebSocketConnectionGroup
                 }
             };
 
-            ControlMessageRequestFactory requestFactory = new ControlMessageRequestFactory();
-            requestFactory.infoLevels.add(InfoLevel.CONNECTOR_INFO);
-            ControlMessageRequest request = trySubmitRequest(requestFactory);
+            ControlMessageRequest request = trySubmitRequest(connectorInfoRequestFactory());
             if (null == request) {
                 // No operational connection yet - checkIsActive() retries
                 // while receivedConnectorInfo is false.
@@ -153,9 +153,7 @@ public class WebSocketConnectionGroup
                 @Override
                 public Boolean apply(RuntimeException e) throws RuntimeException {
                     logger.ok("Resending initial 'CONNECTOR_INFO' request", e);
-                    ControlMessageRequestFactory requestFactory = new ControlMessageRequestFactory();
-                    requestFactory.infoLevels.add(InfoLevel.CONNECTOR_INFO);
-                    ControlMessageRequest retry = trySubmitRequest(requestFactory);
+                    ControlMessageRequest retry = trySubmitRequest(connectorInfoRequestFactory());
                     if (null != retry) {
                         retry.getPromise().then(success);
                     }
@@ -163,6 +161,12 @@ public class WebSocketConnectionGroup
                 }
             });
         }
+    }
+
+    private static ControlMessageRequestFactory connectorInfoRequestFactory() {
+        final ControlMessageRequestFactory requestFactory = new ControlMessageRequestFactory();
+        requestFactory.infoLevels.add(InfoLevel.CONNECTOR_INFO);
+        return requestFactory;
     }
 
     public void principalIsShuttingDown(final Principal connectionPrincipal) {
@@ -350,11 +354,8 @@ public class WebSocketConnectionGroup
             }
 
             if (operational) {
-                ControlMessageRequestFactory requestFactory = new ControlMessageRequestFactory();
-                if (!receivedConnectorInfo) {
-                    requestFactory.infoLevels.add(InfoLevel.CONNECTOR_INFO);
-                }
-                trySubmitRequest(requestFactory);
+                trySubmitRequest(receivedConnectorInfo ? new ControlMessageRequestFactory()
+                        : connectorInfoRequestFactory());
             }
         }
         return operational || !remoteRequests.isEmpty() || !localRequests.isEmpty();
