@@ -12,7 +12,7 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2015-2016 ForgeRock AS.
- * Portions copyright 2025 3A Systems LLC.
+ * Portions copyright 2025-2026 3A Systems LLC.
  */
 
 
@@ -145,7 +145,9 @@ public class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> implem
     private static final Logger logger = Log.getLogger(SinglePrincipal.class);
     private boolean hasCloseBeenCalled = false;
 
-    private RemoteOperationContext context = null;
+    // Written on the handshake-processing pool thread, read by other message
+    // threads via getRemoteConnectionContext()/isHandHooked().
+    private volatile RemoteOperationContext context = null;
 
     private final WebSocketConnectionHolder adapter = new WebSocketConnectionHolder() {
 

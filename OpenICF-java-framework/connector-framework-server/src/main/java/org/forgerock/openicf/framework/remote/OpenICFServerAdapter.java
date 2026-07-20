@@ -21,7 +21,6 @@ import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 import org.forgerock.openicf.common.protobuf.CommonObjectMessages;
 import org.forgerock.openicf.common.protobuf.OperationMessages;
@@ -143,7 +142,7 @@ public class OpenICFServerAdapter implements OperationMessageListener {
             if (logger.isOk()) {
                 logger.ok("{0} onMessage({1})", loggerName(), message.toString());
             }
-            if (!isHandshakeMessage(message)) {
+            if (!isHandshakeMessage(message) && !isErrorResponse(message)) {
                 awaitHandshake(socket, message.getMessageId());
             }
             if (message.hasRequest()) {
@@ -211,17 +210,27 @@ public class OpenICFServerAdapter implements OperationMessageListener {
     }
 
     /**
+     * Error responses are handled before the isHandHooked() guards below, so
+     * they never need to wait for the handshake.
+     */
+    private static boolean isErrorResponse(final RemoteMessage message) {
+        return message.hasResponse() && message.getResponse().hasError();
+    }
+
+    /**
      * Messages are processed on a thread pool, so a message received on a
      * freshly opened connection can overtake the handshake that arrived just
      * before it and would be dropped by the pre-handshake branches below. The
-     * handshake is being processed concurrently, so briefly wait for it
-     * instead of discarding the message.
+     * handshake is being processed concurrently and normally lands within
+     * milliseconds, so briefly wait for it instead of discarding the message.
      */
+    private static final long HANDSHAKE_WAIT_MS = 500;
+
     private void awaitHandshake(final WebSocketConnectionHolder socket, long messageId) {
         if (socket.isHandHooked()) {
             return;
         }
-        final long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(10);
+        final long deadline = System.currentTimeMillis() + HANDSHAKE_WAIT_MS;
         while (!socket.isHandHooked() && System.currentTimeMillis() < deadline) {
             try {
                 Thread.sleep(10);
@@ -231,7 +240,7 @@ public class OpenICFServerAdapter implements OperationMessageListener {
             }
         }
         if (!socket.isHandHooked()) {
-            logger.info("{0} handshake still pending after wait, message('{1}') via socket:{2} ",
+            logger.warn("{0} handshake still pending after wait, message('{1}') via socket:{2} ",
                     loggerName(), messageId, socket.hashCode());
         }
     }

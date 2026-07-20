@@ -533,7 +533,9 @@ public class ClientRemoteConnectorInfoManager extends
         protected final Queue<OperationMessageListener> listeners =
                 new ConcurrentLinkedQueue<OperationMessageListener>();
 
-        private RemoteOperationContext context = null;
+        // Written on the handshake-processing pool thread, read by other message
+        // threads via getRemoteConnectionContext()/isHandHooked().
+        private volatile RemoteOperationContext context = null;
 
         private final WebSocketConnectionHolder adapter = new WebSocketConnectionHolder() {
 
