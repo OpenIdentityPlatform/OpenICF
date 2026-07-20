@@ -465,6 +465,7 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
             AbstractLocalOperationProcessor<BatchOpResult, BatchOpRequest> {
 
         private Subscription subscription = null;
+        private boolean cancelled = false;
         private final AtomicBoolean commandChannelComplete = new AtomicBoolean(false);
         private final AtomicInteger resultChannelComplete = new AtomicInteger(0);
 
@@ -553,6 +554,7 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
                 }
             };
 
+            Subscription batchSubscription = null;
 
             if (!requestMessage.getQuery()) {
                 final List<BatchTask> tasks = new ArrayList<BatchTask>();
@@ -588,7 +590,7 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
                 }
 
                 try {
-                    subscription = connectorFacade.executeBatch(tasks, observer, options);
+                    batchSubscription = connectorFacade.executeBatch(tasks, observer, options);
                 } catch (Throwable t) {
                     tryHandleError(new ConnectorException(t));
                     return BatchOpResult.newBuilder().build();
@@ -599,16 +601,20 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
                     for (int i = 0; i < requestMessage.getBatchTokenCount(); i++) {
                         queryToken.addToken(requestMessage.getBatchToken(i));
                     }
-                    subscription = connectorFacade.queryBatch(queryToken, observer, options);
+                    batchSubscription = connectorFacade.queryBatch(queryToken, observer, options);
                 } catch (Throwable t) {
                     tryHandleError(new ConnectorException(t));
                     return BatchOpResult.newBuilder().build();
                 }
             }
 
+            if (null != batchSubscription) {
+                attachSubscription(batchSubscription);
+            }
+
             BatchOpResult.Builder result = BatchOpResult.newBuilder();
-            if (subscription != null && subscription.getReturnValue() != null) {
-                BatchToken returnedToken = (BatchToken) subscription.getReturnValue();
+            if (batchSubscription != null && batchSubscription.getReturnValue() != null) {
+                BatchToken returnedToken = (BatchToken) batchSubscription.getReturnValue();
                 for (String token : returnedToken.getTokens()) {
                     result.addBatchToken(token);
                 }
@@ -623,8 +629,35 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
             return result.build();
         }
 
+        /**
+         * The subscription is created only after this request is registered,
+         * so a cancel can be delivered before the field is assigned; the
+         * hand-over happens under the lock so exactly one side closes the
+         * subscription.
+         */
+        private void attachSubscription(final Subscription result) {
+            final boolean closeNow;
+            synchronized (this) {
+                closeNow = cancelled;
+                if (!closeNow) {
+                    subscription = result;
+                }
+            }
+            if (closeNow) {
+                result.close();
+            }
+        }
+
         protected boolean tryCancel() {
-            subscription.close();
+            final Subscription current;
+            synchronized (this) {
+                cancelled = true;
+                current = subscription;
+                subscription = null;
+            }
+            if (null != current) {
+                current.close();
+            }
             return super.tryCancel();
         }
     }

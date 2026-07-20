@@ -27,6 +27,9 @@
 package org.forgerock.openicf.common.rpc;
 
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -59,6 +62,19 @@ public abstract class RemoteConnectionGroup<G extends RemoteConnectionGroup<G, H
 
     protected final ConcurrentNavigableMap<Long, LocalRequest<?, ?, G, H, P>> localRequests =
             new ConcurrentSkipListMap<Long, LocalRequest<?, ?, G, H, P>>();
+
+    /**
+     * Cancel messages that arrived before the addressed operation registered
+     * itself in {@link #localRequests} are parked here (request id to expiry
+     * timestamp) and applied when {@link #receiveRequest} registers the
+     * request. Request ids are never reused within a group, so a parked
+     * cancel can only ever match the operation it was sent for; entries whose
+     * operation never arrives are dropped after {@link #PENDING_CANCEL_TTL_MS}.
+     */
+    private final ConcurrentMap<Long, Long> pendingCancels =
+            new ConcurrentHashMap<Long, Long>();
+
+    private static final long PENDING_CANCEL_TTL_MS = 60L * 1000L;
 
     protected final CopyOnWriteArrayList<Pair<String, H>> webSockets =
             new CopyOnWriteArrayList<Pair<String, H>>();
@@ -192,13 +208,29 @@ public abstract class RemoteConnectionGroup<G extends RemoteConnectionGroup<G, H
         return remoteRequest;
     }
 
+    /**
+     * Registers the given request so responses and cancel messages can be
+     * dispatched to it.
+     *
+     * @return the registered request, or {@code null} when a cancel for its
+     *         request id arrived before registration - the request is
+     *         cancelled and must not be executed.
+     */
     public <V, E extends Exception, R extends LocalRequest<V, E, G, H, P>> R receiveRequest(
             final R localRequest) {
+        purgeExpiredPendingCancels();
         LocalRequest<?, ?, G, H, P> tmp =
                 localRequests.putIfAbsent(localRequest.getRequestId(), localRequest);
         if (null != tmp && !tmp.equals(localRequest)) {
             throw new IllegalStateException("Request has been registered with id: "
                     + localRequest.getRequestId());
+        }
+        // Registration and receiveRequestCancel write the two maps in
+        // opposite order, so whichever call runs second is guaranteed to see
+        // the other's entry and deliver the cancel.
+        if (null != pendingCancels.remove(localRequest.getRequestId())) {
+            localRequest.cancel();
+            return null;
         }
         return localRequest;
     }
@@ -216,11 +248,29 @@ public abstract class RemoteConnectionGroup<G extends RemoteConnectionGroup<G, H
     }
 
     public LocalRequest<?, ?, G, H, P> receiveRequestCancel(long messageId) {
+        purgeExpiredPendingCancels();
+        // Park first, then look up: the operation may be racing through
+        // registration on another thread, and this order guarantees that at
+        // least one side observes the other (see receiveRequest).
+        pendingCancels.put(messageId, System.currentTimeMillis() + PENDING_CANCEL_TTL_MS);
         LocalRequest<?, ?, G, H, P> tmp = localRequests.remove(messageId);
         if (null != tmp) {
+            pendingCancels.remove(messageId);
             tmp.cancel();
         }
         return tmp;
+    }
+
+    private void purgeExpiredPendingCancels() {
+        if (pendingCancels.isEmpty()) {
+            return;
+        }
+        final long now = System.currentTimeMillis();
+        for (Map.Entry<Long, Long> entry : pendingCancels.entrySet()) {
+            if (entry.getValue() < now) {
+                pendingCancels.remove(entry.getKey(), entry.getValue());
+            }
+        }
     }
 
     // -- Pair of methods to Cancel pending Request End --

@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.common.rpc.impl;
@@ -109,6 +111,10 @@ public class TestLocalRequest<H extends RemoteConnectionHolder<TestConnectionGro
     public boolean tryCancel() {
         cancelled = true;
         return true;
+    }
+
+    public boolean isCancelled() {
+        return cancelled;
     }
 
     public void execute(int operation) throws InterruptedException {

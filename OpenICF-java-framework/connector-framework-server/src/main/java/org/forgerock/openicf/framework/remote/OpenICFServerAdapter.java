@@ -37,6 +37,7 @@ import org.forgerock.openicf.common.protobuf.RPCMessages.RPCResponse;
 import org.forgerock.openicf.common.protobuf.RPCMessages.RemoteMessage;
 import org.forgerock.openicf.framework.ConnectorFramework;
 import org.forgerock.openicf.framework.async.AsyncConnectorInfoManager;
+import org.forgerock.openicf.framework.async.impl.AbstractLocalOperationProcessor;
 import org.forgerock.openicf.framework.async.impl.AuthenticationAsyncApiOpImpl;
 import org.forgerock.openicf.framework.async.impl.BatchApiOpImpl;
 import org.forgerock.openicf.framework.async.impl.ConnectorEventSubscriptionApiOpImpl;
@@ -423,62 +424,70 @@ public class OpenICFServerAdapter implements OperationMessageListener {
 
                     ConnectorFacade connectorFacade = newInstance(socket, info, connectorFacadeKey);
 
+                    AbstractLocalOperationProcessor<?, ?> processor = null;
                     if (message.hasBatchOpRequest()) {
-                        BatchApiOpImpl.createProcessor(messageId, socket,
-                                message.getBatchOpRequest()).execute(connectorFacade);
+                        processor = BatchApiOpImpl.createProcessor(messageId, socket,
+                                message.getBatchOpRequest());
                     } else if (message.hasAuthenticateOpRequest()) {
-                        AuthenticationAsyncApiOpImpl.createProcessor(messageId, socket,
-                                message.getAuthenticateOpRequest()).execute(connectorFacade);
+                        processor = AuthenticationAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getAuthenticateOpRequest());
                     } else if (message.hasCreateOpRequest()) {
-                        CreateAsyncApiOpImpl.createProcessor(messageId, socket,
-                                message.getCreateOpRequest()).execute(connectorFacade);
+                        processor = CreateAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getCreateOpRequest());
                     } else if (message.hasConnectorEventSubscriptionOpRequest()) {
-                        ConnectorEventSubscriptionApiOpImpl.createProcessor(messageId, socket,
-                                message.getConnectorEventSubscriptionOpRequest()).execute(
-                                connectorFacade);
+                        processor = ConnectorEventSubscriptionApiOpImpl.createProcessor(messageId,
+                                socket, message.getConnectorEventSubscriptionOpRequest());
                     } else if (message.hasDeleteOpRequest()) {
-                        DeleteAsyncApiOpImpl.createProcessor(messageId, socket,
-                                message.getDeleteOpRequest()).execute(connectorFacade);
+                        processor = DeleteAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getDeleteOpRequest());
                     } else if (message.hasGetOpRequest()) {
-                        GetAsyncApiOpImpl.createProcessor(messageId, socket,
-                                message.getGetOpRequest()).execute(connectorFacade);
+                        processor = GetAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getGetOpRequest());
                     } else if (message.hasResolveUsernameOpRequest()) {
-                        ResolveUsernameAsyncApiOpImpl.createProcessor(messageId, socket,
-                                message.getResolveUsernameOpRequest()).execute(connectorFacade);
+                        processor = ResolveUsernameAsyncApiOpImpl.createProcessor(messageId,
+                                socket, message.getResolveUsernameOpRequest());
                     } else if (message.hasSchemaOpRequest()) {
-                        SchemaAsyncApiOpImpl.createProcessor(messageId, socket,
-                                message.getSchemaOpRequest()).execute(connectorFacade);
+                        processor = SchemaAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getSchemaOpRequest());
                     } else if (message.hasScriptOnConnectorOpRequest()) {
-                        ScriptOnConnectorAsyncApiOpImpl.createProcessor(messageId, socket,
-                                message.getScriptOnConnectorOpRequest()).execute(connectorFacade);
+                        processor = ScriptOnConnectorAsyncApiOpImpl.createProcessor(messageId,
+                                socket, message.getScriptOnConnectorOpRequest());
                     } else if (message.hasScriptOnResourceOpRequest()) {
-                        ScriptOnResourceAsyncApiOpImpl.createProcessor(messageId, socket,
-                                message.getScriptOnResourceOpRequest()).execute(connectorFacade);
+                        processor = ScriptOnResourceAsyncApiOpImpl.createProcessor(messageId,
+                                socket, message.getScriptOnResourceOpRequest());
                     } else if (message.hasSearchOpRequest()) {
-                        SearchAsyncApiOpImpl.createProcessor(messageId, socket,
-                                message.getSearchOpRequest()).execute(connectorFacade);
+                        processor = SearchAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getSearchOpRequest());
                     } else if (message.hasSyncOpRequest()) {
-                        SyncAsyncApiOpImpl.createProcessor(messageId, socket,
-                                message.getSyncOpRequest()).execute(connectorFacade);
+                        processor = SyncAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getSyncOpRequest());
                     } else if (message.hasSyncEventSubscriptionOpRequest()) {
-                        SyncEventSubscriptionApiOpImpl.createProcessor(messageId, socket,
-                                message.getSyncEventSubscriptionOpRequest()).execute(
-                                connectorFacade);
+                        processor = SyncEventSubscriptionApiOpImpl.createProcessor(messageId,
+                                socket, message.getSyncEventSubscriptionOpRequest());
                     } else if (message.hasTestOpRequest()) {
-                        TestAsyncApiOpImpl.createProcessor(messageId, socket,
-                                message.getTestOpRequest()).execute(connectorFacade);
+                        processor = TestAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getTestOpRequest());
                     } else if (message.hasUpdateOpRequest()) {
-                        UpdateAsyncApiOpImpl.createProcessor(messageId, socket,
-                                message.getUpdateOpRequest()).execute(connectorFacade);
+                        processor = UpdateAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getUpdateOpRequest());
                     } else if (message.hasValidateOpRequest()) {
-                        ValidateAsyncApiOpImpl.createProcessor(messageId, socket,
-                                message.getValidateOpRequest()).execute(connectorFacade);
+                        processor = ValidateAsyncApiOpImpl.createProcessor(messageId, socket,
+                                message.getValidateOpRequest());
                     } else {
                         socket.getRemoteConnectionContext().getRemoteConnectionGroup()
                                 .trySendMessage(
                                         MessagesUtil.createErrorResponse(messageId,
                                                 new ConnectorException("Unknown OperationRequest"))
                                                 .build());
+                    }
+
+                    // Registration is separate from construction so a
+                    // concurrently processed CancelOpRequest can never observe
+                    // a partially constructed processor; register() returns
+                    // false when a pending cancel already consumed the
+                    // request, in which case the operation must not start.
+                    if (null != processor && processor.register()) {
+                        processor.execute(connectorFacade);
                     }
                 } catch (Throwable t) {
                     logger.ok(t, "Failed handle OperationRequest {0}", messageId);
