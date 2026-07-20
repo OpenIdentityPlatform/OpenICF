@@ -12,6 +12,7 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2015-2016 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.forgerock.openicf.framework.remote;
 
@@ -20,6 +21,7 @@ import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import org.forgerock.openicf.common.protobuf.CommonObjectMessages;
 import org.forgerock.openicf.common.protobuf.OperationMessages;
@@ -141,6 +143,9 @@ public class OpenICFServerAdapter implements OperationMessageListener {
             if (logger.isOk()) {
                 logger.ok("{0} onMessage({1})", loggerName(), message.toString());
             }
+            if (!isHandshakeMessage(message)) {
+                awaitHandshake(socket, message.getMessageId());
+            }
             if (message.hasRequest()) {
                 if (message.getRequest().hasHandshakeMessage()) {
                     if (isClient()) {
@@ -197,6 +202,37 @@ public class OpenICFServerAdapter implements OperationMessageListener {
             logger.warn(e, "{0} failed parse message", loggerName());
         } catch (Throwable t) {
             logger.info(t, "{0} Unhandled exception", loggerName());
+        }
+    }
+
+    private static boolean isHandshakeMessage(final RemoteMessage message) {
+        return (message.hasRequest() && message.getRequest().hasHandshakeMessage())
+                || (message.hasResponse() && message.getResponse().hasHandshakeMessage());
+    }
+
+    /**
+     * Messages are processed on a thread pool, so a message received on a
+     * freshly opened connection can overtake the handshake that arrived just
+     * before it and would be dropped by the pre-handshake branches below. The
+     * handshake is being processed concurrently, so briefly wait for it
+     * instead of discarding the message.
+     */
+    private void awaitHandshake(final WebSocketConnectionHolder socket, long messageId) {
+        if (socket.isHandHooked()) {
+            return;
+        }
+        final long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(10);
+        while (!socket.isHandHooked() && System.currentTimeMillis() < deadline) {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+        if (!socket.isHandHooked()) {
+            logger.info("{0} handshake still pending after wait, message('{1}') via socket:{2} ",
+                    loggerName(), messageId, socket.hashCode());
         }
     }
 
