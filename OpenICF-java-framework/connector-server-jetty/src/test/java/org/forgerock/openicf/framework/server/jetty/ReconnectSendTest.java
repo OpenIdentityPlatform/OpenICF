@@ -33,9 +33,10 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /**
- * Does a SinglePrincipal that has seen one connection closed still send on a
- * subsequent connection? OpenICFWebSocketCreator caches SinglePrincipal per
- * principal name, so the same instance serves every connection of that name.
+ * OpenICFWebSocketCreator caches one SinglePrincipal per principal name and
+ * creates a fresh OpenICFWebSocket endpoint for every connection. A close on
+ * one connection must neither break sends on a later connection of the same
+ * principal nor swallow the close events of later connections.
  */
 public class ReconnectSendTest {
 
@@ -70,9 +71,10 @@ public class ReconnectSendTest {
     }
 
     @Test(timeOut = 30000)
-    public void testSendWorksAfterReconnectOnCachedPrincipal() throws Exception {
+    public void testSendAndCloseWorkPerConnectionOnCachedPrincipal() throws Exception {
         final AtomicReference<WebSocketConnectionHolder> holder =
                 new AtomicReference<WebSocketConnectionHolder>();
+        final AtomicInteger closes = new AtomicInteger();
 
         OperationMessageListener capturing = (OperationMessageListener) Proxy.newProxyInstance(
                 ReconnectSendTest.class.getClassLoader(),
@@ -82,6 +84,9 @@ public class ReconnectSendTest {
                         if ("onConnect".equals(m.getName())) {
                             holder.set((WebSocketConnectionHolder) a[0]);
                         }
+                        if ("onClose".equals(m.getName())) {
+                            closes.incrementAndGet();
+                        }
                         return null;
                     }
                 });
@@ -90,19 +95,28 @@ public class ReconnectSendTest {
                 new ConcurrentHashMap<String, WebSocketConnectionGroup>());
 
         // --- connection #1 ---
-        principal.onWebSocketConnect(newSession());
-        Future<?> first = holder.get().sendBytes(new byte[] { 1, 2, 3 });
-        first.get(5, TimeUnit.SECONDS);
+        OpenICFWebSocket first = new OpenICFWebSocket(principal);
+        first.onWebSocketConnect(newSession());
+        Future<?> firstSend = holder.get().sendBytes(new byte[] { 1, 2, 3 });
+        firstSend.get(5, TimeUnit.SECONDS);
         Assert.assertEquals(SENT.get(), 1, "first connection should have sent");
 
-        principal.onWebSocketClose(1000, "client went away");
+        first.onWebSocketClose(1000, "client went away");
+        Assert.assertEquals(closes.get(), 1, "first close must reach the listener");
 
-        // --- connection #2 on the SAME cached principal instance ---
-        principal.onWebSocketConnect(newSession());
-        Future<?> second = holder.get().sendBytes(new byte[] { 4, 5, 6 });
-        second.get(5, TimeUnit.SECONDS);
+        // duplicate close events of the same connection stay suppressed
+        first.onWebSocketClose(1000, "duplicate");
+        Assert.assertEquals(closes.get(), 1);
 
-        Assert.assertEquals(SENT.get(), 2,
-                "send after reconnect must reach the wire");
+        // --- connection #2 on the SAME cached principal ---
+        OpenICFWebSocket second = new OpenICFWebSocket(principal);
+        second.onWebSocketConnect(newSession());
+        Future<?> secondSend = holder.get().sendBytes(new byte[] { 4, 5, 6 });
+        secondSend.get(5, TimeUnit.SECONDS);
+        Assert.assertEquals(SENT.get(), 2, "send after reconnect must reach the wire");
+
+        second.onWebSocketClose(1000, "client went away again");
+        Assert.assertEquals(closes.get(), 2,
+                "close of a later connection must not be swallowed by an earlier one");
     }
 }
