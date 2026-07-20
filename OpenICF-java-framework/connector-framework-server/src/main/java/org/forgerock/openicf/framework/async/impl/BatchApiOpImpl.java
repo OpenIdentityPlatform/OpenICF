@@ -397,10 +397,22 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
                 if (returnToken != null) {
                     getResultHandler().handleResult(returnToken);
                     logger.ok("Token returned.");
+                    observer.onCompleted();
                 } else {
+                    // Without failing the promise here the caller blocked on it would
+                    // wait forever for a token message that will never arrive.
                     logger.ok("Batch CompletionListener timed out. Unable to return batch token.");
+                    if (!getPromise().isDone()) {
+                        getExceptionHandler().handleException(new ConnectorException(
+                                "Batch operation failed to return a batch token"));
+                        try {
+                            tryCancelRemote(getConnectionContext(), getRequestId());
+                        } catch (Exception e) {
+                            // The transport may already be down when the token was lost.
+                            logger.ok(e, "Failed to cancel remote batch operation.");
+                        }
+                    }
                 }
-                observer.onCompleted();
                 logger.ok("CompletionListener finished.");
             }
         }
