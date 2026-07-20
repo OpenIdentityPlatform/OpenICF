@@ -44,6 +44,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 
 public class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> implements
         WebSocketPingPongListener, WebSocketListener, WebSocketFrameListener {
@@ -102,6 +103,7 @@ public class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> implem
             return;
         }
         hasCloseBeenCalled = true;
+        sendExecutor.shutdown();
         getConnectionPrincipal().getOperationMessageListener().onClose(adapter,
                 statusCode, reason);
     }
@@ -149,6 +151,12 @@ public class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> implem
     // threads via getRemoteConnectionContext()/isHandHooked().
     private volatile RemoteOperationContext context = null;
 
+    // Single thread per socket: frames must leave in submission order (the
+    // peer drops e.g. an operation response that overtakes the handshake
+    // response), and Jetty's RemoteEndpoint does not support concurrent
+    // blocking sends. Shut down in onWebSocketClose.
+    private final ExecutorService sendExecutor = Executors.newSingleThreadExecutor();
+
     private final WebSocketConnectionHolder adapter = new WebSocketConnectionHolder() {
 
         protected void handshake(RPCMessages.HandshakeMessage message) {
@@ -163,17 +171,22 @@ public class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> implem
             return context;
         }
 
-        private final ExecutorService executorService = Executors.newFixedThreadPool(10);
-
         public Future<?> sendBytes(byte[] data) {
             if (isOperational()) {
-                return executorService.submit(() -> {
-                    try {
-                        getSession().getRemote().sendBytes(ByteBuffer.wrap(data));
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+                try {
+                    return sendExecutor.submit(() -> {
+                        try {
+                            getSession().getRemote().sendBytes(ByteBuffer.wrap(data));
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                } catch (RejectedExecutionException e) {
+                    // Socket closed between the isOperational() check and the
+                    // submit - the executor is already shut down.
+                    return Promises.newExceptionPromise(new ConnectorIOException(
+                            "Socket is not connected."));
+                }
             } else {
                 return Promises.newExceptionPromise(new ConnectorIOException(
                         "Socket is not connected."));
@@ -182,13 +195,18 @@ public class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> implem
 
         public Future<?> sendString(String data) {
             if (isOperational()) {
-                return executorService.submit(() -> {
-                    try {
-                        getSession().getRemote().sendString(data);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+                try {
+                    return sendExecutor.submit(() -> {
+                        try {
+                            getSession().getRemote().sendString(data);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                } catch (RejectedExecutionException e) {
+                    return Promises.newExceptionPromise(new ConnectorIOException(
+                            "Socket is not connected."));
+                }
             } else {
                 return Promises.newExceptionPromise(new ConnectorIOException(
                         "Socket is not connected."));

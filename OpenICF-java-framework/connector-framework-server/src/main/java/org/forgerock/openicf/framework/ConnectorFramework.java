@@ -12,6 +12,7 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2015-2016 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.forgerock.openicf.framework;
 
@@ -22,6 +23,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -305,6 +307,10 @@ public class ConnectorFramework implements Closeable {
 
     public void executeMessage(Runnable processMessage) {
         messageExecutor.execute(processMessage);
+    }
+
+    public Executor getMessageExecutor() {
+        return messageExecutor;
     }
 
     // ------ LocalConnectorFramework Implementation Start ------
