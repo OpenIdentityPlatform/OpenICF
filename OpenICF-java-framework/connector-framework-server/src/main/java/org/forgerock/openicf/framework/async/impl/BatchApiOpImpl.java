@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.async.impl;
@@ -290,7 +292,7 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
         // Flow control flags
         private final AtomicBoolean resultChannelComplete = new AtomicBoolean(false);
         private final AtomicBoolean completeEventComplete = new AtomicBoolean(false);
-        private BatchToken returnToken = null;
+        private volatile BatchToken returnToken = null;
         private final AtomicLong completionTimeout = new AtomicLong(new Date().getTime() + 5000);
         private final CompletionListener completionListener = new CompletionListener();
 
@@ -345,13 +347,16 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
             } else if (message.getTaskId().length() == 0 && !message.getComplete()) {
                 // BatchToken message (token list may be empty)
                 logger.ok("Batch token received.");
-                returnToken = new BatchToken();
+                // Fully populate the token before publishing it to the volatile field read by
+                // the CompletionListener thread.
+                BatchToken token = new BatchToken();
                 for (int i = 0; i < message.getBatchTokenCount(); i++) {
-                    returnToken.addToken(message.getBatchToken(i));
+                    token.addToken(message.getBatchToken(i));
                 }
-                returnToken.setQueryRequired(message.getQueryRequired());
-                returnToken.setAsynchronousResults(message.getAsynchronousResults());
-                returnToken.setReturnsResults(message.getReturnsResults());
+                token.setQueryRequired(message.getQueryRequired());
+                token.setAsynchronousResults(message.getAsynchronousResults());
+                token.setReturnsResults(message.getReturnsResults());
+                returnToken = token;
 
                 if (!message.getReturnsResults()) {
                     // No results returned with this token
@@ -367,13 +372,14 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
         }
 
         private class CompletionListener extends Thread {
-            private boolean running = false;
+            private final AtomicBoolean running = new AtomicBoolean(false);
 
             public void start() {
-                if (running) {
+                // The token and "complete" responses are dispatched on pool threads and may
+                // race here; only the first caller may actually start the thread.
+                if (!running.compareAndSet(false, true)) {
                     return;
                 }
-                running = true;
                 super.start();
             }
 
