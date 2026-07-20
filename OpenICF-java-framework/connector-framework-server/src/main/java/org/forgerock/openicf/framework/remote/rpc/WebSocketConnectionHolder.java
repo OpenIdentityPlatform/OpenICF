@@ -61,6 +61,11 @@ public abstract class WebSocketConnectionHolder
      * <p>
      * Tasks must not block waiting for a later message of the same socket:
      * that message cannot be dispatched until the current task returns.
+     * <p>
+     * Arrival order is preserved only because the WebSocket container invokes
+     * the per-connection message callbacks sequentially (both Jetty and
+     * Grizzly do): this method keeps the order of its own calls, so
+     * concurrent callers would enqueue in an undefined order.
      */
     public void executeSerially(final Executor executor, final Runnable task) {
         dispatchQueue.add(task);
@@ -71,6 +76,7 @@ public abstract class WebSocketConnectionHolder
         if (dispatchScheduled.compareAndSet(false, true)) {
             try {
                 executor.execute(new Runnable() {
+                    @Override
                     public void run() {
                         drainDispatchQueue(executor);
                     }

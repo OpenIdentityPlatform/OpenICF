@@ -35,6 +35,7 @@ import org.forgerock.openicf.framework.remote.rpc.OperationMessageListener;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
+import org.forgerock.util.Utils;
 import org.forgerock.util.promise.Promises;
 import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 
@@ -74,7 +75,7 @@ public class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> implem
     }
 
     protected void doClose() {
-
+        sendExecutor.shutdown();
     }
 
 
@@ -103,7 +104,6 @@ public class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> implem
             return;
         }
         hasCloseBeenCalled = true;
-        sendExecutor.shutdown();
         getConnectionPrincipal().getOperationMessageListener().onClose(adapter,
                 statusCode, reason);
     }
@@ -151,11 +151,16 @@ public class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> implem
     // threads via getRemoteConnectionContext()/isHandHooked().
     private volatile RemoteOperationContext context = null;
 
-    // Single thread per socket: frames must leave in submission order (the
-    // peer drops e.g. an operation response that overtakes the handshake
-    // response), and Jetty's RemoteEndpoint does not support concurrent
-    // blocking sends. Shut down in onWebSocketClose.
-    private final ExecutorService sendExecutor = Executors.newSingleThreadExecutor();
+    // Single send thread per principal: frames must leave in submission order
+    // (the peer drops e.g. an operation response that overtakes the handshake
+    // response). Jetty's RemoteEndpoint is thread-safe, but concurrent
+    // blocking sends may reach the wire in any order. This instance is cached
+    // by OpenICFWebSocketCreator and serves every connection of this
+    // principal name, so the executor must survive onWebSocketClose; it is
+    // shut down in doClose(). The thread is a daemon because cached
+    // principals are not closed on servlet destroy.
+    private final ExecutorService sendExecutor = Executors.newSingleThreadExecutor(
+            Utils.newThreadFactory(null, "OpenICF Jetty WebSocket Send %d", true));
 
     private final WebSocketConnectionHolder adapter = new WebSocketConnectionHolder() {
 
@@ -182,8 +187,8 @@ public class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> implem
                         }
                     });
                 } catch (RejectedExecutionException e) {
-                    // Socket closed between the isOperational() check and the
-                    // submit - the executor is already shut down.
+                    // The principal was closed and doClose() shut the
+                    // executor down.
                     return Promises.newExceptionPromise(new ConnectorIOException(
                             "Socket is not connected."));
                 }
