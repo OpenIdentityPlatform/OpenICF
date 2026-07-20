@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.client;
@@ -172,12 +174,13 @@ public class ClientRemoteConnectorInfoManager extends
                 conn.addCloseListener(new CloseListener() {
                     public void onClosed(Closeable closeable, ICloseType type) throws IOException {
                         logger.ok("DEBUG = Connection Closed {0}", type);
-                        
-                        if (availableConnectionPermitCount.get()<1) {
-                        		logger.ok("Destroy onClosed. Remaining permits: {0}", availableConnectionPermitCount.get());
-                        		return;
-                        }
-                        
+
+                        // Always give back the permit held by this connection.
+                        // Skipping the release when no permit is available
+                        // leaks the last permit of a single-connection client
+                        // and leaves it unable to reconnect forever.
+                        // tryReleaseConnectionPermit() is capped at
+                        // permittedConnectionCount so it can not over-credit.
                         tryReleaseConnectionPermit();
 
                         if (!socket.connectPromise.isDone()) {
@@ -193,6 +196,12 @@ public class ClientRemoteConnectorInfoManager extends
                         }
                     }
                 });
+
+                // Stamped after the close listener is registered: once this
+                // timestamp is >= lastConnectAttempt, the permit held by the
+                // last attempt is guaranteed to be released on close, so the
+                // heartbeat self-heal must not restore it.
+                lastConnectionCreated.set(System.currentTimeMillis());
             }
         };
 
@@ -202,6 +211,24 @@ public class ClientRemoteConnectorInfoManager extends
                     if (!ws.isOperational() || !isRunning.get()) {
                         ws.close();
                     }
+                }
+                // Self-heal: a connect attempt that failed before Grizzly
+                // created the Connection (openSocketChannel or
+                // obtainNIOConnection threw, e.g. fd exhaustion) has no close
+                // listener to release its permit. If there is no live
+                // connection, no free permit, no recent connect attempt and
+                // the last attempt never created a Connection
+                // (lastConnectionCreated < lastConnectAttempt), restore the
+                // lost permit so the client can reconnect instead of staying
+                // wedged forever. When a Connection exists its close listener
+                // releases the permit, so healing then would over-credit
+                // while the connection is still pending its handshake.
+                if (isRunning.get() && privateConnections.isEmpty() && !hasFreeConnectionPermit()
+                        && System.currentTimeMillis() - lastConnectAttempt.get() > 30000
+                        && lastConnectionCreated.get() < lastConnectAttempt.get()) {
+                    logger.ok("Restoring connection permit lost by a failed connect attempt - {0}",
+                            getName());
+                    tryReleaseConnectionPermit();
                 }
                 while (isRunning.get() && null != connect(false)) {
                     logger.ok("New connection is created - {0}. Remaining permits:{1}", getName(),
@@ -322,6 +349,8 @@ public class ClientRemoteConnectorInfoManager extends
     // ----
 
     private final AtomicLong lastConnectithenOnException = new AtomicLong(0L);
+    private final AtomicLong lastConnectAttempt = new AtomicLong(0L);
+    private final AtomicLong lastConnectionCreated = new AtomicLong(0L);
 
     public Promise<WebSocketConnectionHolder, RuntimeException> connect() {
         return connect(true);
@@ -367,6 +396,7 @@ public class ClientRemoteConnectorInfoManager extends
         // Successfully acquired one permit
         if (index > -1) {
             if (isRunning.get()) {
+                lastConnectAttempt.set(System.currentTimeMillis());
                 if (connectionInfo.getLocalAddress() != null) {
                     connectionHandler.connect(remoteAddress, new InetSocketAddress(connectionInfo
                             .getLocalAddress(), 0), callback);

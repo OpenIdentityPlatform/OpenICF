@@ -12,6 +12,7 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2015-2016 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.remote.rpc;
@@ -89,7 +90,10 @@ public class WebSocketConnectionGroup
                 }
             };
 
-    private boolean receivedConnectorInfo = false;
+    // Written from transport callback threads, read by the scheduler in
+    // checkIsActive().
+    private volatile boolean receivedConnectorInfo = false;
+    private final AtomicBoolean initialConnectorInfoRequest = new AtomicBoolean(false);
     private final RemoteConnectorInfoManager delegate = new RemoteConnectorInfoManager();
 
     public WebSocketConnectionGroup(final String remoteSessionId) {
@@ -112,29 +116,57 @@ public class WebSocketConnectionGroup
             webSocketConnection.listeners.add(closeListener);
             principals.add(connectionPrincipal.getName());
             if (webSockets.indexOf(entry) == 0) {
-                ControlMessageRequestFactory requestFactory = new ControlMessageRequestFactory();
-                requestFactory.infoLevels.add(InfoLevel.CONNECTOR_INFO);
-                final Function<Boolean, Boolean, RuntimeException> success = new Function<Boolean, Boolean, RuntimeException>() {
-                    @Override
-                    public Boolean apply(Boolean value) throws RuntimeException {
-                        receivedConnectorInfo = value;
-                        return receivedConnectorInfo;
-                    }
-                };
-
-                trySubmitRequest(requestFactory).getPromise().then(success, new Function<RuntimeException, Boolean, RuntimeException>() {
-                    @Override
-                    public Boolean apply(RuntimeException e) throws RuntimeException {
-                        logger.ok("Resending initial 'CONNECTOR_INFO' request", e);
-                        ControlMessageRequestFactory requestFactory = new ControlMessageRequestFactory();
-                        requestFactory.infoLevels.add(InfoLevel.CONNECTOR_INFO);
-                        trySubmitRequest(requestFactory).getPromise().then(success);
-                        return receivedConnectorInfo;
-                    }
-                });
+                // The initial 'CONNECTOR_INFO' request is deferred until
+                // handshakeComplete() - sending it from here races with the
+                // response: the holder assigns its RemoteOperationContext only
+                // after this method returns, so an early response would be
+                // dropped with a NullPointerException.
+                initialConnectorInfoRequest.set(true);
             }
         }
         return operationContext;
+    }
+
+    /**
+     * Invoked by {@link WebSocketConnectionHolder#receiveHandshake} after the
+     * holder has stored the {@link RemoteOperationContext} returned by
+     * {@link #handshake(Principal, WebSocketConnectionHolder, HandshakeMessage)},
+     * so responses to the requests sent below can always be dispatched.
+     */
+    public void handshakeComplete() {
+        if (initialConnectorInfoRequest.compareAndSet(true, false)) {
+            final Function<Boolean, Boolean, RuntimeException> success = new Function<Boolean, Boolean, RuntimeException>() {
+                @Override
+                public Boolean apply(Boolean value) throws RuntimeException {
+                    receivedConnectorInfo = value;
+                    return receivedConnectorInfo;
+                }
+            };
+
+            ControlMessageRequest request = trySubmitRequest(connectorInfoRequestFactory());
+            if (null == request) {
+                // No operational connection yet - checkIsActive() retries
+                // while receivedConnectorInfo is false.
+                return;
+            }
+            request.getPromise().then(success, new Function<RuntimeException, Boolean, RuntimeException>() {
+                @Override
+                public Boolean apply(RuntimeException e) throws RuntimeException {
+                    logger.ok("Resending initial 'CONNECTOR_INFO' request", e);
+                    ControlMessageRequest retry = trySubmitRequest(connectorInfoRequestFactory());
+                    if (null != retry) {
+                        retry.getPromise().then(success);
+                    }
+                    return receivedConnectorInfo;
+                }
+            });
+        }
+    }
+
+    private static ControlMessageRequestFactory connectorInfoRequestFactory() {
+        final ControlMessageRequestFactory requestFactory = new ControlMessageRequestFactory();
+        requestFactory.infoLevels.add(InfoLevel.CONNECTOR_INFO);
+        return requestFactory;
     }
 
     public void principalIsShuttingDown(final Principal connectionPrincipal) {
@@ -322,11 +354,8 @@ public class WebSocketConnectionGroup
             }
 
             if (operational) {
-                ControlMessageRequestFactory requestFactory = new ControlMessageRequestFactory();
-                if (!receivedConnectorInfo) {
-                    requestFactory.infoLevels.add(InfoLevel.CONNECTOR_INFO);
-                }
-                trySubmitRequest(requestFactory);
+                trySubmitRequest(receivedConnectorInfo ? new ControlMessageRequestFactory()
+                        : connectorInfoRequestFactory());
             }
         }
         return operational || !remoteRequests.isEmpty() || !localRequests.isEmpty();
