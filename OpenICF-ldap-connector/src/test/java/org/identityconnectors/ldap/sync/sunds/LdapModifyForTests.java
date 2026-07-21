@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap.sync.sunds;
 
@@ -58,10 +59,12 @@ public class LdapModifyForTests {
     
     private static final Log log = Log.getLog(LdapModifyForTests.class);
 
-    public static void modify(LdapConnection conn, String ldif) throws NamingException {
+    /** Applies the changes in the LDIF and returns how many were performed. */
+    public static int modify(LdapConnection conn, String ldif) throws NamingException {
         LdifParser parser = new LdifParser(ldif);
         Iterator<Line> lines = parser.iterator();
 
+        int changes = 0;
         String dn = null;
         String changeType = null;
 
@@ -76,6 +79,7 @@ public class LdapModifyForTests {
             Line line = lines.next();
             if (line instanceof ChangeSeparator && dn != null) {
                 performChange(conn, dn, changeType, added, deleted, newRdn, deleteOldRdn);
+                changes++;
                 dn = null;
                 changeType = null;
                 added.clear();
@@ -144,6 +148,7 @@ public class LdapModifyForTests {
                 }
             }
         }
+        return changes;
     }
 
     private static void performChange(LdapConnection conn, String dn, String changeType,
@@ -171,7 +176,7 @@ public class LdapModifyForTests {
             log.ok("Modifying context {0} with attributes {1}", dn, modItems);
             conn.getInitialContext().modifyAttributes(dn, modItems.toArray(new ModificationItem[modItems.size()]));
         } else if ("delete".equalsIgnoreCase(changeType)) {
-            log.ok("Deleting context {0}");
+            log.ok("Deleting context {0}", dn);
             conn.getInitialContext().destroySubcontext(dn);
         } else if ("modrdn".equalsIgnoreCase(changeType)) {
             LdapName oldName = quietCreateLdapName(dn);
@@ -185,6 +190,8 @@ public class LdapModifyForTests {
             } finally {
                 ctx.close();
             }
+        } else {
+            throw new IllegalArgumentException("Unsupported changeType: " + changeType);
         }
     }
 
