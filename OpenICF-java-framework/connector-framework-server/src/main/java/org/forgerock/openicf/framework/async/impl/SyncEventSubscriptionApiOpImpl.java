@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.async.impl;
@@ -219,6 +221,7 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
             AbstractLocalOperationProcessor<SyncEventSubscriptionOpResponse, SyncEventSubscriptionOpRequest> {
 
         private Subscription subscription = null;
+        private boolean cancelled = false;
 
         protected InternalLocalOperationProcessor(long requestId, WebSocketConnectionHolder socket,
                 SyncEventSubscriptionOpRequest message) {
@@ -258,7 +261,7 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
                 operationOptions = MessagesUtil.deserializeLegacy(requestMessage.getOptions());
             }
 
-            subscription = connectorFacade.subscribe(objectClass, token, new Observer<SyncDelta>() {
+            final Subscription result = connectorFacade.subscribe(objectClass, token, new Observer<SyncDelta>() {
 
                 public void onCompleted() {
                     handleResult(SyncEventSubscriptionOpResponse.newBuilder().setCompleted(
@@ -283,11 +286,39 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
 
             }, operationOptions);
 
+            attachSubscription(result);
             return SyncEventSubscriptionOpResponse.getDefaultInstance();
         }
 
+        /**
+         * The subscription is created only after this request is registered,
+         * so a cancel can be delivered before the field is assigned; the
+         * hand-over happens under the lock so exactly one side closes the
+         * subscription.
+         */
+        private void attachSubscription(final Subscription result) {
+            final boolean closeNow;
+            synchronized (this) {
+                closeNow = cancelled;
+                if (!closeNow) {
+                    subscription = result;
+                }
+            }
+            if (closeNow) {
+                result.close();
+            }
+        }
+
         protected boolean tryCancel() {
-            subscription.close();
+            final Subscription current;
+            synchronized (this) {
+                cancelled = true;
+                current = subscription;
+                subscription = null;
+            }
+            if (null != current) {
+                current.close();
+            }
             return super.tryCancel();
         }
     }

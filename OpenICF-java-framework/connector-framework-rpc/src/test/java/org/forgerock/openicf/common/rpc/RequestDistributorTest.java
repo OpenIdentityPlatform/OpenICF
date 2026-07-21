@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.common.rpc;
@@ -73,7 +75,9 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestConnect
                 if (obj.request >= 0) {
                     TestLocalRequest<H> request = new TestLocalRequest<H>(obj.messageId, socket);
                     try {
-                        getConnectionGroup().receiveRequest(request).execute(obj.request);
+                        if (request.register()) {
+                            request.execute(obj.request);
+                        }
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                         // request.handleException(e);

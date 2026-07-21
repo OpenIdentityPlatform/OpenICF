@@ -26,6 +26,8 @@
 
 package org.forgerock.openicf.common.rpc;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.forgerock.util.promise.ExceptionHandler;
 import org.forgerock.util.promise.ResultHandler;
 
@@ -43,10 +45,34 @@ public abstract class LocalRequest<V, E extends Exception, G extends RemoteConne
 
     private final P remoteConnectionContext;
 
+    private final AtomicBoolean cancelled = new AtomicBoolean(Boolean.FALSE);
+
+    /**
+     * Creates the request without registering it. Historically the
+     * constructor registered {@code this} in the
+     * {@link RemoteConnectionGroup}; subclasses relying on that must now call
+     * {@link #register()} after construction, or the request will never
+     * receive responses or cancel messages.
+     */
     protected LocalRequest(final long requestId, final H socket) {
         this.requestId = requestId;
         remoteConnectionContext = socket.getRemoteConnectionContext();
-        remoteConnectionContext.getRemoteConnectionGroup().receiveRequest(this);
+    }
+
+    /**
+     * Registers this request in the
+     * {@link RemoteConnectionGroup} so responses and cancel messages can be
+     * dispatched to it. Must be called once the request is fully constructed
+     * and before it is executed: registration publishes this instance to
+     * other threads, and a registration racing with the constructor would let
+     * a concurrent cancel observe a partially initialized subclass.
+     *
+     * @return {@code true} when the request is registered and live,
+     *         {@code false} when a cancel for this request id was already
+     *         received - the request is cancelled and must not be executed.
+     */
+    public final boolean register() {
+        return null != remoteConnectionContext.getRemoteConnectionGroup().receiveRequest(this);
     }
 
     /**
@@ -76,9 +102,23 @@ public abstract class LocalRequest<V, E extends Exception, G extends RemoteConne
         return remoteConnectionContext;
     }
 
+    /**
+     * Returns {@code true} once a {@link #cancel()} has been delivered to
+     * this request, whether directly or as a pending cancel applied during
+     * {@link #register()}.
+     */
+    public final boolean isCancelled() {
+        return cancelled.get();
+    }
+
     public final boolean cancel() {
         remoteConnectionContext.getRemoteConnectionGroup().removeRequest(getRequestId());
-        return tryCancel();
+        // A cancel may be delivered twice when a direct cancel races with a
+        // pending cancel applied during register() - deliver tryCancel() once.
+        if (cancelled.compareAndSet(Boolean.FALSE, Boolean.TRUE)) {
+            return tryCancel();
+        }
+        return false;
     }
 
     public final void handleResult(final V result) {
