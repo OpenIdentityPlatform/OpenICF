@@ -35,6 +35,7 @@ import org.forgerock.openicf.framework.remote.rpc.OperationMessageListener;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
+import org.forgerock.util.Utils;
 import org.forgerock.util.promise.Promises;
 import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 
@@ -44,6 +45,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 
 public class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> implements
         WebSocketPingPongListener, WebSocketListener, WebSocketFrameListener {
@@ -73,7 +75,7 @@ public class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> implem
     }
 
     protected void doClose() {
-
+        sendExecutor.shutdown();
     }
 
 
@@ -149,6 +151,17 @@ public class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> implem
     // threads via getRemoteConnectionContext()/isHandHooked().
     private volatile RemoteOperationContext context = null;
 
+    // Single send thread per principal: frames must leave in submission order
+    // (the peer drops e.g. an operation response that overtakes the handshake
+    // response). Jetty's RemoteEndpoint is thread-safe, but concurrent
+    // blocking sends may reach the wire in any order. This instance is cached
+    // by OpenICFWebSocketCreator and serves every connection of this
+    // principal name, so the executor must survive onWebSocketClose; it is
+    // shut down in doClose(). The thread is a daemon because cached
+    // principals are not closed on servlet destroy.
+    private final ExecutorService sendExecutor = Executors.newSingleThreadExecutor(
+            Utils.newThreadFactory(null, "OpenICF Jetty WebSocket Send %d", true));
+
     private final WebSocketConnectionHolder adapter = new WebSocketConnectionHolder() {
 
         protected void handshake(RPCMessages.HandshakeMessage message) {
@@ -163,17 +176,22 @@ public class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> implem
             return context;
         }
 
-        private final ExecutorService executorService = Executors.newFixedThreadPool(10);
-
         public Future<?> sendBytes(byte[] data) {
             if (isOperational()) {
-                return executorService.submit(() -> {
-                    try {
-                        getSession().getRemote().sendBytes(ByteBuffer.wrap(data));
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+                try {
+                    return sendExecutor.submit(() -> {
+                        try {
+                            getSession().getRemote().sendBytes(ByteBuffer.wrap(data));
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                } catch (RejectedExecutionException e) {
+                    // The principal was closed and doClose() shut the
+                    // executor down.
+                    return Promises.newExceptionPromise(new ConnectorIOException(
+                            "Socket is not connected."));
+                }
             } else {
                 return Promises.newExceptionPromise(new ConnectorIOException(
                         "Socket is not connected."));
@@ -182,13 +200,18 @@ public class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> implem
 
         public Future<?> sendString(String data) {
             if (isOperational()) {
-                return executorService.submit(() -> {
-                    try {
-                        getSession().getRemote().sendString(data);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+                try {
+                    return sendExecutor.submit(() -> {
+                        try {
+                            getSession().getRemote().sendString(data);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                } catch (RejectedExecutionException e) {
+                    return Promises.newExceptionPromise(new ConnectorIOException(
+                            "Socket is not connected."));
+                }
             } else {
                 return Promises.newExceptionPromise(new ConnectorIOException(
                         "Socket is not connected."));

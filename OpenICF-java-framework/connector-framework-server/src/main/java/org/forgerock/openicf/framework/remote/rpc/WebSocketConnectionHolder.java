@@ -29,10 +29,13 @@ package org.forgerock.openicf.framework.remote.rpc;
 import java.io.Closeable;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.forgerock.openicf.common.protobuf.RPCMessages.HandshakeMessage;
 import org.forgerock.openicf.common.rpc.RemoteConnectionHolder;
 import org.forgerock.openicf.framework.CloseListener;
+import org.identityconnectors.common.logging.Log;
 
 import com.google.protobuf.MessageLite;
 
@@ -41,8 +44,71 @@ public abstract class WebSocketConnectionHolder
         Closeable,
         RemoteConnectionHolder<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> {
 
+    private static final Log logger = Log.getLog(WebSocketConnectionHolder.class);
+
     protected final Queue<CloseListener<WebSocketConnectionHolder>> listeners =
             new ConcurrentLinkedQueue<CloseListener<WebSocketConnectionHolder>>();
+
+    private final Queue<Runnable> dispatchQueue = new ConcurrentLinkedQueue<Runnable>();
+    private final AtomicBoolean dispatchScheduled = new AtomicBoolean(false);
+
+    /**
+     * Runs {@code task} on {@code executor} after every task previously
+     * submitted to this holder has completed, preserving the submission order.
+     * At most one task of this holder is in flight at any time, so messages of
+     * one socket are processed in arrival order while different sockets still
+     * run concurrently on the shared executor.
+     * <p>
+     * Tasks must not block waiting for a later message of the same socket:
+     * that message cannot be dispatched until the current task returns.
+     * <p>
+     * Arrival order is preserved only because the WebSocket container invokes
+     * the per-connection message callbacks sequentially (both Jetty and
+     * Grizzly do): this method keeps the order of its own calls, so
+     * concurrent callers would enqueue in an undefined order.
+     */
+    public void executeSerially(final Executor executor, final Runnable task) {
+        dispatchQueue.add(task);
+        scheduleDispatch(executor);
+    }
+
+    private void scheduleDispatch(final Executor executor) {
+        if (dispatchScheduled.compareAndSet(false, true)) {
+            try {
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        drainDispatchQueue(executor);
+                    }
+                });
+            } catch (RuntimeException e) {
+                // Typically RejectedExecutionException on shutdown - allow a
+                // later submission to try again instead of wedging the queue.
+                dispatchScheduled.set(false);
+                throw e;
+            }
+        }
+    }
+
+    private void drainDispatchQueue(final Executor executor) {
+        try {
+            Runnable task;
+            while ((task = dispatchQueue.poll()) != null) {
+                try {
+                    task.run();
+                } catch (Throwable t) {
+                    logger.warn(t, "Failed to process a dispatched message");
+                }
+            }
+        } finally {
+            dispatchScheduled.set(false);
+            // A task may have been added after poll() returned null but before
+            // the flag was cleared; whoever wins the CAS reschedules the drain.
+            if (!dispatchQueue.isEmpty()) {
+                scheduleDispatch(executor);
+            }
+        }
+    }
 
     public boolean receiveHandshake(HandshakeMessage message) {
         if (null == getRemoteConnectionContext()) {

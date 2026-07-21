@@ -128,7 +128,12 @@ public class OpenICFServerAdapter implements OperationMessageListener {
     public void onMessage(final WebSocketConnectionHolder socket, final byte[] bytes) {
         logger.ok("{0} onMessage({1}:bytes)", loggerName(), bytes.length);
 
-        connectorFramework.executeMessage(new Runnable() {
+        // Dispatch messages of one socket in arrival order: an operation
+        // response must not overtake the handshake response on a freshly
+        // opened connection (the pre-handshake branches below would drop it).
+        // Operation requests are handed off to the shared pool inside
+        // processMessage, so operations of one socket still run concurrently.
+        socket.executeSerially(connectorFramework.getMessageExecutor(), new Runnable() {
             public void run() {
                 processMessage(socket, bytes);
             }
@@ -137,13 +142,10 @@ public class OpenICFServerAdapter implements OperationMessageListener {
 
     public void processMessage(final WebSocketConnectionHolder socket, byte[] bytes){
         try {
-            RemoteMessage message = RemoteMessage.parseFrom(bytes);
+            final RemoteMessage message = RemoteMessage.parseFrom(bytes);
 
             if (logger.isOk()) {
                 logger.ok("{0} onMessage({1})", loggerName(), message.toString());
-            }
-            if (!isHandshakeMessage(message) && !isErrorResponse(message)) {
-                awaitHandshake(socket, message.getMessageId());
             }
             if (message.hasRequest()) {
                 if (message.getRequest().hasHandshakeMessage()) {
@@ -155,9 +157,18 @@ public class OpenICFServerAdapter implements OperationMessageListener {
                     }
                 } else if (socket.isHandHooked()) {
                     if (message.getRequest().hasOperationRequest()) {
-                        processOperationRequest(socket, message.getMessageId(), message
-                                .getRequest().getOperationRequest());
-
+                        // Execute on the shared pool: operations may run for a
+                        // long time and several of them multiplex over one
+                        // socket. Keeping them out of the serial dispatch
+                        // queue preserves their concurrency and keeps later
+                        // messages (e.g. CancelOpRequest) timely.
+                        connectorFramework.executeMessage(new Runnable() {
+                            @Override
+                            public void run() {
+                                processOperationRequest(socket, message.getMessageId(), message
+                                        .getRequest().getOperationRequest());
+                            }
+                        });
                     } else if (message.getRequest().hasCancelOpRequest()) {
                         processCancelOpRequest(socket, message.getMessageId(), message.getRequest()
                                 .getCancelOpRequest());
@@ -201,47 +212,6 @@ public class OpenICFServerAdapter implements OperationMessageListener {
             logger.warn(e, "{0} failed parse message", loggerName());
         } catch (Throwable t) {
             logger.info(t, "{0} Unhandled exception", loggerName());
-        }
-    }
-
-    private static boolean isHandshakeMessage(final RemoteMessage message) {
-        return (message.hasRequest() && message.getRequest().hasHandshakeMessage())
-                || (message.hasResponse() && message.getResponse().hasHandshakeMessage());
-    }
-
-    /**
-     * Error responses are handled before the isHandHooked() guards below, so
-     * they never need to wait for the handshake.
-     */
-    private static boolean isErrorResponse(final RemoteMessage message) {
-        return message.hasResponse() && message.getResponse().hasError();
-    }
-
-    /**
-     * Messages are processed on a thread pool, so a message received on a
-     * freshly opened connection can overtake the handshake that arrived just
-     * before it and would be dropped by the pre-handshake branches below. The
-     * handshake is being processed concurrently and normally lands within
-     * milliseconds, so briefly wait for it instead of discarding the message.
-     */
-    private static final long HANDSHAKE_WAIT_MS = 500;
-
-    private void awaitHandshake(final WebSocketConnectionHolder socket, long messageId) {
-        if (socket.isHandHooked()) {
-            return;
-        }
-        final long deadline = System.currentTimeMillis() + HANDSHAKE_WAIT_MS;
-        while (!socket.isHandHooked() && System.currentTimeMillis() < deadline) {
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return;
-            }
-        }
-        if (!socket.isHandHooked()) {
-            logger.warn("{0} handshake still pending after wait, message('{1}') via socket:{2} ",
-                    loggerName(), messageId, socket.hashCode());
         }
     }
 
