@@ -23,8 +23,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 
-import org.eclipse.jetty.util.log.Log;
-import org.eclipse.jetty.util.log.Logger;
 import org.eclipse.jetty.websocket.api.BatchMode;
 import org.eclipse.jetty.websocket.api.Frame;
 import org.eclipse.jetty.websocket.api.Session;
@@ -38,6 +36,7 @@ import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
 import org.forgerock.util.Utils;
 import org.forgerock.util.promise.Promises;
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 
 /**
@@ -54,7 +53,7 @@ import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 public class OpenICFWebSocket implements
         WebSocketPingPongListener, WebSocketListener, WebSocketFrameListener {
 
-    private static final Logger logger = Log.getLogger(OpenICFWebSocket.class);
+    private static final Log logger = Log.getLog(OpenICFWebSocket.class);
 
     private final ConnectionPrincipal<?> principal;
 
@@ -109,7 +108,7 @@ public class OpenICFWebSocket implements
 
     @Override
     public void onWebSocketError(Throwable t) {
-        logger.debug("onError:", t);
+        logger.ok(t, "onError");
         principal.getOperationMessageListener().onError(t);
     }
 
@@ -129,35 +128,39 @@ public class OpenICFWebSocket implements
 
     @Override
     public void onWebSocketBinary(byte[] payload, int offset, int len) {
-        logger.debug("onBinaryMessage('" + (null != payload ? payload.length : 0) + "')");
+        logger.ok("onBinaryMessage({0})", null != payload ? payload.length : 0);
         principal.getOperationMessageListener().onMessage(adapter, payload);
     }
 
     @Override
     public void onWebSocketText(String message) {
-        logger.debug("onTextMessage('" + message + "')");
+        logger.ok("onTextMessage({0})", message);
         principal.getOperationMessageListener().onMessage(adapter, message);
     }
 
     @Override
     public void onWebSocketFrame(Frame frame) {
-        logger.debug("onWebSocketFrame('" + frame + "')");
+        logger.ok("onWebSocketFrame({0})", frame);
     }
 
     private final WebSocketConnectionHolder adapter = new WebSocketConnectionHolder() {
 
+        @Override
         protected void handshake(RPCMessages.HandshakeMessage message) {
             context = principal.handshake(this, message);
         }
 
+        @Override
         public boolean isOperational() {
             return null != getSession() && getSession().isOpen();
         }
 
+        @Override
         public RemoteOperationContext getRemoteConnectionContext() {
             return context;
         }
 
+        @Override
         public Future<?> sendBytes(byte[] data) {
             if (isOperational()) {
                 try {
@@ -179,6 +182,7 @@ public class OpenICFWebSocket implements
             }
         }
 
+        @Override
         public Future<?> sendString(String data) {
             if (isOperational()) {
                 try {
@@ -199,6 +203,7 @@ public class OpenICFWebSocket implements
             }
         }
 
+        @Override
         public void sendPing(byte[] applicationData) throws Exception {
             if (isOperational()) {
                 getSession().getRemote().sendPing(ByteBuffer.wrap(applicationData));
@@ -210,6 +215,7 @@ public class OpenICFWebSocket implements
             }
         }
 
+        @Override
         public void sendPong(byte[] applicationData) throws Exception {
             if (isOperational()) {
                 getSession().getRemote().sendPong(ByteBuffer.wrap(applicationData));
@@ -221,6 +227,7 @@ public class OpenICFWebSocket implements
             }
         }
 
+        @Override
         protected void tryClose() {
             final Session current = getSession();
             if (null != current) {
