@@ -74,17 +74,18 @@ public class OpenICFWebSocketServletBase extends JettyWebSocketServlet {
 
     @Override
     public void destroy() {
-        super.destroy();
         if (websocketCreator != null) {
             try {
                 // End the lifecycle of the cached principals before their
                 // scheduler and framework go away.
                 websocketCreator.close();
-                websocketCreator = null;
             } catch (Throwable e) {
                 logger.warn(e);
+            } finally {
+                websocketCreator = null;
             }
         }
+        super.destroy();
         if (privateExecutorService && executorService != null) {
             try {
                 executorService.shutdown();
@@ -114,6 +115,8 @@ public class OpenICFWebSocketServletBase extends JettyWebSocketServlet {
             ConnectorFrameworkFactory cf = getConnectorFrameworkFactory();
             if (null != cf) {
                 connectorFramework = cf.acquire();
+                // Acquired here, so destroy() must release it.
+                privateConnectorFramework = true;
                 configure(connectorFramework.get());
             } else {
                 throw new RuntimeException("Failed to initialise connectorFramework");

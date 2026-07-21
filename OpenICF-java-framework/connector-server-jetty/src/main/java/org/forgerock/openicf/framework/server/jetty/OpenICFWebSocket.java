@@ -12,7 +12,7 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2015-2016 ForgeRock AS.
- * Portions Copyrighted 2026 3A Systems, LLC.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.forgerock.openicf.framework.server.jetty;
 
@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.jetty.websocket.api.BatchMode;
 import org.eclipse.jetty.websocket.api.Frame;
@@ -57,11 +58,11 @@ public class OpenICFWebSocket implements
 
     private final ConnectionPrincipal<?> principal;
 
-    private Session session;
+    // Written on the Jetty connect thread, read on the send-executor thread
+    // and by isOperational() callers.
+    private volatile Session session;
 
-    // Jetty invokes the callbacks of one connection sequentially, and this
-    // instance serves exactly one connection, so a plain field is enough.
-    private boolean closed = false;
+    private final AtomicBoolean closed = new AtomicBoolean(false);
 
     // Written on the handshake-processing pool thread, read by other message
     // threads via getRemoteConnectionContext()/isHandHooked().
@@ -92,10 +93,9 @@ public class OpenICFWebSocket implements
 
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
-        if (closed) {
+        if (!closed.compareAndSet(false, true)) {
             return;
         }
-        closed = true;
         try {
             principal.getOperationMessageListener().onClose(adapter, statusCode, reason);
         } finally {
@@ -108,7 +108,7 @@ public class OpenICFWebSocket implements
 
     @Override
     public void onWebSocketError(Throwable t) {
-        logger.ok(t, "onError");
+        logger.warn(t, "onError");
         principal.getOperationMessageListener().onError(t);
     }
 
@@ -162,45 +162,30 @@ public class OpenICFWebSocket implements
 
         @Override
         public Future<?> sendBytes(byte[] data) {
+            return submitSend(() -> getSession().getRemote().sendBytes(ByteBuffer.wrap(data)));
+        }
+
+        @Override
+        public Future<?> sendString(String data) {
+            return submitSend(() -> getSession().getRemote().sendString(data));
+        }
+
+        private Future<?> submitSend(FrameWrite frame) {
             if (isOperational()) {
                 try {
                     return sendExecutor.submit(() -> {
                         try {
-                            getSession().getRemote().sendBytes(ByteBuffer.wrap(data));
+                            frame.write();
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
                     });
                 } catch (RejectedExecutionException e) {
                     // The connection was closed and the executor shut down.
-                    return Promises.newExceptionPromise(new ConnectorIOException(
-                            "Socket is not connected."));
                 }
-            } else {
-                return Promises.newExceptionPromise(new ConnectorIOException(
-                        "Socket is not connected."));
             }
-        }
-
-        @Override
-        public Future<?> sendString(String data) {
-            if (isOperational()) {
-                try {
-                    return sendExecutor.submit(() -> {
-                        try {
-                            getSession().getRemote().sendString(data);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                } catch (RejectedExecutionException e) {
-                    return Promises.newExceptionPromise(new ConnectorIOException(
-                            "Socket is not connected."));
-                }
-            } else {
-                return Promises.newExceptionPromise(new ConnectorIOException(
-                        "Socket is not connected."));
-            }
+            return Promises.newExceptionPromise(new ConnectorIOException(
+                    "Socket is not connected."));
         }
 
         @Override
@@ -230,10 +215,15 @@ public class OpenICFWebSocket implements
         @Override
         protected void tryClose() {
             final Session current = getSession();
-            if (null != current) {
+            if (null != current && current.isOpen()) {
                 current.close(StatusCode.NORMAL, "Shutdown");
             }
         }
 
     };
+
+    @FunctionalInterface
+    private interface FrameWrite {
+        void write() throws IOException;
+    }
 }
