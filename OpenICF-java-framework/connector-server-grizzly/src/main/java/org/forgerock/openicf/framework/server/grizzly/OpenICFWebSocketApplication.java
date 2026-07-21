@@ -258,8 +258,14 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
             final ClosingFrame closing = (ClosingFrame) frame;
 
             OperationMessageListener listener;
-            while ((listener = listeners.poll()) != null) {
-                listener.onClose(adapter, closing.getCode(), closing.getReason());
+            try {
+                while ((listener = listeners.poll()) != null) {
+                    listener.onClose(adapter, closing.getCode(), closing.getReason());
+                }
+            } finally {
+                // Fires the holder's close listeners so the
+                // WebSocketConnectionGroup drops this connection.
+                adapter.close();
             }
         }
 
