@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap.sync.sunds;
 
@@ -57,38 +58,59 @@ public class SunDSChangeLogSyncStrategyTests extends SunDSTestBase {
 
     private static final Log log = Log.getLog(SunDSChangeLogSyncStrategyTests.class);
 
-    private static final int STABLE_CHANGELOG_INTERVAL = 2000; /* milliseconds */
+    private static final int CHANGELOG_POLL_INTERVAL = 100; /* milliseconds */
+    private static final int CHANGELOG_WAIT_TIMEOUT = 60000; /* milliseconds */
 
     private static LdapConnection newConnection(LdapConfiguration config) throws NamingException {
         LdapConnection conn = new LdapConnection(config);
-        cleanupBaseContext(conn);
-        waitForChangeLogToStabilize(conn);
+        int lastChangeNumber = getLastChangeNumber(conn);
+        int deleted = cleanupBaseContext(conn);
+        waitForChangeLogToReach(conn, lastChangeNumber + deleted);
         return conn;
     }
 
-    private static void waitForChangeLogToStabilize(LdapConnection conn) {
-        int lastChangeNumber = -1;
-        int previousLastChangeNumber;
-        do {
-            if (lastChangeNumber > 0) {
-                log.ok("Waiting for change log to stabilize (last change number: {0})", lastChangeNumber);
-                try {
-                    Thread.sleep(STABLE_CHANGELOG_INTERVAL);
-                } catch (InterruptedException e) {
-                    // Ignore.
-                }
+    private static int getLastChangeNumber(LdapConnection conn) {
+        // A fresh strategy instance every time: getChangeLogAttributes() caches its first read.
+        return new SunDSChangeLogSyncStrategy(conn, ObjectClass.ACCOUNT).getChangeLogAttributes().getLastChangeNumber();
+    }
+
+    /**
+     * Waits until the change log has caught up with the caller's own changes. OpenDJ writes the
+     * retro change log asynchronously, so an LDAP operation can return before its change log
+     * record exists; waiting for two equal consecutive reads alone is blind to such records, and
+     * a straggler then leaks into the next sync window (issue #116). The caller therefore passes
+     * the change number the log is known to owe it: the last change number read before its
+     * operations plus the number of operations performed.
+     */
+    private static void waitForChangeLogToReach(LdapConnection conn, int expectedChangeNumber) {
+        long deadline = System.currentTimeMillis() + CHANGELOG_WAIT_TIMEOUT;
+        int previousLastChangeNumber = -1;
+        int lastChangeNumber = getLastChangeNumber(conn);
+        // On top of the expected number, require two equal consecutive reads, as a guard against
+        // records the caller did not account for still trickling in.
+        while (lastChangeNumber < expectedChangeNumber || lastChangeNumber != previousLastChangeNumber) {
+            if (System.currentTimeMillis() >= deadline) {
+                throw new AssertionError("Change log did not stabilize at change number "
+                        + expectedChangeNumber + " or later within " + CHANGELOG_WAIT_TIMEOUT
+                        + " ms (last change number: " + lastChangeNumber + ")");
+            }
+            log.ok("Waiting for change log to reach {0} (last change number: {1})", expectedChangeNumber, lastChangeNumber);
+            try {
+                Thread.sleep(CHANGELOG_POLL_INTERVAL);
+            } catch (InterruptedException e) {
+                // Ignore.
             }
             previousLastChangeNumber = lastChangeNumber;
-            lastChangeNumber = new SunDSChangeLogSyncStrategy(conn, ObjectClass.ACCOUNT).getChangeLogAttributes().getLastChangeNumber();
-        } while (lastChangeNumber != previousLastChangeNumber);
+            lastChangeNumber = getLastChangeNumber(conn);
+        }
     }
 
     private List<SyncDelta> doTest(LdapConnection conn, String ldif, int expected) throws NamingException {
         SunDSChangeLogSyncStrategy sync = new SunDSChangeLogSyncStrategy(conn, ObjectClass.ACCOUNT);
         SyncToken token = sync.getLatestSyncToken();
 
-        LdapModifyForTests.modify(conn, ldif);
-        waitForChangeLogToStabilize(conn);
+        int changes = LdapModifyForTests.modify(conn, ldif);
+        waitForChangeLogToReach(conn, (Integer) token.getValue() + changes);
 
         OperationOptionsBuilder builder = new OperationOptionsBuilder();
         builder.setAttributesToGet("cn", "sn", "givenName", "uid");

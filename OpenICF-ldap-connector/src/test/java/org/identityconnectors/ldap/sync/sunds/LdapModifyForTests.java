@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap.sync.sunds;
 
@@ -58,10 +59,12 @@ public class LdapModifyForTests {
     
     private static final Log log = Log.getLog(LdapModifyForTests.class);
 
-    public static void modify(LdapConnection conn, String ldif) throws NamingException {
+    /** Applies the changes in the LDIF and returns how many were performed. */
+    public static int modify(LdapConnection conn, String ldif) throws NamingException {
         LdifParser parser = new LdifParser(ldif);
         Iterator<Line> lines = parser.iterator();
 
+        int changes = 0;
         String dn = null;
         String changeType = null;
 
@@ -76,6 +79,7 @@ public class LdapModifyForTests {
             Line line = lines.next();
             if (line instanceof ChangeSeparator && dn != null) {
                 performChange(conn, dn, changeType, added, deleted, newRdn, deleteOldRdn);
+                changes++;
                 dn = null;
                 changeType = null;
                 added.clear();
@@ -144,6 +148,7 @@ public class LdapModifyForTests {
                 }
             }
         }
+        return changes;
     }
 
     private static void performChange(LdapConnection conn, String dn, String changeType,

@@ -75,7 +75,11 @@ public class SunDSTestBase extends LdapConnectorTestBase {
         return config;
     }
 
-    public static void cleanupBaseContext(LdapConnection conn) throws NamingException {
+    /**
+     * Deletes everything under the base contexts and returns the number of entries deleted, so
+     * callers tracking the change log can tell how many delete records they are owed.
+     */
+    public static int cleanupBaseContext(LdapConnection conn) throws NamingException {
         SearchControls controls = LdapInternalSearch.createDefaultSearchControls();
         controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
         LdapInternalSearch search = new LdapInternalSearch(conn, null, Arrays.asList(conn.getConfiguration().getBaseContexts()),
@@ -93,6 +97,7 @@ public class SunDSTestBase extends LdapConnectorTestBase {
         for (LdapName entryDN : entryDNs) {
             conn.getInitialContext().destroySubcontext(entryDN);
         }
+        return entryDNs.size();
     }
 
     public static ConnectorFacade newFacade(LdapConfiguration cfg) {
