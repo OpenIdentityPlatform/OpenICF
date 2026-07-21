@@ -621,8 +621,14 @@ public class ClientRemoteConnectorInfoManager extends
             connectPromise.handleException(new ConnectorException("Connection is closed: #"
                     + closing.getCode() + " - " + closing.getReason()));
             OperationMessageListener listener;
-            while ((listener = listeners.poll()) != null) {
-                listener.onClose(adapter, closing.getCode(), closing.getReason());
+            try {
+                while ((listener = listeners.poll()) != null) {
+                    listener.onClose(adapter, closing.getCode(), closing.getReason());
+                }
+            } finally {
+                // Fires the holder's close listeners so the
+                // WebSocketConnectionGroup drops this connection.
+                adapter.close();
             }
         }
 
