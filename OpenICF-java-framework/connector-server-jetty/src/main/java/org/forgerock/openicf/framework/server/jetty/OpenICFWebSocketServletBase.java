@@ -18,7 +18,6 @@
 package org.forgerock.openicf.framework.server.jetty;
 
 import java.lang.reflect.Method;
-import java.nio.ByteBuffer;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -27,9 +26,6 @@ import javax.security.auth.callback.NameCallback;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.eclipse.jetty.util.log.Log;
-import org.eclipse.jetty.util.log.Logger;
-import org.eclipse.jetty.websocket.api.WebSocketPingPongListener;
 import org.eclipse.jetty.websocket.server.JettyServerUpgradeRequest;
 import org.eclipse.jetty.websocket.server.JettyServerUpgradeResponse;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
@@ -39,6 +35,7 @@ import org.forgerock.openicf.framework.ConnectorFrameworkFactory;
 import org.forgerock.openicf.framework.remote.ReferenceCountedObject;
 import org.forgerock.util.Utils;
 import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.common.logging.Log;
 
 public class OpenICFWebSocketServletBase extends JettyWebSocketServlet {
 
@@ -49,7 +46,7 @@ public class OpenICFWebSocketServletBase extends JettyWebSocketServlet {
 
     private static final long serialVersionUID = 6089858120348026823L;
 
-    private static final Logger logger = Log.getLogger(OpenICFWebSocketServletBase.class);
+    private static final Log logger = Log.getLog(OpenICFWebSocketServletBase.class);
 
     private boolean privateConnectorFramework = false;
     private boolean privateExecutorService = false;
@@ -80,7 +77,7 @@ public class OpenICFWebSocketServletBase extends JettyWebSocketServlet {
                 // scheduler and framework go away.
                 websocketCreator.close();
             } catch (Throwable e) {
-                logger.warn(e);
+                logger.warn(e, "Failed to close the WebSocket creator");
             } finally {
                 websocketCreator = null;
             }
@@ -91,7 +88,7 @@ public class OpenICFWebSocketServletBase extends JettyWebSocketServlet {
                 executorService.shutdown();
                 executorService = null;
             } catch (Throwable e) {
-                logger.warn(e);
+                logger.warn(e, "Failed to shut the executor service down");
             }
         }
         if (privateConnectorFramework && connectorFramework != null) {
@@ -99,7 +96,7 @@ public class OpenICFWebSocketServletBase extends JettyWebSocketServlet {
                 connectorFramework.release();
                 connectorFramework = null;
             } catch (Exception e) {
-                logger.warn(e);
+                logger.warn(e, "Failed to release the connector framework");
             }
         }
     }

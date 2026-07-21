@@ -29,8 +29,6 @@ import javax.security.auth.callback.NameCallback;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.util.StringUtil;
-import org.eclipse.jetty.util.log.Log;
-import org.eclipse.jetty.util.log.Logger;
 import org.eclipse.jetty.websocket.server.JettyServerUpgradeRequest;
 import org.eclipse.jetty.websocket.server.JettyServerUpgradeResponse;
 import org.eclipse.jetty.websocket.server.JettyWebSocketCreator;
@@ -40,10 +38,11 @@ import org.forgerock.openicf.framework.remote.ConnectionPrincipal;
 import org.forgerock.openicf.framework.remote.OpenICFServerAdapter;
 import org.forgerock.openicf.framework.remote.rpc.OperationMessageListener;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
+import org.identityconnectors.common.logging.Log;
 
 public class OpenICFWebSocketCreator implements JettyWebSocketCreator, Closeable {
 
-    private static final Logger logger = Log.getLogger(OpenICFWebSocketCreator.class);
+    private static final Log logger = Log.getLog(OpenICFWebSocketCreator.class);
 
     protected final ConcurrentMap<String, WebSocketConnectionGroup> globalConnectionGroups =
             new ConcurrentHashMap<String, WebSocketConnectionGroup>();
@@ -81,7 +80,9 @@ public class OpenICFWebSocketCreator implements JettyWebSocketCreator, Closeable
 
 
         if (null == authenticator) {
-            logger.info("Creating single 'anonymous' authenticator");
+            // Framework Log formats through MessageFormat, so single quotes
+            // must be doubled to survive.
+            logger.info("Creating single ''anonymous'' authenticator");
             this.authenticator = new Authenticator() {
                 @Override
                 public void authenticate(JettyServerUpgradeRequest request, JettyServerUpgradeResponse response, NameCallback callback) {
