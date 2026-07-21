@@ -262,7 +262,7 @@ public abstract class LdapConnectorTestBase {
      */
     private static void waitUntilListening() throws IOException {
         final int WAIT = 200; // ms
-        final int ITERATIONS = 50;
+        final int ITERATIONS = 150; // 30 s: a loaded CI runner can be very slow (#111)
         for (int i = 1; !isListening(PORT) || !isListening(SSL_PORT); i++) {
             if (i >= ITERATIONS) {
                 throw new IOException("OpenDJ is not listening on ports " + PORT + " and " + SSL_PORT
@@ -292,7 +292,7 @@ public abstract class LdapConnectorTestBase {
      */
     private static boolean waitUntilStopped() {
         final int WAIT = 200; // ms
-        final int ITERATIONS = 25;
+        final int ITERATIONS = 150; // 30 s: a loaded CI runner can be very slow (#111)
         for (int i = 1; EmbeddedUtils.isRunning() || isAnyPortStillBound(); i++) {
             if (i >= ITERATIONS) {
                 return false;
