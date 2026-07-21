@@ -113,10 +113,6 @@ public class TestLocalRequest<H extends RemoteConnectionHolder<TestConnectionGro
         return true;
     }
 
-    public boolean isCancelled() {
-        return cancelled;
-    }
-
     public void execute(int operation) throws InterruptedException {
         switch (operation) {
         case 0: {

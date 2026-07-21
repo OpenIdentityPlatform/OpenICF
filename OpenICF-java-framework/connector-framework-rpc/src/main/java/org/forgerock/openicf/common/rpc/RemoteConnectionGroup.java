@@ -70,6 +70,10 @@ public abstract class RemoteConnectionGroup<G extends RemoteConnectionGroup<G, H
      * request. Request ids are never reused within a group, so a parked
      * cancel can only ever match the operation it was sent for; entries whose
      * operation never arrives are dropped after {@link #PENDING_CANCEL_TTL_MS}.
+     * The park in {@link #receiveRequestCancel} is unconditional, so a cancel
+     * that loses the race with completion (the operation already produced its
+     * result and unregistered) also leaves an entry behind for the full TTL;
+     * such entries are harmless and are removed by the next purge.
      */
     private final ConcurrentMap<Long, Long> pendingCancels =
             new ConcurrentHashMap<Long, Long>();
@@ -227,9 +231,19 @@ public abstract class RemoteConnectionGroup<G extends RemoteConnectionGroup<G, H
         }
         // Registration and receiveRequestCancel write the two maps in
         // opposite order, so whichever call runs second is guaranteed to see
-        // the other's entry and deliver the cancel.
+        // the other's entry and deliver the cancel. The verdict must come
+        // from the request's own state rather than from winning the park
+        // removal: receiveRequestCancel may find the request in localRequests
+        // right after the putIfAbsent above, consume its own park and cancel
+        // the request directly - this thread then observes no parked entry.
         if (null != pendingCancels.remove(localRequest.getRequestId())) {
             localRequest.cancel();
+        }
+        if (localRequest.isCancelled()) {
+            // cancel() removes the registration, but only when the cancelling
+            // side found it - make sure a request reported dead is never left
+            // registered.
+            localRequests.remove(localRequest.getRequestId(), localRequest);
             return null;
         }
         return localRequest;

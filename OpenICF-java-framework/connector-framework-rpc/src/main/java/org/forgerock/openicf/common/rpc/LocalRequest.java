@@ -47,6 +47,13 @@ public abstract class LocalRequest<V, E extends Exception, G extends RemoteConne
 
     private final AtomicBoolean cancelled = new AtomicBoolean(Boolean.FALSE);
 
+    /**
+     * Creates the request without registering it. Historically the
+     * constructor registered {@code this} in the
+     * {@link RemoteConnectionGroup}; subclasses relying on that must now call
+     * {@link #register()} after construction, or the request will never
+     * receive responses or cancel messages.
+     */
     protected LocalRequest(final long requestId, final H socket) {
         this.requestId = requestId;
         remoteConnectionContext = socket.getRemoteConnectionContext();
@@ -93,6 +100,15 @@ public abstract class LocalRequest<V, E extends Exception, G extends RemoteConne
 
     public P getRemoteConnectionContext() {
         return remoteConnectionContext;
+    }
+
+    /**
+     * Returns {@code true} once a {@link #cancel()} has been delivered to
+     * this request, whether directly or as a pending cancel applied during
+     * {@link #register()}.
+     */
+    public final boolean isCancelled() {
+        return cancelled.get();
     }
 
     public final boolean cancel() {

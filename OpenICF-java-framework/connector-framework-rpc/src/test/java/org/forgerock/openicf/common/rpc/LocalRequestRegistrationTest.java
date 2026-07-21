@@ -15,7 +15,12 @@
  */
 package org.forgerock.openicf.common.rpc;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.forgerock.openicf.common.rpc.impl.TestConnectionContext;
 import org.forgerock.openicf.common.rpc.impl.TestConnectionGroup;
@@ -132,5 +137,75 @@ public class LocalRequestRegistrationTest<H extends RemoteConnectionHolder<TestC
         Assert.assertTrue(request.cancel());
         Assert.assertFalse(request.cancel());
         Assert.assertEquals(cancelCount[0], 1);
+    }
+
+    /**
+     * Replays the interleaving where the whole {@code receiveRequestCancel}
+     * runs between the registration's {@code putIfAbsent} and its pending
+     * cancel check: the re-registration below stands in for the registering
+     * thread resuming after the cancel was delivered directly. The verdict
+     * must come from the request's own cancelled state, so register() must
+     * still report the request dead.
+     */
+    @Test
+    public void testRegisterObservesDirectlyDeliveredCancel() throws Exception {
+        TestConnectionGroup<H> group = new TestConnectionGroup<H>("test");
+        TestLocalRequest<H> request = new TestLocalRequest<H>(1L, newSocket(group));
+
+        Assert.assertTrue(request.register());
+        Assert.assertSame(group.receiveRequestCancel(1L), request);
+
+        Assert.assertFalse(request.register());
+        Assert.assertTrue(request.isCancelled());
+        Assert.assertTrue(group.getLocalRequests().isEmpty());
+    }
+
+    /**
+     * Races {@link LocalRequest#register()} against
+     * {@link TestConnectionGroup#receiveRequestCancel(long)}. Whatever the
+     * interleaving, the cancel must be delivered exactly once and the request
+     * must end up unregistered.
+     */
+    @Test
+    public void testConcurrentRegisterAndCancel() throws Exception {
+        final TestConnectionGroup<H> group = new TestConnectionGroup<H>("test");
+        final ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            for (long requestId = 1; requestId <= 1000; requestId++) {
+                final long id = requestId;
+                final AtomicInteger cancelCount = new AtomicInteger(0);
+                final TestLocalRequest<H> request =
+                        new TestLocalRequest<H>(id, newSocket(group)) {
+                            public boolean tryCancel() {
+                                cancelCount.incrementAndGet();
+                                return super.tryCancel();
+                            }
+                        };
+                final CyclicBarrier barrier = new CyclicBarrier(2);
+                Future<Boolean> registered = executor.submit(new Callable<Boolean>() {
+                    public Boolean call() throws Exception {
+                        barrier.await();
+                        return request.register();
+                    }
+                });
+                Future<Object> cancelled = executor.submit(new Callable<Object>() {
+                    public Object call() throws Exception {
+                        barrier.await();
+                        return group.receiveRequestCancel(id);
+                    }
+                });
+                cancelled.get();
+                Boolean live = registered.get();
+
+                Assert.assertTrue(request.isCancelled(), "round " + id
+                        + ": cancel was lost");
+                Assert.assertEquals(cancelCount.get(), 1, "round " + id
+                        + ": tryCancel() delivered more than once");
+                Assert.assertFalse(group.getLocalRequests().contains(id), "round " + id
+                        + ": cancelled request left registered (register() == " + live + ")");
+            }
+        } finally {
+            executor.shutdownNow();
+        }
     }
 }
