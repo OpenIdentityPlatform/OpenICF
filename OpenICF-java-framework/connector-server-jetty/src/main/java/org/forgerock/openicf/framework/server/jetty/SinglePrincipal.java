@@ -19,15 +19,6 @@
 package org.forgerock.openicf.framework.server.jetty;
 
 import org.eclipse.jetty.util.StringUtil;
-import org.eclipse.jetty.util.log.Log;
-import org.eclipse.jetty.util.log.Logger;
-import org.eclipse.jetty.websocket.api.BatchMode;
-import org.eclipse.jetty.websocket.api.Frame;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.StatusCode;
-import org.eclipse.jetty.websocket.api.WebSocketFrameListener;
-import org.eclipse.jetty.websocket.api.WebSocketListener;
-import org.eclipse.jetty.websocket.api.WebSocketPingPongListener;
 import org.forgerock.openicf.common.protobuf.RPCMessages;
 import org.forgerock.openicf.framework.ConnectorFramework;
 import org.forgerock.openicf.framework.remote.ConnectionPrincipal;
@@ -35,21 +26,18 @@ import org.forgerock.openicf.framework.remote.rpc.OperationMessageListener;
 import org.forgerock.openicf.framework.remote.rpc.RemoteOperationContext;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
-import org.forgerock.util.Utils;
-import org.forgerock.util.promise.Promises;
-import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.RejectedExecutionException;
 
-public class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> implements
-        WebSocketPingPongListener, WebSocketListener, WebSocketFrameListener {
-
+/**
+ * The authenticated principal of one or more WebSocket connections.
+ * <p>
+ * {@link OpenICFWebSocketCreator} caches one instance per principal name and
+ * closes it from {@link OpenICFWebSocketCreator#close()}. The per-connection
+ * state lives in {@link OpenICFWebSocket}, which is created for every
+ * accepted connection.
+ */
+public class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> {
 
     final String name;
     final ConnectorFramework connectorFramework;
@@ -75,180 +63,12 @@ public class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> implem
     }
 
     protected void doClose() {
-        sendExecutor.shutdown();
+        // Per-connection resources are released by OpenICFWebSocket when the
+        // connection closes; the principal itself holds none.
     }
-
 
     @Override
     protected void onNewWebSocketConnectionGroup(final WebSocketConnectionGroup connectionGroup) {
         connectorFramework.getServerManager(getName()).addWebSocketConnectionGroup(connectionGroup);
     }
-
-    @Override
-    public void onWebSocketPing(ByteBuffer buffer) {
-        byte[] b = new byte[buffer.remaining()];
-        buffer.get(b);
-        getConnectionPrincipal().getOperationMessageListener().onPing(adapter, b);
-    }
-
-    @Override
-    public void onWebSocketPong(ByteBuffer buffer) {
-        byte[] b = new byte[buffer.remaining()];
-        buffer.get(b);
-        getConnectionPrincipal().getOperationMessageListener().onPong(adapter, b);
-    }
-
-    @Override
-    public void onWebSocketClose(int statusCode, String reason) {
-        if (hasCloseBeenCalled) {
-            return;
-        }
-        hasCloseBeenCalled = true;
-        getConnectionPrincipal().getOperationMessageListener().onClose(adapter,
-                statusCode, reason);
-    }
-
-    Session session;
-
-    @Override
-    public void onWebSocketConnect(Session session) {
-        WebSocketPingPongListener.super.onWebSocketConnect(session);
-        this.session = session;
-        getConnectionPrincipal().getOperationMessageListener().onConnect(adapter);
-    }
-
-    Session getSession() {
-        return this.session;
-    }
-
-    @Override
-    public void onWebSocketError(Throwable t) {
-        logger.debug("onError:", t);
-        getConnectionPrincipal().getOperationMessageListener().onError(t);
-    }
-
-    @Override
-    public void onWebSocketBinary(byte[] payload, int offset, int len) {
-        logger.debug("onBinaryMessage('" + (null != payload ? payload.length : 0) + "')");
-        getConnectionPrincipal().getOperationMessageListener().onMessage(adapter, payload);
-    }
-
-    @Override
-    public void onWebSocketText(String message) {
-        logger.debug("onTextMessage('" + message + "')");
-        getConnectionPrincipal().getOperationMessageListener().onMessage(adapter, message);
-    }
-
-    @Override
-    public void onWebSocketFrame(Frame frame) {
-        logger.debug("onWebSocketFrame('" + frame + "')");
-    }
-
-    private static final Logger logger = Log.getLogger(SinglePrincipal.class);
-    private boolean hasCloseBeenCalled = false;
-
-    // Written on the handshake-processing pool thread, read by other message
-    // threads via getRemoteConnectionContext()/isHandHooked().
-    private volatile RemoteOperationContext context = null;
-
-    // Single send thread per principal: frames must leave in submission order
-    // (the peer drops e.g. an operation response that overtakes the handshake
-    // response). Jetty's RemoteEndpoint is thread-safe, but concurrent
-    // blocking sends may reach the wire in any order. This instance is cached
-    // by OpenICFWebSocketCreator and serves every connection of this
-    // principal name, so the executor must survive onWebSocketClose; it is
-    // shut down in doClose(). The thread is a daemon because cached
-    // principals are not closed on servlet destroy.
-    private final ExecutorService sendExecutor = Executors.newSingleThreadExecutor(
-            Utils.newThreadFactory(null, "OpenICF Jetty WebSocket Send %d", true));
-
-    private final WebSocketConnectionHolder adapter = new WebSocketConnectionHolder() {
-
-        protected void handshake(RPCMessages.HandshakeMessage message) {
-            context = getConnectionPrincipal().handshake(this, message);
-        }
-
-        public boolean isOperational() {
-            return getSession().isOpen();
-        }
-
-        public RemoteOperationContext getRemoteConnectionContext() {
-            return context;
-        }
-
-        public Future<?> sendBytes(byte[] data) {
-            if (isOperational()) {
-                try {
-                    return sendExecutor.submit(() -> {
-                        try {
-                            getSession().getRemote().sendBytes(ByteBuffer.wrap(data));
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                } catch (RejectedExecutionException e) {
-                    // The principal was closed and doClose() shut the
-                    // executor down.
-                    return Promises.newExceptionPromise(new ConnectorIOException(
-                            "Socket is not connected."));
-                }
-            } else {
-                return Promises.newExceptionPromise(new ConnectorIOException(
-                        "Socket is not connected."));
-            }
-        }
-
-        public Future<?> sendString(String data) {
-            if (isOperational()) {
-                try {
-                    return sendExecutor.submit(() -> {
-                        try {
-                            getSession().getRemote().sendString(data);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                } catch (RejectedExecutionException e) {
-                    return Promises.newExceptionPromise(new ConnectorIOException(
-                            "Socket is not connected."));
-                }
-            } else {
-                return Promises.newExceptionPromise(new ConnectorIOException(
-                        "Socket is not connected."));
-            }
-        }
-
-        public void sendPing(byte[] applicationData) throws Exception {
-            if (isOperational()) {
-                getSession().getRemote().sendPing(ByteBuffer.wrap(applicationData));
-                if (getSession().getRemote().getBatchMode() == BatchMode.ON) {
-                    getSession().getRemote().flush();
-                }
-            } else {
-                throw new ConnectorIOException("Socket is not connected.");
-            }
-        }
-
-        public void sendPong(byte[] applicationData) throws Exception {
-            if (isOperational()) {
-                getSession().getRemote().sendPong(ByteBuffer.wrap(applicationData));
-                if (getSession().getRemote().getBatchMode() == BatchMode.ON) {
-                    getSession().getRemote().flush();
-                }
-            } else {
-                throw new ConnectorIOException("Socket is not connected.");
-            }
-        }
-
-        protected void tryClose() {
-            getSession().close(StatusCode.NORMAL, "TEST003");
-        }
-
-    };
-
-    protected ConnectionPrincipal<?> getConnectionPrincipal() {
-        return this;
-    }
-
-
 }

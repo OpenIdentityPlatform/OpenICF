@@ -12,7 +12,7 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2015-2016 ForgeRock AS.
- * Portions copyright 2025 3A Systems LLC.
+ * Portions copyright 2025-2026 3A Systems LLC.
  */
 
 package org.forgerock.openicf.framework.server.jetty;
@@ -56,6 +56,7 @@ public class OpenICFWebSocketServletBase extends JettyWebSocketServlet {
 
     private ReferenceCountedObject<ConnectorFramework>.Reference connectorFramework = null;
     private ScheduledExecutorService executorService = null;
+    private OpenICFWebSocketCreator websocketCreator = null;
 
     public OpenICFWebSocketServletBase() {
     }
@@ -73,6 +74,17 @@ public class OpenICFWebSocketServletBase extends JettyWebSocketServlet {
 
     @Override
     public void destroy() {
+        if (websocketCreator != null) {
+            try {
+                // End the lifecycle of the cached principals before their
+                // scheduler and framework go away.
+                websocketCreator.close();
+            } catch (Throwable e) {
+                logger.warn(e);
+            } finally {
+                websocketCreator = null;
+            }
+        }
         super.destroy();
         if (privateExecutorService && executorService != null) {
             try {
@@ -94,7 +106,8 @@ public class OpenICFWebSocketServletBase extends JettyWebSocketServlet {
 
     @Override
     public void configure(JettyWebSocketServletFactory factory) {
-        factory.setCreator(getWebsocketCreator());
+        websocketCreator = getWebsocketCreator();
+        factory.setCreator(websocketCreator);
     }
 
     protected ConnectorFramework getConnectorFramework() {
@@ -102,6 +115,8 @@ public class OpenICFWebSocketServletBase extends JettyWebSocketServlet {
             ConnectorFrameworkFactory cf = getConnectorFrameworkFactory();
             if (null != cf) {
                 connectorFramework = cf.acquire();
+                // Acquired here, so destroy() must release it.
+                privateConnectorFramework = true;
                 configure(connectorFramework.get());
             } else {
                 throw new RuntimeException("Failed to initialise connectorFramework");
@@ -114,6 +129,8 @@ public class OpenICFWebSocketServletBase extends JettyWebSocketServlet {
         if (null == executorService) {
             executorService = Executors.newScheduledThreadPool(1, Utils
                     .newThreadFactory(null, "OpenICF WebSocket Servlet Scheduler %d", false));
+            // Created here, so destroy() must shut it down.
+            privateExecutorService = true;
             if (executorService instanceof ScheduledThreadPoolExecutor) {
                 ((ScheduledThreadPoolExecutor) executorService)
                         .setContinueExistingPeriodicTasksAfterShutdownPolicy(false);

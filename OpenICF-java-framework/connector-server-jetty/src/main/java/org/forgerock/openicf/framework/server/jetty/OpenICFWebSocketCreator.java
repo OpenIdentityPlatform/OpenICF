@@ -12,15 +12,17 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2015-2016 ForgeRock AS.
- * Portions copyright 2025 3A Systems LLC.
+ * Portions copyright 2025-2026 3A Systems LLC.
  */
 
 package org.forgerock.openicf.framework.server.jetty;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import javax.security.auth.callback.NameCallback;
@@ -39,7 +41,7 @@ import org.forgerock.openicf.framework.remote.OpenICFServerAdapter;
 import org.forgerock.openicf.framework.remote.rpc.OperationMessageListener;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionGroup;
 
-public class OpenICFWebSocketCreator implements JettyWebSocketCreator {
+public class OpenICFWebSocketCreator implements JettyWebSocketCreator, Closeable {
 
     private static final Logger logger = Log.getLogger(OpenICFWebSocketCreator.class);
 
@@ -51,6 +53,12 @@ public class OpenICFWebSocketCreator implements JettyWebSocketCreator {
 
 
     private Authenticator authenticator;
+
+    private final ScheduledFuture<?> groupHealthChecker;
+
+    // Set by close(); createWebSocket()/authenticate() must not mint new
+    // principals over a framework that is being released.
+    private volatile boolean closed = false;
 
 
     public OpenICFWebSocketCreator(final ConnectorFramework connectorFramework,
@@ -84,8 +92,8 @@ public class OpenICFWebSocketCreator implements JettyWebSocketCreator {
             this.authenticator = authenticator;
         }
 
-        //Will be cancelled when executorService is shut down
-        executorService.scheduleWithFixedDelay(new Runnable() {
+        //Cancelled in close(); also dies when executorService is shut down
+        groupHealthChecker = executorService.scheduleWithFixedDelay(new Runnable() {
             public void run() {
                 for (WebSocketConnectionGroup e : globalConnectionGroups.values()) {
                     if (!e.checkIsActive()) {
@@ -99,17 +107,59 @@ public class OpenICFWebSocketCreator implements JettyWebSocketCreator {
     @Override
     public Object createWebSocket(JettyServerUpgradeRequest request, JettyServerUpgradeResponse response) {
 
+        if (closed) {
+            if (!response.isCommitted()) {
+                try {
+                    response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+                            "OpenICF connector server is shut down");
+                } catch (IOException e) {
+                    //
+                }
+            }
+            return null;
+        }
+
         if (request.getSubProtocols().contains(RemoteWSFrameworkConnectionInfo.OPENICF_PROTOCOL)) {
             response.setAcceptedSubProtocol(RemoteWSFrameworkConnectionInfo.OPENICF_PROTOCOL);
         }
 
         ConnectionPrincipal<?> connectionPrincipal = authenticate(request, response);
         if (null != connectionPrincipal) {
-            return connectionPrincipal;
+            // The principal is cached and shared by every connection of this
+            // name; the endpoint holds the per-connection state.
+            return new OpenICFWebSocket(connectionPrincipal);
         } else if (!response.isCommitted()) {
             unauthorized(response, "Unknown Principal");
         }
         return null;
+    }
+
+    /**
+     * Ends the lifecycle of every cached principal: shuts their connection
+     * groups down and notifies the principals' close listeners. Invoked from
+     * {@link OpenICFWebSocketServletBase#destroy()}.
+     */
+    @Override
+    public void close() {
+        closed = true;
+        groupHealthChecker.cancel(false);
+        // One pass over the groups: every cached principal leaves every group
+        // before the group is dropped, so pending requests of all principals
+        // are cancelled (removing the group inside a per-principal loop would
+        // hide it from the remaining principals).
+        for (WebSocketConnectionGroup group : globalConnectionGroups.values()) {
+            for (ConnectionPrincipal<?> principal : principalCache.values()) {
+                // We should gracefully shut down the group
+                group.principalIsShuttingDown(principal);
+            }
+            if (!group.isOperational()) {
+                globalConnectionGroups.remove(group.getRemoteSessionId());
+            }
+        }
+        for (ConnectionPrincipal<?> principal : principalCache.values()) {
+            principal.close();
+        }
+        principalCache.clear();
     }
 
     protected void unauthorized(JettyServerUpgradeResponse response, String message) {
@@ -123,17 +173,15 @@ public class OpenICFWebSocketCreator implements JettyWebSocketCreator {
     }
 
     public ConnectionPrincipal<?> authenticate(JettyServerUpgradeRequest request, JettyServerUpgradeResponse response) {
+        if (closed) {
+            return null;
+        }
         NameCallback callback = new NameCallback("OpenICF user:>");
         authenticator.authenticate(request, response, callback);
         if (StringUtil.isNotBlank(callback.getName())) {
-            ConnectionPrincipal<?> connectionPrincipal = principalCache.get(callback.getName());
-            if (connectionPrincipal == null) {
-                principalCache.putIfAbsent(callback.getName(), new SinglePrincipal(callback.getName(), listener,
-                        connectorFramework, globalConnectionGroups));
-                return principalCache.get(callback.getName());
-            } else {
-                return connectionPrincipal;
-            }
+            return principalCache.computeIfAbsent(callback.getName(),
+                    name -> new SinglePrincipal(name, listener, connectorFramework,
+                            globalConnectionGroups));
         }
         return null;
     }
