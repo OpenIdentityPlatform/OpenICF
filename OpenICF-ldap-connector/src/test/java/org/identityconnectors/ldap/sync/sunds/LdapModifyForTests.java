@@ -176,7 +176,7 @@ public class LdapModifyForTests {
             log.ok("Modifying context {0} with attributes {1}", dn, modItems);
             conn.getInitialContext().modifyAttributes(dn, modItems.toArray(new ModificationItem[modItems.size()]));
         } else if ("delete".equalsIgnoreCase(changeType)) {
-            log.ok("Deleting context {0}");
+            log.ok("Deleting context {0}", dn);
             conn.getInitialContext().destroySubcontext(dn);
         } else if ("modrdn".equalsIgnoreCase(changeType)) {
             LdapName oldName = quietCreateLdapName(dn);
@@ -190,6 +190,8 @@ public class LdapModifyForTests {
             } finally {
                 ctx.close();
             }
+        } else {
+            throw new IllegalArgumentException("Unsupported changeType: " + changeType);
         }
     }
 
