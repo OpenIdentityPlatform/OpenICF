@@ -27,6 +27,7 @@
 package org.forgerock.openicf.common.rpc;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.forgerock.util.Function;
@@ -49,15 +50,53 @@ public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConn
     private final long requestId;
     private final RemoteRequestFactory.CompletionCallback<V, E, G, H, P> completionCallback;
 
-    private Long requestTime = null;
-    private PromiseImpl<V, E> promise = null;
+    // The request is registered in RemoteConnectionGroup#remoteRequests
+    // before it is sent, so it can be cancelled from another thread while
+    // the send is still in progress. The promise therefore exists from
+    // construction on, and requestTime records whether the message has left
+    // (read by tryCancel on the cancelling thread).
+    private volatile Long requestTime = null;
+    private final PromiseImpl<V, E> promise;
     private final ReentrantLock lock = new ReentrantLock();
+
+    // tryCancel(true) sets this before it reads requestTime; the send
+    // function sets requestTime before it reads this. Whichever runs second
+    // sees the other's write, so a cancel racing with the send never leaves
+    // the remote side uninformed - and remoteCancelSent keeps it to one
+    // cancel message when both do.
+    private volatile boolean remoteCancelRequested = false;
+    private final AtomicBoolean remoteCancelSent = new AtomicBoolean(false);
 
     public RemoteRequest(P context, long requestId,
             RemoteRequestFactory.CompletionCallback<V, E, G, H, P> completionCallback) {
         this.context = context;
         this.requestId = requestId;
         this.completionCallback = completionCallback;
+        this.promise = new PromiseImpl<V, E>() {
+
+            protected E tryCancel(boolean mayInterruptIfRunning) {
+                if (mayInterruptIfRunning) {
+                    remoteCancelRequested = true;
+                    // Nothing to cancel remotely while the message has not
+                    // been delivered: the send function does not send a
+                    // cancelled request.
+                    if (isSent()) {
+                        try {
+                            notifyRemoteCancelOnce();
+                        } catch (final Throwable t) {
+                            return createCancellationException(t);
+                        }
+                    }
+                }
+                return createCancellationException(null);
+            }
+
+        };
+        this.promise.thenOnResultOrException(new Runnable() {
+            public void run() {
+                RemoteRequest.this.completionCallback.complete(RemoteRequest.this);
+            }
+        });
     }
 
     /**
@@ -89,6 +128,13 @@ public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConn
         return requestTime;
     }
 
+    /**
+     * Returns the promise of this request. It exists from construction on,
+     * so a request that is registered but not yet sent can be cancelled; the
+     * result arrives only once the message has been sent and answered.
+     *
+     * @return the promise, never {@code null}.
+     */
     public Promise<V, E> getPromise() {
         return promise;
     }
@@ -109,79 +155,68 @@ public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConn
         return promise.cancel(false);
     }
 
+    private boolean isSent() {
+        return null != requestTime;
+    }
+
+    private void notifyRemoteCancelOnce() {
+        if (remoteCancelSent.compareAndSet(false, true)) {
+            tryCancelRemote(context, requestId);
+        }
+    }
+
     public Function<H, Promise<V, E>, Exception> getSendFunction() {
-        final Promise<V, E> resultPromise = promise;
-        if (null == resultPromise) {
-            final MessageElement message = createMessageElement(context, requestId);
-            if (message == null || !(message.isString() || message.isByte())) {
-                throw new IllegalStateException("RemoteRequest has empty message");
-            }
-            return new Function<H, Promise<V, E>, Exception>() {
-
-                public Promise<V, E> apply(H remoteConnectionHolder) throws Exception {
-                    if (null == promise) {
-                        // Single thread should process it so it should not
-                        // return false
-                        if (lock.tryLock(1, TimeUnit.MINUTES)) {
-                            try {
-                                if (null == promise) {
-
-                                    promise = new PromiseImpl<V, E>() {
-
-                                        protected E tryCancel(boolean mayInterruptIfRunning) {
-                                            if (mayInterruptIfRunning) {
-                                                try {
-                                                    tryCancelRemote(context, requestId);
-                                                } catch (final Throwable t) {
-                                                    return createCancellationException(t);
-                                                }
-                                            }
-                                            return createCancellationException(null);
-                                        }
-
-                                    };
-
-                                    promise.thenOnResultOrException(new Runnable() {
-                                        public void run() {
-                                            completionCallback.complete(RemoteRequest.this);
-                                        }
-                                    });
-
-                                    try {
-                                        if (message.isByte()) {
-                                            remoteConnectionHolder.sendBytes(message.byteMessage)
-                                                    .get();
-                                        } else if (message.isString()) {
-                                            remoteConnectionHolder
-                                                    .sendString(message.stringMessage).get();
-                                        }
-                                    } catch (final Exception e) {
-                                        promise = null;
-                                        throw e;
-                                    } catch (final Throwable t) {
-                                        promise = null;
-                                        throw new Exception(t);
-                                    }
-                                    // Message has been delivered - Report
-                                    // success
-                                    requestTime = System.currentTimeMillis();
-                                }
-                            } finally {
-                                lock.unlock();
-                            }
-                        }
-                    }
-                    return promise;
-                }
-            };
-        } else {
+        if (isSent()) {
             return new Function<H, Promise<V, E>, Exception>() {
 
                 public Promise<V, E> apply(H value) throws Exception {
-                    return resultPromise;
+                    return promise;
                 }
             };
         }
+        final MessageElement message = createMessageElement(context, requestId);
+        if (message == null || !(message.isString() || message.isByte())) {
+            throw new IllegalStateException("RemoteRequest has empty message");
+        }
+        return new Function<H, Promise<V, E>, Exception>() {
+
+            public Promise<V, E> apply(H remoteConnectionHolder) throws Exception {
+                // A request cancelled before it was sent stays unsent: the
+                // caller gets the cancelled promise back instead of waiting
+                // for an answer that can never arrive.
+                if (isSent() || promise.isDone()) {
+                    return promise;
+                }
+                // Single thread should process it so it should not
+                // return false
+                if (!lock.tryLock(1, TimeUnit.MINUTES)) {
+                    throw new IllegalStateException("RemoteRequest " + requestId
+                            + " is still being sent by another thread");
+                }
+                try {
+                    if (!isSent() && !promise.isDone()) {
+                        // A failed send propagates to the group, which
+                        // retries on its next connection with this same
+                        // promise.
+                        if (message.isByte()) {
+                            remoteConnectionHolder.sendBytes(message.byteMessage).get();
+                        } else if (message.isString()) {
+                            remoteConnectionHolder.sendString(message.stringMessage).get();
+                        }
+                        // Message has been delivered - Report success
+                        requestTime = System.currentTimeMillis();
+                        if (remoteCancelRequested) {
+                            // Cancelled while the message was on its way:
+                            // tryCancel saw it unsent.
+                            notifyRemoteCancelOnce();
+                        }
+                    }
+                } finally {
+                    lock.unlock();
+                }
+                return promise;
+            }
+        };
     }
 
     // --- inner Classes
