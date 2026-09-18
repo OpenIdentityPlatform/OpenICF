@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.spi;
 
@@ -37,10 +38,12 @@ public abstract class AbstractConfiguration implements Configuration {
 
     private ConfigurationChangeCallback callback;
 
+    @Override
     public final ConnectorMessages getConnectorMessages() {
         return connectorMessages;
     }
 
+    @Override
     public final void setConnectorMessages(ConnectorMessages messages) {
         connectorMessages = messages;
     }

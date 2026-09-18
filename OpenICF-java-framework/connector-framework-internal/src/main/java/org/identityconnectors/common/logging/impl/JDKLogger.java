@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2014 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.common.logging.impl;
 
@@ -46,6 +47,7 @@ public class JDKLogger implements LogSpi {
      *
      * @see LogSpi#log(Class, String, Level, String, Throwable)
      */
+    @Override
     public void log(Class<?> clazz, String methodName, Level level, String message, Throwable ex) {
         // uses different call if the exception is not null..
         String clazzName = clazz.getName();
@@ -63,6 +65,7 @@ public class JDKLogger implements LogSpi {
      *
      * @see LogSpi#log(Class, StackTraceElement, Level, String, Throwable)
      */
+    @Override
     public void log(final Class<?> clazz, final StackTraceElement caller, final Level level,
                     final String message, final Throwable ex) {
         String methodName = null;
@@ -83,10 +86,12 @@ public class JDKLogger implements LogSpi {
     /**
      * Use the internal JDK logger to determine if the level is worthy of logging.
      */
+    @Override
     public boolean isLoggable(Class<?> clazz, Level level) {
         return getJDKLogger(clazz.getName()).isLoggable(getJDKLevel(level));
     }
 
+    @Override
     public boolean needToInferCaller(Class<?> clazz, Level level) {
         // JDK Logger does it always so better to fetch the correct caller by ICF Log class.
         return true;

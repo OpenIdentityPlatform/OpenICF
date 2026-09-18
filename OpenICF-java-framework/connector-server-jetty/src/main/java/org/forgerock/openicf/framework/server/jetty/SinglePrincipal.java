@@ -56,12 +56,14 @@ public class SinglePrincipal extends ConnectionPrincipal<SinglePrincipal> {
         return StringUtil.isBlank(name) ? super.getName() : name;
     }
 
+    @Override
     public RemoteOperationContext handshake(
             final WebSocketConnectionHolder webSocketConnection,
             final RPCMessages.HandshakeMessage message) {
         return super.handshake(webSocketConnection, message);
     }
 
+    @Override
     protected void doClose() {
         // Per-connection resources are released by OpenICFWebSocket when the
         // connection closes; the principal itself holds none.

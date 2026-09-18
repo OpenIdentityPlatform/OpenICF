@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.framework.common.objects;
@@ -109,6 +110,7 @@ public final class SortKey {
      *
      * @return The string representation of this sort key.
      */
+    @Override
     public String toString() {
         final StringBuilder builder = new StringBuilder();
         builder.append(isAscendingOrder ? '+' : '-');

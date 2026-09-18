@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2013 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.remote;
 
@@ -57,6 +58,7 @@ public class RemoteOperationInvocationHandler implements InvocationHandler {
         this.operation = operation;
     }
 
+    @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         // don't proxy toString, hashCode, or equals
         if (method.getDeclaringClass() == Object.class) {

@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.local;
@@ -60,6 +61,7 @@ public class AsyncLocalConnectorInfoManager extends
         this.connectorBundleParentClassLoader = connectorBundleParentClassLoader;
     }
 
+    @Override
     public void addConnectorInfo(LocalConnectorInfoImpl connectorInfo) {
         super.addConnectorInfo(connectorInfo);
     }
@@ -94,6 +96,7 @@ public class AsyncLocalConnectorInfoManager extends
         addConnectorBundle(Arrays.asList(connectorBundleURLs));
     }
 
+    @Override
     protected boolean canCloseNow() {
         doClose();
         return Boolean.FALSE;

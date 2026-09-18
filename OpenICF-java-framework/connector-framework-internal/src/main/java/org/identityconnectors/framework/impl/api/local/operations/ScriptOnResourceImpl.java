@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2013 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -39,6 +40,7 @@ public class ScriptOnResourceImpl extends ConnectorAPIOperationRunner implements
         super(context, connector);
     }
 
+    @Override
     public Object runScriptOnResource(ScriptContext request, OperationOptions options) {
         Assertions.nullCheck(request, "request");
         // convert null into empty

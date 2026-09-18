@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2014 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.common.logging;
 
@@ -74,6 +75,7 @@ class StdOutLogger implements LogSpi {
      *
      * @see LogSpi#log(Class, String, Level, String, Throwable)
      */
+    @Override
     public void log(final Class<?> clazz, final String methodName, final Level level,
                     final String message, final Throwable ex) {
 
@@ -104,6 +106,7 @@ class StdOutLogger implements LogSpi {
         }
     }
 
+    @Override
     public void log(final Class<?> clazz, final StackTraceElement caller, final Level level, final String message, final Throwable ex) {
         String methodName = null;
         if (null != caller) {
@@ -123,6 +126,7 @@ class StdOutLogger implements LogSpi {
     /**
      * Always returns true.
      */
+    @Override
     public boolean isLoggable(final Class<?> clazz, final Level level) {
         return true;
     }
@@ -130,6 +134,7 @@ class StdOutLogger implements LogSpi {
     /**
      * Always returns true.
      */
+    @Override
     public boolean needToInferCaller(Class<?> clazz, Level level) {
         return true;
     }

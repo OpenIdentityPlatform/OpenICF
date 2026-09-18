@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.async.impl;
@@ -59,11 +60,13 @@ public class AuthenticationAsyncApiOpImpl extends AbstractAPIOperation implement
         super(remoteConnection, connectorKey, facadeKeyFunction, timeout);
     }
 
+    @Override
     public Uid authenticate(final ObjectClass objectClass, final String username,
             final GuardedString password, final OperationOptions options) {
         return asyncTimeout(authenticateAsync(objectClass, username, password, options));
     }
 
+    @Override
     public Promise<Uid, RuntimeException> authenticateAsync(final ObjectClass objectClass,
             final String username, final GuardedString password, final OperationOptions options) {
         Assertions.nullCheck(objectClass, "objectClass");
@@ -101,6 +104,7 @@ public class AuthenticationAsyncApiOpImpl extends AbstractAPIOperation implement
             this.operationRequest = operationRequest;
         }
 
+        @Override
         public InternalRequest createRemoteRequest(
                 final RemoteOperationContext context,
                 final long requestId,
@@ -114,6 +118,7 @@ public class AuthenticationAsyncApiOpImpl extends AbstractAPIOperation implement
             }
         }
 
+        @Override
         protected OperationMessages.OperationRequest.Builder createOperationRequest(
                 final RemoteOperationContext remoteContext) {
             return operationRequest;
@@ -133,6 +138,7 @@ public class AuthenticationAsyncApiOpImpl extends AbstractAPIOperation implement
 
         }
 
+        @Override
         protected OperationMessages.AuthenticateOpResponse getOperationResponseMessages(
                 OperationMessages.OperationResponse message) {
             if (message.hasAuthenticateOpResponse()) {
@@ -143,6 +149,7 @@ public class AuthenticationAsyncApiOpImpl extends AbstractAPIOperation implement
             }
         }
 
+        @Override
         protected void handleOperationResponseMessages(WebSocketConnectionHolder sourceConnection,
                 OperationMessages.AuthenticateOpResponse message) {
             if (message.hasUid()) {
@@ -171,6 +178,7 @@ public class AuthenticationAsyncApiOpImpl extends AbstractAPIOperation implement
             super(requestId, socket, message);
         }
 
+        @Override
         protected RPCMessages.RPCResponse.Builder createOperationResponse(
                 RemoteOperationContext remoteContext, Uid result) {
 
@@ -185,6 +193,7 @@ public class AuthenticationAsyncApiOpImpl extends AbstractAPIOperation implement
                             response));
         }
 
+        @Override
         protected Uid executeOperation(ConnectorFacade connectorFacade,
                 OperationMessages.AuthenticateOpRequest requestMessage) {
             final ObjectClass objectClass = new ObjectClass(requestMessage.getObjectClass());

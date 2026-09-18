@@ -82,6 +82,7 @@ public abstract class DelegatingAsyncConnectorInfoManager extends
                     new CopyOnWriteArrayList<Pair<ConnectorKey, DeferredPromise>>();
             CloseListener<DelegatingAsyncConnectorInfoManager> closeListener =
                     new CloseListener<DelegatingAsyncConnectorInfoManager>() {
+                        @Override
                         public void onClosed(DelegatingAsyncConnectorInfoManager source) {
                             for (Pair<ConnectorKeyRange, DeferredPromise> promise : deferredRangePromiseCacheList) {
                                 promise.getValue().shutdown();
@@ -145,6 +146,7 @@ public abstract class DelegatingAsyncConnectorInfoManager extends
             handleException(ManagedAsyncConnectorInfoManager.CLOSED_EXCEPTION);
         }
 
+        @Override
         protected RuntimeException tryCancel(boolean mayInterruptIfRunning) {
             return super.tryCancel(mayInterruptIfRunning);
         }
@@ -169,6 +171,7 @@ public abstract class DelegatingAsyncConnectorInfoManager extends
         }
     }
 
+    @Override
     public Promise<ConnectorInfo, RuntimeException> findConnectorInfoAsync(final ConnectorKey key) {
         if (!isRunning.get()) {
             return Promises
@@ -191,6 +194,7 @@ public abstract class DelegatingAsyncConnectorInfoManager extends
             if (allowDeferred && isRunning()) {
                 if (pending) {
                     promise.thenOnResultOrException(new Runnable() {
+                        @Override
                         public void run() {
                             deferredKeyPromiseCacheList.remove(entry);
                         }
@@ -203,6 +207,7 @@ public abstract class DelegatingAsyncConnectorInfoManager extends
             }
 
             return promise.then(new Function<ConnectorInfo, ConnectorInfo, RuntimeException>() {
+                @Override
                 public ConnectorInfo apply(final ConnectorInfo value) throws RuntimeException {
                     // Replace the RemoteConnectorInfoManager with this!!
                     return new RemoteConnectorInfoImpl(getMessageDistributor(),
@@ -212,6 +217,7 @@ public abstract class DelegatingAsyncConnectorInfoManager extends
         }
     }
 
+    @Override
     public Promise<ConnectorInfo, RuntimeException> findConnectorInfoAsync(
             final ConnectorKeyRange keyRange) {
         if (!isRunning.get()) {
@@ -241,6 +247,7 @@ public abstract class DelegatingAsyncConnectorInfoManager extends
                 if (allowDeferred && isRunning()) {
                     if (pending) {
                         promise.thenOnResultOrException(new Runnable() {
+                            @Override
                             public void run() {
                                 deferredRangePromiseCacheList.remove(entry);
                             }
@@ -253,6 +260,7 @@ public abstract class DelegatingAsyncConnectorInfoManager extends
                 }
 
                 return promise.then(new Function<ConnectorInfo, ConnectorInfo, RuntimeException>() {
+                    @Override
                     public ConnectorInfo apply(final ConnectorInfo value) throws RuntimeException {
                         // Replace the RemoteConnectorInfoManager with
                         // this!!
@@ -264,6 +272,7 @@ public abstract class DelegatingAsyncConnectorInfoManager extends
         }
     }
 
+    @Override
     public List<ConnectorInfo> getConnectorInfos() {
         final Set<ConnectorKey> keys = new HashSet<ConnectorKey>();
         final List<ConnectorInfo> result = new ArrayList<ConnectorInfo>();
@@ -278,6 +287,7 @@ public abstract class DelegatingAsyncConnectorInfoManager extends
         return result;
     }
 
+    @Override
     public ConnectorInfo findConnectorInfo(ConnectorKey key) {
         for (AsyncConnectorInfoManager group : getDelegates()) {
             ConnectorInfo result = group.findConnectorInfo(key);

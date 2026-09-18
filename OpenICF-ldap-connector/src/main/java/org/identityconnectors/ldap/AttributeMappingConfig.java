@@ -1,3 +1,6 @@
+/*
+ * Portions Copyright 2026 3A Systems, LLC.
+ */
 package org.identityconnectors.ldap;
 
 public class AttributeMappingConfig {
@@ -18,10 +21,12 @@ public class AttributeMappingConfig {
         return toAttribute;
     }
 
+    @Override
     public int hashCode() {
         return fromAttribute.hashCode() + toAttribute.hashCode();
     }
 
+    @Override
     public boolean equals(Object o) {
         if (o instanceof AttributeMappingConfig) {
             AttributeMappingConfig that = (AttributeMappingConfig) o;

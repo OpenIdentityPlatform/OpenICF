@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.maven;
@@ -50,6 +51,7 @@ import org.codehaus.plexus.configuration.PlexusConfiguration;
  */
 @Component(role = ComponentConfigurator.class, hint = "override")
 public class CustomComponentConfigurator extends AbstractComponentConfigurator {
+    @Override
     public void configureComponent(Object component, PlexusConfiguration configuration,
             ExpressionEvaluator expressionEvaluator, ClassRealm containerRealm,
             ConfigurationListener listener) throws ComponentConfigurationException {

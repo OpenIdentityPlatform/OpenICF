@@ -78,6 +78,7 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
         return runnerImplConstructor.newInstance(operationalContext, connector);
     }
     
+    @Override
     public Object invoke(Object proxy, Method method, Object[] args)
             throws Throwable {
         //do not proxy equals, hashCode, toString
@@ -168,6 +169,7 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
             this.poolEntry = poolEntry;
         }
 
+        @Override
         public void close() {
             try {
                 subscription.close();
@@ -178,10 +180,12 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
             }
         }
 
+        @Override
         public boolean isUnsubscribed() {
             return subscription.isUnsubscribed();
         }
 
+        @Override
         public Object getReturnValue() {
             return subscription.getReturnValue();
         }

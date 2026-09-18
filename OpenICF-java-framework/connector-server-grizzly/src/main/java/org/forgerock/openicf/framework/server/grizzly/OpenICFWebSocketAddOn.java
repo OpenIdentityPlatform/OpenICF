@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.server.grizzly;
@@ -28,6 +29,7 @@ import org.glassfish.grizzly.websockets.WebSocketAddOn;
 import org.glassfish.grizzly.websockets.WebSocketFilter;
 
 public class OpenICFWebSocketAddOn extends WebSocketAddOn {
+    @Override
     protected WebSocketFilter createWebSocketFilter() {
         return new OpenICFWebSocketFilter(getTimeoutInSeconds());
     }

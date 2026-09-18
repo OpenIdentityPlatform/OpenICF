@@ -62,6 +62,7 @@ public class DeleteBatchTask implements BatchTask<BatchEmptyResult> {
      *            the executor that will perform the actual delete operation.
      * @return an empty result confirming the delete completed.
      */
+    @Override
     public BatchEmptyResult execute(BatchTaskExecutor executor) {
         return executor.execute(this);
     }
@@ -71,6 +72,7 @@ public class DeleteBatchTask implements BatchTask<BatchEmptyResult> {
      *
      * @return the object class specified when this task was constructed.
      */
+    @Override
     public ObjectClass getObjectClass() {
         return objectClass;
     }

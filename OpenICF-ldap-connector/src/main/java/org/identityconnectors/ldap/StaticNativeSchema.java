@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap;
 
@@ -37,22 +38,27 @@ import java.util.Set;
  */
 public class StaticNativeSchema implements LdapNativeSchema {
 
+    @Override
     public Set<String> getStructuralObjectClasses() {
         return emptySet();
     }
 
+    @Override
     public Set<String> getRequiredAttributes(String ldapClass) {
         return emptySet();
     }
 
+    @Override
     public Set<String> getOptionalAttributes(String ldapClass) {
         return emptySet();
     }
 
+    @Override
     public Set<String> getEffectiveObjectClasses(String ldapClass) {
         return singleton(ldapClass);
     }
 
+    @Override
     public LdapAttributeType getAttributeDescription(String ldapAttrName) {
         return null;
     }

@@ -178,6 +178,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
      *
      * @return The current {@link Configuration}
      */
+    @Override
     public Configuration getConfiguration() {
         return this.config;
     }
@@ -189,6 +190,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
      *            the new {@link Configuration}
      * @see org.identityconnectors.framework.spi.Connector#init(org.identityconnectors.framework.spi.Configuration)
      */
+    @Override
     public void init(final Configuration config) {
         this.config = (CSVFileConfiguration) config;
         csvPreference = new CsvPreference.Builder(
@@ -230,6 +232,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
      *
      * @see org.identityconnectors.framework.spi.Connector#dispose()
      */
+    @Override
     public void dispose() {
         config = null;
     }
@@ -244,6 +247,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     /**
      * {@inheritDoc}
      */
+    @Override
     public Uid authenticate(final ObjectClass objectClass, final String userName, final GuardedString password,
             final OperationOptions options) {
         isAccount(objectClass);
@@ -256,6 +260,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     /**
      * {@inheritDoc}
      */
+    @Override
     public Uid resolveUsername(final ObjectClass objectClass, final String userName, final OperationOptions options) {
         isAccount(objectClass);
         return testCredentials(userName, null, options);
@@ -275,6 +280,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     /**
      * {@inheritDoc}
      */
+    @Override
     public Uid create(final ObjectClass objectClass, final Set<Attribute> createAttributes,
             final OperationOptions options) {
         isAccount(objectClass);
@@ -284,6 +290,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     /**
      * {@inheritDoc}
      */
+    @Override
     public void delete(final ObjectClass objectClass, final Uid uid, final OperationOptions options) {
         isAccount(objectClass);
         doDelete(uid, options);
@@ -292,6 +299,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     /**
      * {@inheritDoc}
      */
+    @Override
     public Schema schema() {
         final String[] header = getHeader();
         ObjectClassInfoBuilder objClassBuilder = new ObjectClassInfoBuilder();
@@ -321,6 +329,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     /**
      * {@inheritDoc}
      */
+    @Override
     public FilterTranslator<Filter> createFilterTranslator(ObjectClass objectClass, OperationOptions options) {
         isAccount(objectClass);
         return CSVFilterTranslator.INSTANCE;
@@ -329,6 +338,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     /**
      * {@inheritDoc}
      */
+    @Override
     public void executeQuery(ObjectClass objectClass, Filter query, ResultsHandler handler, OperationOptions options) {
         isAccount(objectClass);
         if (handler == null) {
@@ -431,6 +441,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     /**
      * {@inheritDoc}
      */
+    @Override
     public void sync(ObjectClass objectClass, SyncToken token, SyncResultsHandler handler, OperationOptions options) {
         isAccount(objectClass);
         if (handler == null) {
@@ -570,6 +581,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     /**
      * {@inheritDoc}
      */
+    @Override
     public SyncToken getLatestSyncToken(ObjectClass objectClass) {
         isAccount(objectClass);
 
@@ -600,6 +612,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     /**
      * {@inheritDoc}
      */
+    @Override
     public void test() {
         config.validate();
 
@@ -612,6 +625,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     /**
      * {@inheritDoc}
      */
+    @Override
     public Uid update(ObjectClass objectClass, Uid uid, Set<Attribute> attributes, OperationOptions options) {
         isAccount(objectClass);
         return doUpdate(UpdateType.UPDATE, uid, attributes, options);
@@ -620,6 +634,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     /**
      * {@inheritDoc}
      */
+    @Override
     public Uid addAttributeValues(ObjectClass objectClass, Uid uid, Set<Attribute> attributes,
             OperationOptions options) {
         isAccount(objectClass);
@@ -629,6 +644,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     /**
      * {@inheritDoc}
      */
+    @Override
     public Uid removeAttributeValues(ObjectClass objectClass, Uid uid, Set<Attribute> attributes,
             OperationOptions options) {
         isAccount(objectClass);
@@ -638,6 +654,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     /**
      * {@inheritDoc}
      */
+    @Override
     public Subscription executeBatch(List<BatchTask> batchTasks, Observer<BatchResult> observer,
             OperationOptions operationOptions) {
         if (observer == null) {
@@ -656,12 +673,15 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         }
         observer.onCompleted();
         return new Subscription() {
+            @Override
             public void close() {}
 
+            @Override
             public boolean isUnsubscribed() {
                 return true;
             }
 
+            @Override
             public Object getReturnValue() {
                 return null;
             }
@@ -669,15 +689,18 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     }
 
     private class BatchTaskExecutorImpl implements BatchTaskExecutor {
+        @Override
         public Uid execute(CreateBatchTask task) {
             return doCreate(task.getCreateAttributes(), task.getOptions());
         }
 
+        @Override
         public BatchEmptyResult execute(DeleteBatchTask task) {
             doDelete(task.getUid(), task.getOptions());
             return null;
         }
 
+        @Override
         public Uid execute(UpdateBatchTask task) {
             return doUpdate(task.getUpdateType(), task.getUid(), task.getAttributes(), task.getOptions());
         }
@@ -686,6 +709,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     /**
      * {@inheritDoc}
      */
+    @Override
     public Subscription queryBatch(BatchToken batchToken, Observer<BatchResult> observer,
             OperationOptions operationOptions) {
         return null;
@@ -731,6 +755,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                     }
                     final Map<String, Object> finalEntry = entry;
                     password.access(new GuardedString.Accessor() {
+                        @Override
                         public void access(char[] chars) {
                             if (!new String(chars).equals(finalEntry.get(config.getHeaderPassword()))) {
                                 throw new InvalidPasswordException("Invalid username and/or password.");
@@ -1220,6 +1245,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         /**
          * {@inheritDoc}
          */
+        @Override
         public Object execute(final Object value, final CsvContext context) {
             Object result = value;
             if (value != null) {

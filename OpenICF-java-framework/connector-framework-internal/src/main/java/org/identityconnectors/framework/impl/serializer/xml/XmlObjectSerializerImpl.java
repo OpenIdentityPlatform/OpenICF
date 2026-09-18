@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.serializer.xml;
 
@@ -59,6 +60,7 @@ public class XmlObjectSerializerImpl implements XmlObjectSerializer {
      *             if there is more than one object and this is not configured
      *             for multi-object document.
      */
+    @Override
     public void writeObject(Object object) {
         if (documentEnded) {
             throw new IllegalStateException(
@@ -79,6 +81,7 @@ public class XmlObjectSerializerImpl implements XmlObjectSerializer {
         firstObjectWritten = true;
     }
 
+    @Override
     public void flush() {
         try {
             output.flush();
@@ -87,6 +90,7 @@ public class XmlObjectSerializerImpl implements XmlObjectSerializer {
         }
     }
 
+    @Override
     public void close(boolean closeStream) {
         if (!documentEnded) {
             if (!firstObjectWritten) {

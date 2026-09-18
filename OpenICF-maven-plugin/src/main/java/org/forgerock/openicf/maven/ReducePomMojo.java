@@ -87,6 +87,7 @@ public class ReducePomMojo extends AbstractMojo {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void execute() throws MojoExecutionException {
         // Check to see if we have a reduction and if so rewrite the POM.
         if (!skip) {

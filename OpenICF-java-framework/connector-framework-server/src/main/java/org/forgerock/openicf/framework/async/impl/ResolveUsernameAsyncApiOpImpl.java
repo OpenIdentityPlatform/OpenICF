@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.async.impl;
@@ -58,11 +59,13 @@ public class ResolveUsernameAsyncApiOpImpl extends AbstractAPIOperation implemen
         super(remoteConnection, connectorKey, facadeKeyFunction,timeout);
     }
 
+    @Override
     public Uid resolveUsername(final ObjectClass objectClass, final String username,
             final OperationOptions options) {
         return asyncTimeout(resolveUsernameAsync(objectClass, username, options));
     }
 
+    @Override
     public Promise<Uid, RuntimeException> resolveUsernameAsync(final ObjectClass objectClass,
             final String username, final OperationOptions options) {
         Assertions.nullCheck(objectClass, "objectClass");
@@ -99,6 +102,7 @@ public class ResolveUsernameAsyncApiOpImpl extends AbstractAPIOperation implemen
             this.operationRequest = operationRequest;
         }
 
+        @Override
         public InternalRequest createRemoteRequest(
                 final RemoteOperationContext context,
                 final long requestId,
@@ -112,6 +116,7 @@ public class ResolveUsernameAsyncApiOpImpl extends AbstractAPIOperation implemen
             }
         }
 
+        @Override
         protected OperationMessages.OperationRequest.Builder createOperationRequest(
                 final RemoteOperationContext remoteContext) {
             return operationRequest;
@@ -131,6 +136,7 @@ public class ResolveUsernameAsyncApiOpImpl extends AbstractAPIOperation implemen
 
         }
 
+        @Override
         protected OperationMessages.ResolveUsernameOpResponse getOperationResponseMessages(
                 OperationMessages.OperationResponse message) {
             if (message.hasResolveUsernameOpResponse()) {
@@ -141,6 +147,7 @@ public class ResolveUsernameAsyncApiOpImpl extends AbstractAPIOperation implemen
             }
         }
 
+        @Override
         protected void handleOperationResponseMessages(WebSocketConnectionHolder sourceConnection,
                 OperationMessages.ResolveUsernameOpResponse message) {
             if (message.hasUid()) {
@@ -168,6 +175,7 @@ public class ResolveUsernameAsyncApiOpImpl extends AbstractAPIOperation implemen
             super(requestId, socket, message);
         }
 
+        @Override
         protected RPCMessages.RPCResponse.Builder createOperationResponse(
                 RemoteOperationContext remoteContext, Uid result) {
             OperationMessages.ResolveUsernameOpResponse.Builder response =
@@ -181,6 +189,7 @@ public class ResolveUsernameAsyncApiOpImpl extends AbstractAPIOperation implemen
                             response));
         }
 
+        @Override
         protected Uid executeOperation(ConnectorFacade connectorFacade,
                 OperationMessages.ResolveUsernameOpRequest requestMessage) {
             final ObjectClass objectClass = new ObjectClass(requestMessage.getObjectClass());

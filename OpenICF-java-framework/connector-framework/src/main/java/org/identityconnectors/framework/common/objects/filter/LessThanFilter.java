@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2014 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.common.objects.filter;
 
@@ -32,10 +33,12 @@ public final class LessThanFilter extends ComparableAttributeFilter {
         super(attr);
     }
 
+    @Override
     public boolean accept(ConnectorObject obj) {
         return isPresent(obj) && compare(obj) < 0;
     }
 
+    @Override
     public <R, P> R accept(FilterVisitor<R, P> v, P p) {
         return v.visitLessThanFilter(p, this);
     }

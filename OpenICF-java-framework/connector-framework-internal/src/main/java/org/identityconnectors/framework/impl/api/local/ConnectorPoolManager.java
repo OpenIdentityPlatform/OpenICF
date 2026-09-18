@@ -97,6 +97,7 @@ public class ConnectorPoolManager {
             this.configuration = configuration;
         }
 
+        @Override
         public void notifyUpdate() {
             try {
                 final ConfigurationPropertyChangeListener listener =
@@ -134,6 +135,7 @@ public class ConnectorPoolManager {
             }
         }
 
+        @Override
         public ObjectPoolConfiguration validate(ObjectPoolConfiguration original) {
             ObjectPoolConfiguration configuration =
                     (ObjectPoolConfiguration) SerializerUtil.cloneObject(original);
@@ -141,6 +143,7 @@ public class ConnectorPoolManager {
             return configuration;
         }
 
+        @Override
         public PoolableConnector makeObject() {
             // setup classloader for constructor and
             // initialization of config bean and connector
@@ -182,6 +185,7 @@ public class ConnectorPoolManager {
             }
         }
 
+        @Override
         public void testObject(PoolableConnector object) {
             ThreadClassLoaderManager.getInstance().pushClassLoader(
                     localConnectorInfo.getConnectorClass().getClassLoader());
@@ -192,6 +196,7 @@ public class ConnectorPoolManager {
             }
         }
 
+        @Override
         public void disposeObject(PoolableConnector object) {
             ThreadClassLoaderManager.getInstance().pushClassLoader(
                     localConnectorInfo.getConnectorClass().getClassLoader());
@@ -202,6 +207,7 @@ public class ConnectorPoolManager {
             }
         }
 
+        @Override
         public void shutdown() {
             if (null != context) {
                 context.dispose();

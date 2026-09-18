@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.impl.api.osgi.internal;
@@ -59,6 +60,7 @@ public class Activator implements BundleActivator {
     private ServiceRegistration connectorInfoManager;
 
     @SuppressWarnings("unchecked")
+    @Override
     public void start(BundleContext context) throws Exception {
         LOG.debug("OpenICF OSGi Extender - Starting");
 
@@ -79,6 +81,7 @@ public class Activator implements BundleActivator {
         LOG.debug("OpenICF OSGi Extender - Started");
     }
 
+    @Override
     public void stop(BundleContext context) throws Exception {
         LOG.debug("OpenICF OSGi Extender - Stopping");
         connectorInfoManager.unregister();

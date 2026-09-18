@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -43,6 +44,7 @@ public class TestImpl extends ConnectorAPIOperationRunner implements TestApiOp {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void test() {
         ((TestOp) getConnector()).test();
     }

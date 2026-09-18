@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  * "Portions Copyrighted 2014-2015 ForgeRock AS"
  */
 package org.identityconnectors.ldap.modify;
@@ -157,6 +158,7 @@ public class LdapCreate extends LdapModifyOperation {
         try {
             if (pwdAttr != null) {
                 pwdAttr.access(new Accessor() {
+                    @Override
                     public void access(javax.naming.directory.Attribute passwordAttr) {
                         hashPassword(passwordAttr, null);
                         ldapAttrs.put(passwordAttr);

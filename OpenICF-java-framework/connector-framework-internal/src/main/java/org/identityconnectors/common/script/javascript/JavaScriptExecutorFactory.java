@@ -97,6 +97,7 @@ public class JavaScriptExecutorFactory extends ScriptExecutorFactory {
             this.compiled = compiled;
         }
 
+        @Override
         public Object execute(Map<String, Object> arguments) throws Exception {
             Map<String, Object> args = CollectionUtil.nullAsEmpty(arguments);
             ScriptContext newContext = new SimpleScriptContext();
@@ -116,6 +117,7 @@ public class JavaScriptExecutorFactory extends ScriptExecutorFactory {
             this.script = script;
         }
 
+        @Override
         public Object execute(Map<String, Object> arguments) throws Exception {
             Map<String, Object> args = CollectionUtil.nullAsEmpty(arguments);
             ScriptEngine engine = manager.getEngineByName(JAVA_SCRIPT);

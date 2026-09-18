@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.remote.security;
@@ -59,6 +60,7 @@ public class SharedSecretPrincipal implements Principal, Serializable {
                 clientCertificate, "clientCertificate").getEncoded(), false), null);
     }
 
+    @Override
     public String getName() {
         return name;
     }
@@ -71,12 +73,14 @@ public class SharedSecretPrincipal implements Principal, Serializable {
         return null != secret && secret.verifyBase64SHA1Hash(hash);
     }
 
+    @Override
     public String toString() {
         return "SharedSecretPrincipal{"
                 + (null != secret ? "name='" + name + '\'' + ", secret=" + secret : "fingerPrint='"
                         + name + '\'') + '}';
     }
 
+    @Override
     public boolean equals(Object o) {
         if (this == o)
             return true;
@@ -93,6 +97,7 @@ public class SharedSecretPrincipal implements Principal, Serializable {
         return true;
     }
 
+    @Override
     public int hashCode() {
         int result = name.hashCode();
         result = 31 * result + (secret != null ? secret.hashCode() : 0);

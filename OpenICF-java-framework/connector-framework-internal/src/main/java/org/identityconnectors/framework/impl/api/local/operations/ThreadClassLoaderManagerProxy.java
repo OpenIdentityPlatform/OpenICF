@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -56,6 +57,7 @@ public class ThreadClassLoaderManagerProxy implements InvocationHandler {
             this.target = target;
         }
 
+        @Override
         public boolean handle(final Object object) {
             ThreadClassLoaderManager.getInstance().pushClassLoader(applicationClassLoader);
             try {
@@ -73,6 +75,7 @@ public class ThreadClassLoaderManagerProxy implements InvocationHandler {
         this.target = target;
     }
 
+    @Override
     public Object invoke(final Object proxy, final Method method, final Object[] arguments)
             throws Throwable {
         final ClassLoader applicationClassLoader =

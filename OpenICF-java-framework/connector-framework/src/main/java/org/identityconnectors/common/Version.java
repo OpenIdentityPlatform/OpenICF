@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.common;
 
@@ -189,6 +190,7 @@ public final class Version implements Comparable<Version> {
         return false;
     }
 
+    @Override
     public int compareTo(Version that) {
         for (int i = 0; i < Math.max(this.components.length, that.components.length); i++) {
             Integer c1 = i < this.components.length ? this.components[i] : Integer.valueOf(0);

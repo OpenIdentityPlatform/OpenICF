@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.serializer;
 
@@ -58,12 +59,14 @@ class FilterHandlers {
             super(clazz, typeName);
         }
 
+        @Override
         public final Object deserialize(final ObjectDecoder decoder) {
             final Filter left = (Filter) decoder.readObjectContents(0);
             final Filter right = (Filter) decoder.readObjectContents(1);
             return createFilter(left, right);
         }
 
+        @Override
         public final void serialize(final Object object, final ObjectEncoder encoder) {
             final CompositeFilter val = (CompositeFilter) object;
             encoder.writeObjectContents(val.getLeft());
@@ -80,12 +83,14 @@ class FilterHandlers {
             super(clazz, typeName);
         }
 
+        @Override
         public final Object deserialize(final ObjectDecoder decoder) {
             final Attribute attribute =
                     (Attribute) decoder.readObjectField("attribute", null, null);
             return createFilter(attribute);
         }
 
+        @Override
         public final void serialize(final Object object, final ObjectEncoder encoder) {
             final AttributeFilter val = (AttributeFilter) object;
             encoder.writeObjectField("attribute", val.getAttribute(), false);
@@ -131,6 +136,7 @@ class FilterHandlers {
 
         HANDLERS.add(new AbstractObjectSerializationHandler(ExtendedMatchFilter.class, "ExtendedMatchFilter") {
 
+            @Override
             public Object deserialize(final ObjectDecoder decoder) {
                 final String operator = decoder.readStringField("operator", null);
                 final Attribute attribute =
@@ -138,6 +144,7 @@ class FilterHandlers {
                 return new ExtendedMatchFilter(operator, attribute);
             }
 
+            @Override
             public void serialize(final Object object, final ObjectEncoder encoder) {
                 final ExtendedMatchFilter val = (ExtendedMatchFilter) object;
                 encoder.writeStringField("operator", val.getOperator());
@@ -183,11 +190,13 @@ class FilterHandlers {
 
         HANDLERS.add(new AbstractObjectSerializationHandler(NotFilter.class, "NotFilter") {
 
+            @Override
             public Object deserialize(final ObjectDecoder decoder) {
                 final Filter filter = (Filter) decoder.readObjectContents(0);
                 return new NotFilter(filter);
             }
 
+            @Override
             public void serialize(final Object object, final ObjectEncoder encoder) {
                 final NotFilter val = (NotFilter) object;
                 encoder.writeObjectContents(val.getFilter());
@@ -204,11 +213,13 @@ class FilterHandlers {
 
         HANDLERS.add(new AbstractObjectSerializationHandler(PresenceFilter.class, "PresenceFilter") {
 
+            @Override
             public Object deserialize(final ObjectDecoder decoder) {
                 final String name = decoder.readStringField("name", null);
                 return new PresenceFilter(name);
             }
 
+            @Override
             public void serialize(final Object object, final ObjectEncoder encoder) {
                 final PresenceFilter val = (PresenceFilter) object;
                 encoder.writeStringField("name", val.getName());

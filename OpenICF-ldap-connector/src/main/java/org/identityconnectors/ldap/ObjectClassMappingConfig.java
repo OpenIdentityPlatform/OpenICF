@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap;
 
@@ -81,10 +82,12 @@ public class ObjectClassMappingConfig {
         return operationalAttributes;
     }
 
+    @Override
     public int hashCode() {
         return objectClass.hashCode();
     }
 
+    @Override
     public boolean equals(Object o) {
         if (o instanceof ObjectClassMappingConfig) {
             ObjectClassMappingConfig that = (ObjectClassMappingConfig)o;

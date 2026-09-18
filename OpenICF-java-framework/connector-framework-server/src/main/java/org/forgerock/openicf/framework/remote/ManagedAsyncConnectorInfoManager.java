@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.remote;
@@ -71,6 +72,7 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
                          *         integer as the first argument is less than,
                          *         equal to, or greater than the second.
                          */
+                        @Override
                         public int compare(final ConnectorKey left, final ConnectorKey right) {
                             int result = left.getBundleName().compareTo(right.getBundleName());
                             if (result != 0) {
@@ -94,6 +96,7 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
         CLOSED_EXCEPTION.setStackTrace(new StackTraceElement[] {});
     }
 
+    @Override
     protected void doClose() {
         for (ConnectorEntry<V> entry : managedConnectorInfos.values()) {
             entry.shutdown();
@@ -135,6 +138,7 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
                 .from(rangePromiseCacheList)
                 .filter(
                         new Predicate<Pair<ConnectorKeyRange, PromiseImpl<ConnectorInfo, RuntimeException>>>() {
+                            @Override
                             public boolean apply(Pair<ConnectorKeyRange, PromiseImpl<ConnectorInfo, RuntimeException>> value) {
                                 return value.getKey().isInRange(connectorInfo.getConnectorKey());
                             }
@@ -149,6 +153,7 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
 
     }
 
+    @Override
     public List<ConnectorInfo> getConnectorInfos() {
         ArrayList<ConnectorInfo> resultList =
                 new ArrayList<ConnectorInfo>(managedConnectorInfos.size());
@@ -160,6 +165,7 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
         return resultList;
     }
 
+    @Override
     public ConnectorInfo findConnectorInfo(ConnectorKey key) {
         ConnectorEntry<V> entry = managedConnectorInfos.get(key);
         if (null != entry) {
@@ -168,6 +174,7 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
         return null;
     }
 
+    @Override
     public Promise<ConnectorInfo, RuntimeException> findConnectorInfoAsync(
             final ConnectorKeyRange keyRange) {
         if (!isRunning.get()) {
@@ -188,6 +195,7 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
 
                 rangePromiseCacheList.add(cacheEntry);
                 cacheEntry.getValue().thenOnResultOrException(new Runnable() {
+                    @Override
                     public void run() {
                         rangePromiseCacheList.remove(cacheEntry);
                     }
@@ -215,6 +223,7 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
         }
     }
 
+    @Override
     public Promise<ConnectorInfo, RuntimeException> findConnectorInfoAsync(final ConnectorKey key) {
         if (!isRunning.get()) {
             return Promises.<ConnectorInfo, RuntimeException> newExceptionPromise(CLOSED_EXCEPTION);
@@ -239,20 +248,24 @@ public class ManagedAsyncConnectorInfoManager<V extends ConnectorInfo, C extends
     public AsyncConnectorInfoManager wrap() {
         return new AsyncConnectorInfoManager() {
 
+            @Override
             public Promise<ConnectorInfo, RuntimeException> findConnectorInfoAsync(
                     final ConnectorKey key) {
                 return ManagedAsyncConnectorInfoManager.this.findConnectorInfoAsync(key);
             }
 
+            @Override
             public Promise<ConnectorInfo, RuntimeException> findConnectorInfoAsync(
                     final ConnectorKeyRange keyRange) {
                 return ManagedAsyncConnectorInfoManager.this.findConnectorInfoAsync(keyRange);
             }
 
+            @Override
             public List<ConnectorInfo> getConnectorInfos() {
                 return ManagedAsyncConnectorInfoManager.this.getConnectorInfos();
             }
 
+            @Override
             public ConnectorInfo findConnectorInfo(final ConnectorKey key) {
                 return ManagedAsyncConnectorInfoManager.this.findConnectorInfo(key);
             }

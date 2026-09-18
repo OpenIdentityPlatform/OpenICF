@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  * $Id$
  */
@@ -116,11 +117,13 @@ public class XMLHandlerImpl implements XMLHandler {
         NamespaceLookupUtil.INSTANCE.initialize(icfSchema, riSchema);
     }
 
+    @Override
     public XMLHandler init() {
         buildDocument();
         return this;
     }
 
+    @Override
     public Uid create(final ObjectClass objClass, final Set<Attribute> attributes) {
         final String method = "create";
         log.info("Entry {0}", method);
@@ -226,6 +229,7 @@ public class XMLHandlerImpl implements XMLHandler {
         return new Uid(uidValue);
     }
 
+    @Override
     public Uid update(ObjectClass objClass, Uid uid, Set<Attribute> replaceAttributes) {
         final String method = "update";
         log.info("Entry {0}", method);
@@ -302,6 +306,7 @@ public class XMLHandlerImpl implements XMLHandler {
         return uid;
     }
 
+    @Override
     public void delete(final ObjectClass objClass, final Uid uid) {
         final String method = "delete";
         log.info("Entry {0}", method);
@@ -319,6 +324,7 @@ public class XMLHandlerImpl implements XMLHandler {
         log.info("Exit {0}", method);
     }
 
+    @Override
     public Collection<ConnectorObject> search(String query, ObjectClass objClass) {
         final String method = "search";
         log.info("Entry {0}", method);
@@ -380,6 +386,7 @@ public class XMLHandlerImpl implements XMLHandler {
         return modified;
     }
 
+    @Override
     public void dispose() {
         final String method = "serialize";
         log.info("Entry {0}", method);
@@ -469,6 +476,7 @@ public class XMLHandlerImpl implements XMLHandler {
         log.info("Entry {0}", method);
     }
 
+    @Override
     public Uid authenticate(String username, GuardedString password) {
         final String method = "authenticate";
         log.info("Entry {0}", method);
@@ -508,6 +516,7 @@ public class XMLHandlerImpl implements XMLHandler {
         return uid;
     }
 
+    @Override
     public boolean isSupportUid(ObjectClass objectClass) {
         ObjectClassInfo objInfo = connSchema.findObjectClassInfo(objectClass.getObjectClassValue());
         if (null != objInfo) {
