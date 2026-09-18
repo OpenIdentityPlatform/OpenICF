@@ -782,24 +782,25 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
 
     private GroovyScriptEngine groovyScriptEngine = null;
 
-    protected GroovyScriptEngine getGroovyScriptEngine() {
+    /**
+     * Synchronised for the whole initialisation, not double-checked: the
+     * customizer script runs against the half-initialised engine (it may call
+     * back into this configuration, which re-enters here), so other threads
+     * have to wait until it has run rather than see the engine early.
+     */
+    protected synchronized GroovyScriptEngine getGroovyScriptEngine() {
         if (null == groovyScriptEngine) {
-            synchronized (this) {
-                if (null == groovyScriptEngine) {
+            final CompilerConfiguration compilerConfiguration =
+                    new CompilerConfiguration(config);
+            compilerConfiguration.addCompilationCustomizers(getImportCustomizer(null));
 
-                    final CompilerConfiguration compilerConfiguration =
-                            new CompilerConfiguration(config);
-                    compilerConfiguration.addCompilationCustomizers(getImportCustomizer(null));
+            final GroovyClassLoader loader =
+                    new GroovyClassLoader(getParentLoader(), compilerConfiguration, true);
 
-                    final GroovyClassLoader loader =
-                            new GroovyClassLoader(getParentLoader(), compilerConfiguration, true);
+            groovyScriptEngine =
+                    new GroovyScriptEngine(getRoots(compilerConfiguration, loader), loader);
 
-                    groovyScriptEngine =
-                            new GroovyScriptEngine(getRoots(compilerConfiguration, loader), loader);
-
-                    initializeCustomizer();
-                }
-            }
+            initializeCustomizer();
         }
         return groovyScriptEngine;
     }

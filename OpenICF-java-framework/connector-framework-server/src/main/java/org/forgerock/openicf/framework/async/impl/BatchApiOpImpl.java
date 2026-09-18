@@ -374,7 +374,8 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
         private class CompletionListener extends Thread {
             private final AtomicBoolean running = new AtomicBoolean(false);
 
-            public void start() {
+            @Override
+            public synchronized void start() {
                 // The token and "complete" responses are dispatched on pool threads and may
                 // race here; only the first caller may actually start the thread.
                 if (!running.compareAndSet(false, true)) {

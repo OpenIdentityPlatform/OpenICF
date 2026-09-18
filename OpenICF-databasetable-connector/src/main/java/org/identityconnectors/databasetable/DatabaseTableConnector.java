@@ -459,7 +459,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
                     log.info("Append empty attribute {0} for required columnName {1}", attributeName, columnName);        
                     value = DatabaseTableConstants.EMPTY_STR;
                 }                
-                final Integer sqlType = getColumnType(columnName);
+                final int sqlType = getColumnType(columnName);
                 final SQLParam param = new SQLParam(quoteName(columnName), value, sqlType);
                 updateSet.addBind(param);
                 log.ok("Appended to update statement the attribute {0} for columnName {1} and sqlType {2}", attributeName, columnName, sqlType);                        
@@ -609,7 +609,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         if(token != null && token.getValue() != null) {
             final Object tokenVal = token.getValue();
             log.info("Sync token is {0}", tokenVal);        
-            final Integer sqlType = getColumnType(config.getChangeLogColumn());
+            final int sqlType = getColumnType(config.getChangeLogColumn());
             where.addBind(new SQLParam(changeLogColumnName, tokenVal, sqlType),">" );
         }
         final DatabaseQueryBuilder query = new DatabaseQueryBuilder(tblname, columnNames);
@@ -1082,7 +1082,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
         for (int i = 1; i <= count; i++) {
             final String name = meta.getColumnName(i);
             final AttributeInfoBuilder attrBld = new AttributeInfoBuilder();
-            final Integer columnType = meta.getColumnType(i);
+            final int columnType = meta.getColumnType(i);
             log.ok("column name {0} has type {1}", name, columnType);
             columnSQLTypes.put(name, columnType);
             if (name.equalsIgnoreCase(config.getKeyColumn())) {

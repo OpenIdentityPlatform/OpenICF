@@ -21,6 +21,7 @@
  * ====================
  *
  * Portions Copyrighted 2012 ForgeRock AS
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  */
 package org.identityconnectors.contract.test;
@@ -32,6 +33,7 @@ import static org.testng.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -102,7 +104,7 @@ public class MultiOpTests extends ObjectClassRunner {
         List<Set<Attribute>> attrs = new ArrayList<Set<Attribute>>();
 
         // objects stored in connector resource before test
-        Map<Uid, ConnectorObject> coBeforeTest = null;
+        Map<Uid, ConnectorObject> coBeforeTest = Collections.emptyMap();
 
         // sync variables
         SyncToken token = null;
@@ -792,7 +794,7 @@ public class MultiOpTests extends ObjectClassRunner {
      */
     private static boolean canLockOut() {
         // by default it's supposed that case insensitive search is disabled.
-        Boolean canLockout = true;
+        boolean canLockout = true;
         try {
             canLockout = !(Boolean) getDataProvider().getTestSuiteAttribute(
                     SKIP + "." + LOCKOUT_PREFIX,

@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  * $Id$
  */
@@ -126,7 +127,7 @@ public class AttributeTypeUtil {
         List<String> results = new ArrayList<String>();
         String stringValue = null;
 
-        if (attr != null && attr.getValue() != null && attrInfo != null) {
+        if (attr != null && attr.getValue() != null) {
             if (attrInfo.getType().isPrimitive())
                 javaClass = convertPrimitiveToWrapper(attrInfo.getType().getName());
 

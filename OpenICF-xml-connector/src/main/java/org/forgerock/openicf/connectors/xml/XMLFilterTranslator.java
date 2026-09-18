@@ -112,9 +112,7 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
             for (int i = 1; i < numOfValues; i++) {
                 Query rightSide = equalsQueries.get(i);
                 orQuery = createOrExpression(leftSide, rightSide);
-                if (i != numOfValues) {
-                    leftSide = orQuery;
-                }
+                leftSide = orQuery;
             }
 
             return orQuery;

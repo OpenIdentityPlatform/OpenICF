@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.testconnector;
@@ -425,7 +426,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
             // Paged Search
             final String pagedResultsCookie = options.getPagedResultsCookie();
             String currentPagedResultsCookie = options.getPagedResultsCookie();
-            final Integer pagedResultsOffset =
+            final int pagedResultsOffset =
                     null != options.getPagedResultsOffset() ? Math.max(0, options
                             .getPagedResultsOffset()) : 0;
             final Integer pageSize = options.getPageSize();
@@ -435,7 +436,8 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
             int handled = 0;
 
             for (ConnectorObject entry : resultSet) {
-                if (pageStartIndex < 0 && pagedResultsCookie.equals(entry.getName().getNameValue())) {
+                if (pageStartIndex < 0 && null != pagedResultsCookie
+                        && pagedResultsCookie.equals(entry.getName().getNameValue())) {
                     pageStartIndex = index + 1;
                 }
 

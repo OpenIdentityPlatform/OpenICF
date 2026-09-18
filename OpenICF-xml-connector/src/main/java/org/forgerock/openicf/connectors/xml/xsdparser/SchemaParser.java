@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  * $Id$
  */
@@ -96,87 +97,87 @@ public class SchemaParser {
 
         while (typesIterator.hasNext()) {
             XSElementDecl type = schema.getElementDecl(typesIterator.next());
+            if (type == null) {
+                continue;
+            }
 
             Set<AttributeInfo> attributes = new HashSet<AttributeInfo>();
             List<Class<? extends SPIOperation>> supportedOp = new LinkedList<Class<? extends SPIOperation>>();
 
             ObjectClassInfoBuilder objectClassBuilder = new ObjectClassInfoBuilder();
             objectClassBuilder.setType(type.getName());
+            XSComplexType xsCompType = type.getType().asComplexType();
 
-            if (type != null) {
-                XSComplexType xsCompType = type.getType().asComplexType();
+            if (xsCompType.getAnnotation() != null) {
+                String supportedOpString = xsCompType.getAnnotation().getAnnotation().toString();
+                String[] supportedOpStringSplit = supportedOpString.split(" |\n");
+                List<String> supportedOpListString = Arrays.asList(supportedOpStringSplit);
 
-                if (xsCompType.getAnnotation() != null) {
-                    String supportedOpString = xsCompType.getAnnotation().getAnnotation().toString();
-                    String[] supportedOpStringSplit = supportedOpString.split(" |\n");
-                    List<String> supportedOpListString = Arrays.asList(supportedOpStringSplit);
+                supportedOp = SchemaParserUtil.getSupportedOpClasses(supportedOpListString);
+            }
 
-                    supportedOp = SchemaParserUtil.getSupportedOpClasses(supportedOpListString);
-                }
+            XSContentType xsContType = xsCompType.getContentType();
+            XSParticle particle = xsContType.asParticle();
 
-                XSContentType xsContType = xsCompType.getContentType();
-                XSParticle particle = xsContType.asParticle();
+            if (particle != null) {
+                XSTerm xsTerm = particle.getTerm();
 
-                if (particle != null) {
-                    XSTerm xsTerm = particle.getTerm();
+                if (xsTerm.isModelGroup()) {
+                    XSModelGroup xsModelGroup = xsTerm.asModelGroup();
+                    XSParticle[] particles = xsModelGroup.getChildren();
 
-                    if (xsTerm.isModelGroup()) {
-                        XSModelGroup xsModelGroup = xsTerm.asModelGroup();
-                        XSParticle[] particles = xsModelGroup.getChildren();
+                    for (XSParticle childParticle : particles) {
+                        XSTerm childParticleTerm = childParticle.getTerm();
 
-                        for (XSParticle childParticle : particles) {
-                            XSTerm childParticleTerm = childParticle.getTerm();
+                        if (childParticleTerm.isElementDecl()) {
+                            XSElementDecl childElementTerm = childParticleTerm.asElementDecl();
+                            Set<Flags> flags = new HashSet<Flags>();
+                            Class<?> attributeClassType = null;
 
-                            if (childParticleTerm.isElementDecl()) {
-                                XSElementDecl childElementTerm = childParticleTerm.asElementDecl();
-                                Set<Flags> flags = new HashSet<Flags>();
-                                Class<?> attributeClassType = null;
+                            if (childParticle.getMinOccurs() == 1) {
+                                flags.add(Flags.REQUIRED);
+                            }
 
-                                if (childParticle.getMinOccurs() == 1) {
-                                    flags.add(Flags.REQUIRED);
+                            if (childParticle.getMaxOccurs() > 1 || childParticle.getMaxOccurs() == -1) {
+                                flags.add(Flags.MULTIVALUED);
+                            }
+
+                            if (childElementTerm.getAnnotation() != null) {
+                                XSAnnotation childElementTermAnnotaion = childElementTerm.getAnnotation();
+                                String annotations = childElementTermAnnotaion.getAnnotation().toString();
+
+                                String[] annotationsSplit = annotations.split(" |\n");
+                                List<String> annotationList = Arrays.asList(annotationsSplit);
+
+                                Set<Flags> flagList = SchemaParserUtil.getFlags(annotationList);
+
+                                if (flagList != null) {
+                                    flags.addAll(flagList);
                                 }
+                                
+                                attributeClassType = SchemaParserUtil.getJavaClassType(annotationList);
 
-                                if (childParticle.getMaxOccurs() > 1 || childParticle.getMaxOccurs() == -1) {
-                                    flags.add(Flags.MULTIVALUED);
+                            }
+
+                            if (attributeClassType == null) {
+                                XSType typeNotFlagedJavaclass = childElementTerm.getType();
+                                
+                                if(typeNotFlagedJavaclass.getName() != null){
+                                    attributeClassType = SchemaParserUtil.findJavaClassType(typeNotFlagedJavaclass.getName());
                                 }
+                            }
 
-                                if (childElementTerm.getAnnotation() != null) {
-                                    XSAnnotation childElementTermAnnotaion = childElementTerm.getAnnotation();
-                                    String annotations = childElementTermAnnotaion.getAnnotation().toString();
+                            AttributeInfo attributeInfo = null;
 
-                                    String[] annotationsSplit = annotations.split(" |\n");
-                                    List<String> annotationList = Arrays.asList(annotationsSplit);
+                            if (attributeClassType != null) {
+                                attributeInfo = AttributeInfoBuilder.build(childElementTerm.getName(), attributeClassType, flags);
+                            }
+                            else {
+                                attributeInfo = AttributeInfoBuilder.build(childElementTerm.getName());
+                            }
 
-                                    Set<Flags> flagList = SchemaParserUtil.getFlags(annotationList);
-
-                                    if (flagList != null) {
-                                        flags.addAll(flagList);
-                                    }
-                                    
-                                    attributeClassType = SchemaParserUtil.getJavaClassType(annotationList);
-
-                                }
-
-                                if (attributeClassType == null) {
-                                    XSType typeNotFlagedJavaclass = childElementTerm.getType();
-                                    
-                                    if(typeNotFlagedJavaclass.getName() != null){
-                                        attributeClassType = SchemaParserUtil.findJavaClassType(typeNotFlagedJavaclass.getName());
-                                    }
-                                }
-
-                                AttributeInfo attributeInfo = null;
-
-                                if (attributeClassType != null) {
-                                    attributeInfo = AttributeInfoBuilder.build(childElementTerm.getName(), attributeClassType, flags);
-                                }
-                                else {
-                                    attributeInfo = AttributeInfoBuilder.build(childElementTerm.getName());
-                                }
-
-                                if(attributeInfo != null){
-                                    attributes.add(attributeInfo);
-                                }
+                            if(attributeInfo != null){
+                                attributes.add(attributeInfo);
                             }
                         }
                     }

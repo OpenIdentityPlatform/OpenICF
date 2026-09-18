@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap;
 
@@ -77,7 +78,9 @@ public class ADLdapUtil {
                 throw new ConnectorException(LdapConstants.MS_GUID_ATTR+" attribute has the wrong length ("+GUID.length+"). Should be 16 bytes.");
             }
         }
-        catch(NamingException e){}
+        catch(NamingException e){
+            throw new ConnectorException("Error reading " + attr.getID() + " attribute", e);
+        }
         
         StringBuilder sGUID = new StringBuilder(43);
         sGUID.append("<GUID=");
@@ -116,6 +119,7 @@ public class ADLdapUtil {
         }
         catch(NamingException e){
             log.error(e, "Error reading " + attr.getID() + " attribute");
+            throw new ConnectorException("Error reading " + attr.getID() + " attribute", e);
         }
         
         StringBuilder sGUID = new StringBuilder(39);
