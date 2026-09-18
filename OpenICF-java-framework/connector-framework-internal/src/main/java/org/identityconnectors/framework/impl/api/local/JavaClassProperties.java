@@ -216,7 +216,7 @@ public class JavaClassProperties {
 
     private static Configuration createBean2(ConfigurationPropertiesImpl properties,
                                              Class<? extends Configuration> configClass) throws Exception {
-        Configuration rv = configClass.newInstance();
+        Configuration rv = configClass.getDeclaredConstructor().newInstance();
         rv.setConnectorMessages(properties.getParent().getConnectorInfo().getMessages());
         mergeIntoBean2(properties, rv);
         return rv;

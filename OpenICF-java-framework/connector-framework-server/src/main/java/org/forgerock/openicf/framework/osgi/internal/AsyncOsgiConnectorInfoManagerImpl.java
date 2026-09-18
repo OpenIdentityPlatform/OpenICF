@@ -242,7 +242,7 @@ public class AsyncOsgiConnectorInfoManagerImpl extends
         try {
             Class<? extends Connector> connectorClass = localInfo.getConnectorClass();
             APIConfigurationImpl rv = new APIConfigurationImpl();
-            Configuration config = localInfo.getConnectorConfigurationClass().newInstance();
+            Configuration config = localInfo.getConnectorConfigurationClass().getDeclaredConstructor().newInstance();
             boolean pooling = PoolableConnector.class.isAssignableFrom(connectorClass);
             rv.setConnectorPoolingSupported(pooling);
             rv.setConfigurationProperties(JavaClassProperties.createConfigurationProperties(config));

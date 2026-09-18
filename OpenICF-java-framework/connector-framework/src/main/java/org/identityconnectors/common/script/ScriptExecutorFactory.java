@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2015 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.common.script;
 
@@ -70,7 +71,7 @@ public abstract class ScriptExecutorFactory {
                     Class<?> clazz = Class.forName(factory);
                     // Create an instance in order to get the supported
                     // language.
-                    ScriptExecutorFactory instance = (ScriptExecutorFactory) clazz.newInstance();
+                    ScriptExecutorFactory instance = (ScriptExecutorFactory) clazz.getDeclaredConstructor().newInstance();
                     String language = instance.getLanguageName();
                     // Do not override a factory earlier in the classpath.
                     if (!factoryCache.containsKey(language)) {
@@ -169,7 +170,7 @@ public abstract class ScriptExecutorFactory {
         }
         // exceptions here should not happened because of the register
         try {
-            return (ScriptExecutorFactory) clazz.newInstance();
+            return (ScriptExecutorFactory) clazz.getDeclaredConstructor().newInstance();
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {

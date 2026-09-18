@@ -51,7 +51,7 @@ public abstract class ObjectSerializerFactory {
             if (instance == null) {
                 try {
                     final Class<?> clazz = Class.forName(IMPL_NAME);
-                    final Object object = clazz.newInstance();
+                    final Object object = clazz.getDeclaredConstructor().newInstance();
                     instance = ObjectSerializerFactory.class.cast(object);
                 } catch (Exception e) {
                     throw ConnectorException.wrap(e);

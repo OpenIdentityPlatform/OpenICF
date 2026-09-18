@@ -48,7 +48,7 @@ public abstract class ConnectorInfoManagerFactory {
         if (instance == null) {
             try {
                 Class<?> clazz = Class.forName(IMPL_NAME);
-                Object object = clazz.newInstance();
+                Object object = clazz.getDeclaredConstructor().newInstance();
                 instance = ConnectorInfoManagerFactory.class.cast(object);
             } catch (Exception e) {
                 throw ConnectorException.wrap(e);

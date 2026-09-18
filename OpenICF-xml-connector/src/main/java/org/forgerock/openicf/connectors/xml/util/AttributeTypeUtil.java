@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  * $Id$
  */
@@ -44,47 +45,46 @@ public class AttributeTypeUtil {
 
     public static Object createInstantiatedObject(String attrValue, String javaclass) {
         if (javaclass.equals(XmlHandlerUtil.STRING)) {
-            String s = new String(attrValue);
-            return s;
+            return attrValue;
         }
         else if (javaclass.equals(XmlHandlerUtil.INT_PRIMITIVE)) {
-            int i = new Integer(attrValue);
+            int i = Integer.valueOf(attrValue);
             return i;
         }
         else if (javaclass.equals(XmlHandlerUtil.INTEGER)) {
-            Integer i = new Integer(attrValue);
+            Integer i = Integer.valueOf(attrValue);
             return i;
         }
         else if (javaclass.equals(XmlHandlerUtil.LONG)) {
-            Long l = new Long(attrValue);
+            Long l = Long.valueOf(attrValue);
             return l;
         }
         else if (javaclass.equals(XmlHandlerUtil.LONG_PRIMITIVE)) {
-            long l = new Long(attrValue);
+            long l = Long.valueOf(attrValue);
             return l;
         }
         else if (javaclass.equals(XmlHandlerUtil.BOOLEAN)) {
-            Boolean b = new Boolean(attrValue);
+            Boolean b = Boolean.valueOf(attrValue);
             return b;
         }
         else if (javaclass.equals(XmlHandlerUtil.BOOLEAN_PRIMITIVE)) {
-            boolean b = new Boolean(attrValue);
+            boolean b = Boolean.valueOf(attrValue);
             return b;
         }
         else if (javaclass.equals(XmlHandlerUtil.DOUBLE)) {
-            Double d = new Double(attrValue);
+            Double d = Double.valueOf(attrValue);
             return d;
         }
         else if (javaclass.equals(XmlHandlerUtil.DOUBLE_PRIMITIVE)) {
-            double d = new Double(attrValue);
+            double d = Double.valueOf(attrValue);
             return d;
         }
         else if (javaclass.equals(XmlHandlerUtil.FLOAT)) {
-            Float f = new Float(attrValue);
+            Float f = Float.valueOf(attrValue);
             return f;
         }
         else if (javaclass.equals(XmlHandlerUtil.FLOAT_PRIMITIVE)) {
-            float f = new Float(attrValue);
+            float f = Float.valueOf(attrValue);
             return f;
         }
         else if (javaclass.equals(XmlHandlerUtil.CHARACTER)) {

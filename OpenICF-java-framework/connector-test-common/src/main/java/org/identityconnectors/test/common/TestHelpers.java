@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2014 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.test.common;
 
@@ -215,7 +216,7 @@ public final class TestHelpers {
         if (instance == null) {
             try {
                 Class<?> clazz = Class.forName(IMPL_NAME);
-                Object object = clazz.newInstance();
+                Object object = clazz.getDeclaredConstructor().newInstance();
                 instance = TestHelpersSpi.class.cast(object);
             } catch (Exception e) {
                 throw ConnectorException.wrap(e);
@@ -308,7 +309,7 @@ public final class TestHelpers {
             Class<?> configObject = Class.forName("groovy.util.ConfigObject");
             Object slurpInstance = null;
             if (StringUtil.isBlank(environment)) {
-                slurpInstance = slurper.newInstance();
+                slurpInstance = slurper.getDeclaredConstructor().newInstance();
             } else {
                 slurpInstance = slurper.getConstructor(String.class).newInstance(environment);
             }

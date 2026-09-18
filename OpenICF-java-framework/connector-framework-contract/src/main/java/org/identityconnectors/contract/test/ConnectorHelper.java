@@ -119,10 +119,10 @@ public class ConnectorHelper {
                     throw new Exception("Class " + customDataProvider + " is not of type "
                             + DataProvider.class.getName());
                 }
-                dp = (DataProvider) dpClass.newInstance();
+                dp = (DataProvider) dpClass.getDeclaredConstructor().newInstance();
             } else {
                 logger.info("DataProvider class not specified, using default ''"+DEFAULT_DATA_PROVIDER+"''.");
-                dp = (DataProvider) DEFAULT_DATA_PROVIDER.newInstance();
+                dp = (DataProvider) DEFAULT_DATA_PROVIDER.getDeclaredConstructor().newInstance();
             }
         } catch (Exception ex) {
             throw ContractException.wrap(ex);

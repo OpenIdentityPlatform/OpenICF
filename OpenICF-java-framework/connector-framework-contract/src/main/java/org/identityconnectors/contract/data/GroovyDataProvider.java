@@ -238,8 +238,8 @@ public class GroovyDataProvider implements DataProvider {
         if (StringUtil.isNotBlank(pOut)) {
             try {
                 _queriedPropsOutFile = new File(pOut);
-                if (!_queriedPropsOutFile.exists()) {
-                    _queriedPropsOutFile.createNewFile();
+                if (!_queriedPropsOutFile.exists() && !_queriedPropsOutFile.createNewFile()) {
+                    throw new IOException("Could not create " + _queriedPropsOutFile);
                 }
                 if (!_queriedPropsOutFile.canWrite()) {
                     _queriedPropsOutFile = null;
@@ -263,8 +263,8 @@ public class GroovyDataProvider implements DataProvider {
         if (StringUtil.isNotBlank(pOut)) {
             try {
                 _propertyOutFile = new File(pOut);
-                if (!_propertyOutFile.exists()) {
-                    _propertyOutFile.createNewFile();
+                if (!_propertyOutFile.exists() && !_propertyOutFile.createNewFile()) {
+                    throw new IOException("Could not create " + _propertyOutFile);
                 }
                 if (!_propertyOutFile.canWrite()) {
                     _propertyOutFile = null;

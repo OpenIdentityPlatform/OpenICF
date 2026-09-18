@@ -326,7 +326,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         try {
             final Class<? extends Connector> connectorClass = localInfo.getConnectorClass();
             final APIConfigurationImpl rv = new APIConfigurationImpl();
-            final Configuration config = localInfo.getConnectorConfigurationClass().newInstance();
+            final Configuration config = localInfo.getConnectorConfigurationClass().getDeclaredConstructor().newInstance();
             final boolean pooling = PoolableConnector.class.isAssignableFrom(connectorClass);
             rv.setConnectorPoolingSupported(pooling);
             rv.setConfigurationProperties(JavaClassProperties.createConfigurationProperties(config));

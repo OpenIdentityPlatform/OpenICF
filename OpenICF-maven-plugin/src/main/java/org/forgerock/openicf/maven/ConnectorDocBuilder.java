@@ -200,7 +200,7 @@ public class ConnectorDocBuilder {
                             Class<? extends Connector> connectorClass =
                                     ((LocalConnectorInfoImpl) info).getConnectorClass();
                             try {
-                                SchemaOp connector = (SchemaOp) connectorClass.newInstance();
+                                SchemaOp connector = (SchemaOp) connectorClass.getDeclaredConstructor().newInstance();
                                 schema = connector.schema();
                             } catch (Throwable t) {
                                 handler.getLog().debug("Getting Schema with Connector Instance", t);
