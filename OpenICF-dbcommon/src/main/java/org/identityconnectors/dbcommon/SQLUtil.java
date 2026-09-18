@@ -821,8 +821,6 @@ public final class SQLUtil {
             stmt.setLong(idx, ((BigInteger) val).longValue());
         } else if (val instanceof Byte) {
             stmt.setByte(idx, (Byte) val);
-        } else if (val instanceof Integer) {
-            stmt.setInt(idx, (Integer) val);
         } else if (val instanceof InputStream) {
             stmt.setBinaryStream(idx, (InputStream) val, 10000);
         } else if (val instanceof Blob) {

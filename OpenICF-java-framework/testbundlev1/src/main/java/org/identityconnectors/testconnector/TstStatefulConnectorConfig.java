@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.testconnector;
@@ -122,7 +123,7 @@ public class TstStatefulConnectorConfig extends TstConnectorConfig implements St
 
     private UUID guid;
 
-    private ScheduledExecutorService executorService = null;
+    private volatile ScheduledExecutorService executorService = null;
 
     public synchronized UUID getGuid() {
         if (null == guid) {

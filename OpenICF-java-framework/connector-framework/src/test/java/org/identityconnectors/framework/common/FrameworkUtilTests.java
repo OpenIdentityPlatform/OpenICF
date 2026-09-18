@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.common;
 
@@ -41,13 +42,13 @@ public class FrameworkUtilTests {
     @Test
     public void testFrameworkVersion() throws Exception {
         ClassLoader loader = new VersionClassLoader(this.getClass().getClassLoader(), "1.2.3-alpha");
-        assertEquals(FrameworkUtil.getFrameworkVersion(loader), Version.parse("1.2.3"));
+        assertEquals(FrameworkUtil.readFrameworkVersion(loader), Version.parse("1.2.3"));
     }
 
     @Test
     public void testFrameworkVersionCannotBeBlank() throws Exception {
         try {
-            FrameworkUtil.getFrameworkVersion(new VersionClassLoader(this.getClass().getClassLoader(), " "));
+            FrameworkUtil.readFrameworkVersion(new VersionClassLoader(this.getClass().getClassLoader(), " "));
             Assert.fail();
         } catch (IllegalStateException e) {
             // OK.

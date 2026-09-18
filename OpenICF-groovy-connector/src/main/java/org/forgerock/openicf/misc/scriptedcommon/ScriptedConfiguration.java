@@ -780,7 +780,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         return logger;
     }
 
-    private GroovyScriptEngine groovyScriptEngine = null;
+    private volatile GroovyScriptEngine groovyScriptEngine = null;
 
     protected GroovyScriptEngine getGroovyScriptEngine() {
         if (null == groovyScriptEngine) {
