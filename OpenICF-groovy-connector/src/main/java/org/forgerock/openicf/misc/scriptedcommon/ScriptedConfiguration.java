@@ -782,7 +782,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         return logger;
     }
 
-    private GroovyScriptEngine groovyScriptEngine = null;
+    private volatile GroovyScriptEngine groovyScriptEngine = null;
 
     /**
      * Synchronised for the whole initialisation, not double-checked: the

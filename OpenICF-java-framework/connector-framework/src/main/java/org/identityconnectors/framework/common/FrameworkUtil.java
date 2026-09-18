@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2016 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.common;
 
@@ -485,14 +486,14 @@ public final class FrameworkUtil {
      *
      * @return the framework version; never null.
      */
-    public static Version getFrameworkVersion() {
+    public static synchronized Version getFrameworkVersion() {
         if (frameworkVersion == null) {
             frameworkVersion = Version.create(1, 5);
         }
         return frameworkVersion;
     }
 
-    static Version getFrameworkVersion(ClassLoader loader) throws IOException {
+    static Version readFrameworkVersion(ClassLoader loader) throws IOException {
         InputStream stream = loader.getResourceAsStream("connectors-framework.properties");
         try {
             Properties props = new Properties();
