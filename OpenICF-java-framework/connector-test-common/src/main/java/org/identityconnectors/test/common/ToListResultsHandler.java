@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.test.common;
 
@@ -36,6 +37,7 @@ public final class ToListResultsHandler implements ResultsHandler {
 
     private final List<ConnectorObject> connectorObjects = new ArrayList<ConnectorObject>();
 
+    @Override
     public boolean handle(ConnectorObject object) {
         connectorObjects.add(object);
         return true;

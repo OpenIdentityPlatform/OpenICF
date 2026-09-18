@@ -12,6 +12,7 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2016 ForgeRock AS.
+ * Portions Copyright 2026 3A Systems, LLC.
  */
 
 package org.forgerock.openicf.connectors.ssh;
@@ -102,6 +103,7 @@ public class SSHConnection {
         final JSch jsch = new JSch();
         try {
             configuration.getPassword().access(new GuardedString.Accessor() {
+                @Override
                 public void access(char[] clearChars) {
                     try {
                         session = jsch.getSession(user, host, port);
@@ -130,8 +132,10 @@ public class SSHConnection {
         final JSch jsch = new JSch();
         try {
             configuration.fetchPrivateKey().access(new GuardedString.Accessor() {
+                @Override
                 public void access(final char[] privateKey) {
                     configuration.getPassphrase().access(new GuardedString.Accessor() {
+                        @Override
                         public void access(final char[] passphrase) {
                             try {
                                 jsch.addIdentity("SSHConnector", charsToBytes(privateKey),

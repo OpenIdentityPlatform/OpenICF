@@ -21,6 +21,7 @@
  * ====================
  *
  * Portions Copyrighted 2012 ForgeRock AS
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  */
 package org.identityconnectors.contract.test;
@@ -103,14 +104,17 @@ public class ValidateApiOpTests extends ContractTestBase {
         final Iterator<?> wrongConfigList = ((List<?>) o).iterator();
 
         return new Iterator<Object[]>() {
+            @Override
             public boolean hasNext() {
                 return wrongConfigList.hasNext();
             }
 
+            @Override
             public Object[] next() {
                 return new Object[]{wrongConfigList.next()};
             }
 
+            @Override
             public void remove() {
                 wrongConfigList.remove();
             }

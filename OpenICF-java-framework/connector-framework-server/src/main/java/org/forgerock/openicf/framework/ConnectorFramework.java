@@ -99,6 +99,7 @@ public class ConnectorFramework implements Closeable {
         return isRunning.get();
     }
 
+    @Override
     public void close() {
         if (isRunning.compareAndSet(Boolean.TRUE, Boolean.FALSE)) {
             // Notify CloseListeners
@@ -218,6 +219,7 @@ public class ConnectorFramework implements Closeable {
             new ConcurrentHashMap<String, ConnectorFacade>();
 
     private final Runnable MANAGED_FACADE_CACHE_RUNNABLE = new Runnable() {
+        @Override
         public void run() {
             for (Map.Entry<String, ConnectorFacade> entry : MANAGED_FACADE_CACHE.entrySet()) {
                 if (entry.getValue() instanceof LocalConnectorFacadeImpl) {
@@ -401,6 +403,7 @@ public class ConnectorFramework implements Closeable {
                     if (rv == null) {
                         rv = new AsyncRemoteLegacyConnectorInfoManager(info, scheduler);
                         rv.addCloseListener(new CloseListener<AsyncRemoteLegacyConnectorInfoManager>() {
+                            @Override
                             public void onClosed(AsyncRemoteLegacyConnectorInfoManager source) {
                                 remoteManagerCache.remove(key);
                             }
@@ -470,12 +473,14 @@ public class ConnectorFramework implements Closeable {
                 remoteConnectionInfoManagerFactory =
                         new RemoteConnectionInfoManagerFactory(listener,
                                 getConnectionManagerConfig()) {
+                            @Override
                             public RemoteConnectorInfoManager connect(
                                     RemoteWSFrameworkConnectionInfo info) {
                                 throw new UnsupportedOperationException(
                                         REMOTE_LIBRARY_MISSING_EXCEPTION, e);
                             }
 
+                            @Override
                             public void doClose() {
 
                             }
@@ -483,6 +488,7 @@ public class ConnectorFramework implements Closeable {
             }
             remoteConnectionInfoManagerFactory
                     .addCloseListener(new CloseListener<RemoteConnectionInfoManagerFactory>() {
+                        @Override
                         public void onClosed(RemoteConnectionInfoManagerFactory source) {
                             remoteConnectionInfoManagerFactory = null;
                         }

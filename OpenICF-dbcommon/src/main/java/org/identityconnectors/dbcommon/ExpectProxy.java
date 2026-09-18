@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.dbcommon;
 
@@ -103,6 +104,7 @@ public class ExpectProxy<T> implements InvocationHandler {
     /**
      * The InvocationHandler method.
      */
+    @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         String ext = "";
         if (methodNames.size() > count) {

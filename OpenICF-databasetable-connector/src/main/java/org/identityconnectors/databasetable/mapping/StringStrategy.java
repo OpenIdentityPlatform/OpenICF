@@ -58,6 +58,7 @@ public class StringStrategy implements MappingStrategy {
     /* (non-Javadoc)
      * @see org.identityconnectors.databasetable.MappingStrategy#getSQLParam(java.sql.ResultSet, int, int)
      */
+    @Override
     public SQLParam getSQLParam(ResultSet resultSet, int i, String name, final int sqlType) throws SQLException {
         //Is it expected to be string, read as a string.
         if( delegate.getSQLAttributeType(sqlType).isAssignableFrom(String.class)) {
@@ -70,6 +71,7 @@ public class StringStrategy implements MappingStrategy {
     /* (non-Javadoc)
      * @see org.identityconnectors.databasetable.MappingStrategy#getSQLAttributeType(int)
      */
+    @Override
     public Class<?> getSQLAttributeType(int sqlType) {
         return delegate.getSQLAttributeType(sqlType);
     }
@@ -77,6 +79,7 @@ public class StringStrategy implements MappingStrategy {
     /* (non-Javadoc)
      * @see org.identityconnectors.databasetable.MappingStrategy#setSQLParam(java.sql.PreparedStatement, int, org.identityconnectors.dbcommon.SQLParam)
      */
+    @Override
     public void setSQLParam(final PreparedStatement stmt, final int idx, SQLParam parm) throws SQLException {
         // Write all internal string as a string and left conversion to the database
         if( delegate.getSQLAttributeType(parm.getSqlType()).isAssignableFrom(String.class)) {

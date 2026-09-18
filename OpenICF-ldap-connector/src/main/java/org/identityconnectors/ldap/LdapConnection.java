@@ -21,6 +21,7 @@
  * ====================
  *
  * Portions Copyrighted 2013-2016 ForgeRock AS
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap;
 
@@ -215,6 +216,7 @@ public class LdapConnection {
             env.put(Context.SECURITY_PRINCIPAL, principal);
             if (credentials != null) {
                 credentials.access(new Accessor() {
+                    @Override
                     public void access(char[] clearChars) {
                         env.put(Context.SECURITY_CREDENTIALS, new String(clearChars));
                     }

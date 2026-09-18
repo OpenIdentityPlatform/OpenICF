@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  * $Id$
  */
@@ -95,6 +96,7 @@ public class XMLConfiguration extends AbstractConfiguration {
         this.createFileIfNotExists = createFileIfNotExists;
     }
 
+    @Override
     public void validate() {
         if (null == xsdFilePath) {
             throw new IllegalArgumentException("Missing xsdFilePath property");

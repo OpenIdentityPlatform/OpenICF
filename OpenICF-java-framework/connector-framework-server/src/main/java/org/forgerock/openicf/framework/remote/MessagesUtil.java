@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.remote;
@@ -240,6 +241,7 @@ public class MessagesUtil {
                 GuardedByteArray sourceValue = (GuardedByteArray) source;
 
                 sourceValue.access(new GuardedByteArray.Accessor() {
+                    @Override
                     public void access(byte[] clearBytes) {
                         builder.addValue(ConnectorObjects.AttributeUnionValue.newBuilder()
                                 .setGuardedByteArrayValue(
@@ -251,6 +253,7 @@ public class MessagesUtil {
                 GuardedString sourceValue = (GuardedString) source;
 
                 sourceValue.access(new GuardedString.Accessor() {
+                    @Override
                     public void access(char[] clearBytes) {
                         builder.addValue(ConnectorObjects.AttributeUnionValue
                                 .newBuilder()
@@ -385,6 +388,7 @@ public class MessagesUtil {
     private final static class UidHandler implements
             ObjectHandler<Uid, CommonObjectMessages.Uid, CommonObjectMessages.Uid.Builder> {
 
+        @Override
         public Uid deserialize(CommonObjectMessages.Uid message) {
             if (StringUtil.isNotBlank(message.getRevision())) {
                 return new Uid(message.getValue(), message.getRevision());
@@ -393,10 +397,12 @@ public class MessagesUtil {
             }
         }
 
+        @Override
         public CommonObjectMessages.Uid serialize(Uid source) {
             return serializeBuilder(source).build();
         }
 
+        @Override
         public CommonObjectMessages.Uid.Builder serializeBuilder(Uid source) {
             CommonObjectMessages.Uid.Builder builder =
                     CommonObjectMessages.Uid.newBuilder().setValue(source.getUidValue());
@@ -411,15 +417,18 @@ public class MessagesUtil {
             implements
             ObjectHandler<ConnectorKey, CommonObjectMessages.ConnectorKey, CommonObjectMessages.ConnectorKey.Builder> {
 
+        @Override
         public ConnectorKey deserialize(CommonObjectMessages.ConnectorKey message) {
             return new ConnectorKey(message.getBundleName(), message.getBundleVersion(), message
                     .getConnectorName());
         }
 
+        @Override
         public CommonObjectMessages.ConnectorKey serialize(ConnectorKey source) {
             return serializeBuilder(source).build();
         }
 
+        @Override
         public CommonObjectMessages.ConnectorKey.Builder serializeBuilder(ConnectorKey source) {
             return CommonObjectMessages.ConnectorKey.newBuilder().setBundleName(
                     source.getBundleName()).setBundleVersion(source.getBundleVersion())
@@ -430,16 +439,19 @@ public class MessagesUtil {
     private final static class ScriptContextHandler
             implements
             ObjectHandler<ScriptContext, CommonObjectMessages.ScriptContext, CommonObjectMessages.ScriptContext.Builder> {
+        @Override
         public ScriptContext deserialize(CommonObjectMessages.ScriptContext message) {
             Map<String, Object> arguments = deserializeLegacy(message.getScriptArguments());
             return new ScriptContext(message.getScript().getScriptLanguage(), message.getScript()
                     .getScriptText(), null != arguments ? arguments : new HashMap<String, Object>());
         }
 
+        @Override
         public CommonObjectMessages.ScriptContext serialize(ScriptContext source) {
             return serializeBuilder(source).build();
         }
 
+        @Override
         public CommonObjectMessages.ScriptContext.Builder serializeBuilder(ScriptContext source) {
             return CommonObjectMessages.ScriptContext.newBuilder().setScript(
                     CommonObjectMessages.Script.newBuilder().setScriptLanguage(
@@ -452,6 +464,7 @@ public class MessagesUtil {
             implements
             ObjectHandler<SearchResult, CommonObjectMessages.SearchResult, CommonObjectMessages.SearchResult.Builder> {
 
+        @Override
         public SearchResult deserialize(CommonObjectMessages.SearchResult message) {
 
             SearchResult.CountPolicy policy = SearchResult.CountPolicy.NONE;
@@ -474,10 +487,12 @@ public class MessagesUtil {
                     message.getTotalPagedResults(), message.getRemainingPagedResults());
         }
 
+        @Override
         public CommonObjectMessages.SearchResult serialize(SearchResult source) {
             return serializeBuilder(source).build();
         }
 
+        @Override
         public CommonObjectMessages.SearchResult.Builder serializeBuilder(SearchResult source) {
             CommonObjectMessages.SearchResult.Builder builder =
                     CommonObjectMessages.SearchResult.newBuilder().setRemainingPagedResults(
@@ -506,15 +521,18 @@ public class MessagesUtil {
             implements
             ObjectHandler<ConnectorObject, CommonObjectMessages.ConnectorObject, CommonObjectMessages.ConnectorObject.Builder> {
 
+        @Override
         public ConnectorObject deserialize(CommonObjectMessages.ConnectorObject message) {
             Set<? extends Attribute> attributes = deserializeLegacy(message.getAttributes());
             return new ConnectorObject(new ObjectClass(message.getObjectClass()), attributes);
         }
 
+        @Override
         public CommonObjectMessages.ConnectorObject serialize(ConnectorObject source) {
             return serializeBuilder(source).build();
         }
 
+        @Override
         public CommonObjectMessages.ConnectorObject.Builder serializeBuilder(ConnectorObject source) {
             return CommonObjectMessages.ConnectorObject.newBuilder().setObjectClass(
                     source.getObjectClass().getObjectClassValue()).setAttributes(
@@ -525,14 +543,17 @@ public class MessagesUtil {
     private final static class LocaleHandler implements
             ObjectHandler<Locale, CommonObjectMessages.Locale, CommonObjectMessages.Locale.Builder> {
 
+        @Override
         public Locale deserialize(CommonObjectMessages.Locale message) {
             return new Locale(message.getLanguage(), message.getCountry(), message.getVariant());
         }
 
+        @Override
         public CommonObjectMessages.Locale serialize(Locale source) {
             return serializeBuilder(source).build();
         }
 
+        @Override
         public CommonObjectMessages.Locale.Builder serializeBuilder(Locale source) {
             return CommonObjectMessages.Locale.newBuilder().setCountry(source.getCountry())
                     .setLanguage(source.getLanguage()).setVariant(source.getVariant());
@@ -543,6 +564,7 @@ public class MessagesUtil {
             implements
             ObjectHandler<SyncDelta, CommonObjectMessages.SyncDelta, CommonObjectMessages.SyncDelta.Builder> {
 
+        @Override
         public SyncDelta deserialize(CommonObjectMessages.SyncDelta message) {
             SyncDeltaBuilder builder = new SyncDeltaBuilder();
             builder.setToken(deserializeMessage(message.getToken(), SyncToken.class));
@@ -576,10 +598,12 @@ public class MessagesUtil {
             return builder.build();
         }
 
+        @Override
         public CommonObjectMessages.SyncDelta serialize(SyncDelta source) {
             return serializeBuilder(source).build();
         }
 
+        @Override
         public CommonObjectMessages.SyncDelta.Builder serializeBuilder(SyncDelta source) {
             CommonObjectMessages.SyncDelta.Builder builder =
                     CommonObjectMessages.SyncDelta.newBuilder();
@@ -621,14 +645,17 @@ public class MessagesUtil {
             implements
             ObjectHandler<SyncToken, CommonObjectMessages.SyncToken, CommonObjectMessages.SyncToken.Builder> {
 
+        @Override
         public SyncToken deserialize(CommonObjectMessages.SyncToken message) {
             return new SyncToken(deserializeLegacy(message.getValue()));
         }
 
+        @Override
         public CommonObjectMessages.SyncToken serialize(SyncToken source) {
             return serializeBuilder(source).build();
         }
 
+        @Override
         public CommonObjectMessages.SyncToken.Builder serializeBuilder(SyncToken source) {
             return CommonObjectMessages.SyncToken.newBuilder().setValue(
                     serializeLegacy(source.getValue()));
@@ -639,14 +666,17 @@ public class MessagesUtil {
             implements
             ObjectHandler<BatchEmptyResult, OperationMessages.BatchEmptyResponse, OperationMessages.BatchEmptyResponse.Builder> {
 
+        @Override
         public BatchEmptyResult deserialize(OperationMessages.BatchEmptyResponse message) {
             return new BatchEmptyResult(message.getResultMessage());
         }
 
+        @Override
         public OperationMessages.BatchEmptyResponse serialize(BatchEmptyResult source) {
             return serializeBuilder(source).build();
         }
 
+        @Override
         public OperationMessages.BatchEmptyResponse.Builder serializeBuilder(BatchEmptyResult source) {
             return OperationMessages.BatchEmptyResponse.newBuilder().setResultMessage(source.getMessage());
         }

@@ -257,6 +257,7 @@ public class VersionRange {
         return comparison > 0; // true if left > right
     }
 
+    @Override
     public boolean equals(Object obj) {
         if (obj == null) {
             return false;
@@ -291,6 +292,7 @@ public class VersionRange {
         return result;
     }
 
+    @Override
     public String toString() {
         if (ceilingVersion != null) {
             StringBuilder sb = new StringBuilder();

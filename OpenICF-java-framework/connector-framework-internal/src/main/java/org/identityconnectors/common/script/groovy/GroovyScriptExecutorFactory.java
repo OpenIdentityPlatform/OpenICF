@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.common.script.groovy;
 
@@ -64,6 +65,7 @@ public class GroovyScriptExecutorFactory extends ScriptExecutorFactory {
             groovyScript = new GroovyShell(loader).parse(script);
         }
 
+        @Override
         public Object execute(Map<String, Object> arguments) throws Exception {
             Map<String, Object> args = CollectionUtil.nullAsEmpty(arguments);
             groovyScript.setBinding(new Binding(args));

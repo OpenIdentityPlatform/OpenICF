@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2013 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api;
 
@@ -82,6 +83,7 @@ public class BufferedResultsProxy implements InvocationHandler {
             this.timeoutMillis = timeoutMillis;
         }
 
+        @Override
         public boolean handle(final Object obj) {
             if (isStopped()) {
                 return false;
@@ -213,6 +215,7 @@ public class BufferedResultsProxy implements InvocationHandler {
         }
     }
 
+    @Override
     public Object invoke(final Object proxy, final Method method, Object[] arguments)
             throws Throwable {
         // do not buffer/timeout equals, hashCode, toString

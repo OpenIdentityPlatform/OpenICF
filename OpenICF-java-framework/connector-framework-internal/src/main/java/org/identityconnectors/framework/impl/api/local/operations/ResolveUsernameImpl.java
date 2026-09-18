@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2014 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -44,6 +45,7 @@ public class ResolveUsernameImpl extends ConnectorAPIOperationRunner implements
     /**
      * Resolve the username to an <code>Uid</code>.
      */
+    @Override
     public Uid resolveUsername(final ObjectClass objectClass, final String username,
             OperationOptions options) {
         Assertions.nullCheck(objectClass, "objectClass");

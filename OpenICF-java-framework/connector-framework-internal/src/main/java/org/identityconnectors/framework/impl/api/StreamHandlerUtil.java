@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api;
 
@@ -41,6 +42,7 @@ public class StreamHandlerUtil {
             this.target = target;
         }
 
+        @Override
         public boolean handle(final ConnectorObject obj) {
             return target.handle(obj);
         }
@@ -56,6 +58,7 @@ public class StreamHandlerUtil {
             this.target = target;
         }
 
+        @Override
         public boolean handle(final SyncDelta obj) {
             return target.handle(obj);
         }
@@ -82,6 +85,7 @@ public class StreamHandlerUtil {
             this.target = target;
         }
 
+        @Override
         public boolean handle(final Object obj) {
             if (targetInterface == ResultsHandler.class) {
                 return ((ResultsHandler) target).handle((ConnectorObject) obj);

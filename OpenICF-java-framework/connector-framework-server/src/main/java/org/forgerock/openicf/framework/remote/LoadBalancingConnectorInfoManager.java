@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.remote;
@@ -47,6 +48,7 @@ public class LoadBalancingConnectorInfoManager extends AsyncRemoteConnectorInfoM
 
         return findConnectorInfoAsync(key).then(
                 new Function<ConnectorInfo, ConnectorFacade, RuntimeException>() {
+                    @Override
                     public ConnectorFacade apply(ConnectorInfo value) throws RuntimeException {
                         if (value instanceof RemoteConnectorInfoImpl) {
                             return new RemoteAsyncConnectorFacade((RemoteConnectorInfoImpl) value,

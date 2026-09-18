@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.common.objects.filter;
 
@@ -58,6 +59,7 @@ public abstract class StringFilter extends SingleValueAttributeFilter {
      *             the same name as provided is not a string.
      * @see org.identityconnectors.framework.common.objects.filter.Filter#accept(ConnectorObject)
      */
+    @Override
     public boolean accept(ConnectorObject obj) {
         boolean ret = false;
         Attribute attr = obj.getAttributeByName(getName());

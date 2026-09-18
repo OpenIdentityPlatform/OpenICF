@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  * 
  * $Id$
  */
@@ -33,6 +34,7 @@ public class GuardedStringAccessor implements GuardedString.Accessor {
     public static final String code_id = "$Id$";
     private char[] _array;
 
+    @Override
     public void access(char[] clearChars) {
         _array = new char[clearChars.length];
         System.arraycopy(clearChars, 0, _array, 0, _array.length);

@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.osgi.internal;
@@ -55,6 +56,7 @@ public class ConnectorFrameworkServiceFactory implements ServiceFactory<Connecto
         this.connectorInfoManager = connectorInfoManager;
     }
 
+    @Override
     public ConnectorFrameworkFactory getService(Bundle bundle,
             ServiceRegistration<ConnectorFrameworkFactory> registration) {
 
@@ -67,6 +69,7 @@ public class ConnectorFrameworkServiceFactory implements ServiceFactory<Connecto
                             bundle.adapt(BundleWiring.class).getClassLoader();
 
                     factory = new ConnectorFrameworkFactory() {
+                        @Override
                         protected ConnectorFramework newInstance() {
                             return new OsgiConnectorFramework(
                                     getDefaultConnectorBundleParentClassLoader(),
@@ -101,6 +104,7 @@ public class ConnectorFrameworkServiceFactory implements ServiceFactory<Connecto
         return factory;
     }
 
+    @Override
     public void ungetService(Bundle bundle,
             ServiceRegistration<ConnectorFrameworkFactory> registration,
             ConnectorFrameworkFactory service) {

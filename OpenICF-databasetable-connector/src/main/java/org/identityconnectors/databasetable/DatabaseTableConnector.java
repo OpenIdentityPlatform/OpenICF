@@ -175,6 +175,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
     /**
      * {@inheritDoc}
      */
+    @Override
     public Configuration getConfiguration() {
         return this.config;
     }
@@ -183,6 +184,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      * Init the connector
      * {@inheritDoc}
      */
+    @Override
     public void init(Configuration cfg) {
         log.info("init DatabaseTable connector");                
         this.config = (DatabaseTableConfiguration) cfg;
@@ -195,6 +197,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
     /**
      * {@inheritDoc}
      */
+    @Override
     public void checkAlive() {
         log.info("checkAlive DatabaseTable connector");
         try {
@@ -230,6 +233,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      * Disposes of the {@link DatabaseTableConnector}'s resources.
      * {@inheritDoc}
      */
+    @Override
     public void dispose() {
         log.info("dispose DatabaseTable connector");                
         if ( conn != null ) {
@@ -245,6 +249,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      * Creates a row in the database representing an account.
      * {@inheritDoc}
      */
+    @Override
     public Uid create(ObjectClass oclass, Set<Attribute> attrs, OperationOptions options) {
         log.info("create account, check the ObjectClass");        
         if(oclass == null || (!oclass.equals(ObjectClass.ACCOUNT))) {
@@ -355,6 +360,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      * Deletes a row from the table.
      * {@inheritDoc}
      */
+    @Override
     public void delete(final ObjectClass oclass, final Uid uid, final OperationOptions options) {
         log.info("delete account, check the ObjectClass");        
 
@@ -414,6 +420,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      * Update the database row with the data provided.
      * {@inheritDoc}
      */
+    @Override
     public Uid update(ObjectClass oclass, Uid uid, Set<Attribute> attrs, OperationOptions options) {
         log.info("update account, check the ObjectClass");        
 
@@ -501,6 +508,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      * Creates a Database Table filter translator.
      * {@inheritDoc}
      */
+    @Override
     public FilterTranslator<FilterWhereBuilder> createFilterTranslator(ObjectClass oclass, OperationOptions options) {
         log.info("check the ObjectClass");        
         if(oclass == null || (!oclass.equals(ObjectClass.ACCOUNT))) {
@@ -514,6 +522,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      * Search for rows 
      * {@inheritDoc}
      */
+    @Override
     public void executeQuery(ObjectClass oclass, FilterWhereBuilder where, ResultsHandler handler,
             OperationOptions options) {
         log.info("check the ObjectClass and result handler");        
@@ -573,6 +582,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
     /**
      * {@inheritDoc}
      */
+    @Override
     public void sync(ObjectClass oclass, SyncToken token, SyncResultsHandler handler, OperationOptions options) {
         log.info("check the ObjectClass and result handler");        
         // Contract tests    
@@ -654,6 +664,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
     /**
      * {@inheritDoc}
      */
+    @Override
     public SyncToken getLatestSyncToken(ObjectClass oclass) {
         log.info("check the ObjectClass");        
         final String SQL_SELECT = "SELECT MAX( {0} ) FROM {1}";
@@ -717,6 +728,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
     /**
      * {@inheritDoc}
      */
+    @Override
     public Schema schema() {
         try {
             openConnection();
@@ -741,6 +753,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      * Test the configuration and connection
      * {@inheritDoc}
      */
+    @Override
     public void test() {
         log.info("test");
         try {
@@ -781,6 +794,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      * Attempts to authenticate the given username combination
      * {@inheritDoc}
      */
+    @Override
     public Uid authenticate(ObjectClass oclass, String username, GuardedString password,
             OperationOptions options) {
 
@@ -853,6 +867,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
      * Attempts to resolve the given username
      * {@inheritDoc}
      */
+    @Override
     public Uid resolveUsername(ObjectClass oclass, String username, OperationOptions options) {
         final String SQL_AUTH_QUERY = "SELECT {0} FROM {1} WHERE ( {0} = ? )";
         

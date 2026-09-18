@@ -55,6 +55,7 @@ public class NativeTimestampsStrategy implements MappingStrategy {
     /* (non-Javadoc)
      * @see org.identityconnectors.databasetable.MappingStrategy#getSQLParam(java.sql.ResultSet, int, int)
      */
+    @Override
     public SQLParam getSQLParam(ResultSet resultSet, int i, String name, final int sqlType) throws SQLException {
         switch (sqlType) {
         case Types.TIMESTAMP:
@@ -67,6 +68,7 @@ public class NativeTimestampsStrategy implements MappingStrategy {
     /* (non-Javadoc)
      * @see org.identityconnectors.databasetable.MappingStrategy#getSQLAttributeType(int)
      */
+    @Override
     public Class<?> getSQLAttributeType(int sqlType) {
         return delegate.getSQLAttributeType(sqlType);
     }
@@ -74,6 +76,7 @@ public class NativeTimestampsStrategy implements MappingStrategy {
     /* (non-Javadoc)
      * @see org.identityconnectors.databasetable.MappingStrategy#setSQLParam(java.sql.PreparedStatement, int, org.identityconnectors.dbcommon.SQLParam)
      */
+    @Override
     public void setSQLParam(final PreparedStatement stmt, final int idx, SQLParam parm) throws SQLException {
         delegate.setSQLParam(stmt, idx, parm);
     }    

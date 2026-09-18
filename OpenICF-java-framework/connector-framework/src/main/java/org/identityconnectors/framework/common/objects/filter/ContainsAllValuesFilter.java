@@ -60,11 +60,13 @@ public class ContainsAllValuesFilter extends AttributeFilter {
      *
      * {@inheritDoc}
      */
+    @Override
     public boolean accept(ConnectorObject obj) {
         Attribute found = obj.getAttributeByName(name);
         return found != null && found.getValue() != null && found.getValue().containsAll(values);
     }
 
+    @Override
     public <R, P> R accept(FilterVisitor<R, P> v, P p) {
         return v.visitContainsAllValuesFilter(p, this);
     }

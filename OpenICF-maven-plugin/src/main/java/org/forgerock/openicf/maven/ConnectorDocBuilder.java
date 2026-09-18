@@ -242,6 +242,7 @@ public class ConnectorDocBuilder {
                             Set<Class<? extends APIOperation>> operationSet =
                                     new TreeSet<Class<? extends APIOperation>>(
                                             new Comparator<Class<? extends APIOperation>>() {
+                                                @Override
                                                 public int compare(
                                                         Class<? extends APIOperation> o1,
                                                         Class<? extends APIOperation> o2) {
@@ -481,6 +482,7 @@ public class ConnectorDocBuilder {
 
     private static final Comparator<Pair<String, String>> PAIR_COMPARATOR =
             new Comparator<Pair<String, String>>() {
+                @Override
                 public int compare(Pair<String, String> left, Pair<String, String> right) {
                     if (left == null && right == null){
                         return 0;

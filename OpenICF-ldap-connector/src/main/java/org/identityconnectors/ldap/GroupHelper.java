@@ -21,6 +21,7 @@
  * ====================
  *
  * Portions Copyrighted 2013-2014 Forgerock
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap;
 
@@ -233,10 +234,12 @@ public class GroupHelper {
             return groupDN;
         }
 
+        @Override
         public int hashCode() {
             return memberRef.hashCode() ^ groupDN.hashCode();
         }
 
+        @Override
         public boolean equals(Object o) {
             if (o instanceof GroupMembership) {
                 GroupMembership that = (GroupMembership)o;
@@ -319,6 +322,7 @@ public class GroupHelper {
 
         private final List<String> results = new ArrayList<String>();
 
+        @Override
         public boolean handle(String baseDN, SearchResult searchResult) throws NamingException {
             results.add(LdapEntry.create(baseDN, searchResult).getDN().toString());
             return true;
@@ -341,6 +345,7 @@ public class GroupHelper {
             this.memberRef = memberRef;
         }
 
+        @Override
         public boolean handle(String baseDN, SearchResult searchResult) throws NamingException {
             LdapName groupDN = LdapEntry.create(baseDN, searchResult).getDN();
             results.add(new GroupMembership(memberRef, groupDN.toString()));

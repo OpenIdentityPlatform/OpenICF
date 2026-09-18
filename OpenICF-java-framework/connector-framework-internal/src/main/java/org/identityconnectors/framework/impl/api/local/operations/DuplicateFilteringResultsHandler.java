@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2013 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -59,6 +60,7 @@ public final class DuplicateFilteringResultsHandler implements SearchResultsHand
         this.handler = handler;
     }
 
+    @Override
     public boolean handle(ConnectorObject object) {
         String uid = object.getUid().getUidValue();
         if (!visitedUIDs.add(uid)) {
@@ -70,6 +72,7 @@ public final class DuplicateFilteringResultsHandler implements SearchResultsHand
         return stillHandling;
     }
 
+    @Override
     public void handleResult(final SearchResult result) {
         handler.handleResult(result);
     }

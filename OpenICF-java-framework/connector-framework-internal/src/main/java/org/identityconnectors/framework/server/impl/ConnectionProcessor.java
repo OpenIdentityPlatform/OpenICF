@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2013 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.framework.server.impl;
@@ -79,6 +80,7 @@ public class ConnectionProcessor implements Runnable {
             connection = conn;
         }
 
+        @Override
         public boolean handle(Object obj) {
             try {
                 OperationResponsePart part = new OperationResponsePart(null, obj);
@@ -110,6 +112,7 @@ public class ConnectionProcessor implements Runnable {
         connection = new RemoteFrameworkConnection(socket);
     }
 
+    @Override
     public void run() {
         try {
             try {

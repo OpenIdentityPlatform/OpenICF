@@ -153,6 +153,7 @@ public final class DatabaseTableSQLUtil {
         final String name = param.getName();
         try {
             guard.access(new GuardedString.Accessor() {
+                @Override
                 public void access(char[] clearChars) {
                     try {
                         //Never use setString, the DB2 database will fail for secured columns

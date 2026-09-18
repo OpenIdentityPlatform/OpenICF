@@ -98,6 +98,7 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
                 tryExecuteBatch(tasks, observer, options)
                         .thenOnException(
                                 new ExceptionHandler<RuntimeException>() {
+                                    @Override
                                     public void handleException(RuntimeException error) {
                                         if (!(error instanceof CancellationException)) {
                                             observer.onError(error);
@@ -108,14 +109,17 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
         promise.getOrThrowUninterruptibly();
 
         return new Subscription() {
+            @Override
             public void close() {
                 promise.cancel(true);
             }
 
+            @Override
             public boolean isUnsubscribed() {
                 return promise.isDone();
             }
 
+            @Override
             public Object getReturnValue() {
                 try {
                     return promise.get();
@@ -132,6 +136,7 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
                 tryQueryBatch(token, observer, options)
                         .thenOnException(
                                 new ExceptionHandler<RuntimeException>() {
+                                    @Override
                                     public void handleException(RuntimeException error) {
                                         if (!(error instanceof CancellationException)) {
                                             observer.onError(error);
@@ -142,14 +147,17 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
         promise.getOrThrowUninterruptibly();
 
         return new Subscription() {
+            @Override
             public void close() {
                 promise.cancel(true);
             }
 
+            @Override
             public boolean isUnsubscribed() {
                 return promise.isDone();
             }
 
+            @Override
             public Object getReturnValue() {
                 try {
                     return promise.get();
@@ -263,6 +271,7 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
             this.observer = observer;
         }
 
+        @Override
         public InternalRequest createRemoteRequest(
                 final RemoteOperationContext context,
                 final long requestId,
@@ -279,6 +288,7 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
             }
         }
 
+        @Override
         protected OperationMessages.OperationRequest.Builder createOperationRequest(
                 final RemoteOperationContext remoteContext) {
             return operationRequest;
@@ -323,6 +333,7 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
             }
         }
 
+        @Override
         protected void handleOperationResponseMessages(WebSocketConnectionHolder sourceConnection,
                 BatchOpResult message) {
             /**
@@ -374,6 +385,7 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
         private class CompletionListener extends Thread {
             private final AtomicBoolean running = new AtomicBoolean(false);
 
+            @Override
             public void start() {
                 // The token and "complete" responses are dispatched on pool threads and may
                 // race here; only the first caller may actually start the thread.
@@ -383,6 +395,7 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
                 super.start();
             }
 
+            @Override
             public void run() {
                 logger.ok("CompletionListener waiting for final result to complete.");
                 while ((!resultChannelComplete.get() || returnToken == null || !completeEventComplete.get())
@@ -502,6 +515,7 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
             final OperationOptions options = MessagesUtil.deserializeLegacy(requestMessage.getOptions());
 
             Observer<BatchResult> observer = new Observer<BatchResult>() {
+                @Override
                 public void onCompleted() {
                     resultChannelComplete.incrementAndGet();
                     if (resultChannelComplete.get() >= 2 && commandChannelComplete.get()) {
@@ -511,6 +525,7 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
                     }
                 }
 
+                @Override
                 public void onError(Throwable error) {
                     try {
                         final byte[] responseMessage =
@@ -521,6 +536,7 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
                     }
                 }
 
+                @Override
                 public void onNext(BatchResult result) {
                     if (result != null) {
                         BatchOpResult.Builder opResult = BatchOpResult.newBuilder()
@@ -648,6 +664,7 @@ public class BatchApiOpImpl extends AbstractAPIOperation implements BatchApiOp {
             }
         }
 
+        @Override
         protected boolean tryCancel() {
             final Subscription current;
             synchronized (this) {

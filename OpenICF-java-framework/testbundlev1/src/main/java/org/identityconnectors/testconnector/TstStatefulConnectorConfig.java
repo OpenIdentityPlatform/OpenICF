@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.testconnector;
@@ -131,6 +132,7 @@ public class TstStatefulConnectorConfig extends TstConnectorConfig implements St
         return guid;
     }
 
+    @Override
     public void release() {
         guid = null;
         if (null != executorService) {
@@ -339,11 +341,13 @@ public class TstStatefulConnectorConfig extends TstConnectorConfig implements St
         public Iterable<ConnectorObject> getIterable(final Filter filter) {
             final Iterable<ConnectorObjectCacheEntry> inner = objectCache.values();
             return new Iterable<ConnectorObject>() {
+                @Override
                 public Iterator<ConnectorObject> iterator() {
                     final Iterator<ConnectorObjectCacheEntry> innerIterator = inner.iterator();
                     return new Iterator<ConnectorObject>() {
                         ConnectorObject nextElement = null;
 
+                        @Override
                         public boolean hasNext() {
                             if (nextElement != null) {
                                 // fail-fast for next() or repeated hasNext()
@@ -363,6 +367,7 @@ public class TstStatefulConnectorConfig extends TstConnectorConfig implements St
                             return false;
                         }
 
+                        @Override
                         public ConnectorObject next() {
                             if (!hasNext()) { // ensure hasNext() has "advanced"
                                               // the next "filtered-in" element
@@ -375,6 +380,7 @@ public class TstStatefulConnectorConfig extends TstConnectorConfig implements St
                             return retValue;
                         }
 
+                        @Override
                         public void remove() {
                             innerIterator.remove();
                         }

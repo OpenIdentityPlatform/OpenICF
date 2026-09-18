@@ -56,18 +56,21 @@ public class RemoteFrameworkConnectionInfoConverter extends AbstractConfiguratio
         implements LogEnabled {
     private Logger log;
 
+    @Override
     public void enableLogging(final Logger logger) {
         assert logger != null;
 
         this.log = logger;
     }
 
+    @Override
     public boolean canConvert(final Class type) {
         assert type != null;
 
         return RemoteFrameworkConnectionInfo.class.isAssignableFrom(type);
     }
 
+    @Override
     public Object fromConfiguration(final ConverterLookup converterLookup,
             final PlexusConfiguration configuration, final Class type, final Class baseType,
             final ClassLoader classLoader, final ExpressionEvaluator expressionEvaluator,

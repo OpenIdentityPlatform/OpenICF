@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.common.rpc;
@@ -44,6 +45,7 @@ public abstract class AbstractLoadBalancingAlgorithm<G extends RemoteConnectionG
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isOperational() {
         for (RequestDistributor<G, H, P> e : requestDistributors)
             if (e.isOperational())
@@ -54,6 +56,7 @@ public abstract class AbstractLoadBalancingAlgorithm<G extends RemoteConnectionG
     /**
      * {@inheritDoc}
      */
+    @Override
     public <R extends RemoteRequest<V, E, G, H, P>, V, E extends Exception> R trySubmitRequest(
             RemoteRequestFactory<R, V, E, G, H, P> requestFactory) {
         return trySubmitRequest(getInitialConnectionFactoryIndex(), requestFactory);

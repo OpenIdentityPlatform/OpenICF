@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.remote.rpc;
@@ -49,6 +50,7 @@ public abstract class LocalOperationProcessor<V>
     protected abstract RPCResponse.Builder createOperationResponse(
             RemoteOperationContext remoteContext, V result);
 
+    @Override
     public boolean check() {
         boolean valid = inconsistencyCounter < 3;
         if (!valid) {
@@ -60,10 +62,12 @@ public abstract class LocalOperationProcessor<V>
         return valid;
     }
 
+    @Override
     public void inconsistent() {
         inconsistencyCounter++;
     }
 
+    @Override
     protected boolean tryHandleResult(V result) {
         try {
             final byte[] responseMessage =
@@ -81,6 +85,7 @@ public abstract class LocalOperationProcessor<V>
         return false;
     }
 
+    @Override
     protected boolean tryHandleError(RuntimeException error) {
         final byte[] responseMessage =
                 MessagesUtil.createErrorResponse(getRequestId(), error).build().toByteArray();
@@ -101,6 +106,7 @@ public abstract class LocalOperationProcessor<V>
     private WebSocketConnectionHolder trySendMessageNow(final byte[] responseMessage) {
         return getRemoteConnectionContext().getRemoteConnectionGroup().trySendMessage(
                 new Function<WebSocketConnectionHolder, WebSocketConnectionHolder, Exception>() {
+                    @Override
                     public WebSocketConnectionHolder apply(WebSocketConnectionHolder value)
                             throws Exception {
                         value.sendBytes(responseMessage).get(100, TimeUnit.MILLISECONDS);
@@ -109,6 +115,7 @@ public abstract class LocalOperationProcessor<V>
                 });
     }
 
+    @Override
     protected boolean tryCancel() {
         return false;
     }

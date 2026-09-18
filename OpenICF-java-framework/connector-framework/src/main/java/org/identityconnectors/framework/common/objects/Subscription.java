@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.framework.common.objects;
@@ -46,6 +47,7 @@ public interface Subscription extends Closeable {
      * @see org.identityconnectors.framework.api.operations.SyncEventSubscriptionApiOp#subscribe(ObjectClass,
      *      SyncToken, Observer, OperationOptions)
      */
+    @Override
     void close();
 
     /**

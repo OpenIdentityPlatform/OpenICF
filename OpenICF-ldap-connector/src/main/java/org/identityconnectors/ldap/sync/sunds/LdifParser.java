@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap.sync.sunds;
 
@@ -35,6 +36,7 @@ public class LdifParser implements Iterable<LdifParser.Line> {
         this.ldif = ldif;
     }
 
+    @Override
     public Iterator<Line> iterator() {
         return new LineIterator(getUnfoldedLines());
     }
@@ -74,6 +76,7 @@ public class LdifParser implements Iterable<LdifParser.Line> {
             this.rawLines = rawLines.iterator();
         }
 
+        @Override
         public boolean hasNext() {
             if (next == null) {
                 next = getNext();
@@ -81,6 +84,7 @@ public class LdifParser implements Iterable<LdifParser.Line> {
             return next != null;
         }
 
+        @Override
         public Line next() {
             if (next == null) {
                 next = getNext();
@@ -118,6 +122,7 @@ public class LdifParser implements Iterable<LdifParser.Line> {
             return result;
         }
 
+        @Override
         public void remove() {
             throw new UnsupportedOperationException();
         }

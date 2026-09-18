@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.forgerock.openicf.framework.osgi;
 
@@ -58,6 +59,7 @@ public class ConnectorManifestScanner implements BundleScanner<ManifestEntry> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public List<ManifestEntry> scan(Bundle bundle) {
         NullArgumentException.validateNotNull(bundle, "Bundle");
 

@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.remote;
@@ -36,6 +37,7 @@ import com.google.protobuf.MessageLite;
 
 public class RoundRobinLoadBalancingAlgorithmFactory extends LoadBalancingAlgorithmFactory {
 
+    @Override
     protected RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> createLoadBalancer(
             List<RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>> delegates) {
         return new RoundRobinLoadBalancingAlgorithm<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>(

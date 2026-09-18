@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.remote;
@@ -141,6 +142,7 @@ public class RemoteAsyncConnectorFacade extends AbstractConnectorFacade implemen
                 facadeKeys = new ConcurrentHashMap<String, ByteString>();
                 facadeKeyFunction =
                         new Function<RemoteOperationContext, ByteString, RuntimeException>() {
+                            @Override
                             public ByteString apply(final RemoteOperationContext value)
                                     throws RuntimeException {
                                 ByteString facadeKey =
@@ -156,17 +158,20 @@ public class RemoteAsyncConnectorFacade extends AbstractConnectorFacade implemen
                                                     transformer
                                                             .apply(new LoadBalancingConnectorFacadeContext() {
 
+                                                                @Override
                                                                 public APIConfiguration getAPIConfiguration() {
                                                                     return connectorInfo
                                                                             .createDefaultAPIConfiguration();
                                                                 }
 
+                                                                @Override
                                                                 public String getPrincipalName() {
                                                                     return value
                                                                             .getRemotePrincipal()
                                                                             .getName();
                                                                 }
 
+                                                                @Override
                                                                 public RemoteOperationContext getRemoteOperationContext() {
                                                                     return value;
                                                                 }
@@ -207,6 +212,7 @@ public class RemoteAsyncConnectorFacade extends AbstractConnectorFacade implemen
                 final ByteString facadeKey = ByteString.copyFromUtf8(getConnectorFacadeKey());
                 facadeKeyFunction =
                         new Function<RemoteOperationContext, ByteString, RuntimeException>() {
+                            @Override
                             public ByteString apply(RemoteOperationContext context)
                                     throws RuntimeException {
                                 context.getRemoteConnectionGroup().findConnectorInfo(
@@ -382,6 +388,7 @@ public class RemoteAsyncConnectorFacade extends AbstractConnectorFacade implemen
         return op;
     }
 
+    @Override
     protected APIOperation getOperationImplementation(Class<? extends APIOperation> api) {
         if (AuthenticationApiOp.class.isAssignableFrom(api)) {
             return authenticationApiOp;
@@ -420,74 +427,87 @@ public class RemoteAsyncConnectorFacade extends AbstractConnectorFacade implemen
         }
     }
 
+    @Override
     public Promise<Uid, RuntimeException> authenticateAsync(ObjectClass objectClass,
             String username, GuardedString password, OperationOptions options) {
         return getAsyncOperationCheckSupported(AuthenticationAsyncApiOp.class).authenticateAsync(
                 objectClass, username, password, options);
     }
 
+    @Override
     public Promise<Uid, RuntimeException> createAsync(ObjectClass objectClass,
             Set<Attribute> createAttributes, OperationOptions options) {
         return getAsyncOperationCheckSupported(CreateAsyncApiOp.class).createAsync(objectClass,
                 createAttributes, options);
     }
 
+    @Override
     public Promise<Void, RuntimeException> deleteAsync(ObjectClass objectClass, Uid uid,
             OperationOptions options) {
         return getAsyncOperationCheckSupported(DeleteAsyncApiOp.class).deleteAsync(objectClass,
                 uid, options);
     }
 
+    @Override
     public Promise<ConnectorObject, RuntimeException> getObjectAsync(ObjectClass objectClass,
             Uid uid, OperationOptions options) {
         return getAsyncOperationCheckSupported(GetAsyncApiOp.class).getObjectAsync(objectClass,
                 uid, options);
     }
 
+    @Override
     public Promise<Uid, RuntimeException> resolveUsernameAsync(ObjectClass objectClass,
             String username, OperationOptions options) {
         return getAsyncOperationCheckSupported(ResolveUsernameAsyncApiOp.class)
                 .resolveUsernameAsync(objectClass, username, options);
     }
 
+    @Override
     public Promise<Schema, RuntimeException> schemaAsync() {
         return getAsyncOperationCheckSupported(SchemaAsyncApiOp.class).schemaAsync();
     }
 
+    @Override
     public Promise<Object, RuntimeException> runScriptOnConnectorAsync(ScriptContext request,
             OperationOptions options) {
         return getAsyncOperationCheckSupported(ScriptOnConnectorAsyncApiOp.class)
                 .runScriptOnConnectorAsync(request, options);
     }
 
+    @Override
     public Promise<Object, RuntimeException> runScriptOnResourceAsync(ScriptContext request,
             OperationOptions options) {
         return getAsyncOperationCheckSupported(ScriptOnResourceAsyncApiOp.class)
                 .runScriptOnResourceAsync(request, options);
     }
 
+    @Override
     public Promise<Void, RuntimeException> testAsync() {
         return getAsyncOperationCheckSupported(TestAsyncApiOp.class).testAsync();
     }
 
+    @Override
     public Promise<Uid, RuntimeException> updateAsync(ObjectClass objectClass, Uid uid,
             Set<Attribute> replaceAttributes, OperationOptions options) {
         return getAsyncOperationCheckSupported(UpdateAsyncApiOp.class).updateAsync(objectClass,
                 uid, replaceAttributes, options);
     }
 
+    @Override
     public Promise<Uid, RuntimeException> addAttributeValuesAsync(ObjectClass objectClass, Uid uid,
             Set<Attribute> valuesToAdd, OperationOptions options) {
         return getAsyncOperationCheckSupported(UpdateAsyncApiOp.class).addAttributeValuesAsync(
                 objectClass, uid, valuesToAdd, options);
     }
 
+    @Override
     public Promise<Uid, RuntimeException> removeAttributeValuesAsync(ObjectClass objectClass,
             Uid uid, Set<Attribute> valuesToRemove, OperationOptions options) {
         return getAsyncOperationCheckSupported(UpdateAsyncApiOp.class).removeAttributeValuesAsync(
                 objectClass, uid, valuesToRemove, options);
     }
 
+    @Override
     public Promise<Void, RuntimeException> validateAsync() {
         return getAsyncOperationCheckSupported(ValidateAsyncApiOp.class).validateAsync();
     }

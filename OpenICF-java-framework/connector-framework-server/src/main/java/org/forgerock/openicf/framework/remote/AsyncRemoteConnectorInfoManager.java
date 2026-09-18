@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.remote;
@@ -72,6 +73,7 @@ public class AsyncRemoteConnectorInfoManager extends DelegatingAsyncConnectorInf
                                 .from(loadBalancingAlgorithmFactory.getAsyncRemoteConnectorInfoManager())
                                 .transform(
                                         new Function<AsyncRemoteConnectorInfoManager, RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>>() {
+                                            @Override
                                             public RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> apply(AsyncRemoteConnectorInfoManager value) {
                                                 return value.getMessageDistributor();
                                             }
@@ -88,10 +90,12 @@ public class AsyncRemoteConnectorInfoManager extends DelegatingAsyncConnectorInf
         }
     }
 
+    @Override
     protected RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> getMessageDistributor() {
         return messageDistributor;
     }
 
+    @Override
     protected void doClose() {
         if (null != remoteCloseable) {
             try {

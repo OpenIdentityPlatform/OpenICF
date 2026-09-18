@@ -95,6 +95,7 @@ public class OpenICFWebSocketCreator implements JettyWebSocketCreator, Closeable
 
         //Cancelled in close(); also dies when executorService is shut down
         groupHealthChecker = executorService.scheduleWithFixedDelay(new Runnable() {
+            @Override
             public void run() {
                 for (WebSocketConnectionGroup e : globalConnectionGroups.values()) {
                     if (!e.checkIsActive()) {
