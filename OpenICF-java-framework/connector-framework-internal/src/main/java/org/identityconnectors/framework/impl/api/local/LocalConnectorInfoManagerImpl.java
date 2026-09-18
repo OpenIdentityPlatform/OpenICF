@@ -34,6 +34,7 @@ import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -500,13 +501,9 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
             if (!tempDir.canWrite()) {
                 throw new IOException("Temporary directory " + tempDir + " is read/only");
             }
-            File candidate;
-            do {
-                candidate = new File(tempDir, "bundle-" + nextRandom());
-            } while (candidate.exists());
-            if (!candidate.mkdir()) {
-                throw new IOException("Temporary directory " + tempDir + " is read/only");
-            }
+            // created with a unique name and, on POSIX file systems, readable
+            // by the owner only: it holds the bundle's libraries
+            final File candidate = Files.createTempDirectory(tempDir.toPath(), "bundle-").toFile();
             candidate.deleteOnExit();
             _bundleTempDir = candidate;
             return candidate;

@@ -19,12 +19,16 @@
 package org.forgerock.openicf.csvfile;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -46,7 +50,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.identityconnectors.common.Base64;
-import org.apache.commons.io.FileUtils;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.common.security.SecurityUtil;
@@ -1031,14 +1034,15 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         } catch (IOException e) {
             throw new ConnectorException("Failed to create object", e);
         } finally {
-            if (mapWriter != null) {
-                try {
+            try {
+                if (mapWriter != null) {
                     mapWriter.close();
-                } catch (IOException e) {
-                    log.error(e, "Failed to close CSV file after create");
                 }
+            } catch (Exception e) {
+                log.error(e, "Failed to close CSV file after create");
+            } finally {
+                lock.unlock();
             }
-            lock.unlock();
         }
 
         return uid;
@@ -1053,12 +1057,13 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         ICsvMapReader reader = null;
         ICsvMapWriter writer = null;
         File tmp = null;
+        boolean rewritten = false;
 
         final WriteLock lock = fileNameToLockMap.get(csvFilePath).writeLock();
         lock.lock();
         try {
             reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
-            tmp = File.createTempFile("csvfile", "tmp");
+            tmp = createRewriteFile();
             writer = new CsvMapWriter(new FileWriter(tmp), csvPreference);
 
             final CellProcessor[] processors = getProcessors(header);
@@ -1074,10 +1079,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 }
             }
             if (!found) {
-                tmp.delete();
                 throw new UnknownUidException("Object for uid " + uid.toString() + " does not exist");
             }
             totalRowCount.put(csvFilePath, totalRowCount.get(csvFilePath) - 1);
+            rewritten = true;
         } catch (FileNotFoundException e) {
             log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
             throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
@@ -1085,31 +1090,13 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             log.error(e, "Error reading from {0}!", config.getCsvFile().toString());
             throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
         } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (Exception e) {
-                    log.error(e, "Error closing file reader");
-                }
+            try {
+                closeQuietly(reader, "reader");
+                closeQuietly(writer, "writer");
+                finishRewrite(tmp, rewritten);
+            } finally {
+                lock.unlock();
             }
-            if (writer != null) {
-                try {
-                    writer.close();
-                } catch (Exception e) {
-                    log.error(e, "Error closing file writer");
-                }
-            }
-            if (tmp != null && tmp.exists()) {
-                try {
-                    if (config.getCsvFile().getAbsoluteFile().exists()) {
-                        config.getCsvFile().getAbsoluteFile().delete();
-                    }
-                    FileUtils.moveFile(tmp.getAbsoluteFile(), config.getCsvFile().getAbsoluteFile());
-                } catch (Exception e) {
-                    log.error(e, "Error renaming file");
-                }
-            }
-            lock.unlock();
         }
     }
 
@@ -1126,12 +1113,13 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         ICsvMapReader reader = null;
         ICsvMapWriter writer = null;
         File tmp = null;
+        boolean rewritten = false;
 
         final WriteLock lock = fileNameToLockMap.get(csvFilePath).writeLock();
         lock.lock();
         try {
             reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
-            tmp = File.createTempFile("csvfile", "tmp");
+            tmp = createRewriteFile();
             writer = new CsvMapWriter(new FileWriter(tmp), csvPreference);
 
             writer.writeHeader(header);
@@ -1157,6 +1145,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             if (updated == null) {
                 throw new UnknownUidException("Uid " + uid.getUidValue() + " does not exist");
             }
+            rewritten = true;
         } catch (FileNotFoundException e) {
             log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
             throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
@@ -1164,34 +1153,72 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             log.error(e, "Error reading from {0}!", config.getCsvFile().toString());
             throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
         } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (Exception e) {
-                    log.error(e, "Error closing file reader");
-                }
+            try {
+                closeQuietly(reader, "reader");
+                closeQuietly(writer, "writer");
+                finishRewrite(tmp, rewritten);
+            } finally {
+                lock.unlock();
             }
-            if (writer != null) {
-                try {
-                    writer.close();
-                } catch (Exception e) {
-                    log.error(e, "Error closing file writer");
-                }
-            }
-            if (tmp != null) {
-                try {
-                    if (config.getCsvFile().getAbsoluteFile().exists()) {
-                        config.getCsvFile().getAbsoluteFile().delete();
-                    }
-                    FileUtils.moveFile(tmp.getAbsoluteFile(), config.getCsvFile().getAbsoluteFile());
-                } catch (Exception e) {
-                    log.error(e, "Error renaming file");
-                }
-            }
-            lock.unlock();
         }
 
         return updated;
+    }
+
+    /**
+     * Creates the file a rewritten copy of the CSV is assembled in: next to
+     * the CSV, so that the copy can take its place with a rename on the same
+     * file system, and readable by its owner only, so that the data is not
+     * exposed to other local users while it is being written.
+     */
+    private File createRewriteFile() throws IOException {
+        File csv = config.getCsvFile().getAbsoluteFile();
+        return Files.createTempFile(csv.getParentFile().toPath(), csv.getName() + ".", ".tmp")
+                .toFile();
+    }
+
+    /**
+     * Puts the rewritten copy in place of the CSV when the rewrite completed,
+     * keeping the CSV's permissions; a copy of a rewrite that failed half-way
+     * is discarded so that the CSV stays as it was.
+     */
+    private void finishRewrite(File tmp, boolean rewritten) {
+        if (tmp == null) {
+            return;
+        }
+        if (!rewritten) {
+            if (!tmp.delete() && tmp.exists()) {
+                log.warn("Could not delete {0}", tmp);
+            }
+            return;
+        }
+        Path csv = config.getCsvFile().getAbsoluteFile().toPath();
+        try {
+            try {
+                Files.setPosixFilePermissions(tmp.toPath(), Files.getPosixFilePermissions(csv));
+            } catch (UnsupportedOperationException e) {
+                // not a POSIX file system: the copy inherits the directory's ACL
+            }
+            try {
+                Files.move(tmp.toPath(), csv, StandardCopyOption.REPLACE_EXISTING,
+                        StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(tmp.toPath(), csv, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (IOException e) {
+            throw new ConnectorIOException("Failed to replace " + csv + " with its rewritten copy "
+                    + tmp, e);
+        }
+    }
+
+    private static void closeQuietly(Closeable closeable, String what) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (Exception e) {
+                log.error(e, "Error closing file {0}", what);
+            }
+        }
     }
 
     private String getAttributeValue(Attribute attr) {
