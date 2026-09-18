@@ -44,6 +44,14 @@ import org.identityconnectors.framework.common.objects.AttributeUtil;
 public class AttributeTypeUtil {
 
     public static Object createInstantiatedObject(String attrValue, String javaclass) {
+        try {
+            return createInstantiatedObjectUnchecked(attrValue, javaclass);
+        } catch (NumberFormatException e) {
+            throw new ConnectorException("Value '" + attrValue + "' is not a valid " + javaclass, e);
+        }
+    }
+
+    private static Object createInstantiatedObjectUnchecked(String attrValue, String javaclass) {
         if (javaclass.equals(XmlHandlerUtil.STRING)) {
             return attrValue;
         }
