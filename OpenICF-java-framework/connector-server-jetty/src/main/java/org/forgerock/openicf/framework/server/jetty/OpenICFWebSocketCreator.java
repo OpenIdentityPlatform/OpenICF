@@ -167,7 +167,8 @@ public class OpenICFWebSocketCreator implements JettyWebSocketCreator, Closeable
         try {
             response.sendError(
                     HttpServletResponse.SC_FORBIDDEN,
-                    "A client certificate is required for accessing OpenICF application but the server's listener is not configured for mutual authentication (or the client did not provide a certificate).");
+                    message
+                            + ": a client certificate is required for accessing OpenICF application but the server's listener is not configured for mutual authentication (or the client did not provide a certificate).");
         } catch (IOException e) {
             //
         }
