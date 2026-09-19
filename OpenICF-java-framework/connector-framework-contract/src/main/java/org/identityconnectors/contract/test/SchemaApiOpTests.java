@@ -19,6 +19,8 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2026 3A Systems LLC.
  */
 package org.identityconnectors.contract.test;
 
@@ -163,7 +165,7 @@ public class SchemaApiOpTests extends ContractTestBase {
 
         // list of expected object classes
         @SuppressWarnings("unchecked")
-        List<String> expOClasses = (List<String>) getTestPropertyOrFail(List.class.getName(),
+        List<String> expOClasses = (List<String>) getTestPropertyOrFail(
                 SUPPORTED_OBJECT_CLASSES_PROPERTY_PREFIX, true);
 
         List<String> testedOClasses = new ArrayList<String>();
@@ -185,7 +187,7 @@ public class SchemaApiOpTests extends ContractTestBase {
 
             // list of expected attributes for the object class
             @SuppressWarnings("unchecked")
-            List<String> expAttrs = (List<String>) getTestPropertyOrFail(List.class.getName(),
+            List<String> expAttrs = (List<String>) getTestPropertyOrFail(
                     "attributes." + ocInfo.getType() + "."
                             + SUPPORTED_OBJECT_CLASSES_PROPERTY_PREFIX, strictCheck);
 
@@ -200,7 +202,7 @@ public class SchemaApiOpTests extends ContractTestBase {
                 // expected attribute values
                 @SuppressWarnings("unchecked")
                 Map<String, Object> expAttrValues = (Map<String, Object>) getTestPropertyOrFail(
-                        Map.class.getName(), attr.getName() + ".attribute." + ocInfo.getType()
+                        attr.getName() + ".attribute." + ocInfo.getType()
                                 + "." + SUPPORTED_OBJECT_CLASSES_PROPERTY_PREFIX, strictCheck);
 
                 // check attribute's values in case the test is strict or property is provided
@@ -230,7 +232,7 @@ public class SchemaApiOpTests extends ContractTestBase {
         // expected object classes supported by operations
         @SuppressWarnings("unchecked")
         Map<String, List<String>> expOperations = (Map<String, List<String>>) getTestPropertyOrFail(
-                Map.class.getName(), SUPPORTED_OPERATIONS_PROPERTY_PREFIX, true);
+                SUPPORTED_OPERATIONS_PROPERTY_PREFIX, true);
         Map<Class<? extends APIOperation>, Set<ObjectClassInfo>> supportedOperations = schema
                 .getSupportedObjectClassesByOperation();
 
@@ -340,7 +342,7 @@ public class SchemaApiOpTests extends ContractTestBase {
     /**
      * Returns property value or fails test if property is not defined.
      */
-    private Object getTestPropertyOrFail(String typeName, String propName, boolean failOnError) {
+    private Object getTestPropertyOrFail(String propName, boolean failOnError) {
         Object propValue = null;
 
         try {

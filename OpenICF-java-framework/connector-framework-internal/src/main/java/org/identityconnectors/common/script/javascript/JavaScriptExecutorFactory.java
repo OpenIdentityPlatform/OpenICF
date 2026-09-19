@@ -91,9 +91,11 @@ public class JavaScriptExecutorFactory extends ScriptExecutorFactory {
     }
 
     private static class CompiledJavaScriptExecutor implements ScriptExecutor {
+        private final ClassLoader loader;
         private final CompiledScript compiled;
 
         public CompiledJavaScriptExecutor(ClassLoader loader, CompiledScript compiled) {
+            this.loader = loader;
             this.compiled = compiled;
         }
 
@@ -104,15 +106,24 @@ public class JavaScriptExecutorFactory extends ScriptExecutorFactory {
             for (Map.Entry<String, Object> entry : args.entrySet()) {
                 engineScope.put(entry.getKey(), entry.getValue());
             }
-            return compiled.eval(newContext);
+            Thread currentThread = Thread.currentThread();
+            ClassLoader previousLoader = currentThread.getContextClassLoader();
+            currentThread.setContextClassLoader(loader);
+            try {
+                return compiled.eval(newContext);
+            } finally {
+                currentThread.setContextClassLoader(previousLoader);
+            }
         }
     }
 
     private class JavaScriptExecutor implements ScriptExecutor {
 
+        private final ClassLoader loader;
         private final String script;
 
         public JavaScriptExecutor(ClassLoader loader, String script) {
+            this.loader = loader;
             this.script = script;
         }
 
@@ -123,7 +134,14 @@ public class JavaScriptExecutorFactory extends ScriptExecutorFactory {
             for (Map.Entry<String, Object> entry : args.entrySet()) {
                 engine.put(entry.getKey(), entry.getValue());
             }
-            return engine.eval(script);
+            Thread currentThread = Thread.currentThread();
+            ClassLoader previousLoader = currentThread.getContextClassLoader();
+            currentThread.setContextClassLoader(loader);
+            try {
+                return engine.eval(script);
+            } finally {
+                currentThread.setContextClassLoader(previousLoader);
+            }
         }
     }
 
