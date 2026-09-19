@@ -128,7 +128,7 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
                         .setConnectorEventSubscriptionOpRequest(requestBuilder), handler));
     }
 
-    private class InternalRequestFactory extends
+    private static class InternalRequestFactory extends
             AbstractRemoteOperationRequestFactory<Void, InternalRequest> {
         private final OperationRequest.Builder operationRequest;
         final Observer<ConnectorObject> handler;

@@ -533,7 +533,7 @@ public abstract class AbstractRemoteConnection implements Connection {
         }
     }
 
-    class InternalFutureCallback<T> implements FutureCallback<T> {
+    static class InternalFutureCallback<T> implements FutureCallback<T> {
         final PromiseImpl<T, ResourceException> promise;
 
         public InternalFutureCallback(PromiseImpl<T, ResourceException> promise) {

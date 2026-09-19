@@ -21,6 +21,7 @@
  * ====================
  *
  *  "Portions Copyrighted 2013-2015 ForgeRock AS"
+ *  "Portions Copyrighted 2026 3A Systems LLC"
  */
 package org.identityconnectors.ldap.search;
 
@@ -190,7 +191,7 @@ public class VlvIndexSearchStrategy extends LdapSearchStrategy {
 
                         try {
                             reader.readStartSequence();
-                            final int offset = (int) reader.readInteger();
+                            reader.readInteger(); // offset, not used by this strategy
                             lastListSize = (int) reader.readInteger();
 
                             getLog().ok("Response control: lastListSize = {0}", lastListSize);

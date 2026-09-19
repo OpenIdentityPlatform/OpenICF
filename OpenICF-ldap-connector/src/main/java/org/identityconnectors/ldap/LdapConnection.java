@@ -21,6 +21,7 @@
  * ====================
  *
  * Portions Copyrighted 2013-2016 ForgeRock AS
+ * Portions Copyrighted 2026 3A Systems LLC
  */
 package org.identityconnectors.ldap;
 
@@ -159,7 +160,6 @@ public class LdapConnection {
     }
     
     private LdapContext getAnonymousContext() throws NamingException {
-        InitialLdapContext ctx = null;
         return new InitialLdapContext(getDefaultContextEnv(), null);
     }
     

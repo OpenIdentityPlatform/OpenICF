@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems LLC.
  */
 
 package org.identityconnectors.testconnector;
@@ -803,7 +805,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
      * Simulated Use Case 3: execute returns a batch token immediately and processes results in a separate thread.
      * No need to call queryBatch() unless the caller is interrupted and needs to reestablish the connection.
      */
-    private class BatchUseCase3Processor extends Thread {
+    private static class BatchUseCase3Processor extends Thread {
         private OperationOptions options;
         private Observer<BatchResult> observer;
         private BatchToken token;

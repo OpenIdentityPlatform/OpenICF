@@ -19,6 +19,8 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2026 3A Systems LLC.
  */
 package org.identityconnectors.ldap;
 
@@ -112,7 +114,7 @@ public abstract class AppendingAttributes implements Attributes {
         return size;
     }
 
-    private abstract class AppendingEnumeration<T> implements NamingEnumeration<T> {
+    private abstract static class AppendingEnumeration<T> implements NamingEnumeration<T> {
 
         private final NamingEnumeration<? extends T> delegate;
         private Enumeration<T> remainingValues;

@@ -161,8 +161,8 @@ public class ClientRemoteConnectorInfoManager extends
                 final ICFWebSocket socket =
                         new ICFWebSocket(protocolHandler, getOperationMessageListener());
                 final WebSocketHolder holder = WebSocketHolder.set(conn, protocolHandler, socket);
-                final RemoteConnectionContext context =
-                        new RemoteConnectionContext(conn, connectionInfo);
+                // The constructor registers itself on the connection (RemoteConnectionContext.set()).
+                new RemoteConnectionContext(conn, connectionInfo);
 
                 holder.handshake =
                         protocolHandler.createClientHandShake(connectionInfo.getRemoteURI());

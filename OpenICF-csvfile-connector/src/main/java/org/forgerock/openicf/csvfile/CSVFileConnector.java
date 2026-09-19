@@ -14,6 +14,7 @@
  * Copyright 2015-2016 ForgeRock AS
  * Portions Copyright 2011 Viliam Repan
  * Portions Copyright 2011 Radovan Semancik
+ * Portions Copyright 2026 3A Systems, LLC.
  */
 package org.forgerock.openicf.csvfile;
 
@@ -1189,7 +1190,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         return processors;
     }
 
-    private class OptionalTrim extends CellProcessorAdaptor implements BoolCellProcessor, DateCellProcessor, DoubleCellProcessor,
+    private static class OptionalTrim extends CellProcessorAdaptor implements BoolCellProcessor, DateCellProcessor, DoubleCellProcessor,
             LongCellProcessor, StringCellProcessor {
 
         /**

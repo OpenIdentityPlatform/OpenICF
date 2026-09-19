@@ -171,9 +171,6 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
             }
             registry.clear();
 
-            for (WebSocketConnectionGroup group : connectionGroups.values()) {
-                // group.close();
-            }
             connectionGroups.clear();
 
             clientTransport.shutdownNow();
