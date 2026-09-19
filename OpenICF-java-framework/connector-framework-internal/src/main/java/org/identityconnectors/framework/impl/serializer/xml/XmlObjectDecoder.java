@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.serializer.xml;
 
@@ -180,7 +181,11 @@ public class XmlObjectDecoder implements ObjectDecoder {
     }
 
     private byte decodeByte(String v) {
-        return Byte.decode(v);
+        try {
+            return Byte.decode(v);
+        } catch (NumberFormatException e) {
+            throw new ConnectorException("Malformed byte value on the wire: '" + v + "'", e);
+        }
     }
 
     private byte[] decodeByteArray(String base64) {
@@ -204,19 +209,35 @@ public class XmlObjectDecoder implements ObjectDecoder {
     }
 
     private double decodeDouble(String val) {
-        return Double.parseDouble(val);
+        try {
+            return Double.parseDouble(val);
+        } catch (NumberFormatException e) {
+            throw new ConnectorException("Malformed double value on the wire: '" + val + "'", e);
+        }
     }
 
     private float decodeFloat(String val) {
-        return Float.parseFloat(val);
+        try {
+            return Float.parseFloat(val);
+        } catch (NumberFormatException e) {
+            throw new ConnectorException("Malformed float value on the wire: '" + val + "'", e);
+        }
     }
 
     private int decodeInt(String val) {
-        return Integer.parseInt(val);
+        try {
+            return Integer.parseInt(val);
+        } catch (NumberFormatException e) {
+            throw new ConnectorException("Malformed int value on the wire: '" + val + "'", e);
+        }
     }
 
     private long decodeLong(String val) {
-        return Long.parseLong(val);
+        try {
+            return Long.parseLong(val);
+        } catch (NumberFormatException e) {
+            throw new ConnectorException("Malformed long value on the wire: '" + val + "'", e);
+        }
     }
 
     private Object readObjectInternal() {

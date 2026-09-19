@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.maven;
@@ -137,6 +138,7 @@ public class PropertyBag {
                     + "to " + targetType);
         }
 
+        try {
         if (targetType.equals(Long.class)) {
             if (StringUtil.isNotBlank(sourceValue)) {
                 targetValue = Long.valueOf(sourceValue);
@@ -173,7 +175,12 @@ public class PropertyBag {
             }
         } else if (targetType.equals(Boolean.TYPE)) {
             targetValue = Boolean.valueOf(sourceValue);
-        } else if (targetType.equals(URI.class)) {
+        }
+        } catch (NumberFormatException e) {
+            throw new MojoExecutionException("Failed to convert value '" + sourceValue
+                    + "' of " + name + " to " + targetType, e);
+        }
+        if (targetType.equals(URI.class)) {
             try {
                 targetValue = new URI(sourceValue);
             } catch (URISyntaxException e) {

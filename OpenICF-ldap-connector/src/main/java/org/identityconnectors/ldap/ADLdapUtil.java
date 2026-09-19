@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap;
 
@@ -65,6 +66,34 @@ public class ADLdapUtil {
     */
     public static final long DIFF_NET_JAVA_FOR_DATE_AND_TIMES = 11644473600000L;
     
+    /**
+     * Parses an integer-valued Active Directory attribute (userAccountControl,
+     * groupType, ...), which is always numeric per the AD schema, but wraps a
+     * malformed value in a ConnectorException naming it instead of letting a
+     * bare NumberFormatException escape with no indication of what failed.
+     */
+    public static int parseADInteger(String value) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            throw new ConnectorException("Not a valid Active Directory numeric value: '"
+                    + value + "'", e);
+        }
+    }
+
+    /**
+     * As {@link #parseADInteger(String)}, for the numeric AD attributes that
+     * do not fit in an int (such as the AD epoch time values).
+     */
+    public static long parseADLong(String value) {
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            throw new ConnectorException("Not a valid Active Directory numeric value: '"
+                    + value + "'", e);
+        }
+    }
+
     static String AddLeadingZero(int k) {
             return (k<=0xF)?"0" + Integer.toHexString(k):Integer.toHexString(k);
     }
@@ -301,7 +330,7 @@ public class ADLdapUtil {
     }
     
     public static Date getJavaDateFromADTime(String adTime) {
-        long milliseconds = (Long.parseLong(adTime) / 10000) - DIFF_NET_JAVA_FOR_DATE_AND_TIMES;
+        long milliseconds = (parseADLong(adTime) / 10000) - DIFF_NET_JAVA_FOR_DATE_AND_TIMES;
         return new Date(milliseconds);
     }
     

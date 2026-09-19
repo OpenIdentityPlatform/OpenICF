@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap;
 
@@ -144,19 +145,19 @@ public class ADGroupType {
     // Static helpers
     
     public static boolean isScopeGlobal(String scope) {
-        return ((Integer.parseInt(scope) & SCOPE_GLOBAL) == SCOPE_GLOBAL);
+        return ((ADLdapUtil.parseADInteger(scope) & SCOPE_GLOBAL) == SCOPE_GLOBAL);
     }
     
     public static boolean isScopeDomainLocal(String scope) {
-        return ((Integer.parseInt(scope) & SCOPE_DOMAIN_LOCAL) == SCOPE_DOMAIN_LOCAL);
+        return ((ADLdapUtil.parseADInteger(scope) & SCOPE_DOMAIN_LOCAL) == SCOPE_DOMAIN_LOCAL);
     }
     
     public static boolean isScopeUniversal(String scope) {
-        return ((Integer.parseInt(scope) & SCOPE_UNIVERSAL) == SCOPE_UNIVERSAL);
+        return ((ADLdapUtil.parseADInteger(scope) & SCOPE_UNIVERSAL) == SCOPE_UNIVERSAL);
     }
     
     public static boolean isTypeSecurity(String type) {
-        return ((Integer.parseInt(type) & TYPE_SECURITY) == TYPE_SECURITY);
+        return ((ADLdapUtil.parseADInteger(type) & TYPE_SECURITY) == TYPE_SECURITY);
     }
     
     public static String getType(String type){
@@ -187,13 +188,13 @@ public class ADGroupType {
                 NamingEnumeration<SearchResult> entries = conn.getInitialContext().search(context, String.format("%s=%s", LdapConstants.MS_GUID_ATTR, guidStringtoByteString(id)), controls);
                 if (entries.hasMore()) {
                     SearchResult res = entries.next();
-                    int gt = Integer.parseInt(res.getAttributes().get(GROUPTYPE).get().toString());
+                    int gt = ADLdapUtil.parseADInteger(res.getAttributes().get(GROUPTYPE).get().toString());
                     return new ADGroupType(gt);
                 }
             }
         } else if (isDNAttribute(conn.getConfiguration().getUidAttribute())) {
             Attributes attrs = conn.getInitialContext().getAttributes(escapeDNValueOfJNDIReservedChars(id), new String[]{GROUPTYPE});
-            int gt = Integer.parseInt(attrs.get(GROUPTYPE).get().toString());
+            int gt = ADLdapUtil.parseADInteger(attrs.get(GROUPTYPE).get().toString());
             return new ADGroupType(gt);
         }
         throw new NamingException("Entry not found");

@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap;
 
@@ -323,39 +324,39 @@ public class ADUserAccountControl {
 
     // Static helpers
     public static boolean isAccountDisabled(String status) {
-        return ((Integer.parseInt(status) & ACCOUNT_DISABLED) == ACCOUNT_DISABLED);
+        return ((ADLdapUtil.parseADInteger(status) & ACCOUNT_DISABLED) == ACCOUNT_DISABLED);
     }
 
     public static boolean isAccountLockOut(String status) {
-        return ((Integer.parseInt(status) & LOCKOUT) == LOCKOUT);
+        return ((ADLdapUtil.parseADInteger(status) & LOCKOUT) == LOCKOUT);
     }
 
     public static boolean isPasswordNotReq(String status) {
-        return ((Integer.parseInt(status) & PASSWD_NOTREQD) == PASSWD_NOTREQD);
+        return ((ADLdapUtil.parseADInteger(status) & PASSWD_NOTREQD) == PASSWD_NOTREQD);
     }
 
     public static boolean isPasswordCantChange(String status) {
-        return ((Integer.parseInt(status) & PASSWD_CANT_CHANGE) == PASSWD_CANT_CHANGE);
+        return ((ADLdapUtil.parseADInteger(status) & PASSWD_CANT_CHANGE) == PASSWD_CANT_CHANGE);
     }
 
     public static boolean isNormalAccount(String status) {
-        return ((Integer.parseInt(status) & NORMAL_ACCOUNT) == NORMAL_ACCOUNT);
+        return ((ADLdapUtil.parseADInteger(status) & NORMAL_ACCOUNT) == NORMAL_ACCOUNT);
     }
 
     public static boolean isDontExpirePassword(String status) {
-        return ((Integer.parseInt(status) & DONT_EXPIRE_PASSWORD) == DONT_EXPIRE_PASSWORD);
+        return ((ADLdapUtil.parseADInteger(status) & DONT_EXPIRE_PASSWORD) == DONT_EXPIRE_PASSWORD);
     }
 
     public static boolean isSmartCardRequired(String status) {
-        return ((Integer.parseInt(status) & SMARTCARD_REQUIRED) == SMARTCARD_REQUIRED);
+        return ((ADLdapUtil.parseADInteger(status) & SMARTCARD_REQUIRED) == SMARTCARD_REQUIRED);
     }
 
     public static boolean isPasswordExpired(String status) {
-        return ((Integer.parseInt(status) & PASSWORD_EXPIRED) == PASSWORD_EXPIRED);
+        return ((ADLdapUtil.parseADInteger(status) & PASSWORD_EXPIRED) == PASSWORD_EXPIRED);
     }
 
     public static boolean isEncryptedTextPasswordAllowed(String status) {
-        return ((Integer.parseInt(status) & ENCRYPTED_TEXT_PASSWORD_ALLOWED) == ENCRYPTED_TEXT_PASSWORD_ALLOWED);
+        return ((ADLdapUtil.parseADInteger(status) & ENCRYPTED_TEXT_PASSWORD_ALLOWED) == ENCRYPTED_TEXT_PASSWORD_ALLOWED);
     }
 
     public static ADUserAccountControl createADUserAccountControl(LdapConnection conn, String id) throws NamingException {
@@ -368,15 +369,15 @@ public class ADUserAccountControl {
                 NamingEnumeration<SearchResult> entries = conn.getInitialContext().search(context, String.format("%s=%s", LdapConstants.MS_GUID_ATTR, guidStringtoByteString(id)), controls);
                 if (entries.hasMore()) {
                     SearchResult res = entries.next();
-                    int uac = Integer.parseInt(res.getAttributes().get(MS_USR_ACCT_CTRL_ATTR).get().toString());
-                    int msDSUac = Integer.parseInt(res.getAttributes().get(MSDS_USR_ACCT_CTRL_ATTR).get().toString());
+                    int uac = ADLdapUtil.parseADInteger(res.getAttributes().get(MS_USR_ACCT_CTRL_ATTR).get().toString());
+                    int msDSUac = ADLdapUtil.parseADInteger(res.getAttributes().get(MSDS_USR_ACCT_CTRL_ATTR).get().toString());
                     return new ADUserAccountControl(uac, msDSUac);
                 }
             }
         } else if (isDNAttribute(conn.getConfiguration().getUidAttribute())) {
             Attributes attrs = conn.getInitialContext().getAttributes(escapeDNValueOfJNDIReservedChars(id), new String[]{MSDS_USR_ACCT_CTRL_ATTR, MS_USR_ACCT_CTRL_ATTR});
-            int uac = Integer.parseInt(attrs.get(MS_USR_ACCT_CTRL_ATTR).get().toString());
-            int msDSUac = Integer.parseInt(attrs.get(MSDS_USR_ACCT_CTRL_ATTR).get().toString());
+            int uac = ADLdapUtil.parseADInteger(attrs.get(MS_USR_ACCT_CTRL_ATTR).get().toString());
+            int msDSUac = ADLdapUtil.parseADInteger(attrs.get(MSDS_USR_ACCT_CTRL_ATTR).get().toString());
             return new ADUserAccountControl(uac, msDSUac);
         }
         throw new NamingException("Entry not found");

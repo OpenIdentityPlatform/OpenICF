@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap.sync.activedirectory;
 
@@ -118,7 +119,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
             String waterMark = gethighestCommittedUSN();
             
             if (token != null && logger.isWarning()) {
-                if (Integer.parseInt(token.getValue().toString()) > Integer.parseInt(waterMark)) {
+                if (ADLdapUtil.parseADInteger(token.getValue().toString()) > ADLdapUtil.parseADInteger(waterMark)) {
                     //[OPENICF-402] The current SyncToken should never be greater than the highestCommittedUSN on the DC
                     // We log the issue and let the process go
                     logger.warn("The current SyncToken value ({0}) is greater than the highestCommittedUSN value ({1})", token.getValue().toString(), waterMark);
@@ -252,7 +253,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                         syncDeltaBuilder.setUid(uid);
                         syncDeltaBuilder.setObject(cob.build());
 
-                        changes.put(Integer.parseInt(usnChanged[0]), syncDeltaBuilder.build());
+                        changes.put(ADLdapUtil.parseADInteger(usnChanged[0]), syncDeltaBuilder.build());
                         return true;
                     }
                 });
@@ -291,7 +292,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                             } else {
                                 syncDeltaBuilder.setObjectClass(oclass);
                             }
-                            changes.put(Integer.parseInt(usnChanged[0]), syncDeltaBuilder.build());
+                            changes.put(ADLdapUtil.parseADInteger(usnChanged[0]), syncDeltaBuilder.build());
                         }
                     } else if (LdapConstants.ServerType.MSAD_LDS.equals(conn.getServerType())) {
                         logger.error("Active Directory Lightweight Directory Services is used but defaultNamingContext has not been set - impossible to detect deleted objects");
@@ -339,7 +340,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
         }
 
         filter.append("(uSNChanged>=");
-        filter.append(Integer.parseInt(token.getValue().toString()) + 1);
+        filter.append(ADLdapUtil.parseADInteger(token.getValue().toString()) + 1);
         filter.append(")");
 
         if (isDeleted) {
