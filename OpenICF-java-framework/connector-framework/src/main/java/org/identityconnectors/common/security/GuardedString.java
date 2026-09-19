@@ -291,4 +291,13 @@ public final class GuardedString {
     public int hashCode() {
         return base64SHA1Hash.hashCode();
     }
+
+    /**
+     * Never prints the clear text; the default {@link Object#toString()} would not either,
+     * but its output is just a class name and hash code, not useful for logging.
+     */
+    @Override
+    public String toString() {
+        return "GuardedString(...)";
+    }
 }

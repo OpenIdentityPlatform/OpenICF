@@ -71,7 +71,7 @@ public class XSDAnnotationParser extends AnnotationParser{
                     if(parse){
                         StringBuilder sb = new StringBuilder();
                         sb.append(chars, start, length);
-                        if(!sb.toString().replace(" ", "").trim().equals("")){
+                        if(!sb.toString().replace(" ", "").trim().isEmpty()){
                             String stringToAppend = addValue + " " + sb.toString().trim();
                             stringBuilder.append(stringToAppend);
                             stringBuilder.append("\n");

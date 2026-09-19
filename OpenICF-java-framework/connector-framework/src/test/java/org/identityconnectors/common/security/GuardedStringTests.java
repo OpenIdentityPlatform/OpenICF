@@ -19,6 +19,8 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2026 3A Systems LLC.
  */
 package org.identityconnectors.common.security;
 
@@ -119,6 +121,13 @@ public class GuardedStringTests {
         } catch (IllegalStateException e) {
             /* ignore */
         }
+    }
+
+    @Test
+    public void testToStringNeverExposesTheClearText() {
+        GuardedString str = new GuardedString("secret".toCharArray());
+        assertFalse(str.toString().contains("secret"),
+                "toString() must never leak the clear text");
     }
 
     @Test
