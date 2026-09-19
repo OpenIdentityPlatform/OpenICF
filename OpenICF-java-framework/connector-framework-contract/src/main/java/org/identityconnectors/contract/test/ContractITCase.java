@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems LLC.
  */
 
 package org.identityconnectors.contract.test;
@@ -32,12 +34,9 @@ import java.util.List;
 
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.contract.data.DataProvider;
-import org.identityconnectors.framework.api.ConnectorFacade;
-import org.identityconnectors.framework.common.objects.Schema;
 import org.testng.IObjectFactory;
 import org.testng.ITestContext;
 import org.testng.annotations.Factory;
-import org.testng.internal.ObjectFactoryImpl;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -110,15 +109,5 @@ public class ContractITCase {
 
     public DataProvider getDataProvider(ITestContext context) {
         return ConnectorHelper.createDataProvider();
-    }
-
-    private static class ContractTestFactory {
-
-        private ConnectorFacade connectorFacade = null;
-
-        private Schema schema = null;
-
-        private IObjectFactory objectFactory = new ObjectFactoryImpl();
-
     }
 }

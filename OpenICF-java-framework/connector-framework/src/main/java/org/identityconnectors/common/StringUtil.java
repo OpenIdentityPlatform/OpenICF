@@ -285,7 +285,7 @@ public final class StringUtil {
      * @return true if the string is empty else false.
      */
     public static boolean isEmpty(final String val) {
-        return (val == null) ? true : "".equals(val) ? true : false;
+        return (val == null) ? true : val.isEmpty();
     }
 
     /**

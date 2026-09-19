@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems LLC.
  */
 package org.identityconnectors.ldap.sync.activedirectory;
 
@@ -321,7 +323,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
             Attributes attrs = conn.getInitialContext().getAttributes("", new String[]{HCU_CHANGED_ATTR});
             hcUSN = getStringAttrValue(attrs, HCU_CHANGED_ATTR);
             if (hcUSN == null) {
-                String error = "Unable to read the highestCommittedUSN attribute"
+                String error = "Unable to read the highestCommittedUSN attribute "
                         + "from the rootDSE of Active Directory ";
                 throw new ConnectorException(error);
             }
