@@ -51,7 +51,8 @@ public class AttributeTypeUtil {
         }
     }
 
-    private static Object createInstantiatedObjectUnchecked(String attrValue, String javaclass) {
+    private static Object createInstantiatedObjectUnchecked(String attrValue, String javaclass)
+            throws NumberFormatException {
         if (javaclass.equals(XmlHandlerUtil.STRING)) {
             return attrValue;
         }
