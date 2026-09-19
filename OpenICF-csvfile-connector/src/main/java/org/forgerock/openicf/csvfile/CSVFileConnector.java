@@ -1217,7 +1217,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         return processors;
     }
 
-    private class OptionalTrim extends CellProcessorAdaptor implements BoolCellProcessor, DateCellProcessor, DoubleCellProcessor,
+    private static class OptionalTrim extends CellProcessorAdaptor implements BoolCellProcessor, DateCellProcessor, DoubleCellProcessor,
             LongCellProcessor, StringCellProcessor {
 
         /**

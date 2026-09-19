@@ -846,7 +846,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
      * Simulated Use Case 3: execute returns a batch token immediately and processes results in a separate thread.
      * No need to call queryBatch() unless the caller is interrupted and needs to reestablish the connection.
      */
-    private class BatchUseCase3Processor extends Thread {
+    private static class BatchUseCase3Processor extends Thread {
         private OperationOptions options;
         private Observer<BatchResult> observer;
         private BatchToken token;

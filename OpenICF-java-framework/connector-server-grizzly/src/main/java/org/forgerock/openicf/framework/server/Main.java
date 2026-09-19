@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2015-2016 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems LLC.
  */
 package org.forgerock.openicf.framework.server;
 
@@ -193,7 +194,6 @@ public final class Main {
         String useSSLStr = properties.getProperty(PROP_SSL);
         String ifAddress = properties.getProperty(PROP_IFADDRESS);
         String keyHash = properties.getProperty(PROP_KEY);
-        String facadeLifeTime = properties.getProperty(PROP_FACADE_LIFETIME);
         String loggerClass = properties.getProperty(PROP_LOGGER_CLASS);
         String url  = properties.getProperty(PROP_REMOTE_URL);
 

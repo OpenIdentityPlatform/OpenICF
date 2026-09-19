@@ -122,7 +122,7 @@ public abstract class AppendingAttributes implements Attributes {
         return size;
     }
 
-    private abstract class AppendingEnumeration<T> implements NamingEnumeration<T> {
+    private abstract static class AppendingEnumeration<T> implements NamingEnumeration<T> {
 
         private final NamingEnumeration<? extends T> delegate;
         private Enumeration<T> remainingValues;

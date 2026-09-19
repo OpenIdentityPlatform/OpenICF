@@ -269,7 +269,7 @@ public class OpenICFServerAdapter implements OperationMessageListener {
         // Nothing to do, pong response has been sent
         logger.info("{0} onPing()", loggerName());
         try {
-            RPCMessages.PingMessage message = RPCMessages.PingMessage.parseFrom(bytes);
+            RPCMessages.PingMessage.parseFrom(bytes);
         } catch (InvalidProtocolBufferException e) {
             logger.warn(e, "{0} failed parse message", loggerName());
         }
@@ -281,7 +281,7 @@ public class OpenICFServerAdapter implements OperationMessageListener {
         // Confirm ping response!
         logger.info("{0} onPong()", loggerName());
         try {
-            RPCMessages.PingMessage message = RPCMessages.PingMessage.parseFrom(bytes);
+            RPCMessages.PingMessage.parseFrom(bytes);
         } catch (InvalidProtocolBufferException e) {
             logger.warn(e, "{0} failed parse message", loggerName());
         }
