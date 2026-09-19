@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.dbcommon;
 
@@ -26,6 +27,7 @@ import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertTrue;
 
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.sql.Blob;
@@ -595,6 +597,26 @@ public class SQLUtilTests {
 
         actual = SQLUtil.attribute2jdbcValue("true", Types.BIT);
         assertEquals(true, actual);
+    }
+
+    /**
+     * A value that does not fit the target SQL type must fail with a
+     * ConnectorException naming the value and the type, not a bare
+     * NumberFormatException.
+     */
+    @Test(expectedExceptions = ConnectorException.class)
+    public void testAttribute2JdbcValueRejectsMalformedDouble() throws SQLException {
+        SQLUtil.attribute2jdbcValue("not-a-number", Types.DOUBLE);
+    }
+
+    @Test(expectedExceptions = ConnectorException.class)
+    public void testAttribute2JdbcValueRejectsMalformedFloat() throws SQLException {
+        SQLUtil.attribute2jdbcValue("not-a-number", Types.FLOAT);
+    }
+
+    @Test(expectedExceptions = ConnectorException.class)
+    public void testAttribute2JdbcValueRejectsMalformedInteger() throws SQLException {
+        SQLUtil.attribute2jdbcValue("not-a-number", Types.INTEGER);
     }
 
     /**

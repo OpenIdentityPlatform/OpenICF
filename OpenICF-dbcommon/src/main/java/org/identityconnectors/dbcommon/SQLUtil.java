@@ -907,6 +907,7 @@ public final class SQLUtil {
         if (value == null) {
             return null;
         }
+        try {
         switch (sqlType) {
         // Known conversions
         case Types.DECIMAL:
@@ -949,6 +950,14 @@ public final class SQLUtil {
             } else {
                 return Long.valueOf(value.toString());
             }
+        default:
+            break;
+        }
+        } catch (NumberFormatException e) {
+            throw new ConnectorException("Value '" + value + "' is not valid for SQL type "
+                    + sqlType, e);
+        }
+        switch (sqlType) {
         case Types.TIMESTAMP:
             if (value instanceof String) {
                 return string2Timestamp((String) value);
