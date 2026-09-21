@@ -1,3 +1,7 @@
+/*
+ * Portions Copyright 2026 3A Systems, LLC.
+ */
+
 package org.forgerock.openicf.connectors.xml.query;
 
 import org.forgerock.openicf.connectors.xml.query.abstracts.QueryPart;
@@ -14,6 +18,7 @@ public class ContainsQuery implements QueryPart {
         this.not = not;
     }
 
+    @Override
     public String getExpression() {
         if (not) {
             return createFalseExpression();

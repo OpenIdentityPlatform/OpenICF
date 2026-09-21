@@ -96,6 +96,7 @@ public class OsgiConnectorInfoManagerImpl extends ConnectorFacadeFactory impleme
 
     private final Vector<ConnectorEventHandler> eventHandlers = new Vector<ConnectorEventHandler>();
 
+    @Override
     public ConnectorInfo findConnectorInfo(ConnectorKey key) {
         for (Pair<Bundle, List<ConnectorInfo>> bundle : connectorInfoCache.values()) {
             for (ConnectorInfo info : bundle.second) {
@@ -107,6 +108,7 @@ public class OsgiConnectorInfoManagerImpl extends ConnectorFacadeFactory impleme
         return null;
     }
 
+    @Override
     public List<ConnectorInfo> getConnectorInfos() {
         List<ConnectorInfo> result = new ArrayList<ConnectorInfo>();
         for (Pair<Bundle, List<ConnectorInfo>> info : connectorInfoCache.values()) {
@@ -162,6 +164,7 @@ public class OsgiConnectorInfoManagerImpl extends ConnectorFacadeFactory impleme
         return ret;
     }
 
+    @Override
     public void addingEntries(Bundle bundle, List<ManifestEntry> list) {
         NullArgumentException.validateNotNull(bundle, "Bundle");
         NullArgumentException.validateNotNull(list, "ManifestEntry");
@@ -180,6 +183,7 @@ public class OsgiConnectorInfoManagerImpl extends ConnectorFacadeFactory impleme
         }
     }
 
+    @Override
     public void removingEntries(Bundle bundle, List<ManifestEntry> list) {
         NullArgumentException.validateNotNull(bundle, "Bundle");
         synchronized (connectorInfoCache) {
@@ -198,6 +202,7 @@ public class OsgiConnectorInfoManagerImpl extends ConnectorFacadeFactory impleme
     /**
      * {@inheritDoc}
      */
+    @Override
     public void addConnectorEventHandler(ConnectorEventHandler hook) {
         if (hook == null) {
             throw new NullPointerException();
@@ -219,6 +224,7 @@ public class OsgiConnectorInfoManagerImpl extends ConnectorFacadeFactory impleme
     /**
      * {@inheritDoc}
      */
+    @Override
     public void deleteConnectorEventHandler(ConnectorEventHandler hook) {
         eventHandlers.removeElement(hook);
     }

@@ -140,6 +140,7 @@ public class LdapSearch {
         final Set<String> attrsToGet = getAttributesToGet(attrsToGetOption);
         LdapInternalSearch search = getInternalSearch(attrsToGet);
         search.execute(new LdapSearchResultsHandler() {
+            @Override
             public boolean handle(String baseDN, SearchResult result) throws NamingException {
                 return handler.handle(createConnectorObject(baseDN, result, attrsToGet, attrsToGetOption != null));
             }
@@ -156,6 +157,7 @@ public class LdapSearch {
         final ConnectorObject[] results = new ConnectorObject[]{null};
         LdapInternalSearch search = getInternalSearch(attrsToGet);
         search.execute(new LdapSearchResultsHandler() {
+            @Override
             public boolean handle(String baseDN, SearchResult result) throws NamingException {
                 results[0] = createConnectorObject(baseDN, result, attrsToGet, attrsToGetOption != null);
                 return false;

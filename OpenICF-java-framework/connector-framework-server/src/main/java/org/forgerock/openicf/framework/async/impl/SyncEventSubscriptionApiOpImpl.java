@@ -72,30 +72,36 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
         super(remoteConnection, connectorKey, facadeKeyFunction, timeout);
     }
 
+    @Override
     public Subscription subscribe(final ObjectClass objectClass, final SyncToken token,
             final Observer<SyncDelta> handler, final OperationOptions operationOptions) {
         final Promise<Void, RuntimeException> promise =
                 trySubscribe(objectClass, token, handler, operationOptions).thenOnException(
                         new ExceptionHandler<RuntimeException>() {
+                            @Override
                             public void handleException(RuntimeException error) {
                                 if (!(error instanceof CancellationException)) {
                                     handler.onError(error);
                                 }
                             }
                         }).thenOnResult(new ResultHandler<Void>() {
+                    @Override
                     public void handleResult(Void result) {
                         handler.onCompleted();
                     }
                 });
         return new Subscription() {
+            @Override
             public void close() {
                 promise.cancel(true);
             }
 
+            @Override
             public boolean isUnsubscribed() {
                 return promise.isDone();
             }
 
+            @Override
             public Object getReturnValue() {
                 return null;
             }
@@ -137,6 +143,7 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
             this.handler = handler;
         }
 
+        @Override
         public InternalRequest createRemoteRequest(
                 final RemoteOperationContext context,
                 final long requestId,
@@ -150,6 +157,7 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
             }
         }
 
+        @Override
         protected OperationRequest.Builder createOperationRequest(
                 final RemoteOperationContext remoteContext) {
             return operationRequest;
@@ -185,6 +193,7 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
             }
         }
 
+        @Override
         protected void handleOperationResponseMessages(WebSocketConnectionHolder sourceConnection,
                 SyncEventSubscriptionOpResponse message) {
             if (null != handler && message.hasSyncDelta()) {
@@ -263,11 +272,13 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
 
             final Subscription result = connectorFacade.subscribe(objectClass, token, new Observer<SyncDelta>() {
 
+                @Override
                 public void onCompleted() {
                     handleResult(SyncEventSubscriptionOpResponse.newBuilder().setCompleted(
                             Boolean.TRUE).build());
                 }
 
+                @Override
                 public void onError(Throwable error) {
                     if (error instanceof RuntimeException) {
                         handleException((RuntimeException) error);
@@ -276,6 +287,7 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
                     }
                 }
 
+                @Override
                 public void onNext(SyncDelta syncDelta) {
                     if (null != syncDelta) {
                         tryHandleResult(SyncEventSubscriptionOpResponse.newBuilder().setSyncDelta(
@@ -309,6 +321,7 @@ public class SyncEventSubscriptionApiOpImpl extends AbstractAPIOperation impleme
             }
         }
 
+        @Override
         protected boolean tryCancel() {
             final Subscription current;
             synchronized (this) {

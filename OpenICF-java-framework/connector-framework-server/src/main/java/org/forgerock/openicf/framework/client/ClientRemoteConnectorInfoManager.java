@@ -172,6 +172,7 @@ public class ClientRemoteConnectorInfoManager extends
                 CONNECT_PROMISE.set(conn, socket.connectPromise);
 
                 conn.addCloseListener(new CloseListener() {
+                    @Override
                     public void onClosed(Closeable closeable, ICloseType type) throws IOException {
                         logger.ok("DEBUG = Connection Closed {0}", type);
 
@@ -206,6 +207,7 @@ public class ClientRemoteConnectorInfoManager extends
         };
 
         final Runnable runnable = new Runnable() {
+            @Override
             public void run() {
                 for (final WebSocketConnectionHolder ws : privateConnections) {
                     if (!ws.isOperational() || !isRunning.get()) {
@@ -257,10 +259,12 @@ public class ClientRemoteConnectorInfoManager extends
         keepConnectedFuture = future;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     protected void doClose() {
         keepConnectedFuture.cancel(false);
         for (WebSocketConnectionGroup e : connectionGroups.values()) {
@@ -284,26 +288,31 @@ public class ClientRemoteConnectorInfoManager extends
 
     // ---
 
+    @Override
     public AsyncConnectorInfoManager getAsyncConnectorInfoManager() {
         return delegatingAsyncConnectorInfoManager;
     }
 
+    @Override
     public RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> getRequestDistributor() {
         return requestDistributor;
     }
 
     private final RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> requestDistributor =
             new RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>() {
+                @Override
                 public <R extends RemoteRequest<V, E, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>, V, E extends Exception> R trySubmitRequest(
                         final RemoteRequestFactory<R, V, E, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> requestFactory) {
                     return ClientRemoteConnectorInfoManager.this.trySubmitRequest(requestFactory);
                 }
 
+                @Override
                 public boolean isOperational() {
                     return ClientRemoteConnectorInfoManager.this.isOperational();
                 }
             };
 
+    @Override
     public <R extends RemoteRequest<V, E, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>, V, E extends Exception> R trySubmitRequest(
             final RemoteRequestFactory<R, V, E, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> requestFactory) {
         // Try the existing WS Connections first
@@ -335,6 +344,7 @@ public class ClientRemoteConnectorInfoManager extends
         return null;
     }
 
+    @Override
     public boolean isOperational() {
         if (isRunning.get()) {
             for (WebSocketConnectionGroup e : connectionGroups.values()) {
@@ -362,10 +372,12 @@ public class ClientRemoteConnectorInfoManager extends
 
         final CompletionHandler<Connection> callback = new CompletionHandler<Connection>() {
 
+            @Override
             public void cancelled() {
                 outerPromise.cancel(false);
             }
 
+            @Override
             public void failed(Throwable throwable) {
                 lastConnectithenOnException.set(System.currentTimeMillis());
                 if (throwable instanceof ConnectException) {
@@ -381,11 +393,13 @@ public class ClientRemoteConnectorInfoManager extends
                 logger.info(throwable, "Failed establish remote connection");
             }
 
+            @Override
             public void completed(Connection result) {
                 outerPromise.handleResult(CONNECT_PROMISE.get(result));
                 logger.ok("TCP Connection is completed");
             }
 
+            @Override
             public void updated(Connection result) {
 
             }
@@ -407,6 +421,7 @@ public class ClientRemoteConnectorInfoManager extends
                         outerPromise
                                 .thenAsync(
                                         new AsyncFunction<Promise<WebSocketConnectionHolder, RuntimeException>, WebSocketConnectionHolder, RuntimeException>() {
+                                            @Override
                                             public Promise<WebSocketConnectionHolder, RuntimeException> apply(
                                                     final Promise<WebSocketConnectionHolder, RuntimeException> value)
                                                     throws RuntimeException {
@@ -414,6 +429,7 @@ public class ClientRemoteConnectorInfoManager extends
                                             }
                                         }).thenOnResult(
                                         new ResultHandler<WebSocketConnectionHolder>() {
+                                            @Override
                                             public void handleResult(
                                                     final WebSocketConnectionHolder result) {
                                                 if (isRunning.get()) {
@@ -424,6 +440,7 @@ public class ClientRemoteConnectorInfoManager extends
                                             }
                                         }).thenOnException(
                                         new ExceptionHandler<RuntimeException>() {
+                                            @Override
                                             public void handleException(RuntimeException error) {
                                                 lastConnectithenOnException.set(System
                                                         .currentTimeMillis());
@@ -552,14 +569,17 @@ public class ClientRemoteConnectorInfoManager extends
                 }
             }
 
+            @Override
             public boolean isOperational() {
                 return isConnected();
             }
 
+            @Override
             public RemoteOperationContext getRemoteConnectionContext() {
                 return context;
             }
 
+            @Override
             public Future<?> sendBytes(byte[] data) {
                 if (isConnected()) {
                     return protocolHandler.send(data);
@@ -569,6 +589,7 @@ public class ClientRemoteConnectorInfoManager extends
                 }
             }
 
+            @Override
             public Future<?> sendString(String data) {
                 if (isConnected()) {
                     return protocolHandler.send(data);
@@ -578,6 +599,7 @@ public class ClientRemoteConnectorInfoManager extends
                 }
             }
 
+            @Override
             public void sendPing(byte[] applicationData) throws Exception {
                 if (isConnected()) {
                     protocolHandler.send(new DataFrame(new PingFrameType(), applicationData));
@@ -586,6 +608,7 @@ public class ClientRemoteConnectorInfoManager extends
                 }
             }
 
+            @Override
             public void sendPong(byte[] applicationData) throws Exception {
                 if (isConnected()) {
                     protocolHandler.send(new DataFrame(new PongFrameType(), applicationData));
@@ -594,6 +617,7 @@ public class ClientRemoteConnectorInfoManager extends
                 }
             }
 
+            @Override
             protected void tryClose() {
                 ICFWebSocket.this.close();
             }
@@ -614,6 +638,7 @@ public class ClientRemoteConnectorInfoManager extends
             return listeners.remove(listener);
         }
 
+        @Override
         public void onClose(DataFrame frame) {
             super.onClose(frame);
             privateConnections.remove(adapter);
@@ -632,6 +657,7 @@ public class ClientRemoteConnectorInfoManager extends
             }
         }
 
+        @Override
         public void onConnect() {
             super.onConnect();
             for (OperationMessageListener listener : listeners) {
@@ -639,6 +665,7 @@ public class ClientRemoteConnectorInfoManager extends
             }
         }
 
+        @Override
         public void onMessage(byte[] data) {
             super.onMessage(data);
             for (OperationMessageListener listener : listeners) {
@@ -646,6 +673,7 @@ public class ClientRemoteConnectorInfoManager extends
             }
         }
 
+        @Override
         public void onMessage(String text) {
             super.onMessage(text);
             for (OperationMessageListener listener : listeners) {
@@ -653,6 +681,7 @@ public class ClientRemoteConnectorInfoManager extends
             }
         }
 
+        @Override
         public void onPing(DataFrame frame) {
             super.onPing(frame);
             for (OperationMessageListener listener : listeners) {
@@ -660,6 +689,7 @@ public class ClientRemoteConnectorInfoManager extends
             }
         }
 
+        @Override
         public void onPong(DataFrame frame) {
             super.onPong(frame);
             for (OperationMessageListener listener : listeners) {
@@ -669,6 +699,7 @@ public class ClientRemoteConnectorInfoManager extends
 
         SimpleBinaryMessage activeMessage = null;
 
+        @Override
         public void onFragment(boolean last, byte[] fragment) {
             super.onFragment(last, fragment);
             if (activeMessage == null) {
@@ -710,6 +741,7 @@ public class ClientRemoteConnectorInfoManager extends
         }
     }
 
+    @Override
     protected void onNewWebSocketConnectionGroup(final WebSocketConnectionGroup connectionGroup) {
         logger.ok("Activating new ConnectionGroup {0}:{1}", getName(), connectionGroup
                 .getRemoteSessionId());
@@ -724,18 +756,22 @@ public class ClientRemoteConnectorInfoManager extends
             super(true);
         }
 
+        @Override
         protected RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> getMessageDistributor() {
             return ClientRemoteConnectorInfoManager.this.getRequestDistributor();
         }
 
+        @Override
         protected void doClose() {
             ClientRemoteConnectorInfoManager.this.close();
         }
 
+        @Override
         protected Collection<? extends AsyncConnectorInfoManager> getDelegates() {
             return connectionGroups.values();
         }
 
+        @Override
         public void onAddAsyncConnectorInfoManager(AsyncConnectorInfoManager delegate) {
             // Notify deferred listeners
             super.onAddAsyncConnectorInfoManager(delegate);

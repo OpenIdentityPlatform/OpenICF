@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * "Portions Copyrighted 2026 3A Systems, LLC"
  */
 
 package org.forgerock.openicf.maven;
@@ -52,18 +53,21 @@ public class RemoteFrameworkConnectionInfoConverter extends AbstractConfiguratio
         implements LogEnabled {
     private Logger log;
 
+    @Override
     public void enableLogging(final Logger logger) {
         assert logger != null;
 
         this.log = logger;
     }
 
+    @Override
     public boolean canConvert(final Class type) {
         assert type != null;
 
         return RemoteFrameworkConnectionInfo.class.isAssignableFrom(type);
     }
 
+    @Override
     public Object fromConfiguration(final ConverterLookup converterLookup,
             final PlexusConfiguration configuration, final Class type, final Class baseType,
             final ClassLoader classLoader, final ExpressionEvaluator expressionEvaluator,
@@ -135,14 +139,17 @@ public class RemoteFrameworkConnectionInfoConverter extends AbstractConfiguratio
      */
     protected List<TrustManager> getTrustManager() {
         return Arrays.asList((TrustManager) new X509TrustManager() {
+            @Override
             public java.security.cert.X509Certificate[] getAcceptedIssuers() {
                 return null;
             }
 
+            @Override
             public void checkClientTrusted(java.security.cert.X509Certificate[] certs,
                     String authType) {
             }
 
+            @Override
             public void checkServerTrusted(java.security.cert.X509Certificate[] certs,
                     String authType) {
             }

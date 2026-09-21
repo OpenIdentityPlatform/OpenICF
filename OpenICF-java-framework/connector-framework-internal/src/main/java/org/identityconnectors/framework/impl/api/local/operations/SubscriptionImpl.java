@@ -88,16 +88,19 @@ public class SubscriptionImpl extends ConnectorAPIOperationRunner {
                     operation.subscribe(objectClass, eventFilter, observer, operationOptions);
 
             return new Subscription() {
+                @Override
                 public void close() {
                     if (observer.doRelease()) {
                         subscription.close();
                     }
                 }
 
+                @Override
                 public boolean isUnsubscribed() {
                     return subscription.isUnsubscribed();
                 }
 
+                @Override
                 public Object getReturnValue() {
                     return subscription.getReturnValue();
                 }
@@ -126,16 +129,19 @@ public class SubscriptionImpl extends ConnectorAPIOperationRunner {
                     operation.subscribe(objectClass, token, observer, operationOptions);
 
             return new Subscription() {
+                @Override
                 public void close() {
                     if (observer.doRelease()) {
                         subscription.close();
                     }
                 }
 
+                @Override
                 public boolean isUnsubscribed() {
                     return observer.isUnsubscribed() && subscription.isUnsubscribed();
                 }
 
+                @Override
                 public Object getReturnValue() {
                     return subscription.getReturnValue();
                 }
@@ -155,16 +161,19 @@ public class SubscriptionImpl extends ConnectorAPIOperationRunner {
             final Subscription subscription = operation.executeBatch(tasks, internalObserver, options);
 
             return new Subscription() {
+                @Override
                 public void close() {
                     if (internalObserver.doRelease()) {
                         subscription.close();
                     }
                 }
 
+                @Override
                 public boolean isUnsubscribed() {
                     return internalObserver.isUnsubscribed() && subscription.isUnsubscribed();
                 }
 
+                @Override
                 public Object getReturnValue() {
                     return subscription.getReturnValue();
                 }
@@ -184,16 +193,19 @@ public class SubscriptionImpl extends ConnectorAPIOperationRunner {
             final Subscription subscription = operation.queryBatch(token, internalObserver, options);
 
             return new Subscription() {
+                @Override
                 public void close() {
                     if (internalObserver.doRelease()) {
                         subscription.close();
                     }
                 }
 
+                @Override
                 public boolean isUnsubscribed() {
                     return internalObserver.isUnsubscribed() && subscription.isUnsubscribed();
                 }
 
+                @Override
                 public Object getReturnValue() {
                     return subscription == null ? null : subscription.getReturnValue();
                 }
@@ -212,18 +224,21 @@ public class SubscriptionImpl extends ConnectorAPIOperationRunner {
             this.delegate = delegate;
         }
 
+        @Override
         public void onCompleted() {
             if (doRelease()) {
                 delegate.onCompleted();
             }
         }
 
+        @Override
         public void onError(Throwable e) {
             if (doRelease()) {
                 delegate.onError(e);
             }
         }
 
+        @Override
         public void onNext(final T connectorObject) {
             try {
                 if (subscribed.get()) {

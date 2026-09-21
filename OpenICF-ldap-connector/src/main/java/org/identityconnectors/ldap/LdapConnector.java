@@ -21,6 +21,7 @@
  * ====================
  *
  * Portions Copyrighted 2013-2014 ForgeRock AS
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap;
 
@@ -91,10 +92,12 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
     public LdapConnector() {
     }
 
+    @Override
     public Configuration getConfiguration() {
         return config;
     }
 
+    @Override
     public void init(Configuration cfg) {
         config = (LdapConfiguration) cfg;
         conn = new LdapConnection(config);
@@ -111,13 +114,16 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
         }
     }
 
+    @Override
     public void dispose() {
         conn.close();
     }
 
+    @Override
     public void test() {
         if (loginContext != null) {
             Subject.doAs(loginContext.getSubject(), new PrivilegedAction() {
+                @Override
                 public Object run() {
                     doTest();
                     return null;
@@ -128,9 +134,11 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
         }
     }
 
+    @Override
     public void checkAlive() {
         if (loginContext != null) {
             Subject.doAs(loginContext.getSubject(), new PrivilegedAction() {
+                @Override
                 public Object run() {
                     conn.checkAlive();
                     return null;
@@ -141,9 +149,11 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
         }
     }
 
+    @Override
     public Schema schema() {
         if (loginContext != null) {
             return Subject.doAs(loginContext.getSubject(), new PrivilegedAction<Schema>() {
+                @Override
                 public Schema run() {
                     return conn.getSchemaMapping().schema();
                 }
@@ -153,9 +163,11 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
         }
     }
 
+    @Override
     public Uid authenticate(final ObjectClass objectClass, final String username, final GuardedString password, final OperationOptions options) {
         if (loginContext != null) {
             return Subject.doAs(loginContext.getSubject(), new PrivilegedAction<Uid>() {
+                @Override
                 public Uid run() {
                     return new LdapAuthenticate(conn, objectClass, username, options).authenticate(password);
                 }
@@ -165,9 +177,11 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
         }
     }
 
+    @Override
     public Uid resolveUsername(final ObjectClass objectClass, final String username, final OperationOptions options) {
          if (loginContext != null) {
             return Subject.doAs(loginContext.getSubject(), new PrivilegedAction<Uid>() {
+                @Override
                 public Uid run() {
                     return new LdapAuthenticate(conn, objectClass, username, options).resolveUsername();
                 }
@@ -177,16 +191,19 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
         }
     }
 
+    @Override
     public FilterTranslator<LdapFilter> createFilterTranslator(ObjectClass objectClass, OperationOptions options) {
         return new LdapFilterTranslator(conn.getSchemaMapping(), objectClass);
     }
 
+    @Override
     public void executeQuery(final ObjectClass objectClass, final LdapFilter query, final ResultsHandler handler, final OperationOptions options) {
         if (objectClass.is(LdapUtil.SERVER_INFO_NAME)) {
             LdapUtil.getServerInfo(conn, handler);
         } else {
             if (loginContext != null) {
                 Subject.doAs(loginContext.getSubject(), new PrivilegedAction() {
+                    @Override
                     public Object run() {
                         new LdapSearch(conn, objectClass, query, handler, options).execute();
                         return null;
@@ -198,9 +215,11 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
         }
     }
 
+    @Override
     public Uid create(final ObjectClass objectClass, final Set<Attribute> attrs, final OperationOptions options) {
         if (loginContext != null) {
             return Subject.doAs(loginContext.getSubject(), new PrivilegedAction<Uid>() {
+                @Override
                 public Uid run() {
                     return new LdapCreate(conn, objectClass, attrs, options).execute();
                 }
@@ -210,9 +229,11 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
         }
     }
 
+    @Override
     public void delete(final ObjectClass objectClass, final Uid uid, final OperationOptions options) {
         if (loginContext != null) {
             Subject.doAs(loginContext.getSubject(), new PrivilegedAction() {
+                @Override
                 public Object run() {
                     new LdapDelete(conn, objectClass, uid, options).execute();
                     return null;
@@ -223,9 +244,11 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
         }
     }
 
+    @Override
     public Uid update(final ObjectClass objectClass, final Uid uid, final Set<Attribute> replaceAttributes, final OperationOptions options) {
         if (loginContext != null) {
             return Subject.doAs(loginContext.getSubject(), new PrivilegedAction<Uid>() {
+                @Override
                 public Uid run() {
                     return new LdapUpdate(conn, objectClass, uid, options).update(replaceAttributes);
                 }
@@ -235,9 +258,11 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
         }
     }
 
+    @Override
     public Uid addAttributeValues(final ObjectClass objectClass, final Uid uid, final Set<Attribute> valuesToAdd, final OperationOptions options) {
         if (loginContext != null) {
             return Subject.doAs(loginContext.getSubject(), new PrivilegedAction<Uid>() {
+                @Override
                 public Uid run() {
                     return new LdapUpdate(conn, objectClass, uid, options).addAttributeValues(valuesToAdd);
                 }
@@ -247,9 +272,11 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
         }
     }
 
+    @Override
     public Uid removeAttributeValues(final ObjectClass objectClass, final Uid uid, final Set<Attribute> valuesToRemove, final OperationOptions options) {
         if (loginContext != null) {
             return Subject.doAs(loginContext.getSubject(), new PrivilegedAction<Uid>() {
+                @Override
                 public Uid run() {
                     return new LdapUpdate(conn, objectClass, uid, options).removeAttributeValues(valuesToRemove);
                 }
@@ -259,9 +286,11 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
         }
     }
 
+    @Override
     public SyncToken getLatestSyncToken(final ObjectClass objectClass) {
         if (loginContext != null) {
             return Subject.doAs(loginContext.getSubject(), new PrivilegedAction<SyncToken>() {
+                @Override
                 public SyncToken run() {
                     return lastSyncToken(objectClass);
                 }
@@ -271,9 +300,11 @@ public class LdapConnector implements TestOp, PoolableConnector, SchemaOp, Searc
         }
     }
 
+    @Override
     public void sync(final ObjectClass objectClass, final SyncToken token, final SyncResultsHandler handler, final OperationOptions options) {
         if (loginContext != null) {
             Subject.doAs(loginContext.getSubject(), new PrivilegedAction() {
+                @Override
                 public Object run() {
                     doSync(objectClass, token, handler, options);
                     return null;

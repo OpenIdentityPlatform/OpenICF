@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * "Portions Copyrighted 2026 3A Systems, LLC"
  */
 package org.identityconnectors.framework.impl.api.remote;
 
@@ -122,6 +123,7 @@ public class RemoteFrameworkConnection implements Closeable {
         decoder = factory.newBinaryDeserializer(inputStream);
     }
 
+    @Override
     public void close() {
         flush();
         try {

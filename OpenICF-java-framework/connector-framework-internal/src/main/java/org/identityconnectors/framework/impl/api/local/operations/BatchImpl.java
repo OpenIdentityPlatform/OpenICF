@@ -73,6 +73,7 @@ public class BatchImpl extends ConnectorAPIOperationRunner implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public Subscription executeBatch(final List<BatchTask> tasks, final Observer<BatchResult> observer,
                                final OperationOptions options) {
         if (tasks == null || tasks.size() == 0) {
@@ -113,6 +114,7 @@ public class BatchImpl extends ConnectorAPIOperationRunner implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public Subscription queryBatch(final BatchToken batchToken, final Observer<BatchResult> observer,
                              final OperationOptions options) {
         Assertions.nullCheck(batchToken, "batchToken");

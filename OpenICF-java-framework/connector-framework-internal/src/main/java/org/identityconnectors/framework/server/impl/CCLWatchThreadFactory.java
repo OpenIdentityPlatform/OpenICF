@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * "Portions Copyrighted 2026 3A Systems, LLC"
  */
 package org.identityconnectors.framework.server.impl;
 
@@ -43,6 +44,7 @@ public class CCLWatchThreadFactory implements ThreadFactory {
         namePrefix = "pool-" + POOL_NUMBER.getAndIncrement() + "-thread-";
     }
 
+    @Override
     public Thread newThread(Runnable r) {
         Thread t = new CCLWatchThread(group, r, namePrefix + threadNumber.getAndIncrement(), 0);
         if (t.isDaemon())

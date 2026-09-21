@@ -118,6 +118,7 @@ public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConn
             }
             return new Function<H, Promise<V, E>, Exception>() {
 
+                @Override
                 public Promise<V, E> apply(H remoteConnectionHolder) throws Exception {
                     if (null == promise) {
                         // Single thread should process it so it should not
@@ -128,6 +129,7 @@ public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConn
 
                                     promise = new PromiseImpl<V, E>() {
 
+                                        @Override
                                         protected E tryCancel(boolean mayInterruptIfRunning) {
                                             if (mayInterruptIfRunning) {
                                                 try {
@@ -142,6 +144,7 @@ public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConn
                                     };
 
                                     promise.thenOnResultOrException(new Runnable() {
+                                        @Override
                                         public void run() {
                                             completionCallback.complete(RemoteRequest.this);
                                         }
@@ -177,6 +180,7 @@ public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConn
         } else {
             return new Function<H, Promise<V, E>, Exception>() {
 
+                @Override
                 public Promise<V, E> apply(H value) throws Exception {
                     return resultPromise;
                 }

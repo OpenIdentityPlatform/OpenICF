@@ -65,6 +65,7 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      * (non-Javadoc)
      * @see org.identityconnectors.framework.spi.Connector#getConfiguration()
      */
+    @Override
     public Configuration getConfiguration() {
         return this.config;
     }
@@ -73,6 +74,7 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      * (non-Javadoc)
      * @see org.identityconnectors.framework.spi.Connector#init(org.identityconnectors.framework.spi.Configuration)
      */
+    @Override
     public void init(Configuration configuration) {
         this.config = Assertions.nullChecked((XMLConfiguration) configuration, "config");
         synchronized (XMLConnector.class) {
@@ -99,6 +101,7 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      * (non-Javadoc)
      * @see org.identityconnectors.framework.spi.Connector#dispose()
      */
+    @Override
     public void dispose() {
         if (xmlInstanceHandler == null) {
             // init() never completed successfully (e.g. invalid XML/XSD path),
@@ -125,6 +128,7 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
         return lock;
     }
 
+    @Override
     public Uid authenticate(final ObjectClass objClass, final String username, final GuardedString password, final OperationOptions options) {
         if (ObjectClass.ACCOUNT.is(Assertions.nullChecked(objClass, "objectClass").getObjectClassValue())) {
 
@@ -143,6 +147,7 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      * (non-Javadoc)
      * @see org.identityconnectors.framework.spi.operations.CreateOp#create(org.identityconnectors.framework.common.objects.ObjectClass, java.util.Set, org.identityconnectors.framework.common.objects.OperationOptions)
      */
+    @Override
     public Uid create(final ObjectClass objClass, final Set<Attribute> attributes, final OperationOptions options) {
         synchronized (getLock()) {
             Assertions.nullCheck(objClass, "objectClass");
@@ -157,6 +162,7 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      * (non-Javadoc)
      * @see org.identityconnectors.framework.spi.operations.UpdateOp#update(org.identityconnectors.framework.common.objects.ObjectClass, org.identityconnectors.framework.common.objects.Uid, java.util.Set, org.identityconnectors.framework.common.objects.OperationOptions)
      */
+    @Override
     public Uid update(ObjectClass objClass, Uid uid, Set<Attribute> replaceAttributes, OperationOptions options) {
         synchronized (getLock()) {
             Assertions.nullCheck(objClass, "objectClass");
@@ -172,6 +178,7 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      * (non-Javadoc)
      * @see org.identityconnectors.framework.spi.operations.DeleteOp#delete(org.identityconnectors.framework.common.objects.ObjectClass, org.identityconnectors.framework.common.objects.Uid, org.identityconnectors.framework.common.objects.OperationOptions)
      */
+    @Override
     public void delete(final ObjectClass objClass, final Uid uid, final OperationOptions options) {
         synchronized (getLock()) {
             Assertions.nullCheck(objClass, "objectClass");
@@ -185,6 +192,7 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      * (non-Javadoc)
      * @see org.identityconnectors.framework.spi.operations.SchemaOp#schema()
      */
+    @Override
     public Schema schema() {
         SchemaParser schemaParser = new SchemaParser(XMLConnector.class, config.getXsdFilePath());
         return schemaParser.parseSchema();
@@ -194,6 +202,7 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      * (non-Javadoc)
      * @see org.identityconnectors.framework.spi.operations.SearchOp#createFilterTranslator(org.identityconnectors.framework.common.objects.ObjectClass, org.identityconnectors.framework.common.objects.OperationOptions)
      */
+    @Override
     public FilterTranslator<Query> createFilterTranslator(ObjectClass objClass, OperationOptions options) {
         return new XMLFilterTranslator(xmlInstanceHandler.isSupportUid(objClass));
     }
@@ -202,6 +211,7 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      * (non-Javadoc)
      * @see org.identityconnectors.framework.spi.operations.SearchOp#executeQuery(org.identityconnectors.framework.common.objects.ObjectClass, java.lang.Object, org.identityconnectors.framework.common.objects.ResultsHandler, org.identityconnectors.framework.common.objects.OperationOptions)
      */
+    @Override
     public void executeQuery(ObjectClass objClass, Query query, ResultsHandler handler, OperationOptions options) {
         synchronized (getLock()) {
             QueryBuilder queryBuilder = new QueryBuilder(query, objClass);
@@ -220,6 +230,7 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      * (non-Javadoc)
      * @see org.identityconnectors.framework.spi.operations.TestOp#test()
      */
+    @Override
     public void test() {
         Assertions.nullCheck(config, "configuration");
         Assertions.nullCheck(xmlInstanceHandler, "xmlHandler");

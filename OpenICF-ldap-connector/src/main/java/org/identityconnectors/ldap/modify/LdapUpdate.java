@@ -21,6 +21,7 @@
  * ====================
  * 
  * "Portions Copyrighted 2013-2015 Forgerock AS"
+ * "Portions Copyrighted 2026 3A Systems, LLC"
  */
 package org.identityconnectors.ldap.modify;
 
@@ -364,6 +365,7 @@ public class LdapUpdate extends LdapModifyOperation {
 
         if (passwords.first != null) {
             passwords.first.access(new Accessor() {
+                @Override
                 public void access(javax.naming.directory.Attribute passwordAttr) {
                     hashPassword(passwordAttr, entryDN);
                     // No current password provided - we use 'replace'
@@ -378,6 +380,7 @@ public class LdapUpdate extends LdapModifyOperation {
                                 // Password change has to be done in 2 operations. Remove old, Add new
                                 final javax.naming.directory.Attribute newPasswordAttr = passwordAttr;
                                 passwords.second.access(new Accessor() {
+                                    @Override
                                     public void access(javax.naming.directory.Attribute oldPasswordAttr) {
                                         hashPassword(oldPasswordAttr, entryDN);
                                         modItems.add(new ModificationItem(DirContext.REMOVE_ATTRIBUTE, oldPasswordAttr));

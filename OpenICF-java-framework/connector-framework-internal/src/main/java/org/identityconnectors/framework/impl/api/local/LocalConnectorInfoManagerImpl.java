@@ -21,6 +21,7 @@
  * ====================
  * Portions Copyrighted 2010-2015 ForgeRock AS.
  * Portions Copyrighted 2010-2014 Tirasa.
+ * Portions Copyrighted 2026 3A Systems, LLC.
  */
 package org.identityconnectors.framework.impl.api.local;
 
@@ -422,6 +423,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         return paths;
     }
 
+    @Override
     public ConnectorInfo findConnectorInfo(final ConnectorKey key) {
         for (ConnectorInfo info : connectorInfos) {
             if (info.getConnectorKey().equals(key)) {
@@ -431,6 +433,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         return null;
     }
 
+    @Override
     public List<ConnectorInfo> getConnectorInfos() {
         return Collections.unmodifiableList(connectorInfos);
     }

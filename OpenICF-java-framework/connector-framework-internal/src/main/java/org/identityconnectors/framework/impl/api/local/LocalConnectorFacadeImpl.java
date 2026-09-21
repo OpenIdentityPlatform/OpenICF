@@ -215,6 +215,7 @@ public class LocalConnectorFacadeImpl extends AbstractConnectorFacade {
                 || api == BatchApiOp.class) {
             final ConnectorAPIOperationRunnerProxy handler =
                     new ConnectorAPIOperationRunnerProxy(getOperationalContext(), null) {
+                        @Override
                         protected APIOperationRunner getApiOperationRunner(
                                 final ConnectorOperationalContext operationalContext,
                                 final Connector connector) throws Exception {
@@ -294,6 +295,7 @@ public class LocalConnectorFacadeImpl extends AbstractConnectorFacade {
         }
 
         @SuppressWarnings("unchecked")
+        @Override
         public Object invoke(Object proxy, Method method, Object[] arguments) throws Throwable {
             // do not log equals, hashCode, toString
             if (method.getDeclaringClass() == Object.class) {

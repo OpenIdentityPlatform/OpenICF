@@ -74,6 +74,7 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
     @Parameter(defaultValue = "${project.build.sourceEncoding}")
     private String sourceEncoding;
 
+    @Override
     public String getSourceEncoding() {
         return sourceEncoding;
     }
@@ -84,6 +85,7 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
     @Parameter(defaultValue = "${basedir}", readonly = true, required = true)
     protected File basedir;
 
+    @Override
     public File getBasedir() {
         return basedir;
     }
@@ -101,6 +103,7 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
     @Parameter(defaultValue = "${project.build.outputDirectory}", required = true, readonly = true)
     private File buildOutputDirectory;
 
+    @Override
     public File getBuildOutputDirectory() {
         return buildOutputDirectory;
     }
@@ -118,6 +121,7 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
     @Parameter(property = "openicf.templateDirectory", defaultValue = "org/forgerock/openicf/maven")
     private String templateDirectory;
 
+    @Override
     public String getTemplateDirectory() {
         return templateDirectory;
     }
@@ -136,6 +140,7 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
     @Parameter
     private String[] includes;
 
+    @Override
     public String[] getIncludes() {
         return includes;
     }
@@ -147,6 +152,7 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
     @Parameter
     private String[] excludes;
 
+    @Override
     public String[] getExcludes() {
         return excludes;
     }
@@ -161,6 +167,7 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
     @Parameter
     private PropertyBag configurationProperties;
 
+    @Override
     public PropertyBag getConfigurationProperties() {
         return configurationProperties;
     }
@@ -168,6 +175,7 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
     @Parameter
     private RemoteFrameworkConnectionInfo remoteFrameworkConnectionInfo;
 
+    @Override
     public RemoteFrameworkConnectionInfo getRemoteFrameworkConnectionInfo() {
         return remoteFrameworkConnectionInfo;
     }
@@ -181,6 +189,7 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
     @Component
     private MavenProject project;
 
+    @Override
     public MavenProject getMavenProject() {
         return project;
     }
@@ -196,6 +205,7 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
      */
     private I18N i18n;
 
+    @Override
     public I18N getI18N() {
         return i18n;
     }
@@ -253,6 +263,7 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
      *
      * @return the output name of this report.
      */
+    @Override
     public String getOutputName() {
         if (null == reportName) {
             return "openicf-report";
@@ -268,6 +279,7 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
      *            the wanted locale to return the report's name, could be null.
      * @return the name of this report.
      */
+    @Override
     public String getName(Locale locale) {
         if (reportName == null) {
             return getBundle(locale).getString("report.openicf.name");
@@ -284,6 +296,7 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
      *            null.
      * @return the description of this report.
      */
+    @Override
     public String getDescription(Locale locale) {
         if (reportName == null) {
             return getBundle(locale).getString("report.openicf.description");
@@ -296,6 +309,7 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
         return ResourceBundle.getBundle("openicf-report", locale, this.getClass().getClassLoader());
     }
 
+    @Override
     public void generate(ConnectorDocBuilder builder, Context context, String connectorName)
             throws MojoExecutionException {
         try {

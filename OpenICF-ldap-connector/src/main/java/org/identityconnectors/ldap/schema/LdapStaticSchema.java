@@ -16,6 +16,7 @@
  * applicable, add the following below the CDDL Header, with the fields enclosed
  * by brackets [] replaced by your own identifying information: "Portions
  * Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap.schema;
 
@@ -111,6 +112,7 @@ public class LdapStaticSchema implements LdapNativeSchema {
         initAttributeDescriptions();
     }
 
+    @Override
     public Set<String> getStructuralObjectClasses() {
         // we skip groupOfUniqueNames and inetOrgPerson since they are 
         // the default object classes used for __ACCOUNT__ and __GROUP__
@@ -123,6 +125,7 @@ public class LdapStaticSchema implements LdapNativeSchema {
         );
     }
 
+    @Override
     public Set<String> getRequiredAttributes(String ldapClass) {
         if (ACCOUNT.equalsIgnoreCase(ldapClass)) {
             return newSet("uid");
@@ -144,6 +147,7 @@ public class LdapStaticSchema implements LdapNativeSchema {
         return newSet();
     }
 
+    @Override
     public Set<String> getOptionalAttributes(String ldapClass) {
         if (ACCOUNT.equalsIgnoreCase(ldapClass)) {
             return newSet("description", "seeAlso", "l", "o", "ou", "host");
@@ -165,10 +169,12 @@ public class LdapStaticSchema implements LdapNativeSchema {
         return newSet();
     }
 
+    @Override
     public Set<String> getEffectiveObjectClasses(String ldapClass) {
         return newSet(ldapClass);
     }
 
+    @Override
     public LdapAttributeType getAttributeDescription(String ldapAttrName) {
         if (attrName2Type.get(ldapAttrName) != null) {
             return attrName2Type.get(ldapAttrName);

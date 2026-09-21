@@ -130,6 +130,7 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
     @Parameter(defaultValue = "${project.build.outputDirectory}", required = true, readonly = true)
     private File buildOutputDirectory;
 
+    @Override
     public File getBuildOutputDirectory() {
         return buildOutputDirectory;
     }
@@ -185,6 +186,7 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
     @Parameter
     private String[] includes;
 
+    @Override
     public String[] getIncludes() {
         return includes;
     }
@@ -196,6 +198,7 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
     @Parameter
     private String[] excludes;
 
+    @Override
     public String[] getExcludes() {
         return excludes;
     }
@@ -211,6 +214,7 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
     @Parameter
     private PropertyBag configurationProperties;
 
+    @Override
     public PropertyBag getConfigurationProperties() {
         return configurationProperties;
     }
@@ -218,6 +222,7 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
     @Parameter
     private RemoteFrameworkConnectionInfo remoteFrameworkConnectionInfo;
 
+    @Override
     public RemoteFrameworkConnectionInfo getRemoteFrameworkConnectionInfo() {
         return remoteFrameworkConnectionInfo;
     }
@@ -261,26 +266,32 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
      */
     private I18N i18n;
 
+    @Override
     public File getBasedir() {
         return basedir;
     }
 
+    @Override
     public String getSourceEncoding() {
         return sourceEncoding;
     }
 
+    @Override
     public String getTemplateDirectory() {
         return templateDirectory;
     }
 
+    @Override
     public I18N getI18N() {
         return i18n;
     }
 
+    @Override
     public MavenProject getMavenProject() {
         return project;
     }
 
+    @Override
     public void generate(ConnectorDocBuilder builder, Context context, String connectorName)
             throws MojoExecutionException {
         try {
@@ -334,6 +345,7 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
         }
     }
 
+    @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (skip) {
             getLog().info("Skipping DocBook generation");
@@ -387,6 +399,7 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
 
                     org.apache.commons.io.FileUtils.copyDirectory(docbkxDirectory, rootDirectory,
                             new FileFilter() {
+                                @Override
                                 public boolean accept(File pathname) {
                                     return includes.contains(pathname.getPath());
                                 }

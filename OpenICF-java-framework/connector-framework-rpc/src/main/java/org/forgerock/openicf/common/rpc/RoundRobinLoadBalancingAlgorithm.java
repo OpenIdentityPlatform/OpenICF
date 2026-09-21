@@ -58,6 +58,7 @@ public class RoundRobinLoadBalancingAlgorithm<G extends RemoteConnectionGroup<G,
         super(requestDistributors);
     }
 
+    @Override
     protected int getInitialConnectionFactoryIndex() {
         // A round robin pool of one connection factories is unlikely in
         // practice and requires special treatment.

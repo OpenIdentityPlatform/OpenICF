@@ -185,6 +185,7 @@ public abstract class RemoteConnectionGroup<G extends RemoteConnectionGroup<G, H
             request =
                     requestFactory.createRemoteRequest(getRemoteConnectionContext(), messageId,
                             new RemoteRequestFactory.CompletionCallback<V, E, G, H, P>() {
+                                @Override
                                 public void complete(RemoteRequest<V, E, G, H, P> request) {
                                     remoteRequests.remove(request.getRequestId());
                                 }
@@ -198,6 +199,7 @@ public abstract class RemoteConnectionGroup<G extends RemoteConnectionGroup<G, H
 
     // -- Pair of methods to Submit and Receive the new Request Start --
 
+    @Override
     public <R extends RemoteRequest<V, E, G, H, P>, V, E extends Exception> R trySubmitRequest(
             RemoteRequestFactory<R, V, E, G, H, P> requestFactory) {
 

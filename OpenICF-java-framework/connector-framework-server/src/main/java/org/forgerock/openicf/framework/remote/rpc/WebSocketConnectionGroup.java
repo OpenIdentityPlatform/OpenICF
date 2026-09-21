@@ -81,6 +81,7 @@ public class WebSocketConnectionGroup
 
     private final CloseListener<WebSocketConnectionHolder> closeListener =
             new CloseListener<WebSocketConnectionHolder>() {
+                @Override
                 public void onClosed(final WebSocketConnectionHolder connection) {
                     for (Pair<String, WebSocketConnectionHolder> p : webSockets) {
                         if (connection.equals(p.getSecond())) {
@@ -200,6 +201,7 @@ public class WebSocketConnectionGroup
         final byte[] messageBytes = message.toByteArray();
         return Boolean.TRUE
                 .equals(trySendMessage(new Function<WebSocketConnectionHolder, Boolean, Exception>() {
+                    @Override
                     public Boolean apply(WebSocketConnectionHolder value) throws Exception {
                         value.sendBytes(messageBytes).get();
                         return Boolean.TRUE;
@@ -207,10 +209,12 @@ public class WebSocketConnectionGroup
                 }));
     }
 
+    @Override
     protected RemoteOperationContext getRemoteConnectionContext() {
         return operationContext;
     }
 
+    @Override
     public boolean isOperational() {
         for (Pair<String, WebSocketConnectionHolder> e : webSockets) {
             if (e.getSecond().isOperational()) {
@@ -233,6 +237,7 @@ public class WebSocketConnectionGroup
         return isRunning.get() && delegate.isRunning();
     }
 
+    @Override
     public final void close() {
         if (canCloseNow()) {
             try {
@@ -293,19 +298,23 @@ public class WebSocketConnectionGroup
 
     // --- AsyncConnectorInfoManager implementation ---
 
+    @Override
     public Promise<ConnectorInfo, RuntimeException> findConnectorInfoAsync(final ConnectorKey key) {
         return delegate.findConnectorInfoAsync(key);
     }
 
+    @Override
     public Promise<ConnectorInfo, RuntimeException> findConnectorInfoAsync(
             final ConnectorKeyRange keyRange) {
         return delegate.findConnectorInfoAsync(keyRange);
     }
 
+    @Override
     public List<ConnectorInfo> getConnectorInfos() {
         return delegate.getConnectorInfos();
     }
 
+    @Override
     public ConnectorInfo findConnectorInfo(final ConnectorKey key) {
         return delegate.findConnectorInfo(key);
     }
@@ -399,6 +408,7 @@ public class WebSocketConnectionGroup
 
         public final EnumSet<InfoLevel> infoLevels = EnumSet.noneOf(InfoLevel.class);
 
+        @Override
         public ControlMessageRequest createRemoteRequest(
                 RemoteOperationContext context,
                 long requestId,
@@ -420,6 +430,7 @@ public class WebSocketConnectionGroup
             this.infoLevels = infoLevels;
         }
 
+        @Override
         protected RPCMessages.RPCRequest.Builder createOperationRequest(
                 RemoteOperationContext remoteContext) {
 
@@ -432,6 +443,7 @@ public class WebSocketConnectionGroup
             return RPCMessages.RPCRequest.newBuilder().setControlRequest(builder);
         }
 
+        @Override
         protected boolean handleResponseMessage(WebSocketConnectionHolder sourceConnection,
                 MessageLite message) {
             if (message instanceof ControlResponse) {
