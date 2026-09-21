@@ -20,7 +20,6 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2015 ForgeRock AS.
- * Portions Copyrighted 2026 3A Systems LLC.
  */
 
 package org.identityconnectors.common;
@@ -97,13 +96,13 @@ public class PrettyStringBuilder {
             s.append(')');
         } else if (obj instanceof Map) {
             final Map map = (Map) obj;
-            final Iterator it = map.entrySet().iterator();
+            final Iterator it = map.keySet().iterator();
             int i = 0;
             s.append('{');
             while ((it.hasNext() && (i++ < maxArrayLen))) {
-                final Map.Entry entry = (Map.Entry) it.next();
-                s.append(entry.getKey()).append(':');
-                s.append(toPrettyString(entry.getValue()));
+                final Object key = it.next();
+                s.append(key).append(':');
+                s.append(toPrettyString(map.get(key)));
                 if (it.hasNext()) {
                     s.append(",");
                 }

@@ -22,8 +22,6 @@
  * "Portions Copyrighted 2010 [name of copyright owner]"
  *
  * $Id$
- *
- * Portions Copyrighted 2026 3A Systems LLC.
  */
 package org.forgerock.openicf.connectors.xml.util;
 
@@ -46,46 +44,47 @@ public class AttributeTypeUtil {
 
     public static Object createInstantiatedObject(String attrValue, String javaclass) {
         if (javaclass.equals(XmlHandlerUtil.STRING)) {
-            return attrValue;
+            String s = new String(attrValue);
+            return s;
         }
         else if (javaclass.equals(XmlHandlerUtil.INT_PRIMITIVE)) {
-            int i = parseInt(attrValue);
+            int i = new Integer(attrValue);
             return i;
         }
         else if (javaclass.equals(XmlHandlerUtil.INTEGER)) {
-            Integer i = parseInt(attrValue);
+            Integer i = new Integer(attrValue);
             return i;
         }
         else if (javaclass.equals(XmlHandlerUtil.LONG)) {
-            Long l = parseLong(attrValue);
+            Long l = new Long(attrValue);
             return l;
         }
         else if (javaclass.equals(XmlHandlerUtil.LONG_PRIMITIVE)) {
-            long l = parseLong(attrValue);
+            long l = new Long(attrValue);
             return l;
         }
         else if (javaclass.equals(XmlHandlerUtil.BOOLEAN)) {
-            Boolean b = Boolean.valueOf(attrValue);
+            Boolean b = new Boolean(attrValue);
             return b;
         }
         else if (javaclass.equals(XmlHandlerUtil.BOOLEAN_PRIMITIVE)) {
-            boolean b = Boolean.parseBoolean(attrValue);
+            boolean b = new Boolean(attrValue);
             return b;
         }
         else if (javaclass.equals(XmlHandlerUtil.DOUBLE)) {
-            Double d = parseDouble(attrValue);
+            Double d = new Double(attrValue);
             return d;
         }
         else if (javaclass.equals(XmlHandlerUtil.DOUBLE_PRIMITIVE)) {
-            double d = parseDouble(attrValue);
+            double d = new Double(attrValue);
             return d;
         }
         else if (javaclass.equals(XmlHandlerUtil.FLOAT)) {
-            Float f = parseFloat(attrValue);
+            Float f = new Float(attrValue);
             return f;
         }
         else if (javaclass.equals(XmlHandlerUtil.FLOAT_PRIMITIVE)) {
-            float f = parseFloat(attrValue);
+            float f = new Float(attrValue);
             return f;
         }
         else if (javaclass.equals(XmlHandlerUtil.CHARACTER)) {
@@ -118,38 +117,6 @@ public class AttributeTypeUtil {
         }
         else {
             return null;
-        }
-    }
-
-    private static int parseInt(String attrValue) {
-        try {
-            return Integer.parseInt(attrValue);
-        } catch (NumberFormatException e) {
-            throw new ConnectorException("Malformed int value in the XML: '" + attrValue + "'", e);
-        }
-    }
-
-    private static long parseLong(String attrValue) {
-        try {
-            return Long.parseLong(attrValue);
-        } catch (NumberFormatException e) {
-            throw new ConnectorException("Malformed long value in the XML: '" + attrValue + "'", e);
-        }
-    }
-
-    private static double parseDouble(String attrValue) {
-        try {
-            return Double.parseDouble(attrValue);
-        } catch (NumberFormatException e) {
-            throw new ConnectorException("Malformed double value in the XML: '" + attrValue + "'", e);
-        }
-    }
-
-    private static float parseFloat(String attrValue) {
-        try {
-            return Float.parseFloat(attrValue);
-        } catch (NumberFormatException e) {
-            throw new ConnectorException("Malformed float value in the XML: '" + attrValue + "'", e);
         }
     }
 

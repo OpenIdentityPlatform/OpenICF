@@ -21,7 +21,6 @@
  * ====================
  *
  * Portions Copyrighted 2012 ForgeRock AS
- * Portions Copyrighted 2026 3A Systems LLC.
  *
  */
 package org.identityconnectors.contract.test;
@@ -577,12 +576,11 @@ public class MultiOpTests extends ObjectClassRunner {
     /**
      * Method to check the attrName's attribute contract
      *
-     * @param objectClass object class under test
      * @param attrName attribute to be checked
      * @param createValue value used for create
      * @param updateValue value used for update
      * @param type expected type of the value
-     * @param addPassword add password to attributes in the update
+     * @param addPassword, add password to attributes in the update
      */
     private void checkOpAttribute(ObjectClass objectClass, String attrName, Object createValue, Object updateValue, Class<?> type, boolean addPassword) {
         final int iteration = 0;
