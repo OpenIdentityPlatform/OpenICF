@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2013 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -34,12 +35,12 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
 import org.identityconnectors.framework.common.objects.filter.AndFilter;
-import org.identityconnectors.framework.common.objects.filter.AttributeFilter;
 import org.identityconnectors.framework.common.objects.filter.ContainsAllValuesFilter;
 import org.identityconnectors.framework.common.objects.filter.ContainsFilter;
 import org.identityconnectors.framework.common.objects.filter.EndsWithFilter;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
 import org.identityconnectors.framework.common.objects.filter.Filter;
+import org.identityconnectors.framework.common.objects.filter.FilterVisitor;
 import org.identityconnectors.framework.common.objects.filter.GreaterThanFilter;
 import org.identityconnectors.framework.common.objects.filter.GreaterThanOrEqualFilter;
 import org.identityconnectors.framework.common.objects.filter.LessThanFilter;
@@ -146,46 +147,78 @@ public final class ObjectNormalizerFacade {
      * @return The normalized filter.
      */
     public Filter normalizeFilter(Filter filter) {
-        if (filter instanceof ContainsFilter) {
-            AttributeFilter afilter = (AttributeFilter) filter;
-            return new ContainsFilter(normalizeAttribute(afilter.getAttribute()));
-        } else if (filter instanceof EndsWithFilter) {
-            AttributeFilter afilter = (AttributeFilter) filter;
-            return new EndsWithFilter(normalizeAttribute(afilter.getAttribute()));
-        } else if (filter instanceof EqualsFilter) {
-            AttributeFilter afilter = (AttributeFilter) filter;
-            return new EqualsFilter(normalizeAttribute(afilter.getAttribute()));
-        } else if (filter instanceof GreaterThanFilter) {
-            AttributeFilter afilter = (AttributeFilter) filter;
-            return new GreaterThanFilter(normalizeAttribute(afilter.getAttribute()));
-        } else if (filter instanceof GreaterThanOrEqualFilter) {
-            AttributeFilter afilter = (AttributeFilter) filter;
-            return new GreaterThanOrEqualFilter(normalizeAttribute(afilter.getAttribute()));
-        } else if (filter instanceof LessThanFilter) {
-            AttributeFilter afilter = (AttributeFilter) filter;
-            return new LessThanFilter(normalizeAttribute(afilter.getAttribute()));
-        } else if (filter instanceof LessThanOrEqualFilter) {
-            AttributeFilter afilter = (AttributeFilter) filter;
-            return new LessThanOrEqualFilter(normalizeAttribute(afilter.getAttribute()));
-        } else if (filter instanceof StartsWithFilter) {
-            AttributeFilter afilter = (AttributeFilter) filter;
-            return new StartsWithFilter(normalizeAttribute(afilter.getAttribute()));
-        } else if (filter instanceof ContainsAllValuesFilter) {
-            AttributeFilter afilter = (AttributeFilter) filter;
-            return new ContainsAllValuesFilter(normalizeAttribute(afilter.getAttribute()));
-        } else if (filter instanceof NotFilter) {
-            NotFilter notFilter = (NotFilter) filter;
-            return new NotFilter(normalizeFilter(notFilter.getFilter()));
-        } else if (filter instanceof AndFilter) {
-            AndFilter andFilter = (AndFilter) filter;
-            return new AndFilter(normalizeFilter(andFilter.getLeft()), normalizeFilter(andFilter
+        if (filter == null) {
+            return null;
+        }
+        return filter.accept(NormalizingFilterVisitor.INSTANCE, this);
+    }
+
+    /**
+     * Applies {@link #normalizeAttribute(Attribute)} to every attribute
+     * referenced by a filter, recursing through composite (AND/OR/NOT)
+     * filters. Filter kinds with no attribute of their own (e.g. presence,
+     * extended) are returned unchanged.
+     */
+    private static final class NormalizingFilterVisitor implements
+            FilterVisitor<Filter, ObjectNormalizerFacade> {
+
+        static final NormalizingFilterVisitor INSTANCE = new NormalizingFilterVisitor();
+
+        public Filter visitAndFilter(ObjectNormalizerFacade p, AndFilter filter) {
+            return new AndFilter(p.normalizeFilter(filter.getLeft()), p.normalizeFilter(filter
                     .getRight()));
-        } else if (filter instanceof OrFilter) {
-            OrFilter orFilter = (OrFilter) filter;
-            return new OrFilter(normalizeFilter(orFilter.getLeft()), normalizeFilter(orFilter
-                    .getRight()));
-        } else {
+        }
+
+        public Filter visitContainsFilter(ObjectNormalizerFacade p, ContainsFilter filter) {
+            return new ContainsFilter(p.normalizeAttribute(filter.getAttribute()));
+        }
+
+        public Filter visitContainsAllValuesFilter(ObjectNormalizerFacade p,
+                ContainsAllValuesFilter filter) {
+            return new ContainsAllValuesFilter(p.normalizeAttribute(filter.getAttribute()));
+        }
+
+        public Filter visitEqualsFilter(ObjectNormalizerFacade p, EqualsFilter filter) {
+            return new EqualsFilter(p.normalizeAttribute(filter.getAttribute()));
+        }
+
+        public Filter visitExtendedFilter(ObjectNormalizerFacade p, Filter filter) {
             return filter;
+        }
+
+        public Filter visitGreaterThanFilter(ObjectNormalizerFacade p, GreaterThanFilter filter) {
+            return new GreaterThanFilter(p.normalizeAttribute(filter.getAttribute()));
+        }
+
+        public Filter visitGreaterThanOrEqualFilter(ObjectNormalizerFacade p,
+                GreaterThanOrEqualFilter filter) {
+            return new GreaterThanOrEqualFilter(p.normalizeAttribute(filter.getAttribute()));
+        }
+
+        public Filter visitLessThanFilter(ObjectNormalizerFacade p, LessThanFilter filter) {
+            return new LessThanFilter(p.normalizeAttribute(filter.getAttribute()));
+        }
+
+        public Filter visitLessThanOrEqualFilter(ObjectNormalizerFacade p,
+                LessThanOrEqualFilter filter) {
+            return new LessThanOrEqualFilter(p.normalizeAttribute(filter.getAttribute()));
+        }
+
+        public Filter visitNotFilter(ObjectNormalizerFacade p, NotFilter filter) {
+            return new NotFilter(p.normalizeFilter(filter.getFilter()));
+        }
+
+        public Filter visitOrFilter(ObjectNormalizerFacade p, OrFilter filter) {
+            return new OrFilter(p.normalizeFilter(filter.getLeft()), p.normalizeFilter(filter
+                    .getRight()));
+        }
+
+        public Filter visitStartsWithFilter(ObjectNormalizerFacade p, StartsWithFilter filter) {
+            return new StartsWithFilter(p.normalizeAttribute(filter.getAttribute()));
+        }
+
+        public Filter visitEndsWithFilter(ObjectNormalizerFacade p, EndsWithFilter filter) {
+            return new EndsWithFilter(p.normalizeAttribute(filter.getAttribute()));
         }
     }
 

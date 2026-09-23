@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * "Portions Copyrighted 2026 3A Systems, LLC"
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -160,6 +161,17 @@ public class ObjectNormalizerFacadeTests {
                 FilterBuilder.not(FilterBuilder.contains(createNormalizedTestAttribute()));
         Filter filter = FilterBuilder.not(FilterBuilder.contains(createTestAttribute()));
         assertNormalizedFilter(expected, filter);
+    }
+
+    @Test
+    public void testPresenceFilterPassedThroughUnchanged() {
+        Filter filter = FilterBuilder.present("foo");
+        assertNormalizedFilter(filter, filter);
+    }
+
+    @Test
+    public void testNullFilterReturnsNull() {
+        assertEquals(createTestNormalizer().normalizeFilter(null), null);
     }
 
     @Test
