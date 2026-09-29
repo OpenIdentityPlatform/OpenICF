@@ -36,8 +36,10 @@ public class ConnectionManagerConfig {
     /**
      * System property that turns off TLS hostname verification for every
      * client unless a {@link ConnectionManagerConfig} says otherwise. Shared
-     * with the legacy connector server client. Only the literal {@code false}
-     * disables verification, so a typo in the value can not weaken it.
+     * with the legacy connector server client and, like there, read on every
+     * connection, so changing it takes effect without rebuilding the
+     * framework. Only {@code false}, in any letter case, disables
+     * verification, so a typo in the value can not weaken it.
      */
     public static final String HOSTNAME_VERIFICATION_PROPERTY =
             "org.identityconnectors.framework.remote.hostnameVerification";
@@ -82,8 +84,8 @@ public class ConnectionManagerConfig {
 
     protected int maxConnectionLifeTimeInMs;
 
-    protected boolean hostnameVerification =
-            !"false".equalsIgnoreCase(System.getProperty(HOSTNAME_VERIFICATION_PROPERTY));
+    /** Set by {@link #setHostnameVerification}; {@code null} follows the system property. */
+    protected Boolean hostnameVerification;
 
     public int getScheduledThreadPoolSize() {
         return 5;
@@ -193,10 +195,14 @@ public class ConnectionManagerConfig {
      * the remote URI during the TLS handshake (RFC 2818 / RFC 6125 "HTTPS"
      * endpoint identification). On by default; switching it off leaves the
      * connection open to man-in-the-middle attacks by anyone holding a
-     * certificate the client trusts.
+     * certificate the client trusts. Unless set explicitly, follows
+     * {@link #HOSTNAME_VERIFICATION_PROPERTY} at the time of the call.
      */
     public boolean isHostnameVerification() {
-        return hostnameVerification;
+        final Boolean explicit = hostnameVerification;
+        return explicit != null
+                ? explicit
+                : !"false".equalsIgnoreCase(System.getProperty(HOSTNAME_VERIFICATION_PROPERTY));
     }
 
     public void setHostnameVerification(boolean hostnameVerification) {

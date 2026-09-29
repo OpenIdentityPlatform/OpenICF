@@ -313,8 +313,7 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
         final SSLEngineConfigurator configurator =
                 new SSLEngineConfigurator(context, true, false, false);
         final SwitchingSSLFilter filter =
-                new SwitchingSSLFilter(configurator, defaultSecState, clientConfig
-                        .isHostnameVerification());
+                new SwitchingSSLFilter(configurator, defaultSecState, clientConfig);
         fcb.add(filter);
 
         final AsyncHttpClientEventFilter eventFilter =
@@ -891,18 +890,18 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
     static final class SwitchingSSLFilter extends SSLFilter {
 
         private final boolean secureByDefault;
-        private final boolean hostnameVerification;
+        private final ConnectionManagerConfig managerConfig;
         final Attribute<Boolean> CONNECTION_IS_SECURE = Grizzly.DEFAULT_ATTRIBUTE_BUILDER
                 .createAttribute(SwitchingSSLFilter.class.getName());
 
         // -------------------------------------------------------- Constructors
 
         SwitchingSSLFilter(final SSLEngineConfigurator clientConfig, final boolean secureByDefault,
-                final boolean hostnameVerification) {
+                final ConnectionManagerConfig managerConfig) {
 
             super(null, clientConfig);
             this.secureByDefault = secureByDefault;
-            this.hostnameVerification = hostnameVerification;
+            this.managerConfig = managerConfig;
 
         }
 
@@ -923,12 +922,31 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
             final SSLEngine sslEngine =
                     host != null ? sslEngineConfigurator.createSSLEngine(host, -1) : super
                             .createClientSSLEngine(sslCtx, sslEngineConfigurator);
-            if (hostnameVerification) {
+            if (managerConfig.isHostnameVerification()) {
                 final SSLParameters parameters = sslEngine.getSSLParameters();
                 parameters.setEndpointIdentificationAlgorithm("HTTPS");
                 sslEngine.setSSLParameters(parameters);
             }
             return sslEngine;
+        }
+
+        /**
+         * Grizzly's transport wrapper gives a connection without an
+         * {@code SSLEngine} a server-mode one on its first read. Through a
+         * proxy that first read is the plain answer to CONNECT, and the client
+         * handshake then waits for a ClientHello nobody sends; so reads bypass
+         * the wrapper until the connection is switched to TLS.
+         */
+        @Override
+        protected SSLTransportFilterWrapper createOptimizedTransportFilter(
+                final TransportFilter childFilter) {
+            return new SSLTransportFilterWrapper(childFilter, this) {
+                @Override
+                public NextAction handleRead(final FilterChainContext ctx) throws IOException {
+                    return isSecure(ctx.getConnection()) ? super.handleRead(ctx) : wrappedFilter
+                            .handleRead(ctx);
+                }
+            };
         }
 
         @Override
