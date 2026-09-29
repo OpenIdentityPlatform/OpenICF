@@ -145,30 +145,37 @@ public class RemoteFrameworkConnectionInfoConverter extends AbstractConfiguratio
      */
     protected List<TrustManager> getTrustManager() {
         return Arrays.asList((TrustManager) new X509ExtendedTrustManager() {
+            @Override
             public java.security.cert.X509Certificate[] getAcceptedIssuers() {
                 return null;
             }
 
+            @Override
             public void checkClientTrusted(java.security.cert.X509Certificate[] certs,
                     String authType) {
             }
 
+            @Override
             public void checkServerTrusted(java.security.cert.X509Certificate[] certs,
                     String authType) {
             }
 
+            @Override
             public void checkClientTrusted(java.security.cert.X509Certificate[] certs,
                     String authType, Socket socket) {
             }
 
+            @Override
             public void checkServerTrusted(java.security.cert.X509Certificate[] certs,
                     String authType, Socket socket) {
             }
 
+            @Override
             public void checkClientTrusted(java.security.cert.X509Certificate[] certs,
                     String authType, SSLEngine engine) {
             }
 
+            @Override
             public void checkServerTrusted(java.security.cert.X509Certificate[] certs,
                     String authType, SSLEngine engine) {
             }
