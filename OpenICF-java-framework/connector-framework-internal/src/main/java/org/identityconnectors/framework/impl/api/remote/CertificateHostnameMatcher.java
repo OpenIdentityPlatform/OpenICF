@@ -15,6 +15,7 @@
  */
 package org.identityconnectors.framework.impl.api.remote;
 
+import java.net.IDN;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.cert.CertificateParsingException;
@@ -32,19 +33,23 @@ import javax.security.auth.x500.X500Principal;
 
 /**
  * Matches a host name or IP address against the names in an X.509 server
- * certificate the way RFC 6125 / RFC 2818 (and JSSE's "HTTPS" endpoint
- * identification) do: IP addresses against subjectAltName iPAddress entries,
+ * certificate, approximating RFC 2818 and JSSE's "HTTPS" endpoint
+ * identification: IP addresses against subjectAltName iPAddress entries,
  * host names against subjectAltName dNSName entries, falling back to the
- * subject CN only when the certificate carries no dNSName at all.
+ * subject CN only when the certificate carries no dNSName at all. Wildcards
+ * follow JSSE's rules for certificates from a private CA; the public suffix
+ * check JSSE adds for public CAs is not replicated.
  * <p>
  * This is a diagnostic aid for deployments that switched hostname
- * verification off; the enforcing check is done by JSSE during the handshake.
+ * verification off, so a mismatch reported here is advisory; the enforcing
+ * check is done by JSSE during the handshake.
  */
 final class CertificateHostnameMatcher {
 
     private static final int SAN_DNS_NAME = 2;
     private static final int SAN_IP_ADDRESS = 7;
-    private static final Pattern IPV4_LITERAL = Pattern.compile("(\\d{1,3}\\.){3}\\d{1,3}");
+    private static final Pattern IPV4_LITERAL =
+            Pattern.compile("((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.){3}(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)");
 
     private CertificateHostnameMatcher() {
     }
@@ -117,22 +122,52 @@ final class CertificateHostnameMatcher {
     }
 
     /**
-     * Case-insensitive comparison; a {@code *} in the leftmost label of the
-     * certificate name stands for exactly one label of the host.
+     * Case-insensitive comparison of IDN-normalized names; a {@code *} in the
+     * leftmost label of the certificate name (e.g. {@code *.example.com} or
+     * {@code w*.example.com}) matches within exactly one label of the host.
      */
     private static boolean matchesDnsName(String host, String name) {
-        String lowerHost = host.toLowerCase(Locale.ENGLISH);
-        String lowerName = name.toLowerCase(Locale.ENGLISH);
-        if (!lowerName.startsWith("*.")) {
+        String lowerHost = normalize(host);
+        String lowerName = normalize(name);
+        int lastWildcard = lowerName.lastIndexOf('*');
+        if (lastWildcard < 0) {
             return lowerHost.equals(lowerName);
         }
-        String suffix = lowerName.substring(1);
-        if (suffix.indexOf('.', 1) < 0) {
-            // "*.com": a wildcard must not cover a whole top-level domain
+        // "*", "*." and "*com" are not wildcard names; a '*' outside the
+        // leftmost label is compared literally, as JSSE does
+        if (lowerName.equals("*.") || lowerName.indexOf('.', lastWildcard) < 0) {
             return false;
         }
-        int firstDot = lowerHost.indexOf('.');
-        return firstDot > 0 && lowerHost.substring(firstDot).equals(suffix);
+        String[] hostLabels = lowerHost.split("\\.", -1);
+        String[] nameLabels = lowerName.split("\\.", -1);
+        if (hostLabels.length != nameLabels.length) {
+            return false;
+        }
+        for (int i = 1; i < nameLabels.length; i++) {
+            if (!hostLabels[i].equals(nameLabels[i])) {
+                return false;
+            }
+        }
+        return hostLabels[0].matches(wildcardLabel(nameLabels[0]));
+    }
+
+    private static String wildcardLabel(String label) {
+        StringBuilder regex = new StringBuilder();
+        int start = 0;
+        for (int star = label.indexOf('*'); star >= 0; star = label.indexOf('*', start)) {
+            regex.append(Pattern.quote(label.substring(start, star))).append("[^.]*");
+            start = star + 1;
+        }
+        return regex.append(Pattern.quote(label.substring(start))).toString();
+    }
+
+    private static String normalize(String name) {
+        try {
+            name = IDN.toUnicode(IDN.toASCII(name));
+        } catch (IllegalArgumentException e) {
+            // not a valid IDN: compare as is
+        }
+        return name.toLowerCase(Locale.ENGLISH);
     }
 
     private static List<String> subjectAltNames(X509Certificate certificate, int type) {

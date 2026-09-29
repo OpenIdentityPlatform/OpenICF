@@ -15,10 +15,12 @@
  */
 package org.identityconnectors.framework.impl.api.remote;
 
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -114,15 +116,60 @@ public class RemoteFrameworkConnectionSSLTests {
     public void keepsVerificationUnlessPropertyIsExactlyFalse() throws Exception {
         KeyStore store = loadKeyStore("KeyStore.jks");
         try (TlsServer server = new TlsServer(store, InetAddress.getByName("127.0.0.1"))) {
-            withHostnameVerificationProperty("off", () -> {
-                try {
-                    connect("127.0.0.1", server.getPort(), trustManagers(store)).close();
-                    fail("A value other than 'false' must not disable hostname verification");
+            for (String value : new String[] { "off", "FALSE" }) {
+                withHostnameVerificationProperty(value, () -> {
+                    try {
+                        connect("127.0.0.1", server.getPort(), trustManagers(store)).close();
+                        fail("'" + value + "' must not disable hostname verification");
+                    } catch (ConnectorException e) {
+                        assertHandshakeFailure(e);
+                    }
+                });
+            }
+        }
+    }
+
+    @Test
+    public void reportsMismatchOnlyForNonMatchingCertificateWhenVerificationIsDisabled()
+            throws Exception {
+        KeyStore cnOnly = loadKeyStore("KeyStore.jks");
+        try (TlsServer server = new TlsServer(cnOnly, InetAddress.getByName("127.0.0.1"))) {
+            withHostnameVerificationProperty("false", () ->
+                    connect("127.0.0.1", server.getPort(), trustManagers(cnOnly)).close());
+            assertTrue(RemoteFrameworkConnection.REPORTED_MISMATCHES
+                    .contains("127.0.0.1:" + server.getPort()));
+        }
+        KeyStore san = loadKeyStore("KeyStore-san.jks");
+        try (TlsServer server = new TlsServer(san, InetAddress.getByName("127.0.0.1"))) {
+            withHostnameVerificationProperty("false", () ->
+                    connect("127.0.0.1", server.getPort(), trustManagers(san)).close());
+            assertFalse(RemoteFrameworkConnection.REPORTED_MISMATCHES
+                    .contains("127.0.0.1:" + server.getPort()));
+        }
+    }
+
+    /**
+     * Without trust managers the connection trusts the JVM default trust
+     * store ({@code javax.net.ssl.trustStore}), the typical deployment; a
+     * PKIX failure instead of the hostname failure would mean the store was
+     * not used.
+     */
+    @Test
+    public void verifiesHostnameWithDefaultTrustStore() throws Exception {
+        KeyStore store = loadKeyStore("KeyStore.jks");
+        String trustStore = new File(RemoteFrameworkConnectionSSLTests.class
+                .getResource("/KeyStore.jks").toURI()).getPath();
+        withSystemProperties(new String[][] {
+            { "javax.net.ssl.trustStore", trustStore },
+            { "javax.net.ssl.trustStorePassword", new String(PASSWORD) },
+            { "javax.net.ssl.trustStoreType", "JKS" } }, () -> {
+                try (TlsServer server = new TlsServer(store, InetAddress.getByName("127.0.0.1"))) {
+                    connect("127.0.0.1", server.getPort(), null).close();
+                    fail("Expected the handshake to fail: certificate has no name matching 127.0.0.1");
                 } catch (ConnectorException e) {
                     assertHandshakeFailure(e);
                 }
             });
-        }
     }
 
     // ---- helpers ---------------------------------------------------------
@@ -133,16 +180,25 @@ public class RemoteFrameworkConnectionSSLTests {
 
     private static void withHostnameVerificationProperty(String value, Action action)
             throws Exception {
-        String property = RemoteFrameworkConnection.HOSTNAME_VERIFICATION_PROPERTY;
-        String previous = System.getProperty(property);
-        System.setProperty(property, value);
+        withSystemProperties(new String[][] {
+            { RemoteFrameworkConnection.HOSTNAME_VERIFICATION_PROPERTY, value } }, action);
+    }
+
+    private static void withSystemProperties(String[][] properties, Action action)
+            throws Exception {
+        String[] previous = new String[properties.length];
+        for (int i = 0; i < properties.length; i++) {
+            previous[i] = System.setProperty(properties[i][0], properties[i][1]);
+        }
         try {
             action.run();
         } finally {
-            if (previous == null) {
-                System.clearProperty(property);
-            } else {
-                System.setProperty(property, previous);
+            for (int i = 0; i < properties.length; i++) {
+                if (previous[i] == null) {
+                    System.clearProperty(properties[i][0]);
+                } else {
+                    System.setProperty(properties[i][0], previous[i]);
+                }
             }
         }
     }

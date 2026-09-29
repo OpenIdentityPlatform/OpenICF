@@ -66,7 +66,7 @@ public class RemoteFrameworkConnection implements Closeable {
             "org.identityconnectors.framework.remote.hostnameVerification";
 
     /** Servers already reported as mismatching while verification is off. */
-    private static final Set<String> REPORTED_MISMATCHES = ConcurrentHashMap.newKeySet();
+    static final Set<String> REPORTED_MISMATCHES = ConcurrentHashMap.newKeySet();
 
     private Socket socket;
     private BinaryObjectSerializer encoder;
@@ -152,7 +152,7 @@ public class RemoteFrameworkConnection implements Closeable {
      * the property value can not silently weaken the connection.
      */
     static boolean isHostnameVerificationEnabled() {
-        return !"false".equalsIgnoreCase(System.getProperty(HOSTNAME_VERIFICATION_PROPERTY));
+        return !"false".equals(System.getProperty(HOSTNAME_VERIFICATION_PROPERTY));
     }
 
     /**
@@ -175,7 +175,7 @@ public class RemoteFrameworkConnection implements Closeable {
                     (X509Certificate) chain[0])) {
                 return;
             } else {
-                problem = "presented a certificate that does not match the host: "
+                problem = "presented a certificate that may not match the host: "
                         + CertificateHostnameMatcher.describe((X509Certificate) chain[0]);
             }
         } catch (SSLPeerUnverifiedException e) {

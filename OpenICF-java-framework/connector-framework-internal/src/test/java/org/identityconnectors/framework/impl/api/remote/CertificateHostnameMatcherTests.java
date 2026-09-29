@@ -33,8 +33,16 @@ import org.testng.annotations.Test;
  * <li>{@code KeyStore-san.jks}: {@code CN=localhost},
  * {@code SAN=dns:localhost,ip:127.0.0.1,ip:::1};</li>
  * <li>{@code wildcard-san.pem}: {@code CN=cn.example.org},
- * {@code SAN=dns:*.example.com,dns:example.net}.</li>
+ * {@code SAN=dns:*.example.com,dns:example.net};</li>
+ * <li>{@code multi-cn.pem}: {@code CN=right.example,OU=x,CN=wrong.example},
+ * no subjectAltName;</li>
+ * <li>{@code private-wildcard-san.pem}: {@code O=OpenICF test},
+ * {@code SAN=dns:*.com,dns:w*.example.org,dns:300.1.1.1};</li>
+ * <li>{@code no-names.pem}: {@code O=OpenICF test}, no CN, no subjectAltName.</li>
  * </ul>
+ * The PEM files are self-signed, generated with e.g.
+ * {@code openssl req -x509 -newkey rsa:2048 -nodes -keyout /dev/null -days 3650
+ * -subj "/O=OpenICF test" -addext "subjectAltName=DNS:*.com,DNS:w*.example.org"}.
  */
 public class CertificateHostnameMatcherTests {
 
@@ -84,6 +92,39 @@ public class CertificateHostnameMatcherTests {
         assertFalse(CertificateHostnameMatcher.matches("example.com", cert));
         assertFalse(CertificateHostnameMatcher.matches("a.b.example.com", cert));
         assertFalse(CertificateHostnameMatcher.matches("wwwexample.com", cert));
+    }
+
+    @Test
+    public void acceptsWildcardFormsJsseAcceptsFromPrivateCa() throws Exception {
+        X509Certificate cert = pemCertificate("private-wildcard-san.pem");
+        assertTrue(CertificateHostnameMatcher.matches("example.com", cert));
+        assertFalse(CertificateHostnameMatcher.matches("com", cert));
+        assertFalse(CertificateHostnameMatcher.matches("www.example.com", cert));
+        assertTrue(CertificateHostnameMatcher.matches("www.example.org", cert));
+        assertTrue(CertificateHostnameMatcher.matches("w.example.org", cert));
+        assertFalse(CertificateHostnameMatcher.matches("x.example.org", cert));
+    }
+
+    @Test
+    public void usesMostSpecificCommonName() throws Exception {
+        X509Certificate cert = pemCertificate("multi-cn.pem");
+        assertTrue(CertificateHostnameMatcher.matches("right.example", cert));
+        assertFalse(CertificateHostnameMatcher.matches("wrong.example", cert));
+    }
+
+    @Test
+    public void matchesNothingWithoutCommonNameOrSubjectAltName() throws Exception {
+        X509Certificate cert = pemCertificate("no-names.pem");
+        assertFalse(CertificateHostnameMatcher.matches("localhost", cert));
+        assertFalse(CertificateHostnameMatcher.matches("127.0.0.1", cert));
+    }
+
+    @Test
+    public void treatsOutOfRangeOctetsAsHostName() throws Exception {
+        // 300.1.1.1 is not an IPv4 literal: it is matched against dNSName
+        // entries instead of being resolved and compared as an address
+        X509Certificate cert = pemCertificate("private-wildcard-san.pem");
+        assertTrue(CertificateHostnameMatcher.matches("300.1.1.1", cert));
     }
 
     @Test

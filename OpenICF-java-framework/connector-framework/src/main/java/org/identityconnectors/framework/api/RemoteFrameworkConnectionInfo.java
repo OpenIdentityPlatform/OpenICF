@@ -71,9 +71,10 @@ public final class RemoteFrameworkConnectionInfo {
      *            The remote framework key
      * @param useSSL
      *            Set to true if we are to connect via SSL. The server
-     *            certificate is then verified against {@code host}: it must
-     *            list it as a subjectAltName dNSName or iPAddress entry (or as
-     *            CN when it has no subjectAltName). Setting the system property
+     *            certificate is then verified against {@code host}: an IP
+     *            address must be a subjectAltName iPAddress entry, a host name
+     *            a subjectAltName dNSName entry (or the subject CN when the
+     *            certificate has no dNSName entry). Setting the system property
      *            {@code org.identityconnectors.framework.remote.hostnameVerification}
      *            to {@code false} disables this check (not recommended).
      * @param trustManagers
@@ -109,9 +110,10 @@ public final class RemoteFrameworkConnectionInfo {
      *            The remote framework key
      * @param useSSL
      *            Set to true if we are to connect via SSL. The server
-     *            certificate is then verified against {@code host}: it must
-     *            list it as a subjectAltName dNSName or iPAddress entry (or as
-     *            CN when it has no subjectAltName). Setting the system property
+     *            certificate is then verified against {@code host}: an IP
+     *            address must be a subjectAltName iPAddress entry, a host name
+     *            a subjectAltName dNSName entry (or the subject CN when the
+     *            certificate has no dNSName entry). Setting the system property
      *            {@code org.identityconnectors.framework.remote.hostnameVerification}
      *            to {@code false} disables this check (not recommended).
      * @param trustManagers
