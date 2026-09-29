@@ -21,7 +21,7 @@
  with the fields enclosed by brackets [] replaced by
  your own identifying information:
  "Portions Copyrighted [year] [name of copyright owner]"
-  Portions Copyrighted 2024 3A Systems, LLC
+  Portions Copyrighted 2024-2026 3A Systems, LLC
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -59,6 +59,13 @@
 
         <testConfigurations>default</testConfigurations>
         <privateConfigPath>${user.home}/.connectors/${project.artifactId}-${project.version}/config</privateConfigPath>
+
+        <!--
+            Local copy of the Groovy API package-list, so javadoc links to Groovy without fetching it
+            over the network. Resolved from each connector module, all of which sit next to
+            OpenICF-java-framework. Refresh the file when the Groovy version changes.
+        -->
+        <groovyJavadocPackageList>${project.basedir}/../OpenICF-java-framework/bundles-parent/src/javadoc/groovy-2.4.21</groovyJavadocPackageList>
 
         <!-- OSGi Properties -->
         <openicf.osgi.exclude.dependencies>false</openicf.osgi.exclude.dependencies>
@@ -180,10 +187,12 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <configuration>
-                        <links>
-                            <link>https://docs.groovy-lang.org/latest/html/api/</link>
-<!--                            <link>http://openicf.forgerock.org/apidocs/</link>-->
-                        </links>
+                        <offlineLinks>
+                            <offlineLink>
+                                <url>https://docs.groovy-lang.org/2.4.21/html/api/</url>
+                                <location>${groovyJavadocPackageList}</location>
+                            </offlineLink>
+                        </offlineLinks>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -327,9 +336,12 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
-                    <links>
-                        <link>https://docs.groovy-lang.org/latest/html/api/</link>
-                    </links>
+                    <offlineLinks>
+                        <offlineLink>
+                            <url>https://docs.groovy-lang.org/2.4.21/html/api/</url>
+                            <location>${groovyJavadocPackageList}</location>
+                        </offlineLink>
+                    </offlineLinks>
                 </configuration>
             </plugin>
         </plugins>
