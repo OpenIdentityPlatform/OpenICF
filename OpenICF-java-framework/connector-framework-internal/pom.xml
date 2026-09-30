@@ -141,6 +141,16 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <!-- logs like the default StdOutLogger and records the messages for the tests -->
+                        <org.identityconnectors.common.logging.class>org.identityconnectors.common.logging.CapturingLogSpi</org.identityconnectors.common.logging.class>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+            <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <!-- Copy bundle JARs -->

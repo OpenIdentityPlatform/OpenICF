@@ -15,8 +15,9 @@
  */
 package org.identityconnectors.framework.impl.api.remote;
 
-import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
@@ -24,9 +25,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.KeyStore;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -40,9 +44,12 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
 import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.common.logging.CapturingLogSpi;
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.RemoteFrameworkConnectionInfo;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.testng.SkipException;
 import org.testng.annotations.Test;
 
 /**
@@ -130,22 +137,71 @@ public class RemoteFrameworkConnectionSSLTests {
     }
 
     @Test
-    public void reportsMismatchOnlyForNonMatchingCertificateWhenVerificationIsDisabled()
+    public void reportsMismatchOnceAndOnlyForNonMatchingCertificateWhenVerificationIsDisabled()
             throws Exception {
+        assertCapturingLog();
         KeyStore cnOnly = loadKeyStore("KeyStore.jks");
-        try (TlsServer server = new TlsServer(cnOnly, InetAddress.getByName("127.0.0.1"))) {
-            withHostnameVerificationProperty("false", () ->
-                    connect("127.0.0.1", server.getPort(), trustManagers(cnOnly)).close());
-            assertTrue(RemoteFrameworkConnection.REPORTED_MISMATCHES
-                    .contains("127.0.0.1:" + server.getPort()));
+        KeyStore san = loadKeyStore("KeyStore-san.jks");
+        InetAddress loopback = InetAddress.getByName("127.0.0.1");
+        RemoteFrameworkConnection.REPORTED_MISMATCHES.clear();
+        CapturingLogSpi.clear();
+        // both servers are bound at once, so their ports differ
+        try (TlsServer cnOnlyServer = new TlsServer(cnOnly, loopback);
+                TlsServer sanServer = new TlsServer(san, loopback)) {
+            withHostnameVerificationProperty("false", () -> {
+                for (int i = 0; i < 2; i++) {
+                    connect("127.0.0.1", cnOnlyServer.getPort(), trustManagers(cnOnly)).close();
+                    connect("127.0.0.1", sanServer.getPort(), trustManagers(san)).close();
+                }
+            });
+            List<String> warnings = mismatchWarnings("127.0.0.1:" + cnOnlyServer.getPort());
+            assertEquals(warnings.size(), 1, "one warning per server: " + warnings);
+            assertTrue(warnings.get(0).contains("may not match the host"), warnings.get(0));
+            assertEquals(mismatchWarnings("127.0.0.1:" + sanServer.getPort()).size(), 0);
+        }
+    }
+
+    /**
+     * JSSE drops the trailing dot of a fully qualified host name before
+     * checking it, so {@code localhost.} matches {@code dns:localhost}, and
+     * with verification off no warning is logged for it.
+     */
+    @Test
+    public void acceptsFullyQualifiedHostWithTrailingDot() throws Exception {
+        assertCapturingLog();
+        String host = "localhost.";
+        InetAddress address;
+        try {
+            address = InetAddress.getByName(host);
+        } catch (UnknownHostException e) {
+            throw new SkipException(host + " does not resolve here");
         }
         KeyStore san = loadKeyStore("KeyStore-san.jks");
-        try (TlsServer server = new TlsServer(san, InetAddress.getByName("127.0.0.1"))) {
+        CapturingLogSpi.clear();
+        try (TlsServer server = new TlsServer(san, address)) {
+            connect(host, server.getPort(), trustManagers(san)).close();
             withHostnameVerificationProperty("false", () ->
-                    connect("127.0.0.1", server.getPort(), trustManagers(san)).close());
-            assertFalse(RemoteFrameworkConnection.REPORTED_MISMATCHES
-                    .contains("127.0.0.1:" + server.getPort()));
+                    connect(host, server.getPort(), trustManagers(san)).close());
+            assertEquals(mismatchWarnings(host + ":" + server.getPort()).size(), 0);
         }
+    }
+
+    @Test
+    public void describesWhyVerificationWouldFail() throws Exception {
+        Certificate[] cnOnly = { certificate("KeyStore.jks") };
+        Certificate[] san = { certificate("KeyStore-san.jks") };
+        assertNull(RemoteFrameworkConnection.describeMismatch("localhost", san));
+        assertNull(RemoteFrameworkConnection.describeMismatch("127.0.0.1", san));
+        String cnOnlyByIp = RemoteFrameworkConnection.describeMismatch("127.0.0.1", cnOnly);
+        assertTrue(cnOnlyByIp.contains("may not match the host: subject 'CN=localhost"), cnOnlyByIp);
+        assertTrue(cnOnlyByIp.contains("no subjectAltName"), cnOnlyByIp);
+        assertTrue(cnOnlyByIp.contains("fix the server certificate"), cnOnlyByIp);
+        assertTrue(RemoteFrameworkConnection.describeMismatch("localhost", null)
+                .contains("presented no verifiable certificate"));
+        // JSSE rejects the name itself, so no certificate can fix it
+        String invalidHost = RemoteFrameworkConnection.describeMismatch("my_host.example", san);
+        assertTrue(invalidHost.contains("not a valid DNS host name"), invalidHost);
+        assertTrue(invalidHost.contains("by its IP address"), invalidHost);
     }
 
     /**
@@ -203,6 +259,23 @@ public class RemoteFrameworkConnectionSSLTests {
         }
     }
 
+    private static void assertCapturingLog() {
+        assertTrue(CapturingLogSpi.isActive(), "the surefire configuration must select "
+                + CapturingLogSpi.class.getName() + " through " + Log.LOGSPI_PROP);
+    }
+
+    /** WARN messages about the given server logged since the last clear. */
+    private static List<String> mismatchWarnings(String server) {
+        List<String> warnings = new ArrayList<String>();
+        for (String message : CapturingLogSpi.messages(RemoteFrameworkConnection.class,
+                Log.Level.WARN)) {
+            if (message.contains("connector server " + server + " ")) {
+                warnings.add(message);
+            }
+        }
+        return warnings;
+    }
+
     private static void assertHandshakeFailure(ConnectorException e) {
         Throwable cause = e;
         while (cause != null && !(cause instanceof SSLHandshakeException)) {
@@ -227,6 +300,11 @@ public class RemoteFrameworkConnectionSSLTests {
             store.load(in, PASSWORD);
             return store;
         }
+    }
+
+    private static Certificate certificate(String keyStore) throws Exception {
+        KeyStore store = loadKeyStore(keyStore);
+        return store.getCertificate(store.aliases().nextElement());
     }
 
     private static List<TrustManager> trustManagers(KeyStore store) throws Exception {

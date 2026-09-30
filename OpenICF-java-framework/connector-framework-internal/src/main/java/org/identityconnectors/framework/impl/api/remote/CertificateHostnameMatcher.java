@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
+import javax.net.ssl.SNIHostName;
 import javax.security.auth.x500.X500Principal;
 
 /**
@@ -36,7 +37,9 @@ import javax.security.auth.x500.X500Principal;
  * certificate, approximating RFC 2818 and JSSE's "HTTPS" endpoint
  * identification: IP addresses against subjectAltName iPAddress entries,
  * host names against subjectAltName dNSName entries, falling back to the
- * subject CN only when the certificate carries no dNSName at all. Wildcards
+ * subject CN only when the certificate carries no dNSName at all. As in JSSE,
+ * one trailing dot of the host is ignored and a host name that is not a valid
+ * DNS name matches nothing. Wildcards
  * follow JSSE's rules for certificates from a private CA; the public suffix
  * check JSSE adds for public CAs is not replicated.
  * <p>
@@ -59,12 +62,16 @@ final class CertificateHostnameMatcher {
      * names the certificate was issued for.
      */
     static boolean matches(String host, X509Certificate certificate) {
+        host = stripTrailingDot(host);
         if (isIpLiteral(host)) {
             for (String address : subjectAltNames(certificate, SAN_IP_ADDRESS)) {
                 if (sameAddress(host, address)) {
                     return true;
                 }
             }
+            return false;
+        }
+        if (!isVerifiableHost(host)) {
             return false;
         }
         List<String> dnsNames = subjectAltNames(certificate, SAN_DNS_NAME);
@@ -78,6 +85,27 @@ final class CertificateHostnameMatcher {
             }
         }
         return false;
+    }
+
+    /**
+     * Returns whether JSSE can verify a certificate for {@code host} at all:
+     * an IP literal, or a valid DNS name once one trailing dot is removed.
+     * JSSE rejects any other host name (an underscore, an empty label, a
+     * leading or trailing hyphen) before it looks at the certificate, so no
+     * certificate can pass hostname verification for it.
+     */
+    static boolean isVerifiableHost(String host) {
+        host = stripTrailingDot(host);
+        if (isIpLiteral(host)) {
+            return true;
+        }
+        try {
+            // the check sun.security.util.HostnameChecker.matchDNS runs first
+            new SNIHostName(host);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 
     /**
@@ -102,6 +130,11 @@ final class CertificateHostnameMatcher {
             description.append(", subjectAltName ").append(names);
         }
         return description.toString();
+    }
+
+    /** JSSE drops the dot of a fully qualified name before checking it. */
+    private static String stripTrailingDot(String host) {
+        return host.endsWith(".") ? host.substring(0, host.length() - 1) : host;
     }
 
     private static boolean isIpLiteral(String host) {

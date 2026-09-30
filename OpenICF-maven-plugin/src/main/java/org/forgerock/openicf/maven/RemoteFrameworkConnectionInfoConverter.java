@@ -137,11 +137,12 @@ public class RemoteFrameworkConnectionInfoConverter extends AbstractConfiguratio
      * Create a trust manager that trusts all certificates It is not using a
      * particular keyStore.
      * <p>
-     * It is an {@link X509ExtendedTrustManager} so that JSSE does not wrap it
-     * and add the "HTTPS" hostname check the framework enables for the
-     * connection: with every certificate trusted, that check adds no security
-     * and would only reject connector servers whose certificate does not name
-     * the configured host.
+     * It is an {@link X509ExtendedTrustManager} so that JSSE does not wrap it:
+     * neither the "HTTPS" hostname check the framework enables for the
+     * connection nor the {@code jdk.certpath.disabledAlgorithms} check on the
+     * server's certificate chain applies. With every certificate trusted,
+     * neither check adds security; the hostname check would only reject
+     * connector servers whose certificate does not name the configured host.
      */
     protected List<TrustManager> getTrustManager() {
         return Arrays.asList((TrustManager) new X509ExtendedTrustManager() {

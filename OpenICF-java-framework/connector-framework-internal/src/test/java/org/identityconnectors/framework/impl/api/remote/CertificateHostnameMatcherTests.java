@@ -38,7 +38,9 @@ import org.testng.annotations.Test;
  * no subjectAltName;</li>
  * <li>{@code private-wildcard-san.pem}: {@code O=OpenICF test},
  * {@code SAN=dns:*.com,dns:w*.example.org,dns:300.1.1.1};</li>
- * <li>{@code no-names.pem}: {@code O=OpenICF test}, no CN, no subjectAltName.</li>
+ * <li>{@code no-names.pem}: {@code O=OpenICF test}, no CN, no subjectAltName;</li>
+ * <li>{@code invalid-host-san.pem}: {@code O=OpenICF test},
+ * {@code SAN=dns:my_host.example,dns:-bad-.example.com}.</li>
  * </ul>
  * The PEM files are self-signed, generated with e.g.
  * {@code openssl req -x509 -newkey rsa:2048 -nodes -keyout /dev/null -days 3650
@@ -125,6 +127,34 @@ public class CertificateHostnameMatcherTests {
         // entries instead of being resolved and compared as an address
         X509Certificate cert = pemCertificate("private-wildcard-san.pem");
         assertTrue(CertificateHostnameMatcher.matches("300.1.1.1", cert));
+    }
+
+    @Test
+    public void verifiesOnlyIpLiteralsAndValidDnsNames() {
+        for (String host : new String[] { "localhost", "connector-server", "icf.local",
+            "WWW.Example.COM", "www.example.com.", "127.0.0.1", "::1", "[::1]", "300.1.1.1" }) {
+            assertTrue(CertificateHostnameMatcher.isVerifiableHost(host), host);
+        }
+        for (String host : new String[] { "my_host.example", "my_host.example.",
+            "a..example.com", "-bad-.example.com", "localhost.." }) {
+            assertFalse(CertificateHostnameMatcher.isVerifiableHost(host), host);
+        }
+    }
+
+    @Test
+    public void ignoresTrailingDotOfHost() throws Exception {
+        assertTrue(CertificateHostnameMatcher.matches("localhost.", keyStoreCertificate("KeyStore.jks")));
+        assertTrue(CertificateHostnameMatcher.matches("localhost.", keyStoreCertificate("KeyStore-san.jks")));
+        assertTrue(CertificateHostnameMatcher.matches("www.example.com.", pemCertificate("wildcard-san.pem")));
+    }
+
+    @Test
+    public void neverMatchesHostThatIsNotAValidDnsName() throws Exception {
+        // JSSE rejects these host names before it looks at the certificate,
+        // even when the certificate carries exactly that name
+        X509Certificate cert = pemCertificate("invalid-host-san.pem");
+        assertFalse(CertificateHostnameMatcher.matches("my_host.example", cert));
+        assertFalse(CertificateHostnameMatcher.matches("-bad-.example.com", cert));
     }
 
     @Test
