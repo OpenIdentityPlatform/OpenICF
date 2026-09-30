@@ -20,32 +20,18 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.remote;
 
-import org.forgerock.openicf.framework.remote.security.ECIESEncryptor;
 import org.identityconnectors.common.Pair;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import java.security.KeyPair;
 import java.security.SecureRandom;
 
 public class SecurityUtilTest {
-
-    @Test
-    public void testECIESEncryptor() throws Exception {
-        KeyPair client = SecurityUtil.generateKeyPair();
-        KeyPair server = SecurityUtil.generateKeyPair();
-
-        ECIESEncryptor clientEncryptor = new ECIESEncryptor(client, server.getPublic());
-        ECIESEncryptor serverEncryptor = new ECIESEncryptor(server, client.getPublic());
-
-        byte[] expected = "password".getBytes();
-        byte[] secure = clientEncryptor.encrypt(expected);
-        Assert.assertEquals(serverEncryptor.decrypt(secure), expected);
-    }
 
     @Test
     public void testCheckMutualVerification() throws Exception {

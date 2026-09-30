@@ -17,7 +17,6 @@
 package org.forgerock.openicf.framework.remote;
 
 import java.security.KeyPair;
-import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -56,11 +55,9 @@ import org.forgerock.openicf.framework.async.impl.UpdateAsyncApiOpImpl;
 import org.forgerock.openicf.framework.async.impl.ValidateAsyncApiOpImpl;
 import org.forgerock.openicf.framework.remote.rpc.OperationMessageListener;
 import org.forgerock.openicf.framework.remote.rpc.WebSocketConnectionHolder;
-import org.forgerock.openicf.framework.remote.security.ECIESEncryptor;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.l10n.CurrentLocale;
 import org.identityconnectors.common.logging.Log;
-import org.identityconnectors.common.security.Encryptor;
 import org.identityconnectors.framework.api.ConfigurationProperty;
 import org.identityconnectors.framework.api.ConfigurationPropertyChangeListener;
 import org.identityconnectors.framework.api.ConnectorFacade;
@@ -489,17 +486,6 @@ public class OpenICFServerAdapter implements OperationMessageListener {
             final CancelOpRequest message) {
         socket.getRemoteConnectionContext().getRemoteConnectionGroup().receiveRequestCancel(
                 messageId);
-    }
-
-    protected Encryptor initialiseEncryptor() {
-        HandshakeMessage message = null;
-        // Create Encryptor
-        if (!message.getPublicKey().isEmpty()) {
-            PublicKey publicKey =
-                    SecurityUtil.createPublicKey(message.getPublicKey().toByteArray());
-            Encryptor encryptor = new ECIESEncryptor(keyPair, publicKey);
-        }
-        return null;
     }
 
     protected String loggerName() {

@@ -284,7 +284,9 @@ public class ObjectPool<T> {
             final ReentrantLock lock = this.takeLock;
             lock.lockInterruptibly();
             try {
-                do {
+                // leaves only by returning an object or by throwing: on the
+                // timeout below, or when interrupted
+                while (true) {
                     if (totalPermit.tryAcquire()) {
                         // If the pool is empty and there are available permits
                         // then create a new instance.
@@ -313,7 +315,7 @@ public class ObjectPool<T> {
                             return pooledConn;
                         }
                     }
-                } while (nanos > 0);
+                }
             } finally {
                 lock.unlock();
             }

@@ -21,6 +21,7 @@
  * ====================
  *
  * Portions Copyrighted 2012 ForgeRock AS
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  */
 package org.identityconnectors.contract.test;
@@ -526,7 +527,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
     private boolean authenticateExpectingRuntimeException(ObjectClass objectClass, String name, GuardedString password) {
     	boolean authenticateFailed = false;
 
-    	for(int i=0;i<getLongTestParam(MAX_ITERATIONS, 1);i++) {
+    	for (long i = 0; i < getLongTestParam(MAX_ITERATIONS, 1); i++) {
             try {
                 getConnectorFacade().authenticate(ObjectClass.ACCOUNT, name,password,
                         getOperationOptionsByOp(objectClass, AuthenticationApiOp.class));
@@ -545,7 +546,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
     private boolean authenticateExpectingInvalidCredentials(ObjectClass objectClass, String name, GuardedString password) {
     	boolean authenticateFailed = false;
 
-    	for(int i=0;i<getLongTestParam(MAX_ITERATIONS, 1);i++) {
+    	for (long i = 0; i < getLongTestParam(MAX_ITERATIONS, 1); i++) {
             try {
                 getConnectorFacade().authenticate(ObjectClass.ACCOUNT, name, password,
                         getOperationOptionsByOp(objectClass, AuthenticationApiOp.class));
@@ -565,7 +566,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
     	Uid authenticatedUid = null;
     	RuntimeException lastException = null;
 
-    	for(int i=0;i<getLongTestParam(MAX_ITERATIONS, 1);i++) {
+    	for (long i = 0; i < getLongTestParam(MAX_ITERATIONS, 1); i++) {
             try {
                 authenticatedUid = getConnectorFacade().authenticate(ObjectClass.ACCOUNT, name,password,
                         getOperationOptionsByOp(objectClass, AuthenticationApiOp.class));
@@ -589,7 +590,7 @@ public class AuthenticationApiOpTests extends ObjectClassRunner {
     	PasswordExpiredException passwordExpiredException = null;
     	RuntimeException lastException = null;
 
-    	for(int i=0;i<getLongTestParam(MAX_ITERATIONS, 1);i++) {
+    	for (long i = 0; i < getLongTestParam(MAX_ITERATIONS, 1); i++) {
             try {
                 getConnectorFacade().authenticate(ObjectClass.ACCOUNT, name,password,
                         getOperationOptionsByOp(objectClass, AuthenticationApiOp.class));

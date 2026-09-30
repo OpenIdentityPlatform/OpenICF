@@ -21,6 +21,7 @@
  * ====================
  * Portions Copyrighted 2010-2015 ForgeRock AS.
  * Portions Copyrighted 2010-2014 Tirasa.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local;
 
@@ -454,8 +455,12 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
 
         public File copyStreamToFile(final InputStream stream, final String name)
                 throws IOException {
-            final File bundleDir = getBundleTempDir();
-            final File newFile = new File(bundleDir, name);
+            // canonical, like the file resolveEntry returns, so that the
+            // parent walk below ends at bundleDir even when java.io.tmpdir
+            // goes through a symbolic link
+            final File bundleDir = getBundleTempDir().getCanonicalFile();
+            // refuses entries such as lib/../../x that would leave bundleDir
+            final File newFile = IOUtil.resolveEntry(bundleDir, name);
             if (newFile.exists()) {
                 throw new IOException("File " + newFile + " already exists");
             }

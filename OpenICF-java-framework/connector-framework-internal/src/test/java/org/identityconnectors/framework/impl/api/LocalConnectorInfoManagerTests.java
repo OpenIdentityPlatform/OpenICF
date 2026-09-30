@@ -19,14 +19,22 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
 
 import org.identityconnectors.common.Version;
 import org.identityconnectors.common.logging.Log;
@@ -83,6 +91,51 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
             if (!e.getMessage().contains("unrecognized framework version")) {
                 Assert.fail();
             }
+        }
+    }
+
+    /**
+     * A bundle entry such as {@code lib/../../x.jar} must not be written
+     * outside of the bundle's temporary directory (zip slip).
+     */
+    @Test
+    public void testRejectsBundleEntryEscapingTempDirectory() throws Exception {
+        // bundles are expanded into java.io.tmpdir/bundle-<random>/, so the
+        // entry below points two levels up, straight into java.io.tmpdir
+        String escapedName = "escaped-" + UUID.randomUUID() + ".jar";
+        File escaped = new File(System.getProperty("java.io.tmpdir"), escapedName);
+
+        File bundle = File.createTempFile("evil-bundle", ".jar");
+        Manifest manifest = new Manifest();
+        manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+        manifest.getMainAttributes().putValue("ConnectorBundle-FrameworkVersion", "1.0");
+        manifest.getMainAttributes().putValue("ConnectorBundle-Name", "evil");
+        manifest.getMainAttributes().putValue("ConnectorBundle-Version", "1.0");
+        JarOutputStream out = new JarOutputStream(new FileOutputStream(bundle), manifest);
+        try {
+            // a regular entry first, so that lib/ exists when the escaping
+            // entry is expanded and lib/../.. resolves
+            out.putNextEntry(new JarEntry("lib/ok.jar"));
+            out.write(new byte[] { 0 });
+            out.closeEntry();
+            out.putNextEntry(new JarEntry("lib/../../" + escapedName));
+            out.write(new byte[] { 0 });
+            out.closeEntry();
+        } finally {
+            out.close();
+        }
+        try {
+            ConnectorInfoManagerFactory.getInstance().getLocalManager(bundle.toURI().toURL());
+            Assert.fail("Expected the bundle to be refused");
+        } catch (ConfigurationException expected) {
+            assertFalse(escaped.exists(), "bundle entry written outside of its temp directory: "
+                    + escaped);
+        } finally {
+            // nothing to evict: a bundle that fails to load is never cached,
+            // and clearing the local cache here would leave pooled connector
+            // instances of the other tests behind with a stale class loader
+            escaped.delete();
+            bundle.delete();
         }
     }
 

@@ -414,7 +414,9 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
                         String name = entry.getName();
                         if (entry.getName().startsWith("shared")) {
 
-                            File destination = new File(sharedRoot, name);
+                            File destination =
+                                    org.identityconnectors.common.IOUtil.resolveEntry(
+                                            sharedRoot, name);
                             if (entry.isDirectory()) {
                                 if (!destination.exists()) {
                                     destination.mkdirs();

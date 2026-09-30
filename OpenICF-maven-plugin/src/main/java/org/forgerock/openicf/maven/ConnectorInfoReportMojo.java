@@ -343,7 +343,9 @@ public class ConnectorInfoReportMojo extends AbstractMavenReport implements Conn
                     String name = entry.getName();
                     if (name.startsWith("shared")) {
 
-                        File destination = new File(outputDirectory, name.substring(7));
+                        File destination =
+                                org.identityconnectors.common.IOUtil.resolveEntry(
+                                        outputDirectory, name.substring(7));
                         if (entry.isDirectory()) {
                             if (!destination.exists()) {
                                 destination.mkdirs();
