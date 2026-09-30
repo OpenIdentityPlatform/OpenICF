@@ -184,8 +184,15 @@ public class ClientRemoteConnectorInfoManager extends
                         tryReleaseConnectionPermit();
 
                         if (!socket.connectPromise.isDone()) {
-                            socket.connectPromise.handleException(new ConnectorIOException(
-                                    "Connection is closed before WebSocket is established"));
+                            final Throwable handshakeFailure =
+                                    ConnectionManager.getHandshakeFailure(conn);
+                            socket.connectPromise.handleException(handshakeFailure != null
+                                    ? new ConnectorIOException(
+                                            "TLS handshake failed before WebSocket is established: "
+                                                    + handshakeFailure.getMessage(),
+                                            handshakeFailure)
+                                    : new ConnectorIOException(
+                                            "Connection is closed before WebSocket is established"));
                         }
                         // Immediately try to reconnect
                         if (System.currentTimeMillis() - lastConnectithenOnException.get() > 30000) {

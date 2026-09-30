@@ -11,6 +11,7 @@
  * See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
  * ====================
  * Portions Copyrighted 2015 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 /**
@@ -32,6 +33,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLParameters;
 
 import org.forgerock.openicf.framework.remote.ReferenceCountedObject;
 import org.forgerock.openicf.framework.remote.rpc.OperationMessageListener;
@@ -64,6 +67,7 @@ import org.glassfish.grizzly.http.util.HttpStatus;
 import org.glassfish.grizzly.http.util.MimeHeaders;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransport;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransportBuilder;
+import org.glassfish.grizzly.ssl.SSLConnectionContext;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.grizzly.ssl.SSLFilter;
@@ -308,7 +312,8 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
         }
         final SSLEngineConfigurator configurator =
                 new SSLEngineConfigurator(context, true, false, false);
-        final SwitchingSSLFilter filter = new SwitchingSSLFilter(configurator, defaultSecState);
+        final SwitchingSSLFilter filter =
+                new SwitchingSSLFilter(configurator, defaultSecState, clientConfig);
         fcb.add(filter);
 
         final AsyncHttpClientEventFilter eventFilter =
@@ -474,6 +479,15 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
 
         public String getAuthority() {
             return connectionInfo.getRemoteURI().getAuthority();
+        }
+
+        /** The host of the remote URI, without the brackets of an IPv6 literal. */
+        String getHost() {
+            String host = connectionInfo.getRemoteURI().getHost();
+            if (host != null && host.startsWith("[") && host.endsWith("]")) {
+                host = host.substring(1, host.length() - 1);
+            }
+            return host;
         }
 
         boolean isGracefullyFinishResponseOnClose() {
@@ -860,22 +874,89 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
         }
     } // END GracefulCloseEvent
 
+    /**
+     * The TLS handshake failure recorded on a connection by
+     * {@link SwitchingSSLFilter}, so that the reason (an untrusted or
+     * mismatching server certificate, say) can be reported to whoever waits
+     * for that connection instead of a bare "connection closed".
+     */
+    static final Attribute<Throwable> HANDSHAKE_FAILURE = Grizzly.DEFAULT_ATTRIBUTE_BUILDER
+            .createAttribute(SwitchingSSLFilter.class.getName() + ".handshakeFailure");
+
+    static Throwable getHandshakeFailure(final Connection<?> connection) {
+        return HANDSHAKE_FAILURE.get(connection);
+    }
+
     static final class SwitchingSSLFilter extends SSLFilter {
 
         private final boolean secureByDefault;
+        private final ConnectionManagerConfig managerConfig;
         final Attribute<Boolean> CONNECTION_IS_SECURE = Grizzly.DEFAULT_ATTRIBUTE_BUILDER
                 .createAttribute(SwitchingSSLFilter.class.getName());
 
         // -------------------------------------------------------- Constructors
 
-        SwitchingSSLFilter(final SSLEngineConfigurator clientConfig, final boolean secureByDefault) {
+        SwitchingSSLFilter(final SSLEngineConfigurator clientConfig, final boolean secureByDefault,
+                final ConnectionManagerConfig managerConfig) {
 
             super(null, clientConfig);
             this.secureByDefault = secureByDefault;
+            this.managerConfig = managerConfig;
 
         }
 
         // ---------------------------------------------- Methods from SSLFilter
+
+        /**
+         * Creates the engine for the server named in the remote URI (not for
+         * the proxy the socket may be connected to) and, unless switched off,
+         * has JSSE check the server certificate against that host during the
+         * handshake: an {@code SSLEngine} does not do this on its own.
+         */
+        @Override
+        protected SSLEngine createClientSSLEngine(final SSLConnectionContext sslCtx,
+                final SSLEngineConfigurator sslEngineConfigurator) {
+            final RemoteConnectionContext context =
+                    RemoteConnectionContext.get(sslCtx.getConnection());
+            final String host = context != null ? context.getHost() : null;
+            final SSLEngine sslEngine =
+                    host != null ? sslEngineConfigurator.createSSLEngine(host, -1) : super
+                            .createClientSSLEngine(sslCtx, sslEngineConfigurator);
+            if (managerConfig.isHostnameVerification()) {
+                final SSLParameters parameters = sslEngine.getSSLParameters();
+                parameters.setEndpointIdentificationAlgorithm("HTTPS");
+                sslEngine.setSSLParameters(parameters);
+            }
+            return sslEngine;
+        }
+
+        /**
+         * Grizzly's transport wrapper gives a connection without an
+         * {@code SSLEngine} a server-mode one on its first read. Through a
+         * proxy that first read is the plain answer to CONNECT, and the client
+         * handshake then waits for a ClientHello nobody sends; so reads bypass
+         * the wrapper until the connection is switched to TLS.
+         */
+        @Override
+        protected SSLTransportFilterWrapper createOptimizedTransportFilter(
+                final TransportFilter childFilter) {
+            return new SSLTransportFilterWrapper(childFilter, this) {
+                @Override
+                public NextAction handleRead(final FilterChainContext ctx) throws IOException {
+                    return isSecure(ctx.getConnection()) ? super.handleRead(ctx) : wrappedFilter
+                            .handleRead(ctx);
+                }
+            };
+        }
+
+        @Override
+        protected void notifyHandshakeFailed(final Connection connection, final Throwable t) {
+            HANDSHAKE_FAILURE.set(connection, t);
+            final RemoteConnectionContext context = RemoteConnectionContext.get(connection);
+            logger.warn("TLS handshake with connector server {0} failed: {1}",
+                    context != null ? context.getAuthority() : connection.getPeerAddress(), t);
+            super.notifyHandshakeFailed(connection, t);
+        }
 
         @Override
         public NextAction handleEvent(FilterChainContext ctx, FilterChainEvent event)

@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.client;
@@ -31,6 +32,17 @@ import javax.net.ssl.SSLContext;
 import org.identityconnectors.common.security.GuardedString;
 
 public class ConnectionManagerConfig {
+
+    /**
+     * System property that turns off TLS hostname verification for every
+     * client unless a {@link ConnectionManagerConfig} says otherwise. Shared
+     * with the legacy connector server client and, like there, read on every
+     * connection, so changing it takes effect without rebuilding the
+     * framework. Only exactly {@code false} disables verification, so a typo
+     * or another spelling of the value can not weaken it.
+     */
+    public static final String HOSTNAME_VERIFICATION_PROPERTY =
+            "org.identityconnectors.framework.remote.hostnameVerification";
 
     // SSL Config
 
@@ -71,6 +83,9 @@ public class ConnectionManagerConfig {
     protected boolean useRelativeURIsWithConnectProxies;
 
     protected int maxConnectionLifeTimeInMs;
+
+    /** Set by {@link #setHostnameVerification}; {@code null} follows the system property. */
+    protected Boolean hostnameVerification;
 
     public int getScheduledThreadPoolSize() {
         return 5;
@@ -173,6 +188,25 @@ public class ConnectionManagerConfig {
 
     public static Builder newBuilder() {
         return new Builder();
+    }
+
+    /**
+     * Whether the connector server certificate is checked against the host of
+     * the remote URI during the TLS handshake (RFC 2818 / RFC 6125 "HTTPS"
+     * endpoint identification). On by default; switching it off leaves the
+     * connection open to man-in-the-middle attacks by anyone holding a
+     * certificate the client trusts. Unless set explicitly, follows
+     * {@link #HOSTNAME_VERIFICATION_PROPERTY} at the time of the call.
+     */
+    public boolean isHostnameVerification() {
+        final Boolean explicit = hostnameVerification;
+        return explicit != null
+                ? explicit
+                : !"false".equals(System.getProperty(HOSTNAME_VERIFICATION_PROPERTY));
+    }
+
+    public void setHostnameVerification(boolean hostnameVerification) {
+        this.hostnameVerification = hostnameVerification;
     }
 
     public static class Builder {
