@@ -20,19 +20,27 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2016 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.common.security.impl;
 
 import java.security.Key;
 
 import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.identityconnectors.common.security.Encryptor;
 
 
+/**
+ * The wire format of the legacy connector server protocol: AES/CBC with a
+ * key and IV built into the framework, so that any peer can read what
+ * another wrote. This is obfuscation rather than protection - the connection
+ * must be protected by TLS - and it must stay byte-for-byte compatible with
+ * the .NET connector server, which is why it is kept as is. Secrets held in
+ * memory use {@link AesGcmEncryptor} instead.
+ */
 public class EncryptorImpl implements Encryptor {
 
     private static final String ALGORITHM = "AES";
@@ -52,23 +60,10 @@ public class EncryptorImpl implements Encryptor {
         (byte) 0x64,(byte) 0x05,(byte) 0x6A,(byte) 0xBE,
     };
 
-    private Key key;
-    private IvParameterSpec iv;
+    private final Key key = new SecretKeySpec(DEFAULT_KEY_BYTES, ALGORITHM);
+    private final IvParameterSpec iv = new IvParameterSpec(DEFAULT_IV_BYTES);
 
-    public EncryptorImpl(boolean defaultKey) {
-        if (defaultKey) {
-            key = new SecretKeySpec(DEFAULT_KEY_BYTES, ALGORITHM);
-            iv = new IvParameterSpec(DEFAULT_IV_BYTES);
-        } else {
-            try {
-                key = KeyGenerator.getInstance(ALGORITHM).generateKey();
-                iv = new IvParameterSpec(DEFAULT_IV_BYTES);
-            } catch (RuntimeException e) {
-                throw e;
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
+    public EncryptorImpl() {
     }
 
     public byte[] decrypt(byte[] bytes) {

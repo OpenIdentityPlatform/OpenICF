@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.common.security.impl;
 
@@ -30,7 +31,7 @@ public class EncryptorFactoryImpl extends EncryptorFactory {
     private final Encryptor defaultEncryptor;
 
     public EncryptorFactoryImpl() {
-        defaultEncryptor = new EncryptorImpl(true);
+        defaultEncryptor = new EncryptorImpl();
     }
 
     @Override
@@ -40,7 +41,7 @@ public class EncryptorFactoryImpl extends EncryptorFactory {
 
     @Override
     public Encryptor newRandomEncryptor() {
-        return new EncryptorImpl(false);
+        return new AesGcmEncryptor();
     }
 
 }
