@@ -48,8 +48,9 @@ public class ConnectionManagerConfigTest {
         assertTrue(new ConnectionManagerConfig().isHostnameVerification());
         System.setProperty(KEY, "false");
         assertFalse(new ConnectionManagerConfig().isHostnameVerification());
+        // exactly "false", as in the legacy client
         System.setProperty(KEY, "FALSE");
-        assertFalse(new ConnectionManagerConfig().isHostnameVerification());
+        assertTrue(new ConnectionManagerConfig().isHostnameVerification());
         System.setProperty(KEY, "flase");
         assertTrue(new ConnectionManagerConfig().isHostnameVerification());
     }

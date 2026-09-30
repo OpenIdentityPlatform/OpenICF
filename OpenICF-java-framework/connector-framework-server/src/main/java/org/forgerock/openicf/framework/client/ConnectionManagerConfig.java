@@ -38,8 +38,8 @@ public class ConnectionManagerConfig {
      * client unless a {@link ConnectionManagerConfig} says otherwise. Shared
      * with the legacy connector server client and, like there, read on every
      * connection, so changing it takes effect without rebuilding the
-     * framework. Only {@code false}, in any letter case, disables
-     * verification, so a typo in the value can not weaken it.
+     * framework. Only exactly {@code false} disables verification, so a typo
+     * or another spelling of the value can not weaken it.
      */
     public static final String HOSTNAME_VERIFICATION_PROPERTY =
             "org.identityconnectors.framework.remote.hostnameVerification";
@@ -202,7 +202,7 @@ public class ConnectionManagerConfig {
         final Boolean explicit = hostnameVerification;
         return explicit != null
                 ? explicit
-                : !"false".equalsIgnoreCase(System.getProperty(HOSTNAME_VERIFICATION_PROPERTY));
+                : !"false".equals(System.getProperty(HOSTNAME_VERIFICATION_PROPERTY));
     }
 
     public void setHostnameVerification(boolean hostnameVerification) {

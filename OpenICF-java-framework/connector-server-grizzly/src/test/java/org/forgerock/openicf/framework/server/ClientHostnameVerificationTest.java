@@ -139,6 +139,50 @@ public class ClientHostnameVerificationTest {
     }
 
     /**
+     * The first connection builds the client's filter chain with verification
+     * on; a later change of the system property must still reach the next
+     * handshake, as it does for the legacy client.
+     */
+    @Test
+    public void followsLaterChangeOfTheSystemProperty() throws Exception {
+        final String key = ConnectionManagerConfig.HOSTNAME_VERIFICATION_PROPERTY;
+        final String saved = System.getProperty(key);
+        System.clearProperty(key);
+        try (Client client = new Client(new ConnectionManagerConfig())) {
+            assertNotNull(client.connect(sanPort));
+            System.setProperty(key, "false");
+            assertNotNull(client.open(buildRemoteWSFrameworkConnectionInfo(true, cnOnlyPort, null)));
+        } finally {
+            if (saved == null) {
+                System.clearProperty(key);
+            } else {
+                System.setProperty(key, saved);
+            }
+        }
+    }
+
+    @Test
+    public void rejectsServerCertificateWithoutMatchingNameThroughProxy() throws Exception {
+        try (ConnectProxy proxy = new ConnectProxy();
+                Client client = new Client(new ConnectionManagerConfig())) {
+            RemoteWSFrameworkConnectionInfo info =
+                    RemoteWSFrameworkConnectionInfo.newBuilder().setRemoteURI(
+                            URI.create("wss://127.0.0.1:" + cnOnlyPort + "/openicf"))
+                            .setPrincipal("secure").setPassword(DEFAULT_GUARDED_PASSWORD)
+                            .setProxyHost("127.0.0.1").setProxyPort(proxy.getPort()).build();
+            try {
+                client.connect(info);
+                fail("Expected the handshake to fail: certificate has no name matching 127.0.0.1");
+            } catch (ConnectorException e) {
+                assertHostnameVerificationFailure(e);
+            }
+            // the handshake did go through the tunnel
+            assertTrue(proxy.getTargets().contains("127.0.0.1:" + cnOnlyPort),
+                    "Expected a CONNECT to 127.0.0.1:" + cnOnlyPort + ", got " + proxy.getTargets());
+        }
+    }
+
+    /**
      * Through a CONNECT proxy the socket peer is the proxy, not the connector
      * server, and the certificate must still be checked against the host of
      * the remote URI: {@code CN=localhost} passes for {@code localhost} (with
@@ -209,12 +253,22 @@ public class ClientHostnameVerificationTest {
         }
 
         ConnectorInfo connect(RemoteWSFrameworkConnectionInfo info) throws Exception {
+            return open(info).getAsyncConnectorInfoManager().findConnectorInfoAsync(
+                    TEST_CONNECTOR_KEY).getOrThrow(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        }
+
+        /**
+         * Only opens the WebSocket, which needs the TLS handshake to pass. A
+         * second connection to the same server session joins the connection
+         * group of the first one and gets no connector lookup of its own.
+         */
+        ClientRemoteConnectorInfoManager open(RemoteWSFrameworkConnectionInfo info)
+                throws Exception {
             ConnectionManager connectionManager =
                     (ConnectionManager) framework.get().getRemoteConnectionInfoManagerFactory();
             ClientRemoteConnectorInfoManager manager = connectionManager.connect(info);
             manager.connect().getOrThrow(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-            return manager.getAsyncConnectorInfoManager().findConnectorInfoAsync(
-                    TEST_CONNECTOR_KEY).getOrThrow(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            return manager;
         }
 
         public void close() {
