@@ -151,7 +151,57 @@ public class RemoteRequestCancelBeforeSendTest {
         Assert.assertTrue(group.getRemoteRequests().isEmpty());
     }
 
+    @Test
+    public void concurrentCancelsAfterSendNotifyRemoteOnce() throws Exception {
+        RecordingHolder holder = new RecordingHolder(group, false);
+        group.addConnection(holder);
+        BlockingRequestFactory factory = new BlockingRequestFactory();
+        factory.releaseSend();
+
+        TestRemoteRequest<RecordingHolder> request = group.trySubmitRequest(factory);
+        Assert.assertNotNull(request);
+        holder.blockFirstSend(); // the next send - the first cancel message - blocks
+
+        Future<Boolean> first = executor.submit(() -> request.getPromise().cancel(true));
+        holder.awaitBlockedInSend();
+        // The first cancel is still inside tryCancel: the promise is not done,
+        // so this one reaches the remote notification too.
+        request.getPromise().cancel(true);
+        holder.releaseSend();
+        first.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Assert.assertTrue(request.getPromise().isCancelled());
+        Assert.assertEquals(holder.sent.size(), 2, "request then one cancel: " + holder.sent);
+    }
+
     // Behaviour that must survive the change: the cases below pass before it.
+
+    @Test
+    public void undeliverableCancelDuringSendKeepsTheDeliveredRequest() throws Exception {
+        RecordingHolder holder = new RecordingHolder(group, false);
+        holder.blockFirstSend();
+        group.addConnection(holder);
+        BlockingRequestFactory factory = new BlockingRequestFactory();
+        factory.failCancelRemote();
+        factory.releaseSend();
+
+        Future<TestRemoteRequest<RecordingHolder>> submitted = submit(factory);
+        holder.awaitBlockedInSend();
+
+        // The request is on its way and the transport cannot carry the
+        // cancel message, as after WebSocketConnectionGroup.shutdown()
+        // dropped the sockets.
+        Assert.assertTrue(factory.request.get().getPromise().cancel(true));
+
+        holder.releaseSend();
+        TestRemoteRequest<RecordingHolder> request = submitted.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Assert.assertSame(request, factory.request.get(),
+                "a delivered request must not be reported as unsent");
+        Assert.assertTrue(request.getPromise().isCancelled());
+        Assert.assertEquals(holder.sent.size(), 1, "the request only: " + holder.sent);
+        Assert.assertTrue(group.getRemoteRequests().isEmpty());
+    }
 
     @Test
     public void cancelAfterSendNotifiesRemote() throws Exception {
@@ -211,6 +261,7 @@ public class RemoteRequestCancelBeforeSendTest {
     /**
      * Creates requests that block in {@code createMessageElement} - after
      * registration, before anything is sent - until {@link #releaseSend()}.
+     * After {@link #failCancelRemote()} their {@code tryCancelRemote} throws.
      */
     private static final class BlockingRequestFactory
             implements
@@ -219,6 +270,7 @@ public class RemoteRequestCancelBeforeSendTest {
         final AtomicReference<TestRemoteRequest<RecordingHolder>> request = new AtomicReference<>();
         private final CountDownLatch blocked = new CountDownLatch(1);
         private final CountDownLatch release = new CountDownLatch(1);
+        private volatile boolean failCancelRemote = false;
 
         public TestRemoteRequest<RecordingHolder> createRemoteRequest(
                 TestConnectionContext<RecordingHolder> context,
@@ -241,6 +293,15 @@ public class RemoteRequestCancelBeforeSendTest {
                             return message;
                         }
 
+                        protected void tryCancelRemote(
+                                TestConnectionContext<RecordingHolder> remoteContext,
+                                long requestId) {
+                            if (failCancelRemote) {
+                                throw new IllegalStateException("Transport layer is not operational");
+                            }
+                            super.tryCancelRemote(remoteContext, requestId);
+                        }
+
                         protected void handle(RecordingHolder sourceConnection,
                                 TestRemoteRequest<RecordingHolder> request, TestMessage message) {
                         }
@@ -256,6 +317,10 @@ public class RemoteRequestCancelBeforeSendTest {
 
         void releaseSend() {
             release.countDown();
+        }
+
+        void failCancelRemote() {
+            failCancelRemote = true;
         }
     }
 

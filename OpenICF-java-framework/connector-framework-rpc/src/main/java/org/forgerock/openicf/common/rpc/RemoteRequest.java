@@ -74,6 +74,7 @@ public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConn
         this.completionCallback = completionCallback;
         this.promise = new PromiseImpl<V, E>() {
 
+            @Override
             protected E tryCancel(boolean mayInterruptIfRunning) {
                 if (mayInterruptIfRunning) {
                     remoteCancelRequested = true;
@@ -93,6 +94,7 @@ public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConn
 
         };
         this.promise.thenOnResultOrException(new Runnable() {
+            @Override
             public void run() {
                 RemoteRequest.this.completionCallback.complete(RemoteRequest.this);
             }
@@ -169,6 +171,7 @@ public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConn
         if (isSent()) {
             return new Function<H, Promise<V, E>, Exception>() {
 
+                @Override
                 public Promise<V, E> apply(H value) throws Exception {
                     return promise;
                 }
@@ -180,11 +183,9 @@ public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConn
         }
         return new Function<H, Promise<V, E>, Exception>() {
 
+            @Override
             public Promise<V, E> apply(H remoteConnectionHolder) throws Exception {
-                // A request cancelled before it was sent stays unsent: the
-                // caller gets the cancelled promise back instead of waiting
-                // for an answer that can never arrive.
-                if (isSent() || promise.isDone()) {
+                if (isSent()) {
                     return promise;
                 }
                 // Single thread should process it so it should not
@@ -194,6 +195,9 @@ public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConn
                             + " is still being sent by another thread");
                 }
                 try {
+                    // A request cancelled before it was sent stays unsent:
+                    // the caller gets the cancelled promise back instead of
+                    // waiting for an answer that can never arrive.
                     if (!isSent() && !promise.isDone()) {
                         // A failed send propagates to the group, which
                         // retries on its next connection with this same
@@ -207,8 +211,15 @@ public abstract class RemoteRequest<V, E extends Exception, G extends RemoteConn
                         requestTime = System.currentTimeMillis();
                         if (remoteCancelRequested) {
                             // Cancelled while the message was on its way:
-                            // tryCancel saw it unsent.
-                            notifyRemoteCancelOnce();
+                            // tryCancel saw it unsent. The promise is
+                            // already cancelled; a cancel that cannot be
+                            // sent must not fail the delivered request, or
+                            // the group would report it as never sent.
+                            try {
+                                notifyRemoteCancelOnce();
+                            } catch (final Throwable ignored) {
+                                // The transport is gone - nothing left to tell.
+                            }
                         }
                     }
                 } finally {
