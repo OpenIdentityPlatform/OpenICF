@@ -20,15 +20,19 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyright 2026 3A Systems, LLC.
  */
 
 package org.forgerock.openicf.maven;
 
+import java.net.Socket;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.X509ExtendedTrustManager;
 
 import org.codehaus.plexus.component.configurator.ComponentConfigurationException;
 import org.codehaus.plexus.component.configurator.ConfigurationListener;
@@ -131,20 +135,50 @@ public class RemoteFrameworkConnectionInfoConverter extends AbstractConfiguratio
 
     /**
      * Create a trust manager that trusts all certificates It is not using a
-     * particular keyStore
+     * particular keyStore.
+     * <p>
+     * It is an {@link X509ExtendedTrustManager} so that JSSE does not wrap it:
+     * neither the "HTTPS" hostname check the framework enables for the
+     * connection nor the {@code jdk.certpath.disabledAlgorithms} check on the
+     * server's certificate chain applies. With every certificate trusted,
+     * neither check adds security; the hostname check would only reject
+     * connector servers whose certificate does not name the configured host.
      */
     protected List<TrustManager> getTrustManager() {
-        return Arrays.asList((TrustManager) new X509TrustManager() {
+        return Arrays.asList((TrustManager) new X509ExtendedTrustManager() {
+            @Override
             public java.security.cert.X509Certificate[] getAcceptedIssuers() {
                 return null;
             }
 
+            @Override
             public void checkClientTrusted(java.security.cert.X509Certificate[] certs,
                     String authType) {
             }
 
+            @Override
             public void checkServerTrusted(java.security.cert.X509Certificate[] certs,
                     String authType) {
+            }
+
+            @Override
+            public void checkClientTrusted(java.security.cert.X509Certificate[] certs,
+                    String authType, Socket socket) {
+            }
+
+            @Override
+            public void checkServerTrusted(java.security.cert.X509Certificate[] certs,
+                    String authType, Socket socket) {
+            }
+
+            @Override
+            public void checkClientTrusted(java.security.cert.X509Certificate[] certs,
+                    String authType, SSLEngine engine) {
+            }
+
+            @Override
+            public void checkServerTrusted(java.security.cert.X509Certificate[] certs,
+                    String authType, SSLEngine engine) {
             }
         });
     }

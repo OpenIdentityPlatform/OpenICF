@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api;
 
@@ -201,10 +202,12 @@ public class RemoteConnectorInfoManagerSSLTests extends ConnectorInfoManagerTest
 
         final int PORT = 8761;
 
+        // The client verifies the server certificate against the host it
+        // connects to, so the certificate must carry 127.0.0.1 as subjectAltName.
         TrustManager clientTrustManager =
-            new MyTrustManager("KeyStore.jks");
+            new MyTrustManager("KeyStore-san.jks");
         KeyManager serverKeyManager =
-            new MyKeyManager("KeyStore.jks");
+            new MyKeyManager("KeyStore-san.jks");
 
         synchronized (RemoteConnectorInfoManagerSSLTests.class) {
             if (null == _server) {
