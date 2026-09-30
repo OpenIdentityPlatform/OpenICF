@@ -75,8 +75,23 @@ public class IOUtilsTests {
     @Test
     public void resolveEntryReturnsFileInsideDirectory() throws IOException {
         File dir = Files.createTempDirectory("IOUtilsTests").toFile();
-        assertEquals(IOUtil.resolveEntry(dir, "lib/a.jar").getCanonicalFile(), new File(dir,
-                "lib/a.jar").getCanonicalFile());
+        try {
+            assertEquals(IOUtil.resolveEntry(dir, "lib/a.jar").getCanonicalFile(), new File(dir,
+                    "lib/a.jar").getCanonicalFile());
+        } finally {
+            IOUtil.delete(dir);
+        }
+    }
+
+    @Test
+    public void resolveEntryReturnsTheCanonicalFile() throws IOException {
+        File dir = Files.createTempDirectory("IOUtilsTests").toFile();
+        try {
+            assertEquals(IOUtil.resolveEntry(dir, "lib/../lib/a.jar"), new File(dir, "lib/a.jar")
+                    .getCanonicalFile());
+        } finally {
+            IOUtil.delete(dir);
+        }
     }
 
     @Test
@@ -84,37 +99,61 @@ public class IOUtilsTests {
         // the directory entry of an archive root, e.g. "shared/" once its
         // prefix is stripped, maps to the directory itself
         File dir = Files.createTempDirectory("IOUtilsTests").toFile();
-        assertEquals(IOUtil.resolveEntry(dir, "").getCanonicalFile(), dir.getCanonicalFile());
+        try {
+            assertEquals(IOUtil.resolveEntry(dir, "").getCanonicalFile(), dir.getCanonicalFile());
+        } finally {
+            IOUtil.delete(dir);
+        }
     }
 
     @Test(expectedExceptions = IOException.class)
     public void resolveEntryRejectsEntryEscapingDirectory() throws IOException {
         File dir = Files.createTempDirectory("IOUtilsTests").toFile();
-        IOUtil.resolveEntry(dir, "lib/../../escaped.jar");
+        try {
+            IOUtil.resolveEntry(dir, "lib/../../escaped.jar");
+        } finally {
+            IOUtil.delete(dir);
+        }
+    }
+
+    @Test(expectedExceptions = IOException.class)
+    public void resolveEntryRejectsSiblingSharingTheDirectoryNamePrefix() throws IOException {
+        // "<dir>2" starts with the name of "<dir>", but is not below it
+        File dir = Files.createTempDirectory("IOUtilsTests").toFile();
+        try {
+            IOUtil.resolveEntry(dir, "../" + dir.getName() + "2/evil.jar");
+        } finally {
+            IOUtil.delete(dir);
+        }
     }
 
     @Test
     public void unjarRefusesEntryEscapingTargetDirectory() throws IOException {
         File root = Files.createTempDirectory("IOUtilsTests").toFile();
-        File toDir = new File(root, "out");
-        assertTrue(toDir.mkdir());
-        File jar = new File(root, "evil.jar");
-        JarOutputStream out = new JarOutputStream(new FileOutputStream(jar));
         try {
-            out.putNextEntry(new JarEntry("../escaped.txt"));
-            out.write("escaped".getBytes(UTF8_NAME));
-            out.closeEntry();
+            File toDir = new File(root, "out");
+            assertTrue(toDir.mkdir());
+            File jar = new File(root, "evil.jar");
+            JarOutputStream out = new JarOutputStream(new FileOutputStream(jar));
+            try {
+                out.putNextEntry(new JarEntry("../escaped.txt"));
+                out.write("escaped".getBytes(UTF8_NAME));
+                out.closeEntry();
+            } finally {
+                out.close();
+            }
+            JarFile jarFile = new JarFile(jar);
+            try {
+                IOUtil.unjar(jarFile, toDir);
+                fail("Expected the entry escaping " + toDir + " to be refused");
+            } catch (IOException expected) {
+                assertFalse(new File(root, "escaped.txt").exists(), "entry written outside "
+                        + toDir);
+            } finally {
+                jarFile.close();
+            }
         } finally {
-            out.close();
-        }
-        JarFile jarFile = new JarFile(jar);
-        try {
-            IOUtil.unjar(jarFile, toDir);
-            fail("Expected the entry escaping " + toDir + " to be refused");
-        } catch (IOException expected) {
-            assertFalse(new File(root, "escaped.txt").exists(), "entry written outside " + toDir);
-        } finally {
-            jarFile.close();
+            IOUtil.delete(root);
         }
     }
 
