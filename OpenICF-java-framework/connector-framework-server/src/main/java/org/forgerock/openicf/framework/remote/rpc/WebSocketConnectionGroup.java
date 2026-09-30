@@ -152,6 +152,16 @@ public class WebSocketConnectionGroup
             request.getPromise().then(success, new Function<RuntimeException, Boolean, RuntimeException>() {
                 @Override
                 public Boolean apply(RuntimeException e) throws RuntimeException {
+                    if (request.getPromise().isCancelled()) {
+                        // Only shutdown() cancels this request, and the
+                        // listener runs on its thread before the sockets are
+                        // removed: a retry would be sent over the closing
+                        // connection and registered in the group being torn
+                        // down. The state is checked rather than the
+                        // exception type because createCancellationException
+                        // returns the failure of the remote cancel as-is.
+                        return receivedConnectorInfo;
+                    }
                     logger.ok("Resending initial 'CONNECTOR_INFO' request", e);
                     ControlMessageRequest retry = trySubmitRequest(connectorInfoRequestFactory());
                     if (null != retry) {
