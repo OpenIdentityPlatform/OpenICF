@@ -301,11 +301,11 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
 
         SSLContextConfigurator contextConfigurator = createSSLContextConfigurator(clientConfig);
         SSLContext context =
-                null != contextConfigurator ? contextConfigurator.createSSLContext() : null;
+                null != contextConfigurator ? contextConfigurator.createSSLContext(false) : null;
         boolean defaultSecState = (context != null);
         if (context == null) {
             try {
-                context = DEFAULT_CONFIG.createSSLContext();
+                context = DEFAULT_CONFIG.createSSLContext(false);
             } catch (Exception e) {
                 throw new IllegalStateException(e);
             }

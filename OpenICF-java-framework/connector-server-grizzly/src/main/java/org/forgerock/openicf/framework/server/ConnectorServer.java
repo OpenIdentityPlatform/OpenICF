@@ -367,7 +367,7 @@ public class ConnectorServer {
         boolean wantClientAuth = false;
 
         SSLEngineConfigurator result =
-                new SSLEngineConfigurator(contextConfigurator.createSSLContext(), false,
+                new SSLEngineConfigurator(contextConfigurator.createSSLContext(false), false,
                         needClientAuth, wantClientAuth);
 
         result.setEnabledCipherSuites(ConnectorServer.RECOMMENDED_CIPHERS);
