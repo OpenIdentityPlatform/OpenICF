@@ -251,9 +251,7 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestConnect
         }
     }
 
-    @Test(dependsOnMethods = { "testNoConnectionRequest" },
-            expectedExceptions = RuntimeException.class,
-            expectedExceptionsMessageRegExp = "Unknown Test case number")
+    @Test(dependsOnMethods = { "testNoConnectionRequest" })
     public void testFailedRequest() throws Exception {
         RemoteConnectionHolder<TestConnectionGroup<H>, H, TestConnectionContext<H>> connection =
                 getConnection();
@@ -263,7 +261,22 @@ public class RequestDistributorTest<H extends RemoteConnectionHolder<TestConnect
             Assert.assertTrue(server.isOperational());
 
             TestRemoteRequest<H> request = client.trySubmitRequest(new TestRequestFactory<H>(3));
-            request.getPromise().getOrThrowUninterruptibly();
+            try {
+                request.getPromise().getOrThrowUninterruptibly();
+                Assert.fail("Not Failed");
+            } catch (RuntimeException e) {
+                Assert.assertEquals(e.getMessage(), "Unknown Test case number");
+            }
+            // The promise's completion listeners (which remove this request
+            // from remoteRequests/localRequests) run after
+            // getOrThrowUninterruptibly() has already thrown, so wait for
+            // that cleanup instead of asserting immediately - otherwise the
+            // next test method's entry assertions can race it.
+            for (int i = 0; i < 5 && !(client.getRemoteRequests().isEmpty()
+                    && server.getLocalRequests().isEmpty()); i++) {
+                Reporter.log("Wait for failed request cleanup: " + i, true);
+                Thread.sleep(1000); // Wait to complete all other threads
+            }
             Assert.assertTrue(client.getRemoteRequests().isEmpty());
             Assert.assertTrue(server.getLocalRequests().isEmpty());
         } finally {
