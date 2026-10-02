@@ -18,11 +18,15 @@ package org.identityconnectors.common.script.javascript;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertSame;
+import static org.testng.Assert.fail;
 
 import java.net.URLClassLoader;
 
+import javax.script.ScriptException;
+
 import org.identityconnectors.common.script.ScriptExecutor;
 import org.identityconnectors.common.script.ScriptExecutorFactory;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 public class JavaScriptExecutorFactoryTests {
@@ -61,6 +65,42 @@ public class JavaScriptExecutorFactoryTests {
         ClassLoader custom = new URLClassLoader(new java.net.URL[0], getClass().getClassLoader());
         ScriptExecutor ex = getScriptExecutor("1;", custom, false);
         ex.execute(null);
+        assertSame(Thread.currentThread().getContextClassLoader(), before);
+    }
+
+    @Test
+    public void testCompiledScriptDoesNotLeakClassLoaderAfterExecution() throws Exception {
+        ClassLoader before = Thread.currentThread().getContextClassLoader();
+        ClassLoader custom = new URLClassLoader(new java.net.URL[0], getClass().getClassLoader());
+        getScriptExecutor("1;", custom, true).execute(null);
+        assertSame(Thread.currentThread().getContextClassLoader(), before);
+    }
+
+    @DataProvider(name = "compile")
+    public Object[][] compile() {
+        return new Object[][] { { false }, { true } };
+    }
+
+    @Test(dataProvider = "compile")
+    public void testFailingScriptDoesNotLeakClassLoader(boolean compile) throws Exception {
+        ClassLoader before = Thread.currentThread().getContextClassLoader();
+        ClassLoader custom = new URLClassLoader(new java.net.URL[0], getClass().getClassLoader());
+        ScriptExecutor ex = getScriptExecutor("throw 'boom';", custom, compile);
+        try {
+            ex.execute(null);
+            fail("the script must throw");
+        } catch (ScriptException expected) {
+            // thrown by eval()
+        }
+        assertSame(Thread.currentThread().getContextClassLoader(), before);
+    }
+
+    @Test(dataProvider = "compile")
+    public void testNullClassLoaderKeepsTheCallersContextClassLoader(boolean compile) throws Exception {
+        ClassLoader before = Thread.currentThread().getContextClassLoader();
+        ScriptExecutor ex = getScriptExecutor("java.lang.Thread.currentThread().getContextClassLoader();",
+                null, compile);
+        assertSame(ex.execute(null), before);
         assertSame(Thread.currentThread().getContextClassLoader(), before);
     }
 
