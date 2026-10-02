@@ -782,7 +782,14 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         return logger;
     }
 
-    private volatile GroovyScriptEngine groovyScriptEngine = null;
+    /** The engine, published only once its customizer has run. Guarded by {@code this}. */
+    private GroovyScriptEngine groovyScriptEngine = null;
+
+    /**
+     * The engine whose customizer is running, for the calls the customizer makes back into
+     * {@link #getGroovyScriptEngine()} on the same thread. Guarded by {@code this}.
+     */
+    private GroovyScriptEngine customizingGroovyScriptEngine = null;
 
     /**
      * Synchronised for the whole initialisation, not double-checked: the
@@ -792,6 +799,10 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      */
     protected synchronized GroovyScriptEngine getGroovyScriptEngine() {
         if (null == groovyScriptEngine) {
+            if (null != customizingGroovyScriptEngine) {
+                return customizingGroovyScriptEngine;
+            }
+
             final CompilerConfiguration compilerConfiguration =
                     new CompilerConfiguration(config);
             compilerConfiguration.addCompilationCustomizers(getImportCustomizer(null));
@@ -799,10 +810,17 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
             final GroovyClassLoader loader =
                     new GroovyClassLoader(getParentLoader(), compilerConfiguration, true);
 
-            groovyScriptEngine =
+            final GroovyScriptEngine engine =
                     new GroovyScriptEngine(getRoots(compilerConfiguration, loader), loader);
 
-            initializeCustomizer();
+            // If the customizer fails, the engine is dropped and the next call retries.
+            customizingGroovyScriptEngine = engine;
+            try {
+                initializeCustomizer();
+            } finally {
+                customizingGroovyScriptEngine = null;
+            }
+            groovyScriptEngine = engine;
         }
         return groovyScriptEngine;
     }

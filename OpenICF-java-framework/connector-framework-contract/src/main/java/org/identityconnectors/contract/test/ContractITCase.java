@@ -25,7 +25,6 @@
 
 package org.identityconnectors.contract.test;
 
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -33,10 +32,8 @@ import java.util.List;
 
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.contract.data.DataProvider;
-import org.testng.IObjectFactory;
 import org.testng.ITestContext;
 import org.testng.annotations.Factory;
-import org.testng.internal.ObjectFactoryImpl;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -69,17 +66,16 @@ public class ContractITCase {
 
         Injector injector = getInjector(context);
         List<Object> result = new ArrayList<Object>();
-        IObjectFactory objectFactory = new ObjectFactoryImpl();
 
         for (Class<?> testClass: getContractTestClasses(context)) {
-            Constructor constructor = null;
             try {
-                constructor = testClass.getConstructor(String.class);
-                Object test = objectFactory.newInstance(constructor, "");
+                Object test = testClass.getConstructor(String.class).newInstance("");
                 injector.injectMembers(test);
                 result.add(test);
             } catch (NoSuchMethodException e) {
                 result.add(injector.getInstance(testClass));
+            } catch (ReflectiveOperationException e) {
+                throw new IllegalStateException("Cannot instantiate " + testClass.getName(), e);
             }
         }
         return result.toArray();
