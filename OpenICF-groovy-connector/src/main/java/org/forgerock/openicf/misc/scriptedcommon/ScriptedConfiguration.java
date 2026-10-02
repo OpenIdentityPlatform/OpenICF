@@ -780,28 +780,49 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         return logger;
     }
 
+    /** The engine, published only once its customizer has run. */
     private volatile GroovyScriptEngine groovyScriptEngine = null;
 
+    /**
+     * The engine whose customizer is running, for the calls the customizer makes back into
+     * {@link #getGroovyScriptEngine()} on the same thread. Guarded by {@code this}.
+     */
+    private GroovyScriptEngine customizingGroovyScriptEngine = null;
+
     protected GroovyScriptEngine getGroovyScriptEngine() {
-        if (null == groovyScriptEngine) {
-            synchronized (this) {
-                if (null == groovyScriptEngine) {
-
-                    final CompilerConfiguration compilerConfiguration =
-                            new CompilerConfiguration(config);
-                    compilerConfiguration.addCompilationCustomizers(getImportCustomizer(null));
-
-                    final GroovyClassLoader loader =
-                            new GroovyClassLoader(getParentLoader(), compilerConfiguration, true);
-
-                    groovyScriptEngine =
-                            new GroovyScriptEngine(getRoots(compilerConfiguration, loader), loader);
-
-                    initializeCustomizer();
-                }
-            }
+        // Read the field once: release() may clear it at any time.
+        GroovyScriptEngine engine = groovyScriptEngine;
+        if (null != engine) {
+            return engine;
         }
-        return groovyScriptEngine;
+        synchronized (this) {
+            engine = groovyScriptEngine;
+            if (null != engine) {
+                return engine;
+            }
+            if (null != customizingGroovyScriptEngine) {
+                return customizingGroovyScriptEngine;
+            }
+
+            final CompilerConfiguration compilerConfiguration =
+                    new CompilerConfiguration(config);
+            compilerConfiguration.addCompilationCustomizers(getImportCustomizer(null));
+
+            final GroovyClassLoader loader =
+                    new GroovyClassLoader(getParentLoader(), compilerConfiguration, true);
+
+            engine = new GroovyScriptEngine(getRoots(compilerConfiguration, loader), loader);
+
+            // If the customizer fails, the engine is dropped and the next call retries.
+            customizingGroovyScriptEngine = engine;
+            try {
+                initializeCustomizer();
+            } finally {
+                customizingGroovyScriptEngine = null;
+            }
+            groovyScriptEngine = engine;
+            return engine;
+        }
     }
 
     /*
