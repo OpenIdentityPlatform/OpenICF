@@ -25,10 +25,12 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1054,7 +1056,8 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             if (!found) {
                 throw new UnknownUidException("Object for uid " + uid.toString() + " does not exist");
             }
-            totalRowCount.put(csvFilePath, totalRowCount.get(csvFilePath) - 1);
+            // the last rows reach the copy only here: a failure must not replace the CSV
+            writer.close();
             rewritten = true;
         } catch (FileNotFoundException e) {
             log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
@@ -1067,6 +1070,9 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 closeQuietly(reader, "reader");
                 closeQuietly(writer, "writer");
                 finishRewrite(tmp, rewritten);
+                if (rewritten) {
+                    totalRowCount.put(csvFilePath, totalRowCount.get(csvFilePath) - 1);
+                }
             } finally {
                 lock.unlock();
             }
@@ -1118,6 +1124,8 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             if (updated == null) {
                 throw new UnknownUidException("Uid " + uid.getUidValue() + " does not exist");
             }
+            // the last rows reach the copy only here: a failure must not replace the CSV
+            writer.close();
             rewritten = true;
         } catch (FileNotFoundException e) {
             log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
@@ -1151,23 +1159,35 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     }
 
     /**
-     * Puts the rewritten copy in place of the CSV when the rewrite completed,
-     * keeping the CSV's permissions; a copy of a rewrite that failed half-way
-     * is discarded so that the CSV stays as it was.
+     * Puts the rewritten copy in place of the CSV when the rewrite completed:
+     * the copy is synced to disk, takes over the CSV's mode bits and, if the
+     * process may set it, its group (the owner becomes the process's user),
+     * and is renamed over the CSV. A copy that is not put in place - of a
+     * rewrite that failed half-way, or one whose replacement failed - is
+     * discarded so that the CSV stays as it was.
      */
     private void finishRewrite(File tmp, boolean rewritten) {
         if (tmp == null) {
             return;
         }
         if (!rewritten) {
-            if (!tmp.delete() && tmp.exists()) {
-                log.warn("Could not delete {0}", tmp);
-            }
+            deleteRewriteFile(tmp);
             return;
         }
         Path csv = config.getCsvFile().getAbsoluteFile().toPath();
         try {
+            // on disk before the rename, so that a crash can not leave the CSV
+            // name pointing to a copy whose data was never written
+            try (FileChannel channel = FileChannel.open(tmp.toPath(), StandardOpenOption.WRITE)) {
+                channel.force(true);
+            }
             try {
+                try {
+                    Files.setAttribute(tmp.toPath(), "posix:group",
+                            Files.getAttribute(csv, "posix:group"));
+                } catch (IOException e) {
+                    // not a member of the CSV's group: the copy keeps the process's group
+                }
                 Files.setPosixFilePermissions(tmp.toPath(), Files.getPosixFilePermissions(csv));
             } catch (UnsupportedOperationException e) {
                 // not a POSIX file system: the copy inherits the directory's ACL
@@ -1179,8 +1199,28 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 Files.move(tmp.toPath(), csv, StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (IOException e) {
-            throw new ConnectorIOException("Failed to replace " + csv + " with its rewritten copy "
-                    + tmp, e);
+            deleteRewriteFile(tmp);
+            throw new ConnectorIOException("Failed to replace " + csv + " with its rewritten copy", e);
+        }
+        syncDirectory(csv.getParent());
+    }
+
+    private static void deleteRewriteFile(File tmp) {
+        if (!tmp.delete() && tmp.exists()) {
+            log.warn("Could not delete {0}", tmp);
+        }
+    }
+
+    /**
+     * Makes the rename of the copy over the CSV durable. Best effort: not every
+     * platform can open a directory (Windows can not), and the CSV is consistent
+     * either way - the crash would only undo the operation.
+     */
+    private static void syncDirectory(Path dir) {
+        try (FileChannel channel = FileChannel.open(dir, StandardOpenOption.READ)) {
+            channel.force(true);
+        } catch (IOException e) {
+            log.ok(e, "Could not sync directory {0}", dir);
         }
     }
 

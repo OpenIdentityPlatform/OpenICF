@@ -16,6 +16,7 @@
 package org.forgerock.openicf.csvfile;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.fail;
 
 import java.io.File;
@@ -74,20 +75,20 @@ public class RewriteSafetyTest {
 
     @Test
     public void updateKeepsFilePermissions() throws Exception {
-        Set<PosixFilePermission> ownerOnly = restrictToOwner();
+        Set<PosixFilePermission> mode = setDistinctMode();
 
         connector.update(ObjectClass.ACCOUNT, new Uid("vilo"), lastName("updated"), null);
 
-        assertEquals(Files.getPosixFilePermissions(csv.toPath()), ownerOnly);
+        assertEquals(Files.getPosixFilePermissions(csv.toPath()), mode);
     }
 
     @Test
     public void deleteKeepsFilePermissions() throws Exception {
-        Set<PosixFilePermission> ownerOnly = restrictToOwner();
+        Set<PosixFilePermission> mode = setDistinctMode();
 
         connector.delete(ObjectClass.ACCOUNT, new Uid("vilo"), null);
 
-        assertEquals(Files.getPosixFilePermissions(csv.toPath()), ownerOnly);
+        assertEquals(Files.getPosixFilePermissions(csv.toPath()), mode);
     }
 
     @Test
@@ -99,6 +100,7 @@ public class RewriteSafetyTest {
             fail("Expected the malformed row to fail the update");
         } catch (RuntimeException expected) {
             assertEquals(read(), original, "the data file was replaced by the partial rewrite");
+            assertNoRewriteFileLeft();
         }
     }
 
@@ -111,16 +113,26 @@ public class RewriteSafetyTest {
             fail("Expected the malformed row to fail the delete");
         } catch (RuntimeException expected) {
             assertEquals(read(), original, "the data file was replaced by the partial rewrite");
+            assertNoRewriteFileLeft();
         }
     }
 
-    private Set<PosixFilePermission> restrictToOwner() throws Exception {
+    private Set<PosixFilePermission> setDistinctMode() throws Exception {
         if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
             throw new SkipException("POSIX file permissions are not supported here");
         }
-        Set<PosixFilePermission> ownerOnly = PosixFilePermissions.fromString("rw-------");
-        Files.setPosixFilePermissions(csv.toPath(), ownerOnly);
-        return ownerOnly;
+        // neither a new temporary file (rw-------) nor a 022 umask (rw-r--r--)
+        // yields this mode: the CSV keeps it only if the rewrite copies it
+        Set<PosixFilePermission> mode = PosixFilePermissions.fromString("rw-r-----");
+        Files.setPosixFilePermissions(csv.toPath(), mode);
+        return mode;
+    }
+
+    private void assertNoRewriteFileLeft() {
+        for (String name : csv.getAbsoluteFile().getParentFile().list()) {
+            assertFalse(name.startsWith(csv.getName() + ".") && name.endsWith(".tmp"),
+                    "the copy of the failed rewrite was left behind: " + name);
+        }
     }
 
     private static Set<Attribute> lastName(String value) {
